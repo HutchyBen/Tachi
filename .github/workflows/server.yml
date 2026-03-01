@@ -27,30 +27,25 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          version: 8.15.6
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: pnpm
+          bun-version: latest
 
       - name: Install dependencies
-        run: pnpm --filter tachi-server... --filter . install
+        run: bun install
 
       - name: Lint code
-        run: pnpm --filter tachi-server lint
+        run: bun run --filter tachi-server lint
 
       - name: Typecheck code
-        run: pnpm --filter tachi-server typecheck
+        run: bun run --filter tachi-server typecheck
 
         # configure external dbs
       - uses: supercharge/mongodb-github-action@1.4.1
       - uses: supercharge/redis-github-action@1.1.0
 
       - name: Run tests
-        run: pnpm --filter tachi-server test
+        run: bun run --filter tachi-server test
         env:
           NODE_ENV: "test"
           PORT: 8080

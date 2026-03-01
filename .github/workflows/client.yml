@@ -12,7 +12,7 @@ on:
     branches:
       - "main"
     paths:
-      - "server/**"
+      - "client/**"
       - "common/**"
   workflow_dispatch:
 
@@ -23,23 +23,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          version: 8.15.6
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: pnpm
+          bun-version: latest
 
       - name: Install dependencies
-        run: pnpm --filter tachi-client... --filter . install
+        run: bun install
 
       - name: Lint
-        run: pnpm --filter tachi-client lint
+        run: bun run --filter tachi-client lint
 
       - name: Typecheck
-        run: pnpm --filter tachi-client typecheck
+        run: bun run --filter tachi-client typecheck
 
   deploy:
     runs-on: [ubuntu-latest]
@@ -52,14 +47,9 @@ jobs:
       - name: Install rsync
         run: sudo apt install -y rsync
 
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          version: 8.15.6
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: pnpm
+          bun-version: latest
 
       - name: Enable SSH Key
         run: |
@@ -72,11 +62,11 @@ jobs:
           SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
 
       - name: Install dependencies
-        run: pnpm --filter tachi-client... --filter . install
+        run: bun install
 
       - name: Build Bokutachi
         if: github.ref == 'refs/heads/main'
-        run: pnpm --filter tachi-client build
+        run: bun run --filter tachi-client build
         env:
           VITE_GIT_REPO: "GitHub:zkldi/Tachi"
           VITE_TCHIC_MODE: "boku"
@@ -90,7 +80,7 @@ jobs:
 
       - name: Build Kamaitachi
         if: github.ref == 'refs/heads/main'
-        run: pnpm --filter tachi-client build
+        run: bun run --filter tachi-client build
         env:
           VITE_MANDATE_LOGIN: true
           VITE_GOATCOUNTER: "https://tachi.goatcounter.com/count"
@@ -119,7 +109,7 @@ jobs:
           TACHI_HOST: ${{secrets.TACHI_HOST}}
 
       - name: Build Staging
-        run: pnpm --filter tachi-client build
+        run: bun run --filter tachi-client build
         env:
           VITE_MANDATE_LOGIN: true
           VITE_GOATCOUNTER: "https://tachi.goatcounter.com/count"

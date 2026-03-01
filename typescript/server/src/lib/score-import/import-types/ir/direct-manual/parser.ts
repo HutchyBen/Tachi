@@ -1,0 +1,22 @@
+import type { KtLogger } from "#lib/logger/logger";
+import type { BatchManualScore } from "../../../../../../../common/src";
+
+import type { BatchManualContext } from "../../common/batch-manual/types";
+import type { ParserFunctionReturns } from "../../common/types";
+
+import { ParseBatchManualFromObject } from "../../common/batch-manual/parser";
+
+/**
+ * Parses an object of BATCH-MANUAL data.
+ * @param fileData - The buffer to parse.
+ * @param body - The request body that made this file import request.
+ */
+function ParseDirectManual(
+	body: Record<string, unknown>,
+	inferTimestamp: boolean,
+	logger: KtLogger,
+): ParserFunctionReturns<BatchManualScore, BatchManualContext> {
+	return ParseBatchManualFromObject(body, "ir/direct-manual", inferTimestamp, logger);
+}
+
+export default ParseDirectManual;

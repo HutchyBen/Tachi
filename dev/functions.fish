@@ -21,16 +21,27 @@ function rgb
 	printf "\033[0m"
 end
 
+# "Git Move Root" - cd relative to the .git root.
+function gmr --wraps=cd
+	set -l git_root (git rev-parse --show-toplevel 2>/dev/null)
+	if test $status != 0;
+		return 1
+	end
+	cd "$git_root/$1"
+end
+
 function cmd
 	rgb $argv[1] e61c6e 000000
 end
-
-
 
 function fish_greeting
 	# check $PATH is correct
 	if not contains ~/.local/pnpm $PATH
 		fish_add_path ~/.local/pnpm
+	end
+
+	if test (random 0 100) -lt 10; and test -d /host-pc/dl # entropy
+		perl /tachi/dev/eye.pl
 	end
 
 	echo "Welcome to $(rgb "Tachi" e61c6e 131313)!"
@@ -96,14 +107,14 @@ end
 function seeds
 	set fzfcmd fzf --border
 
-	set mode (echo "Single Use"\n"Rerunners" | $fzfcmd)
+	set mode (echo "Personal"\n"Rerunners" | $fzfcmd)
 
 	if test -z "$mode"
 		return
 	end
 
-	if test $mode = "Single Use"
-		set place single-use
+	if test $mode = "Personal"
+		set place personal
 	else if test $mode = "Rerunners"
 		set place rerunners
 	end
@@ -113,7 +124,7 @@ function seeds
 	set selected_file (fd -e ts -e js --strip-cwd-prefix | $fzfcmd)
 
 	if test -n "$selected_file"
-		set cmd ts-node "./$selected_file"
+		set cmd bun run "./$selected_file"
 		echo $cmd
 	
 		$cmd

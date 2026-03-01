@@ -1,8 +1,6 @@
 {
 	"name": "Tachi",
-	"dockerComposeFile": [
-		"../docker-compose-dev.yml"
-	],
+	"dockerComposeFile": ["../docker-compose-dev.yml"],
 	"service": "tachi-dev",
 	"workspaceFolder": "/tachi",
 	"postAttachCommand": "./dev/bootstrap.sh",
@@ -14,11 +12,15 @@
 				"typescript.tsdk": "node_modules/typescript/lib",
 				"[typescriptreact]": {
 					"editor.formatOnSave": true,
-					"editor.defaultFormatter": "dbaeumer.vscode-eslint"
+					"editor.defaultFormatter": "biomejs.biome"
 				},
 				"[typescript]": {
 					"editor.formatOnSave": true,
-					"editor.defaultFormatter": "dbaeumer.vscode-eslint"
+					"editor.defaultFormatter": "biomejs.biome"
+				},
+				"[javascript]": {
+					"editor.formatOnSave": true,
+					"editor.defaultFormatter": "biomejs.biome"
 				},
 				"terminal.integrated.profiles.linux": {
 					"fish": {
@@ -44,9 +46,7 @@
 					}
 				]
 			},
-			"extensions": [
-				"dbaeumer.vscode-eslint"
-			]
+			"extensions": ["dbaeumer.vscode-eslint", "biomejs.biome"]
 		}
 	}
 }

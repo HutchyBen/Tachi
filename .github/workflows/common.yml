@@ -20,24 +20,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          version: 8.15.6
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: pnpm
+          bun-version: latest
 
       - name: Install dependencies
-        run: pnpm --filter tachi-common... --filter . install
+        run: bun install
 
       - name: Run Linter
-        run: pnpm --filter tachi-common lint
+        run: bun run --filter tachi-common lint
         env:
           NODE_ENV: "test"
 
       - name: Run Tests
-        run: pnpm --filter tachi-common test
+        run: bun run --filter tachi-common test
         env:
           NODE_ENV: "test"

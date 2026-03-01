@@ -18,14 +18,9 @@ jobs:
       - name: Install rsync
         run: sudo apt install -y rsync
 
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          version: 8.15.6
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: pnpm
+          bun-version: latest
 
       - name: Enable SSH Key
         run: |
@@ -38,10 +33,10 @@ jobs:
           SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
 
       - name: Install dependencies
-        run: pnpm --filter tachi-homepage... --filter . install
+        run: bun install
 
       - name: Build
-        run: pnpm --filter tachi-homepage build
+        run: bun run --filter tachi-homepage build
 
       - name: Deploy
         run: rsync --recursive --compress --delete --progress ./homepage/dist/. ci@"$TACHI_HOST":tachi

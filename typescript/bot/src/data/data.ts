@@ -1,0 +1,17 @@
+export enum LoggerLayers {
+	apiRequests = "apiRequests",
+	botConfigSetup = "botConfigSetup",
+	buildChartEmbed = "buildChartEmbed",
+	buildProfileEmbed = "buildProfileEmbed",
+	chartSearch = "chartSearch",
+	client = "client",
+	database = "database",
+	databaseQuery = "databaseQuery",
+	profile = "profile",
+	selectInteractionHandler = "selectInteractionHandler",
+	server = "server",
+	serverAuth = "serverAuth",
+	slashCommands = "slashCommands",
+	tachiAuth = "tachiAuth",
+	tachiFetch = "tachiFetch",
+}

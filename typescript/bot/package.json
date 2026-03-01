@@ -1,0 +1,63 @@
+{
+	"name": "tachi-bot",
+	"version": "2.2.0",
+	"private": true,
+	"type": "module",
+	"main": "js/bot/src/main.js",
+	"license": "MIT",
+	"scripts": {
+		"build": "tsgo -b",
+		"start": "pnpm build && node -r ts-node/register -r tsconfig-paths/register js/main.js",
+		"start-no-build": "node -r ts-node/register -r tsconfig-paths/register js/main.js",
+		"lint": "eslint .",
+		"lint-fix": "eslint . --fix",
+		"typecheck": "tsgo --noEmit"
+	},
+	"devDependencies": {
+		"@types/express": "catalog:",
+		"@types/json5": "catalog:",
+		"@types/lodash": "catalog:",
+		"@types/luxon": "catalog:",
+		"@types/node": "catalog:",
+		"@typescript/native-preview": "catalog:",
+		"@types/node-fetch": "catalog:",
+		"eslint-config-tachi": "workspace:*"
+	},
+	"dependencies": {
+		"@discordjs/builders": "catalog:",
+		"@discordjs/rest": "catalog:",
+		"@types/bson": "catalog:",
+		"@types/humanize-duration": "catalog:",
+		"@valuabletouch/winston-seq": "catalog:",
+		"deepmerge": "catalog:",
+		"discord-api-types": "catalog:",
+		"discord.js": "catalog:",
+		"dotenv": "catalog:",
+		"express": "catalog:",
+		"humanize-duration": "catalog:",
+		"json5": "catalog:",
+		"lodash": "catalog:",
+		"luxon": "catalog:",
+		"mei-logger": "catalog:",
+		"monk": "catalog:",
+		"node-fetch": "catalog:",
+		"prudence": "catalog:",
+		"seq-logging": "catalog:",
+		"sync-fetch": "catalog:",
+		"tachi-common": "workspace:*",
+		"ts-node": "catalog:",
+		"tsconfig-paths": "catalog:",
+		"typescript": "catalog:",
+		"winston": "catalog:"
+	},
+	"engines": {
+		"bun": ">=1.2.0"
+	},
+	"imports": {
+		"#*": [
+			"./src/*",
+			"./src/*.ts",
+			"./src/*/index.ts"
+		]
+	}
+}

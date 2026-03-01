@@ -1,0 +1,10 @@
+# reload the shell setup
+setup-fish:
+	@fish dev/setup.fish
+
+	@exec fish
+
+# Set up the codebase.
+setup:
+	-@rm BOOTSTRAP_OK
+	./dev/bootstrap.sh

@@ -34,14 +34,6 @@ Various scripts for interacting with `tachi-server`, such
 as single-use scripts for importing some data, or
 frequently used scripts such as updating BMS tables.
 
-!!! danger
-	The scripts in here are not regularly maintained,
-	**especially** the ones inside `single-use`. You should
-	**ABSOLUTELY NOT** run those if you do not know what
-	they do.
-
-	Seriously, you could destroy your server.
-
 ## TypeScript Source Code
 
 All of these are inside `/src`.

@@ -1,0 +1,5522 @@
+[
+	{
+		"altTitles": [],
+		"artist": "HIMEHINA",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf939fb41f086536",
+		"legacySongID": 1,
+		"searchTerms": ["Hitogata"],
+		"title": "ヒトガタ"
+	},
+	{
+		"altTitles": ["叩ケ 叩ケ 手ェ叩ケ"],
+		"artist": "SIRO",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf939fb5ed44a717",
+		"legacySongID": 2,
+		"searchTerms": ["Tatake Tatake Te-tatake"],
+		"title": "叩ケ　叩ケ　手ェ叩ケ"
+	},
+	{
+		"altTitles": [],
+		"artist": "Ado",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf939fb6c0ba0296",
+		"legacySongID": 3,
+		"searchTerms": ["Ussee-wa"],
+		"title": "うっせぇわ"
+	},
+	{
+		"altTitles": [],
+		"artist": "Sound piercer feat.DAZBEE",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf939fb7fa9e8449",
+		"legacySongID": 4,
+		"searchTerms": ["Hana Tachi ni Kibou wo"],
+		"title": "花たちに希望を"
+	},
+	{
+		"altTitles": [],
+		"artist": "わかどり",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf939fb8897ee470",
+		"legacySongID": 5,
+		"searchTerms": [],
+		"title": "NightTheater"
+	},
+	{
+		"altTitles": [],
+		"artist": "REDALiCE feat. 犬山たまき",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf939fb94dd87126",
+		"legacySongID": 6,
+		"searchTerms": ["Koi no Moonlight"],
+		"title": "恋のMoonlight"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Noriken & aran",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf939fba5b97ad41",
+		"legacySongID": 7,
+		"searchTerms": [],
+		"title": "Comet Coaster"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Myosuke & Gram",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf939fbbdbc867c0",
+		"legacySongID": 8,
+		"searchTerms": [],
+		"title": "XODUS"
+	},
+	{
+		"altTitles": [],
+		"artist": "Ayatsugu_Otowa",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf939fbcfffc64f2",
+		"legacySongID": 9,
+		"searchTerms": [],
+		"title": "Lights of Muse"
+	},
+	{
+		"altTitles": [],
+		"artist": "MYUKKE.",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf939fbd02f50d15",
+		"legacySongID": 10,
+		"searchTerms": [],
+		"title": "The 90's Decision"
+	},
+	{
+		"altTitles": [],
+		"artist": "モリモリあつし",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf939fbed73fd7e6",
+		"legacySongID": 11,
+		"searchTerms": ["Funkotsu-saishin Casino"],
+		"title": "粉骨砕身カジノゥ"
+	},
+	{
+		"altTitles": [],
+		"artist": "iroha",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf939fbf30889511",
+		"legacySongID": 12,
+		"searchTerms": ["Roshin Yuukai"],
+		"title": "炉心融解"
+	},
+	{
+		"altTitles": [],
+		"artist": "wowaka",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf939fc035a67791",
+		"legacySongID": 13,
+		"searchTerms": ["World's End Dancehall"],
+		"title": "ワールズエンド・ダンスホール"
+	},
+	{
+		"altTitles": [],
+		"artist": "cosMo＠暴走P feat.初音ミク",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf939fc119d241b2",
+		"legacySongID": 14,
+		"searchTerms": ["Infinity (2018Remake)"],
+		"title": "∞(2018Remake)"
+	},
+	{
+		"altTitles": [],
+		"artist": "ダイナミック自演ズ",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf939fc2bb74ac78",
+		"legacySongID": 15,
+		"searchTerms": ["Chigau!!!"],
+		"title": "ちがう!!!"
+	},
+	{
+		"altTitles": [],
+		"artist": "ひとしずく×やま△",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf939fc35a461137",
+		"legacySongID": 16,
+		"searchTerms": ["Kaitou F no Daihon(Scenario) -Kieta Diamond no Nazo-"],
+		"title": "怪盗Fの台本（シナリオ）〜消えたダイヤの謎〜"
+	},
+	{
+		"altTitles": [],
+		"artist": "OИE (song by ナナホシ管弦楽団)",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf939fc4cd0a443b",
+		"legacySongID": 17,
+		"searchTerms": ["Onegai Darling"],
+		"title": "おねがいダーリン"
+	},
+	{
+		"altTitles": [],
+		"artist": "高宮なすの(鳴海杏子)",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf939fc534e9cd8a",
+		"legacySongID": 18,
+		"searchTerms": ["Many Many Money Money"],
+		"title": "メニメニマニマニ"
+	},
+	{
+		"altTitles": [],
+		"artist": "fhána",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf939fc6471683d7",
+		"legacySongID": 19,
+		"searchTerms": ["Aozora no Rhapsody"],
+		"title": "青空のラプソディ"
+	},
+	{
+		"altTitles": [],
+		"artist": "歌組雪月花(夜々(原田ひとみ)・いろり(茅野愛衣)・小紫(小倉唯))",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf939fc778b005db",
+		"legacySongID": 20,
+		"searchTerms": ["Maware! Setsugetsuka"],
+		"title": "回レ！雪月花"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Myosuke & Laur",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf939fc89b6ace5b",
+		"legacySongID": 21,
+		"searchTerms": [],
+		"title": "Break Through Myself feat. Risa Yuzuki"
+	},
+	{
+		"altTitles": [],
+		"artist": "aran & t+pazolite",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf939fc99cbe7ef3",
+		"legacySongID": 22,
+		"searchTerms": [],
+		"title": "Chobit Flavor"
+	},
+	{
+		"altTitles": [],
+		"artist": "Getty & Srav3R & DJ Noriken",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf939fca69479b5b",
+		"legacySongID": 23,
+		"searchTerms": ["DELTA COMPLEX"],
+		"title": "D3LTA QOMPLEX"
+	},
+	{
+		"altTitles": [],
+		"artist": "YuNi",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf939fcb4ff06181",
+		"legacySongID": 24,
+		"searchTerms": ["Toumei Seisai"],
+		"title": "透明声彩"
+	},
+	{
+		"altTitles": [],
+		"artist": "ミライアカリ",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf939fcce2d7f652",
+		"legacySongID": 25,
+		"searchTerms": [],
+		"title": "Fly to NEW WORLD"
+	},
+	{
+		"altTitles": [],
+		"artist": "ド葛本社",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf939fcd68e7c911",
+		"legacySongID": 26,
+		"searchTerms": [],
+		"title": "Fam☆Fam☆Time!"
+	},
+	{
+		"altTitles": [],
+		"artist": "40mP",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf939fce271b8d8f",
+		"legacySongID": 27,
+		"searchTerms": ["Torinoko City"],
+		"title": "トリノコシティ"
+	},
+	{
+		"altTitles": [],
+		"artist": "Kanaria",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf939fcf63e32e31",
+		"legacySongID": 28,
+		"searchTerms": [],
+		"title": "KING"
+	},
+	{
+		"altTitles": [],
+		"artist": "かいりきベア",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf939fd08afbea4f",
+		"legacySongID": 29,
+		"searchTerms": ["Darling Dance"],
+		"title": "ダーリンダンス"
+	},
+	{
+		"altTitles": [],
+		"artist": "じん",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf939fd1dd1b9a3d",
+		"legacySongID": 30,
+		"searchTerms": ["Summer-time Record"],
+		"title": "サマータイムレコード"
+	},
+	{
+		"altTitles": [],
+		"artist": "REDALiCE feat. 野宮あゆみ",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf939fd226554482",
+		"legacySongID": 31,
+		"searchTerms": [],
+		"title": "Crime Wave"
+	},
+	{
+		"altTitles": [],
+		"artist": "Sampling Masters MEGA",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf939fd3ebe1fa01",
+		"legacySongID": 32,
+		"searchTerms": [],
+		"title": "Avant Raze"
+	},
+	{
+		"altTitles": [],
+		"artist": "かめりあ(EDP)",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf939fd4f24fda8b",
+		"legacySongID": 33,
+		"searchTerms": ["Color Code"],
+		"title": "#1f1e33"
+	},
+	{
+		"altTitles": [],
+		"artist": "Feryquitous",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf939fd557348d82",
+		"legacySongID": 34,
+		"searchTerms": [],
+		"title": "Arcahv"
+	},
+	{
+		"altTitles": [],
+		"artist": "REDALiCE vs USAO",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf939fd657bac8a4",
+		"legacySongID": 35,
+		"searchTerms": ["SAIKYO STRONGER"],
+		"title": "最強STRONGER"
+	},
+	{
+		"altTitles": [],
+		"artist": "Laur",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf939fd7a9c0c853",
+		"legacySongID": 36,
+		"searchTerms": [],
+		"title": "Sheriruth (Laur Remix)"
+	},
+	{
+		"altTitles": [],
+		"artist": "nitro (lowiro)",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf939fd8b92f50f9",
+		"legacySongID": 37,
+		"searchTerms": [],
+		"title": "Let you DIVE! (nitro rmx)"
+	},
+	{
+		"altTitles": [],
+		"artist": "Noizenecio",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf939fd9126c0ade",
+		"legacySongID": 38,
+		"searchTerms": [],
+		"title": "Machinery of Avoid"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf939fda2b69a19d",
+		"legacySongID": 39,
+		"searchTerms": [],
+		"title": "Datamania (tpz Overheat Remix)"
+	},
+	{
+		"altTitles": [],
+		"artist": "USAO & DJ Genki feat. ルーン(CV:河瀬茉希)",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf939fdbb2fd267b",
+		"legacySongID": 40,
+		"searchTerms": ["Ouverture"],
+		"title": "Ouvertüre"
+	},
+	{
+		"altTitles": [],
+		"artist": "EmoCosine",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf939fdc953ed092",
+		"legacySongID": 41,
+		"searchTerms": [],
+		"title": "Love Kills U"
+	},
+	{
+		"altTitles": [],
+		"artist": "モリモリあつし",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf939fdd23817e61",
+		"legacySongID": 42,
+		"searchTerms": [],
+		"title": "YOG"
+	},
+	{
+		"altTitles": [],
+		"artist": "KO3 & Relect",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf939fdeeae83f38",
+		"legacySongID": 43,
+		"searchTerms": [],
+		"title": "Kira☆Kira☆Night"
+	},
+	{
+		"altTitles": [],
+		"artist": "Massive New Krew",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf939fdf4cf77afa",
+		"legacySongID": 44,
+		"searchTerms": ["Cho MANJI Rush"],
+		"title": "超MANJIラッシュ"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Noriken",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf939fe0d9e5e3c1",
+		"legacySongID": 45,
+		"searchTerms": [],
+		"title": "Meta-Mysteria"
+	},
+	{
+		"altTitles": [],
+		"artist": "ARuFa",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf939fe1d78f78cf",
+		"legacySongID": 46,
+		"searchTerms": ["Samsara!"],
+		"title": "さんさーら！"
+	},
+	{
+		"altTitles": [],
+		"artist": "P*Light",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf939fe2166916a5",
+		"legacySongID": 47,
+		"searchTerms": [],
+		"title": "EVE"
+	},
+	{
+		"altTitles": [],
+		"artist": "Kobaryo",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf939fe3a4405b86",
+		"legacySongID": 48,
+		"searchTerms": [],
+		"title": "Eternal Ending"
+	},
+	{
+		"altTitles": [],
+		"artist": "Yooh",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf939fe4d5bcf2ef",
+		"legacySongID": 49,
+		"searchTerms": [],
+		"title": "Lost Illusion"
+	},
+	{
+		"altTitles": [],
+		"artist": "\"漆黒\"の堕天使《Gram》†Versus† \"聖刻\"の熾天使《Gram》",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf939fe54aad2bfa",
+		"legacySongID": 50,
+		"searchTerms": [],
+		"title": "eden"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite VS 削除",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf939fe621f9e6e4",
+		"legacySongID": 51,
+		"searchTerms": [],
+		"title": "Silentphobia"
+	},
+	{
+		"altTitles": [],
+		"artist": "「アズールレーン」より",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf939fe712012ed4",
+		"legacySongID": 52,
+		"searchTerms": ["Solomon Night"],
+		"title": "ソロモン・ナイト"
+	},
+	{
+		"altTitles": [],
+		"artist": "Polaris「アズールレーン」より",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf939fe87201a8b1",
+		"legacySongID": 53,
+		"searchTerms": ["coeur"],
+		"title": "cœur"
+	},
+	{
+		"altTitles": [],
+		"artist": "サンディエゴ（CV:伊藤あすか）「アズールレーン」より",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf939fe987e583f8",
+		"legacySongID": 54,
+		"searchTerms": ["Watashi wa No 1!"],
+		"title": "私はNo 1！"
+	},
+	{
+		"altTitles": [],
+		"artist": "YUC'e",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf939fea4de1da28",
+		"legacySongID": 55,
+		"searchTerms": [],
+		"title": "Night Club Junkie"
+	},
+	{
+		"altTitles": [],
+		"artist": "HiTECH NINJA",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf939feb4dac5717",
+		"legacySongID": 56,
+		"searchTerms": [],
+		"title": "Cauliflower"
+	},
+	{
+		"altTitles": [],
+		"artist": "Mameyudoufu",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf939fec9b5a79a5",
+		"legacySongID": 57,
+		"searchTerms": [],
+		"title": "Purple Skies"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf939fed30cdbdad",
+		"legacySongID": 58,
+		"searchTerms": ["Yake-ni in the Rain feat. Kobayashi Watashi"],
+		"title": "やけにインザレイン feat. 小林私"
+	},
+	{
+		"altTitles": [],
+		"artist": "かめりあ vs DJ Genki",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf939feecabc9e09",
+		"legacySongID": 59,
+		"searchTerms": [],
+		"title": "Traveller feat.moimoi"
+	},
+	{
+		"altTitles": [],
+		"artist": "Getty",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf939fef32dba3da",
+		"legacySongID": 60,
+		"searchTerms": ["FLASH OUT"],
+		"title": "FLVSH OUT"
+	},
+	{
+		"altTitles": [],
+		"artist": "Massive New Krew",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf939ff0383d48c5",
+		"legacySongID": 61,
+		"searchTerms": [],
+		"title": "BSCS"
+	},
+	{
+		"altTitles": [],
+		"artist": "Happy Around!＆Peaky P-key 「D4DJ Groovy Mix」より",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf939ff12c26c03e",
+		"legacySongID": 62,
+		"searchTerms": [],
+		"title": "LOVE!HUG!GROOVY!!"
+	},
+	{
+		"altTitles": [],
+		"artist": "Happy Around! feat. KYOKO & SAKI 「D4DJ Groovy Mix」より",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf939ff2cfaba71a",
+		"legacySongID": 63,
+		"searchTerms": ["Guru-guru DJ TURN!!"],
+		"title": "ぐるぐるDJ TURN!!"
+	},
+	{
+		"altTitles": [],
+		"artist": "Happy Around! 「D4DJ Groovy Mix」より",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf939ff38433a887",
+		"legacySongID": 64,
+		"searchTerms": [],
+		"title": "Dig Delight!"
+	},
+	{
+		"altTitles": [],
+		"artist": "Peaky P-key 「D4DJ Groovy Mix」より",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf939ff4a3cecc50",
+		"legacySongID": 65,
+		"searchTerms": ["Denran Countdown"],
+		"title": "電乱★カウントダウン"
+	},
+	{
+		"altTitles": [],
+		"artist": "Photon Maiden 「D4DJ Groovy Mix」より",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf939ff59e816e8b",
+		"legacySongID": 66,
+		"searchTerms": [],
+		"title": "Photon Melodies"
+	},
+	{
+		"altTitles": [],
+		"artist": "SYNC.ART'S feat. 美里",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf939ff62c2f6bc2",
+		"legacySongID": 67,
+		"searchTerms": ["Epikouros no Niji wa Mou Mienai"],
+		"title": "エピクロスの虹はもう見えない"
+	},
+	{
+		"altTitles": [],
+		"artist": "森羅万象",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf939ff713e3ee6e",
+		"legacySongID": 68,
+		"searchTerms": ["Cirno wa Kakusei Summer Days!"],
+		"title": "チルノは覚醒サマーデイズ！"
+	},
+	{
+		"altTitles": [],
+		"artist": "koutaq",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf939ff8b825970d",
+		"legacySongID": 69,
+		"searchTerms": ["Yo-jigen Chouyaku Kikan"],
+		"title": "四次元跳躍機関"
+	},
+	{
+		"altTitles": [],
+		"artist": "Masayoshi Minoshima(Alstroemeria Records)",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf939ff938795c2d",
+		"legacySongID": 70,
+		"searchTerms": [],
+		"title": "ARROW RAIN feat.ayame"
+	},
+	{
+		"altTitles": [],
+		"artist": "Kobaryo",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf939ffa148c75a3",
+		"legacySongID": 71,
+		"searchTerms": [],
+		"title": "Destructive Little Sister"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Myosuke & aran",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf939ffb4a1e76e0",
+		"legacySongID": 72,
+		"searchTerms": [],
+		"title": "Madwing"
+	},
+	{
+		"altTitles": [],
+		"artist": "Lite Show Magic",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf939ffcd260b559",
+		"legacySongID": 73,
+		"searchTerms": ["TRICKLASH 220"],
+		"title": "TRICKL4SH 220"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Genki & P*Light",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf939ffd727b756d",
+		"legacySongID": 74,
+		"searchTerms": [],
+		"title": "Popping Happiness!"
+	},
+	{
+		"altTitles": [],
+		"artist": "削除 feat Nikki Simmons",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf939ffeec5e2bbf",
+		"legacySongID": 75,
+		"searchTerms": ["Destroyer"],
+		"title": "Destr0yer"
+	},
+	{
+		"altTitles": [],
+		"artist": "LeaF",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf939fff6d9c9a53",
+		"legacySongID": 76,
+		"searchTerms": ["Mope-mope"],
+		"title": "もぺもぺ"
+	},
+	{
+		"altTitles": [],
+		"artist": "モリモリあつし",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0002735507f",
+		"legacySongID": 77,
+		"searchTerms": [],
+		"title": "PUPA"
+	},
+	{
+		"altTitles": [],
+		"artist": "Halozy",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a001c1f27ae3",
+		"legacySongID": 78,
+		"searchTerms": ["Monosugoi Ikioi de Keine ga Monosugoi Uta"],
+		"title": "物凄い勢いでけーねが物凄いうた"
+	},
+	{
+		"altTitles": [],
+		"artist": "ARM＋夕野ヨシミ (IOSYS) feat. miko",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a0026f4a3441",
+		"legacySongID": 79,
+		"searchTerms": ["Kanbu de Tomatte Sugu Tokeru - Kyouki no Udongein"],
+		"title": "患部で止まってすぐ溶ける ～ 狂気の優曇華院"
+	},
+	{
+		"altTitles": [],
+		"artist": "みきとP",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a00397bd36c1",
+		"legacySongID": 80,
+		"searchTerms": ["Barerii-ko"],
+		"title": "バレリーコ"
+	},
+	{
+		"altTitles": [],
+		"artist": "ぬゆり",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0045ecf61b8",
+		"legacySongID": 81,
+		"searchTerms": ["Fixer"],
+		"title": "フィクサー"
+	},
+	{
+		"altTitles": [],
+		"artist": "すりぃ feat.鏡音レン",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a005b6a9b19c",
+		"legacySongID": 82,
+		"searchTerms": ["Telecaster B-Boy"],
+		"title": "テレキャスタービーボーイ"
+	},
+	{
+		"altTitles": [],
+		"artist": "ユリイ・カノン feat.GUMI",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0066d37bbef",
+		"legacySongID": 83,
+		"searchTerms": ["Dareka no Shinzou ni Nareta Nara"],
+		"title": "だれかの心臓になれたなら"
+	},
+	{
+		"altTitles": [],
+		"artist": "綾瀬理恵",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0077533bb4e",
+		"legacySongID": 84,
+		"searchTerms": ["Hi Jitsuzaikei Joshi Tachi wa Dousurya Iidesuka?"],
+		"title": "非実在系女子たちはどうすりゃいいですか？"
+	},
+	{
+		"altTitles": [],
+		"artist": "鹿乃と宇崎ちゃん",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0082abd65dc",
+		"legacySongID": 85,
+		"searchTerms": ["Nadame Sukashi Negotiation"],
+		"title": "なだめスかし Negotiation"
+	},
+	{
+		"altTitles": [],
+		"artist": "fripSide",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0098fa67250",
+		"legacySongID": 86,
+		"searchTerms": [],
+		"title": "sister's noise"
+	},
+	{
+		"altTitles": [],
+		"artist": "まふまふ",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a00a87cf0499",
+		"legacySongID": 87,
+		"searchTerms": ["Sacrifice"],
+		"title": "サクリファイス"
+	},
+	{
+		"altTitles": [],
+		"artist": "kemu",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a00cb0366976",
+		"legacySongID": 88,
+		"searchTerms": ["Rokucho-nen to ichiya monogatari"],
+		"title": "六兆年と一夜物語"
+	},
+	{
+		"altTitles": [],
+		"artist": "A-One",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a00d00004e25",
+		"legacySongID": 89,
+		"searchTerms": [],
+		"title": "Scream out!"
+	},
+	{
+		"altTitles": [],
+		"artist": "宝鐘マリン with ホロイズムファンタジー",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a00eebe4dcdd",
+		"legacySongID": 90,
+		"searchTerms": ["Hoi-hoi Gensou Holo-ism"],
+		"title": "ホイホイ☆幻想ホロイズム"
+	},
+	{
+		"altTitles": [],
+		"artist": "Maozon ｢Lanota｣より",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a00f8569528a",
+		"legacySongID": 91,
+		"searchTerms": [],
+		"title": "Stasis"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite ｢Lanota｣より",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a010295e1073",
+		"legacySongID": 92,
+		"searchTerms": [],
+		"title": "You are the Miserable"
+	},
+	{
+		"altTitles": [],
+		"artist": "Kamome sano ｢Lanota｣より",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a01134fb9a1e",
+		"legacySongID": 93,
+		"searchTerms": [],
+		"title": "Rainmaker"
+	},
+	{
+		"altTitles": [],
+		"artist": "アリスシャッハと魔法の楽団 ｢Lanota｣より",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0122506bc0f",
+		"legacySongID": 94,
+		"searchTerms": [],
+		"title": "Apocalypse"
+	},
+	{
+		"altTitles": [],
+		"artist": "ユアミトス ｢Lanota｣より",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0134478293e",
+		"legacySongID": 95,
+		"searchTerms": [],
+		"title": "Weg"
+	},
+	{
+		"altTitles": [],
+		"artist": "EmoCosine",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0145a04c6ff",
+		"legacySongID": 96,
+		"searchTerms": [],
+		"title": "MAGENTA POTION"
+	},
+	{
+		"altTitles": [],
+		"artist": "ARM(IOSYS)",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a015d8858ec9",
+		"legacySongID": 97,
+		"searchTerms": ["Shinchoku WARS feat. Beat Mario"],
+		"title": "進捗WARS feat．ビートまりお"
+	},
+	{
+		"altTitles": [],
+		"artist": "Laur",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0161922cfae",
+		"legacySongID": 98,
+		"searchTerms": [],
+		"title": "ATAMA WARUI"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Myosuke",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a017c782d089",
+		"legacySongID": 99,
+		"searchTerms": [],
+		"title": "Megaton Killer"
+	},
+	{
+		"altTitles": [],
+		"artist": "Feryquitous",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a01845c0e0d3",
+		"legacySongID": 100,
+		"searchTerms": [],
+		"title": "Lhaksha"
+	},
+	{
+		"altTitles": [],
+		"artist": "sasakure.UK",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a019a29271da",
+		"legacySongID": 101,
+		"searchTerms": [],
+		"title": "LIN NE KRO NE feat. lasah"
+	},
+	{
+		"altTitles": [],
+		"artist": "REDALiCE",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a01a39d65ec9",
+		"legacySongID": 102,
+		"searchTerms": [],
+		"title": "SHAKE!"
+	},
+	{
+		"altTitles": [],
+		"artist": "Srav3R vs Getty",
+		"data": {
+			"displayVersion": "lilyr",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a01b938c6c4d",
+		"legacySongID": 103,
+		"searchTerms": [],
+		"title": "DUAL BREAKER XX"
+	},
+	{
+		"altTitles": [],
+		"artist": "Zekk",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a01c98004ea8",
+		"legacySongID": 104,
+		"searchTerms": ["Free Fall"],
+		"title": "フリーフォール"
+	},
+	{
+		"altTitles": [],
+		"artist": "かねこちはる",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a01ded39dd65",
+		"legacySongID": 105,
+		"searchTerms": ["Neko Musume"],
+		"title": "猫娘"
+	},
+	{
+		"altTitles": [],
+		"artist": "Laur",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a01ea1eb1aa7",
+		"legacySongID": 106,
+		"searchTerms": [],
+		"title": "Animosity"
+	},
+	{
+		"altTitles": [],
+		"artist": "USAO",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a01f240ab0e6",
+		"legacySongID": 107,
+		"searchTerms": [],
+		"title": "Liberate"
+	},
+	{
+		"altTitles": [],
+		"artist": "Massive New Krew",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a0200bda564a",
+		"legacySongID": 108,
+		"searchTerms": [],
+		"title": "Big Bang"
+	},
+	{
+		"altTitles": [],
+		"artist": "YUC'e",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a021db6a752f",
+		"legacySongID": 109,
+		"searchTerms": ["Future Candy"],
+		"title": "Future Cαndy"
+	},
+	{
+		"altTitles": [],
+		"artist": "Neko Hacker",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a022d857ad2a",
+		"legacySongID": 110,
+		"searchTerms": [],
+		"title": "From Zero feat. 利香"
+	},
+	{
+		"altTitles": [],
+		"artist": "KOTONOHOUSE",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a02340a21c2d",
+		"legacySongID": 111,
+		"searchTerms": [],
+		"title": "PRESS START!"
+	},
+	{
+		"altTitles": [],
+		"artist": "Pa's Lam System",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a024b16263e2",
+		"legacySongID": 112,
+		"searchTerms": [],
+		"title": "TWISTSTEP"
+	},
+	{
+		"altTitles": [],
+		"artist": "sasakure. UK",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0252f7b6aff",
+		"legacySongID": 113,
+		"searchTerms": ["Bokurano 16bit Sensou"],
+		"title": "ぼくらの16bit戦争"
+	},
+	{
+		"altTitles": [],
+		"artist": "supercell",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0262807f064",
+		"legacySongID": 114,
+		"searchTerms": ["World is Mine"],
+		"title": "ワールドイズマイン"
+	},
+	{
+		"altTitles": [],
+		"artist": "オワタP",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a027ab3f31d3",
+		"legacySongID": 115,
+		"searchTerms": ["Shinchoku Doudesu-ka!"],
+		"title": "進捗どうですか！"
+	},
+	{
+		"altTitles": [],
+		"artist": "ろひ",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a028138bcb0a",
+		"legacySongID": 116,
+		"searchTerms": ["Kakuzetsu Thanatos"],
+		"title": "隔絶≡タナトス"
+	},
+	{
+		"altTitles": [],
+		"artist": "aran & Kobaryo",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a029f09b9a54",
+		"legacySongID": 117,
+		"searchTerms": ["Hageshi kono yoru -Psylent Crazy Night-"],
+		"title": "はげしこの夜 -Psylent Crazy Night-"
+	},
+	{
+		"altTitles": [],
+		"artist": "P*Light",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a02af0ba3117",
+		"legacySongID": 118,
+		"searchTerms": ["Koi Metal"],
+		"title": "恋メタル"
+	},
+	{
+		"altTitles": [],
+		"artist": "group_inou",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a02ba732623c",
+		"legacySongID": 119,
+		"searchTerms": [],
+		"title": "THERAPY"
+	},
+	{
+		"altTitles": [],
+		"artist": "ミュージカル『テニスの王子様』3rdシーズン",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "2.5次元"
+		},
+		"id": "S19ccf93a02c01623ed9",
+		"legacySongID": 120,
+		"searchTerms": ["Shakariki Fight Bun-bun"],
+		"title": "シャカリキ・ファイト・ブンブン"
+	},
+	{
+		"altTitles": [],
+		"artist": "野猿",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a02d0dbb479d",
+		"legacySongID": 121,
+		"searchTerms": [],
+		"title": "Fish Fight!"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Noriken vs MASAKI",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a02efdd55dca",
+		"legacySongID": 122,
+		"searchTerms": ["QiXiN MADNESS 2153"],
+		"title": "QiXiN MAdN3ss 2153"
+	},
+	{
+		"altTitles": [],
+		"artist": "E.G.G. 「グルーヴコースター」より",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a02ffed37ffc",
+		"legacySongID": 123,
+		"searchTerms": [],
+		"title": "Got more raves?"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite 「グルーヴコースター」より",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a030f1f2581d",
+		"legacySongID": 124,
+		"searchTerms": [],
+		"title": "Good Night, Bad Luck."
+	},
+	{
+		"altTitles": [],
+		"artist": "ビートまりお＋あまね 「グルーヴコースター」より",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a03115f16240",
+		"legacySongID": 125,
+		"searchTerms": ["Groove the Heart"],
+		"title": "グルーヴ・ザ・ハート"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Genki",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a0329b3f2d28",
+		"legacySongID": 126,
+		"searchTerms": ["Panic Pop Festival!!!"],
+		"title": "パニックポップ☆フェスティバル!!!"
+	},
+	{
+		"altTitles": [],
+		"artist": "aran & lapix",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a033545db7f2",
+		"legacySongID": 127,
+		"searchTerms": [],
+		"title": "KALACAKLA"
+	},
+	{
+		"altTitles": [],
+		"artist": "Srav3R",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0346c2b0647",
+		"legacySongID": 128,
+		"searchTerms": ["RAVEGIRL"],
+		"title": "RAV#GIRL"
+	},
+	{
+		"altTitles": [],
+		"artist": "源屋",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a03580422573",
+		"legacySongID": 129,
+		"searchTerms": [],
+		"title": "Stasis feat.motoko -WACCA EDiT-"
+	},
+	{
+		"altTitles": [],
+		"artist": "REDALiCE feat. 兎田ぺこら&さくらみこ",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a036d561410e",
+		"legacySongID": 130,
+		"searchTerms": ["Peko Miko Daisensou!!"],
+		"title": "ぺこみこ大戦争！！"
+	},
+	{
+		"altTitles": [],
+		"artist": "白上フブキ",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0377d3fdb54",
+		"legacySongID": 131,
+		"searchTerms": ["Say! Fanfare!"],
+		"title": "Say!ファンファーレ!"
+	},
+	{
+		"altTitles": [],
+		"artist": "星街すいせい",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a038853dcf24",
+		"legacySongID": 132,
+		"searchTerms": [],
+		"title": "NEXT COLOR PLANET"
+	},
+	{
+		"altTitles": [],
+		"artist": "hololive IDOL PROJECT",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a03970cbb884",
+		"legacySongID": 133,
+		"searchTerms": ["Yumemiru sora e"],
+		"title": "夢見る空へ"
+	},
+	{
+		"altTitles": [],
+		"artist": "紗倉ひびき(CV：ファイルーズあい)＆街雄鳴造(CV：石川界人)",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a03aa6b96c5c",
+		"legacySongID": 134,
+		"searchTerms": ["Onegai Muscle"],
+		"title": "お願いマッスル"
+	},
+	{
+		"altTitles": [],
+		"artist": "街雄鳴造（ＣＶ：石川界人）",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a03b493216f2",
+		"legacySongID": 135,
+		"searchTerms": ["Macho a Name?"],
+		"title": "マッチョアネーム？"
+	},
+	{
+		"altTitles": [],
+		"artist": "井口裕香",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a03c7d943e13",
+		"legacySongID": 136,
+		"searchTerms": [],
+		"title": "HELLO to DREAM"
+	},
+	{
+		"altTitles": [],
+		"artist": "井口裕香",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a03dd3bf8274",
+		"legacySongID": 137,
+		"searchTerms": [],
+		"title": "over and over"
+	},
+	{
+		"altTitles": [],
+		"artist": "アイズ・ヴァレンシュタイン（cv.大西沙織）",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a03e7e1aa21c",
+		"legacySongID": 138,
+		"searchTerms": ["Tropica' Vacation"],
+		"title": "トロピカッ☆バケーション"
+	},
+	{
+		"altTitles": [],
+		"artist": "REDALiCE & aran",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a03f993e0ebe",
+		"legacySongID": 139,
+		"searchTerms": [],
+		"title": "Sweet Requiem"
+	},
+	{
+		"altTitles": [],
+		"artist": "ビートまりお（COOL&CREATE）",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a040fcc42333",
+		"legacySongID": 140,
+		"searchTerms": [],
+		"title": "Help me, ERINNNNNN!!"
+	},
+	{
+		"altTitles": [],
+		"artist": "sumijun(Halozy) feat. ななひら(Confetto)",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a0418ff38190",
+		"legacySongID": 141,
+		"searchTerms": ["Shinchoku Doudesu-ka?"],
+		"title": "進捗どうですか？"
+	},
+	{
+		"altTitles": [],
+		"artist": "BlackY",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a0427470dd80",
+		"legacySongID": 142,
+		"searchTerms": [],
+		"title": "ARTEMiS"
+	},
+	{
+		"altTitles": [],
+		"artist": "Getty vs. DJ DiA",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a043bc5afad9",
+		"legacySongID": 143,
+		"searchTerms": [],
+		"title": "Grayed Out-Antifront-"
+	},
+	{
+		"altTitles": [],
+		"artist": "P*Light",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a044a4a2979c",
+		"legacySongID": 144,
+		"searchTerms": [],
+		"title": "Poppin' Shower"
+	},
+	{
+		"altTitles": [],
+		"artist": "Orangestar feat.IA",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a045bfa093d7",
+		"legacySongID": 145,
+		"searchTerms": ["Asu no Yozora Shokaihan"],
+		"title": "アスノヨゾラ哨戒班"
+	},
+	{
+		"altTitles": [],
+		"artist": "GigaReol",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0461cd102e4",
+		"legacySongID": 146,
+		"searchTerms": ["Hibikase"],
+		"title": "ヒビカセ"
+	},
+	{
+		"altTitles": [],
+		"artist": "れるりり",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a047fe800e39",
+		"legacySongID": 147,
+		"searchTerms": ["Noushou Sakuretsu Girl"],
+		"title": "脳漿炸裂ガール"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite & Massive New Krew feat. リリィ(CV:青木志貴)",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a048584ae288",
+		"legacySongID": 148,
+		"searchTerms": [],
+		"title": "with U"
+	},
+	{
+		"altTitles": [],
+		"artist": "ずっと真夜中でいいのに。",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a049f9da0ced",
+		"legacySongID": 149,
+		"searchTerms": ["Byoushin wo Kamu"],
+		"title": "秒針を噛む"
+	},
+	{
+		"altTitles": [],
+		"artist": "KANA-BOON",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a04a819e96eb",
+		"legacySongID": 150,
+		"searchTerms": ["Naimono-nedari"],
+		"title": "ないものねだり"
+	},
+	{
+		"altTitles": [],
+		"artist": "T.M.Revolution",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a04b4880c9da",
+		"legacySongID": 151,
+		"searchTerms": [],
+		"title": "HOT LIMIT"
+	},
+	{
+		"altTitles": [],
+		"artist": "ＳＰＹＡＩＲ",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a04c75a68cce",
+		"legacySongID": 152,
+		"searchTerms": [],
+		"title": "RAGE OF DUST"
+	},
+	{
+		"altTitles": [],
+		"artist": "ガヴリール(CV:富田美憂)、ヴィーネ(CV:大西沙織)、サターニャ(CV:大空直美)、ラフィエル(CV:花澤香菜)",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a04d806a3aac",
+		"legacySongID": 153,
+		"searchTerms": ["Gabriel Drop Kick"],
+		"title": "ガヴリールドロップキック"
+	},
+	{
+		"altTitles": [],
+		"artist": "鈴木このみ",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a04ebd748ccf",
+		"legacySongID": 154,
+		"searchTerms": [],
+		"title": "This game"
+	},
+	{
+		"altTitles": [],
+		"artist": "hololive IDOL PROJECT",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a04f251110ce",
+		"legacySongID": 155,
+		"searchTerms": ["Kirameki Rider"],
+		"title": "キラメキライダー☆"
+	},
+	{
+		"altTitles": [],
+		"artist": "i☆Ris",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0506c7a05f3",
+		"legacySongID": 156,
+		"searchTerms": [],
+		"title": "Make it！ (DJ Genki Remix)"
+	},
+	{
+		"altTitles": [],
+		"artist": "i☆Ris",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a051a3309104",
+		"legacySongID": 157,
+		"searchTerms": [],
+		"title": "Make it！"
+	},
+	{
+		"altTitles": [],
+		"artist": "Run Girls, Run！",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a052abcd6848",
+		"legacySongID": 158,
+		"searchTerms": ["Kira-tto Start (USAO Remix)"],
+		"title": "キラッとスタート (USAO Remix)"
+	},
+	{
+		"altTitles": [],
+		"artist": "Run Girls, Run！",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0539851ac20",
+		"legacySongID": 159,
+		"searchTerms": ["Kira-tto Start"],
+		"title": "キラッとスタート"
+	},
+	{
+		"altTitles": [],
+		"artist": "彩瀬なる（CV.加藤英美里）",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0548a74c4ae",
+		"legacySongID": 160,
+		"searchTerms": ["Heart Iro Tori Dream"],
+		"title": "ハート♥イロ♥トリドリ〜ム"
+	},
+	{
+		"altTitles": [],
+		"artist": "みきとP",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0554a89922c",
+		"legacySongID": 161,
+		"searchTerms": ["39 music!"],
+		"title": "39みゅーじっく！"
+	},
+	{
+		"altTitles": [],
+		"artist": "キノシタ(kinoshita) feat.音街ウナ・鏡音リン",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a056ca826c7f",
+		"legacySongID": 162,
+		"searchTerms": ["Positive Dance-Time"],
+		"title": "ポジティブ☆ダンスタイム"
+	},
+	{
+		"altTitles": [],
+		"artist": "八王子P × Giga",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a057ff1f72ef",
+		"legacySongID": 163,
+		"searchTerms": ["Gimme-Gimme feat. Hatsune Miku & Kagamine Rin"],
+		"title": "Gimme×Gimme feat. 初音ミク・鏡音リン"
+	},
+	{
+		"altTitles": [],
+		"artist": "日向電工",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a05841e68896",
+		"legacySongID": 164,
+		"searchTerms": ["Buriki no Dance"],
+		"title": "ブリキノダンス"
+	},
+	{
+		"altTitles": [],
+		"artist": "岸田教団&THE明星ロケッツ",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a059537dda2b",
+		"legacySongID": 165,
+		"searchTerms": ["Akeboshi Rocket"],
+		"title": "明星ロケット"
+	},
+	{
+		"altTitles": [],
+		"artist": "魂音泉",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a05a07873bca",
+		"legacySongID": 166,
+		"searchTerms": ["Yukemuri Tama-onsen II"],
+		"title": "ゆけむり魂温泉 II"
+	},
+	{
+		"altTitles": [],
+		"artist": "LeaF",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a05b89773aef",
+		"legacySongID": 167,
+		"searchTerms": [],
+		"title": "Calamity Fortune"
+	},
+	{
+		"altTitles": [],
+		"artist": "Yunomi",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a05c853659f2",
+		"legacySongID": 168,
+		"searchTerms": ["Indoor-kei nara Trackmaker"],
+		"title": "インドア系ならトラックメイカー"
+	},
+	{
+		"altTitles": [],
+		"artist": "ミュージカル『テニスの王子様』3rdシーズン",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "2.5次元"
+		},
+		"id": "S19ccf93a05db2f193bd",
+		"legacySongID": 169,
+		"searchTerms": ["New Wave"],
+		"title": "ニュー・ウェーブ"
+	},
+	{
+		"altTitles": [],
+		"artist": "REDALiCE",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a05e163d088b",
+		"legacySongID": 170,
+		"searchTerms": [],
+		"title": "ALiVE"
+	},
+	{
+		"altTitles": [],
+		"artist": "aran & Kobaryo",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a05f37e63ae4",
+		"legacySongID": 171,
+		"searchTerms": [],
+		"title": "While Shining feat.Yukacco"
+	},
+	{
+		"altTitles": [],
+		"artist": "RiraN",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a060abb17e1c",
+		"legacySongID": 172,
+		"searchTerms": [],
+		"title": "Tell Me"
+	},
+	{
+		"altTitles": [],
+		"artist": "NOMA w/ Apo11o program ft. Yuyoyuppe",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a06133e0f20d",
+		"legacySongID": 173,
+		"searchTerms": [],
+		"title": "LETHAL;WEAPON"
+	},
+	{
+		"altTitles": [],
+		"artist": "かめりあ",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a06286b16679",
+		"legacySongID": 174,
+		"searchTerms": [],
+		"title": "THE MUZZLE FACING"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite feat. ななひら",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a063afe76751",
+		"legacySongID": 175,
+		"searchTerms": [],
+		"title": "ONOMATO Pairing!!!"
+	},
+	{
+		"altTitles": [],
+		"artist": "Kobaryo feat. HiTNEX-X",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a064c6b64ab1",
+		"legacySongID": 176,
+		"searchTerms": [],
+		"title": "SUPER REACTOR"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Myosuke",
+		"data": {
+			"displayVersion": "lily",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a0656c339de0",
+		"legacySongID": 177,
+		"searchTerms": [],
+		"title": "GENOCIDER"
+	},
+	{
+		"altTitles": [],
+		"artist": "超魂團（ウルトラソウルズ）",
+		"data": {
+			"displayVersion": "s",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0666517fe1e",
+		"legacySongID": 178,
+		"searchTerms": [],
+		"title": "WHITE"
+	},
+	{
+		"altTitles": [],
+		"artist": "崎山つばさ",
+		"data": {
+			"displayVersion": "s",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0674a274458",
+		"legacySongID": 179,
+		"searchTerms": ["Dancing Samurai"],
+		"title": "ダンシング☆サムライ"
+	},
+	{
+		"altTitles": [],
+		"artist": "ナナヲアカリ",
+		"data": {
+			"displayVersion": "s",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0683edc0e26",
+		"legacySongID": 180,
+		"searchTerms": ["Da Da Da Da-tenshi"],
+		"title": "ダダダダ天使"
+	},
+	{
+		"altTitles": [],
+		"artist": "Lia",
+		"data": {
+			"displayVersion": "s",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a069218057d1",
+		"legacySongID": 181,
+		"searchTerms": [],
+		"title": "Bravely You"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Noriken",
+		"data": {
+			"displayVersion": "s",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a06a2cbaf5c2",
+		"legacySongID": 182,
+		"searchTerms": ["MAGiCALGiRL MEGA STRiKE!"],
+		"title": "MAGiC4LG1RL M3GA S7R1KE!"
+	},
+	{
+		"altTitles": [],
+		"artist": "Laur",
+		"data": {
+			"displayVersion": "s",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a06b4ee9c26d",
+		"legacySongID": 183,
+		"searchTerms": [],
+		"title": "Metamorphose"
+	},
+	{
+		"altTitles": [],
+		"artist": "Getty",
+		"data": {
+			"displayVersion": "s",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a06c163bc3e8",
+		"legacySongID": 184,
+		"searchTerms": [],
+		"title": "METEOR BURST"
+	},
+	{
+		"altTitles": [],
+		"artist": "REDALiCE & cosMo＠暴走P",
+		"data": {
+			"displayVersion": "s",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a06df064f482",
+		"legacySongID": 185,
+		"searchTerms": ["Tenshi Korin"],
+		"title": "天使光輪"
+	},
+	{
+		"altTitles": [],
+		"artist": "USAO",
+		"data": {
+			"displayVersion": "s",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a06eb612796c",
+		"legacySongID": 186,
+		"searchTerms": [],
+		"title": "XTREME"
+	},
+	{
+		"altTitles": [],
+		"artist": "C-Show",
+		"data": {
+			"displayVersion": "s",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a06f250d9c3d",
+		"legacySongID": 187,
+		"searchTerms": ["Tour Final"],
+		"title": "ツアー・ファイナル"
+	},
+	{
+		"altTitles": [],
+		"artist": "cosMo@暴走P",
+		"data": {
+			"displayVersion": "s",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a07028cdb240",
+		"legacySongID": 188,
+		"searchTerms": ["Real Hatsune Miku no Shoushitsu"],
+		"title": "リアル初音ミクの消失"
+	},
+	{
+		"altTitles": [],
+		"artist": "かいりきベア",
+		"data": {
+			"displayVersion": "s",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a071247e54d4",
+		"legacySongID": 189,
+		"searchTerms": ["Venom"],
+		"title": "ベノム"
+	},
+	{
+		"altTitles": [],
+		"artist": "ピノキオピー",
+		"data": {
+			"displayVersion": "s",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a072841b18ea",
+		"legacySongID": 190,
+		"searchTerms": ["Obake no Uke-nerai"],
+		"title": "おばけのウケねらい"
+	},
+	{
+		"altTitles": [],
+		"artist": "和田たけあき(くらげP)",
+		"data": {
+			"displayVersion": "s",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0731bc274ca",
+		"legacySongID": 191,
+		"searchTerms": ["Chururira Chururira Da-da-da!"],
+		"title": "チュルリラ・チュルリラ・ダッダッダ！"
+	},
+	{
+		"altTitles": [],
+		"artist": "ブレンド・A",
+		"data": {
+			"displayVersion": "s",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0746264f78a",
+		"legacySongID": 192,
+		"searchTerms": ["DETARAME NA minus TO plus NI OKERU blend KO"],
+		"title": "デタラメなマイナスとプラスにおけるブレンド考"
+	},
+	{
+		"altTitles": [],
+		"artist": "ブレンド・A",
+		"data": {
+			"displayVersion": "s",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a07501555bcc",
+		"legacySongID": 193,
+		"searchTerms": ["Bon Appetit S"],
+		"title": "ぼなぺてぃーと♡S"
+	},
+	{
+		"altTitles": [],
+		"artist": "ミュージカル『テニスの王子様』3rdシーズン",
+		"data": {
+			"displayVersion": "s",
+			"genre": "2.5次元"
+		},
+		"id": "S19ccf93a076a31accc9",
+		"legacySongID": 194,
+		"searchTerms": [],
+		"title": "STILL HOT IN MY HEART"
+	},
+	{
+		"altTitles": [],
+		"artist": "ミュージカル『テニスの王子様』3rdシーズン",
+		"data": {
+			"displayVersion": "s",
+			"genre": "2.5次元"
+		},
+		"id": "S19ccf93a077f6d9718d",
+		"legacySongID": 195,
+		"searchTerms": ["Smile and Tears"],
+		"title": "スマイル・アンド・ティアズ"
+	},
+	{
+		"altTitles": [],
+		"artist": "ミュージカル『テニスの王子様』3rdシーズン",
+		"data": {
+			"displayVersion": "s",
+			"genre": "2.5次元"
+		},
+		"id": "S19ccf93a0783333e1bd",
+		"legacySongID": 196,
+		"searchTerms": ["Gan-gan Don-don"],
+		"title": "ガンガン・ドンドン"
+	},
+	{
+		"altTitles": [],
+		"artist": "NOMA",
+		"data": {
+			"displayVersion": "s",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a07988200bb6",
+		"legacySongID": 197,
+		"searchTerms": [],
+		"title": "Brain Power"
+	},
+	{
+		"altTitles": [],
+		"artist": "REDALiCE & Hommarju",
+		"data": {
+			"displayVersion": "s",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a07aee87045b",
+		"legacySongID": 198,
+		"searchTerms": [],
+		"title": "Ultra Red"
+	},
+	{
+		"altTitles": [],
+		"artist": "葛西ハーコーズ",
+		"data": {
+			"displayVersion": "s",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a07b841d4e48",
+		"legacySongID": 199,
+		"searchTerms": ["Cycle Hit"],
+		"title": "サイクルヒット"
+	},
+	{
+		"altTitles": [],
+		"artist": "世阿弥 「グルーヴコースター」より",
+		"data": {
+			"displayVersion": "s",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a07c059a5dd2",
+		"legacySongID": 200,
+		"searchTerms": ["Seija no Kodo"],
+		"title": "聖者の鼓動"
+	},
+	{
+		"altTitles": [],
+		"artist": "REDALiCE vs MASAKI 「グルーヴコースター」より",
+		"data": {
+			"displayVersion": "s",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a07df5458315",
+		"legacySongID": 201,
+		"searchTerms": [],
+		"title": "BUCHiGiRE Berserker"
+	},
+	{
+		"altTitles": [],
+		"artist": "COSIO (ZUNTATA) 「グルーヴコースター」より",
+		"data": {
+			"displayVersion": "s",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a07e26030754",
+		"legacySongID": 202,
+		"searchTerms": [],
+		"title": "FUJIN Rumble"
+	},
+	{
+		"altTitles": [],
+		"artist": "セイネ (CV: 河上英里子) 「グルーヴコースター」より",
+		"data": {
+			"displayVersion": "s",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a07fd39bd968",
+		"legacySongID": 203,
+		"searchTerms": ["Kimi no Starlight Road"],
+		"title": "君のStarlight Road"
+	},
+	{
+		"altTitles": [],
+		"artist": "PSYQUI",
+		"data": {
+			"displayVersion": "s",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a08071b2bb3c",
+		"legacySongID": 204,
+		"searchTerms": [],
+		"title": "Eyes on me feat. Such"
+	},
+	{
+		"altTitles": [],
+		"artist": "EBIMAYO",
+		"data": {
+			"displayVersion": "s",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a08172337f82",
+		"legacySongID": 205,
+		"searchTerms": [],
+		"title": "GOODWORLD"
+	},
+	{
+		"altTitles": [],
+		"artist": "削除",
+		"data": {
+			"displayVersion": "s",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0827356feed",
+		"legacySongID": 206,
+		"searchTerms": [],
+		"title": "Altale"
+	},
+	{
+		"altTitles": [],
+		"artist": "まふまふ",
+		"data": {
+			"displayVersion": "s",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a08395362142",
+		"legacySongID": 207,
+		"searchTerms": ["Rinne-tensho"],
+		"title": "輪廻転生"
+	},
+	{
+		"altTitles": [],
+		"artist": "岸田教団&THE明星ロケッツ",
+		"data": {
+			"displayVersion": "s",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a084e4f4ce44",
+		"legacySongID": 208,
+		"searchTerms": ["Strike the blood"],
+		"title": "ストライク・ザ・ブラッド"
+	},
+	{
+		"altTitles": [],
+		"artist": "Laur",
+		"data": {
+			"displayVersion": "s",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a08511e77e13",
+		"legacySongID": 209,
+		"searchTerms": [],
+		"title": "Strange Bar"
+	},
+	{
+		"altTitles": [],
+		"artist": "onoken",
+		"data": {
+			"displayVersion": "s",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a0862e9bb9a8",
+		"legacySongID": 210,
+		"searchTerms": [],
+		"title": "GASHATT"
+	},
+	{
+		"altTitles": [],
+		"artist": "豚乙女",
+		"data": {
+			"displayVersion": "s",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a087bac4fe37",
+		"legacySongID": 211,
+		"searchTerms": ["Kaze ni Noseta Negai"],
+		"title": "風に乗せた願い"
+	},
+	{
+		"altTitles": [],
+		"artist": "暁Records",
+		"data": {
+			"displayVersion": "s",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a088ef735e68",
+		"legacySongID": 212,
+		"searchTerms": [],
+		"title": "LOVE EAST"
+	},
+	{
+		"altTitles": [],
+		"artist": "Silver Forest",
+		"data": {
+			"displayVersion": "s",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a08907e27e69",
+		"legacySongID": 213,
+		"searchTerms": ["Kero 9 Destiny"],
+		"title": "ケロ⑨Destiny"
+	},
+	{
+		"altTitles": [],
+		"artist": "魂音泉",
+		"data": {
+			"displayVersion": "s",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a08a37bdfe76",
+		"legacySongID": 214,
+		"searchTerms": ["Tengu no Otoshi-bumi feat. ytr"],
+		"title": "天狗の落とし文 feat. ytr"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite",
+		"data": {
+			"displayVersion": "s",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a08b2cfe4765",
+		"legacySongID": 215,
+		"searchTerms": ["Shinjaku"],
+		"title": "神寂"
+	},
+	{
+		"altTitles": [],
+		"artist": "164",
+		"data": {
+			"displayVersion": "s",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a08c4e79c4fe",
+		"legacySongID": 216,
+		"searchTerms": ["Amanojaku"],
+		"title": "天ノ弱"
+	},
+	{
+		"altTitles": [],
+		"artist": "Last Note.",
+		"data": {
+			"displayVersion": "s",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a08d7cc4dae9",
+		"legacySongID": 217,
+		"searchTerms": ["Setsuna Trip"],
+		"title": "セツナトリップ"
+	},
+	{
+		"altTitles": [],
+		"artist": "じん(自然の敵P)",
+		"data": {
+			"displayVersion": "s",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a08e7d9f0cfd",
+		"legacySongID": 218,
+		"searchTerms": ["Kagerou Daze"],
+		"title": "カゲロウデイズ"
+	},
+	{
+		"altTitles": [],
+		"artist": "サカナクション",
+		"data": {
+			"displayVersion": "s",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a08f4a862867",
+		"legacySongID": 219,
+		"searchTerms": ["Shin Takarajima"],
+		"title": "新宝島"
+	},
+	{
+		"altTitles": [],
+		"artist": "DA PUMP",
+		"data": {
+			"displayVersion": "s",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a09083e4c463",
+		"legacySongID": 220,
+		"searchTerms": [],
+		"title": "U.S.A."
+	},
+	{
+		"altTitles": [],
+		"artist": "AZKi",
+		"data": {
+			"displayVersion": "s",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a091e5bb345a",
+		"legacySongID": 221,
+		"searchTerms": [],
+		"title": "without U"
+	},
+	{
+		"altTitles": [],
+		"artist": "ときのそら",
+		"data": {
+			"displayVersion": "s",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a092711d4313",
+		"legacySongID": 222,
+		"searchTerms": [],
+		"title": "Dream☆Story"
+	},
+	{
+		"altTitles": [],
+		"artist": "hololive IDOL PROJECT",
+		"data": {
+			"displayVersion": "s",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a093b6c19ef3",
+		"legacySongID": 223,
+		"searchTerms": [],
+		"title": "Shiny Smily Story"
+	},
+	{
+		"altTitles": [],
+		"artist": "かめりあ feat. ななひら",
+		"data": {
+			"displayVersion": "s",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0942fb2f9cb",
+		"legacySongID": 224,
+		"searchTerms": ["Bassline Yatteru? w", "Can I Friend You On Bassbook? Lol"],
+		"title": "ベースラインやってる？笑"
+	},
+	{
+		"altTitles": [],
+		"artist": "E.G.G. a.k.a. COSIO",
+		"data": {
+			"displayVersion": "s",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a095fc3f73c3",
+		"legacySongID": 225,
+		"searchTerms": [],
+		"title": "EU over Progress"
+	},
+	{
+		"altTitles": [],
+		"artist": "バルーン",
+		"data": {
+			"displayVersion": "s",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a096d1497609",
+		"legacySongID": 226,
+		"searchTerms": ["Charles"],
+		"title": "シャルル"
+	},
+	{
+		"altTitles": [],
+		"artist": "aran",
+		"data": {
+			"displayVersion": "s",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a097d35eab9c",
+		"legacySongID": 227,
+		"searchTerms": [],
+		"title": "Mazy Metroplex"
+	},
+	{
+		"altTitles": [],
+		"artist": "Kobaryo",
+		"data": {
+			"displayVersion": "s",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a09825c81e78",
+		"legacySongID": 228,
+		"searchTerms": [],
+		"title": "†DOOF†SENC†"
+	},
+	{
+		"altTitles": [],
+		"artist": "Eve",
+		"data": {
+			"displayVersion": "s",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0996710c101",
+		"legacySongID": 229,
+		"searchTerms": ["Dramaturgy"],
+		"title": "ドラマツルギー"
+	},
+	{
+		"altTitles": [],
+		"artist": "DECO*27",
+		"data": {
+			"displayVersion": "s",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a09a17e46c67",
+		"legacySongID": 230,
+		"searchTerms": ["Ghost Rule"],
+		"title": "ゴーストルール"
+	},
+	{
+		"altTitles": [],
+		"artist": "森羅万象",
+		"data": {
+			"displayVersion": "s",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a09b9ab982a0",
+		"legacySongID": 231,
+		"searchTerms": ["Itazura Sensation"],
+		"title": "悪戯センセーション"
+	},
+	{
+		"altTitles": [],
+		"artist": "フレデリック",
+		"data": {
+			"displayVersion": "s",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a09c3bce5461",
+		"legacySongID": 232,
+		"searchTerms": ["OddLoop"],
+		"title": "オドループ"
+	},
+	{
+		"altTitles": [],
+		"artist": "みきとP",
+		"data": {
+			"displayVersion": "s",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a09de3791f94",
+		"legacySongID": 233,
+		"searchTerms": ["Yi Er Fanclub"],
+		"title": "いーあるふぁんくらぶ"
+	},
+	{
+		"altTitles": [],
+		"artist": "REDALiCE feat. 野宮あゆみ",
+		"data": {
+			"displayVersion": "s",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a09ea420f8b2",
+		"legacySongID": 234,
+		"searchTerms": [],
+		"title": "Mami Mami Zone"
+	},
+	{
+		"altTitles": [],
+		"artist": "USAO & DJ Genki",
+		"data": {
+			"displayVersion": "s",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a09f568d5462",
+		"legacySongID": 235,
+		"searchTerms": [],
+		"title": "Shiny Memory feat.Yukacco"
+	},
+	{
+		"altTitles": ["ナイト・オブ・ナイツ (かめりあ's\"ワンス・アポン・ア・ナイト\"Remix)"],
+		"artist": "かめりあ",
+		"data": {
+			"displayVersion": "s",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a0a06d80f80a",
+		"legacySongID": 236,
+		"searchTerms": ["Night/Knight of Nights/Knights (Camellia's Once-Upon-A-Night Remix)"],
+		"title": "ナイト・オブ・ナイツ (かめりあ’s“ワンス・アポン・ア・ナイト”Remix)"
+	},
+	{
+		"altTitles": [],
+		"artist": "飛鳥(原田ひとみ)&焔(喜多村英梨)",
+		"data": {
+			"displayVersion": "s",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0a1e2c168a3",
+		"legacySongID": 237,
+		"searchTerms": ["Rinne"],
+		"title": "燐廻"
+	},
+	{
+		"altTitles": [],
+		"artist": "fripSide",
+		"data": {
+			"displayVersion": "s",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0a223d434ef",
+		"legacySongID": 238,
+		"searchTerms": [],
+		"title": "only my railgun"
+	},
+	{
+		"altTitles": [],
+		"artist": "Srav3R",
+		"data": {
+			"displayVersion": "s",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a0a30c87e736",
+		"legacySongID": 239,
+		"searchTerms": [],
+		"title": "Murasaki"
+	},
+	{
+		"altTitles": [],
+		"artist": "Hommarju",
+		"data": {
+			"displayVersion": "s",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a0a414a6a48f",
+		"legacySongID": 240,
+		"searchTerms": [],
+		"title": "Demon's Rave"
+	},
+	{
+		"altTitles": [],
+		"artist": "Neru",
+		"data": {
+			"displayVersion": "s",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0a52b8ac655",
+		"legacySongID": 241,
+		"searchTerms": ["Lost One no Goukoku"],
+		"title": "ロストワンの号哭"
+	},
+	{
+		"altTitles": [],
+		"artist": "Massive New Krew",
+		"data": {
+			"displayVersion": "s",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0a6c9ebb2cc",
+		"legacySongID": 242,
+		"searchTerms": [],
+		"title": "LOSE CONTROL"
+	},
+	{
+		"altTitles": [],
+		"artist": "西村 隆文",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a0a763230132",
+		"legacySongID": 243,
+		"searchTerms": [],
+		"title": "jacaranda"
+	},
+	{
+		"altTitles": [],
+		"artist": "Getty",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0a8b37c14b8",
+		"legacySongID": 244,
+		"searchTerms": ["BLAST BEAT"],
+		"title": "BLVST BEVT"
+	},
+	{
+		"altTitles": [],
+		"artist": "COSIO",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a0a99dae93d1",
+		"legacySongID": 245,
+		"searchTerms": [],
+		"title": "CHECKER FLAG"
+	},
+	{
+		"altTitles": [],
+		"artist": "Da Tweekaz",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0aaabe241a6",
+		"legacySongID": 246,
+		"searchTerms": ["Jagermeister"],
+		"title": "Jägermeister"
+	},
+	{
+		"altTitles": [],
+		"artist": "舞台『弱虫ペダル』キャスト",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "2.5次元"
+		},
+		"id": "S19ccf93a0ab2af9119e",
+		"legacySongID": 247,
+		"searchTerms": [],
+		"title": "Over the sweat and tears"
+	},
+	{
+		"altTitles": [],
+		"artist": "超魂團（ウルトラソウルズ）",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0acf608b5ab",
+		"legacySongID": 248,
+		"searchTerms": [],
+		"title": "What's this?"
+	},
+	{
+		"altTitles": [],
+		"artist": "エキセントリック少年ボウイ　オールスターズ",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0adbc87f5cb",
+		"legacySongID": 249,
+		"searchTerms": ["'Eccentric Shonen Boy' no Theme"],
+		"title": "『エキセントリック少年ボウイ』のテーマ"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Myosuke & Gram",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a0ae2f125cf0",
+		"legacySongID": 250,
+		"searchTerms": [],
+		"title": "JINGLE DEATH"
+	},
+	{
+		"altTitles": [],
+		"artist": "Kobaryo",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a0afe376b398",
+		"legacySongID": 251,
+		"searchTerms": [],
+		"title": "Invisible Frenzy"
+	},
+	{
+		"altTitles": [],
+		"artist": "cosMo@暴走P",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0b026bf5e2e",
+		"legacySongID": 252,
+		"searchTerms": ["Hatsune Miku no Shoshitsu"],
+		"title": "初音ミクの消失"
+	},
+	{
+		"altTitles": [],
+		"artist": "xi",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0b1631c192b",
+		"legacySongID": 253,
+		"searchTerms": [],
+		"title": "FREEDOM DiVE↓"
+	},
+	{
+		"altTitles": [],
+		"artist": "Giga feat. 鏡音リン・レン",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0b2284496ba",
+		"legacySongID": 254,
+		"searchTerms": ["Rettou Joutou"],
+		"title": "劣等上等"
+	},
+	{
+		"altTitles": [],
+		"artist": "C-Show",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a0b30f2c1a01",
+		"legacySongID": 255,
+		"searchTerms": [],
+		"title": "Stratoliner"
+	},
+	{
+		"altTitles": [],
+		"artist": "KO3&Relect",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0b464cee7ac",
+		"legacySongID": 256,
+		"searchTerms": [],
+		"title": "Honey Panic!"
+	},
+	{
+		"altTitles": [],
+		"artist": "YURI!!! on ICE feat. w.hatano",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0b53893d1ef",
+		"legacySongID": 257,
+		"searchTerms": [],
+		"title": "You Only Live Once"
+	},
+	{
+		"altTitles": [],
+		"artist": "HiTECH NINJA",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a0b687e5d858",
+		"legacySongID": 258,
+		"searchTerms": [],
+		"title": "Utopia feat. shully"
+	},
+	{
+		"altTitles": [],
+		"artist": "ヨルシカ",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0b78ec97cec",
+		"legacySongID": 259,
+		"searchTerms": ["Tada Kimi ni Hare"],
+		"title": "ただ君に晴れ"
+	},
+	{
+		"altTitles": [],
+		"artist": "高橋洋子",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0b807294f5b",
+		"legacySongID": 260,
+		"searchTerms": ["Zankoku na Tenshi no Thesis"],
+		"title": "残酷な天使のテーゼ"
+	},
+	{
+		"altTitles": [],
+		"artist": "Snail's House",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0b9433b7c85",
+		"legacySongID": 261,
+		"searchTerms": [],
+		"title": "Pixel Galaxy"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0ba05aae129",
+		"legacySongID": 262,
+		"searchTerms": [],
+		"title": "VOX Diamond"
+	},
+	{
+		"altTitles": [],
+		"artist": "Kizuna AI",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0bb91fd892d",
+		"legacySongID": 263,
+		"searchTerms": [],
+		"title": "Hello, Morning"
+	},
+	{
+		"altTitles": [],
+		"artist": "USAO",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a0bc0fd78189",
+		"legacySongID": 264,
+		"searchTerms": [],
+		"title": "Chariot"
+	},
+	{
+		"altTitles": [],
+		"artist": "Kizuna AI",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0bdec641cb2",
+		"legacySongID": 265,
+		"searchTerms": ["AIAIAI (feat. Nakata Yasutaka)"],
+		"title": "AIAIAI (feat. 中田ヤスタカ)"
+	},
+	{
+		"altTitles": [],
+		"artist": "W&W ft. Kizuna AI",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0bed4c79f14",
+		"legacySongID": 266,
+		"searchTerms": [],
+		"title": "The Light"
+	},
+	{
+		"altTitles": [],
+		"artist": "豚乙女",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a0bfc75a969d",
+		"legacySongID": 267,
+		"searchTerms": ["Machi-bito wa Kozu."],
+		"title": "待チ人ハ来ズ。"
+	},
+	{
+		"altTitles": [],
+		"artist": "飛鳥(原田ひとみ)・焔(喜多村英梨)・雅緋(平田宏美)・雪泉(原由実)",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0c0b30ba64b",
+		"legacySongID": 268,
+		"searchTerms": ["Shuketsu no Hanabana"],
+		"title": "集結の華々"
+	},
+	{
+		"altTitles": [],
+		"artist": "ARM＋夕野ヨシミ (IOSYS) feat. miko",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a0c1cf58649b",
+		"legacySongID": 269,
+		"searchTerms": ["Cirno no Perfect Sansuu Kyoshitsu"],
+		"title": "チルノのパーフェクトさんすう教室"
+	},
+	{
+		"altTitles": [],
+		"artist": "REDALiCE",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a0c21332887e",
+		"legacySongID": 270,
+		"searchTerms": [],
+		"title": "taboo tears you up 2017"
+	},
+	{
+		"altTitles": [],
+		"artist": "Masayoshi Minoshima",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a0c315b81a77",
+		"legacySongID": 271,
+		"searchTerms": [],
+		"title": "Bad Apple!! feat. nomico"
+	},
+	{
+		"altTitles": [],
+		"artist": "亜咲花",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0c4be251411",
+		"legacySongID": 272,
+		"searchTerms": [],
+		"title": "SHINY DAYS"
+	},
+	{
+		"altTitles": [],
+		"artist": "ビートまりお（COOL&CREATE）",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a0c5e2192045",
+		"legacySongID": 273,
+		"searchTerms": ["Night/Knight of Nights/Knights"],
+		"title": "ナイト・オブ・ナイツ"
+	},
+	{
+		"altTitles": [],
+		"artist": "亜咲花",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0c6fc57b34f",
+		"legacySongID": 274,
+		"searchTerms": [],
+		"title": "Raise Your Heart!!"
+	},
+	{
+		"altTitles": [],
+		"artist": "暁Records",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a0c78a965712",
+		"legacySongID": 275,
+		"searchTerms": [],
+		"title": "WARNING×WARNING×WARNING"
+	},
+	{
+		"altTitles": [],
+		"artist": "GYARI(ココアシガレットP)",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0c838ff95c6",
+		"legacySongID": 276,
+		"searchTerms": ["Akari ga Yatte Kita-zo!"],
+		"title": "アカリがやってきたぞっ"
+	},
+	{
+		"altTitles": [],
+		"artist": "Srav3R",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0c9bd4d94a4",
+		"legacySongID": 277,
+		"searchTerms": [],
+		"title": "Akareram"
+	},
+	{
+		"altTitles": [],
+		"artist": "八王子P",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0cae44b0151",
+		"legacySongID": 278,
+		"searchTerms": ["Kimagure Mercy"],
+		"title": "気まぐれメルシィ feat. 初音ミク"
+	},
+	{
+		"altTitles": [],
+		"artist": "ナユタン星人",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0cb1aa65865",
+		"legacySongID": 279,
+		"searchTerms": ["Taiyou-kei Disco"],
+		"title": "太陽系デスコ"
+	},
+	{
+		"altTitles": [],
+		"artist": "Kobaryo",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0cc46108337",
+		"legacySongID": 280,
+		"searchTerms": [],
+		"title": "Galaxy Friends"
+	},
+	{
+		"altTitles": ["13 DONKEYS"],
+		"artist": "Massive New Krew",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a0cd8fc045f7",
+		"legacySongID": 281,
+		"searchTerms": [],
+		"title": "13 Donkeys"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Genki",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a0ceba618303",
+		"legacySongID": 282,
+		"searchTerms": ["ATARAXiA"],
+		"title": "ATARAX1A"
+	},
+	{
+		"altTitles": [],
+		"artist": "P*Light",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a0cf413e44ba",
+		"legacySongID": 283,
+		"searchTerms": [],
+		"title": "ADAM"
+	},
+	{
+		"altTitles": [],
+		"artist": "REDALiCE",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0d05dcb51b2",
+		"legacySongID": 284,
+		"searchTerms": [],
+		"title": "HiGHER"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Myosuke",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0d14e2343e9",
+		"legacySongID": 285,
+		"searchTerms": [],
+		"title": "Source of Creation"
+	},
+	{
+		"altTitles": [],
+		"artist": "Getty",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0d295b98075",
+		"legacySongID": 286,
+		"searchTerms": [],
+		"title": "Blaze"
+	},
+	{
+		"altTitles": [],
+		"artist": "うたたP",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0d3211b9c55",
+		"legacySongID": 287,
+		"searchTerms": ["Shiawase ni Nareru Kakushi Command ga Aru Rashii"],
+		"title": "幸せになれる隠しコマンドがあるらしい"
+	},
+	{
+		"altTitles": [],
+		"artist": "三浦大知",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0d483317799",
+		"legacySongID": 288,
+		"searchTerms": [],
+		"title": "EXCITE"
+	},
+	{
+		"altTitles": [],
+		"artist": "Laur",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a0d505f24bd2",
+		"legacySongID": 289,
+		"searchTerms": [],
+		"title": "Exitium"
+	},
+	{
+		"altTitles": [],
+		"artist": "ARuFa & t+pazolite & かめりあ",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0d67356448f",
+		"legacySongID": 290,
+		"searchTerms": ["Boku no Yume, Mechakuso Mugen Waki"],
+		"title": "ぼくの夢、メチャクソ無限湧き"
+	},
+	{
+		"altTitles": [],
+		"artist": "ARuFa",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0d71c92435f",
+		"legacySongID": 291,
+		"searchTerms": ["Konnichi wa, ARuFa desu."],
+		"title": "こんにちは、ARuFaです。"
+	},
+	{
+		"altTitles": [],
+		"artist": "siromaru + cranky",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0d8ab14cfd4",
+		"legacySongID": 292,
+		"searchTerms": [],
+		"title": "conflict"
+	},
+	{
+		"altTitles": [],
+		"artist": "TANO*C Sound Team",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0d942be2f9f",
+		"legacySongID": 293,
+		"searchTerms": [],
+		"title": "BATTLE NO.1"
+	},
+	{
+		"altTitles": [],
+		"artist": "aran",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0da37b3bb9c",
+		"legacySongID": 294,
+		"searchTerms": [],
+		"title": "GRiDGALAXY"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Noriken",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0db509eb564",
+		"legacySongID": 295,
+		"searchTerms": [],
+		"title": "Jingle"
+	},
+	{
+		"altTitles": [],
+		"artist": "Harmonies(P*Light & Massive New Krew)",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0dc16314de2",
+		"legacySongID": 296,
+		"searchTerms": [],
+		"title": "Shining Harmony"
+	},
+	{
+		"altTitles": [],
+		"artist": "DECO*27",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0dd741486f7",
+		"legacySongID": 297,
+		"searchTerms": ["Scramble Kousai"],
+		"title": "スクランブル交際"
+	},
+	{
+		"altTitles": [],
+		"artist": "DECO*27",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0de45655534",
+		"legacySongID": 298,
+		"searchTerms": ["Otome Kaibou"],
+		"title": "乙女解剖"
+	},
+	{
+		"altTitles": [],
+		"artist": "新庄かなえ（三森すずこ）",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0df7ce65d3c",
+		"legacySongID": 299,
+		"searchTerms": ["Fatto-shite Tougenkyou"],
+		"title": "ファッとして桃源郷"
+	},
+	{
+		"altTitles": [],
+		"artist": "Yunomi",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0e0d8103330",
+		"legacySongID": 300,
+		"searchTerms": ["Game Over (feat. TORIENA)"],
+		"title": "ゲームオーバー (feat. TORIENA)"
+	},
+	{
+		"altTitles": [],
+		"artist": "中野家の五つ子（花澤香菜・竹達彩奈・伊藤美来・佐倉綾音・水瀬いのり）",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0e1f42ca16e",
+		"legacySongID": 301,
+		"searchTerms": ["Gotoubun no Kimochi"],
+		"title": "五等分の気持ち"
+	},
+	{
+		"altTitles": [],
+		"artist": "Machico",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0e2311e9294",
+		"legacySongID": 302,
+		"searchTerms": [],
+		"title": "TOMORROW"
+	},
+	{
+		"altTitles": [],
+		"artist": "寺島拓篤",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0e34edb30c6",
+		"legacySongID": 303,
+		"searchTerms": [],
+		"title": "Nameless Story"
+	},
+	{
+		"altTitles": [],
+		"artist": "Laur",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0e4f7323762",
+		"legacySongID": 304,
+		"searchTerms": [],
+		"title": "Sound Chimera"
+	},
+	{
+		"altTitles": [],
+		"artist": "源屋",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0e5244f7787",
+		"legacySongID": 305,
+		"searchTerms": ["BLUE SKY feat. Nomiya Ayumi"],
+		"title": "BLUE SKY feat. 野宮あゆみ"
+	},
+	{
+		"altTitles": [],
+		"artist": "P*Light feat. mow*2",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0e6f8701317",
+		"legacySongID": 306,
+		"searchTerms": [],
+		"title": "BOOM! BOOM!! BOOM!!!"
+	},
+	{
+		"altTitles": [],
+		"artist": "Massive New Krew",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0e765baae10",
+		"legacySongID": 307,
+		"searchTerms": [],
+		"title": "Ever Free(Raw Edit)"
+	},
+	{
+		"altTitles": [],
+		"artist": "USAO",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0e837bebb2c",
+		"legacySongID": 308,
+		"searchTerms": [],
+		"title": "Try again"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Genki VS かめりあ (feat. moimoi)",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0e9deb5c4fc",
+		"legacySongID": 309,
+		"searchTerms": [],
+		"title": "Sunshine"
+	},
+	{
+		"altTitles": [],
+		"artist": "Srav3R",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a0ea22790705",
+		"legacySongID": 310,
+		"searchTerms": [],
+		"title": "Over My Hand"
+	},
+	{
+		"altTitles": [],
+		"artist": "Getty",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a0eb9ec25cb9",
+		"legacySongID": 311,
+		"searchTerms": [],
+		"title": "Are You Ready"
+	},
+	{
+		"altTitles": [],
+		"artist": "aran",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a0ec78a018c9",
+		"legacySongID": 312,
+		"searchTerms": [],
+		"title": "Gate One"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Myosuke",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a0ed49925822",
+		"legacySongID": 313,
+		"searchTerms": [],
+		"title": "HELL FLAME"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Noriken",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a0ee202e1f9b",
+		"legacySongID": 314,
+		"searchTerms": [],
+		"title": "Quon"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a0ef7016ed47",
+		"legacySongID": 315,
+		"searchTerms": [],
+		"title": "BIG HEAD BANGING"
+	},
+	{
+		"altTitles": [],
+		"artist": "REDALiCE",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a0f0c4ee56f9",
+		"legacySongID": 316,
+		"searchTerms": ["LEVATEiN feat. Nomiya Ayumi"],
+		"title": "LEVATEiN feat. 野宮あゆみ"
+	},
+	{
+		"altTitles": [],
+		"artist": "ジョー・リノイエ with 安西美貴",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a0f11fe3c2fb",
+		"legacySongID": 317,
+		"searchTerms": ["'Kono Omoi wo Nosete' from Rune Factory 4 Special"],
+		"title": "ルーンファクトリー４スペシャルより「この想いを乗せて」"
+	},
+	{
+		"altTitles": [],
+		"artist": "ぬゆり",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0f2757de391",
+		"legacySongID": 318,
+		"searchTerms": ["Fragile"],
+		"title": "フラジール"
+	},
+	{
+		"altTitles": [],
+		"artist": "GYARI(ココアシガレットP)",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0f3d40be68e",
+		"legacySongID": 319,
+		"searchTerms": ["Seyana. - Nandemo Iukoto wo Kiite Kureru Akane-chan -"],
+		"title": "Seyana. ～何でも言うことを聞いてくれるアカネチャン～"
+	},
+	{
+		"altTitles": [],
+		"artist": "n-buna",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0f4e314d4fb",
+		"legacySongID": 320,
+		"searchTerms": ["Umiyuri Kaitei-tan"],
+		"title": "ウミユリ海底譚"
+	},
+	{
+		"altTitles": [],
+		"artist": "BABYMETAL",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0f54bc4144c",
+		"legacySongID": 321,
+		"searchTerms": ["Gimme Choco!!"],
+		"title": "ギミチョコ!!"
+	},
+	{
+		"altTitles": [],
+		"artist": "MONKEY MAJIK × サンドウィッチマン",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0f68fda8e33",
+		"legacySongID": 322,
+		"searchTerms": ["U-marvelous"],
+		"title": "ウマーベラス"
+	},
+	{
+		"altTitles": [],
+		"artist": "みきとP",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0f7783815f4",
+		"legacySongID": 323,
+		"searchTerms": ["Roki"],
+		"title": "ロキ"
+	},
+	{
+		"altTitles": [],
+		"artist": "どうぶつビスケッツ×PPP",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0f85b1754ac",
+		"legacySongID": 324,
+		"searchTerms": ["Youkoso Japari-Park e"],
+		"title": "ようこそジャパリパークへ"
+	},
+	{
+		"altTitles": [],
+		"artist": "上坂すみれ",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0f90bb0e836",
+		"legacySongID": 325,
+		"searchTerms": [],
+		"title": "POP TEAM EPIC"
+	},
+	{
+		"altTitles": [],
+		"artist": "フランシュシュ",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a0fa763cdc99",
+		"legacySongID": 326,
+		"searchTerms": ["Adabana Necromancy"],
+		"title": "徒花ネクロマンシー"
+	},
+	{
+		"altTitles": [],
+		"artist": "HARDCORE TANO*C & エリザベス（CV:大西沙織）",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a0fba6174de5",
+		"legacySongID": 327,
+		"searchTerms": [],
+		"title": "Let you DIVE!"
+	},
+	{
+		"altTitles": [],
+		"artist": "ハチ",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0fc2baadfa3",
+		"legacySongID": 328,
+		"searchTerms": ["Matryoshka"],
+		"title": "マトリョシカ"
+	},
+	{
+		"altTitles": [],
+		"artist": "ハチ",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0fde9daecea",
+		"legacySongID": 329,
+		"searchTerms": ["Suna no Wakusei feat. Hatsune Miku"],
+		"title": "砂の惑星 feat. 初音ミク"
+	},
+	{
+		"altTitles": [],
+		"artist": "ナユタン星人 feat. 初音ミク",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a0fea708e834",
+		"legacySongID": 330,
+		"searchTerms": ["Alien Alien"],
+		"title": "エイリアンエイリアン"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Myosuke",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a0ffd15f034d",
+		"legacySongID": 331,
+		"searchTerms": [],
+		"title": "Fight for the CORE feat. Daisuke"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Noriken",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a10063c10dec",
+		"legacySongID": 332,
+		"searchTerms": [],
+		"title": "Soldiers"
+	},
+	{
+		"altTitles": [],
+		"artist": "いとうかなこ",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a101bf043c4c",
+		"legacySongID": 333,
+		"searchTerms": ["Fatima"],
+		"title": "ファティマ"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a10268b581d6",
+		"legacySongID": 334,
+		"searchTerms": [],
+		"title": "illanai-assorted"
+	},
+	{
+		"altTitles": [],
+		"artist": "REDALiCE feat. Ayumi Nomiya",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a103c806bad8",
+		"legacySongID": 335,
+		"searchTerms": [],
+		"title": "MEMORiZE"
+	},
+	{
+		"altTitles": [],
+		"artist": "米津玄師",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a1045bf8ee23",
+		"legacySongID": 336,
+		"searchTerms": ["Peace Sign"],
+		"title": "ピースサイン"
+	},
+	{
+		"altTitles": [],
+		"artist": "黒うさP feat. 初音ミク",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a1052c923af2",
+		"legacySongID": 337,
+		"searchTerms": ["Senbon-zakura"],
+		"title": "千本桜"
+	},
+	{
+		"altTitles": [],
+		"artist": "P*Light",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a1062e5b6de0",
+		"legacySongID": 338,
+		"searchTerms": [],
+		"title": "PARALLEL★PRISM"
+	},
+	{
+		"altTitles": [],
+		"artist": "Massive New Krew",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a1073d6d0b69",
+		"legacySongID": 339,
+		"searchTerms": [],
+		"title": "Poseidon"
+	},
+	{
+		"altTitles": [],
+		"artist": "USAO",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a1087fbd518e",
+		"legacySongID": 340,
+		"searchTerms": [],
+		"title": "Knight Rider"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Genki feat. Yukacco",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a1090a18769a",
+		"legacySongID": 341,
+		"searchTerms": [],
+		"title": "Rainbow Dream"
+	},
+	{
+		"altTitles": [],
+		"artist": "ギルガメッシュ（CV：大塚剛央）、千極兆司（CV：立花慎之介）、緋野天魔（CV：小野賢章）、神水鶴久遠（CV：広瀬裕也）、皇麗夢（CV：豊永利行）",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a10a686e1f4b",
+		"legacySongID": 342,
+		"searchTerms": ["Femme Fatale"],
+		"title": "ファムファタール"
+	},
+	{
+		"altTitles": [],
+		"artist": "餓鬼レンジャー feat. 梅田サイファー",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a10bd3ff40cb",
+		"legacySongID": 343,
+		"searchTerms": ["Agenagen"],
+		"title": "アゲナゲン"
+	},
+	{
+		"altTitles": [],
+		"artist": "ゆうゆ",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a10c6fd5c172",
+		"legacySongID": 344,
+		"searchTerms": ["Tengaku"],
+		"title": "天樂"
+	},
+	{
+		"altTitles": [],
+		"artist": "supercell",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a10db7acd001",
+		"legacySongID": 345,
+		"searchTerms": ["Melt"],
+		"title": "メルト"
+	},
+	{
+		"altTitles": [],
+		"artist": "亜沙",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a10e6d8d64fb",
+		"legacySongID": 346,
+		"searchTerms": ["Yoshiwara Lament"],
+		"title": "吉原ラメント"
+	},
+	{
+		"altTitles": [],
+		"artist": "REDALiCE",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a10f7dc5f98f",
+		"legacySongID": 347,
+		"searchTerms": ["Crimson Teio", "Crimson Emperor"],
+		"title": "クリムゾン帝王"
+	},
+	{
+		"altTitles": [],
+		"artist": "aran",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a11016de7c6f",
+		"legacySongID": 348,
+		"searchTerms": ["EPHEMERA"],
+		"title": "EPHMR"
+	},
+	{
+		"altTitles": [],
+		"artist": "Laur",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a11164c10e91",
+		"legacySongID": 349,
+		"searchTerms": [],
+		"title": "DANGEROOOOUS JUNGLE"
+	},
+	{
+		"altTitles": [],
+		"artist": "Kobaryo",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a112038a5db1",
+		"legacySongID": 350,
+		"searchTerms": [],
+		"title": "Dimension Hacker"
+	},
+	{
+		"altTitles": ["cloud Ⅸ"],
+		"artist": "NOMA",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a1131ba0052b",
+		"legacySongID": 351,
+		"searchTerms": [],
+		"title": "cloud IX"
+	},
+	{
+		"altTitles": [],
+		"artist": "SOUND HOLIC feat. Nana Takahashi",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a11444999ed2",
+		"legacySongID": 352,
+		"searchTerms": [],
+		"title": "Grip & Break down !!"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a115bc97294a",
+		"legacySongID": 353,
+		"searchTerms": [],
+		"title": "CENSORED!!"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Myosuke vs MASAKI",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a11661cab31a",
+		"legacySongID": 354,
+		"searchTerms": ["Kami"],
+		"title": "神"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Genki feat. yukacco",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a1173cf915c1",
+		"legacySongID": 355,
+		"searchTerms": [],
+		"title": "Candy Star"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Noriken",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a1188ff433ef",
+		"legacySongID": 356,
+		"searchTerms": [],
+		"title": "Onigami"
+	},
+	{
+		"altTitles": [],
+		"artist": "USAO & Camellia",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C（オリジナル）"
+		},
+		"id": "S19ccf93a11980518f93",
+		"legacySongID": 357,
+		"searchTerms": ["Mobius"],
+		"title": "Möbius"
+	},
+	{
+		"altTitles": [],
+		"artist": "Kobaryo",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a11a59744faa",
+		"legacySongID": 358,
+		"searchTerms": [],
+		"title": "GENOCIDER (Kobaryo's FTN-Remix)"
+	},
+	{
+		"altTitles": [],
+		"artist": "Camellia",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a11b6d952a10",
+		"legacySongID": 359,
+		"searchTerms": [],
+		"title": "Invisible Frenzy (Camellia's \"593: Insanely Fluctuated\" Remix)"
+	},
+	{
+		"altTitles": [],
+		"artist": "TANO*C ALL STARS",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a11cb5919634",
+		"legacySongID": 360,
+		"searchTerms": [],
+		"title": "Reach My Voice"
+	},
+	{
+		"altTitles": [],
+		"artist": "USAO",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a11d309d844e",
+		"legacySongID": 361,
+		"searchTerms": [],
+		"title": "You & DIE"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Myosuke",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a11e3a1d6193",
+		"legacySongID": 362,
+		"searchTerms": [],
+		"title": "EXTRA HARD"
+	},
+	{
+		"altTitles": [],
+		"artist": "Kobaryo",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a120ac88cac3",
+		"legacySongID": 363,
+		"searchTerms": [],
+		"title": "Obtain An Unused Whale In The Abstract Sea"
+	},
+	{
+		"altTitles": [],
+		"artist": "Srav3R",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a121d5f78600",
+		"legacySongID": 364,
+		"searchTerms": [],
+		"title": "Middle"
+	},
+	{
+		"altTitles": [],
+		"artist": "aran",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a1223bb3fa83",
+		"legacySongID": 365,
+		"searchTerms": [],
+		"title": "Avenue"
+	},
+	{
+		"altTitles": [],
+		"artist": "Massive New Krew & RoughSketch",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a123086ec3f0",
+		"legacySongID": 366,
+		"searchTerms": ["Extreme ↑↑ Ongaku School feat. nanahira"],
+		"title": "えくすとりーむ↑↑おんがくスクール feat. ななひら"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a1244b6e0cc7",
+		"legacySongID": 367,
+		"searchTerms": [],
+		"title": "T+ VS SHARK"
+	},
+	{
+		"altTitles": [],
+		"artist": "aran",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a125a7106c70",
+		"legacySongID": 368,
+		"searchTerms": [],
+		"title": "Brand New World feat. Yukacco"
+	},
+	{
+		"altTitles": [],
+		"artist": "Kobaryo feat. HiTNEX-X",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a126adfcbd8c",
+		"legacySongID": 369,
+		"searchTerms": [],
+		"title": "SUPER EMULATOR"
+	},
+	{
+		"altTitles": [],
+		"artist": "Getty",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a12734a03d29",
+		"legacySongID": 370,
+		"searchTerms": [],
+		"title": "GAKKY"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Noriken",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a12827d475b2",
+		"legacySongID": 371,
+		"searchTerms": [],
+		"title": "NIGHTWAVE FRAGMENTS"
+	},
+	{
+		"altTitles": [],
+		"artist": "Srav3R",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a129ce20d7f1",
+		"legacySongID": 372,
+		"searchTerms": ["NEXTAGE"],
+		"title": "N3XTAGE"
+	},
+	{
+		"altTitles": [],
+		"artist": "USAO",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a12a7ca9df1f",
+		"legacySongID": 373,
+		"searchTerms": [],
+		"title": "Big Daddy"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Genki",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a12bea8d4529",
+		"legacySongID": 374,
+		"searchTerms": [],
+		"title": "Ready Go feat. Yukacco"
+	},
+	{
+		"altTitles": [],
+		"artist": "aran",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a12c0d16d244",
+		"legacySongID": 375,
+		"searchTerms": [],
+		"title": "Scramble TANO*C"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Noriken",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a12d1e2f6309",
+		"legacySongID": 376,
+		"searchTerms": [],
+		"title": "Everybody Say HARDCORE TANO*C"
+	},
+	{
+		"altTitles": [],
+		"artist": "REDALiCE",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a12e67eb47f3",
+		"legacySongID": 377,
+		"searchTerms": [],
+		"title": "Crush Out"
+	},
+	{
+		"altTitles": [],
+		"artist": "P*Light",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a12f116aa189",
+		"legacySongID": 378,
+		"searchTerms": [],
+		"title": "Keep on Groovin' feat. mow*2"
+	},
+	{
+		"altTitles": [],
+		"artist": "源屋",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a13035d82131",
+		"legacySongID": 379,
+		"searchTerms": [],
+		"title": "To the sky -wacca edit- feat.motoko"
+	},
+	{
+		"altTitles": [],
+		"artist": "Massive New Krew",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a1316d99364f",
+		"legacySongID": 380,
+		"searchTerms": [],
+		"title": "We are the Massive New Krew (2020Edit)"
+	},
+	{
+		"altTitles": [],
+		"artist": "SAISEN TURN",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a1327ac6450a",
+		"legacySongID": 381,
+		"searchTerms": ["Saisentan-bo Shogun 3 / TOP SHOGUN 3"],
+		"title": "最先端坊将軍３"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a13370287a9f",
+		"legacySongID": 382,
+		"searchTerms": [],
+		"title": "BPM=RT"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Myosuke",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a134063b1f70",
+		"legacySongID": 383,
+		"searchTerms": [],
+		"title": "1BPM"
+	},
+	{
+		"altTitles": [],
+		"artist": "Laur",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a1355a6a245c",
+		"legacySongID": 384,
+		"searchTerms": [],
+		"title": "Viyella's Nightmare"
+	},
+	{
+		"altTitles": [],
+		"artist": "Gram",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a136980e413f",
+		"legacySongID": 385,
+		"searchTerms": [],
+		"title": "Odin"
+	},
+	{
+		"altTitles": ["DIVE With Ü"],
+		"artist": "HARDCORE TANO*C & エリザベス（CV:大西沙織） & リリィ（CV:青木志貴） & ルーン（CV:河瀬茉希）",
+		"data": {
+			"displayVersion": "reverse",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a1376d538325",
+		"legacySongID": 386,
+		"searchTerms": [],
+		"title": "DIVE with Ü"
+	},
+	{
+		"altTitles": [],
+		"artist": "UNISON SQUARE GARDEN",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a138f18ec981",
+		"legacySongID": 387,
+		"searchTerms": ["Sugar Song and Bitter Step"],
+		"title": "シュガーソングとビターステップ"
+	},
+	{
+		"altTitles": [],
+		"artist": "あんさんぶるスターズ！ オン・ステージ",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "2.5次元"
+		},
+		"id": "S19ccf93a139b9f43c71",
+		"legacySongID": 388,
+		"searchTerms": ["Singin' Shine!"],
+		"title": "Singin'☆Shine！"
+	},
+	{
+		"altTitles": [],
+		"artist": "土間うまる(田中あいみ)",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a13a4e480f73",
+		"legacySongID": 389,
+		"searchTerms": ["Kakushinteki☆Metamorphose!"],
+		"title": "かくしん的☆めたまるふぉ～ぜっ!"
+	},
+	{
+		"altTitles": [],
+		"artist": "土間うまる(田中あいみ)",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a13bea7606f8",
+		"legacySongID": 390,
+		"searchTerms": ["Nimensei☆Uraomote Life!"],
+		"title": "にめんせい☆ウラオモテライフ!"
+	},
+	{
+		"altTitles": [],
+		"artist": "仁科カヅキ vs 大和アレクサンダー(増田俊樹・武内駿輔)",
+		"data": {
+			"displayVersion": "wacca",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a13c9b35b7e2",
+		"legacySongID": 391,
+		"searchTerms": [],
+		"title": "EZ DO DANCE -K.O.P. REMIX-"
+	},
+	{
+		"altTitles": ["My dreams were totally crushed! (Nanahira ver.)"],
+		"artist": "ARuFa & t+pazolite & かめりあ",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a13d147bcc0e",
+		"legacySongID": 392,
+		"searchTerms": [],
+		"title": "ぼくの夢、メチャクソ無限湧き (ななひら ver.)"
+	},
+	{
+		"altTitles": [],
+		"artist": "Synthion",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a13e1afb5568",
+		"legacySongID": 393,
+		"searchTerms": [],
+		"title": "Blossom"
+	},
+	{
+		"altTitles": [],
+		"artist": "USAO & Yuta Imai",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a13fc1b44d58",
+		"legacySongID": 394,
+		"searchTerms": [],
+		"title": "BULK UP (GAME EXCLUSIVE EDIT)"
+	},
+	{
+		"altTitles": ["Haru wo tsugeru"],
+		"artist": "yama",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a1406d1e6229",
+		"legacySongID": 395,
+		"searchTerms": [],
+		"title": "春を告げる"
+	},
+	{
+		"altTitles": ["Kimi no Sei"],
+		"artist": "the peggies",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a14104808823",
+		"legacySongID": 396,
+		"searchTerms": [],
+		"title": "君のせい"
+	},
+	{
+		"altTitles": [],
+		"artist": "結束バンド「ぼっち・ざ・ろっく！」より",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a142ed393312",
+		"legacySongID": 397,
+		"searchTerms": [],
+		"title": "Seisyun Complex"
+	},
+	{
+		"altTitles": [],
+		"artist": "uma",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a1439943a505",
+		"legacySongID": 398,
+		"searchTerms": [],
+		"title": "Chakra"
+	},
+	{
+		"altTitles": [],
+		"artist": "黒魔",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a1444fd38131",
+		"legacySongID": 399,
+		"searchTerms": [],
+		"title": "ÅMARA(大未来電脳)"
+	},
+	{
+		"altTitles": [],
+		"artist": "nm-y feat. AKA",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a145071e3dc0",
+		"legacySongID": 400,
+		"searchTerms": [],
+		"title": "caesura."
+	},
+	{
+		"altTitles": ["Lagtrain"],
+		"artist": "inabakumori",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a1467069a338",
+		"legacySongID": 401,
+		"searchTerms": [],
+		"title": "ラグトレイン"
+	},
+	{
+		"altTitles": [],
+		"artist": "ETIA.",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a14766096136",
+		"legacySongID": 402,
+		"searchTerms": [],
+		"title": "Hainuwele"
+	},
+	{
+		"altTitles": [],
+		"artist": "aran",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a1489c29dd9e",
+		"legacySongID": 403,
+		"searchTerms": [],
+		"title": "Gestalt"
+	},
+	{
+		"altTitles": [],
+		"artist": "Laur",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a149ab202f42",
+		"legacySongID": 404,
+		"searchTerms": [],
+		"title": "Rebuff"
+	},
+	{
+		"altTitles": [],
+		"artist": "REDALiCE feat. Ayumi Nomiya",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "東方アレンジ"
+		},
+		"id": "S19ccf93a14a1664925f",
+		"legacySongID": 405,
+		"searchTerms": [],
+		"title": "Colors"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Myosuke",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a14b7a2b3060",
+		"legacySongID": 406,
+		"searchTerms": [],
+		"title": "Joe Fight"
+	},
+	{
+		"altTitles": ["Rabbit Hole"],
+		"artist": "DECO*27",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a14c6e0e6dba",
+		"legacySongID": 407,
+		"searchTerms": [],
+		"title": "ラビットホール"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite and Srav3R",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a14d772ffe71",
+		"legacySongID": 408,
+		"searchTerms": [],
+		"title": "Make Up Your World feat. キョンシーのCiちゃん & らっぷびと"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ NECOJITA",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a14ec8616518",
+		"legacySongID": 409,
+		"searchTerms": [],
+		"title": "Asteroid [feat. blaxervant]"
+	},
+	{
+		"altTitles": [],
+		"artist": "nora2r",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a14f79dd3d8e",
+		"legacySongID": 410,
+		"searchTerms": [],
+		"title": "B.B.K.K.B.K.K."
+	},
+	{
+		"altTitles": [],
+		"artist": "Caramella Girls",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a150f17416ea",
+		"legacySongID": 411,
+		"searchTerms": [],
+		"title": "Caramelldansen (Speedycake Remix)"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a151241a2209",
+		"legacySongID": 412,
+		"searchTerms": [],
+		"title": "Cheatreal"
+	},
+	{
+		"altTitles": [],
+		"artist": "onumi VS DossyX",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a15280687e45",
+		"legacySongID": 413,
+		"searchTerms": [],
+		"title": "IMPULSE // WEAVER"
+	},
+	{
+		"altTitles": [],
+		"artist": "Aiobahn feat. KOTOKO",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a153d77e7ac4",
+		"legacySongID": 414,
+		"searchTerms": [],
+		"title": "Internet Yamero"
+	},
+	{
+		"altTitles": ["Show"],
+		"artist": "Ado",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a154e6dabf7e",
+		"legacySongID": 415,
+		"searchTerms": [],
+		"title": "唱"
+	},
+	{
+		"altTitles": [],
+		"artist": "USAO",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a155da40d81d",
+		"legacySongID": 416,
+		"searchTerms": [],
+		"title": "Blows Up Everything"
+	},
+	{
+		"altTitles": [],
+		"artist": "SAWTOWNE",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a156526cf956",
+		"legacySongID": 417,
+		"searchTerms": [],
+		"title": "Confessions of a Rotten Girl ft. Hatsune Miku"
+	},
+	{
+		"altTitles": [],
+		"artist": "USAO",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a157a520bb1b",
+		"legacySongID": 418,
+		"searchTerms": [],
+		"title": "Got It Bad"
+	},
+	{
+		"altTitles": ["Kyoufuu All Back (feat. Kaai Yuki)"],
+		"artist": "Yukopi",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a158621f55a7",
+		"legacySongID": 419,
+		"searchTerms": [],
+		"title": "強風オールバック (feat.歌愛ユキ)"
+	},
+	{
+		"altTitles": [],
+		"artist": "crayvxn",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a1595a72849d",
+		"legacySongID": 420,
+		"searchTerms": [],
+		"title": "my flow"
+	},
+	{
+		"altTitles": [],
+		"artist": "C-Show",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a15a6cb199de",
+		"legacySongID": 421,
+		"searchTerms": [],
+		"title": "N3V3R G3T OV3R"
+	},
+	{
+		"altTitles": [],
+		"artist": "Zekk",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a15b20d888f2",
+		"legacySongID": 422,
+		"searchTerms": [],
+		"title": "POWER OF UNITY"
+	},
+	{
+		"altTitles": [],
+		"artist": "Cosmograph",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a15cc4c0b7d4",
+		"legacySongID": 423,
+		"searchTerms": [],
+		"title": "Straight into the lights"
+	},
+	{
+		"altTitles": [],
+		"artist": "EasyPop",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a15d99032a43",
+		"legacySongID": 424,
+		"searchTerms": [],
+		"title": "Happy Synthesizer"
+	},
+	{
+		"altTitles": [],
+		"artist": "Laur vs 大国奏音",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a15ecbdcdae9",
+		"legacySongID": 425,
+		"searchTerms": [],
+		"title": "Latent Kingdom"
+	},
+	{
+		"altTitles": ["Null"],
+		"artist": "Schwank",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a15f45426c25",
+		"legacySongID": 426,
+		"searchTerms": [],
+		"title": "�"
+	},
+	{
+		"altTitles": [],
+		"artist": "SubjectLoser",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "オリジナル"
+		},
+		"id": "S19ccf93a16056381fac",
+		"legacySongID": 427,
+		"searchTerms": [],
+		"title": "egoIST"
+	},
+	{
+		"altTitles": ["MIRACLE POP ADVENTURE!!!!!"],
+		"artist": "DJ Genki",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a161701eff47",
+		"legacySongID": 428,
+		"searchTerms": [],
+		"title": "ミラクルポップ☆アドベンチャー!!!!!"
+	},
+	{
+		"altTitles": [],
+		"artist": "F. Rabbeat feat. マスタード",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a162c94c8cb0",
+		"legacySongID": 429,
+		"searchTerms": [],
+		"title": "How To Make 音ゲ~曲!"
+	},
+	{
+		"altTitles": [],
+		"artist": "Mysteka",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a163018ce32e",
+		"legacySongID": 430,
+		"searchTerms": [],
+		"title": "Feels So Right feat. Renko"
+	},
+	{
+		"altTitles": [],
+		"artist": "Sakuzyo",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a1642a63e63b",
+		"legacySongID": 431,
+		"searchTerms": [],
+		"title": "Distorted Fate"
+	},
+	{
+		"altTitles": [],
+		"artist": "Team Grimoire",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a1655d4c4a7c",
+		"legacySongID": 432,
+		"searchTerms": [],
+		"title": "Rrhar'il"
+	},
+	{
+		"altTitles": [],
+		"artist": "Lime",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a16697622b74",
+		"legacySongID": 433,
+		"searchTerms": [],
+		"title": "Chronomia"
+	},
+	{
+		"altTitles": [],
+		"artist": "Porter Robinson",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a16707c682f8",
+		"legacySongID": 434,
+		"searchTerms": [],
+		"title": "Get Your Wish"
+	},
+	{
+		"altTitles": [],
+		"artist": "めろくる | Mellowcle",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a168297e0a5a",
+		"legacySongID": 435,
+		"searchTerms": [],
+		"title": "Mãos para cima! ~手を上げな~"
+	},
+	{
+		"altTitles": [],
+		"artist": "NoKANY",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a169aeef07e2",
+		"legacySongID": 436,
+		"searchTerms": [],
+		"title": "Mujinku-Vacuum Track#ADD8E6-"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite & Getty",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a16a0bef41bd",
+		"legacySongID": 437,
+		"searchTerms": [],
+		"title": "Twisted Drop Party"
+	},
+	{
+		"altTitles": ["Planet Loop"],
+		"artist": "NayutalieN",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "ボカロ"
+		},
+		"id": "S19ccf93a16b4d71538a",
+		"legacySongID": 438,
+		"searchTerms": [],
+		"title": "惑星ループ"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Noriken",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a16c723709ef",
+		"legacySongID": 439,
+		"searchTerms": [],
+		"title": "DAWNBREAKER"
+	},
+	{
+		"altTitles": [],
+		"artist": "Srav3R",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a16df67be87f",
+		"legacySongID": 440,
+		"searchTerms": [],
+		"title": "ICEBURN"
+	},
+	{
+		"altTitles": [],
+		"artist": "aran",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a16ee2add8f7",
+		"legacySongID": 441,
+		"searchTerms": [],
+		"title": "Random Access Emotions"
+	},
+	{
+		"altTitles": [],
+		"artist": "kz(livetune)／歌：オンゲキシューターズ",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a16f164c0822",
+		"legacySongID": 442,
+		"searchTerms": [],
+		"title": "STARTLINER"
+	},
+	{
+		"altTitles": [],
+		"artist": "EmoCosine + Synthion",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a170f56b7625",
+		"legacySongID": 443,
+		"searchTerms": [],
+		"title": "Stellar:Dream"
+	},
+	{
+		"altTitles": [],
+		"artist": "xi",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a17157c0fb82",
+		"legacySongID": 444,
+		"searchTerms": [],
+		"title": "Titania"
+	},
+	{
+		"altTitles": [],
+		"artist": "曲: 烏屋茶房 / 歌: R.B.P. [九條 楓(CV:佳村 はるか)、逢坂 茜(CV:大空 直美)、珠洲島 有栖(CV:長縄 まりあ)]",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a1729eb0ab6f",
+		"legacySongID": 445,
+		"searchTerms": [],
+		"title": "Y.Y.Y.計画!!!!"
+	},
+	{
+		"altTitles": [],
+		"artist": "曲: アオワイファイ / 歌: オンゲキシューターズ",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a173d170d94d",
+		"legacySongID": 446,
+		"searchTerms": [],
+		"title": "WakeUP MakeUP FEVER!"
+	},
+	{
+		"altTitles": [],
+		"artist": "USAO",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a174ea529fda",
+		"legacySongID": 447,
+		"searchTerms": [],
+		"title": "Last Kingdom"
+	},
+	{
+		"altTitles": [],
+		"artist": "Yooh",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a175034d09ff",
+		"legacySongID": 448,
+		"searchTerms": [],
+		"title": "Good bye, Merry-Go-Round."
+	},
+	{
+		"altTitles": [],
+		"artist": "黒魔",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a176817e2b09",
+		"legacySongID": 449,
+		"searchTerms": [],
+		"title": "Don't Fight The Music"
+	},
+	{
+		"altTitles": [],
+		"artist": "Hommarju",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a177f3d946c4",
+		"legacySongID": 450,
+		"searchTerms": [],
+		"title": "Pop Sequence"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite x Hommarju x ginkiha (FLUCTON)",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a178482869c6",
+		"legacySongID": 451,
+		"searchTerms": [],
+		"title": "Crossing Delta"
+	},
+	{
+		"altTitles": [],
+		"artist": "ginkiha",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a1790f80370b",
+		"legacySongID": 452,
+		"searchTerms": [],
+		"title": "Paved Garden"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Myosuke",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "TANO*C"
+		},
+		"id": "S19ccf93a17a30aa0c0a",
+		"legacySongID": 453,
+		"searchTerms": [],
+		"title": "Shadow Bang"
+	},
+	{
+		"altTitles": [],
+		"artist": "t+pazolite",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a17bba836537",
+		"legacySongID": 454,
+		"searchTerms": [],
+		"title": "Slapstick Parfait"
+	},
+	{
+		"altTitles": [],
+		"artist": "reku mochizuki",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a17c8b804772",
+		"legacySongID": 455,
+		"searchTerms": [],
+		"title": "Kirakira Noel Story!!"
+	},
+	{
+		"altTitles": [],
+		"artist": "Blacklolita",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a17df5388187",
+		"legacySongID": 456,
+		"searchTerms": [],
+		"title": "Giga Flare VIP"
+	},
+	{
+		"altTitles": [],
+		"artist": "P*Light 「CHRONO CIRCLE」より",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a17e6f8e1c8e",
+		"legacySongID": 457,
+		"searchTerms": [],
+		"title": "SWAG!!"
+	},
+	{
+		"altTitles": [],
+		"artist": "星街すいせい",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "アニメ／ＰＯＰ"
+		},
+		"id": "S19ccf93a17f258b231e",
+		"legacySongID": 458,
+		"searchTerms": [],
+		"title": "ビビデバ | BIBBIDIBA"
+	},
+	{
+		"altTitles": [],
+		"artist": "aran 「Rotaeno」より",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a180c1ab5dd6",
+		"legacySongID": 459,
+		"searchTerms": [],
+		"title": "Maholova"
+	},
+	{
+		"altTitles": [],
+		"artist": "ETIA. 「Rotaeno」より",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19ccf93a181a649a23c",
+		"legacySongID": 460,
+		"searchTerms": [],
+		"title": "MVURBD"
+	}
+]

@@ -2,19 +2,21 @@
 	"name": "tachi-homepage",
 	"version": "0.1.0",
 	"description": "",
-	"engines": {
-		"node": ">=20.10.0",
-		"pnpm": ">=8.12.0"
-	},
 	"scripts": {
 		"build": "node build.mjs",
+		"lint": "eslint .",
+		"lint-fix": "eslint . --fix",
 		"watch": "node build.mjs --watch"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
-		"node-sass": "9.0.0",
-		"prettier": "3.2.5"
+		"eslint-config-tachi": "workspace:*",
+		"node-sass": "catalog:",
+		"prettier": "catalog:"
+	},
+	"engines": {
+		"bun": ">=1.2.0"
 	}
 }

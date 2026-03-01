@@ -72,7 +72,7 @@ If you're looking to add a BMS table to Tachi for an example, you'd look into th
 
 ## Single-Use Scripts
 
-Some scripts we only want to run once, and we don't really need to keep them around. These are saved into the `single-use` folder, and will never be tracked by `git`.
+Some scripts we only want to run once, and we don't really need to keep them around. These are saved into the `personal` folder, and will never be tracked by `git`.
 
 You can make quick hacky scripts here.
 

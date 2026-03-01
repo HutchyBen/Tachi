@@ -18,6 +18,7 @@ your-pc
 
 # Compiled output
 js
+build
 
 # Ignore all .env's apart from example.env
 .env
@@ -44,7 +45,7 @@ coverage
 out.*
 failed-tests.log
 
-.tsbuildinfo
+tsconfig.json.tsbuildinfo
 
 # legacy bootstrap flag
 I_HAVE_BOOTSTRAPPED_OK

@@ -1,0 +1,23 @@
+POSTGRES_URL := "postgresql://tachi:tachi@postgres"
+DEFAULT_DB := "tachi_dev"
+
+# Open a psql shell against the local dev Postgres instance.
+db POSTGRES_DB=DEFAULT_DB:
+	psql "{{POSTGRES_URL}}/{{POSTGRES_DB}}"
+
+# Drop and recreate the database so migrations can be re-applied from scratch.
+db-reset POSTGRES_DB=DEFAULT_DB:
+	#!/bin/bash
+
+	export DATABASE_URL="{{POSTGRES_URL}}/{{POSTGRES_DB}}"
+	tachidb database drop
+	tachidb database create
+	tachidb migrate run
+
+# Show the status of all applied (and failed) migrations.
+db-migrate-status POSTGRES_DB=DEFAULT_DB:
+	psql "{{POSTGRES_URL}}/{{POSTGRES_DB}}" -c \
+		"SELECT version, description, success, installed_on, execution_time || 'µs' AS execution_time \
+		 FROM \"_migration\" \
+		 ORDER BY version"
+

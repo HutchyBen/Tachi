@@ -9,11 +9,13 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
 	&& apt-get upgrade -y \
 	&& apt-get install -y \
 		# essentials
-		git npm locales sudo \
+		git npm locales sudo unzip \
 		# docs pythonisms
 		python-is-python3 python3-setuptools pip mkdocs mkdocs-material \
+		# postgres client tools (psql, pg_dump, pg_restore, pg_isready, etc.)
+		postgresql-client \
 		# nice to haves
-		gh fish just fzf curl wget parallel neovim fd-find bat \
+		gh fish just fzf curl wget parallel neovim fd-find bat rsync \
 	# uninstall lynx so people don't get a CLI browser that can't load anything when they do `gh auth login`
 	&& apt-get purge -y lynx
 
@@ -23,13 +25,19 @@ ENV DEBIAN_FRONTEND=readline
 # `fd` is called `fdfind` on debian. Awesome.
 RUN ln -s $(which fdfind) /usr/bin/fd
 
+# expose the db CLI globally
+RUN ln -sf /tachi/typescript/db-cli/src/index.ts /usr/local/bin/tachidb
+
 # setup locales
 # https://stackoverflow.com/questions/28405902/how-to-set-the-locale-inside-a-debian-ubuntu-docker-container
 RUN echo 'en_US.UTF-8 UTF-8' > /etc/locale.gen && locale-gen
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 
-# nodeisms
-RUN npm install --silent -g pnpm@8.15.6
+# bun
+# TODO(zk): This will just pull a random version off
+# the internet, unpinned. There's got to be something
+# better...
+RUN curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash
 
 # https://github.com/python-babel/babel/issues/990
 # it wouldn't be python without needing absurd global state manipulation to fix
@@ -53,11 +61,9 @@ RUN chown -R tachi:tachi /tachi
 USER tachi
 
 # see above comment about non-root volumes
-RUN mkdir node_modules .pnpm-store
-
-# make pnpm be quiet about new versions
-RUN echo "update-notifier=false" >> /home/tachi/.npmrc
+RUN mkdir node_modules
 
 # keep container alive indefinitely
 # Exclude .git from chown to avoid permission errors on macOS Docker mounts
+# TODO(zk): What the fuck is this?
 ENTRYPOINT ["sh", "-c", "sudo find /tachi -maxdepth 1 ! -name '.git' ! -name '/tachi' -exec chown -R tachi:tachi {} + 2>/dev/null || true; exec /bin/fish"]

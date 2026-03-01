@@ -1,0 +1,9 @@
+gen: gen-kanel gen-proto
+
+# Generate kanel types from the postgres definitions in Tachi.
+gen-kanel: (db-reset "templatedb")
+	bun run kanel -d "{{ POSTGRES_URL }}/templatedb" -c db/kanel_config.js
+
+# Generate protobuf types from the proto definitions in the server
+gen-proto:
+	bun run --filter tachi-server gen-proto

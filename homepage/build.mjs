@@ -1,12 +1,6 @@
-import sass from "node-sass";
+import { copyFileSync, existsSync, mkdirSync, watch, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import {
-	existsSync,
-	mkdirSync,
-	writeFileSync,
-	watch,
-	copyFileSync,
-} from "node:fs";
+import sass from "node-sass";
 
 const sourceDirectory = resolve(".", "src");
 const outDirectory = resolve(".", "dist");

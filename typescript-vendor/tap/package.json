@@ -1,0 +1,122 @@
+{
+	"name": "tap",
+	"version": "15.0.9",
+	"author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me)",
+	"description": "A Test-Anything-Protocol library for JavaScript",
+	"homepage": "http://www.node-tap.org/",
+	"bin": {
+		"tap": "bin/run.js"
+	},
+	"main": "lib/tap.js",
+	"exports": {
+		".": {
+			"import": "./lib/tap.mjs",
+			"default": "./lib/tap.js"
+		},
+		"./*": "./*",
+		"./": "./"
+	},
+	"engines": {
+		"node": ">=10"
+	},
+	"dependencies": {
+		"chokidar": "catalog:",
+		"coveralls": "catalog:",
+		"findit": "catalog:",
+		"foreground-child": "catalog:",
+		"fs-exists-cached": "catalog:",
+		"glob": "catalog:",
+		"import-jsx": "catalog:",
+		"ink": "catalog:",
+		"isexe": "catalog:",
+		"istanbul-lib-processinfo": "catalog:",
+		"jackspeak": "catalog:",
+		"libtap": "catalog:",
+		"minipass": "catalog:",
+		"mkdirp": "catalog:",
+		"nyc": "catalog:",
+		"opener": "catalog:",
+		"rimraf": "catalog:",
+		"signal-exit": "catalog:",
+		"source-map-support": "catalog:",
+		"tap-mocha-reporter": "catalog:",
+		"tap-parser": "catalog:",
+		"tap-yaml": "catalog:",
+		"tcompare": "catalog:",
+		"treport": "catalog:",
+		"which": "catalog:"
+	},
+	"devDependencies": {
+		"flow-remove-types": "catalog:",
+		"node-preload": "catalog:",
+		"process-on-spawn": "catalog:",
+		"ts-node": "catalog:",
+		"typescript": "catalog:"
+	},
+	"peerDependencies": {
+		"flow-remove-types": ">=2.112.0",
+		"ts-node": ">=8.5.2",
+		"typescript": ">=3.7.2"
+	},
+	"peerDependenciesMeta": {
+		"flow-remove-types": {
+			"optional": true
+		},
+		"ts-node": {
+			"optional": true
+		},
+		"typescript": {
+			"optional": true
+		}
+	},
+	"keywords": [
+		"assert",
+		"tap",
+		"test",
+		"testing"
+	],
+	"license": "ISC",
+	"repository": "https://github.com/tapjs/node-tap.git",
+	"scripts": {
+		"snap": "node bin/run.js -M coverage-map.js",
+		"test": "node bin/run.js -M coverage-map.js",
+		"unit": "bash scripts/unit.sh",
+		"posttest": "rm -rf cli-tests-*",
+		"postunit": "npm run posttest",
+		"t": "node bin/run.js -J -sfails.txt",
+		"preversion": "npm test",
+		"postversion": "npm publish",
+		"postpublish": "bash postpublish.sh",
+		"www:build": "cd docs; npm ci; npm run build",
+		"www:develop": "cd docs; npm run develop",
+		"start": "npm run www:develop",
+		"www:serve": "cd docs; npm run serve"
+	},
+	"tap": {
+		"test-regex": "^test/.*\\.js$",
+		"check-coverage": true
+	},
+	"nyc": {
+		"include": [
+			"bin/run.js",
+			"bin/jsx.js",
+			"lib/*.js",
+			"bin/jack.js"
+		]
+	},
+	"files": [
+		"settings.js",
+		"bin/run.js",
+		"bin/jsx.js",
+		"bin/jack.js",
+		"lib"
+	],
+	"bundleDependencies": [
+		"ink",
+		"treport",
+		"@types/react"
+	],
+	"funding": {
+		"url": "https://github.com/sponsors/isaacs"
+	}
+}

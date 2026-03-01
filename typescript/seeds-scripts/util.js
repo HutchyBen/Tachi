@@ -1,0 +1,147 @@
+const crypto = require("crypto");
+const fjsh = require("fast-json-stable-hash");
+const fs = require("fs");
+const path = require("path");
+
+const DeterministicCollectionSort = require("./sort-seeds");
+
+function IterateCollections(cb) {
+	for (const collection of fs.readdirSync(COLLECTIONS_DIR)) {
+		const data = cb(
+			JSON.parse(fs.readFileSync(path.join(COLLECTIONS_DIR, collection))),
+			collection,
+		);
+
+		fs.writeFileSync(path.join(COLLECTIONS_DIR, collection), JSON.stringify(data, null, "\t"));
+	}
+
+	DeterministicCollectionSort();
+}
+
+const COLLECTIONS_DIR = path.join(__dirname, "../collections");
+
+function ReadCollection(name, throwIfNotFound = false) {
+	const p = path.join(COLLECTIONS_DIR, name);
+	if (!fs.existsSync(p)) {
+		if (throwIfNotFound) {
+			throw new Error(`No collection ${name} exists.`);
+		}
+
+		fs.writeFileSync(p, JSON.stringify([]));
+		return [];
+	}
+
+	return JSON.parse(fs.readFileSync(p));
+}
+
+function WriteCollection(name, data) {
+	fs.writeFileSync(path.join(COLLECTIONS_DIR, name), JSON.stringify(data, null, "\t"));
+
+	DeterministicCollectionSort();
+}
+
+function MutateCollection(name, cb) {
+	const data = cb(ReadCollection(name));
+
+	if (data === undefined) {
+		throw new Error(`You forgot to return from your MutateCollection function.`);
+	}
+
+	WriteCollection(name, data);
+}
+
+/**
+ * A variant of the snowflake ID algorithm for tachi
+ */
+function tachiID(prefix, ts = Date.now(), epoch = 0) {
+	let dt = ts - epoch;
+	let dtb = dt.toString(16);
+	let rand = crypto.randomBytes(4).toString("hex");
+
+	return prefix + dtb + rand;
+}
+
+function CreateChartID(ts = Date.now()) {
+	return tachiID("C", ts);
+}
+
+function CreateQuestID(ts = Date.now()) {
+	return tachiID("Q", ts);
+}
+
+function CreateSongID(ts = Date.now()) {
+	return tachiID("S", ts);
+}
+
+function CreateFolderID(ts = Date.now()) {
+	return tachiID("F", ts);
+}
+
+function CreateTableID(ts = Date.now()) {
+	return tachiID("T", ts);
+}
+
+// this api sucks, maybe dont use it
+//
+// TODO(zk): remove this and give folders actual readable names
+function CreateLegacyFolderID(query, game, playtype) {
+	return `F${fjsh.hash(Object.assign({ game, playtype }, query), "SHA256")}`;
+}
+
+function CreateLegacyFolderIDFromFolder(folder) {
+	return CreateLegacyFolderID(folder.data, folder.game, folder.playtype);
+}
+
+function CreateGoalID(charts, criteria, game, playtype) {
+	return `G${fjsh.hash({ charts, criteria, game, playtype }, "sha256")}`;
+}
+
+// quick inplace deepmerge hack
+// probably doesn't work for arrays, i don't care though.
+function EfficientInPlaceDeepmerge(ref, apply) {
+	for (const key in apply) {
+		if (typeof apply[key] === "object" && apply[key]) {
+			EfficientInPlaceDeepmerge(ref[key], apply[key]);
+		} else {
+			ref[key] = apply[key];
+		}
+	}
+}
+
+function GetChartCollectionGame(filename) {
+	let result = filename.match(/charts-([\w-]+)\.json$/u);
+
+	if (result === null) {
+		throw new Error(`Could not extract game from ${filename}.`);
+	}
+
+	return result[1];
+}
+
+function GetSongCollectionGameGroup(filename) {
+	let result = filename.match(/songs-([\w-]+)\.json$/u);
+
+	if (result === null) {
+		throw new Error(`Could not extract gameGroup from ${filename}.`);
+	}
+
+	return result[1];
+}
+
+module.exports = {
+	CreateChartID,
+	CreateFolderID,
+	CreateGoalID,
+	CreateLegacyFolderID,
+	CreateLegacyFolderIDFromFolder,
+	CreateQuestID,
+	CreateSongID,
+	CreateTableID,
+	EfficientInPlaceDeepmerge,
+	GetChartCollectionGame,
+	GetSongCollectionGame: GetSongCollectionGameGroup,
+	IterateCollections,
+	MutateCollection,
+	ReadCollection,
+	WriteCollection,
+};

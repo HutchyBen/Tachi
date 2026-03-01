@@ -1,9 +1,10 @@
 .git
+.bun
 node_modules
-.tsbuildinfo
+tsconfig.json.tsbuildinfo
 **/node_modules
-**/.tsbuildinfo
+**/tsconfig.json.tsbuildinfo
 
 # Extracted data from iidx merge script
-seeds/scripts/rerunners/iidx/iidx-mdb-parse/ifs-output
-seeds/scripts/rerunners/iidx/iidx-mdb-parse/logs
+typescript/seeds-scripts/rerunners/iidx/iidx-mdb-parse/ifs-output
+typescript/seeds-scripts/rerunners/iidx/iidx-mdb-parse/logs

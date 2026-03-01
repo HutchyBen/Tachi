@@ -1,0 +1,1345 @@
+/* eslint-disable no-await-in-loop */
+/**
+ * One-shot migration from MongoDB → PostgreSQL.
+ *
+ * Fucking wrote by claude dude. I'm out of a job.
+ *
+ * Required env vars:
+ *   MONGO_URL      – MongoDB connection string, e.g. mongodb://mongo/tachi
+ *   POSTGRES_URL   – PostgreSQL connection string, e.g. postgresql://tachi:tachi@postgres/tachi_dev
+ *
+ * Run with:
+ *   cd server && MONGO_URL=... POSTGRES_URL=... ts-node -r tsconfig-paths/register src/scripts/migrate-to-postgres.ts
+ */
+
+import type { PrivateUserInfoDocument } from "#utils/types";
+import type {
+	AccountBadgeKind,
+	AuthLevel,
+	Database,
+	GameGroup,
+	ImportType,
+	NewAccount,
+	NewAccountBadge,
+	NewAccountFollowing,
+	NewAccountSettings,
+	NewAccountUsernameChange,
+	NewClassAchievement,
+	NewFolderView,
+	NewGameRival,
+	NewGameSettings,
+	NewGameSettingsShowcase,
+	NewGameStats,
+	NewGameStatsSnapshot,
+	NewGoalSub,
+	NewImport,
+	NewImportClass,
+	NewImportError,
+	NewImportGame,
+	NewImportLock,
+	NewImportSession,
+	NewImportTiming,
+	NewInviteLock,
+	NewNotification,
+	NewOrphanChart,
+	NewOrphanChartUser,
+	NewPrivAccountCredential,
+	NewPrivApiClient,
+	NewPrivApiToken,
+	NewPrivInvite,
+	NewPrivSvcCgCardInfo,
+	NewPrivSvcFerCard,
+	NewPrivSvcKaiAuthToken,
+	NewPrivSvcMytCardInfo,
+	NewQuestSub,
+	NewScore,
+	NewScoreBlacklist,
+	NewSession,
+	NewSvcFerSettings,
+	NewSvcKshookSv6cSettings,
+	Game as PgGame,
+} from "tachi-db";
+
+import { mongoScoreDataToPg } from "#lib/v3/migration-tools";
+import fs from "fs";
+import { type Insertable, Kysely, PostgresDialect, sql } from "kysely";
+import monk from "monk";
+import path from "path";
+import { Pool } from "pg";
+import {
+	type CGCardInfo,
+	type ClassAchievementDocument,
+	type FervidexSettingsDocument,
+	GetGPTString,
+	type GoalSubscriptionDocument,
+	GPTStringToV3,
+	type ImportDocument,
+	type ImportTimingsDocument,
+	type KaiAuthDocument,
+	type KsHookSettingsDocument,
+	type MytCardInfo,
+	type NotificationDocument,
+	type OrphanChartDocument,
+	type QuestSubscriptionDocument,
+	type RecentlyViewedFolderDocument,
+	type ScoreDocument,
+	type SessionDocument,
+	type TachiAPIClientDocument,
+	type UGPTSettingsDocument,
+	UserAuthLevels,
+	type UserDocument,
+	type UserGameStats,
+	type UserGameStatsSnapshotDocument,
+	type UserNameChangeDocument,
+	type UserSettingsDocument,
+} from "../../../common/src";
+
+import { buildChartIdMap, importSeeds } from "./load-seeds-pg";
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Extension types for MongoDB documents that have extra fields not in the TS interface
+// ──────────────────────────────────────────────────────────────────────────────
+
+/** InviteCodeDocument extended – always has all fields in practice. */
+interface InviteCodeDocumentFull {
+	code: string;
+	createdBy: number;
+	createdAt: number;
+	consumed: boolean;
+	consumedBy: number | null;
+	consumedAt: number | null;
+}
+
+/** Import lock document – inlined in db.ts. */
+interface ImportLockDocument {
+	userID: number;
+	locked: boolean;
+	lockedAt: number | null;
+}
+
+/** Invite lock document – inlined in db.ts. */
+interface InviteLockDocument {
+	userID: number;
+	locked: boolean;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Connection setup
+// ──────────────────────────────────────────────────────────────────────────────
+
+const MONGO_URL = process.env.MONGO_URL ?? "mongodb://mongo/tachi";
+const POSTGRES_URL = process.env.POSTGRES_URL;
+const SEEDS_DIR = process.env.SEEDS_DIR ?? path.resolve(__dirname, "../../../seeds/collections");
+
+if (!POSTGRES_URL) {
+	console.error("[migrate] POSTGRES_URL is not set.");
+	process.exit(1);
+}
+
+const mongoDB = monk(MONGO_URL);
+
+const pg = new Kysely<Database>({
+	dialect: new PostgresDialect({
+		pool: new Pool({ connectionString: POSTGRES_URL }),
+	}),
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Game helpers
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Games where the Postgres `game` enum equals the game name (single playtype).
+ * All other games use `${game}-${playtype.toLowerCase()}`.
+ */
+const SINGLE_PT_GAMES = new Set([
+	"arcaea",
+	"chunithm",
+	"jubeat",
+	"maimai",
+	"maimaidx",
+	"museca",
+	"ongeki",
+	"popn",
+	"sdvx",
+	"wacca",
+]);
+
+/** Maps MongoDB game + playtype strings to the Postgres game enum value. */
+function toGame(game: string, playtype: string): PgGame {
+	if (SINGLE_PT_GAMES.has(game)) {
+		return game as PgGame;
+	}
+
+	return `${game}-${playtype.toLowerCase()}` as PgGame;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Auth level helper
+// ──────────────────────────────────────────────────────────────────────────────
+
+/** Maps the MongoDB numeric UserAuthLevels enum to the Postgres AuthLevel string enum. */
+function toAuthLevel(level: UserAuthLevels): AuthLevel {
+	switch (level) {
+		case UserAuthLevels.BANNED:
+			return "banned";
+		case UserAuthLevels.ADMIN:
+			return "admin";
+		default:
+			return "user";
+	}
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Timestamp helpers
+// ──────────────────────────────────────────────────────────────────────────────
+
+/** Convert a millisecond epoch to ISO-8601 string. Returns null if falsy. */
+function ts(ms: number | null | undefined): string | null {
+	return ms === null || ms === undefined ? null : new Date(ms).toISOString();
+}
+
+/** As above, but required (throws if falsy). */
+function tsReq(ms: number): string {
+	return new Date(ms).toISOString();
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// API permission helpers
+// (Old MongoDB data uses dash-separated permission names, not the underscore
+// form in the current APIPermissions type — kept as plain string lookups.)
+// ──────────────────────────────────────────────────────────────────────────────
+
+/** Extract one Postgres pm_* column from a MongoDB requestedPermissions array. */
+function perm(permissions: Array<string>, key: string): boolean | null {
+	return permissions.includes(key) ? true : null;
+}
+
+/** Extract one Postgres pm_* column from a MongoDB permissions record. */
+function permRec(permissions: Record<string, boolean>, key: string): boolean | null {
+	return permissions[key] ?? null;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Bulk insert helper
+// ──────────────────────────────────────────────────────────────────────────────
+
+const INSERT_CHUNK = 500;
+
+async function batchInsert<T extends keyof Database>(
+	table: T,
+	rows: ReadonlyArray<Insertable<Database[T]>>,
+): Promise<void> {
+	if (rows.length === 0) {
+		return;
+	}
+
+	for (let i = 0; i < rows.length; i = i + INSERT_CHUNK) {
+		const chunk = rows.slice(i, i + INSERT_CHUNK);
+
+		// The inner `as never` is an implementation detail: TypeScript cannot narrow
+		// generic T inside the function body. The public signature enforces correctness.
+		try {
+			await pg
+				.insertInto(table)
+				.values(chunk as never)
+				.execute();
+		} catch (err) {
+			console.error(`  [${table}] Error inserting chunk:`, err);
+
+			fs.writeFileSync(`invalidshit-${table}.json`, JSON.stringify(chunk, null, "\t"));
+			throw err;
+		}
+	}
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Streaming helpers
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Convenience wrapper: cursor-streams a MongoDB collection and inserts all
+ * mapped rows into a single Postgres table. For collections with multiple
+ * output tables or complex logic, use streamCollection directly.
+ */
+async function streamMigrate<Doc extends object, Row extends object>(
+	collection: string,
+	table: keyof Database,
+	mapFn: (doc: Doc) => Row,
+	label = collection,
+	batchSize = 2_000,
+): Promise<void> {
+	await streamCollection<Doc>(
+		collection,
+		async (docs) => {
+			await batchInsert(table, docs.map(mapFn) as never);
+		},
+		label,
+		batchSize,
+	);
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Cursor-based streaming for large collections (keyset pagination on _id)
+// ──────────────────────────────────────────────────────────────────────────────
+
+async function streamCollection<T>(
+	collectionName: string,
+	onBatch: (docs: Array<T>) => Promise<void>,
+	label: string,
+	batchSize = 2_000,
+): Promise<void> {
+	const col = mongoDB.get<{ _id: unknown } & T>(collectionName);
+	const total = await col.count({});
+
+	console.log(`  [${label}] ${total.toLocaleString()} documents to migrate...`);
+
+	let lastId: unknown = null;
+	let processed = 0;
+
+	while (true) {
+		// FilterQuery<T> is structurally strict; cast through unknown to allow raw _id queries.
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const query = (lastId !== null ? { _id: { $gt: lastId } } : {}) as any;
+
+		const docs = (await col.find(query, {
+			sort: { _id: 1 },
+			limit: batchSize,
+		} as any)) as unknown as Array<{ _id: unknown } & T>;
+
+		if (docs.length === 0) {
+			break;
+		}
+
+		await onBatch(docs);
+
+		// docs.length > 0 is guaranteed by the break above
+
+		lastId = docs[docs.length - 1]!._id;
+		processed = processed + docs.length;
+
+		if (processed % 100_000 === 0) {
+			console.log(`    ${processed.toLocaleString()} / ${total.toLocaleString()}`);
+		}
+	}
+
+	console.log(`  [${label}] Done: ${processed.toLocaleString()} rows.`);
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Main
+// ──────────────────────────────────────────────────────────────────────────────
+
+async function main(): Promise<void> {
+	await mongoDB.then(() => void 0);
+
+	console.log("=== MongoDB → PostgreSQL migration ===\n");
+
+	// ── Seeds first ────────────────────────────────────────────────────────
+	// Songs, charts, folders, tables, goals, quests, questlines, and BMS
+	// courses all come from the local seeds directory rather than MongoDB.
+	console.log("── Seeds ────────────────────────────────────────────────────────");
+	await importSeeds(pg, SEEDS_DIR);
+
+	// Maps old MongoDB chartID (40-char SHA1) → seed sid (16-char hex).
+	// Used to resolve chart_id FK references in scores and PBs.
+	const chartIdMap = buildChartIdMap(SEEDS_DIR);
+
+	// ══════════════════════════════════════════════════════════════════════════
+	// LEVEL 0 — No FK dependencies
+	// ══════════════════════════════════════════════════════════════════════════
+
+	console.log("\n── Level 0 ──────────────────────────────────────────────────────");
+
+	// ── account + account_badge ───────────────────────────────────────────────
+	{
+		console.log("\n[account / account_badge]");
+		const VALID_BADGES = new Set<AccountBadgeKind>(["alpha", "beta", "dev-team"]);
+		const users = await mongoDB.get<UserDocument>("users").find({});
+
+		const accountRows: Array<NewAccount> = users.map((u) => ({
+			id: u.id,
+			username: u.username,
+			sm_discord: u.socialMedia.discord ?? null,
+			sm_twitter: u.socialMedia.twitter ?? null,
+			sm_github: u.socialMedia.github ?? null,
+			sm_steam: u.socialMedia.steam ?? null,
+			sm_youtube: u.socialMedia.youtube ?? null,
+			sm_twitch: u.socialMedia.twitch ?? null,
+			joined: tsReq(u.joinDate),
+			about: u.about,
+			status: u.status && u.status.length > 140 ? null : u.status,
+			custom_pfp_location: u.customPfpLocation,
+			custom_banner_location: u.customBannerLocation,
+			last_seen: tsReq(u.lastSeen),
+			auth_level: toAuthLevel(u.authLevel),
+		}));
+
+		await batchInsert("account", accountRows);
+
+		// Reset BIGSERIAL sequence so future inserts don't collide with migrated IDs.
+		await sql`SELECT setval(pg_get_serial_sequence('account', 'id'), (SELECT MAX(id) FROM account))`.execute(
+			pg,
+		);
+
+		const badgeRows: Array<NewAccountBadge> = [];
+
+		for (const u of users) {
+			for (const badge of u.badges) {
+				if (VALID_BADGES.has(badge as AccountBadgeKind)) {
+					badgeRows.push({ user_id: u.id, badge: badge as AccountBadgeKind });
+				}
+			}
+		}
+
+		await batchInsert("account_badge", badgeRows);
+		console.log(`  ${users.length} accounts, ${badgeRows.length} badges.`);
+	}
+
+	// ── orphan_chart + orphan_chart_user ──────────────────────────────────────
+	{
+		console.log("\n[orphan_chart / orphan_chart_user]");
+		const orphans = await mongoDB.get<OrphanChartDocument>("orphan-chart-queue").find({});
+
+		const orphanRows: Array<NewOrphanChart> = [];
+		const orphanUserRows: Array<NewOrphanChartUser> = [];
+
+		for (const o of orphans) {
+			const chartId = o.chartDoc.chartID;
+
+			orphanRows.push({
+				id: chartId,
+				game: o.gptString as PgGame,
+				chart_doc: JSON.stringify(o.chartDoc),
+				song_doc: JSON.stringify(o.songDoc),
+			});
+
+			for (const userId of o.userIDs) {
+				orphanUserRows.push({ orphan_chart_id: chartId, user_id: userId });
+			}
+		}
+
+		await batchInsert("orphan_chart", orphanRows);
+		await batchInsert("orphan_chart_user", orphanUserRows);
+		console.log(`  ${orphanRows.length} orphan charts, ${orphanUserRows.length} user links.`);
+	}
+
+	// ══════════════════════════════════════════════════════════════════════════
+	// LEVEL 1 — Depend on account and/or level-0 tables
+	// ══════════════════════════════════════════════════════════════════════════
+
+	console.log("\n── Level 1 ──────────────────────────────────────────────────────");
+
+	// ── account_settings + account_following ──────────────────────────────────
+	{
+		console.log("\n[account_settings / account_following]");
+		const settings = await mongoDB.get<UserSettingsDocument>("user-settings").find({});
+
+		const settingRows: Array<NewAccountSettings> = settings.map((s) => ({
+			user_id: s.userID,
+			pf_invisible: s.preferences.invisible,
+			pf_developer_mode: s.preferences.developerMode,
+			pf_advanced_mode: s.preferences.advancedMode,
+			pf_contentious_content: s.preferences.contentiousContent,
+			pf_deletable_scores: s.preferences.deletableScores,
+		}));
+
+		await batchInsert("account_settings", settingRows);
+
+		const followRows: Array<NewAccountFollowing> = [];
+
+		for (const s of settings) {
+			for (const followeeId of s.following) {
+				followRows.push({ user_id: s.userID, followee: followeeId });
+			}
+		}
+
+		await batchInsert("account_following", followRows);
+		console.log(`  ${settings.length} account settings, ${followRows.length} follows.`);
+	}
+
+	// ── account_username_change ───────────────────────────────────────────────
+	{
+		console.log("\n[account_username_change]");
+		const changes = await mongoDB.get<UserNameChangeDocument>("user-name-changes").find({});
+
+		const changeRows: Array<NewAccountUsernameChange> = changes.map((c) => ({
+			user_id: c.userID,
+			username: c.username,
+			previous_username: c.previousUsername,
+			timestamp: tsReq(c.timestamp),
+		}));
+
+		await batchInsert("account_username_change", changeRows);
+		console.log(`  ${changes.length} username changes.`);
+	}
+
+	// ── priv_account_credential ───────────────────────────────────────────────
+	{
+		console.log("\n[priv_account_credential]");
+		const privInfo = await mongoDB
+			.get<PrivateUserInfoDocument>("user-private-information")
+			.find({});
+
+		const credRows: Array<NewPrivAccountCredential> = privInfo.map((p) => ({
+			user_id: p.userID,
+			password: p.password,
+			email: p.email,
+		}));
+
+		await batchInsert("priv_account_credential", credRows);
+		console.log(`  ${privInfo.length} credentials.`);
+	}
+
+	// ── priv_api_client ───────────────────────────────────────────────────────
+	{
+		console.log("\n[priv_api_client]");
+		const clients = await mongoDB.get<TachiAPIClientDocument>("api-clients").find({});
+
+		const clientRows: Array<NewPrivApiClient> = clients.map((c) => {
+			// Old MongoDB data uses dash-separated permission names ("customise-profile"),
+			// not the underscore form in the current APIPermissions type.
+			const p = c.requestedPermissions as unknown as Array<string>;
+
+			return {
+				client_id: c.clientID,
+				client_secret: c.clientSecret,
+				name: c.name,
+				author: c.author,
+				pm_customise_profile: perm(p, "customise-profile"),
+				pm_customise_score: perm(p, "customise-score"),
+				pm_customise_session: perm(p, "customise-session"),
+				pm_delete_score: perm(p, "delete-score"),
+				pm_manage_rivals: perm(p, "manage-rivals"),
+				pm_manage_targets: perm(p, "manage-targets"),
+				pm_submit_score: perm(p, "submit-score"),
+				pm_manage_challenges: perm(p, "manage-challenges"),
+				api_key_template: c.apiKeyTemplate,
+				api_key_filename: c.apiKeyFilename,
+			};
+		});
+
+		await batchInsert("priv_api_client", clientRows);
+		console.log(`  ${clients.length} API clients.`);
+	}
+
+	// ── priv_invite ───────────────────────────────────────────────────────────
+	{
+		console.log("\n[priv_invite]");
+		// InviteCodeDocument is a discriminated union; use the full flattened type.
+		const invites = await mongoDB.get<InviteCodeDocumentFull>("invites").find({});
+
+		const inviteRows: Array<NewPrivInvite> = invites.map((inv) => ({
+			code: inv.code,
+			created_by: inv.createdBy,
+			created_at: tsReq(inv.createdAt),
+			consumed: inv.consumed,
+			consumed_by: inv.consumedBy,
+			consumed_at: ts(inv.consumedAt),
+		}));
+
+		await batchInsert("priv_invite", inviteRows);
+		console.log(`  ${invites.length} invites.`);
+	}
+
+	// ── priv_svc_kai_auth_token ───────────────────────────────────────────────
+	{
+		console.log("\n[priv_svc_kai_auth_token]");
+		const kaiTokens = await mongoDB.get<KaiAuthDocument>("kai-auth-tokens").find({});
+
+		const tokenRows: Array<NewPrivSvcKaiAuthToken> = kaiTokens.map((k) => ({
+			user_id: k.userID,
+			service: k.service,
+			token: k.token,
+			refresh_token: k.refreshToken,
+		}));
+
+		await batchInsert("priv_svc_kai_auth_token", tokenRows);
+		console.log(`  ${kaiTokens.length} KAI auth tokens.`);
+	}
+
+	// ── priv_svc_cg_card_info ─────────────────────────────────────────────────
+	{
+		console.log("\n[priv_svc_cg_card_info]");
+		const cgCards = await mongoDB.get<CGCardInfo>("cg-card-info").find({});
+
+		const cgRows: Array<NewPrivSvcCgCardInfo> = [];
+
+		for (const c of cgCards) {
+			if (c.service !== "dev" && c.service !== "gan" && c.service !== "nag") {
+				console.error(`  [priv_svc_cg_card_info] Skipping invalid service: ${c.service}`);
+				continue;
+			}
+
+			cgRows.push({
+				user_id: c.userID,
+				service: c.service,
+				card_id: c.cardID,
+				pin: c.pin,
+			});
+		}
+
+		await batchInsert("priv_svc_cg_card_info", cgRows);
+		console.log(`  ${cgCards.length} CG card infos.`);
+	}
+
+	// ── priv_svc_myt_card_info ────────────────────────────────────────────────
+	{
+		console.log("\n[priv_svc_myt_card_info]");
+		const mytCards = await mongoDB.get<MytCardInfo>("myt-card-info").find({});
+
+		const mytRows: Array<NewPrivSvcMytCardInfo> = [];
+
+		for (const m of mytCards) {
+			if (mytRows.find((e) => e.card_access_code === m.cardAccessCode)) {
+				console.error(
+					`  [priv_svc_myt_card_info] Skipping duplicate card access code: ${m.cardAccessCode}`,
+				);
+				continue;
+			}
+
+			mytRows.push({
+				user_id: m.userID,
+				card_access_code: m.cardAccessCode,
+			});
+		}
+
+		await batchInsert("priv_svc_myt_card_info", mytRows);
+		console.log(`  ${mytCards.length} MYT card infos.`);
+	}
+
+	// ── svc_fer_settings + priv_svc_fer_card ─────────────────────────────────
+	{
+		console.log("\n[svc_fer_settings / priv_svc_fer_card]");
+		const ferSettings = await mongoDB.get<FervidexSettingsDocument>("fer-settings").find({});
+
+		const ferRows: Array<NewSvcFerSettings> = ferSettings.map((f) => ({
+			user_id: f.userID,
+			force_static_import: f.forceStaticImport,
+		}));
+
+		await batchInsert("svc_fer_settings", ferRows);
+
+		const cardRows: Array<NewPrivSvcFerCard> = [];
+
+		for (const f of ferSettings) {
+			for (const card of f.cards ?? []) {
+				cardRows.push({ user_id: f.userID, card_id: card });
+			}
+		}
+
+		await batchInsert("priv_svc_fer_card", cardRows);
+		console.log(`  ${ferSettings.length} fer settings, ${cardRows.length} FER cards.`);
+	}
+
+	// ── svc_kshook_sv6c_settings ──────────────────────────────────────────────
+	{
+		console.log("\n[svc_kshook_sv6c_settings]");
+		const ksSettings = await mongoDB
+			.get<KsHookSettingsDocument>("kshook-sv6c-settings")
+			.find({});
+
+		const ksRows: Array<NewSvcKshookSv6cSettings> = ksSettings.map((k) => ({
+			user_id: k.userID,
+			force_static_import: k.forceStaticImport,
+		}));
+
+		await batchInsert("svc_kshook_sv6c_settings", ksRows);
+		console.log(`  ${ksSettings.length} KsHook settings.`);
+	}
+
+	// ── import_lock ───────────────────────────────────────────────────────────
+	{
+		console.log("\n[import_lock]");
+		const importLocks = await mongoDB.get<ImportLockDocument>("import-locks").find({});
+
+		const lockRows: Array<NewImportLock> = importLocks.map((l) => ({
+			user_id: l.userID,
+			locked: l.locked,
+			locked_at: ts(l.lockedAt),
+		}));
+
+		await batchInsert("import_lock", lockRows);
+		console.log(`  ${importLocks.length} import locks.`);
+	}
+
+	// ── invite_lock ───────────────────────────────────────────────────────────
+	{
+		console.log("\n[invite_lock]");
+		const inviteLocks = await mongoDB.get<InviteLockDocument>("invite-locks").find({});
+
+		const lockRows: Array<NewInviteLock> = [];
+
+		for (const l of inviteLocks) {
+			if (lockRows.find((e) => e.user_id === l.userID)) {
+				console.error(`  [invite_lock] Skipping duplicate user ID: ${l.userID}`);
+				continue;
+			}
+
+			lockRows.push({
+				user_id: l.userID,
+				locked: l.locked,
+				locked_at: null,
+			});
+		}
+
+		await batchInsert("invite_lock", lockRows);
+		console.log(`  ${inviteLocks.length} invite locks.`);
+	}
+
+	// ── notification ──────────────────────────────────────────────────────────
+	{
+		console.log("\n[notification]");
+		const notifications = await mongoDB.get<NotificationDocument>("notifications").find({});
+
+		const notifRows: Array<NewNotification> = notifications.map((n) => ({
+			title: n.title,
+			sent_to: n.sentTo,
+			sent_at: tsReq(n.sentAt),
+			read: n.read,
+			kind: n.body.type.toLowerCase(),
+			payload: JSON.stringify(n.body),
+		}));
+
+		await batchInsert("notification", notifRows);
+		console.log(`  ${notifications.length} notifications.`);
+	}
+
+	// ── game_settings + game_settings_showcase + game_rival ──────────────────
+	{
+		console.log("\n[game_settings / game_settings_showcase / game_rival]");
+		const ugptSettings = await mongoDB.get<UGPTSettingsDocument>("game-settings").find({});
+
+		const settingsRows: Array<NewGameSettings> = [];
+		const showcaseRows: Array<NewGameSettingsShowcase> = [];
+		const rivalRows: Array<NewGameRival> = [];
+
+		for (const s of ugptSettings) {
+			const game = toGame(s.game, s.playtype);
+			const prefs = s.preferences;
+
+			settingsRows.push({
+				user_id: s.userID,
+				game,
+				pf_preferred_score_alg: (prefs.preferredScoreAlg as string | null) ?? null,
+				pf_preferred_session_alg: (prefs.preferredSessionAlg as string | null) ?? null,
+				pf_preferred_profile_alg: (prefs.preferredProfileAlg as string | null) ?? null,
+				pf_preferred_default_enum: prefs.preferredDefaultEnum,
+				pf_default_table: prefs.defaultTable,
+				pf_preferred_ranking: prefs.preferredRanking,
+				data: JSON.stringify(prefs.gameSpecific),
+			});
+
+			if (prefs.stats.length > 0) {
+				showcaseRows.push({
+					user_id: s.userID,
+					game,
+					data: JSON.stringify(prefs.stats),
+				});
+			}
+
+			for (const rivalId of s.rivals) {
+				if (rivalId !== s.userID) {
+					rivalRows.push({ user_id: s.userID, game, rival: rivalId });
+				}
+			}
+		}
+
+		await batchInsert("game_settings", settingsRows);
+		await batchInsert("game_settings_showcase", showcaseRows);
+		await batchInsert("game_rival", rivalRows);
+		console.log(
+			`  ${settingsRows.length} game settings, ${showcaseRows.length} showcases, ${rivalRows.length} rivals.`,
+		);
+	}
+
+	// ── game_stats ────────────────────────────────────────────────────────────
+	{
+		console.log("\n[game_stats]");
+		const gameStats = await mongoDB.get<UserGameStats>("game-stats").find({});
+
+		const statsRows: Array<NewGameStats> = gameStats.map((gs) => ({
+			user_id: gs.userID,
+			game: toGame(gs.game, gs.playtype),
+			ratings: JSON.stringify(gs.ratings),
+			classes: JSON.stringify(gs.classes),
+		}));
+
+		await batchInsert("game_stats", statsRows);
+		console.log(`  ${gameStats.length} game stats.`);
+	}
+
+	// ── game_stats_snapshot ───────────────────────────────────────────────────
+	console.log("\n[game_stats_snapshot]");
+	await streamMigrate<UserGameStatsSnapshotDocument, NewGameStatsSnapshot>(
+		"game-stats-snapshots",
+		"game_stats_snapshot",
+		(snap) => ({
+			user_id: snap.userID,
+			game: toGame(snap.game, snap.playtype),
+			timestamp: tsReq(snap.timestamp),
+			playcount: snap.playcount,
+			ratings: JSON.stringify(snap.ratings),
+			classes: JSON.stringify(snap.classes),
+			rankings: JSON.stringify(snap.rankings),
+		}),
+	);
+
+	// ── class_achievement ─────────────────────────────────────────────────────
+	{
+		console.log("\n[class_achievement]");
+		const achievements = await mongoDB
+			.get<ClassAchievementDocument>("class-achievements")
+			.find({});
+
+		const achievementRows: Array<NewClassAchievement> = achievements.map((a) => ({
+			game: toGame(a.game, a.playtype),
+			user_id: a.userID,
+			class_set: a.classSet as string,
+			// classOldValue can be null in Mongo; Postgres requires a string — use empty string.
+			class_prev_value: a.classOldValue ?? "",
+			class_value: a.classValue,
+			timestamp: tsReq(a.timeAchieved),
+		}));
+
+		await batchInsert("class_achievement", achievementRows);
+		console.log(`  ${achievements.length} class achievements.`);
+	}
+
+	// ── session ───────────────────────────────────────────────────────────────
+	console.log("\n[session]");
+	await streamMigrate<SessionDocument, NewSession>("sessions", "session", (s) => ({
+		id: s.sessionID,
+		user_id: s.userID,
+		game: toGame(s.game, s.playtype),
+		name: s.name,
+		description: s.desc,
+		time_inserted: tsReq(s.timeInserted),
+		time_started: tsReq(s.timeStarted),
+		time_ended: tsReq(s.timeEnded),
+		calculated_data: JSON.stringify(s.calculatedData),
+		highlight: s.highlight,
+	}));
+
+	// ── import + import_* children ────────────────────────────────────────────
+	// Streamed: 2.5M rows. One pass populates the base table and all 6 child
+	// tables. Base rows are inserted before children within each batch to
+	// satisfy FK constraints.
+
+	// Pre-load all migrated session IDs into memory. The session table is fully
+	// populated above and won't change during this loop, so we can filter
+	// import_session rows with a local Set instead of issuing a SELECT query
+	// on every batch (~1,250 round-trips for a 2.5M-document collection).
+	const migratedSessionIds = new Set(
+		(await pg.selectFrom("session").select("id").execute()).map((r) => r.id),
+	);
+
+	console.log("\n[import / import_game / import_error / import_class / import_session]");
+	await streamCollection<ImportDocument>(
+		"imports",
+		async (docs) => {
+			const importRows: Array<NewImport> = [];
+			const importGameRows: Array<NewImportGame> = [];
+			const importErrorRows: Array<NewImportError> = [];
+			const importClassRows: Array<NewImportClass> = [];
+			let importSessionRows: Array<NewImportSession> = [];
+
+			// Batch-fetch the service field from the first score of each import
+			// rather than doing one findOne per import document.
+			const firstScoreIds = docs
+				.map((imp) => imp.scoreIDs[0])
+				.filter((id): id is string => id !== undefined);
+
+			const scoreServiceMap = new Map(
+				(
+					await mongoDB
+						.get<ScoreDocument>("scores")
+						.find(
+							{ scoreID: { $in: firstScoreIds } },
+							{ projection: { scoreID: 1, service: 1 } },
+						)
+				).map((s) => [s.scoreID, s.service]),
+			);
+
+			for (const imp of docs) {
+				const importId = imp.importID;
+
+				const service = scoreServiceMap.get(imp.scoreIDs[0] ?? "") ?? "Unknown";
+
+				importRows.push({
+					id: importId,
+					user_id: imp.userID,
+					time_started: tsReq(imp.timeStarted),
+					time_finished: tsReq(imp.timeFinished),
+					game_group: imp.game as GameGroup,
+					import_type: imp.importType as ImportType,
+					user_intent: imp.userIntent,
+					service,
+				});
+
+				// some imports have no gpt strings
+
+				const playtypes = imp.playtypes ?? [];
+
+				for (const playtype of playtypes) {
+					importGameRows.push({ id: importId, game: toGame(imp.game, playtype) });
+				}
+
+				for (const err of imp.errors) {
+					importErrorRows.push({
+						import_id: importId,
+						type: err.type,
+						message: err.message,
+					});
+				}
+
+				for (const delta of imp.classDeltas) {
+					importClassRows.push({
+						import_id: importId,
+						game: toGame(delta.game, delta.playtype),
+						set: delta.set as string,
+						prev: delta.old,
+						new: delta.new,
+					});
+				}
+
+				for (const sess of imp.createdSessions) {
+					importSessionRows.push({
+						import_id: importId,
+						session_id: sess.sessionID,
+						type: sess.type.toLowerCase(),
+					});
+				}
+			}
+
+			// Deduplicate import_session rows (same import_id + session_id can appear multiple times).
+			const seenImportSession = new Set<string>();
+
+			importSessionRows = importSessionRows.filter((r) => {
+				const key = `${r.import_id}:${r.session_id}`;
+
+				if (seenImportSession.has(key)) {
+					return false;
+				}
+
+				seenImportSession.add(key);
+				return true;
+			});
+
+			// Filter out import_session rows whose session wasn't migrated.
+			if (importSessionRows.length > 0) {
+				const before = importSessionRows.length;
+
+				importSessionRows = importSessionRows.filter((r) =>
+					migratedSessionIds.has(r.session_id),
+				);
+				const skipped = before - importSessionRows.length;
+
+				if (skipped > 0) {
+					console.warn(
+						`  [import_session] Skipped ${skipped} row(s) — session not found`,
+					);
+				}
+			}
+
+			// Base rows first — children have FK references to import(id).
+			await batchInsert("import", importRows);
+			await batchInsert("import_game", importGameRows);
+			await batchInsert("import_error", importErrorRows);
+			await batchInsert("import_class", importClassRows);
+			await batchInsert("import_session", importSessionRows);
+			// import_goal and import_quest are intentionally skipped — the
+			// historical data doesn't align with reality.
+		},
+		"import + children",
+	);
+
+	// ── goal_sub ──────────────────────────────────────────────────────────────
+	{
+		console.log("\n[goal_sub]");
+		const goalSubs = await mongoDB.get<GoalSubscriptionDocument>("goal-subs").find({});
+
+		const uniqueGoalIds = [...new Set(goalSubs.map((gs) => gs.goalID))];
+		const existingGoalIds = new Set(
+			(
+				await pg.selectFrom("goal").select("id").where("id", "in", uniqueGoalIds).execute()
+			).map((r) => r.id),
+		);
+
+		const goalSubRows: Array<NewGoalSub> = [];
+
+		for (const gs of goalSubs) {
+			if (!existingGoalIds.has(gs.goalID)) {
+				console.warn(`  [goal_sub] Skipping — goal ${gs.goalID} not found in DB`);
+				continue;
+			}
+
+			goalSubRows.push({
+				goal_id: gs.goalID,
+				user_id: gs.userID,
+				last_interaction: ts(gs.lastInteraction),
+				progress: gs.progress,
+				progress_human: gs.progressHuman,
+				out_of: gs.outOf,
+				out_of_human: gs.outOfHuman,
+				achieved: gs.achieved,
+				time_achieved: ts(gs.timeAchieved),
+				was_instantly_achieved: gs.wasInstantlyAchieved,
+				was_assigned_standalone: gs.wasAssignedStandalone,
+			});
+		}
+
+		await batchInsert("goal_sub", goalSubRows);
+		console.log(
+			`  ${goalSubRows.length} goal subscriptions (${
+				goalSubs.length - goalSubRows.length
+			} skipped).`,
+		);
+	}
+
+	// ── quest_sub ─────────────────────────────────────────────────────────────
+	{
+		console.log("\n[quest_sub]");
+		const questSubs = await mongoDB.get<QuestSubscriptionDocument>("quest-subs").find({});
+
+		const questSubRows: Array<NewQuestSub> = questSubs.map((qs) => ({
+			quest_id: qs.questID,
+			user_id: qs.userID,
+			progress: qs.progress,
+			last_interaction: ts(qs.lastInteraction),
+			achieved: qs.achieved,
+			time_achieved: ts(qs.timeAchieved),
+			was_instantly_achieved: qs.wasInstantlyAchieved,
+		}));
+
+		await batchInsert("quest_sub", questSubRows);
+		console.log(`  ${questSubs.length} quest subscriptions.`);
+	}
+
+	// ── folder_view ───────────────────────────────────────────────────────────
+	{
+		console.log("\n[folder_view]");
+		const folderViews = await mongoDB
+			.get<RecentlyViewedFolderDocument>("recent-folder-views")
+			.find({});
+
+		const uniqueFolderIds = [...new Set(folderViews.map((fv) => fv.folderID))];
+		const existingFolderIds = new Set(
+			(
+				await pg
+					.selectFrom("folder")
+					.select("id")
+					.where("id", "in", uniqueFolderIds)
+					.execute()
+			).map((r) => r.id),
+		);
+
+		const viewRows: Array<NewFolderView> = folderViews
+			.filter((fv) => existingFolderIds.has(fv.folderID))
+			.map((fv) => ({
+				user_id: fv.userID,
+				folder_id: fv.folderID,
+				last_viewed: tsReq(fv.lastViewed),
+			}));
+
+		const skipped = folderViews.length - viewRows.length;
+
+		if (skipped > 0) {
+			console.warn(`  [folder_view] Skipping ${skipped} row(s) — folder not found in DB`);
+		}
+
+		for (let i = 0; i < viewRows.length; i = i + INSERT_CHUNK) {
+			const chunk = viewRows.slice(i, i + INSERT_CHUNK);
+
+			await pg
+				.insertInto("folder_view")
+				.values(chunk)
+				.onConflict((oc) =>
+					oc.columns(["user_id", "folder_id"]).doUpdateSet({
+						last_viewed: sql`excluded.last_viewed`,
+					}),
+				)
+				.execute();
+		}
+
+		console.log(`  ${viewRows.length} folder views (${skipped} skipped).`);
+	}
+
+	// ── score_blacklist ───────────────────────────────────────────────────────
+	{
+		console.log("\n[score_blacklist]");
+		const blacklist = await mongoDB
+			.get<{ scoreID: string; userID: number }>("score-blacklist")
+			.find({});
+
+		const blacklistRows: Array<NewScoreBlacklist> = blacklist.map((b) => ({
+			user_id: b.userID,
+			score_id: b.scoreID,
+		}));
+
+		await batchInsert("score_blacklist", blacklistRows);
+		console.log(`  ${blacklist.length} score blacklist entries.`);
+	}
+
+	// ══════════════════════════════════════════════════════════════════════════
+	// LEVEL 2 — Depend on level 1 tables
+	// ══════════════════════════════════════════════════════════════════════════
+
+	console.log("\n── Level 2 ──────────────────────────────────────────────────────");
+
+	// ── priv_api_token ────────────────────────────────────────────────────────
+	{
+		console.log("\n[priv_api_token]");
+		const apiTokens = await mongoDB
+			.get<{
+				fromAPIClient: string | null;
+				identifier: string;
+				permissions: Record<string, boolean>;
+				token: string | null;
+				userID: number | null;
+			}>("api-tokens")
+			.find({});
+
+		const existingClientIds = new Set(
+			(await pg.selectFrom("priv_api_client").select("client_id").execute()).map(
+				(r) => r.client_id,
+			),
+		);
+
+		const validTokens = apiTokens.filter(
+			// Skip tokens with no token string (can't be stored as PK) or no user (no FK target).
+			// Also skip tokens whose oauth2 client no longer exists.
+			(t) =>
+				t.token !== null &&
+				t.userID !== null &&
+				(t.fromAPIClient === null || existingClientIds.has(t.fromAPIClient)),
+		);
+
+		if (validTokens.length !== apiTokens.length) {
+			console.warn(
+				`  ${
+					apiTokens.length - validTokens.length
+				} API tokens skipped — null token/userID or deleted oauth2 client`,
+			);
+		}
+
+		const tokenRows: Array<NewPrivApiToken> = validTokens.map((t) => {
+			// Old data uses dash-separated permission names.
+			const p = t.permissions;
+
+			return {
+				// Guaranteed non-null by the filter above.
+
+				token: t.token!,
+
+				user_id: t.userID!,
+				identifier: t.identifier,
+				pm_customise_profile: permRec(p, "customise-profile"),
+				pm_customise_score: permRec(p, "customise-score"),
+				pm_customise_session: permRec(p, "customise-session"),
+				pm_delete_score: permRec(p, "delete-score"),
+				pm_manage_rivals: permRec(p, "manage-rivals"),
+				pm_manage_targets: permRec(p, "manage-targets"),
+				pm_submit_score: permRec(p, "submit-score"),
+				pm_manage_challenges: permRec(p, "manage-challenges"),
+				from_oauth2_client: t.fromAPIClient,
+			};
+		});
+
+		await batchInsert("priv_api_token", tokenRows);
+
+		console.log(
+			`  ${validTokens.length} API tokens (${apiTokens.length - validTokens.length} skipped).`,
+		);
+	}
+
+	// ── import_timing ─────────────────────────────────────────────────────────
+	console.log("\n[import_timing]");
+	await streamCollection<ImportTimingsDocument>(
+		"import-timings",
+		async (docs) => {
+			const importIds = docs.map((t) => t.importID);
+			const existingIds = new Set(
+				(
+					await pg
+						.selectFrom("import")
+						.select("id")
+						.where("id", "in", importIds)
+						.execute()
+				).map((r) => r.id),
+			);
+
+			const rows: Array<NewImportTiming> = [];
+			let skipped = 0;
+
+			for (const t of docs) {
+				if (!existingIds.has(t.importID)) {
+					skipped++;
+					continue;
+				}
+
+				rows.push({
+					id: t.importID,
+					timestamp: tsReq(t.timestamp),
+					import_secs_avg: t.rel.import,
+					import_parse_secs_avg: t.rel.importParse,
+					pb_secs_avg: t.rel.pb,
+					session_secs_avg: t.rel.session,
+
+					parse_secs: t.abs.parse ?? 0,
+
+					import_secs: t.abs.import ?? 0,
+
+					import_parse_secs: t.abs.importParse ?? 0,
+
+					session_secs: t.abs.session ?? 0,
+
+					pb_secs: t.abs.pb ?? 0,
+
+					ugs_secs: t.abs.ugs ?? 0,
+
+					goal_secs: t.abs.goal ?? 0,
+
+					quest_secs: t.abs.quest ?? 0,
+
+					total_secs: t.total ?? 0,
+				});
+			}
+
+			if (skipped > 0) {
+				console.warn(`  [import_timing] Skipped ${skipped} row(s) — import not found`);
+			}
+
+			await batchInsert("import_timing", rows);
+		},
+		"import_timing",
+	);
+
+	// ══════════════════════════════════════════════════════════════════════════
+	// LEVEL 3 — Large collections: scores and PBs (cursor-streamed)
+	// ══════════════════════════════════════════════════════════════════════════
+
+	console.log("\n── Level 3 (streaming) ──────────────────────────────────────────");
+
+	// ── score ─────────────────────────────────────────────────────────────────
+	console.log("\n[score]");
+
+	await streamCollection<ScoreDocument>(
+		"scores",
+		async (docs) => {
+			const rows: Array<NewScore> = [];
+
+			// Batch-fetch sessions and imports that contain any score in this
+			// batch, then build scoreID→sessionID / scoreID→importID reverse maps.
+			// This replaces two individual findOne queries per score with two
+			// batch queries per batch (2 round-trips instead of 2×batchSize).
+			const batchScoreIds = docs.map((s) => s.scoreID);
+
+			const scoreToSession = new Map<string, string>();
+			const scoreToImport = new Map<string, string>();
+
+			const [sessionDocs, importDocs] = await Promise.all([
+				mongoDB.get<{ scoreIDs: Array<string>; sessionID: string }>("sessions").find(
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					{ scoreIDs: { $in: batchScoreIds } } as any,
+					{ projection: { sessionID: 1, scoreIDs: 1 } },
+				),
+				mongoDB.get<{ importID: string; scoreIDs: Array<string> }>("imports").find(
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					{ scoreIDs: { $in: batchScoreIds } } as any,
+					{ projection: { importID: 1, scoreIDs: 1 } },
+				),
+			]);
+
+			for (const sess of sessionDocs) {
+				for (const sid of sess.scoreIDs) {
+					if (!scoreToSession.has(sid)) {
+						scoreToSession.set(sid, sess.sessionID);
+					}
+				}
+			}
+
+			for (const imp of importDocs) {
+				for (const sid of imp.scoreIDs) {
+					if (!scoreToImport.has(sid)) {
+						scoreToImport.set(sid, imp.importID);
+					}
+				}
+			}
+
+			for (const s of docs) {
+				const chartSid = chartIdMap.get(s.chartID);
+
+				if (chartSid === undefined) {
+					throw new Error(
+						`  [score] Skipping score ${s.scoreID} — no sid for chartID ${s.chartID}`,
+					);
+				}
+
+				const sessionId = scoreToSession.get(s.scoreID) ?? null;
+				const importId = scoreToImport.get(s.scoreID) ?? null;
+
+				// if (!sessionId) {
+				// console.warn(`  [score] ${s.scoreID} belongs to no session!`);
+				// }
+
+				// if (!importId) {
+				// console.warn(`  [score] ${s.scoreID} belongs to no import!`);
+				// }
+
+				const gpt = GetGPTString(s.game, s.playtype);
+				const { data, derived } = mongoScoreDataToPg(gpt, s.scoreData);
+
+				rows.push({
+					id: s.scoreID,
+					user_id: s.userID,
+					chart_id: chartSid,
+					game: GPTStringToV3(GetGPTString(s.game, s.playtype)),
+					session_id: sessionId,
+					import_id: importId,
+					data: JSON.stringify(data),
+					derived_data: JSON.stringify(derived),
+					calculated_data: JSON.stringify(s.calculatedData),
+					meta: JSON.stringify(s.scoreMeta),
+					time_achieved: ts(s.timeAchieved),
+					time_added: tsReq(s.timeAdded),
+					highlight: s.highlight,
+					comment: s.comment,
+				});
+			}
+
+			await pg
+				.insertInto("score")
+				.values(rows as never)
+				.execute();
+		},
+		"score",
+	);
+
+	// ── pb + pb_composed_from ─────────────────────────────────────────────────
+	console.log("\n[pb / pb_composed_from]");
+
+	console.log("  TODO: Call reprocess-all-pbs somehow.");
+
+	// ══════════════════════════════════════════════════════════════════════════
+	// Done
+	// ══════════════════════════════════════════════════════════════════════════
+
+	console.log("\n\n=== Migration complete! ===");
+}
+
+main()
+	.catch((err: unknown) => {
+		const message =
+			typeof err === "object" && err !== null && "message" in err
+				? (err as { message: unknown }).message
+				: err;
+
+		console.error("[migrate] Fatal:", message);
+		console.error(err);
+		process.exit(1);
+	})
+	.finally(async () => {
+		await mongoDB.close();
+		await pg.destroy();
+	});

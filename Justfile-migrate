@@ -1,0 +1,27 @@
+# Justfile for the v3 migration. To be deleted once everything has moved over.
+
+# do the full migration suite.
+migrate-v3:
+	just gen
+	just seeds-v3-migrate
+	just mongo-to-pg kamai kamai
+	just mongo-to-pg boku boku
+
+# Migrate all MongoDB data into Postgres (run once, requires both DBs to be reachable).
+mongo-to-pg POSTGRES_DB_NAME MONGO_DB_NAME:
+	just db-reset "{{ POSTGRES_DB_NAME }}"
+
+	cd typescript/server && POSTGRES_URL="{{POSTGRES_URL}}/{{POSTGRES_DB_NAME}}" MONGO_URL="mongodb://mongo/{{MONGO_DB_NAME}}" \
+		bun run src/scripts/migrate-to-postgres.ts
+
+# Rollback the seeds to the state stored somewhere.
+seeds-rollback ROLLBACK_DIR="/host-pc/Documents/Repos/Tachi/seeds/collections":
+	rsync -avz --delete "{{ROLLBACK_DIR}}/" seeds/collections
+
+seeds-v3-migrate: seeds-rollback
+	#!/bin/bash
+	cd seeds/scripts/rerunners/v3
+	
+	for f in *.ts; do
+		ts-node "$f"
+	done

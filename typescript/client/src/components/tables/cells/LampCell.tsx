@@ -1,0 +1,15 @@
+import { ChangeOpacity } from "#util/color-opacity";
+import React from "react";
+
+export default function LampCell({ lamp, colour }: { colour: string; lamp: string }) {
+	return (
+		<td
+			style={{
+				backgroundColor: ChangeOpacity(colour, 0.2),
+				whiteSpace: "nowrap",
+			}}
+		>
+			<strong>{lamp}</strong>
+		</td>
+	);
+}

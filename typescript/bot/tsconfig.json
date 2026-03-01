@@ -1,0 +1,16 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"module": "Preserve",
+		"moduleResolution": "bundler",
+		"paths": {
+			// lolololOLOloLOlooLOOOOOL
+			// LOLOLOLOLOLOLOL
+			"@discordjs/builders": ["../../node_modules/@discordjs/builders/dist/index"],
+			"discord-api-types": ["../../node_modules/discord-api-types/v9"],
+			"discord-api-types/v9": ["../../node_modules/discord-api-types/v9"]
+		}
+	},
+	"include": ["src"],
+	"exclude": ["node_modules"]
+}
