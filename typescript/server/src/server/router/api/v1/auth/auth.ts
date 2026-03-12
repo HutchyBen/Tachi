@@ -1,7 +1,7 @@
 import type { PrivateUserInfoDocument } from "#utils/types";
 
 import CreateLogCtx from "#lib/logger/logger";
-import { Environment, ServerConfig } from "#lib/setup/config";
+import { Env, ServerConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
 import nodeFetch from "#utils/fetch";
 import { Random20Hex } from "#utils/misc";
@@ -108,7 +108,7 @@ export async function AddNewUser(
 	};
 
 	// all created users on a dev instance should be admins, for convenience.
-	if (Environment.nodeEnv === "dev") {
+	if (Env.NODE_ENV === "dev") {
 		userDoc.authLevel = UserAuthLevels.ADMIN;
 	}
 

@@ -1,7 +1,7 @@
 import type { Migration } from "#utils/types";
 
 import CreateLogCtx from "#lib/logger/logger";
-import { Environment, TachiConfig } from "#lib/setup/config";
+import { Env, TachiConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
 
 import UserFollowersMigration from "./migrations/add-following-to-users";
@@ -51,7 +51,7 @@ export const FAKE_MIGRATION: Migration = {
 // If we're testing, we should pull fake migrations instead to ensure the tests
 // stay consistent
 const REGISTERED_MIGRATIONS: Array<Migration> =
-	Environment.nodeEnv === "test"
+	Env.NODE_ENV === "test"
 		? [FAKE_MIGRATION]
 		: [
 				UGPTRivalsMigration,
@@ -66,7 +66,7 @@ const REGISTERED_MIGRATIONS: Array<Migration> =
 			];
 
 // only apply type-specific migrations if we're not in testing
-if (Environment.nodeEnv !== "test") {
+if (Env.NODE_ENV !== "test") {
 	// kamaitachi specific migrations
 	if (TachiConfig.TYPE !== "boku") {
 		REGISTERED_MIGRATIONS.push(
@@ -269,7 +269,7 @@ export async function ApplyMigration(migration: Migration) {
 		// remove the stale migration so it can be re-ran in the future.
 		await db.migrations.findOneAndDelete({ migrationID });
 
-		if (Environment.nodeEnv === "test") {
+		if (Env.NODE_ENV === "test") {
 			throw new Error("Was going to exit with statusCode 1, but we're in testing.");
 		}
 

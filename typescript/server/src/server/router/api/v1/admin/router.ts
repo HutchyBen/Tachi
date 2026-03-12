@@ -5,7 +5,7 @@ import { SendSiteAnnouncementNotification } from "#lib/notifications/notificatio
 import { UpdateGoalsForUser } from "#lib/score-import/framework/goals/goals";
 import { UpdateQuestsForUser } from "#lib/score-import/framework/quests/quests";
 import { DeleteMultipleScores, DeleteScore } from "#lib/score-mutation/delete-scores";
-import { Environment, ServerConfig, TachiConfig } from "#lib/setup/config";
+import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
 import db from "#services/mongo/db";
 import { RecalcAllScores, UpdateAllPBs } from "#utils/calculations/recalc-scores";
@@ -60,7 +60,7 @@ const RequireAdminLevel: RequestHandler = async (req, res, next) => {
 	next();
 };
 
-const LOG_LEVEL = Environment.logLevel;
+const LOG_LEVEL = Env.LOG_LEVEL;
 
 router.use(RequireAdminLevel);
 

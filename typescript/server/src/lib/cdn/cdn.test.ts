@@ -1,4 +1,4 @@
-import { Environment, ServerConfig } from "#lib/setup/config";
+import { Env, ServerConfig } from "#lib/setup/config";
 import { expressRequestMock } from "#test-utils/mock-request";
 import fs from "fs";
 import path from "path";
@@ -17,7 +17,7 @@ function getTestTxt() {
 }
 
 const ResetFileRoot = () => {
-	if (Environment.nodeEnv !== "test") {
+	if (Env.NODE_ENV !== "test") {
 		throw new Error(
 			`Not in test, yet CDN.test.ts was triggered, which could rm -rf something important.`,
 		);

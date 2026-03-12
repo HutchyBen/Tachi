@@ -4,6 +4,7 @@
 		"module": "Preserve",
 		"moduleResolution": "bundler",
 		"paths": {
+			"#*": ["./src/*"],
 			// lolololOLOloLOlooLOOOOOL
 			// LOLOLOLOLOLOLOL
 			"@discordjs/builders": ["../../node_modules/@discordjs/builders/dist/index"],

@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 
-import { Environment } from "#lib/setup/config";
+import { Env } from "#lib/setup/config";
 import db from "#services/mongo/db";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 
@@ -39,7 +39,7 @@ export const RequireOwnershipOfClient: RequestHandler = (req, res, next) => {
 	// There's an open issue for this here: https://github.com/i-like-robots/express-request-mock/issues/19
 	/* istanbul ignore next */
 	if (
-		Environment.nodeEnv === "test" &&
+		Env.NODE_ENV === "test" &&
 		(req.safeBody.__terribleHackOauth2ClientDoc as TachiAPIClientDocument | undefined)
 	) {
 		// obviously a glaring hack and security flaw - this only applies

@@ -8,7 +8,7 @@ import type { integer } from "../../../common/src";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import CreateLogCtx from "#lib/logger/logger";
-import { Environment, ServerConfig, TachiConfig } from "#lib/setup/config";
+import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RedisClient } from "#services/redis/redis";
 import { IsNonEmptyString, IsRecord } from "#utils/misc";
 import ExpressPromBundle from "express-prom-bundle";
@@ -22,7 +22,7 @@ const logger = CreateLogCtx(__filename);
 
 let store;
 
-if (Environment.nodeEnv !== "test") {
+if (Env.NODE_ENV !== "test") {
 	logger.info("Connecting ExpressSession to Redis.", { bootInfo: true });
 	const RedisStore = connectRedis(expressSession);
 
@@ -46,13 +46,13 @@ const userSessionMiddleware = expressSession({
 		// the absence of Secure in combination with SameSite=None will cause issues on non-https
 		// instances in newer versions of chromium. there is no workaround for this.
 		secure:
-			Environment.nodeEnv === "production" ||
-			Environment.nodeEnv === "staging" ||
+			Env.NODE_ENV === "production" ||
+			Env.NODE_ENV === "staging" ||
 			ServerConfig.ENABLE_SERVER_HTTPS,
 
 		// Very important. Without this, we're vulnerable to CSRF!
 		sameSite:
-			Environment.nodeEnv === "production" || Environment.nodeEnv === "staging"
+			Env.NODE_ENV === "production" || Env.NODE_ENV === "staging"
 				? "strict"
 				: "none",
 	},
@@ -60,7 +60,7 @@ const userSessionMiddleware = expressSession({
 
 const app: Express = express();
 
-if (Environment.nodeEnv !== "production" && IsNonEmptyString(ServerConfig.CLIENT_DEV_SERVER)) {
+if (Env.NODE_ENV !== "production" && IsNonEmptyString(ServerConfig.CLIENT_DEV_SERVER)) {
 	logger.warn(`Enabling CORS requests from ${ServerConfig.CLIENT_DEV_SERVER}.`, {
 		bootInfo: true,
 	});
@@ -100,7 +100,7 @@ if (Environment.nodeEnv !== "production" && IsNonEmptyString(ServerConfig.CLIENT
 
 	app.options("*", (req, res) => res.send());
 
-	if (Environment.nodeEnv !== "test") {
+	if (Env.NODE_ENV !== "test") {
 		logger.info("Enabling Helmet, as no CLIENT_DEV_SERVER was set, or we are in production.", {
 			bootInfo: true,
 		});
@@ -159,7 +159,7 @@ if (
 	ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE === "LOCAL_FILESYSTEM" &&
 	ServerConfig.CDN_CONFIG.SAVE_LOCATION.SERVE_OWN_CDN === true
 ) {
-	if (Environment.nodeEnv === "production") {
+	if (Env.NODE_ENV === "production") {
 		logger.warn(
 			`Running LOCAL_FILESYSTEM OWN_CDN in production. Consider making a separate process handle your CDN for performance.`,
 			{ bootInfo: true },

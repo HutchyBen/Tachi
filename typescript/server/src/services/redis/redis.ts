@@ -1,6 +1,6 @@
 import { ONE_MINUTE, ONE_SECOND } from "#lib/constants/time";
 import CreateLogCtx from "#lib/logger/logger";
-import { Environment } from "#lib/setup/config";
+import { Env } from "#lib/setup/config";
 import { GetMillisecondsSince } from "#utils/misc";
 import redis from "redis";
 
@@ -9,7 +9,7 @@ const logger = CreateLogCtx(__filename);
 logger.verbose("Instantiated Redis Store", { bootInfo: true });
 
 export const RedisClient = redis.createClient({
-	url: `redis://${Environment.redisUrl}`,
+	url: `redis://${Env.REDIS_URL}`,
 });
 
 const startConnect = process.hrtime.bigint();

@@ -1,4 +1,4 @@
-import { Environment } from "#lib/setup/config";
+import { Env } from "#lib/setup/config";
 import { UpdateLastSeen } from "#server/middleware/update-last-seen";
 import { Router } from "express";
 
@@ -24,7 +24,7 @@ router.use("/api/v1", apiRouterV1);
 // on the root endpoint.
 // That is to say, if a user is hitting 127.0.0.1:8080/
 // instead of "cannot GET /", they should get a nice message.
-if (Environment.nodeEnv === "dev") {
+if (Env.NODE_ENV === "dev") {
 	router.get("/", (req, res) =>
 		res.send(
 			`Server is live and running. All is good!<br />

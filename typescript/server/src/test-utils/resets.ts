@@ -1,7 +1,7 @@
 import type { ICollection } from "monk";
 
 import CreateLogCtx from "#lib/logger/logger";
-import { Environment, ServerConfig } from "#lib/setup/config";
+import { Env, ServerConfig } from "#lib/setup/config";
 import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
 import db, { type StaticDatabases } from "#services/mongo/db";
 import { SetIndexes } from "#services/mongo/indexes";
@@ -116,7 +116,7 @@ export function ResetCDN() {
 
 export async function SetIndexesForDB() {
 	await ResetDBState();
-	const url = `${Environment.mongoUrl}/testingdb`;
+	const url = `${Env.MONGO_URL}/testingdb`;
 
 	logger.info(`Setting indexes for ${url}`);
 

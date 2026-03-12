@@ -1,5 +1,5 @@
 import CreateLogCtx from "#lib/logger/logger";
-import { Environment, ServerConfig } from "#lib/setup/config";
+import { Env, ServerConfig } from "#lib/setup/config";
 import bunyan from "bunyan";
 import nodemailer, { type SentMessageInfo, type Transporter } from "nodemailer";
 
@@ -45,7 +45,7 @@ export function SendEmail(
 	htmlContent: string,
 	textContent: string,
 ): Promise<SentMessageInfo> | undefined {
-	if (Environment.nodeEnv === "test") {
+	if (Env.NODE_ENV === "test") {
 		logger.debug(`Stubbed out SendEmail as env was test.`);
 		return;
 	}

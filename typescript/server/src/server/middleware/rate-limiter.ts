@@ -2,7 +2,7 @@ import type { Request } from "express";
 
 import { ONE_MINUTE } from "#lib/constants/time";
 import CreateLogCtx from "#lib/logger/logger";
-import { Environment, ServerConfig, TachiConfig } from "#lib/setup/config";
+import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RedisClient } from "#services/redis/redis";
 import { OmitUndefinedKeys } from "#utils/misc";
 import rateLimit, { type Options } from "express-rate-limit";
@@ -15,7 +15,7 @@ const logger = CreateLogCtx(__filename);
 function CreateStore(name: string) {
 	// undefined forces a default to an in-memory store
 	// So we use that when in testing or localdev.
-	return Environment.nodeEnv === "production" || Environment.nodeEnv === "staging"
+	return Env.NODE_ENV === "production" || Env.NODE_ENV === "staging"
 		? new RateLimitRedis({ prefix: `${TachiConfig.NAME}-RL:${name}`, client: RedisClient })
 		: undefined;
 }
@@ -68,6 +68,6 @@ export const HyperAggressiveRateLimitMiddleware = rateLimit(
 // vulnerable to bursting down the server.
 // if we're in testing, disable this rate limit!
 export const ScoreImportRateLimiter =
-	Environment.nodeEnv === "test"
+	Env.NODE_ENV === "test"
 		? rateLimit(CreateRateLimitOptions(Infinity, "ScImport", ONE_MINUTE))
 		: rateLimit(CreateRateLimitOptions(5, "ScImport", ONE_MINUTE));

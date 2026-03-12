@@ -4,6 +4,7 @@ import type https from "https";
 import { rootLogger } from "#lib/logger/logger";
 import { CloseScoreImportQueue } from "#lib/score-import/worker/queue";
 import { monkDB } from "#services/mongo/db";
+import { ClosePgConnection } from "#services/pg/db.js";
 import { CloseRedisConnection } from "#services/redis/redis";
 
 const logger = rootLogger;
@@ -21,6 +22,9 @@ export function HandleSIGTERMGracefully(instance?: http.Server | https.Server) {
 async function CloseEverythingElse() {
 	logger.info("Closing Mongo Database.", { shutdownInfo: true });
 	await monkDB.close();
+
+	logger.info("Closing database...", {shutdownInfo: true});
+	await ClosePgConnection();
 
 	logger.info("Closing Redis Connection.", { shutdownInfo: true });
 	await CloseRedisConnection();

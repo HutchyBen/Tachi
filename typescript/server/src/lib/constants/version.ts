@@ -4,7 +4,7 @@ import fs from "fs";
 // viz. boku and kamai share versioning. This is because they
 // essentially share codebases.
 import CreateLogCtx from "#lib/logger/logger";
-import { Environment } from "#lib/setup/config";
+import { Env } from "#lib/setup/config";
 import path from "path";
 import semver from "semver";
 
@@ -26,8 +26,8 @@ if (!semverInfo) {
 let commit: string | null = null;
 
 try {
-	if (Environment.commitHash) {
-		commit = Environment.commitHash;
+	if (Env.COMMIT_HASH) {
+		commit = Env.COMMIT_HASH;
 	} else {
 		// This fetches the HEAD of our current running branch. This is useful for debugging.
 		// Note that git returns this with a trailing newline, so we have to trim that off.

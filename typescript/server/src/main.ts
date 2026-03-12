@@ -1,7 +1,3 @@
-// Before we run anything, set a global to indicate to the code that
-// we're running as a server, and not as a job runner or score worker.
-process.env.IS_SERVER = "true";
-
 import type http from "http";
 
 import { LoadDefaultClients } from "#lib/builtin-clients/builtin-clients";
@@ -9,7 +5,7 @@ import { VERSION_PRETTY } from "#lib/constants/version";
 import { HandleSIGTERMGracefully } from "#lib/handlers/sigterm";
 import CreateLogCtx from "#lib/logger/logger";
 import { ApplyUnappliedMigrations } from "#lib/migration/migrations";
-import { Environment, ServerConfig, TachiConfig } from "#lib/setup/config";
+import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 import { AddNewUser } from "#server/router/api/v1/auth/auth";
 import server from "#server/server";
 import db, { monkDB } from "#services/mongo/db";
@@ -26,10 +22,10 @@ import { UserAuthLevels } from "../../common/src";
 
 const logger = CreateLogCtx(__filename);
 
-logger.info(`Booting ${TachiConfig.NAME} - ${VERSION_PRETTY} [ENV: ${Environment.nodeEnv}]`, {
+logger.info(`Booting ${TachiConfig.NAME} - ${VERSION_PRETTY} [ENV: ${Env.NODE_ENV}]`, {
 	bootInfo: true,
 });
-logger.info(`Log level is set to ${Environment.logLevel}.`, { bootInfo: true });
+logger.info(`Log level is set to ${Env.LOG_LEVEL}.`, { bootInfo: true });
 
 logger.info(`Loading sequence documents...`, { bootInfo: true });
 
@@ -48,7 +44,7 @@ async function RunOnInit() {
 		}
 	});
 
-	if (Environment.nodeEnv === "dev") {
+	if (Env.NODE_ENV === "dev") {
 		const exists = await db.users.findOne({ id: 1 });
 
 		if (!exists) {
@@ -85,7 +81,7 @@ void RunOnInit();
 let instance: http.Server | https.Server;
 
 if (ServerConfig.ENABLE_SERVER_HTTPS === true) {
-	if (Environment.nodeEnv === "production") {
+	if (Env.NODE_ENV === "production") {
 		logger.warn(
 			"HTTPS Mode is enabled. This should not be used in production, and you should instead run behind a reverse proxy.",
 			{ bootInfo: true },
@@ -97,11 +93,11 @@ if (ServerConfig.ENABLE_SERVER_HTTPS === true) {
 
 	const httpsServer = https.createServer({ key: privateKey, cert: certificate }, server);
 
-	instance = httpsServer.listen(Environment.port);
-	logger.info(`HTTPS Listening on port ${Environment.port}`, { bootInfo: true });
+	instance = httpsServer.listen(Env.PORT);
+	logger.info(`HTTPS Listening on port ${Env.PORT}`, { bootInfo: true });
 } else {
-	instance = server.listen(Environment.port);
-	logger.info(`HTTP Listening on port ${Environment.port}`, { bootInfo: true });
+	instance = server.listen(Env.PORT);
+	logger.info(`HTTP Listening on port ${Env.PORT}`, { bootInfo: true });
 }
 
 process.on("SIGTERM", () => {
@@ -111,7 +107,7 @@ process.on("SIGTERM", () => {
 if (process.env.INVOKE_JOB_RUNNER) {
 	logger.info(`Spawning a tachi-server job runner inline.`, { bootInfo: true });
 
-	if (Environment.nodeEnv === "production") {
+	if (Env.NODE_ENV === "production") {
 		logger.warn(
 			`Spawning inline tachi-server job runner in production. This is bad for performance.`,
 			{ bootInfo: true },

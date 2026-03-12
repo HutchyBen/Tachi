@@ -1,7 +1,7 @@
 import { SendEmail } from "#lib/email/client";
 import { EmailFormatResetPassword, EmailFormatVerifyEmail } from "#lib/email/formats";
 import CreateLogCtx from "#lib/logger/logger";
-import { Environment, ServerConfig, TachiConfig } from "#lib/setup/config";
+import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
 import {
 	AggressiveRateLimitMiddleware,
@@ -76,7 +76,7 @@ router.post(
 		logger.verbose(`Received login request with username ${body.username} (${req.ip})`);
 
 		/* istanbul ignore next */
-		if (Environment.nodeEnv === "production" || Environment.nodeEnv === "staging") {
+		if (Env.NODE_ENV === "production" || Env.NODE_ENV === "staging") {
 			logger.verbose("Validating captcha...");
 			const validCaptcha = await ValidateCaptcha(body.captcha, req.socket.remoteAddress);
 
@@ -214,7 +214,7 @@ router.post(
 		logger.verbose(`received register request with username ${body.username} (${req.ip})`);
 
 		/* istanbul ignore next */
-		if (Environment.nodeEnv === "production" || Environment.nodeEnv === "staging") {
+		if (Env.NODE_ENV === "production" || Env.NODE_ENV === "staging") {
 			logger.verbose("Validating captcha...");
 			const validCaptcha = await ValidateCaptcha(body.captcha, req.socket.remoteAddress);
 
@@ -463,7 +463,7 @@ router.post(
 	HyperAggressiveRateLimitMiddleware,
 	prValidate({ email: "string" }),
 	async (req, res) => {
-		if (!ServerConfig.EMAIL_CONFIG && Environment.nodeEnv !== "test") {
+		if (!ServerConfig.EMAIL_CONFIG && Env.NODE_ENV !== "test") {
 			return res.status(501).json({
 				success: false,
 				description: `This server does not support password resets.`,

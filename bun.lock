@@ -97,7 +97,6 @@
         "node-fetch": "catalog:",
         "prudence": "catalog:",
         "seq-logging": "catalog:",
-        "sync-fetch": "catalog:",
         "tachi-common": "workspace:*",
         "ts-node": "catalog:",
         "tsconfig-paths": "catalog:",
@@ -381,7 +380,6 @@
         "connect-redis": "catalog:",
         "csv-parse": "catalog:",
         "deepmerge": "catalog:",
-        "dotenv": "catalog:",
         "express": "catalog:",
         "express-async-errors": "catalog:",
         "express-prom-bundle": "catalog:",
@@ -417,6 +415,7 @@
         "winston": "catalog:",
         "winston-loki": "catalog:",
         "winston-transport": "catalog:",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "@grpc/grpc-js": "catalog:",

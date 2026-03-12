@@ -1,6 +1,6 @@
 import CreateLogCtx from "#lib/logger/logger";
 import { PullDatabaseSeeds } from "#lib/seeds/repo";
-import { Environment } from "#lib/setup/config";
+import { Env } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
 import { RequireLocalDevelopment } from "#server/middleware/type-require";
 import { GetCommit, ListGitCommitsInPath } from "#utils/git";
@@ -37,9 +37,9 @@ const LOCAL_DEV_SEEDS_PATH = path.join(
 );
 const TEST_SEEDS_PATH = path.join(__dirname, "../../../../../test-utils/mock-db");
 
-const LOCAL_SEEDS_PATH = Environment.nodeEnv === "test" ? TEST_SEEDS_PATH : LOCAL_DEV_SEEDS_PATH;
+const LOCAL_SEEDS_PATH = Env.NODE_ENV === "test" ? TEST_SEEDS_PATH : LOCAL_DEV_SEEDS_PATH;
 
-if (Environment.nodeEnv === "dev" || Environment.nodeEnv === "test") {
+if (Env.NODE_ENV === "dev" || Env.NODE_ENV === "test") {
 	if (!fsSync.existsSync(LOCAL_SEEDS_PATH)) {
 		logger.error(
 			`Failed to load seeds routes, could not find any seeds/collections checked out at ${LOCAL_SEEDS_PATH}.

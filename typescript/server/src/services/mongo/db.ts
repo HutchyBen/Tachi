@@ -50,7 +50,7 @@ import {
 // so we just disable these rules. I know, it sucks, but we'll live.
 import { ONE_MINUTE, ONE_SECOND } from "#lib/constants/time";
 import CreateLogCtx from "#lib/logger/logger";
-import { Environment, ServerConfig } from "#lib/setup/config";
+import { Env, ServerConfig } from "#lib/setup/config";
 import { GetMillisecondsSince } from "#utils/misc";
 
 const logger = CreateLogCtx(__filename);
@@ -58,21 +58,21 @@ const logger = CreateLogCtx(__filename);
 let dbName = ServerConfig.MONGO_DATABASE_NAME;
 
 /* istanbul ignore next */
-if (Environment.nodeEnv === "test") {
+if (Env.NODE_ENV === "test") {
 	dbName = `testingdb`;
 }
 
-logger.info(`Connecting to database ${Environment.mongoUrl}/${dbName}...`, { bootInfo: true });
+logger.info(`Connecting to database ${Env.MONGO_URL}/${dbName}...`, { bootInfo: true });
 const dbtime = process.hrtime.bigint();
 
-export const monkDB = monk(`${Environment.mongoUrl}/${dbName}`, {
+export const monkDB = monk(`${Env.MONGO_URL}/${dbName}`, {
 	// Various things cause bizarre issues with mongodb connections. Windows+Docker especially so.
 	// 5 minutes is excessive, but believe it or not, some setups are exceeding 2 minutes!
 	serverSelectionTimeoutMS: ONE_MINUTE * 5,
 
 	// in local dev, don't **ever** add _id onto objects you're inserting
 	// in production, this might have a performance hit.
-	forceServerObjectId: Environment.nodeEnv === "test",
+	forceServerObjectId: Env.NODE_ENV === "test",
 });
 
 /* istanbul ignore next */

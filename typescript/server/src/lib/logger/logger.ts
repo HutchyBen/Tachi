@@ -1,6 +1,5 @@
-import { Environment, ServerConfig, TachiConfig } from "#lib/setup/config";
+import { Env, TachiConfig } from "#lib/setup/config";
 import { EscapeStringRegexp } from "#utils/misc";
-import { Transport as SeqTransport } from "@valuabletouch/winston-seq";
 import SafeJSONStringify from "safe-json-stringify";
 import winston, { format, type LeveledLogMethod, type Logger, transports } from "winston";
 
@@ -66,18 +65,16 @@ const formatExcessPropertiesNoStack = (
 	return ` ${limit ? StrCap(content) : content}`;
 };
 
-const replicaInfo = Environment.replicaIdentity ? ` (${Environment.replicaIdentity})` : "";
-
 const tachiPrintf = format.printf(
 	({ level, message, context = "tachi-root", timestamp, ...meta }) =>
-		`${timestamp}${replicaInfo} [${
+		`${timestamp} [${
 			Array.isArray(context) ? context.join(" | ") : context
 		}] ${level}: ${message}${formatExcessProperties(meta)}`,
 );
 
 const tachiConsolePrintf = format.printf(
 	({ level, message, context = "tachi-root", timestamp, hideFromConsole, ...meta }) =>
-		`${timestamp}${replicaInfo} [${
+		`${timestamp} [${
 			Array.isArray(context) ? context.join(" | ") : context
 		}] ${level}: ${message}${formatExcessPropertiesNoStack(
 			meta,
@@ -123,30 +120,6 @@ const tports: Array<winston.transport> = [
 	}),
 ];
 
-if (Environment.seqUrl) {
-	const levelMap: Record<string, any> = {
-		crit: "Fatal",
-		severe: "Error",
-		error: "Error",
-		warn: "Warning",
-		info: "Information",
-		verbose: "Verbose",
-		debug: "Debug",
-	};
-
-	tports.push(
-		new SeqTransport({
-			apiKey: Environment.seqApiKey,
-			serverUrl: Environment.seqUrl,
-			onError: (err) => {
-				console.error(`Failed to send seq message: ${err.message}.`);
-			},
-			levelMapper(level = "") {
-				return levelMap[level] ?? "Information";
-			},
-		}),
-	);
-}
 
 export const rootLogger = winston.createLogger({
 	levels: {
@@ -177,7 +150,6 @@ export const rootLogger = winston.createLogger({
 	defaultMeta: {
 		__ServerName: TachiConfig.NAME,
 		__Worker: !!process.env.IS_WORKER,
-		__ReplicaID: Environment.replicaIdentity,
 	},
 }) as KtLogger;
 
@@ -217,7 +189,7 @@ export function ChangeRootLogLevel(
 export function GetLogLevel() {
 	return (
 		rootLogger.transports.map((e) => e.level).find((e) => typeof e === "string") ??
-		Environment.logLevel
+		Env.LOG_LEVEL
 	);
 }
 

@@ -6,7 +6,10 @@
 		"noImplicitAny": false,
 		"strictNullChecks": true,
 		"allowJs": true,
-		"strict": false
+		"strict": false,
+		"paths": {
+			"#*": ["./src/*"]
+		}
 	},
 	"exclude": ["node_modules"]
 }

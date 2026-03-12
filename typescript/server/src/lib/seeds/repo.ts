@@ -5,7 +5,7 @@ import fs from "fs/promises";
 import type { GameGroup } from "../../../../common/src";
 /* eslint-disable no-await-in-loop */
 import CreateLogCtx from "#lib/logger/logger";
-import { Environment, ServerConfig } from "#lib/setup/config";
+import { Env, ServerConfig } from "#lib/setup/config";
 import { asyncExec } from "#utils/misc";
 import os from "os";
 import path from "path";
@@ -189,7 +189,7 @@ export class DatabaseSeedsRepo {
 	 * Pull any seeds changes in this repository.
 	 */
 	pull() {
-		if (Environment.nodeEnv === "dev") {
+		if (Env.NODE_ENV === "dev") {
 			// prevent an awful interaction where a user edits stuff on their disk
 			// and tries to run pnpm load-seeds
 			// but it fails because pull can't rebase with changes.

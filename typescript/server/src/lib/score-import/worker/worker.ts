@@ -1,6 +1,6 @@
 import { HandleSIGTERMGracefully } from "#lib/handlers/sigterm";
 import CreateLogCtx from "#lib/logger/logger";
-import { Environment, ServerConfig } from "#lib/setup/config";
+import { Env, ServerConfig } from "#lib/setup/config";
 import { FormatUserDoc, GetUserWithID } from "#utils/user";
 import { Worker } from "bullmq";
 import { EventEmitter } from "events";
@@ -130,7 +130,7 @@ export const worker = new Worker(
 		concurrency: ServerConfig.EXTERNAL_SCORE_IMPORT_WORKER_CONCURRENCY ?? 10,
 		connection: {
 			port: 6379,
-			host: Environment.redisUrl,
+			host: Env.REDIS_URL,
 		},
 	},
 );

@@ -129,7 +129,7 @@ interface InviteLockDocument {
 
 const MONGO_URL = process.env.MONGO_URL ?? "mongodb://mongo/tachi";
 const POSTGRES_URL = process.env.POSTGRES_URL;
-const SEEDS_DIR = process.env.SEEDS_DIR ?? path.resolve(__dirname, "../../../seeds/collections");
+const SEEDS_DIR = process.env.SEEDS_DIR ?? path.resolve(__dirname, "../../../../db/seeds");
 
 if (!POSTGRES_URL) {
 	console.error("[migrate] POSTGRES_URL is not set.");

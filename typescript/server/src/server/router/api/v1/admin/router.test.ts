@@ -1,6 +1,6 @@
 import { ONE_MINUTE } from "#lib/constants/time";
 import { ChangeRootLogLevel, GetLogLevel } from "#lib/logger/logger";
-import { Environment, ServerConfig } from "#lib/setup/config";
+import { Env, ServerConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
 import { CreateFakeAuthCookie } from "#test-utils/fake-auth";
 import mockApi from "#test-utils/mock-api";
@@ -12,7 +12,7 @@ import t from "tap";
 
 import { type ScoreDocument, UserAuthLevels } from "../../../../../../../common/src";
 
-const LOG_LEVEL = Environment.logLevel;
+const LOG_LEVEL = Env.LOG_LEVEL;
 
 t.test("POST /api/v1/admin/change-log-level", async (t) => {
 	t.beforeEach(async () => {
