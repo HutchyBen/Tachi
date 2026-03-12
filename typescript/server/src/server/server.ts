@@ -51,10 +51,7 @@ const userSessionMiddleware = expressSession({
 			ServerConfig.ENABLE_SERVER_HTTPS,
 
 		// Very important. Without this, we're vulnerable to CSRF!
-		sameSite:
-			Env.NODE_ENV === "production" || Env.NODE_ENV === "staging"
-				? "strict"
-				: "none",
+		sameSite: Env.NODE_ENV === "production" || Env.NODE_ENV === "staging" ? "strict" : "none",
 	},
 });
 

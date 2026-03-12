@@ -19,6 +19,7 @@ fix: fmt
 
 	just gen
 	bun run --filter '*' lint-fix
+	.scripts/ts_autoinherit.js
 
 # Automatically fix any issues we can in the codebase and then
 # make a commit for them

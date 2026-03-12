@@ -1,23 +1,20 @@
+import { log } from "#utils/log";
 import monk from "monk";
 
 import type { DiscordUserMapDocument } from "./documents";
 
 import { ProcessEnv } from "../config";
-import { LoggerLayers } from "../data/data";
-import { CreateLayeredLogger } from "../utils/logger";
 
-const logger = CreateLayeredLogger(LoggerLayers.database);
-
-logger.info(`Connecting to ${ProcessEnv.mongoUrl}...`);
+log.info(`Connecting to ${ProcessEnv.mongoUrl}...`);
 
 const monkDB = monk(ProcessEnv.mongoUrl);
 
 monkDB
 	.then(() => {
-		logger.info(`Database connection successful.`);
+		log.info(`Database connection successful.`);
 	})
 	.catch((err) => {
-		logger.crit(err);
+		log.fatal(err);
 		process.exit(1);
 	});
 
@@ -26,16 +23,16 @@ const db = {
 };
 
 export async function SetIndexes(hardReset = false) {
-	logger.info(`Recieved request to set indexes.`);
+	log.info(`Recieved request to set indexes.`);
 
 	if (hardReset) {
-		logger.warn(`Hard resetting indexes!`);
+		log.warn(`Hard resetting indexes!`);
 		await db.discordUserMap.dropIndexes();
 	}
 
 	await db.discordUserMap.createIndex({ discordID: 1 }, { unique: true });
 
-	logger.info(`Indexes have been set.`);
+	log.info(`Indexes have been set.`);
 }
 
 export default db;

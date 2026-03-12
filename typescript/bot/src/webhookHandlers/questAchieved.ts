@@ -1,11 +1,11 @@
 import { BotConfig } from "#config";
 import { PrependTachiUrl } from "#utils/fetchTachi";
+import { log } from "#utils/log";
 import { GetGameGroupConfig, type integer, type WebhookEventQuestAchievedV1 } from "tachi-common";
 
 import { client } from "../main";
 import { GetQuestWithID, GetUserInfo } from "../utils/apiRequests";
 import { CreateEmbed } from "../utils/embeds";
-import logger from "../utils/logger";
 import { GetGameChannel } from "../utils/misc";
 
 export async function HandleQuestAchievedV1(
@@ -20,7 +20,7 @@ export async function HandleQuestAchievedV1(
 	} catch (e) {
 		const err = e as Error;
 
-		logger.error(`ClassUpdate handler failed: ${err.message}`);
+		log.error({ err }, "ClassUpdate handler failed.");
 		return 500;
 	}
 

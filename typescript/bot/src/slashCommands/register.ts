@@ -1,14 +1,11 @@
 import type { Client } from "discord.js";
 
+import { log } from "#utils/log";
 import { REST } from "@discordjs/rest";
 import { Routes } from "discord-api-types/v9";
 
 import { BotConfig, ProcessEnv } from "../config";
-import { LoggerLayers } from "../data/data";
-import { CreateLayeredLogger } from "../utils/logger";
 import { SLASH_COMMANDS } from "./commands";
-
-const logger = CreateLayeredLogger(LoggerLayers.slashCommands);
 
 const rest = new REST({
 	version: "9",
@@ -23,18 +20,18 @@ export async function RegisterSlashCommands(client: Client): Promise<void> {
 		const commandsArray = [...SLASH_COMMANDS.values()];
 
 		// always unregister guild slash commands, just in case.
-		logger.info(`Unregistering guild slash commands.`);
+		log.info(`Unregistering guild slash commands.`);
 
 		await UnregisterAllCommands(client);
 
 		if (ProcessEnv.nodeEnv === "production") {
-			logger.info(`Updating global commands.`);
+			log.info(`Updating global commands.`);
 
 			await rest.put(Routes.applicationCommands(client.application!.id), {
 				body: commandsArray.map((command) => command.info),
 			});
 		} else {
-			logger.info("Registering guild slash commands.");
+			log.info("Registering guild slash commands.");
 
 			await rest.put(
 				Routes.applicationGuildCommands(
@@ -47,9 +44,9 @@ export async function RegisterSlashCommands(client: Client): Promise<void> {
 			);
 		}
 
-		logger.info("Successfully registered guild slash commands.");
+		log.info("Successfully registered guild slash commands.");
 	} catch (err) {
-		logger.error("Failed to register guild slash commands.", err);
+		log.error({ err }, "Failed to register guild slash commands.");
 		throw err;
 	}
 }
@@ -59,7 +56,7 @@ export async function RegisterSlashCommands(client: Client): Promise<void> {
  */
 async function UnregisterAllCommands(client: Client): Promise<void> {
 	try {
-		logger.info("Tidying old guild slash commands.");
+		log.info("Tidying old guild slash commands.");
 		const guilds = client.guilds.cache;
 
 		// discord.js doesn't use arrays because those aren't cool anymore
@@ -77,9 +74,9 @@ async function UnregisterAllCommands(client: Client): Promise<void> {
 		// parallelise waiting for these to be deleted.
 		await Promise.all(promises);
 
-		logger.info(`Successfully tidied ${promises.length} old guild slash commands.`);
+		log.info(`Successfully tidied ${promises.length} old guild slash commands.`);
 	} catch (err) {
-		logger.error("Failed to tidy old guild slash commands.", err);
+		log.error({ err }, "Failed to tidy old guild slash commands.");
 
 		throw err;
 	}

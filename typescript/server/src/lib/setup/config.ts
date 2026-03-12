@@ -1,5 +1,5 @@
 import JSON5 from "json5";
-import { allSupportedGameGroups, type GameGroup , type ImportTypes } from "tachi-common";
+import { allSupportedGameGroups, type GameGroup, type ImportTypes } from "tachi-common";
 import { allImportTypes } from "tachi-common/constants/import-types";
 import { z } from "zod";
 
@@ -197,7 +197,6 @@ if (!["crit", "debug", "error", "info", "severe", "verbose", "warn"].includes(lo
 
 	process.exit(1);
 }
-
 
 const POSTGRES_URL = process.env.POSTGRES_URL ?? "";
 

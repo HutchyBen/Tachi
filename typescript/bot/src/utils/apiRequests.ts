@@ -13,15 +13,12 @@ import type {
 } from "tachi-common";
 
 import { BotConfig } from "#config";
+import { log } from "#utils/log";
 
 import type { ImportDeferred, ImportPollStatus, UGPTStats } from "./returnTypes";
 
-import { LoggerLayers } from "../data/data";
 import { RequestTypes, TachiServerV1Get, TachiServerV1Request } from "./fetchTachi";
-import { CreateLayeredLogger } from "./logger";
 import { Sleep } from "./misc";
-
-const logger = CreateLayeredLogger(LoggerLayers.apiRequests);
 
 export async function GetUserInfo(userID: string | integer) {
 	const res = await TachiServerV1Get<UserDocument>(`/users/${userID}`, null);
@@ -116,7 +113,7 @@ export async function PerformScoreImport(
 
 	if (!initRes.success) {
 		if (initRes.statusCode >= 500) {
-			logger.error(`Failed to perform score import on ${url}.`, { body });
+			log.error({ body }, `Failed to perform score import on ${url}.`);
 			throw new Error(`Failed to perform import on ${url}.`);
 		} else {
 			return initRes.description;
@@ -172,7 +169,7 @@ Please go to ${BotConfig.TACHI_SERVER_LOCATION}/u/me/integrations/services to un
 		}
 	}
 
-	logger.error(`Unexpected status code ${initRes.statusCode} returned from ${url}.`, { body });
+	log.error({ body }, `Unexpected status code ${initRes.statusCode} returned from ${url}.`);
 
 	throw new Error(`Unexpected status code ${initRes.statusCode} returned from ${url}.`);
 }

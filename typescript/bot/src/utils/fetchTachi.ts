@@ -1,14 +1,11 @@
 import type { integer, SuccessfulAPIResponse, UnsuccessfulAPIResponse } from "tachi-common";
 
+import { log } from "#utils/log";
 import fetch from "node-fetch";
 import { URLSearchParams } from "url";
 
 import { BotConfig } from "../config";
-import { LoggerLayers } from "../data/data";
 import { VERSION_STR } from "../version";
-import { CreateLayeredLogger } from "./logger";
-
-const logger = CreateLayeredLogger(LoggerLayers.tachiFetch);
 
 export type APIResponse<T> = (({ body: null } & UnsuccessfulAPIResponse) | SuccessfulAPIResponse<T>) & {
 	statusCode: integer;
@@ -41,9 +38,9 @@ export async function TachiServerV1Request<T>(
 	body: unknown = {},
 ): Promise<APIResponse<T>> {
 	const realUrl = PrependTachiUrl(url, "1");
-	const loggerUrl = `${method} ${realUrl}`;
+	const logUrl = `${method} ${realUrl}`;
 
-	logger.debug(`Making a request to ${loggerUrl}.`);
+	log.debug(`Making a request to ${logUrl}.`);
 
 	try {
 		const res = await fetch(realUrl, {
@@ -60,11 +57,11 @@ export async function TachiServerV1Request<T>(
 
 		const contents = { ...json, statusCode: res.status };
 
-		LogRequestResult(loggerUrl, contents);
+		LogRequestResult(logUrl, contents);
 
 		return contents;
 	} catch (err) {
-		logger.error(`Failed while requesting ${method} ${realUrl}.`, { err });
+		log.error({ err }, `Failed while requesting ${method} ${realUrl}.`);
 
 		// Throw the error upwards for it to be caught be a higher handler.
 		throw err;
@@ -94,7 +91,7 @@ export async function TachiServerV1Get<T = unknown>(
 
 		const realUrl = `${PrependTachiUrl(url, "1")}?${urlParams.toString()}`;
 
-		logger.verbose(`GET ${realUrl}`);
+		log.debug(`GET ${realUrl}`);
 
 		const res = await fetch(realUrl, {
 			method: RequestTypes.GET,
@@ -111,7 +108,7 @@ export async function TachiServerV1Get<T = unknown>(
 
 		return contents;
 	} catch (err) {
-		logger.error(`Failed while requesting GET ${url}.\n\n${err}\n`);
+		log.error(`Failed while requesting GET ${url}.\n\n${err}\n`);
 
 		throw err;
 	}
@@ -133,12 +130,12 @@ export function PrependTachiUrl(url: string, version: "1" = "1"): string {
  * Logs the result of a request.
  * Logs at WARN level if was unsuccessful, DEBUG otherwise.
  */
-function LogRequestResult(loggerUrl: string, res: APIResponse<unknown>): void {
+function LogRequestResult(logUrl: string, res: APIResponse<unknown>): void {
 	if (!res.success) {
-		logger.warn(
-			`Request ${loggerUrl} was unsuccessful: ${res.description} (${res.statusCode})`,
+		log.warn(
+			`Request ${logUrl} was unsuccessful: ${res.description} (${res.statusCode})`,
 		);
 	} else {
-		logger.debug(`Request ${loggerUrl} was successful: ${res.description} (${res.statusCode})`);
+		log.debug(`Request ${logUrl} was successful: ${res.description} (${res.statusCode})`);
 	}
 }

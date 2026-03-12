@@ -23,7 +23,7 @@ async function CloseEverythingElse() {
 	logger.info("Closing Mongo Database.", { shutdownInfo: true });
 	await monkDB.close();
 
-	logger.info("Closing database...", {shutdownInfo: true});
+	logger.info("Closing database...", { shutdownInfo: true });
 	await ClosePgConnection();
 
 	logger.info("Closing Redis Connection.", { shutdownInfo: true });

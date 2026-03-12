@@ -1,5 +1,6 @@
 import { BotConfig } from "#config";
 import { PrependTachiUrl } from "#utils/fetchTachi";
+import { log } from "#utils/log"
 import {
 	GetGameGroupConfig,
 	type GoalDocument,
@@ -10,7 +11,6 @@ import {
 import { client } from "../main";
 import { GetGoalWithID, GetUserInfo } from "../utils/apiRequests";
 import { CreateEmbed } from "../utils/embeds";
-import logger from "../utils/logger";
 import { GetGameChannel, Pluralise } from "../utils/misc";
 
 export async function HandleGoalAchievedV1(
@@ -25,7 +25,7 @@ export async function HandleGoalAchievedV1(
 	} catch (e) {
 		const err = e as Error;
 
-		logger.error(`ClassUpdate handler failed: ${err.message}`);
+		log.error(`ClassUpdate handler failed: ${err.message}`);
 		return 500;
 	}
 

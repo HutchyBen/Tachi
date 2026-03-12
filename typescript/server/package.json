@@ -95,6 +95,7 @@
 		"node-html-parser": "catalog:",
 		"nodemailer": "catalog:",
 		"pg": "catalog:",
+		"pino": "catalog:",
 		"prudence": "catalog:",
 		"rate-limit-redis": "catalog:",
 		"redis": "catalog:",
@@ -107,10 +108,10 @@
 		"ts-node": "catalog:",
 		"typescript": "catalog:",
 		"uuidv7": "catalog:",
-		"zod": "catalog:",
 		"winston": "catalog:",
 		"winston-loki": "catalog:",
-		"winston-transport": "catalog:"
+		"winston-transport": "catalog:",
+		"zod": "catalog:"
 	},
 	"nyc": {
 		"reporter": [

@@ -14,9 +14,9 @@ config();
 // Reads the bots config file from $pwd/conf.json5.
 // Validates it using prudence.
 
-// the real logger tries to bind to discord, and is dependent on the options
+// the real log tries to bind to discord, and is dependent on the options
 // below.
-const logger = console;
+const log = console;
 
 export interface BotConfig {
 	TACHI_SERVER_LOCATION: string;
@@ -43,10 +43,10 @@ function ParseBotConfig(fileLoc = "conf.json5"): BotConfig {
 	try {
 		const contents = fs.readFileSync(fileLoc, "utf-8");
 
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+		 
 		data = JSON5.parse(contents);
 	} catch (err) {
-		logger.error("Failed to find/parse a valid conf.json5 file. Cannot boot.", { err });
+		log.error({ err }, "Failed to find/parse a valid conf.json5 file. Cannot boot.");
 
 		throw err;
 	}
@@ -93,7 +93,7 @@ function ParseBotConfig(fileLoc = "conf.json5"): BotConfig {
 	});
 
 	if (err) {
-		logger.error(FormatPrError(err, "Invalid conf.json5 file. Cannot safely boot."));
+		log.error(FormatPrError(err, "Invalid conf.json5 file. Cannot safely boot."));
 
 		throw err;
 	}
@@ -105,8 +105,6 @@ export interface ProcessEnvironment {
 	nodeEnv: "dev" | "production" | "staging" | "test";
 	mongoUrl: string;
 	port: integer;
-	seqUrl?: string;
-	seqApiKey?: string;
 }
 
 function ParseEnvVars() {
@@ -123,15 +121,13 @@ function ParseEnvVars() {
 			PORT: (self) =>
 				p.isPositiveInteger(Number(self)) === true ||
 				"Should be a string representing a whole integer port.",
-			SEQ_URL: "*string",
-			SEQ_API_KEY: "*string",
 		},
 		{},
 		{ allowExcessKeys: true },
 	);
 
 	if (err) {
-		logger.error(FormatPrError(err, "Invalid environment. Cannot safely boot."));
+		log.error(FormatPrError(err, "Invalid environment. Cannot safely boot."));
 
 		throw err;
 	}
@@ -140,8 +136,6 @@ function ParseEnvVars() {
 		nodeEnv: process.env.NODE_ENV,
 		mongoUrl: process.env.MONGO_URL,
 		port: Number(process.env.PORT),
-		seqUrl: process.env.SEQ_URL,
-		seqApiKey: process.env.SEQ_API_KEY,
 	} as ProcessEnvironment;
 }
 
@@ -154,13 +148,13 @@ async function GetServerConfig() {
 	// this fetch is complete, and it saves us having to do a singleton pattern or worse.
 	// This *should* be solved with top-level-await, but good luck actually getting
 	// typescript to output the right stuff here.
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+	 
 	const res = await fetch(`${BotConfig.TACHI_SERVER_LOCATION}/api/v1/config`).then((res) =>
 		res.json(),
 	);
 
 	if (!res.success) {
-		logger.error(
+		log.error(
 			`Failed to fetch server info from ${BotConfig.TACHI_SERVER_LOCATION}. Can't run.`,
 		);
 		process.exit(1);
@@ -177,7 +171,7 @@ export const ProcessEnv = ParseEnvVars();
 // This warns people if their parent server supports games that they aren't acknowledging.
 for (const game of ServerConfig.GAMES) {
 	if (!Object.prototype.hasOwnProperty.call(BotConfig.DISCORD.GAME_CHANNELS, game)) {
-		logger.warn(
+		log.warn(
 			`${ServerConfig.NAME} declares support for ${game}, but no channel is mapped to it in your conf.json5.`,
 		);
 	}

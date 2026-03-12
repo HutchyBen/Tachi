@@ -14,7 +14,7 @@ import { client } from "../main";
 import { GetUGPTStats, GetUserInfo } from "../utils/apiRequests";
 import { CreateEmbed } from "../utils/embeds";
 import { PrependTachiUrl } from "../utils/fetchTachi";
-import logger from "../utils/logger";
+import { log } from "#utils/log"
 import { FormatClass, GetGameChannel } from "../utils/misc";
 
 export async function HandleClassUpdateV1(
@@ -29,12 +29,12 @@ export async function HandleClassUpdateV1(
 	} catch (e) {
 		const err = e as Error;
 
-		logger.error(`ClassUpdate handler failed: ${err.message}`);
+		log.error(`ClassUpdate handler failed: ${err.message}`);
 		return 500;
 	}
 
 	if (!ShouldRenderUpdate(game, playtype, event.set, event.new)) {
-		logger.info(
+		log.info(
 			`Not rendering class update ${event.set}: ${event.old} -> ${event.new} (not relevant).`,
 		);
 		return 204;
@@ -49,7 +49,7 @@ export async function HandleClassUpdateV1(
 
 		// Do not render if the user hasn't hit the score cap.
 		if (totalScores < minimumNecessaryScores) {
-			logger.info(
+			log.info(
 				`Not rendering class update ${event.set}: ${event.old} -> ${event.new} (not enough scores).`,
 			);
 			return 204;
@@ -91,7 +91,7 @@ function ShouldRenderUpdate(
 	const classSpec = config.classes[classSet];
 
 	if (classSpec === undefined) {
-		logger.error(`Invalid class ${classSet} for ${game} ${playtype}`);
+		log.error(`Invalid class ${classSet} for ${game} ${playtype}`);
 		return false;
 	}
 
@@ -105,12 +105,12 @@ function ShouldRenderUpdate(
 	const minimumId = ids.indexOf(classSpec.minimumRelevantValue);
 
 	if (currentId < 0) {
-		logger.error(`Invalid classValue ${classValue} for ${game} ${playtype}`);
+		log.error(`Invalid classValue ${classValue} for ${game} ${playtype}`);
 		return false;
 	}
 
 	if (minimumId < 0) {
-		logger.error(`Invalid minimum classValue ${classValue} for ${game} ${playtype}`);
+		log.error(`Invalid minimum classValue ${classValue} for ${game} ${playtype}`);
 		return false;
 	}
 
@@ -126,7 +126,7 @@ function GetMinimumScores(
 	const classSpec = config.classes[classSet];
 
 	if (classSpec === undefined) {
-		logger.error(`Invalid class ${classSet} for ${game} ${playtype}`);
+		log.error(`Invalid class ${classSet} for ${game} ${playtype}`);
 		return null;
 	}
 

@@ -1,12 +1,9 @@
+import { log } from "#utils/log";
 import { type CommandInteraction, MessageEmbed } from "discord.js";
 
 import type { DiscordUserMapDocument } from "../database/documents";
 
-import { LoggerLayers } from "../data/data";
 import { SLASH_COMMANDS } from "../slashCommands/commands";
-import { CreateLayeredLogger } from "../utils/logger";
-
-const logger = CreateLayeredLogger(LoggerLayers.slashCommands);
 
 /**
  * Handles incoming command requests by resolving the interaction to the command
@@ -29,7 +26,7 @@ export async function handleIsCommand(
 
 		await interaction.deferReply();
 
-		logger.verbose(`Running ${command.info.name} interaction.`);
+		log.debug(`Running ${command.info.name} interaction.`);
 		try {
 			const response = await command.exec(interaction, requestingUser);
 
@@ -43,13 +40,13 @@ export async function handleIsCommand(
 				});
 			}
 		} catch (err) {
-			logger.error(`An error occured while executing a command.`, { command, err });
+			log.error({ command, err }, `An error occured while executing a command.`);
 
 			void interaction.editReply(
 				`An error has occured while executing this command (${err}). This has been reported.`,
 			);
 		}
 	} catch (e) {
-		logger.error("Failed to handle isCommand interaction", { error: e });
+		log.error({ error: e }, "Failed to handle isCommand interaction");
 	}
 }

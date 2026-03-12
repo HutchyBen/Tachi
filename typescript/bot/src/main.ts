@@ -1,17 +1,16 @@
+import { log } from "#utils/log.js";
 import { GetLimboChannel } from "#utils/misc";
 import { Client, type CommandInteraction, Intents, type SelectMenuInteraction } from "discord.js";
 
 import { BotConfig, ProcessEnv, ServerConfig } from "./config";
-import { LoggerLayers } from "./data/data";
 import { GetUserAndTokenForDiscordID } from "./database/queries";
 import { handleIsCommand } from "./interactionHandlers/handleIsCommand";
 import { app } from "./server/server";
 import { RegisterSlashCommands } from "./slashCommands/register";
-import { CreateLayeredLogger } from "./utils/logger";
 import { VERSION_PRETTY } from "./version";
 
-// hack: DiscordJS's endpoints sometimes return bigints that end up in our logger.
-// when our logger tries to format that content, JSON.stringify fails.
+// hack: DiscordJS's endpoints sometimes return bigints that end up in our log.
+// when our log tries to format that content, JSON.stringify fails.
 //
 // I personally cannot believe that the spec now made JSON.stringify fallible in such
 // a common case. It's kind of absurdly ridiculous. But hey ho; monkey patch our way
@@ -20,8 +19,6 @@ import { VERSION_PRETTY } from "./version";
 BigInt.prototype.toJSON = function toJSON() {
 	return this.toString();
 };
-
-const logger = CreateLayeredLogger(LoggerLayers.client);
 
 export const client = new Client({
 	intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.GUILD_MESSAGES],
@@ -53,11 +50,11 @@ client.on("interactionCreate", async (interaction) => {
 		if (interaction.isCommand()) {
 			await handleIsCommand(interaction, requestingUser);
 		}
-	} catch (e) {
+	} catch (err) {
 		await interaction.channel?.send(
 			"We failed to handle this request. Are your DMs shut to non-friends?",
 		);
-		logger.error("Failed to run interaction.", { interaction, e });
+		log.error({ interaction, err }, "Failed to run interaction.");
 	}
 });
 
@@ -79,25 +76,25 @@ We've sent you a DM with instructions on how to link your account.`,
 
 void (async () => {
 	try {
-		logger.info(`Booting Tachi Bot ${VERSION_PRETTY}.`);
+		log.info(`Booting Tachi Bot ${VERSION_PRETTY}.`);
 
 		// Login to discord.
 		await client.login(BotConfig.DISCORD.TOKEN);
 
-		logger.info(`Logged in successfully to ${client.guilds.cache.size} guilds.`);
+		log.info(`Logged in successfully to ${client.guilds.cache.size} guilds.`);
 
 		// Mount our express server.
 		app.listen(ProcessEnv.port);
 
-		logger.info(
+		log.info(
 			`Invite URL: https://discord.com/api/oauth2/authorize?client_id=${
 				client.application!.id
 			}&permissions=8&scope=applications.commands%20bot`,
 		);
 
 		await RegisterSlashCommands(client);
-	} catch (err) {
-		logger.crit("Failed to properly boot.", err);
+	} catch (error) {
+		log.fatal({ error }, "Failed to properly boot.");
 		process.exit(1);
 	}
 })();
@@ -105,7 +102,5 @@ void (async () => {
 // taken from https://nodejs.org/api/process.html#process_event_unhandledrejection
 // to avoid future deprecation.
 process.on("unhandledRejection", (reason, promise) => {
-	// @ts-expect-error reason is an error, and the logger can handle errors
-	// it just refuses.
-	logger.error(reason, { promise });
+	log.error({ promise }, reason as string);
 });

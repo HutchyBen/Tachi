@@ -120,7 +120,6 @@ const tports: Array<winston.transport> = [
 	}),
 ];
 
-
 export const rootLogger = winston.createLogger({
 	levels: {
 		// entire process termination is necessary
