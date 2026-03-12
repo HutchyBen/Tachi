@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
+import db from "#services/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import { expressRequestMock } from "#test-utils/mock-request";
 import ResetDBState from "#test-utils/resets";

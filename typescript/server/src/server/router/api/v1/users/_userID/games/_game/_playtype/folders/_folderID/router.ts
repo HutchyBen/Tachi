@@ -1,7 +1,7 @@
 import type { FilterQuery } from "mongodb";
 
-import db from "#external/mongo/db";
 import prValidate from "#server/middleware/prudence-validate";
+import db from "#services/mongo/db";
 import { GetEnumDistForFolder, GetFolderCharts, GetPBsOnFolder } from "#utils/folder";
 import { GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import { ParseStrPositiveInt } from "#utils/string-checks";

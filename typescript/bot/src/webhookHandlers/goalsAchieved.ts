@@ -1,11 +1,11 @@
 import { BotConfig } from "#config";
+import { PrependTachiUrl } from "#utils/fetchTachi";
 import {
 	GetGameGroupConfig,
 	type GoalDocument,
 	type integer,
 	type WebhookEventGoalAchievedV1,
 } from "tachi-common";
-import { PrependTachiUrl } from "#utils/fetchTachi";
 
 import { client } from "../main";
 import { GetGoalWithID, GetUserInfo } from "../utils/apiRequests";

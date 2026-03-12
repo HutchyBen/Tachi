@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
 import { GetTotalAllowedInvites } from "#lib/invites/invites";
 import { RequireInvitesEnabled } from "#server/middleware/type-require";
+import db from "#services/mongo/db";
 import { Random20Hex } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { GetUsersWithIDs } from "#utils/user";

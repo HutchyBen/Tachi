@@ -1,7 +1,7 @@
 import type { RequestHandler } from "express";
 
-import db from "#external/mongo/db";
 import { Environment } from "#lib/setup/config";
+import db from "#services/mongo/db";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 
 import type { TachiAPIClientDocument } from "../../../../../../../common/src";

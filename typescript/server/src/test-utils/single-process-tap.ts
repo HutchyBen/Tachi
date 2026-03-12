@@ -1,4 +1,4 @@
-import "#external/mongo/db";
+import "#services/mongo/db";
 import glob from "glob";
 import path from "path";
 import t from "tap";

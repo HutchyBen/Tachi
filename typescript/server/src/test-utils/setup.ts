@@ -1,4 +1,4 @@
-import { monkDB } from "#external/mongo/db";
+import { monkDB } from "#services/mongo/db";
 
 import { SetIndexesForDB } from "./resets";
 

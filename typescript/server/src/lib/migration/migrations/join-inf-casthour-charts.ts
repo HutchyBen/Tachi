@@ -1,8 +1,8 @@
 import type { Migration } from "#utils/types";
 
-/* eslint-disable no-await-in-loop */
-import db from "#external/mongo/db";
 import UpdateScore from "#lib/score-mutation/update-score";
+/* eslint-disable no-await-in-loop */
+import db from "#services/mongo/db";
 
 // old chart -> new chart
 const mappings = [

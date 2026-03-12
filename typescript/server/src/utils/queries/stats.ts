@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
 import { ONE_HOUR } from "#lib/constants/time";
+import db from "#services/mongo/db";
 import NodeCache from "node-cache";
 
 import type { Classes, GameGroup, GPTString, integer, Playtype } from "../../../../common/src";

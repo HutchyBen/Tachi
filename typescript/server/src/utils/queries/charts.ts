@@ -1,6 +1,6 @@
 import type { FilterQuery } from "mongodb";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 
 import type {
 	ChartDocument,

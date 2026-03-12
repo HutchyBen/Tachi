@@ -1,4 +1,4 @@
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 
 import type { ScoreDocument, SessionDocument } from "../../../common/src";
 

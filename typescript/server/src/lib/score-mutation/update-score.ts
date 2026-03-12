@@ -1,16 +1,15 @@
 import type { DryScoreData } from "#lib/score-import/framework/common/types";
 
 import { type KtLogger, rootLogger } from "#lib/logger/logger";
-
-import { GetGPTString, type GPTString, type ScoreDocument } from "../../../../common/src";
-
-/* eslint-disable no-await-in-loop */
-import db from "#external/mongo/db";
 import { CreateScoreCalcData } from "#lib/score-import/framework/calculated-data/score";
 import { CreateSessionCalcData } from "#lib/score-import/framework/calculated-data/session";
 import { UpdateChartRanking } from "#lib/score-import/framework/pb/create-pb-doc";
 import { CreateFullScoreData } from "#lib/score-import/framework/score-importing/derivers";
 import { CreateScoreID } from "#lib/score-import/framework/score-importing/score-id";
+
+import { GetGPTString, type GPTString, type ScoreDocument } from "../../../../common/src";
+/* eslint-disable no-await-in-loop */
+import db from "#services/mongo/db";
 import { UpdateAllPBs } from "#utils/calculations/recalc-scores";
 import { FormatUserDoc, GetUserWithID } from "#utils/user";
 

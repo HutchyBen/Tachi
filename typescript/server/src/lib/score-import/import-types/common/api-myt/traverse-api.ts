@@ -1,10 +1,10 @@
 import type { KtLogger } from "#lib/logger/logger";
 
-import db from "#external/mongo/db";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ServerConfig } from "#lib/setup/config";
 import { CardsClient } from "#proto/generated/cards/cards_grpc_pb";
 import { LookupRequest, type LookupResponse } from "#proto/generated/cards/cards_pb";
+import db from "#services/mongo/db";
 import {
 	type CallOptions,
 	type ClientReadableStream,

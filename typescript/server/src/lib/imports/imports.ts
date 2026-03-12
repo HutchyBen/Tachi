@@ -1,10 +1,10 @@
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import {
 	CheckAndSetOngoingImportLock,
 	UnsetOngoingImportLock,
 } from "#lib/score-import/framework/import-locks/lock";
 import { DeleteMultipleScores } from "#lib/score-mutation/delete-scores";
+import db from "#services/mongo/db";
 
 import type { ImportDocument } from "../../../../common/src";
 

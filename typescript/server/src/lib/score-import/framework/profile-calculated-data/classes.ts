@@ -1,7 +1,7 @@
 import type { KtLogger } from "#lib/logger/logger";
 
-import db from "#external/mongo/db";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
+import db from "#services/mongo/db";
 import { ReturnClassIfGreater } from "#utils/class";
 import deepmerge from "deepmerge";
 

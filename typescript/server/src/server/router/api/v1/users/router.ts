@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
 import { SearchUsersRegExp } from "#lib/search/search";
+import db from "#services/mongo/db";
 import { IsString } from "#utils/misc";
 import { GetOnlineCutoff } from "#utils/user";
 import { Router } from "express";

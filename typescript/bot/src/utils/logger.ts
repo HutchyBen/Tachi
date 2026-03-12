@@ -1,7 +1,7 @@
 import type { SeqLogLevel } from "seq-logging";
 
-import { Transport as SeqTransport } from "@valuabletouch/winston-seq";
 import { ProcessEnv } from "#config";
+import { Transport as SeqTransport } from "@valuabletouch/winston-seq";
 import { CreateLogger, type MeiLogger } from "mei-logger";
 import { transports } from "winston";
 

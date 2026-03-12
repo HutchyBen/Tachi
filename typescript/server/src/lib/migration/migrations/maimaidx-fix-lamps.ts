@@ -1,9 +1,9 @@
 import type { Migration } from "#utils/types";
 
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { ProcessPBs } from "#lib/score-import/framework/pb/process-pbs";
 import UpdateScore from "#lib/score-mutation/update-score";
+import db from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";
 
 import type { integer, ProvidedMetrics, ScoreDocument } from "../../../../../common/src";

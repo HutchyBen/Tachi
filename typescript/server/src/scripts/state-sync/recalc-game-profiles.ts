@@ -1,9 +1,9 @@
-import type { GameGroup, Playtype, ScoreDocument } from "../../../../common/src";
-
-/* eslint-disable no-await-in-loop */
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { UpdateUsersGamePlaytypeStats } from "#lib/score-import/framework/ugpt-stats/update-ugpt-stats";
+
+import type { GameGroup, Playtype, ScoreDocument } from "../../../../common/src";
+/* eslint-disable no-await-in-loop */
+import db from "#services/mongo/db";
 import { WrapScriptPromise } from "#utils/misc";
 import { FormatUserDoc } from "#utils/user";
 

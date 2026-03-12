@@ -1,4 +1,3 @@
-import db from "#external/mongo/db";
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
 import CreateLogCtx from "#lib/logger/logger";
 import { ServerConfig } from "#lib/setup/config";
@@ -9,6 +8,7 @@ import {
 	UnsubscribeFromQuest,
 } from "#lib/targets/quests";
 import { RequirePermissions } from "#server/middleware/auth";
+import db from "#services/mongo/db";
 import { AssignToReqTachiData, GetGPT, GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import { FormatUserDoc } from "#utils/user";
 import { type RequestHandler, Router } from "express";

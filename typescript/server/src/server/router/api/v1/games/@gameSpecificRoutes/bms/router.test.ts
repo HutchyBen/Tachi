@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
 import { ServerConfig } from "#lib/setup/config";
+import db from "#services/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import t from "tap";
 

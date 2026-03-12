@@ -1,4 +1,3 @@
-import db from "#external/mongo/db";
 import {
 	CUSTOM_TACHI_BMS_TABLES,
 	HandleBMSTableBodyRequest,
@@ -6,6 +5,7 @@ import {
 	HandleBMSTableHTMLRequest,
 	type TachiBMSTable,
 } from "#lib/game-specific/custom-bms-tables";
+import db from "#services/mongo/db";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
 

@@ -1,7 +1,7 @@
-import db from "#external/mongo/db";
 import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
 import CreateLogCtx from "#lib/logger/logger";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
+import db from "#services/mongo/db";
 
 import {
 	type Classes,

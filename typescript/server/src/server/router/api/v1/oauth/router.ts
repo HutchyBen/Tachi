@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
 import prValidate from "#server/middleware/prudence-validate";
+import db from "#services/mongo/db";
 import { Random20Hex } from "#utils/misc";
 import { Router } from "express";
 import { p } from "prudence";

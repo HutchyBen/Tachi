@@ -1,7 +1,7 @@
 import type { Migration } from "#utils/types";
 
-import db from "#external/mongo/db";
 import { DeleteMultipleScores } from "#lib/score-mutation/delete-scores";
+import db from "#services/mongo/db";
 
 const migration: Migration = {
 	id: "remove-iidx-extra-beginners",

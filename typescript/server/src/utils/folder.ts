@@ -1,8 +1,8 @@
 import type { BulkWriteOperation, FilterQuery } from "mongodb";
 
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { TachiConfig } from "#lib/setup/config";
+import db from "#services/mongo/db";
 import deepmerge from "deepmerge";
 import fjsh from "fast-json-stable-hash";
 

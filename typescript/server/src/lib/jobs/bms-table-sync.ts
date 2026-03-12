@@ -1,9 +1,9 @@
 /* eslint-disable no-await-in-loop */
 import type { FilterQuery } from "mongodb";
 
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { DeorphanIfInQueue } from "#lib/orphan-queue/orphan-queue";
+import db from "#services/mongo/db";
 import { InitaliseFolderChartLookup } from "#utils/folder";
 import { FormatBMSTables, WrapScriptPromise } from "#utils/misc";
 import { type BMSTableEntry, LoadBMSTable } from "bms-table-loader";

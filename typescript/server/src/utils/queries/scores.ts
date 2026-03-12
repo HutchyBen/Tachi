@@ -1,4 +1,4 @@
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 
 import type { GameGroup, integer, Playtype } from "../../../../common/src";
 

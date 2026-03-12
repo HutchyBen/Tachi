@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
 import { CDNStoreOrOverwrite } from "#lib/cdn/cdn";
 import { GetProfilePictureURL } from "#lib/cdn/url-format";
+import db from "#services/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import { GetKTDataBuffer } from "#test-utils/test-data";

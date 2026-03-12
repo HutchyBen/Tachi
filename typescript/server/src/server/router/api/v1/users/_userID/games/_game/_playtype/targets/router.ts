@@ -1,7 +1,7 @@
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { GetRelevantGoals } from "#lib/targets/goals";
 import { GetParentQuests } from "#lib/targets/quests";
+import db from "#services/mongo/db";
 import {
 	GetRecentlyAchievedGoals,
 	GetRecentlyAchievedQuests,

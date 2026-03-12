@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
 import { USCIR_ADJACENT_SCORE_N } from "#lib/constants/usc-ir";
 import CreateLogCtx from "#lib/logger/logger";
+import db from "#services/mongo/db";
 import { MStoS } from "#utils/misc";
 import { GetPBOnChart, GetServerRecordOnChart } from "#utils/scores";
 

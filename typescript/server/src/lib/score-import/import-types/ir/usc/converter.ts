@@ -1,6 +1,5 @@
 import type { USCClientScore } from "#server/router/ir/usc/_playtype/types";
 
-import db from "#external/mongo/db";
 import {
 	USC_DEFAULT_HOLD,
 	USC_DEFAULT_MISS,
@@ -8,6 +7,7 @@ import {
 	USC_DEFAULT_PERFECT,
 	USC_DEFAULT_SLAM,
 } from "#lib/constants/usc-ir";
+import db from "#services/mongo/db";
 import { FindSongOnID } from "#utils/queries/songs";
 
 import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";

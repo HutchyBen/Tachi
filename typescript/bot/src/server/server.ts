@@ -1,9 +1,9 @@
 import type { APITokenDocument, UserDocument, WebhookEvents } from "tachi-common";
 
-import express, { type Express } from "express";
 import { client } from "#main";
-import path from "path";
 import { HandleQuestAchievedV1 } from "#webhookHandlers/questAchieved";
+import express, { type Express } from "express";
+import path from "path";
 
 import { BotConfig, ProcessEnv } from "../config";
 import { LoggerLayers } from "../data/data";

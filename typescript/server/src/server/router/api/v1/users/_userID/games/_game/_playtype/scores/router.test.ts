@@ -1,4 +1,4 @@
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import { mkFakeScoreIIDXSP, mkFakeScoreSDVX } from "#test-utils/misc";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";

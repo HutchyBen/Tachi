@@ -4,9 +4,6 @@ process.env.IS_SERVER = "true";
 
 import type http from "http";
 
-import db, { monkDB } from "#external/mongo/db";
-import { UpdateIndexes } from "#external/mongo/indexes";
-import { InitSequenceDocs } from "#external/mongo/sequence-docs";
 import { LoadDefaultClients } from "#lib/builtin-clients/builtin-clients";
 import { VERSION_PRETTY } from "#lib/constants/version";
 import { HandleSIGTERMGracefully } from "#lib/handlers/sigterm";
@@ -15,6 +12,9 @@ import { ApplyUnappliedMigrations } from "#lib/migration/migrations";
 import { Environment, ServerConfig, TachiConfig } from "#lib/setup/config";
 import { AddNewUser } from "#server/router/api/v1/auth/auth";
 import server from "#server/server";
+import db, { monkDB } from "#services/mongo/db";
+import { UpdateIndexes } from "#services/mongo/indexes";
+import { InitSequenceDocs } from "#services/mongo/sequence-docs";
 import fetch from "#utils/fetch";
 import { InitaliseFolderChartLookup } from "#utils/folder";
 import { spawn } from "child_process";

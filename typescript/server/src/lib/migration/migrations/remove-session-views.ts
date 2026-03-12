@@ -1,6 +1,6 @@
 import type { Migration } from "#utils/types";
 
-import db, { monkDB } from "#external/mongo/db";
+import db, { monkDB } from "#services/mongo/db";
 
 const migration: Migration = {
 	id: "remove-session-views",

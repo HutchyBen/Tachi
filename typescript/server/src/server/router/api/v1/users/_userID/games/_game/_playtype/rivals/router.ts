@@ -1,9 +1,9 @@
-import db from "#external/mongo/db";
 import { CreateActivityRouteHandler } from "#lib/activity/activity";
 import { SetRivalsFailReasons } from "#lib/constants/err-codes";
 import { GetChallengerUsers, GetRivalIDs, GetRivalUsers, SetRivals } from "#lib/rivals/rivals";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
+import db from "#services/mongo/db";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { IsString } from "#utils/misc";
 import { GetUGPT } from "#utils/req-tachi-data";

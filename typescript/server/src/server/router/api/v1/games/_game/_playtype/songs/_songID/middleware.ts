@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { ParseStrPositiveInt } from "#utils/string-checks";
 

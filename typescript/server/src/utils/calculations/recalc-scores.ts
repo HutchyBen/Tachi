@@ -1,4 +1,3 @@
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { CreateScoreCalcData } from "#lib/score-import/framework/calculated-data/score";
 import { GetAndUpdateUsersGoals } from "#lib/score-import/framework/goals/goals";
@@ -6,6 +5,7 @@ import { ProcessPBs } from "#lib/score-import/framework/pb/process-pbs";
 import { UpdateUsersQuests } from "#lib/score-import/framework/quests/quests";
 import { UpdateUsersGamePlaytypeStats } from "#lib/score-import/framework/ugpt-stats/update-ugpt-stats";
 import { TachiConfig } from "#lib/setup/config";
+import db from "#services/mongo/db";
 import { EfficientDBIterate } from "#utils/efficient-db-iterate";
 import { FormatUserDoc } from "#utils/user";
 

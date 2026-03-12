@@ -1,4 +1,4 @@
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import { dmf } from "#test-utils/misc.js";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";

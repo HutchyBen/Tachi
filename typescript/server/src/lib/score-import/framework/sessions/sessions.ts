@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
 import { ONE_HOUR } from "#lib/constants/time";
 import CreateLogCtx, { AppendLogCtx, type KtLogger } from "#lib/logger/logger";
+import db from "#services/mongo/db";
 import { GetChartForIDGuaranteed } from "#utils/db";
 import { GetScoresFromSession } from "#utils/session";
 import crypto from "crypto";

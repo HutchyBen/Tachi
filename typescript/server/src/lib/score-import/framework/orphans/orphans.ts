@@ -1,7 +1,7 @@
 import type { KtLogger } from "#lib/logger/logger";
 import type { FilterQuery } from "mongodb";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import { GetBlacklist } from "#utils/queries/blacklist";
 import { GetUserWithID } from "#utils/user";
 import fjsh from "fast-json-stable-hash";

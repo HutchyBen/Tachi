@@ -1,4 +1,4 @@
-const { ReadCollection, WriteCollection } = require("../../util");
+import { ReadCollection, WriteCollection } from "../../util";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

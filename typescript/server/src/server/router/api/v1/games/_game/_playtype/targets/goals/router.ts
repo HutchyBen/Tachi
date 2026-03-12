@@ -1,8 +1,8 @@
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { CreateGoalTitle, ValidateGoalChartsAndCriteria } from "#lib/targets/goal-utils";
 import { GetQuestsThatContainGoal } from "#lib/targets/goals";
 import prValidate from "#server/middleware/prudence-validate";
+import db from "#services/mongo/db";
 import { GetMostSubscribedGoals } from "#utils/db";
 import { AssignToReqTachiData, GetGPT, GetTachiData } from "#utils/req-tachi-data";
 import { GetUsersWithIDs } from "#utils/user";

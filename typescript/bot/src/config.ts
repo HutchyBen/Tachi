@@ -7,8 +7,6 @@ import { p } from "prudence";
 
 import { IsRecord } from "./utils/predicates";
 import { FormatPrError } from "./utils/prudence";
-// @ts-expect-error No types available...
-import fetchSync from "sync-fetch";
 
 // Initialise .env.
 config();
@@ -45,6 +43,7 @@ function ParseBotConfig(fileLoc = "conf.json5"): BotConfig {
 	try {
 		const contents = fs.readFileSync(fileLoc, "utf-8");
 
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		data = JSON5.parse(contents);
 	} catch (err) {
 		logger.error("Failed to find/parse a valid conf.json5 file. Cannot boot.", { err });
@@ -150,12 +149,15 @@ export const BotConfig: BotConfig = ParseBotConfig(process.env.CONF_JSON5_LOCATI
 
 // The Tachi Server exports all of the information about it. This saves us having to
 // sync more metadata across instances.
-function GetServerConfig() {
+async function GetServerConfig() {
 	// Yes, I know synchronous fetch is disgusting. However, we can't do anything until
 	// this fetch is complete, and it saves us having to do a singleton pattern or worse.
 	// This *should* be solved with top-level-await, but good luck actually getting
 	// typescript to output the right stuff here.
-	const res = fetchSync(`${BotConfig.TACHI_SERVER_LOCATION}/api/v1/config`).json();
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+	const res = await fetch(`${BotConfig.TACHI_SERVER_LOCATION}/api/v1/config`).then((res) =>
+		res.json(),
+	);
 
 	if (!res.success) {
 		logger.error(
@@ -167,7 +169,7 @@ function GetServerConfig() {
 	return res.body as TachiServerCoreConfig;
 }
 
-export const ServerConfig = GetServerConfig();
+export const ServerConfig = await GetServerConfig();
 
 export const ProcessEnv = ParseEnvVars();
 

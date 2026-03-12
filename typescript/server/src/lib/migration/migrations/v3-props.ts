@@ -1,8 +1,8 @@
 import type { Migration } from "#utils/types";
 import type { FilterQuery } from "mongodb";
 
-import db from "#external/mongo/db";
 import { EditGoal } from "#lib/targets/goals";
+import db from "#services/mongo/db";
 
 import type { GoalDocument } from "../../../../../common/src";
 

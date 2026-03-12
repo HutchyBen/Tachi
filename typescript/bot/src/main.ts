@@ -1,5 +1,5 @@
-import { Client, type CommandInteraction, Intents, type SelectMenuInteraction } from "discord.js";
 import { GetLimboChannel } from "#utils/misc";
+import { Client, type CommandInteraction, Intents, type SelectMenuInteraction } from "discord.js";
 
 import { BotConfig, ProcessEnv, ServerConfig } from "./config";
 import { LoggerLayers } from "./data/data";
@@ -27,7 +27,7 @@ export const client = new Client({
 	intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.GUILD_MESSAGES],
 });
 
-client.on("guildMemberAdd", async (member) => {
+client.on("guildMemberAdd", async (_member) => {
 	if (BotConfig.DISCORD.APPROVED_ROLE && BotConfig.DISCORD.LIMBO_CHANNEL) {
 		const channel = GetLimboChannel(client);
 

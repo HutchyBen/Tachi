@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import prValidate from "#server/middleware/prudence-validate";
+import db from "#services/mongo/db";
 import { Random20Hex } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { FormatUserDoc } from "#utils/user";

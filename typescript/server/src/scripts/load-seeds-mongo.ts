@@ -2,6 +2,12 @@ import type { BulkWriteOperation, DeleteWriteOpResultObject } from "mongodb";
 import type { ICollection } from "monk";
 
 import CreateLogCtx, { type KtLogger } from "#lib/logger/logger";
+import { UpdateGoalsInFolder } from "#lib/score-import/framework/goals/goals";
+import UpdateIsPrimaryStatus from "#lib/score-mutation/update-isprimary";
+import { PullDatabaseSeeds } from "#lib/seeds/repo";
+import { TachiConfig } from "#lib/setup/config";
+import { RemoveStaleFolderShowcaseStats } from "#lib/showcase/showcase";
+import { UpdateQuestSubscriptions } from "#lib/targets/quests";
 
 import type {
 	BMSCourseDocument,
@@ -14,15 +20,8 @@ import type {
 	SongDocument,
 	TableDocument,
 } from "../../../common/src";
-
 /* eslint-disable no-await-in-loop */
-import db, { monkDB } from "#external/mongo/db";
-import { UpdateGoalsInFolder } from "#lib/score-import/framework/goals/goals";
-import UpdateIsPrimaryStatus from "#lib/score-mutation/update-isprimary";
-import { PullDatabaseSeeds } from "#lib/seeds/repo";
-import { TachiConfig } from "#lib/setup/config";
-import { RemoveStaleFolderShowcaseStats } from "#lib/showcase/showcase";
-import { UpdateQuestSubscriptions } from "#lib/targets/quests";
+import db, { monkDB } from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";
 import { UpdateGameSongIDCounter } from "#utils/db";
 import { InitaliseFolderChartLookup } from "#utils/folder";

@@ -1,11 +1,11 @@
 import type { KtLogger } from "#lib/logger/logger";
 import type { FindOneResult } from "monk";
 
-import db from "#external/mongo/db";
 import {
 	AmbiguousTitleFailure,
 	InternalFailure,
 } from "#lib/score-import/framework/common/converter-failures";
+import db from "#services/mongo/db";
 
 import type { GameGroup, integer, SongDocument } from "../../../../common/src";
 

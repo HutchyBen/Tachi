@@ -1,9 +1,9 @@
-import db from "#external/mongo/db";
 import { EvaluateShowcaseStat } from "#lib/showcase/evaluator";
 import { GetRelatedStatDocuments } from "#lib/showcase/get-related";
 import { EvaluateUsersStatsShowcase } from "#lib/showcase/get-stats";
 import { RequirePermissions } from "#server/middleware/auth";
 import { RequireAuthedAsUser } from "#server/router/api/v1/users/_userID/middleware";
+import db from "#services/mongo/db";
 import { IsRecord } from "#utils/misc";
 import { FormatPrError } from "#utils/prudence";
 import { GetUGPT } from "#utils/req-tachi-data";

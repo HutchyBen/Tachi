@@ -1,4 +1,3 @@
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import {
 	GetKaiTypeClientCredentials,
@@ -6,6 +5,7 @@ import {
 } from "#lib/score-import/import-types/common/api-kai/utils";
 import prValidate from "#server/middleware/prudence-validate";
 import { RequireKamaitachi } from "#server/middleware/type-require";
+import db from "#services/mongo/db";
 import fetch from "#utils/fetch";
 import { NotNullish } from "#utils/misc";
 import { GetKaiAuth, RevokeKaiAuth } from "#utils/queries/auth";

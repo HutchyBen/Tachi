@@ -1,19 +1,12 @@
 import type { CommandInteraction } from "discord.js";
 
-import {
-	type Difficulties,
-	type GameGroup,
-	GetGamePTConfig,
-	type GPTString,
-	type Playtype,
-	type UserDocument,
-} from "tachi-common";
+import { type GameGroup, type Playtype, type UserDocument } from "tachi-common";
 
 import type { DiscordUserMapDocument } from "../database/documents";
 import type { Emittable } from "../slashCommands/types";
 
 import { GetUserInfo } from "./apiRequests";
-import { ConvertInputIntoGenerousRegex, ParseGPT } from "./misc";
+import { ParseGPT } from "./misc";
 
 /**
  * Utility parser for getting the game, playtype and requesting user, since this is

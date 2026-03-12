@@ -1,4 +1,4 @@
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import { mkFakeGameSettings } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";

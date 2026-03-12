@@ -1,9 +1,9 @@
 import type { Request } from "express";
 
-import { RedisClient } from "#external/redis/redis";
 import { ONE_MINUTE } from "#lib/constants/time";
 import CreateLogCtx from "#lib/logger/logger";
 import { Environment, ServerConfig, TachiConfig } from "#lib/setup/config";
+import { RedisClient } from "#services/redis/redis";
 import { OmitUndefinedKeys } from "#utils/misc";
 import rateLimit, { type Options } from "express-rate-limit";
 import RateLimitRedis from "rate-limit-redis";

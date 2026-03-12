@@ -1,6 +1,6 @@
 import type { Migration } from "#utils/types";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import { UpdateAllPBs } from "#utils/calculations/recalc-scores";
 
 const migration: Migration = {

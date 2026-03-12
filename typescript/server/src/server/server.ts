@@ -6,10 +6,10 @@ import type { integer } from "../../../common/src";
 // THIS IMPORT **MUST** GO HERE. DO NOT MOVE IT. IT MUST OCCUR BEFORE ANYTHING HAPPENS WITH EXPRESS
 // BUT AFTER EXPRESS IS IMPORTED.
 
-import { RedisClient } from "#external/redis/redis";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import CreateLogCtx from "#lib/logger/logger";
 import { Environment, ServerConfig, TachiConfig } from "#lib/setup/config";
+import { RedisClient } from "#services/redis/redis";
 import { IsNonEmptyString, IsRecord } from "#utils/misc";
 import ExpressPromBundle from "express-prom-bundle";
 import expressSession from "express-session";

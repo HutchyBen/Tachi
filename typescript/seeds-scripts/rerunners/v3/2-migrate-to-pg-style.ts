@@ -7,7 +7,7 @@ import {
 	GPTStringToV3,
 	V3ToGameGroup,
 } from "../../../common/src";
-const { CreateSongID, CreateChartID, ReadCollection, WriteCollection } = require("../../util");
+import { CreateChartID, CreateSongID, ReadCollection, WriteCollection } from "../../util";
 
 // ── Stability map ─────────────────────────────────────────────────────────────
 // Persists legacy→new ID mappings so re-runs produce the same IDs.

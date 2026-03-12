@@ -1,4 +1,3 @@
-import db from "#external/mongo/db";
 import { CDNStoreOrOverwrite } from "#lib/cdn/cdn";
 import { GetUSCIRReplayURL } from "#lib/cdn/url-format";
 import { ONE_MEGABYTE } from "#lib/constants/filesize";
@@ -10,6 +9,7 @@ import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/expre
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RejectIfBanned, RequirePermissions } from "#server/middleware/auth";
 import { CreateMulterSingleUploadMiddleware } from "#server/middleware/multer-upload";
+import db from "#services/mongo/db";
 import { FormatPrError } from "#utils/prudence";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";

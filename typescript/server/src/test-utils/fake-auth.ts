@@ -1,8 +1,8 @@
 import type supertest from "supertest";
 
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
+import db from "#services/mongo/db";
 
 import { ALL_PERMISSIONS } from "../../../common/src";
 import ResetDBState from "./resets";

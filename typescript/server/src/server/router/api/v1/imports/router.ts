@@ -1,7 +1,6 @@
 import type { ScoreImportWorkerReturns } from "#lib/score-import/worker/types";
 import type { FilterQuery } from "mongodb";
 
-import db from "#external/mongo/db";
 import { JOB_RETRY_COUNT } from "#lib/constants/tachi";
 import { RevertImport } from "#lib/imports/imports";
 import CreateLogCtx from "#lib/logger/logger";
@@ -9,6 +8,7 @@ import ScoreImportQueue, { ScoreImportQueueEvents } from "#lib/score-import/work
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
+import db from "#services/mongo/db";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { DeleteUndefinedProps } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";

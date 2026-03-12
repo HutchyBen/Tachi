@@ -1,10 +1,10 @@
 import type http from "http";
 import type https from "https";
 
-import { monkDB } from "#external/mongo/db";
-import { CloseRedisConnection } from "#external/redis/redis";
 import { rootLogger } from "#lib/logger/logger";
 import { CloseScoreImportQueue } from "#lib/score-import/worker/queue";
+import { monkDB } from "#services/mongo/db";
+import { CloseRedisConnection } from "#services/redis/redis";
 
 const logger = rootLogger;
 

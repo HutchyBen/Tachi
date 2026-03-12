@@ -1,6 +1,6 @@
-/* eslint-disable no-await-in-loop */
-import db from "#external/mongo/db";
 import { TachiConfig } from "#lib/setup/config";
+/* eslint-disable no-await-in-loop */
+import db from "#services/mongo/db";
 
 export default async function UpdateIsPrimaryStatus() {
 	for (const game of TachiConfig.GAMES) {

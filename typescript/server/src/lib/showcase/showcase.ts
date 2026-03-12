@@ -1,4 +1,4 @@
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 
 /**
  * When a folder is removed, any showcase stats referring to that folder

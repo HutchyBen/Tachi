@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
+import db from "#services/mongo/db";
 import { dmf, mkFakePBIIDXSP } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import {

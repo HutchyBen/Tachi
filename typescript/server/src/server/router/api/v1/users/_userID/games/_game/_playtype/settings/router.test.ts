@@ -1,7 +1,7 @@
 import type { UGPTSettingsDocument } from "../../../../../../../../../../../../common/src";
 
 /* eslint-disable no-await-in-loop */
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import { mkFakeUser } from "#test-utils/misc";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";

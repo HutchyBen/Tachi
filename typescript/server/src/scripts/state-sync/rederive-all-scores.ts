@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import UpdateScore from "#lib/score-mutation/update-score";
+import db from "#services/mongo/db";
 import { UpdateAllPBs } from "#utils/calculations/recalc-scores";
 import { EfficientDBIterate } from "#utils/efficient-db-iterate";
 

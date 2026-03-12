@@ -1,7 +1,7 @@
 import type { Request, Response } from "express-serve-static-core";
 import type { FilterQuery } from "mongodb";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import {
 	GetRecentlyAchievedGoals,
 	GetRecentlyAchievedQuests,

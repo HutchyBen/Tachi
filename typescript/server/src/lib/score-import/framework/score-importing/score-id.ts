@@ -1,6 +1,6 @@
 import type { KtLogger } from "#lib/logger/logger";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import fjsh from "fast-json-stable-hash";
 
 import type { DryScore } from "../common/types";

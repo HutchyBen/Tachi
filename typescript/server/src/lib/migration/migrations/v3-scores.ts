@@ -1,6 +1,12 @@
 import type { DryScoreData } from "#lib/score-import/framework/common/types";
 import type { Migration } from "#utils/types";
 
+import CreateLogCtx from "#lib/logger/logger";
+import { CreateScoreID } from "#lib/score-import/framework/score-importing/score-id";
+import { DeleteMultipleScores } from "#lib/score-mutation/delete-scores";
+import UpdateScore from "#lib/score-mutation/update-score";
+import { RecalcGameProfiles } from "#scripts/state-sync/recalc-game-profiles";
+
 import {
 	allSupportedGameGroups,
 	GetGamePTConfig,
@@ -9,14 +15,8 @@ import {
 	type GPTStrings,
 	type integer,
 } from "../../../../../common/src";
-
 /* eslint-disable no-await-in-loop */
-import db, { monkDB } from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
-import { CreateScoreID } from "#lib/score-import/framework/score-importing/score-id";
-import { DeleteMultipleScores } from "#lib/score-mutation/delete-scores";
-import UpdateScore from "#lib/score-mutation/update-score";
-import { RecalcGameProfiles } from "#scripts/state-sync/recalc-game-profiles";
+import db, { monkDB } from "#services/mongo/db";
 import { UpdateAllPBs } from "#utils/calculations/recalc-scores";
 import { RecalcSessions } from "#utils/calculations/recalc-sessions";
 import { EfficientDBIterate } from "#utils/efficient-db-iterate";

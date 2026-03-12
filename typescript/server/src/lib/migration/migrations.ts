@@ -1,8 +1,8 @@
 import type { Migration } from "#utils/types";
 
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { Environment, TachiConfig } from "#lib/setup/config";
+import db from "#services/mongo/db";
 
 import UserFollowersMigration from "./migrations/add-following-to-users";
 import AddLockedAt from "./migrations/add-lockedat";

@@ -3,8 +3,8 @@
 
 import type { Migration } from "#utils/types";
 
-import db from "#external/mongo/db";
 import { DeleteMultipleScores } from "#lib/score-mutation/delete-scores";
+import db from "#services/mongo/db";
 
 const HAS_RANDOM_MD5 = [
 	"b94b380dbf8ebb9e132f9314dfc90501",

@@ -2,7 +2,7 @@ import type { PBMergeFunction } from "#game-implementations/types";
 import type { PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
 import type { FilterQuery } from "mongodb";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 
 import type {
 	ConfDerivedMetrics,

@@ -1,4 +1,4 @@
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import t from "tap";
 
 import type { APIPermissions } from "../../../common/src";

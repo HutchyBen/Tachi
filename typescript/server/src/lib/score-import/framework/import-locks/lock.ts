@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
 import { ONE_DAY, ONE_HOUR } from "#lib/constants/time";
 import CreateLogCtx from "#lib/logger/logger";
+import db from "#services/mongo/db";
 
 import type { integer } from "../../../../../../common/src";
 

@@ -1,9 +1,9 @@
 import type { FilterQuery } from "mongodb";
 import type { ICollection } from "monk";
 
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { TachiConfig } from "#lib/setup/config";
+import db from "#services/mongo/db";
 import { GetSongForIDGuaranteed } from "#utils/db";
 import { EscapeStringRegexp } from "#utils/misc";
 import { GetOnlineCutoff } from "#utils/user";

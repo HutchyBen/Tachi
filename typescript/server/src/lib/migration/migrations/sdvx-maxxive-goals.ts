@@ -1,6 +1,6 @@
 import type { Migration } from "#utils/types";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 
 const migration: Migration = {
 	id: "sdvx-maxxive-lamp-rearrange",

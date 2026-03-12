@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
 import { GetSessionScoreInfo } from "#lib/score-import/framework/sessions/sessions";
 import { SearchSessions } from "#lib/search/search";
+import db from "#services/mongo/db";
 import { GetUGPT } from "#utils/req-tachi-data";
 import { CheckStrSessionAlg } from "#utils/string-checks";
 import { Router } from "express";

@@ -10,10 +10,7 @@ import { CreateLayeredLogger } from "./logger";
 
 const logger = CreateLayeredLogger(LoggerLayers.tachiFetch);
 
-export type APIResponse<T> = (
-	| ({ body: null } & UnsuccessfulAPIResponse)
-	| SuccessfulAPIResponse<T>
-) & {
+export type APIResponse<T> = (({ body: null } & UnsuccessfulAPIResponse) | SuccessfulAPIResponse<T>) & {
 	statusCode: integer;
 };
 

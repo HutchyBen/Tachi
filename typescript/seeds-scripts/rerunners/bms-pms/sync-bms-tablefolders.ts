@@ -1,10 +1,13 @@
-const { LoadBMSTable } = require("bms-table-loader");
-const { BMS_TABLES } = require("tachi-common");
+import { LoadBMSTable } from "bms-table-loader";
+import {
+	BMS_TABLES,
+	type BMSTableInfo,
+	type FolderDocument,
+	type TableDocument,
+} from "tachi-common";
 
-import { type BMSTableInfo, type FolderDocument, type TableDocument } from "../../../common/src";
-const logger = require("../../logger");
-import { CreateFolderIDFromFolder } from "../../util";
-const { ReadCollection, MutateCollection } = require("../../util");
+import logger from "../../logger";
+import { MutateCollection, ReadCollection } from "../../util";
 
 const existsTables = ReadCollection("tables.json").map((e) => e.tableID);
 const existsFolders = ReadCollection("folders.json").map((e) => e.folderID);

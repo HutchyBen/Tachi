@@ -1,7 +1,7 @@
 import type { KtLogger } from "#lib/logger/logger";
 import type { ScoreImportJob } from "#lib/score-import/worker/types";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import { GetMillisecondsSince } from "#utils/misc";
 import { GetUserWithID } from "#utils/user";
 

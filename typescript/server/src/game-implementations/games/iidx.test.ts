@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
+import db from "#services/mongo/db";
 import { dmf, mkFakePBIIDXSP, mkFakeScoreIIDXSP } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestSnapshot } from "#test-utils/single-process-snapshot";

@@ -1,4 +1,4 @@
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import { GetUser } from "#utils/req-tachi-data";
 import { Router } from "express";
 

@@ -1,12 +1,12 @@
 import type { PrudenceError } from "prudence";
 
-import { type TachiAPIClientDocument, UserAuthLevels } from "../../../../common/src";
-
-/* eslint-disable no-await-in-loop */
-import db from "#external/mongo/db";
-import { DatabaseSchemas } from "#external/mongo/schemas";
 import CreateLogCtx from "#lib/logger/logger";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
+
+import { type TachiAPIClientDocument, UserAuthLevels } from "../../../../common/src";
+/* eslint-disable no-await-in-loop */
+import db from "#services/mongo/db";
+import { DatabaseSchemas } from "#services/mongo/schemas";
 import { Random20Hex } from "#utils/misc";
 import { FormatPrError } from "#utils/prudence";
 import fjsh from "fast-json-stable-hash";

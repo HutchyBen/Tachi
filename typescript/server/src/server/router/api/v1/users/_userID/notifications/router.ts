@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
 import { ONE_SECOND } from "#lib/constants/time";
+import db from "#services/mongo/db";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
 

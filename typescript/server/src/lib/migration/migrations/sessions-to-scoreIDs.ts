@@ -1,6 +1,6 @@
 import type { Migration } from "#utils/types";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import { EfficientDBIterate } from "#utils/efficient-db-iterate";
 
 import type { SessionDocument } from "../../../../../common/src";

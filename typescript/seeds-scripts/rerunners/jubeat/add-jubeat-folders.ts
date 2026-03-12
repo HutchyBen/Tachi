@@ -1,7 +1,7 @@
-import { type FolderDocument } from "tachi-common/src/types";
+import { type FolderDocument } from "tachi-common";
 
 import { JUBEAT_SINGLE_CONF } from "../../../common/src/config/game-support/jubeat";
-const { MutateCollection, CreateFolderID } = require("../../util");
+import { CreateFolderID, MutateCollection } from "../../util";
 
 function CreateFolder(criteria, title) {
 	const f: any = {
@@ -14,7 +14,7 @@ function CreateFolder(criteria, title) {
 		inactive: false,
 	};
 
-	const folderID = CreateFolderID(f.data, f.game, f.playtype);
+	const folderID = CreateFolderID();
 
 	f.folderID = folderID;
 

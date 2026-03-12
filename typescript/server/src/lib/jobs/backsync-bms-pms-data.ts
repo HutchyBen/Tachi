@@ -1,7 +1,7 @@
-/* eslint-disable no-await-in-loop */
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { PullDatabaseSeeds } from "#lib/seeds/repo";
+/* eslint-disable no-await-in-loop */
+import db from "#services/mongo/db";
 import { WrapScriptPromise } from "#utils/misc";
 
 const logger = CreateLogCtx(__filename);

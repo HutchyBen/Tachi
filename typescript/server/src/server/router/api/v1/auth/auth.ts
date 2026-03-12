@@ -1,8 +1,8 @@
 import type { PrivateUserInfoDocument } from "#utils/types";
 
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { Environment, ServerConfig } from "#lib/setup/config";
+import db from "#services/mongo/db";
 import nodeFetch from "#utils/fetch";
 import { Random20Hex } from "#utils/misc";
 import { CreateURLWithParams } from "#utils/url";

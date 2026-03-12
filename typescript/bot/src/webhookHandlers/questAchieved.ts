@@ -1,6 +1,6 @@
 import { BotConfig } from "#config";
-import { GetGameGroupConfig, type integer, type WebhookEventQuestAchievedV1 } from "tachi-common";
 import { PrependTachiUrl } from "#utils/fetchTachi";
+import { GetGameGroupConfig, type integer, type WebhookEventQuestAchievedV1 } from "tachi-common";
 
 import { client } from "../main";
 import { GetQuestWithID, GetUserInfo } from "../utils/apiRequests";

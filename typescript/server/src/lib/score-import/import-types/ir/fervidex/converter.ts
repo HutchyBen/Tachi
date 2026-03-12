@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
 import { CreateScoreID } from "#lib/score-import/framework/score-importing/score-id";
+import db from "#services/mongo/db";
 import { DeleteUndefinedProps, IsNullishOrEmptyStr } from "#utils/misc";
 import { FindIIDXChartOnInGameIDVersion, FindIIDXChartWith2DXtraHash } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";

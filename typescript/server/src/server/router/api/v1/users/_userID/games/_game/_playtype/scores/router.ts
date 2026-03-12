@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
 import { SearchSpecificGameSongsAndCharts } from "#lib/search/search";
 import { HyperAggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
+import db from "#services/mongo/db";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { GetUGPT } from "#utils/req-tachi-data";
 import { FilterChartsAndSongs } from "#utils/scores";

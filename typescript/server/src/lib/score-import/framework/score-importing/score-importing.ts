@@ -1,7 +1,7 @@
 import type { ScoreImportJob } from "#lib/score-import/worker/types";
 
-import db from "#external/mongo/db";
 import { AppendLogCtx, type KtLogger } from "#lib/logger/logger";
+import db from "#services/mongo/db";
 import { ClassToObject } from "#utils/misc";
 
 import type { ConverterFnSuccessReturn, ConverterFunction } from "../../import-types/common/types";

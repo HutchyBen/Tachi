@@ -1,8 +1,8 @@
 /* eslint-disable no-await-in-loop */
 
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { CreateSessionCalcData } from "#lib/score-import/framework/calculated-data/session";
+import db from "#services/mongo/db";
 
 import { GetGPTString } from "../../../../common/src";
 

@@ -1,7 +1,7 @@
-/* eslint-disable no-await-in-loop */
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { BacksyncCollection } from "#lib/seeds/repo";
+/* eslint-disable no-await-in-loop */
+import db from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";
 import fetch from "#utils/fetch";
 import { WrapScriptPromise } from "#utils/misc";

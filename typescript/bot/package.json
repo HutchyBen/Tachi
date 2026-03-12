@@ -43,7 +43,6 @@
 		"node-fetch": "catalog:",
 		"prudence": "catalog:",
 		"seq-logging": "catalog:",
-		"sync-fetch": "catalog:",
 		"tachi-common": "workspace:*",
 		"ts-node": "catalog:",
 		"tsconfig-paths": "catalog:",

@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { InvalidScoreFailure } from "#lib/score-import/framework/common/converter-failures";
+import db from "#services/mongo/db";
 import { dmf } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import {

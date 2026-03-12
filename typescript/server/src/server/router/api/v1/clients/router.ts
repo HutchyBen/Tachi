@@ -1,7 +1,7 @@
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { ServerConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
+import db from "#services/mongo/db";
 import { DedupeArr, DeleteUndefinedProps, IsValidURL, Random20Hex } from "#utils/misc";
 import { optNull } from "#utils/prudence";
 import { GetTachiData } from "#utils/req-tachi-data";

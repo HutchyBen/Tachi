@@ -1,7 +1,7 @@
-import db from "#external/mongo/db";
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
 import CreateLogCtx from "#lib/logger/logger";
 import { BulkSendNotification } from "#lib/notifications/notifications";
+import db from "#services/mongo/db";
 
 import type {
 	GameGroup,

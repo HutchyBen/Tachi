@@ -1,10 +1,10 @@
 import type { FindOptions } from "monk";
 
-import db from "#external/mongo/db";
 import { CreateActivityRouteHandler } from "#lib/activity/activity";
 import { ONE_HOUR } from "#lib/constants/time";
 import { SearchUsersRegExp } from "#lib/search/search";
 import prValidate from "#server/middleware/prudence-validate";
+import db from "#services/mongo/db";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { IsString } from "#utils/misc";
 import { GetGPT } from "#utils/req-tachi-data";

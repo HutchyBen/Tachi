@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { BacksyncCollection, PullDatabaseSeeds } from "#lib/seeds/repo";
+import db from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";
 import fetch from "#utils/fetch";
 import { WrapScriptPromise } from "#utils/misc";

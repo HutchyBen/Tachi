@@ -1,7 +1,7 @@
 import type { KtLogger } from "#lib/logger/logger";
 
-import db from "#external/mongo/db";
 import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
+import db from "#services/mongo/db";
 
 import type {
 	ClassDelta,

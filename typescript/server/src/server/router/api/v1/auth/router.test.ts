@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
 import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
+import db from "#services/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import { Sleep } from "#utils/misc";

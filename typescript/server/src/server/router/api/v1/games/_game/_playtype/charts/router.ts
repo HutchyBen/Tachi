@@ -1,9 +1,9 @@
-import db from "#external/mongo/db";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import CreateLogCtx from "#lib/logger/logger";
 import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch-manual/converter";
 import { SearchSpecificGameSongs } from "#lib/search/search";
 import prValidate from "#server/middleware/prudence-validate";
+import db from "#services/mongo/db";
 import { IsString } from "#utils/misc";
 import { FindChartsOnPopularity } from "#utils/queries/charts";
 import { GetGPT } from "#utils/req-tachi-data";

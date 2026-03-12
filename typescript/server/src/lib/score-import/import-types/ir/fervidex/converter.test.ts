@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { CreateScoreID } from "#lib/score-import/framework/score-importing/score-id";
+import db from "#services/mongo/db";
 import { dmf, mkFakeScoreIIDXSP } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { Testing511Song, Testing511SPA, TestingIIDXSPDryScore } from "#test-utils/test-data";

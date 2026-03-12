@@ -1,10 +1,10 @@
 import type { ICollection } from "monk";
 
-import db, { type StaticDatabases } from "#external/mongo/db";
-import { SetIndexes } from "#external/mongo/indexes";
 import CreateLogCtx from "#lib/logger/logger";
 import { Environment, ServerConfig } from "#lib/setup/config";
 import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
+import db, { type StaticDatabases } from "#services/mongo/db";
+import { SetIndexes } from "#services/mongo/indexes";
 import fs from "fs";
 import path from "path";
 import rimraf from "rimraf";

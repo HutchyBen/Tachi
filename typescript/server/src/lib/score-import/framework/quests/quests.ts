@@ -1,9 +1,9 @@
 import type { KtLogger } from "#lib/logger/logger";
 import type { BulkWriteUpdateOneOperation } from "mongodb";
 
-import db from "#external/mongo/db";
 import { EvaluateQuestProgress } from "#lib/targets/quests";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
+import db from "#services/mongo/db";
 
 import type {
 	GameGroup,

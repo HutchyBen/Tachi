@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
 import prValidate from "#server/middleware/prudence-validate";
 import { RequireKamaitachi } from "#server/middleware/type-require";
+import db from "#services/mongo/db";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
 import { p } from "prudence";

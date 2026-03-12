@@ -1,8 +1,8 @@
 /* eslint-disable no-await-in-loop */
 
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { UpdateUsersGamePlaytypeStats } from "#lib/score-import/framework/ugpt-stats/update-ugpt-stats";
+import db from "#services/mongo/db";
 import { FormatUserDoc } from "#utils/user";
 
 const logger = CreateLogCtx(__filename);

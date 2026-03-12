@@ -3,13 +3,13 @@ import type {
 	BeatorajaScore,
 } from "#lib/score-import/import-types/ir/beatoraja/types";
 
-import db from "#external/mongo/db";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import CreateLogCtx from "#lib/logger/logger";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { ServerConfig } from "#lib/setup/config";
 import { RequireNotGuest } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
+import db from "#services/mongo/db";
 import { UpdateClassIfGreater } from "#utils/class";
 import { IsRecord, NotNullish } from "#utils/misc";
 import { Router } from "express";

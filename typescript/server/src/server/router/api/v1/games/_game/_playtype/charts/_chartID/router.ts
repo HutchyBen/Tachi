@@ -1,8 +1,8 @@
 import type { FilterQuery } from "mongodb";
 
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { SearchUsersRegExp } from "#lib/search/search";
+import db from "#services/mongo/db";
 import { IsString } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { ParseStrPositiveNonZeroInt } from "#utils/string-checks";

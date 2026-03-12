@@ -1,9 +1,9 @@
-import db from "#external/mongo/db";
 import { CreateActivityRouteHandler } from "#lib/activity/activity";
 import { ONE_MONTH, ONE_WEEK, ONE_YEAR } from "#lib/constants/time";
 import CreateLogCtx from "#lib/logger/logger";
 import prValidate from "#server/middleware/prudence-validate";
 import { PasswordCompare, ValidatePassword } from "#server/router/api/v1/auth/auth";
+import db from "#services/mongo/db";
 import { IsString } from "#utils/misc";
 import { GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import DestroyUserGamePlaytypeData from "#utils/reset-state/destroy-ugpt";

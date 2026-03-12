@@ -1,7 +1,7 @@
-import db from "#external/mongo/db";
 import { GetSessionScoreInfo } from "#lib/score-import/framework/sessions/sessions";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
+import db from "#services/mongo/db";
 import { GetEnumDistForFolderAsOf } from "#utils/folder";
 import { AddToSetInRecord } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";

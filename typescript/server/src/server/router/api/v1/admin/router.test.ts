@@ -1,7 +1,7 @@
-import db from "#external/mongo/db";
 import { ONE_MINUTE } from "#lib/constants/time";
 import { ChangeRootLogLevel, GetLogLevel } from "#lib/logger/logger";
 import { Environment, ServerConfig } from "#lib/setup/config";
+import db from "#services/mongo/db";
 import { CreateFakeAuthCookie } from "#test-utils/fake-auth";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";

@@ -1,7 +1,7 @@
 import type { KtLogger } from "#lib/logger/logger";
 
-import db from "#external/mongo/db";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
+import db from "#services/mongo/db";
 
 import type { integer } from "../../../../common/src";
 

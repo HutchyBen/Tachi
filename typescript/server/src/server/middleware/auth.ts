@@ -1,10 +1,10 @@
 import type { RequestHandler } from "express";
 import type { Session, SessionData } from "express-session";
 
-import db from "#external/mongo/db";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import CreateLogCtx from "#lib/logger/logger";
 import { TachiConfig } from "#lib/setup/config";
+import db from "#services/mongo/db";
 import { IsNullishOrEmptyStr, SplitAuthorizationHeader } from "#utils/misc";
 
 import {

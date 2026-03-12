@@ -1,4 +1,3 @@
-import db from "#external/mongo/db";
 import { SendEmail } from "#lib/email/client";
 import { EmailFormatResetPassword, EmailFormatVerifyEmail } from "#lib/email/formats";
 import CreateLogCtx from "#lib/logger/logger";
@@ -8,6 +7,7 @@ import {
 	AggressiveRateLimitMiddleware,
 	HyperAggressiveRateLimitMiddleware,
 } from "#server/middleware/rate-limiter";
+import db from "#services/mongo/db";
 import { DecrementCounterValue, GetNextCounterValue } from "#utils/db";
 import { Random20Hex } from "#utils/misc";
 import {

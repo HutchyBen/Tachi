@@ -1,4 +1,4 @@
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import { UpdateAllPBs } from "#utils/calculations/recalc-scores";
 
 import type { GameGroup, integer, Playtype } from "../../../../common/src";

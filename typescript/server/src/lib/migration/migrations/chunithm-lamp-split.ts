@@ -1,5 +1,11 @@
 import type { Migration } from "#utils/types";
 
+import CreateLogCtx from "#lib/logger/logger";
+import { ProcessPBs } from "#lib/score-import/framework/pb/process-pbs";
+import { CreateFullScoreData } from "#lib/score-import/framework/score-importing/derivers";
+import { CreateScoreID } from "#lib/score-import/framework/score-importing/score-id";
+import { CreateGoalID } from "#lib/targets/goals";
+
 import type { GetEnumValue } from "../../../../../common/src/types/metrics";
 
 import {
@@ -10,14 +16,8 @@ import {
 	type ScoreData,
 	type ScoreDocument,
 } from "../../../../../common/src";
-
 /* eslint-disable no-await-in-loop */
-import db, { monkDB } from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
-import { ProcessPBs } from "#lib/score-import/framework/pb/process-pbs";
-import { CreateFullScoreData } from "#lib/score-import/framework/score-importing/derivers";
-import { CreateScoreID } from "#lib/score-import/framework/score-importing/score-id";
-import { CreateGoalID } from "#lib/targets/goals";
+import db, { monkDB } from "#services/mongo/db";
 import { EfficientDBIterate } from "#utils/efficient-db-iterate";
 
 const logger = CreateLogCtx(__filename);

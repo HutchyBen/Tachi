@@ -1,10 +1,10 @@
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { GetRivalUsers } from "#lib/rivals/rivals";
 import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch-manual/converter";
 import { SearchSpecificGameSongsAndCharts } from "#lib/search/search";
 import prValidate from "#server/middleware/prudence-validate";
 import { AggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
+import db from "#services/mongo/db";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { IsValidScoreAlg } from "#utils/misc";
 import { GetAdjacentAbove, GetAdjacentBelow } from "#utils/queries/pbs";

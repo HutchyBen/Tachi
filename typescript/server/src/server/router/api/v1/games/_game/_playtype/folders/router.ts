@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
 import { SearchCollection } from "#lib/search/search";
+import db from "#services/mongo/db";
 import { GetFolderCharts } from "#utils/folder";
 import { IsString } from "#utils/misc";
 import { GetGPT, GetTachiData } from "#utils/req-tachi-data";

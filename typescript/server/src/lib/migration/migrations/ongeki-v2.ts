@@ -1,8 +1,8 @@
 import type { Migration } from "#utils/types";
 
-import db from "#external/mongo/db";
 import { rootLogger } from "#lib/logger/logger";
 import UpdateScore from "#lib/score-mutation/update-score";
+import db from "#services/mongo/db";
 import { EfficientDBIterate } from "#utils/efficient-db-iterate";
 
 import { ONGEKI_NOTE_LAMPS, type ScoreDocument } from "../../../../../common/src";

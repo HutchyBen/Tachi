@@ -1,7 +1,7 @@
 import type { Migration } from "#utils/types";
 
 /* eslint-disable no-await-in-loop */
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 
 const migration: Migration = {
 	id: "rm-hot",

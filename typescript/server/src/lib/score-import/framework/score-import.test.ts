@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
 import { CDNRetrieve } from "#lib/cdn/cdn";
+import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import { FakeSmallBatchManual } from "#test-utils/test-data";
 import t from "tap";

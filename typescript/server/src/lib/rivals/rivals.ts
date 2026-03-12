@@ -1,10 +1,10 @@
 import type { BulkWriteUpdateOneOperation } from "mongodb";
 
-import db from "#external/mongo/db";
 import { SetRivalsFailReasons } from "#lib/constants/err-codes";
 import CreateLogCtx from "#lib/logger/logger";
 import { SendSetRivalNotification } from "#lib/notifications/notification-wrappers";
 import { ServerConfig } from "#lib/setup/config";
+import db from "#services/mongo/db";
 import { ArrayDiff } from "#utils/misc";
 import { GetUsersWithIDs, GetUserWithIDGuaranteed } from "#utils/user";
 

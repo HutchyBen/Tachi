@@ -1,4 +1,3 @@
-import db from "#external/mongo/db";
 import { GetRecentActivity } from "#lib/activity/activity";
 import { ONE_MONTH } from "#lib/constants/time";
 import { SendEmail } from "#lib/email/client";
@@ -7,6 +6,7 @@ import CreateLogCtx from "#lib/logger/logger";
 import { GetRivalIDs } from "#lib/rivals/rivals";
 import { ServerConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
+import db from "#services/mongo/db";
 import { DeleteUndefinedProps, IsNonEmptyString, Random20Hex, StripUrl } from "#utils/misc";
 import { optNullFluffStrField } from "#utils/prudence";
 import {

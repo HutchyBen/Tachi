@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
 import { FindStandaloneQuests, GetGoalsInQuests } from "#lib/targets/quests";
+import db from "#services/mongo/db";
 import { GetChildQuests } from "#utils/db";
 import { IsString } from "#utils/misc";
 import { AssignToReqTachiData, GetGPT, GetTachiData } from "#utils/req-tachi-data";

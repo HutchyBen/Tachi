@@ -1,9 +1,9 @@
 import type { GPTServerImplementation } from "#game-implementations/types";
 
-import db from "#external/mongo/db";
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileSumBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
+import db from "#services/mongo/db";
 import { IsNullish } from "#utils/misc";
 import { p } from "prudence";
 import { Jubility } from "rg-stats";

@@ -2,10 +2,9 @@
 
 // WARNING: This is claude-slop and not reviewed by me
 
+import { Command } from "commander";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { join, resolve } from "path";
-
-import { Command } from "commander";
 import { Client } from "pg";
 import { applyMigrations, getMigrationInfo, revertLastMigration } from "tachi-db-migration-engine";
 
@@ -243,12 +242,12 @@ migrateCmd
 			const typeWidth = 7;
 			const statusWidth = 10;
 
-			const header =
+			const header = `${
 				"Version".padEnd(versionWidth) +
 				"Description".padEnd(descWidth) +
 				"Type".padEnd(typeWidth) +
-				"Status".padEnd(statusWidth) +
-				"Applied At";
+				"Status".padEnd(statusWidth)
+			}Applied At`;
 
 			console.log(header);
 			console.log("-".repeat(header.length + 20));

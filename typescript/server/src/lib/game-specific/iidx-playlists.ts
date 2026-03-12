@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
+import db from "#services/mongo/db";
 import { PoyashiBPI } from "rg-stats";
 
 import type { ChartDocument, integer, Playtypes } from "../../../../common/src";

@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { RequirePermissions } from "#server/middleware/auth";
+import db from "#services/mongo/db";
 import { FormatPrError, optNull } from "#utils/prudence";
 import { GetUGPT } from "#utils/req-tachi-data";
 import { FormatUserDoc } from "#utils/user";

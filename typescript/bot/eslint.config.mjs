@@ -7,6 +7,7 @@ export default [
 		ignores: ["js/**", "node_modules/**"],
 	},
 	{
+		files: ["**/*.{ts,tsx}"],
 		rules: {
 			"@typescript-eslint/no-unsafe-assignment": "warn",
 		},

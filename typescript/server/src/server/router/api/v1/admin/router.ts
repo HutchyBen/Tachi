@@ -1,4 +1,3 @@
-import db from "#external/mongo/db";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { ONE_MINUTE } from "#lib/constants/time";
 import CreateLogCtx, { ChangeRootLogLevel, GetLogLevel } from "#lib/logger/logger";
@@ -8,6 +7,7 @@ import { UpdateQuestsForUser } from "#lib/score-import/framework/quests/quests";
 import { DeleteMultipleScores, DeleteScore } from "#lib/score-mutation/delete-scores";
 import { Environment, ServerConfig, TachiConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
+import db from "#services/mongo/db";
 import { RecalcAllScores, UpdateAllPBs } from "#utils/calculations/recalc-scores";
 import { RecalcSessions } from "#utils/calculations/recalc-sessions";
 import { IsValidPlaytype } from "#utils/misc";

@@ -1,8 +1,8 @@
-import db from "#external/mongo/db";
 import { MODEL_SDVX3_KONASTE } from "#lib/constants/ea3id";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import CreateLogCtx from "#lib/logger/logger";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
+import db from "#services/mongo/db";
 import { ParseEA3SoftID } from "#utils/ea3id";
 import { IsNullishOrEmptyStr } from "#utils/misc";
 import { type RequestHandler, Router } from "express";

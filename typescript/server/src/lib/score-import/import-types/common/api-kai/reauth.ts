@@ -1,8 +1,8 @@
 import type { KtLogger } from "#lib/logger/logger";
 
-import db from "#external/mongo/db";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ServerConfig } from "#lib/setup/config";
+import db from "#services/mongo/db";
 import nodeFetch from "#utils/fetch";
 import { p } from "prudence";
 

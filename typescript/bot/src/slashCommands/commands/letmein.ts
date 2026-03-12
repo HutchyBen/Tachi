@@ -1,5 +1,5 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
 import { BotConfig } from "#config";
+import { SlashCommandBuilder } from "@discordjs/builders";
 
 import type { SlashCommand } from "../types";
 

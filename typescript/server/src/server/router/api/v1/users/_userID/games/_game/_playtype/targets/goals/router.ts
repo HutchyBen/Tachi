@@ -1,4 +1,3 @@
-import db from "#external/mongo/db";
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
 import CreateLogCtx from "#lib/logger/logger";
 import { ServerConfig } from "#lib/setup/config";
@@ -11,6 +10,7 @@ import {
 import { GetParentQuests } from "#lib/targets/quests";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
+import db from "#services/mongo/db";
 import { GetGoalForIDGuaranteed } from "#utils/db";
 import { AssignToReqTachiData, GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";

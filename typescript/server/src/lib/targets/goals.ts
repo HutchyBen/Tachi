@@ -1,10 +1,10 @@
 import type { GoalCriteriaFormatter } from "#game-implementations/types";
 import type { FilterQuery } from "mongodb";
 
-import db from "#external/mongo/db";
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
 import CreateLogCtx, { type KtLogger } from "#lib/logger/logger";
+import db from "#services/mongo/db";
 import { GetFolderChartIDs } from "#utils/folder";
 import fjsh from "fast-json-stable-hash";
 

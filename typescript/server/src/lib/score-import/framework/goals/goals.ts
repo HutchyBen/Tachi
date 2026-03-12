@@ -1,8 +1,8 @@
 import type { KtLogger } from "#lib/logger/logger";
 
-import db from "#external/mongo/db";
 import { EvaluateGoalForUser, GetRelevantGoals } from "#lib/targets/goals";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
+import db from "#services/mongo/db";
 
 import type {
 	GameGroup,
