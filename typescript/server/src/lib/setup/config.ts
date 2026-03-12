@@ -1,6 +1,7 @@
 import type { SendMailOptions } from "nodemailer";
 
 import { FormatPrError } from "#utils/prudence";
+
 import {
 	allSupportedGameGroups,
 	type integer,
@@ -11,8 +12,9 @@ import dotenv from "dotenv";
 import fs from "fs";
 import JSON5 from "json5";
 import { p } from "prudence";
-import { allImportTypes } from "../../../../common/src/constants/import-types";
 import { URL } from "url";
+
+import { allImportTypes } from "../../../../common/src/constants/import-types";
 
 // imports things like NODE_ENV from a local .env file if one is present.
 dotenv.config();
@@ -337,10 +339,18 @@ if (!["crit", "debug", "error", "info", "severe", "verbose", "warn"].includes(lo
 
 const replicaIdentity = process.env.REPLICA_IDENTITY;
 
+const postgresUrl = process.env.POSTGRES_URL ?? "";
+
+if (!postgresUrl) {
+	logger.error(`No POSTGRES_URL specified in environment. Terminating.`);
+	process.exit(1);
+}
+
 export const Environment = {
 	port,
 	redisUrl,
 	mongoUrl,
+	postgresUrl,
 	nodeEnv: nodeEnv as "dev" | "production" | "staging" | "test",
 	replicaIdentity,
 	commitHash: process.env.COMMIT_HASH,

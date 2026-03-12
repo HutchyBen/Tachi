@@ -8,12 +8,11 @@
 	"files": {
 		"includes": [
 			"**",
-			"!db/src/generated",
-			"!client/build",
-			"!dist",
-			"!vendor",
-			"!seeds/collections",
-			"!server/src/test-utils/test-data"
+			"!typescript/db/src/generated",
+			"!typescript/client/build",
+			"!typescript-vendor",
+			"!db/seeds",
+			"!typescript/server/src/test-utils/test-data"
 		]
 	},
 	"vcs": {

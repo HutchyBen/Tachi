@@ -187,7 +187,9 @@ export async function applyMigrations(
 					);
 				}
 
-				console.log(`[migrate] Applying ${migration.version} — ${migration.description}...`);
+				console.log(
+					`[migrate] Applying ${migration.version} — ${migration.description}...`,
+				);
 
 				const start = process.hrtime.bigint();
 
@@ -340,9 +342,10 @@ export async function revertLastMigration(
 
 			try {
 				await client.query(downSql);
-				await client.query(`DELETE FROM "_migration" WHERE version = $1 AND success = true`, [
-					latestVersion,
-				]);
+				await client.query(
+					`DELETE FROM "_migration" WHERE version = $1 AND success = true`,
+					[latestVersion],
+				);
 				await client.query("COMMIT");
 
 				const elapsedUs = (process.hrtime.bigint() - start) / 1000n;
