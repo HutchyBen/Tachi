@@ -12,7 +12,6 @@
  *
  * Optional env vars:
  *   SEEDS_DIR – path to the seeds/collections directory
- *               (default: ../../../seeds/collections relative to this file)
  *
  * Run with:
  *   cd server && POSTGRES_URL=... ts-node -r tsconfig-paths/register src/scripts/load-seeds-pg.ts
@@ -540,7 +539,7 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 
 // ── Standalone entrypoint ──────────────────────────────────────────────────
 
-const DEFAULT_SEEDS_DIR = path.resolve(__dirname, "../../../seeds/collections");
+const DEFAULT_SEEDS_DIR = path.resolve(__dirname, "../../../db/seeds");
 
 if (require.main === module) {
 	const POSTGRES_URL = process.env.POSTGRES_URL;

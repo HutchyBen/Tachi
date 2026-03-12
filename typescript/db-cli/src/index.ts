@@ -1,4 +1,7 @@
 #!/usr/bin/env bun
+
+// WARNING: This is claude-slop and not reviewed by me
+
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { join, resolve } from "path";
 
