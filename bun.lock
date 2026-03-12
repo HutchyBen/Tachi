@@ -218,23 +218,7 @@
         "vitest": "catalog:",
       },
     },
-    "typescript/db-migration-engine": {
-      "name": "tachi-db-migration-engine",
-      "version": "1.0.0",
-      "dependencies": {
-        "kysely": "catalog:",
-        "pg": "catalog:",
-      },
-      "devDependencies": {
-        "@types/node": "catalog:",
-        "@types/pg": "catalog:",
-        "@typescript/native-preview": "catalog:",
-        "eslint-config-tachi": "workspace:*",
-        "ts-node": "catalog:",
-        "typescript": "catalog:",
-      },
-    },
-    "typescript/db-migration-engine-cli": {
+    "typescript/db-cli": {
       "name": "tachi-db-migration-engine-cli",
       "version": "1.0.0",
       "bin": {
@@ -250,6 +234,22 @@
         "@types/pg": "catalog:",
         "@typescript/native-preview": "catalog:",
         "eslint-config-tachi": "workspace:*",
+        "typescript": "catalog:",
+      },
+    },
+    "typescript/db-migration-engine": {
+      "name": "tachi-db-migration-engine",
+      "version": "1.0.0",
+      "dependencies": {
+        "kysely": "catalog:",
+        "pg": "catalog:",
+      },
+      "devDependencies": {
+        "@types/node": "catalog:",
+        "@types/pg": "catalog:",
+        "@typescript/native-preview": "catalog:",
+        "eslint-config-tachi": "workspace:*",
+        "ts-node": "catalog:",
         "typescript": "catalog:",
       },
     },
@@ -3221,7 +3221,7 @@
 
     "tachi-db-migration-engine": ["tachi-db-migration-engine@workspace:typescript/db-migration-engine"],
 
-    "tachi-db-migration-engine-cli": ["tachi-db-migration-engine-cli@workspace:typescript/db-migration-engine-cli"],
+    "tachi-db-migration-engine-cli": ["tachi-db-migration-engine-cli@workspace:typescript/db-cli"],
 
     "tachi-github-bot": ["tachi-github-bot@workspace:typescript/github-bot"],
 
