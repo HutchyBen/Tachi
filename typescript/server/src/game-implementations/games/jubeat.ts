@@ -1,12 +1,13 @@
 import type { GPTServerImplementation } from "#game-implementations/types";
 
 import db from "#external/mongo/db";
-import { IsNullish } from "#utils/misc";
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileSumBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
+import { IsNullish } from "#utils/misc";
 import { p } from "prudence";
 import { Jubility } from "rg-stats";
+
 import {
 	FmtNum,
 	type GameGroup,
@@ -17,7 +18,6 @@ import {
 	type Playtype,
 	type Versions,
 } from "../../../../common/src";
-
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
 async function GetBestJubilityOnSongs(

@@ -1,11 +1,3 @@
-import type {
-	AnyProfileRatingAlg,
-	GPTString,
-	ImportTypes,
-	integer,
-	UserGameStats,
-} from "../../../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import { GetRecentActivity } from "#lib/activity/activity";
 import { ONE_MONTH } from "#lib/constants/time";
@@ -14,6 +6,7 @@ import { EmailFormatVerifyEmail } from "#lib/email/formats";
 import CreateLogCtx from "#lib/logger/logger";
 import { GetRivalIDs } from "#lib/rivals/rivals";
 import { ServerConfig } from "#lib/setup/config";
+import prValidate from "#server/middleware/prudence-validate";
 import { DeleteUndefinedProps, IsNonEmptyString, Random20Hex, StripUrl } from "#utils/misc";
 import { optNullFluffStrField } from "#utils/prudence";
 import {
@@ -34,7 +27,14 @@ import {
 } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-import prValidate from "#server/middleware/prudence-validate";
+
+import type {
+	AnyProfileRatingAlg,
+	GPTString,
+	ImportTypes,
+	integer,
+	UserGameStats,
+} from "../../../../../../../../common/src";
 
 import { HashPassword, PasswordCompare, ValidateEmail, ValidatePassword } from "../../auth/auth";
 import apiTokensRouter from "./api-tokens/router";

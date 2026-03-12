@@ -1,17 +1,17 @@
 import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
+import prValidate from "#server/middleware/prudence-validate";
 import { Random20Hex } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { FormatUserDoc } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-import prValidate from "#server/middleware/prudence-validate";
+
 import {
 	ALL_PERMISSIONS,
 	type APIPermissions,
 	type APITokenDocument,
 } from "../../../../../../../../../common/src";
-
 import { RequireSelfRequestFromUser } from "../middleware";
 
 const logger = CreateLogCtx(__filename);

@@ -1,12 +1,12 @@
 import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { DeleteScore } from "#lib/score-mutation/delete-scores";
+import { RequirePermissions } from "#server/middleware/auth";
+import prValidate from "#server/middleware/prudence-validate";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { GetUserWithID } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-import { RequirePermissions } from "#server/middleware/auth";
-import prValidate from "#server/middleware/prudence-validate";
 
 import { GetScoreFromParam, RequireOwnershipOfScoreOrAdmin } from "./middleware";
 

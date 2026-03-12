@@ -1,9 +1,10 @@
 import type { RequestHandler, Response } from "express-serve-static-core";
-import type { APITokenDocument } from "../../../../common/src";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import CreateLogCtx from "#lib/logger/logger";
 import { TachiConfig } from "#lib/setup/config";
+
+import type { APITokenDocument } from "../../../../common/src";
 
 const logger = CreateLogCtx(__filename);
 

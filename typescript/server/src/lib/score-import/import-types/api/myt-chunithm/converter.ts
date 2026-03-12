@@ -8,13 +8,13 @@ import {
 	SongOrChartNotFoundFailure,
 } from "#lib/score-import/framework/common/converter-failures";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
-import { FindChartOnInGameID } from "#utils/queries/charts";
-import { FindSongOnID } from "#utils/queries/songs";
 import {
 	ChunithmClearStatus,
 	ChunithmComboStatus,
 	ChunithmLevel,
 } from "#proto/generated/chunithm/common_pb";
+import { FindChartOnInGameID } from "#utils/queries/charts";
+import { FindSongOnID } from "#utils/queries/songs";
 
 import type { ConverterFunction } from "../../common/types";
 import type { MytChunithmScore } from "./types";

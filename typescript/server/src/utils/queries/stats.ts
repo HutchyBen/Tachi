@@ -1,8 +1,8 @@
-import type { Classes, GameGroup, GPTString, integer, Playtype } from "../../../../common/src";
-
 import db from "#external/mongo/db";
 import { ONE_HOUR } from "#lib/constants/time";
 import NodeCache from "node-cache";
+
+import type { Classes, GameGroup, GPTString, integer, Playtype } from "../../../../common/src";
 
 const classDistCache = new NodeCache();
 

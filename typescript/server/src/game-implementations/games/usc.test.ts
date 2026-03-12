@@ -4,6 +4,8 @@ import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestingUSCChart } from "#test-utils/test-data";
+import t from "tap";
+
 import {
 	GetGPTString,
 	type GPTStrings,
@@ -12,8 +14,6 @@ import {
 	SDVX_GRADES,
 	USC_LAMPS,
 } from "../../../../common/src";
-import t from "tap";
-
 import { USC_CONTROLLER_IMPL, USC_KEYBOARD_IMPL } from "./usc";
 
 const logger = CreateLogCtx(__filename);

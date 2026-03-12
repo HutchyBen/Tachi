@@ -7,6 +7,7 @@ import type {
 } from "#game-implementations/types";
 
 import { DDRFlare } from "rg-stats";
+
 import {
 	type ChartDocument,
 	DDR_GBOUNDARIES,
@@ -20,7 +21,6 @@ import {
 	type ScoreDocument,
 	type SongDocument,
 } from "../../../../common/src";
-
 import db from "../../external/mongo/db";
 import CreateLogCtx from "../../lib/logger/logger";
 import { IsNullish } from "../../utils/misc";

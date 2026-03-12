@@ -1,5 +1,8 @@
 import type { BulkWriteOperation, DeleteWriteOpResultObject } from "mongodb";
 import type { ICollection } from "monk";
+
+import CreateLogCtx, { type KtLogger } from "#lib/logger/logger";
+
 import type {
 	BMSCourseDocument,
 	ChartDocument,
@@ -11,8 +14,6 @@ import type {
 	SongDocument,
 	TableDocument,
 } from "../../../common/src";
-
-import CreateLogCtx, { type KtLogger } from "#lib/logger/logger";
 
 /* eslint-disable no-await-in-loop */
 import db, { monkDB } from "#external/mongo/db";

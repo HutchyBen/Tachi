@@ -1,10 +1,10 @@
-import type { ScoreDocument, SessionDocument, UserDocument } from "../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import { TestingIIDXSPScore, TestingIIDXSPScorePB } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
 import t from "tap";
+
+import type { ScoreDocument, SessionDocument, UserDocument } from "../../../../../../common/src";
 
 import { CreateScoreLogger } from "../common/import-logger";
 import { CreateSessions, LoadScoresIntoSessions } from "./sessions";

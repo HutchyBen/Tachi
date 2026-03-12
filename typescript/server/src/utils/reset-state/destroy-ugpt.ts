@@ -1,7 +1,7 @@
-import type { GameGroup, integer, Playtype } from "../../../../common/src";
-
 import db from "#external/mongo/db";
 import { UpdateAllPBs } from "#utils/calculations/recalc-scores";
+
+import type { GameGroup, integer, Playtype } from "../../../../common/src";
 
 /**
  * Completely resets a UGPT profile.

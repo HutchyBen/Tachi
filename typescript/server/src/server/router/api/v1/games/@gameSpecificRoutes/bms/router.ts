@@ -1,5 +1,3 @@
-import type { Playtypes } from "../../../../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import {
 	CUSTOM_TACHI_BMS_TABLES,
@@ -10,6 +8,8 @@ import {
 } from "#lib/game-specific/custom-bms-tables";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
+
+import type { Playtypes } from "../../../../../../../../../common/src";
 
 import { ValidatePlaytypeFromParamFor } from "../../_game/_playtype/middleware";
 

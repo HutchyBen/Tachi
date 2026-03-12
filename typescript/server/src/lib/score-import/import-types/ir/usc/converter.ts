@@ -1,5 +1,4 @@
 import type { USCClientScore } from "#server/router/ir/usc/_playtype/types";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
 
 import db from "#external/mongo/db";
 import {
@@ -11,6 +10,7 @@ import {
 } from "#lib/constants/usc-ir";
 import { FindSongOnID } from "#utils/queries/songs";
 
+import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
 import type { DryScore } from "../../../framework/common/types";
 import type { ConverterFunction } from "../../common/types";
 import type { IRUSCContext } from "./types";

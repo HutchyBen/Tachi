@@ -1,13 +1,14 @@
 import db from "#external/mongo/db";
 import { GetSessionScoreInfo } from "#lib/score-import/framework/sessions/sessions";
+import { RequirePermissions } from "#server/middleware/auth";
+import prValidate from "#server/middleware/prudence-validate";
 import { GetEnumDistForFolderAsOf } from "#utils/folder";
 import { AddToSetInRecord } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { GetUserWithID } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-import { RequirePermissions } from "#server/middleware/auth";
-import prValidate from "#server/middleware/prudence-validate";
+
 import {
 	type FolderDocument,
 	GetGamePTConfig,
@@ -17,7 +18,6 @@ import {
 	type ScoreDocument,
 } from "../../../../../../../../common/src";
 import { optNull } from "../../../../../../../../common/src/lib/schemas";
-
 import { GetSessionFromParam, RequireOwnershipOfSession } from "./middleware";
 
 const router: Router = Router({ mergeParams: true });

@@ -1,6 +1,6 @@
-import type { ScoreDocument, SessionDocument } from "../../../common/src";
-
 import db from "#external/mongo/db";
+
+import type { ScoreDocument, SessionDocument } from "../../../common/src";
 
 /**
  * Returns all the score documents inside a session.

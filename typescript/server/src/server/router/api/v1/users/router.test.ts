@@ -1,9 +1,9 @@
-import type { UserDocument } from "../../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
+
+import type { UserDocument } from "../../../../../../../common/src";
 
 t.test("GET /api/v1/users", (t) => {
 	t.beforeEach(ResetDBState);

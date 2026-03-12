@@ -1,10 +1,9 @@
 import type { ClassProvider } from "#lib/score-import/framework/calculated-data/types";
 
-import { WACCA_STAGEUPS } from "../../../../../../../common/src";
-import { WaccaStageUps } from "../../../../../../../common/src/config/game-support/wacca";
-
 import type { MyPagePlayerStage } from "./types";
 
+import { WACCA_STAGEUPS } from "../../../../../../../common/src";
+import { WaccaStageUps } from "../../../../../../../common/src/config/game-support/wacca";
 import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 
 const STAGES: Record<number, number> = {

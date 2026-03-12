@@ -5,6 +5,7 @@ import CreateLogCtx from "#lib/logger/logger";
 import { TachiConfig } from "#lib/setup/config";
 import deepmerge from "deepmerge";
 import fjsh from "fast-json-stable-hash";
+
 import {
 	type ChartDocument,
 	type FolderChartLookup,
@@ -20,7 +21,6 @@ import {
 	type SongDocument,
 	type TableDocument,
 } from "../../../common/src";
-
 import { GetFolderForIDGuaranteed } from "./db";
 
 const logger = CreateLogCtx(__filename);

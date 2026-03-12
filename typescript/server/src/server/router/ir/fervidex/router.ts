@@ -4,13 +4,14 @@ import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import CreateLogCtx from "#lib/logger/logger";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { SoftwareIDToVersion } from "#lib/score-import/import-types/ir/fervidex/parser";
+import { RequirePermissions } from "#server/middleware/auth";
+import { PrudenceErrorFormatter } from "#server/middleware/prudence-validate";
 import { UpdateClassIfGreater } from "#utils/class";
 import { ParseEA3SoftID } from "#utils/ea3id";
 import { IsNullishOrEmptyStr } from "#utils/misc";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
-import { RequirePermissions } from "#server/middleware/auth";
-import { PrudenceErrorFormatter } from "#server/middleware/prudence-validate";
+
 import {
 	GetGamePTConfig,
 	type integer,

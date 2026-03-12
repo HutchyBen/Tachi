@@ -5,7 +5,6 @@ import {
 	type GPTString,
 	type Playtype,
 } from "../../../../../../common/src";
-
 import { InvalidScoreFailure } from "./converter-failures";
 
 export function AssertStrAsDifficulty(

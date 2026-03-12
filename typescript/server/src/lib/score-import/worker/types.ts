@@ -1,6 +1,6 @@
 import type { Job } from "bullmq";
-import type { ImportDocument, ImportTypes, integer } from "../../../../../common/src";
 
+import type { ImportDocument, ImportTypes, integer } from "../../../../../common/src";
 import type { Parsers } from "../import-types/parsers";
 
 // Ok so, please hear me out on this one.

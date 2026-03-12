@@ -2,6 +2,8 @@ import db from "#external/mongo/db";
 import { CreateActivityRouteHandler } from "#lib/activity/activity";
 import { ONE_MONTH, ONE_WEEK, ONE_YEAR } from "#lib/constants/time";
 import CreateLogCtx from "#lib/logger/logger";
+import prValidate from "#server/middleware/prudence-validate";
+import { PasswordCompare, ValidatePassword } from "#server/router/api/v1/auth/auth";
 import { IsString } from "#utils/misc";
 import { GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import DestroyUserGamePlaytypeData from "#utils/reset-state/destroy-ugpt";
@@ -16,8 +18,7 @@ import {
 } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-import prValidate from "#server/middleware/prudence-validate";
-import { PasswordCompare, ValidatePassword } from "#server/router/api/v1/auth/auth";
+
 import {
 	FormatGameGroup,
 	GetGamePTConfig,
@@ -27,7 +28,6 @@ import {
 	type ProfileRatingAlgorithms,
 	type UserGameStatsSnapshotDocument,
 } from "../../../../../../../../../../../common/src";
-
 import { RequireAuthedAsUser, RequireSelfRequestFromUser } from "../../../middleware";
 import foldersRouter from "./folders/router";
 import { CheckUserPlayedGamePlaytype } from "./middleware";

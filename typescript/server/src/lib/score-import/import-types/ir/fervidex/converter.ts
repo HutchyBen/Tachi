@@ -3,12 +3,12 @@ import { CreateScoreID } from "#lib/score-import/framework/score-importing/score
 import { DeleteUndefinedProps, IsNullishOrEmptyStr } from "#utils/misc";
 import { FindIIDXChartOnInGameIDVersion, FindIIDXChartWith2DXtraHash } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
-import { type Difficulties, GetGPTString, type Playtypes } from "../../../../../../../common/src";
 
 import type { DryScore } from "../../../framework/common/types";
 import type { ConverterFunction } from "../../common/types";
 import type { FervidexContext, FervidexScore } from "./types";
 
+import { type Difficulties, GetGPTString, type Playtypes } from "../../../../../../../common/src";
 import {
 	InternalFailure,
 	InvalidScoreFailure,

@@ -3,12 +3,12 @@ import { CDNDelete, CDNRedirect, CDNStoreOrOverwrite } from "#lib/cdn/cdn";
 import { GetProfilePictureURL } from "#lib/cdn/url-format";
 import { ONE_MEGABYTE } from "#lib/constants/filesize";
 import CreateLogCtx from "#lib/logger/logger";
+import { RequirePermissions } from "#server/middleware/auth";
+import { CreateMulterSingleUploadMiddleware } from "#server/middleware/multer-upload";
 import { HashSHA256 } from "#utils/crypto";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { FormatUserDoc } from "#utils/user";
 import { Router } from "express";
-import { RequirePermissions } from "#server/middleware/auth";
-import { CreateMulterSingleUploadMiddleware } from "#server/middleware/multer-upload";
 
 import { RequireAuthedAsUser } from "../middleware";
 

@@ -1,5 +1,4 @@
 import type { GameGroup } from "../../../../../../../common/src";
-
 import type { MytGame } from "./types";
 
 export function GameToMytGame(game: GameGroup): MytGame | undefined {

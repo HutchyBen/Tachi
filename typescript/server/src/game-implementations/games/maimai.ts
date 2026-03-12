@@ -1,12 +1,12 @@
 import type { GPTServerImplementation } from "#game-implementations/types";
 
-import { IsNullish } from "#utils/misc";
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileAvgBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
+import { IsNullish } from "#utils/misc";
 import { MaimaiRate } from "rg-stats";
-import { GetGrade, MAIMAI_GBOUNDARIES } from "../../../../common/src";
 
+import { GetGrade, MAIMAI_GBOUNDARIES } from "../../../../common/src";
 import { GoalFmtPercent, GoalOutOfFmtPercent, GradeGoalFormatter } from "./_common";
 
 export const MAIMAI_IMPL: GPTServerImplementation<"maimai:Single"> = {

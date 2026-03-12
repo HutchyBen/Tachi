@@ -2,11 +2,11 @@ import type { ClassProvider } from "#lib/score-import/framework/calculated-data/
 
 import nodeFetch from "#utils/fetch";
 import { IsRecord } from "#utils/misc";
-import { IIDX_DANS } from "../../../../../../../../common/src";
-import { IIDXDans } from "../../../../../../../../common/src/config/game-support/iidx";
 
 import type { KaiAPIReauthFunction } from "../traverse-api";
 
+import { IIDX_DANS } from "../../../../../../../../common/src";
+import { IIDXDans } from "../../../../../../../../common/src/config/game-support/iidx";
 import { KaiTypeToBaseURL } from "../utils";
 
 export async function CreateKaiIIDXClassProvider(

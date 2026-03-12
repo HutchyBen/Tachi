@@ -1,10 +1,10 @@
-import type { ChartDocument, FolderDocument } from "../../../common/src";
-
 import db from "#external/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import { Testing511SPA } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
 import t from "tap";
+
+import type { ChartDocument, FolderDocument } from "../../../common/src";
 
 import { GetFolderChartIDs, ResolveFolderToCharts, TransposeFolderData } from "./folder";
 

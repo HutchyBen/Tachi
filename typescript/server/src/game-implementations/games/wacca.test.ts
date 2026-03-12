@@ -1,5 +1,4 @@
 import type { DeepPartial } from "#utils/types";
-import type { ProvidedMetrics, ScoreData, ScoreDocument } from "../../../../common/src";
 
 import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
@@ -8,9 +7,11 @@ import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestSnapshot } from "#test-utils/single-process-snapshot";
 import { TestingWaccaPupaExp } from "#test-utils/test-data";
-import { WACCA_SINGLE_CONF } from "../../../../common/src/config/game-support/wacca";
 import t from "tap";
 
+import type { ProvidedMetrics, ScoreData, ScoreDocument } from "../../../../common/src";
+
+import { WACCA_SINGLE_CONF } from "../../../../common/src/config/game-support/wacca";
 import { RunValidators } from "./_common";
 import { WACCA_IMPL } from "./wacca";
 

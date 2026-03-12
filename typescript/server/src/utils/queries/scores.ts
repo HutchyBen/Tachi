@@ -1,6 +1,6 @@
-import type { GameGroup, integer, Playtype } from "../../../../common/src";
-
 import db from "#external/mongo/db";
+
+import type { GameGroup, integer, Playtype } from "../../../../common/src";
 
 export async function GetRecentUGPTScores(
 	userID: integer,

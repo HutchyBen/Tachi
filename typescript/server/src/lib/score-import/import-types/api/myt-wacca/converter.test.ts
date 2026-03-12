@@ -1,13 +1,13 @@
 import CreateLogCtx from "#lib/logger/logger";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
-import ResetDBState from "#test-utils/resets";
-import { TestingWaccaPupaExp, TestingWaccaPupaSong } from "#test-utils/test-data";
-import deepmerge from "deepmerge";
 import {
 	WaccaMusicDifficulty,
 	WaccaMusicScoreGrade,
 	WaccaPlayMode,
 } from "#proto/generated/wacca/common_pb";
+import ResetDBState from "#test-utils/resets";
+import { TestingWaccaPupaExp, TestingWaccaPupaSong } from "#test-utils/test-data";
+import deepmerge from "deepmerge";
 import t from "tap";
 
 import type { MytWaccaScore } from "./types";

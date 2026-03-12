@@ -1,10 +1,10 @@
-import type { UserDocument } from "../../../common/src";
-
 import db from "#external/mongo/db";
 import { DatabaseSchemas } from "#external/mongo/schemas";
 import { mkFakeUser } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
+
+import type { UserDocument } from "../../../common/src";
 
 import { FormatUserDoc, GetUserCaseInsensitive, GetUsersWithIDs } from "./user";
 

@@ -1,8 +1,8 @@
 import db from "#external/mongo/db";
+import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import { Sleep } from "#utils/misc";
-import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
 import t from "tap";
 
 import { PasswordCompare } from "./auth";

@@ -1,20 +1,20 @@
 import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { ServerConfig } from "#lib/setup/config";
+import prValidate from "#server/middleware/prudence-validate";
 import { DedupeArr, DeleteUndefinedProps, IsValidURL, Random20Hex } from "#utils/misc";
 import { optNull } from "#utils/prudence";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { FormatUserDoc } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-import prValidate from "#server/middleware/prudence-validate";
+
 import {
 	ALL_PERMISSIONS,
 	type APIPermissions,
 	type TachiAPIClientDocument,
 	UserAuthLevels,
 } from "../../../../../../../common/src";
-
 import { GetClientFromID, RequireOwnershipOfClient } from "./middleware";
 
 const logger = CreateLogCtx(__filename);

@@ -1,12 +1,13 @@
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
+
+import type { DryScoreData } from "../common/types";
+
 import {
 	type ChartDocument,
 	type GameGroup,
 	GetGPTString,
 	type GPTString,
 } from "../../../../../../common/src";
-
-import type { DryScoreData } from "../common/types";
 
 /**
  * Create calculated data for a score.

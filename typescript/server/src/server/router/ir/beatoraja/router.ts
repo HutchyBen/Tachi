@@ -2,19 +2,20 @@ import type {
 	BeatorajaChart,
 	BeatorajaScore,
 } from "#lib/score-import/import-types/ir/beatoraja/types";
-import type { integer } from "../../../../../../common/src";
 
 import db from "#external/mongo/db";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import CreateLogCtx from "#lib/logger/logger";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { ServerConfig } from "#lib/setup/config";
+import { RequireNotGuest } from "#server/middleware/auth";
+import prValidate from "#server/middleware/prudence-validate";
 import { UpdateClassIfGreater } from "#utils/class";
 import { IsRecord, NotNullish } from "#utils/misc";
 import { Router } from "express";
 import { p } from "prudence";
-import { RequireNotGuest } from "#server/middleware/auth";
-import prValidate from "#server/middleware/prudence-validate";
+
+import type { integer } from "../../../../../../common/src";
 
 import { ValidateIRClientVersion } from "./auth";
 import chartsRouter from "./charts/_chartSHA256/router";

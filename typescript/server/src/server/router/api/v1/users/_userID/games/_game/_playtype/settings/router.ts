@@ -1,18 +1,18 @@
 import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
+import { RequirePermissions } from "#server/middleware/auth";
 import { FormatPrError, optNull } from "#utils/prudence";
 import { GetUGPT } from "#utils/req-tachi-data";
 import { FormatUserDoc } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-import { RequirePermissions } from "#server/middleware/auth";
+
 import {
 	GetGamePTConfig,
 	GetScoreMetrics,
 	PrudenceZodShim,
 	type UGPTSettingsDocument,
 } from "../../../../../../../../../../../../common/src";
-
 import { RequireAuthedAsUser } from "../../../../middleware";
 
 const logger = CreateLogCtx(__filename);

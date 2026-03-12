@@ -1,4 +1,5 @@
 import type { ClassProvider } from "#lib/score-import/framework/calculated-data/types";
+
 import type { integer } from "../../../../../../../common/src";
 
 import { IIDXDans } from "../../../../../../../common/src/config/game-support/iidx";

@@ -1,9 +1,10 @@
 import type { IObjectID } from "monk";
-import type { integer } from "../../../../common/src";
 
 import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { WrapScriptPromise } from "#utils/misc";
+
+import type { integer } from "../../../../common/src";
 
 const logger = CreateLogCtx(__filename);
 

@@ -7,6 +7,7 @@ import { TachiConfig } from "#lib/setup/config";
 import { GetSongForIDGuaranteed } from "#utils/db";
 import { EscapeStringRegexp } from "#utils/misc";
 import { GetOnlineCutoff } from "#utils/user";
+
 import {
 	type ChartDocument,
 	CreateSongMap,
@@ -21,7 +22,6 @@ import {
 	SplitGPT,
 	type UserDocument,
 } from "../../../../common/src";
-
 import { AsyncFzf } from "./fzf/main";
 
 const logger = CreateLogCtx(__filename);

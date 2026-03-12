@@ -1,8 +1,5 @@
 import CreateLogCtx from "#lib/logger/logger";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
-import { dmf } from "#test-utils/misc";
-import ResetDBState from "#test-utils/resets";
-import { TestingChunithmChartConverter, TestingChunithmSongConverter } from "#test-utils/test-data";
 import {
 	ChunithmClearStatus,
 	ChunithmComboStatus,
@@ -10,6 +7,9 @@ import {
 	ChunithmLevel,
 	ChunithmScoreRank,
 } from "#proto/generated/chunithm/common_pb";
+import { dmf } from "#test-utils/misc";
+import ResetDBState from "#test-utils/resets";
+import { TestingChunithmChartConverter, TestingChunithmSongConverter } from "#test-utils/test-data";
 import t from "tap";
 
 import type { MytChunithmScore } from "./types";

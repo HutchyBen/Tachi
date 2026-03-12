@@ -1,11 +1,11 @@
 import type { ScoreImportJobData } from "#lib/score-import/worker/types";
-import type { ImportTypes } from "../../../../../../common/src";
 
 import db from "#external/mongo/db";
 import { CDNStoreOrOverwrite } from "#lib/cdn/cdn";
 import { GetScoreImportInputURL } from "#lib/cdn/url-format";
 import CreateLogCtx from "#lib/logger/logger";
 
+import type { ImportTypes } from "../../../../../../common/src";
 import type ScoreImportFatalError from "../score-importing/score-import-error";
 
 const logger = CreateLogCtx(__filename);

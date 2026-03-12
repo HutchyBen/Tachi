@@ -7,6 +7,8 @@ import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestSnapshot } from "#test-utils/single-process-snapshot";
 import { TestingArcaeaSheriruthFTR, TestingWaccaPupaExp } from "#test-utils/test-data";
+import t from "tap";
+
 import {
 	ARCAEA_GRADES,
 	ARCAEA_LAMPS,
@@ -15,8 +17,6 @@ import {
 	type ScoreData,
 	type ScoreDocument,
 } from "../../../../common/src";
-import t from "tap";
-
 import { RunValidators } from "./_common";
 import { ARCAEA_IMPL } from "./arcaea";
 

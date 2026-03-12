@@ -1,9 +1,9 @@
 import chalk from "chalk";
 import fs from "fs";
 import path from "path";
-import { type GameGroup, V3ToGameGroup } from "../../common/src";
 import { z } from "zod";
 
+import { type GameGroup, V3ToGameGroup } from "../../common/src";
 import { GetChartCollectionGame, GetSongCollectionGame, ReadCollection } from "../util";
 import { type AllCollections, V3_SCHEMAS } from "./schemas";
 import { FormatFunctions } from "./test-utils";

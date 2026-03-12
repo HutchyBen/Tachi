@@ -8,8 +8,8 @@ import { GetTachiData } from "#utils/req-tachi-data";
 import { ParseStrPositiveNonZeroInt } from "#utils/string-checks";
 import { GetUsersWithIDs } from "#utils/user";
 import { Router } from "express";
-import { type FolderDocument, FormatChart } from "../../../../../../../../../../../common/src";
 
+import { type FolderDocument, FormatChart } from "../../../../../../../../../../../common/src";
 import { ValidateAndGetChart } from "./middleware";
 
 const logger = CreateLogCtx(__filename);

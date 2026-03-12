@@ -1,8 +1,9 @@
 import type { Migration } from "#utils/types";
-import type { SessionDocument } from "../../../../../common/src";
 
 import db from "#external/mongo/db";
 import { EfficientDBIterate } from "#utils/efficient-db-iterate";
+
+import type { SessionDocument } from "../../../../../common/src";
 
 const migration: Migration = {
 	id: "sessions-to-scoreIDs",

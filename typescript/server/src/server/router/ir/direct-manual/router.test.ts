@@ -1,5 +1,3 @@
-import type { BatchManual, BatchManualScore } from "../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import { CreateFakeAuthCookie } from "#test-utils/fake-auth";
 import mockApi from "#test-utils/mock-api";
@@ -11,6 +9,8 @@ import {
 } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
 import t from "tap";
+
+import type { BatchManual, BatchManualScore } from "../../../../../../common/src";
 
 t.test("POST /ir/direct-manual/import", async (t) => {
 	const cookie = await CreateFakeAuthCookie(mockApi);

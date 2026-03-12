@@ -1,10 +1,3 @@
-import type {
-	GameGroup,
-	ImportDocument,
-	ImportTypes,
-	UserGameStats,
-} from "../../../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import { ONE_DAY, ONE_YEAR } from "#lib/constants/time";
 import { CreateFakeAuthCookie } from "#test-utils/fake-auth";
@@ -12,6 +5,13 @@ import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import { Random20Hex } from "#utils/misc";
 import t from "tap";
+
+import type {
+	GameGroup,
+	ImportDocument,
+	ImportTypes,
+	UserGameStats,
+} from "../../../../../../../../common/src";
 
 import { PasswordCompare } from "../../auth/auth";
 

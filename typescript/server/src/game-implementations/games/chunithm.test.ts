@@ -4,6 +4,8 @@ import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { CHUNITHMBBKKChart, TestingChunithmScorePB } from "#test-utils/test-data";
+import t from "tap";
+
 import {
 	CHUNITHM_CLEAR_LAMPS,
 	CHUNITHM_GRADES,
@@ -11,8 +13,6 @@ import {
 	type ProvidedMetrics,
 	type ScoreData,
 } from "../../../../common/src";
-import t from "tap";
-
 import { CHUNITHM_IMPL } from "./chunithm";
 
 const baseMetrics: ProvidedMetrics["chunithm:Single"] = {

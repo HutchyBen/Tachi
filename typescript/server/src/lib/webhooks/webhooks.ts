@@ -1,8 +1,8 @@
-import type { WebhookEvents } from "../../../../common/src";
-
 import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import fetch from "#utils/fetch";
+
+import type { WebhookEvents } from "../../../../common/src";
 
 const logger = CreateLogCtx(__filename);
 

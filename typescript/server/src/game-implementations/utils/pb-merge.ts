@@ -1,6 +1,9 @@
-import type { PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
 import type { PBMergeFunction } from "#game-implementations/types";
+import type { PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
 import type { FilterQuery } from "mongodb";
+
+import db from "#external/mongo/db";
+
 import type {
 	ConfDerivedMetrics,
 	ConfOptionalMetrics,
@@ -9,8 +12,6 @@ import type {
 	ScoreDocument,
 } from "../../../../common/src";
 import type { ExtractEnumMetricNames } from "../../../../common/src/types/metrics";
-
-import db from "#external/mongo/db";
 
 // insane typemagic to get mongodb-safe names for this GPT's metrics.
 type MetricKeys<GPT extends GPTString> = Exclude<

@@ -1,8 +1,8 @@
-import type { integer } from "../../../../common/src";
-
 import db from "#external/mongo/db";
 import { GetEnumDistForFolders } from "#utils/folder";
 import { GetTimeXHoursAgo } from "#utils/misc";
+
+import type { integer } from "../../../../common/src";
 
 // Various utils related to the player summary endpoint.
 const REASONABLE_HOURS_AGO = 16;

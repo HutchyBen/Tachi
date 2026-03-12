@@ -1,11 +1,10 @@
-import type { Versions } from "../../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../../common/src/types/metrics";
-
 import { FormatPrError } from "#utils/prudence";
 import { FindSDVXChartOnInGameIDVersion } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 import { p } from "prudence";
 
+import type { Versions } from "../../../../../../../../common/src";
+import type { GetEnumValue } from "../../../../../../../../common/src/types/metrics";
 import type { DryScore } from "../../../../framework/common/types";
 import type { ConverterFunction } from "../../types";
 import type { KaiContext, KaiSDVXScore } from "../types";

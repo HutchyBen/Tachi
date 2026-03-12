@@ -8,7 +8,6 @@ import {
 	type Versions,
 } from "../../../common/src";
 import { DDR_FLARE_CATEGORIES } from "../../../common/src/config/game-support/ddr";
-
 import { CreateChartID, MutateCollection, ReadCollection, WriteCollection } from "../../util";
 
 const gameConfig = GetGameGroupConfig("ddr") as GameConfig<"ddr">;

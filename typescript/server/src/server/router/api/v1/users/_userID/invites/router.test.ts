@@ -3,12 +3,13 @@ import { ONE_MONTH } from "#lib/constants/time";
 import { CreateFakeAuthCookie } from "#test-utils/fake-auth";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
+import t from "tap";
+
 import {
 	type InviteCodeDocument,
 	UserAuthLevels,
 	type UserDocument,
 } from "../../../../../../../../../common/src";
-import t from "tap";
 
 t.test("GET /api/v1/users/:userID/invites", async (t) => {
 	t.beforeEach(ResetDBState);

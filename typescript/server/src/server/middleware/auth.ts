@@ -6,6 +6,7 @@ import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import CreateLogCtx from "#lib/logger/logger";
 import { TachiConfig } from "#lib/setup/config";
 import { IsNullishOrEmptyStr, SplitAuthorizationHeader } from "#utils/misc";
+
 import {
 	ALL_PERMISSIONS,
 	type APIPermissions,

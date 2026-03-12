@@ -1,7 +1,7 @@
-import type { integer, NotificationBody, NotificationDocument } from "../../../../common/src";
-
 import db from "#external/mongo/db";
 import { Random20Hex } from "#utils/misc";
+
+import type { integer, NotificationBody, NotificationDocument } from "../../../../common/src";
 
 function ConstructNotificationDoc(
 	title: string,

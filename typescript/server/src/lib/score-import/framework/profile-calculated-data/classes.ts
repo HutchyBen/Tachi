@@ -4,6 +4,9 @@ import db from "#external/mongo/db";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
 import { ReturnClassIfGreater } from "#utils/class";
 import deepmerge from "deepmerge";
+
+import type { ClassProvider } from "../calculated-data/types";
+
 import {
 	type AnyClasses,
 	type ClassDelta,
@@ -17,9 +20,6 @@ import {
 	type Playtype,
 	type UserGameStats,
 } from "../../../../../../common/src";
-
-import type { ClassProvider } from "../calculated-data/types";
-
 import { CalculateDerivedClasses } from "../calculated-data/profile-classes";
 
 /**

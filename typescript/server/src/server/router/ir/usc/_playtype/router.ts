@@ -14,6 +14,9 @@ import { FormatPrError } from "#utils/prudence";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
+
+import type { USCClientChart } from "./types";
+
 import {
 	type ChartDocument,
 	GetGamePTConfig,
@@ -22,9 +25,6 @@ import {
 	type Playtypes,
 	type SuccessfulAPIResponse,
 } from "../../../../../../../common/src";
-
-import type { USCClientChart } from "./types";
-
 import { CreatePOSTScoresResponseBody, TachiScoreToServerScore } from "./usc";
 
 const logger = CreateLogCtx(__filename);

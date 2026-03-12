@@ -1,7 +1,7 @@
-import type { APIPermissions } from "../../../common/src";
-
 import db from "#external/mongo/db";
 import t from "tap";
+
+import type { APIPermissions } from "../../../common/src";
 
 import mockApi from "./mock-api";
 import ResetDBState from "./resets";

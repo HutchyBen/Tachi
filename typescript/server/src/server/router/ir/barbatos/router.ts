@@ -1,7 +1,7 @@
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
-import { Router } from "express";
 import { RequirePermissions } from "#server/middleware/auth";
+import { Router } from "express";
 
 const router: Router = Router({ mergeParams: true });
 

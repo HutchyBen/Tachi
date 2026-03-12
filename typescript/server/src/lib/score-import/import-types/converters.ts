@@ -1,7 +1,6 @@
-import type { ImportTypes } from "../../../../../common/src";
-
 import { Never } from "#utils/misc";
 
+import type { ImportTypes } from "../../../../../common/src";
 import type { ConverterFunction, ImportTypeContextMap, ImportTypeDataMap } from "./common/types";
 
 import ConvertAPIMytChunithm from "./api/myt-chunithm/converter";

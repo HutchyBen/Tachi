@@ -1,3 +1,15 @@
+import db from "#external/mongo/db";
+import {
+	CUSTOM_TACHI_IIDX_PLAYLISTS,
+	type TachiIIDXPlaylist,
+} from "#lib/game-specific/iidx-playlists";
+import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch-manual/converter";
+import { EAM_VERSION_NAMES } from "#lib/score-import/import-types/common/eamusement-iidx-csv/parser";
+import { AggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
+import { ValidatePlaytypeFromParamFor } from "#server/router/api/v1/games/_game/_playtype/middleware";
+import { GetUser } from "#utils/req-tachi-data";
+import { Router } from "express";
+
 import type {
 	ChartDocument,
 	integer,
@@ -6,18 +18,6 @@ import type {
 	SongDocument,
 } from "../../../../../../../../../../../common/src";
 import type { GetEnumValue } from "../../../../../../../../../../../common/src/types/metrics";
-
-import db from "#external/mongo/db";
-import {
-	CUSTOM_TACHI_IIDX_PLAYLISTS,
-	type TachiIIDXPlaylist,
-} from "#lib/game-specific/iidx-playlists";
-import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch-manual/converter";
-import { EAM_VERSION_NAMES } from "#lib/score-import/import-types/common/eamusement-iidx-csv/parser";
-import { GetUser } from "#utils/req-tachi-data";
-import { Router } from "express";
-import { AggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
-import { ValidatePlaytypeFromParamFor } from "#server/router/api/v1/games/_game/_playtype/middleware";
 
 const router: Router = Router({ mergeParams: true });
 

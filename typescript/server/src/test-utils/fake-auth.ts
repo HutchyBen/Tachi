@@ -3,8 +3,8 @@ import type supertest from "supertest";
 import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
-import { ALL_PERMISSIONS } from "../../../common/src";
 
+import { ALL_PERMISSIONS } from "../../../common/src";
 import ResetDBState from "./resets";
 
 const logger = CreateLogCtx(__filename);

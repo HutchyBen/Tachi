@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { type GameGroup, GetGPTString, GPTStringToV3, type Playtype } from "../../../common/src";
 
+import { type GameGroup, GetGPTString, GPTStringToV3, type Playtype } from "../../../common/src";
 import { CreateFolderID, CreateTableID } from "../../util";
 const { ReadCollection, WriteCollection } = require("../../util");
 

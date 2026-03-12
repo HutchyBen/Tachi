@@ -1,8 +1,11 @@
-import type { KtLogger } from "#lib/logger/logger";
 import type { GPTDerivers } from "#game-implementations/types";
-import type { MetricValue } from "../../../../../../common/src/types/metrics";
+import type { KtLogger } from "#lib/logger/logger";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
+
+import type { MetricValue } from "../../../../../../common/src/types/metrics";
+import type { DryScore, DryScoreData } from "../common/types";
+
 import {
 	type ChartDocument,
 	type DerivedMetrics,
@@ -13,9 +16,6 @@ import {
 	type ScoreData,
 	type ScoreEnumIndexes,
 } from "../../../../../../common/src";
-
-import type { DryScore, DryScoreData } from "../common/types";
-
 import { InternalFailure } from "../common/converter-failures";
 
 /**

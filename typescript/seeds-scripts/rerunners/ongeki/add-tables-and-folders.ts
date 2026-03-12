@@ -1,6 +1,6 @@
 import { Command } from "commander";
-import { type FolderDocument, GetGamePTConfig } from "../../../common/src";
 
+import { type FolderDocument, GetGamePTConfig } from "../../../common/src";
 import { CreateFolderID, MutateCollection } from "../../util";
 
 const LEVELS = [

@@ -8,10 +8,10 @@ import {
 	SubscribeToQuest,
 	UnsubscribeFromQuest,
 } from "#lib/targets/quests";
+import { RequirePermissions } from "#server/middleware/auth";
 import { AssignToReqTachiData, GetGPT, GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import { FormatUserDoc } from "#utils/user";
 import { type RequestHandler, Router } from "express";
-import { RequirePermissions } from "#server/middleware/auth";
 
 import { RequireAuthedAsUser } from "../../../../../middleware";
 

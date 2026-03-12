@@ -1,3 +1,8 @@
+import db from "#external/mongo/db";
+import { SubscribeFailReasons } from "#lib/constants/err-codes";
+import CreateLogCtx from "#lib/logger/logger";
+import { BulkSendNotification } from "#lib/notifications/notifications";
+
 import type {
 	GameGroup,
 	GoalDocument,
@@ -7,11 +12,6 @@ import type {
 	QuestDocument,
 	QuestSubscriptionDocument,
 } from "../../../../common/src";
-
-import db from "#external/mongo/db";
-import { SubscribeFailReasons } from "#lib/constants/err-codes";
-import CreateLogCtx from "#lib/logger/logger";
-import { BulkSendNotification } from "#lib/notifications/notifications";
 
 import {
 	type EvaluatedGoalReturn,

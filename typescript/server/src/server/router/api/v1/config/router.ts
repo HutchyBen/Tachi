@@ -1,6 +1,6 @@
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
-import { Router } from "express";
 import { RequireBokutachi } from "#server/middleware/type-require";
+import { Router } from "express";
 
 const router: Router = Router({ mergeParams: true });
 

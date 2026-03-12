@@ -1,3 +1,5 @@
+import db from "#external/mongo/db";
+
 import type {
 	GameGroup,
 	GPTString,
@@ -6,8 +8,6 @@ import type {
 	Playtype,
 	ScoreRatingAlgorithms,
 } from "../../../../common/src";
-
-import db from "#external/mongo/db";
 
 /**
  * Curries a function that returns the sum of N best ratings on `key`.

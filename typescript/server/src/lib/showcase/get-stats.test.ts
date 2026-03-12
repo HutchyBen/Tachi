@@ -3,9 +3,9 @@ import ResetDBState from "#test-utils/resets";
 import { Testing511SPA, TestingIIDXFolderSP10, TestingIIDXSPScorePB } from "#test-utils/test-data";
 import { CreateFolderChartLookup } from "#utils/folder";
 import deepmerge from "deepmerge";
-import { IIDX_LAMPS } from "../../../../common/src";
 import t from "tap";
 
+import { IIDX_LAMPS } from "../../../../common/src";
 import { EvaluateUsersStatsShowcase } from "./get-stats";
 
 t.test("#EvalulateUsersStatsShowcase", (t) => {

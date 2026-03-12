@@ -13,14 +13,15 @@ import { HandleSIGTERMGracefully } from "#lib/handlers/sigterm";
 import CreateLogCtx from "#lib/logger/logger";
 import { ApplyUnappliedMigrations } from "#lib/migration/migrations";
 import { Environment, ServerConfig, TachiConfig } from "#lib/setup/config";
+import { AddNewUser } from "#server/router/api/v1/auth/auth";
+import server from "#server/server";
 import fetch from "#utils/fetch";
 import { InitaliseFolderChartLookup } from "#utils/folder";
 import { spawn } from "child_process";
 import fs from "fs";
 import https from "https";
 import path from "path";
-import { AddNewUser } from "#server/router/api/v1/auth/auth";
-import server from "#server/server";
+
 import { UserAuthLevels } from "../../common/src";
 
 const logger = CreateLogCtx(__filename);

@@ -1,8 +1,9 @@
-import type { ConfScoreMetric } from "../../../../../../common/src/types/metrics";
-
-import { ONE_HOUR } from "#lib/constants/time";
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import { RunValidators } from "#game-implementations/games/_common";
+import { ONE_HOUR } from "#lib/constants/time";
+
+import type { ConfScoreMetric } from "../../../../../../common/src/types/metrics";
+
 import {
 	type ChartDocument,
 	GetGPTConfig,
@@ -10,7 +11,6 @@ import {
 	type GPTString,
 	type ScoreDocument,
 } from "../../../../../../common/src";
-
 import { InvalidScoreFailure } from "../common/converter-failures";
 
 /**

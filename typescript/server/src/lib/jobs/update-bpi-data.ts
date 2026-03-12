@@ -1,3 +1,10 @@
+import db from "#external/mongo/db";
+import CreateLogCtx from "#lib/logger/logger";
+import { BacksyncCollection, PullDatabaseSeeds } from "#lib/seeds/repo";
+import { RecalcAllScores } from "#utils/calculations/recalc-scores";
+import fetch from "#utils/fetch";
+import { WrapScriptPromise } from "#utils/misc";
+
 import type {
 	ChartDocument,
 	Difficulties,
@@ -6,13 +13,6 @@ import type {
 	SongDocument,
 	Versions,
 } from "../../../../common/src";
-
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
-import { BacksyncCollection, PullDatabaseSeeds } from "#lib/seeds/repo";
-import { RecalcAllScores } from "#utils/calculations/recalc-scores";
-import fetch from "#utils/fetch";
-import { WrapScriptPromise } from "#utils/misc";
 
 const logger = CreateLogCtx(__filename);
 

@@ -1,8 +1,8 @@
-import type { integer } from "../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import { ONE_DAY, ONE_HOUR } from "#lib/constants/time";
 import CreateLogCtx from "#lib/logger/logger";
+
+import type { integer } from "../../../../../../common/src";
 
 const logger = CreateLogCtx(__filename);
 

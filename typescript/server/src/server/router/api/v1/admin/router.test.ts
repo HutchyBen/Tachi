@@ -8,8 +8,9 @@ import ResetDBState from "#test-utils/resets";
 import { TestingIIDXSPScore } from "#test-utils/test-data";
 import { Sleep } from "#utils/misc";
 import deepmerge from "deepmerge";
-import { type ScoreDocument, UserAuthLevels } from "../../../../../../../common/src";
 import t from "tap";
+
+import { type ScoreDocument, UserAuthLevels } from "../../../../../../../common/src";
 
 const LOG_LEVEL = Environment.logLevel;
 

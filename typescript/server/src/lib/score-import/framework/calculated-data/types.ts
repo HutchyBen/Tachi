@@ -1,4 +1,5 @@
 import type { KtLogger } from "#lib/logger/logger";
+
 import type { ClassConfigs, Classes, GPTString, integer } from "../../../../../../common/src";
 import type {
 	DerivedClassConfig,

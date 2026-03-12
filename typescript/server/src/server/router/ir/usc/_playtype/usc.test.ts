@@ -1,14 +1,14 @@
+import db from "#external/mongo/db";
+import ResetDBState from "#test-utils/resets";
+import deepmerge from "deepmerge";
+import t from "tap";
+
 import type {
 	ChartDocument,
 	PBScoreDocument,
 	ScoreDocument,
 	UserDocument,
 } from "../../../../../../../common/src";
-
-import db from "#external/mongo/db";
-import ResetDBState from "#test-utils/resets";
-import deepmerge from "deepmerge";
-import t from "tap";
 
 import { CreatePOSTScoresResponseBody, TachiScoreToServerScore } from "./usc";
 

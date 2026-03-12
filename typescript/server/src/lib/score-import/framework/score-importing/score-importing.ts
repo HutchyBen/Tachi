@@ -3,6 +3,10 @@ import type { ScoreImportJob } from "#lib/score-import/worker/types";
 import db from "#external/mongo/db";
 import { AppendLogCtx, type KtLogger } from "#lib/logger/logger";
 import { ClassToObject } from "#utils/misc";
+
+import type { ConverterFnSuccessReturn, ConverterFunction } from "../../import-types/common/types";
+import type { DryScore } from "../common/types";
+
 import {
 	type ChartDocument,
 	type GameGroup,
@@ -13,10 +17,6 @@ import {
 	type ScoreDocument,
 	type SongDocument,
 } from "../../../../../../common/src";
-
-import type { ConverterFnSuccessReturn, ConverterFunction } from "../../import-types/common/types";
-import type { DryScore } from "../common/types";
-
 import {
 	type AmbiguousTitleFailure,
 	type ConverterFailure,

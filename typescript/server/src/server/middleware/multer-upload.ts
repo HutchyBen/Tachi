@@ -1,9 +1,10 @@
 import type { RequestHandler } from "express";
-import type { integer } from "../../../../common/src";
 
 import { SIXTEEN_MEGABTYES } from "#lib/constants/filesize";
 import CreateLogCtx from "#lib/logger/logger";
 import multer, { MulterError } from "multer";
+
+import type { integer } from "../../../../common/src";
 
 const defaultLogger = CreateLogCtx(__filename);
 

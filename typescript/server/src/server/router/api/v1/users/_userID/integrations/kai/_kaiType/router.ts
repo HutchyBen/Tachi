@@ -4,6 +4,8 @@ import {
 	GetKaiTypeClientCredentials,
 	KaiTypeToBaseURL,
 } from "#lib/score-import/import-types/common/api-kai/utils";
+import prValidate from "#server/middleware/prudence-validate";
+import { RequireKamaitachi } from "#server/middleware/type-require";
 import fetch from "#utils/fetch";
 import { NotNullish } from "#utils/misc";
 import { GetKaiAuth, RevokeKaiAuth } from "#utils/queries/auth";
@@ -11,8 +13,6 @@ import { GetTachiData } from "#utils/req-tachi-data";
 import { FormatUserDoc } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-import prValidate from "#server/middleware/prudence-validate";
-import { RequireKamaitachi } from "#server/middleware/type-require";
 
 import { RequireSelfRequestFromUser } from "../../../middleware";
 import { ValidateKaiType } from "./middleware";

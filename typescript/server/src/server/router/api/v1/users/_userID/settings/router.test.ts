@@ -1,11 +1,11 @@
-import type { UserDocument } from "../../../../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import { CreateFakeAuthCookie } from "#test-utils/fake-auth";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import deepmerge from "deepmerge";
 import t from "tap";
+
+import type { UserDocument } from "../../../../../../../../../common/src";
 
 t.test("GET /api/v1/users/:userID/settings", (t) => {
 	t.beforeEach(ResetDBState);

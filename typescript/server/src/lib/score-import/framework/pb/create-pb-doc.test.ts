@@ -8,9 +8,9 @@ import {
 	TestingIIDXSPScore,
 } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
-import { IIDX_GRADES, IIDX_LAMPS } from "../../../../../../common/src";
 import t from "tap";
 
+import { IIDX_GRADES, IIDX_LAMPS } from "../../../../../../common/src";
 import { CreatePBDoc, type PBScoreDocumentNoRank } from "./create-pb-doc";
 
 const IIDXScore = TestingIIDXSPScore;

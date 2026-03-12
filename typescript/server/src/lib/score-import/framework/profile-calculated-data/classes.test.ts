@@ -1,8 +1,8 @@
 import CreateLogCtx from "#lib/logger/logger";
 import ResetDBState from "#test-utils/resets";
-import { GITADORA_COLOURS, type UserGameStats } from "../../../../../../common/src";
 import t from "tap";
 
+import { GITADORA_COLOURS, type UserGameStats } from "../../../../../../common/src";
 import { CalculateUGPTClasses, ProcessClassDeltas } from "./classes";
 
 const logger = CreateLogCtx(__filename);

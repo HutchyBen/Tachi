@@ -1,7 +1,5 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
 import type { EmptyObject } from "#utils/types";
-import type { Difficulties } from "../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
 
 import {
 	InvalidScoreFailure,
@@ -11,6 +9,8 @@ import { AssertStrAsPositiveInt } from "#lib/score-import/framework/common/strin
 import { FindChartWithPTDF } from "#utils/queries/charts";
 import { FindSongOnTitle } from "#utils/queries/songs";
 
+import type { Difficulties } from "../../../../../../../common/src";
+import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
 import type { ConverterFunction } from "../../common/types";
 import type { SDVXEamusementCSVData } from "./types";
 

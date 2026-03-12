@@ -1,12 +1,12 @@
 import type { KtLogger } from "#lib/logger/logger";
 import type { EmptyObject } from "#utils/types";
-import type { integer } from "../../../../../../../common/src";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
-import { credentials } from "@grpc/grpc-js";
 import { ChunithmUserClient } from "#proto/generated/chunithm/user_grpc_pb";
 import { GetPlaylogRequest, type GetPlaylogStreamItem } from "#proto/generated/chunithm/user_pb";
+import { credentials } from "@grpc/grpc-js";
 
+import type { integer } from "../../../../../../../common/src";
 import type { ParserFunctionReturns } from "../../common/types";
 import type { MytChunithmScore } from "./types";
 

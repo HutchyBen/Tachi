@@ -1,12 +1,12 @@
 import db from "#external/mongo/db";
 import { GetTotalAllowedInvites } from "#lib/invites/invites";
+import { RequireInvitesEnabled } from "#server/middleware/type-require";
 import { Random20Hex } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { GetUsersWithIDs } from "#utils/user";
 import { Router } from "express";
-import { RequireInvitesEnabled } from "#server/middleware/type-require";
-import { type InviteCodeDocument, UserAuthLevels } from "../../../../../../../../../common/src";
 
+import { type InviteCodeDocument, UserAuthLevels } from "../../../../../../../../../common/src";
 import { RequireSelfRequestFromUser } from "../middleware";
 
 const router: Router = Router({ mergeParams: true });

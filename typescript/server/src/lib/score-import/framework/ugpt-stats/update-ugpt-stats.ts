@@ -1,4 +1,8 @@
 import type { KtLogger } from "#lib/logger/logger";
+
+import db from "#external/mongo/db";
+import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
+
 import type {
 	ClassDelta,
 	GameGroup,
@@ -6,10 +10,6 @@ import type {
 	Playtype,
 	UserGameStats,
 } from "../../../../../../common/src";
-
-import db from "#external/mongo/db";
-import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
-
 import type { ClassProvider } from "../calculated-data/types";
 
 import { CalculateProfileRatings } from "../calculated-data/profile";

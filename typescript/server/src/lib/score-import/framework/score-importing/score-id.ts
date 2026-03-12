@@ -2,6 +2,9 @@ import type { KtLogger } from "#lib/logger/logger";
 
 import db from "#external/mongo/db";
 import fjsh from "fast-json-stable-hash";
+
+import type { DryScore } from "../common/types";
+
 import {
 	GetGPTConfig,
 	type GPTString,
@@ -9,8 +12,6 @@ import {
 	type OptionalMetrics,
 	type ProvidedMetrics,
 } from "../../../../../../common/src";
-
-import type { DryScore } from "../common/types";
 
 /**
  * Creates an identifier for this score.

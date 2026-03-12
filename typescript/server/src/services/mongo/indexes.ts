@@ -6,9 +6,10 @@ import monk, { type IMonkManager } from "monk";
 import CreateLogCtx from "#lib/logger/logger";
 import { TachiConfig } from "#lib/setup/config";
 import { DedupeArr, Random20Hex } from "#utils/misc";
-import { GAME_PT_CONFIGS } from "../../../../common/src";
 
 import type { Databases } from "./db";
+
+import { GAME_PT_CONFIGS } from "../../../../common/src";
 
 const logger = CreateLogCtx(__filename);
 

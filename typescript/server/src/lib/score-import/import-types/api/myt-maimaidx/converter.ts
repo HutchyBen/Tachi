@@ -1,6 +1,5 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
 import type { EmptyObject } from "#utils/types";
-import type { ScoreData } from "../../../../../../../common/src";
 
 import {
 	InternalFailure,
@@ -9,10 +8,11 @@ import {
 	SongOrChartNotFoundFailure,
 } from "#lib/score-import/framework/common/converter-failures";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
+import { MaimaiComboStatus, MaimaiLevel } from "#proto/generated/maimai/common_pb";
 import { FindChartOnInGameID } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
-import { MaimaiComboStatus, MaimaiLevel } from "#proto/generated/maimai/common_pb";
 
+import type { ScoreData } from "../../../../../../../common/src";
 import type { ConverterFunction } from "../../common/types";
 import type { MytMaimaiDxScore } from "./types";
 

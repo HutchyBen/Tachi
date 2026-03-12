@@ -1,9 +1,10 @@
 import type { Migration } from "#utils/types";
 import type { FilterQuery } from "mongodb";
-import type { GoalDocument } from "../../../../../common/src";
 
 import db from "#external/mongo/db";
 import { EditGoal } from "#lib/targets/goals";
+
+import type { GoalDocument } from "../../../../../common/src";
 
 async function UpdateGoals(
 	query: FilterQuery<GoalDocument>,

@@ -1,5 +1,3 @@
-import type { ChartDocument, ScoreDocument } from "../../../../../../../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import { mkFakeScoreIIDXSP, mkFakeScoreSDVX } from "#test-utils/misc";
 import mockApi from "#test-utils/mock-api";
@@ -11,6 +9,8 @@ import {
 	Testing511SPA,
 } from "#test-utils/test-data";
 import t from "tap";
+
+import type { ChartDocument, ScoreDocument } from "../../../../../../../../../../../../common/src";
 
 t.test("GET /api/v1/users/:userID/games/:game/:playtype/scores/recent", (t) => {
 	t.beforeEach(ResetDBState);

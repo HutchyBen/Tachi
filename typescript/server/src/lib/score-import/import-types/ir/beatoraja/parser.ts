@@ -1,9 +1,9 @@
 import type { KtLogger } from "#lib/logger/logger";
-import type { integer } from "../../../../../../../common/src";
 
 import { FormatPrError } from "#utils/prudence";
 import { p } from "prudence";
 
+import type { integer } from "../../../../../../../common/src";
 import type { ParserFunctionReturns } from "../../common/types";
 import type { BeatorajaChart, BeatorajaContext, BeatorajaScore } from "./types";
 

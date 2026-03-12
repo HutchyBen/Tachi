@@ -4,8 +4,9 @@ import { mkFakeImport } from "#test-utils/misc";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import { FakeImport } from "#test-utils/test-data";
-import { UserAuthLevels } from "../../../../../../../common/src";
 import t from "tap";
+
+import { UserAuthLevels } from "../../../../../../../common/src";
 
 t.test("GET /api/v1/imports/:importID", (t) => {
 	t.beforeEach(ResetDBState);

@@ -1,10 +1,10 @@
 import type { EmptyObject } from "#utils/types";
-import type { Difficulties, Playtypes, Versions } from "../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
 
 import { FindChartWithPTDFVersion } from "#utils/queries/charts";
 import { FindSongOnTitleInsensitive } from "#utils/queries/songs";
 
+import type { Difficulties, Playtypes, Versions } from "../../../../../../../common/src";
+import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
 import type { DryScore } from "../../../framework/common/types";
 import type { ConverterFunction } from "../../common/types";
 import type { S3Score } from "./types";

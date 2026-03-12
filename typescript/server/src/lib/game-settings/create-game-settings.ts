@@ -1,7 +1,7 @@
-import type { GameGroup, integer, Playtype } from "../../../../common/src";
-
 import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
+
+import type { GameGroup, integer, Playtype } from "../../../../common/src";
 
 const logger = CreateLogCtx(__filename);
 

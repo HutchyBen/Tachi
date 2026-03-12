@@ -1,5 +1,4 @@
 import type { ScoreImportJobData } from "#lib/score-import/worker/types";
-import type { APIImportTypes, FileUploadImportTypes } from "../../../../../../../common/src";
 
 import { SIXTEEN_MEGABTYES } from "#lib/constants/filesize";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
@@ -8,14 +7,16 @@ import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/expre
 import { DeorphanScores } from "#lib/score-import/framework/orphans/orphans";
 import { MakeScoreImport } from "#lib/score-import/framework/score-import";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
-import { Random20Hex } from "#utils/misc";
-import { FormatUserDoc, GetUserWithIDGuaranteed } from "#utils/user";
-import { Router } from "express";
-import { p } from "prudence";
 import { RequirePermissions } from "#server/middleware/auth";
 import { CreateMulterSingleUploadMiddleware } from "#server/middleware/multer-upload";
 import prValidate from "#server/middleware/prudence-validate";
 import { ScoreImportRateLimiter } from "#server/middleware/rate-limiter";
+import { Random20Hex } from "#utils/misc";
+import { FormatUserDoc, GetUserWithIDGuaranteed } from "#utils/user";
+import { Router } from "express";
+import { p } from "prudence";
+
+import type { APIImportTypes, FileUploadImportTypes } from "../../../../../../../common/src";
 
 const logger = CreateLogCtx(__filename);
 

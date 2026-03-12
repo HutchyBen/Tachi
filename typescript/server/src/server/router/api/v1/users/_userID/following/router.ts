@@ -1,13 +1,13 @@
-import type { integer } from "../../../../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { ServerConfig } from "#lib/setup/config";
+import prValidate from "#server/middleware/prudence-validate";
 import { GetUser } from "#utils/req-tachi-data";
 import { FormatUserDoc, GetUsersWithIDs, GetUserWithID } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-import prValidate from "#server/middleware/prudence-validate";
+
+import type { integer } from "../../../../../../../../../common/src";
 
 import { RequireSelfRequestFromUser } from "../middleware";
 

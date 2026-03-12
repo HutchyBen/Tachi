@@ -1,8 +1,8 @@
 /* eslint-disable no-await-in-loop */
 
 import readline from "readline";
-import { type ChartDocument, type SongDocument } from "../../../common/src";
 
+import { type ChartDocument, type SongDocument } from "../../../common/src";
 import { ReadCollection, WriteCollection } from "../../util";
 
 type OngekiChart = ChartDocument<"ongeki:Single">;

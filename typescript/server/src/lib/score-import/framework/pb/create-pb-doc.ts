@@ -2,9 +2,10 @@ import type { KtLogger } from "#lib/logger/logger";
 import type { BulkWriteUpdateOneOperation, FilterQuery, SortOptionObject } from "mongodb";
 
 import db from "#external/mongo/db";
+import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import { GetEveryonesRivalIDs } from "#lib/rivals/rivals";
 import { DeleteUndefinedProps } from "#utils/misc";
-import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
+
 import {
 	type ChartDocument,
 	type GameGroup,
@@ -16,7 +17,6 @@ import {
 	type Playtype,
 	type ScoreDocument,
 } from "../../../../../../common/src";
-
 import { CreateScoreCalcData } from "../calculated-data/score";
 import { CreateEnumIndexes } from "../score-importing/derivers";
 

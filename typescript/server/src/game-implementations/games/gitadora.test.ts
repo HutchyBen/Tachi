@@ -4,6 +4,8 @@ import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestingGitadoraChart } from "#test-utils/test-data";
+import t from "tap";
+
 import {
 	GetGPTString,
 	GITADORA_GRADES,
@@ -14,8 +16,6 @@ import {
 	type ScoreData,
 	type ScoreDocument,
 } from "../../../../common/src";
-import t from "tap";
-
 import { GITADORA_DORA_IMPL, GITADORA_GITA_IMPL } from "./gitadora";
 
 const logger = CreateLogCtx(__filename);

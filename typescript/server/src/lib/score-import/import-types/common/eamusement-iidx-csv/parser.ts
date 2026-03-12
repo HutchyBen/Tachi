@@ -2,6 +2,10 @@ import type { KtLogger } from "#lib/logger/logger";
 
 import { StringIsGameVersion } from "#utils/misc";
 import { CSVParseError, NaiveCSVParse } from "#utils/naive-csv-parser";
+
+import type { ParserFunctionReturns } from "../types";
+import type { EamusementScoreData, IIDXEamusementCSVContext, IIDXEamusementCSVData } from "./types";
+
 import {
 	GetGamePTConfig,
 	type integer,
@@ -9,10 +13,6 @@ import {
 	type Playtypes,
 	type Versions,
 } from "../../../../../../../common/src";
-
-import type { ParserFunctionReturns } from "../types";
-import type { EamusementScoreData, IIDXEamusementCSVContext, IIDXEamusementCSVData } from "./types";
-
 import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 
 export enum EAM_VERSION_NAMES {

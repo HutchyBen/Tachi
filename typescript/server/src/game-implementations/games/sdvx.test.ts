@@ -5,14 +5,14 @@ import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestSnapshot } from "#test-utils/single-process-snapshot";
 import { TestingSDVXAlbidaChart } from "#test-utils/test-data";
+import t from "tap";
+
 import {
 	type ProvidedMetrics,
 	type ScoreData,
 	SDVX_GRADES,
 	SDVX_LAMPS,
 } from "../../../../common/src";
-import t from "tap";
-
 import { SDVX_IMPL } from "./sdvx";
 
 const logger = CreateLogCtx(__filename);

@@ -1,7 +1,7 @@
 import { Parser } from "binary-parser";
 import fs from "fs";
-import { type ChartDocument, type SongDocument } from "../../../common/src";
 
+import { type ChartDocument, type SongDocument } from "../../../common/src";
 import { ReadCollection, WriteCollection } from "../../util";
 
 const STEP_HEADER_LENGTH = 6;

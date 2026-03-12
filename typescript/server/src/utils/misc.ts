@@ -5,6 +5,8 @@ import { ONE_HOUR, ONE_SECOND } from "#lib/constants/time";
 import { TachiConfig } from "#lib/setup/config";
 import { exec } from "child_process";
 import crypto from "crypto";
+import { URL } from "url";
+
 import {
 	type GameGroup,
 	type GamePTConfig,
@@ -15,7 +17,6 @@ import {
 	type Playtype,
 	type Versions,
 } from "../../../common/src";
-import { URL } from "url";
 
 // https://github.com/sindresorhus/escape-string-regexp/blob/main/index.js
 // the developer of this has migrated everything to Force ES6 style modules,

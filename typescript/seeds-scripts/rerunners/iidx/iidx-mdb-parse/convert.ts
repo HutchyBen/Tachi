@@ -3,8 +3,8 @@ import { execSync } from "child_process";
 import fs, { mkdirSync } from "fs";
 import iconv from "iconv-lite";
 import path from "path";
-import { type integer } from "../../../../common/src";
 
+import { type integer } from "../../../../common/src";
 import logger from "../../../logger";
 import { ParseDotOneFile } from "./dot-one-parser/parser";
 import { type IIDXConvertOutput } from "./dot-one-parser/types";

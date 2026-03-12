@@ -1,7 +1,7 @@
-import type { ScoreDocument } from "../../../../common/src";
-
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
+
+import type { ScoreDocument } from "../../../../common/src";
 
 import db from "./db";
 

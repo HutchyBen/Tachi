@@ -1,9 +1,9 @@
-import type { BatchManual } from "../../../../../../../common/src";
-
 import CreateLogCtx from "#lib/logger/logger";
 import { EscapeStringRegexp } from "#utils/misc";
 import deepmerge from "deepmerge";
 import t from "tap";
+
+import type { BatchManual } from "../../../../../../../common/src";
 
 import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 import { ParseBatchManualFromObject as ParserFn } from "./parser";

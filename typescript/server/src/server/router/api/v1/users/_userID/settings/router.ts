@@ -1,9 +1,9 @@
 import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
+import prValidate from "#server/middleware/prudence-validate";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { FormatUserDoc, GetSettingsForUser } from "#utils/user";
 import { Router } from "express";
-import prValidate from "#server/middleware/prudence-validate";
 
 import { RequireSelfRequestFromUser } from "../middleware";
 

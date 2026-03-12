@@ -1,5 +1,3 @@
-import type { integer, ProvidedMetrics, ScoreData } from "../../../../common/src";
-
 import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
@@ -7,9 +5,11 @@ import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestSnapshot } from "#test-utils/single-process-snapshot";
 import { TestingMaimaiChart } from "#test-utils/test-data";
-import { MAIMAI_SINGLE_CONF } from "../../../../common/src/config/game-support/maimai";
 import t from "tap";
 
+import type { integer, ProvidedMetrics, ScoreData } from "../../../../common/src";
+
+import { MAIMAI_SINGLE_CONF } from "../../../../common/src/config/game-support/maimai";
 import { MAIMAI_IMPL } from "./maimai";
 
 const logger = CreateLogCtx(__filename);

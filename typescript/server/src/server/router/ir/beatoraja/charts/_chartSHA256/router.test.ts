@@ -1,9 +1,9 @@
-import type { PBScoreDocument, ScoreDocument } from "../../../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
+
+import type { PBScoreDocument, ScoreDocument } from "../../../../../../../../common/src";
 
 t.test("GET /ir/beatoraja/charts/:chartSHA256/scores", (t) => {
 	t.beforeEach(ResetDBState);

@@ -1,8 +1,3 @@
-import type {
-	ChartDocument,
-	PBScoreDocument,
-} from "../../../../../../../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
@@ -14,6 +9,11 @@ import {
 	TestingIIDXSPScorePB,
 } from "#test-utils/test-data";
 import t from "tap";
+
+import type {
+	ChartDocument,
+	PBScoreDocument,
+} from "../../../../../../../../../../../../common/src";
 
 t.test("GET /api/v1/users/:userID/games/:game/:playtype/pbs/best", (t) => {
 	t.beforeEach(ResetDBState);

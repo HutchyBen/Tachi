@@ -1,9 +1,9 @@
 import chalk from "chalk";
 import fjsh from "fast-json-stable-hash";
 import get from "lodash.get";
+
 import { allSupportedGameGroups, type GameGroup, type integer } from "../../common/src";
 import { type SCHEMAS } from "../../common/src/lib/schemas";
-
 import { ReadCollection } from "../util";
 import { FormatFunctions } from "./test-utils";
 

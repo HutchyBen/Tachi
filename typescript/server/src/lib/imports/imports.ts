@@ -1,5 +1,3 @@
-import type { ImportDocument } from "../../../../common/src";
-
 import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import {
@@ -7,6 +5,8 @@ import {
 	UnsetOngoingImportLock,
 } from "#lib/score-import/framework/import-locks/lock";
 import { DeleteMultipleScores } from "#lib/score-mutation/delete-scores";
+
+import type { ImportDocument } from "../../../../common/src";
 
 const logger = CreateLogCtx(__filename);
 

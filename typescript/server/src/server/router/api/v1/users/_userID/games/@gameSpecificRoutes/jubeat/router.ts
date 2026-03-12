@@ -1,7 +1,7 @@
+import { GetPBsForJubility } from "#game-implementations/games/jubeat";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { GetUser } from "#utils/req-tachi-data";
 import { Router } from "express";
-import { GetPBsForJubility } from "#game-implementations/games/jubeat";
 
 const router: Router = Router({ mergeParams: true });
 

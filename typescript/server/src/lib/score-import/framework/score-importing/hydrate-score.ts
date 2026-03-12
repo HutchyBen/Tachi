@@ -1,5 +1,7 @@
 import type { KtLogger } from "#lib/logger/logger";
 
+import type { DryScore } from "../common/types";
+
 import {
 	type ChartDocument,
 	GetGPTString,
@@ -7,9 +9,6 @@ import {
 	type ScoreDocument,
 	type SongDocument,
 } from "../../../../../../common/src";
-
-import type { DryScore } from "../common/types";
-
 import { CreateScoreCalcData } from "../calculated-data/score";
 import { CreateFullScoreData } from "./derivers";
 

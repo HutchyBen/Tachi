@@ -9,18 +9,18 @@ import {
 	UnsubscribeFromGoal,
 } from "#lib/targets/goals";
 import { GetParentQuests } from "#lib/targets/quests";
+import { RequirePermissions } from "#server/middleware/auth";
+import prValidate from "#server/middleware/prudence-validate";
 import { GetGoalForIDGuaranteed } from "#utils/db";
 import { AssignToReqTachiData, GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
-import { RequirePermissions } from "#server/middleware/auth";
-import prValidate from "#server/middleware/prudence-validate";
+
 import {
 	GetGamePTConfig,
 	type GoalDocument,
 	type QuestDocument,
 } from "../../../../../../../../../../../../../common/src";
-
 import { RequireAuthedAsUser } from "../../../../../middleware";
 
 const router: Router = Router({ mergeParams: true });

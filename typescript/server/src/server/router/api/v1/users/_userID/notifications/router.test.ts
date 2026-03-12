@@ -1,11 +1,11 @@
-import type { NotificationDocument } from "../../../../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import { CreateFakeAuthCookie } from "#test-utils/fake-auth";
 import { mkFakeNotification, mkFakeUser } from "#test-utils/misc";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
+
+import type { NotificationDocument } from "../../../../../../../../../common/src";
 
 t.test("GET /api/v1/users/:userID/notifications", async (t) => {
 	t.beforeEach(ResetDBState);

@@ -3,6 +3,7 @@ import { XMLParser } from "fast-xml-parser";
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import { CreateLogger } from "mei-logger";
 import path from "path";
+
 import {
 	type ChartDocument,
 	type Difficulties,
@@ -10,7 +11,6 @@ import {
 	type integer,
 	type SongDocument,
 } from "../../../common/src";
-
 import { CreateChartID, ReadCollection, WriteCollection } from "../../util";
 
 const logger = CreateLogger("chunithm/merge-options");

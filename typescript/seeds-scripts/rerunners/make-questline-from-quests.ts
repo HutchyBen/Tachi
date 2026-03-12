@@ -1,8 +1,8 @@
 import { spawnSync } from "child_process";
 import { Command } from "commander";
 import fs from "fs";
-import { type QuestDocument, type QuestlineDocument } from "../../common/src";
 
+import { type QuestDocument, type QuestlineDocument } from "../../common/src";
 import { MutateCollection, ReadCollection } from "../util";
 
 /**

@@ -2,6 +2,7 @@ import type { OrphanScoreDocument } from "#lib/score-import/import-types/common/
 import type { MigrationDocument, PrivateUserInfoDocument } from "#utils/types";
 
 import monk, { type ICollection, type TMiddleware } from "monk";
+
 import {
 	allSupportedGameGroups,
 	type APITokenDocument,

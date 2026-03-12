@@ -1,5 +1,4 @@
 import type { GameGroup } from "../../../../../../../common/src";
-
 import type { CGServices, CGSupportedGames } from "./types";
 
 export function CGGameToTachiGame(cgGame: CGSupportedGames): GameGroup {

@@ -1,10 +1,13 @@
-import type { integer } from "../../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import { SendEmail } from "#lib/email/client";
 import { EmailFormatResetPassword, EmailFormatVerifyEmail } from "#lib/email/formats";
 import CreateLogCtx from "#lib/logger/logger";
 import { Environment, ServerConfig, TachiConfig } from "#lib/setup/config";
+import prValidate from "#server/middleware/prudence-validate";
+import {
+	AggressiveRateLimitMiddleware,
+	HyperAggressiveRateLimitMiddleware,
+} from "#server/middleware/rate-limiter";
 import { DecrementCounterValue, GetNextCounterValue } from "#utils/db";
 import { Random20Hex } from "#utils/misc";
 import {
@@ -18,11 +21,8 @@ import {
 } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-import prValidate from "#server/middleware/prudence-validate";
-import {
-	AggressiveRateLimitMiddleware,
-	HyperAggressiveRateLimitMiddleware,
-} from "#server/middleware/rate-limiter";
+
+import type { integer } from "../../../../../../../common/src";
 
 import {
 	AddNewUser,

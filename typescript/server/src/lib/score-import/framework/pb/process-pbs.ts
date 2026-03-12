@@ -2,13 +2,13 @@ import type { KtLogger } from "#lib/logger/logger";
 
 import db from "#external/mongo/db";
 import { GetChartForIDGuaranteed } from "#utils/db";
+
 import {
 	type GameGroup,
 	GetGPTString,
 	type integer,
 	type Playtype,
 } from "../../../../../../common/src";
-
 import { CreatePBDoc, type PBScoreDocumentNoRank, UpdateChartRanking } from "./create-pb-doc";
 
 /**

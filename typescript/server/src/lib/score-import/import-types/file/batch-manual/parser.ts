@@ -1,6 +1,6 @@
 import type { KtLogger } from "#lib/logger/logger";
-import type { BatchManualScore } from "../../../../../../../common/src";
 
+import type { BatchManualScore } from "../../../../../../../common/src";
 import type { BatchManualContext } from "../../common/batch-manual/types";
 import type { ParserFunctionReturns } from "../../common/types";
 

@@ -5,8 +5,8 @@ import CreateLogCtx from "#lib/logger/logger";
 import { GetFoldersFromTable } from "#utils/folder";
 import { GetGPT, GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
-import { FormatGameGroup, type TableDocument } from "../../../../../../../../../../common/src";
 
+import { FormatGameGroup, type TableDocument } from "../../../../../../../../../../common/src";
 import { GetTableFromParam } from "./middleware";
 
 const router: Router = Router({ mergeParams: true });

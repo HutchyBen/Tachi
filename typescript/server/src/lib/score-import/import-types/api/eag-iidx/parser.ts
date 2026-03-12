@@ -1,7 +1,8 @@
 import type { KtLogger } from "#lib/logger/logger";
-import type { integer } from "../../../../../../../common/src";
 
 import { GetKaiAuthGuaranteed } from "#utils/queries/auth";
+
+import type { integer } from "../../../../../../../common/src";
 
 import { ParseKaiIIDX } from "../../common/api-kai/iidx/parser";
 

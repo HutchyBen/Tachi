@@ -4,13 +4,13 @@ import { XMLParser } from "fast-xml-parser";
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import { CreateLogger } from "mei-logger";
 import path from "path";
+
 import {
 	type ChartDocument,
 	type Difficulties,
 	GetGamePTConfig,
 	type SongDocument,
 } from "../../../common/src";
-
 import {
 	CreateChartID,
 	GetFreshSongIDGenerator,

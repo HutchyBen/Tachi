@@ -7,6 +7,7 @@ import { UpdateGoalsForUser } from "#lib/score-import/framework/goals/goals";
 import { UpdateQuestsForUser } from "#lib/score-import/framework/quests/quests";
 import { DeleteMultipleScores, DeleteScore } from "#lib/score-mutation/delete-scores";
 import { Environment, ServerConfig, TachiConfig } from "#lib/setup/config";
+import prValidate from "#server/middleware/prudence-validate";
 import { RecalcAllScores, UpdateAllPBs } from "#utils/calculations/recalc-scores";
 import { RecalcSessions } from "#utils/calculations/recalc-sessions";
 import { IsValidPlaytype } from "#utils/misc";
@@ -15,7 +16,7 @@ import { GetScoresFromSession } from "#utils/session";
 import { GetUserWithID, ResolveUser } from "#utils/user";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
-import prValidate from "#server/middleware/prudence-validate";
+
 import {
 	type GameGroup,
 	type GoalSubscriptionDocument,

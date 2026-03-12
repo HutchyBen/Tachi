@@ -1,5 +1,3 @@
-import type { BatchManualScore } from "../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import ResetDBState from "#test-utils/resets";
@@ -7,6 +5,7 @@ import deepmerge from "deepmerge";
 import fjsh from "fast-json-stable-hash";
 import t from "tap";
 
+import type { BatchManualScore } from "../../../../../../common/src";
 import type { BatchManualContext } from "../../import-types/common/batch-manual/types";
 import type { OrphanScoreDocument } from "../../import-types/common/types";
 

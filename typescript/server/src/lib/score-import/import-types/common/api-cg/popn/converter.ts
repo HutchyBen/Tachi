@@ -1,6 +1,4 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
-import type { Difficulties, integer, Versions } from "../../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../../common/src/types/metrics";
 
 import {
 	InternalFailure,
@@ -12,6 +10,8 @@ import { ParseDateFromString } from "#lib/score-import/framework/common/score-ut
 import { FindChartOnInGameIDVersion } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
+import type { Difficulties, integer, Versions } from "../../../../../../../../common/src";
+import type { GetEnumValue } from "../../../../../../../../common/src/types/metrics";
 import type { ConverterFunction } from "../../types";
 import type { CGContext, CGPopnScore } from "../types";
 

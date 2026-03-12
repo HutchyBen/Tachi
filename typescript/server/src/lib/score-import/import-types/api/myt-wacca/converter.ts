@@ -1,7 +1,5 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
 import type { EmptyObject } from "#utils/types";
-import type { Difficulties } from "../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
 
 import {
 	InternalFailure,
@@ -9,14 +7,16 @@ import {
 	SongOrChartNotFoundFailure,
 } from "#lib/score-import/framework/common/converter-failures";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
-import { FindChartOnInGameID } from "#utils/queries/charts";
-import { FindSongOnID } from "#utils/queries/songs";
 import {
 	type WaccaClearStatus,
 	WaccaMusicDifficulty,
 	type WaccaMusicDifficultyMap,
 } from "#proto/generated/wacca/common_pb";
+import { FindChartOnInGameID } from "#utils/queries/charts";
+import { FindSongOnID } from "#utils/queries/songs";
 
+import type { Difficulties } from "../../../../../../../common/src";
+import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
 import type { ConverterFunction } from "../../common/types";
 import type { MytWaccaScore } from "./types";
 

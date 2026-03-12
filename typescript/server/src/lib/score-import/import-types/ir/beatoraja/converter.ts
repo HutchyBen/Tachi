@@ -1,6 +1,5 @@
 import type { KtLogger } from "#lib/logger/logger";
 import type { Mutable } from "#utils/types";
-import type { ChartDocument, Playtypes, SongDocument } from "../../../../../../../common/src";
 
 import { HandleOrphanQueue } from "#lib/orphan-queue/orphan-queue";
 import { DeorphanScores } from "#lib/score-import/framework/orphans/orphans";
@@ -9,6 +8,7 @@ import { Random20Hex } from "#utils/misc";
 import { FindChartOnSHA256, FindChartOnSHA256Playtype } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
+import type { ChartDocument, Playtypes, SongDocument } from "../../../../../../../common/src";
 import type { DryScore } from "../../../framework/common/types";
 import type { ConverterFunction } from "../../common/types";
 import type { BeatorajaChart, BeatorajaContext, BeatorajaScore } from "./types";

@@ -8,6 +8,7 @@ import { IsString } from "#utils/misc";
 import { FindChartsOnPopularity } from "#utils/queries/charts";
 import { GetGPT } from "#utils/req-tachi-data";
 import { Router } from "express";
+
 import {
 	type ChartDocument,
 	type integer,
@@ -15,7 +16,6 @@ import {
 	type UGPTSettingsDocument,
 } from "../../../../../../../../../../common/src";
 import { PR_RESOLVER } from "../../../../../../../../../../common/src/lib/schemas";
-
 import chartIDRouter from "./_chartID/router";
 
 const logger = CreateLogCtx(__filename);

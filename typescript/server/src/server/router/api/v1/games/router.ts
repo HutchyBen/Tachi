@@ -1,7 +1,7 @@
 import { TachiConfig } from "#lib/setup/config";
 import { Router } from "express";
-import { GetGameGroupConfig } from "../../../../../../../common/src";
 
+import { GetGameGroupConfig } from "../../../../../../../common/src";
 import gameSpecificRoutes from "./@gameSpecificRoutes/router";
 import gameRouter from "./_game/router";
 

@@ -1,14 +1,14 @@
 import CreateLogCtx from "#lib/logger/logger";
 import { PullDatabaseSeeds } from "#lib/seeds/repo";
 import { Environment } from "#lib/setup/config";
+import prValidate from "#server/middleware/prudence-validate";
+import { RequireLocalDevelopment } from "#server/middleware/type-require";
 import { GetCommit, ListGitCommitsInPath } from "#utils/git";
 import { asyncExec, IsString } from "#utils/misc";
 import { Router } from "express";
 import fsSync from "fs";
 import fs from "fs/promises";
 import path from "path";
-import prValidate from "#server/middleware/prudence-validate";
-import { RequireLocalDevelopment } from "#server/middleware/type-require";
 
 const logger = CreateLogCtx(__filename);
 

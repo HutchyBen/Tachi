@@ -1,18 +1,18 @@
 import type { FilterQuery } from "mongodb";
 
 import db from "#external/mongo/db";
+import prValidate from "#server/middleware/prudence-validate";
 import { GetEnumDistForFolder, GetFolderCharts, GetPBsOnFolder } from "#utils/folder";
 import { GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import { ParseStrPositiveInt } from "#utils/string-checks";
 import { Router } from "express";
-import prValidate from "#server/middleware/prudence-validate";
+
 import {
 	GetGamePTConfig,
 	GetScoreMetricConf,
 	type ScoreDocument,
 	ValidateMetric,
 } from "../../../../../../../../../../../../../common/src";
-
 import { GetFolderFromParam } from "../../../../../../../games/_game/_playtype/folders/middleware";
 import { RequireSelfRequestFromUser } from "../../../../../middleware";
 

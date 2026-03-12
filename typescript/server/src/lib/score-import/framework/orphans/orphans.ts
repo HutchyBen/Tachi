@@ -1,12 +1,12 @@
 import type { KtLogger } from "#lib/logger/logger";
 import type { FilterQuery } from "mongodb";
-import type { GameGroup, ImportTypes, integer } from "../../../../../../common/src";
 
 import db from "#external/mongo/db";
 import { GetBlacklist } from "#utils/queries/blacklist";
 import { GetUserWithID } from "#utils/user";
 import fjsh from "fast-json-stable-hash";
 
+import type { GameGroup, ImportTypes, integer } from "../../../../../../common/src";
 import type {
 	ConverterFnReturnOrFailure,
 	ConverterFunction,

@@ -4,6 +4,11 @@ import type { ScoreImportJob } from "#lib/score-import/worker/types";
 import db from "#external/mongo/db";
 import { GetMillisecondsSince } from "#utils/misc";
 import { GetUserWithID } from "#utils/user";
+
+import type { ConverterFunction, ImportInputParser } from "../../import-types/common/types";
+import type { ClassProvider } from "../calculated-data/types";
+import type { ChartIDPlaytypeMap, ScorePlaytypeMap } from "../common/types";
+
 import {
 	type GameGroup,
 	GetGameGroupConfig,
@@ -15,11 +20,6 @@ import {
 	type Playtype,
 	type UserDocument,
 } from "../../../../../../common/src";
-
-import type { ConverterFunction, ImportInputParser } from "../../import-types/common/types";
-import type { ClassProvider } from "../calculated-data/types";
-import type { ChartIDPlaytypeMap, ScorePlaytypeMap } from "../common/types";
-
 import { Converters } from "../../import-types/converters";
 import { InternalFailure } from "../common/converter-failures";
 import { CreateScoreLogger } from "../common/import-logger";

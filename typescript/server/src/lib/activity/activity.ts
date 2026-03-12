@@ -1,5 +1,16 @@
 import type { Request, Response } from "express-serve-static-core";
 import type { FilterQuery } from "mongodb";
+
+import db from "#external/mongo/db";
+import {
+	GetRecentlyAchievedGoals,
+	GetRecentlyAchievedQuests,
+	GetRelevantSongsAndCharts,
+} from "#utils/db";
+import { DedupeArr } from "#utils/misc";
+import { GetGPT } from "#utils/req-tachi-data";
+import { GetUsersWithIDs } from "#utils/user";
+
 import type {
 	ChartDocument,
 	ClassAchievementDocument,
@@ -15,16 +26,6 @@ import type {
 	SongDocument,
 	UserDocument,
 } from "../../../../common/src";
-
-import db from "#external/mongo/db";
-import {
-	GetRecentlyAchievedGoals,
-	GetRecentlyAchievedQuests,
-	GetRelevantSongsAndCharts,
-} from "#utils/db";
-import { DedupeArr } from "#utils/misc";
-import { GetGPT } from "#utils/req-tachi-data";
-import { GetUsersWithIDs } from "#utils/user";
 
 export type ActivityConstraint = FilterQuery<
 	ClassAchievementDocument & ScoreDocument & SessionDocument

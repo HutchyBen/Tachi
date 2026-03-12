@@ -1,8 +1,8 @@
-import type { UserDocument } from "../../../../common/src";
-
 import { ONE_MONTH } from "#lib/constants/time";
 import CreateLogCtx from "#lib/logger/logger";
 import { ServerConfig } from "#lib/setup/config";
+
+import type { UserDocument } from "../../../../common/src";
 
 const logger = CreateLogCtx(__filename);
 

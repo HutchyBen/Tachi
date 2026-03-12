@@ -4,14 +4,14 @@ import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestingMusecaChart } from "#test-utils/test-data";
+import t from "tap";
+
 import {
 	MUSECA_GRADES,
 	MUSECA_LAMPS,
 	type ProvidedMetrics,
 	type ScoreData,
 } from "../../../../common/src";
-import t from "tap";
-
 import { MUSECA_IMPL } from "./museca";
 
 const baseMetrics: ProvidedMetrics["museca:Single"] = {

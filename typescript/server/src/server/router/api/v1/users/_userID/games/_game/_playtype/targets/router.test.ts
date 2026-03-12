@@ -1,10 +1,3 @@
-import type {
-	GoalDocument,
-	GoalSubscriptionDocument,
-	QuestDocument,
-	QuestSubscriptionDocument,
-} from "../../../../../../../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
@@ -16,6 +9,13 @@ import {
 } from "#test-utils/test-data";
 import dm from "deepmerge";
 import t from "tap";
+
+import type {
+	GoalDocument,
+	GoalSubscriptionDocument,
+	QuestDocument,
+	QuestSubscriptionDocument,
+} from "../../../../../../../../../../../../common/src";
 
 function mkGoalSub(merge: Partial<GoalSubscriptionDocument>) {
 	return dm(HC511UserGoal, merge);

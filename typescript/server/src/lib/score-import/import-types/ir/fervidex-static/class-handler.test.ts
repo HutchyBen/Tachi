@@ -1,8 +1,8 @@
 import CreateLogCtx from "#lib/logger/logger";
 import ResetDBState from "#test-utils/resets";
-import { IIDXDans } from "../../../../../../../common/src/config/game-support/iidx";
 import t from "tap";
 
+import { IIDXDans } from "../../../../../../../common/src/config/game-support/iidx";
 import { CreateFerStaticClassProvider } from "./class-handler";
 
 const logger = CreateLogCtx(__filename);

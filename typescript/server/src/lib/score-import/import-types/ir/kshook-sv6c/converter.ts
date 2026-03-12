@@ -1,5 +1,4 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
 
 import {
 	InternalFailure,
@@ -9,6 +8,7 @@ import {
 import { FindSDVXChartOnInGameIDVersion } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
+import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
 import type { ConverterFunction } from "../../common/types";
 import type { KsHookSV6CContext, KsHookSV6CScore } from "./types";
 

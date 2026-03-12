@@ -2,11 +2,11 @@ import CreateLogCtx from "#lib/logger/logger";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { MockMulterFile } from "#test-utils/mock-multer";
 import { TestingWaccaMyPageScraperRecordsCSV } from "#test-utils/test-data";
-import { WACCA_STAGEUPS } from "../../../../../../../common/src/constants/game";
 import t from "tap";
 
 import type { MyPageRecordsParsedPB } from "./types";
 
+import { WACCA_STAGEUPS } from "../../../../../../../common/src/constants/game";
 import { ParseMyPageScraperPlayerCSV, ParseMyPageScraperRecordsCSV } from "./parser";
 
 const logger = CreateLogCtx(__filename);

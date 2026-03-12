@@ -1,7 +1,7 @@
-import type { integer, ScoreDocument } from "../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
+
+import type { integer, ScoreDocument } from "../../../../../../common/src";
 
 const logger = CreateLogCtx(__filename);
 const MAX_PIPELINE_LENGTH = 500;

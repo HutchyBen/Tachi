@@ -2,6 +2,7 @@ import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { WrapScriptPromise } from "#utils/misc";
 import { FormatUserDoc, ResolveUser } from "#utils/user";
+
 import { UserAuthLevels } from "../../../common/src";
 
 const userID = process.argv[2];

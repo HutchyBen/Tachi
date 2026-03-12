@@ -1,12 +1,12 @@
 import fs from "fs";
 import path from "path";
+
 import {
 	GAME_GROUP_CONFIGS,
 	GAME_PT_CONFIGS,
 	GPTStringToV3,
 	V3ToGameGroup,
 } from "../../../common/src";
-
 const { CreateSongID, CreateChartID, ReadCollection, WriteCollection } = require("../../util");
 
 // ── Stability map ─────────────────────────────────────────────────────────────

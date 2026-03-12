@@ -1,3 +1,6 @@
+import CreateLogCtx from "#lib/logger/logger";
+import { Random20Hex } from "#utils/misc";
+
 import type {
 	ImportDocument,
 	ImportTypes,
@@ -5,10 +8,6 @@ import type {
 	SuccessfulAPIResponse,
 	UnsuccessfulAPIResponse,
 } from "../../../../../common/src";
-
-import CreateLogCtx from "#lib/logger/logger";
-import { Random20Hex } from "#utils/misc";
-
 import type { ParserArguments } from "../worker/types";
 
 import { MakeScoreImport } from "./score-import";

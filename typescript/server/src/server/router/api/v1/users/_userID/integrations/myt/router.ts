@@ -1,11 +1,11 @@
-import type { MytCardInfo } from "../../../../../../../../../../common/src";
-
 import db from "#external/mongo/db";
+import prValidate from "#server/middleware/prudence-validate";
+import { RequireKamaitachi } from "#server/middleware/type-require";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
 import { p } from "prudence";
-import prValidate from "#server/middleware/prudence-validate";
-import { RequireKamaitachi } from "#server/middleware/type-require";
+
+import type { MytCardInfo } from "../../../../../../../../../../common/src";
 
 import { RequireSelfRequestFromUser } from "../../middleware";
 

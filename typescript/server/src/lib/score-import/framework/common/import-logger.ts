@@ -1,7 +1,7 @@
-import type { ImportTypes, UserDocument } from "../../../../../../common/src";
-
 import { type KtLogger, rootLogger } from "#lib/logger/logger";
 import { FormatUserDoc } from "#utils/user";
+
+import type { ImportTypes, UserDocument } from "../../../../../../common/src";
 
 export function CreateScoreLogger(
 	user: UserDocument,

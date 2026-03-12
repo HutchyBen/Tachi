@@ -1,5 +1,6 @@
 import type { DryScoreData } from "#lib/score-import/framework/common/types";
 import type { PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
+
 import type {
 	ChartDocument,
 	ClassConfigs,

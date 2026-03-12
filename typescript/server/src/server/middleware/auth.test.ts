@@ -3,9 +3,9 @@ import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import mockApi from "#test-utils/mock-api";
 import { expressRequestMock } from "#test-utils/mock-request";
 import ResetDBState from "#test-utils/resets";
-import { ALL_PERMISSIONS } from "../../../../common/src";
 import t from "tap";
 
+import { ALL_PERMISSIONS } from "../../../../common/src";
 import { SetRequestPermissions } from "./auth";
 
 t.test("#SetRequestPermissions", (t) => {

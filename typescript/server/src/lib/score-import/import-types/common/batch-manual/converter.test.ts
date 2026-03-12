@@ -1,10 +1,3 @@
-import type {
-	BatchManualScore,
-	ChartDocument,
-	MatchTypeResolver,
-	MatchTypeResolverWithDifficulty,
-} from "../../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { InvalidScoreFailure } from "#lib/score-import/framework/common/converter-failures";
@@ -19,6 +12,13 @@ import {
 } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
 import t from "tap";
+
+import type {
+	BatchManualScore,
+	ChartDocument,
+	MatchTypeResolver,
+	MatchTypeResolverWithDifficulty,
+} from "../../../../../../../common/src";
 
 import {
 	BatchManualScoreToResolver,

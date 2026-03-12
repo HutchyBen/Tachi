@@ -1,6 +1,7 @@
 import { GetRecentActivityForMultipleGames } from "#lib/activity/activity";
 import { TachiConfig } from "#lib/setup/config";
 import { Router } from "express";
+
 import { GetGameGroupConfig } from "../../../../../../../common/src";
 
 const router: Router = Router({ mergeParams: true });

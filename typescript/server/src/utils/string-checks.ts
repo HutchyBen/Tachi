@@ -6,7 +6,6 @@ import {
 	GetGamePTConfig,
 	type Playtype,
 } from "../../../common/src";
-
 import { IsString } from "./misc";
 
 const isIntegerRegex = /^-?\d+$/u;

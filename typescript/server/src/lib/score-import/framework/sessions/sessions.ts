@@ -4,6 +4,9 @@ import CreateLogCtx, { AppendLogCtx, type KtLogger } from "#lib/logger/logger";
 import { GetChartForIDGuaranteed } from "#utils/db";
 import { GetScoresFromSession } from "#utils/session";
 import crypto from "crypto";
+
+import type { ScorePlaytypeMap } from "../common/types";
+
 import {
 	type GameGroup,
 	GetGamePTConfig,
@@ -17,9 +20,6 @@ import {
 	type SessionInfoReturn,
 	type SessionScoreInfo,
 } from "../../../../../../common/src";
-
-import type { ScorePlaytypeMap } from "../common/types";
-
 import { CreateSessionCalcData } from "../calculated-data/session";
 import { CreatePBDoc, type PBScoreDocumentNoRank } from "../pb/create-pb-doc";
 import { GenerateRandomSessionName } from "./name-generation";

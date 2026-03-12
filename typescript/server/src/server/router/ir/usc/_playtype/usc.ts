@@ -1,3 +1,9 @@
+import db from "#external/mongo/db";
+import { USCIR_ADJACENT_SCORE_N } from "#lib/constants/usc-ir";
+import CreateLogCtx from "#lib/logger/logger";
+import { MStoS } from "#utils/misc";
+import { GetPBOnChart, GetServerRecordOnChart } from "#utils/scores";
+
 import type {
 	ChartDocument,
 	GPTStrings,
@@ -6,13 +12,6 @@ import type {
 	ScoreDocument,
 } from "../../../../../../../common/src";
 import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
-
-import db from "#external/mongo/db";
-import { USCIR_ADJACENT_SCORE_N } from "#lib/constants/usc-ir";
-import CreateLogCtx from "#lib/logger/logger";
-import { MStoS } from "#utils/misc";
-import { GetPBOnChart, GetServerRecordOnChart } from "#utils/scores";
-
 import type { USCServerScore } from "./types";
 
 const logger = CreateLogCtx(__filename);

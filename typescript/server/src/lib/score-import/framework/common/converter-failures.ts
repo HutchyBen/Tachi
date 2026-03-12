@@ -1,7 +1,6 @@
 // Various Errors that can occur during processing.
 
 import type { ImportTypes } from "../../../../../../common/src";
-
 import type { ImportTypeContextMap, ImportTypeDataMap } from "../../import-types/common/types";
 
 export type FailureTypes =

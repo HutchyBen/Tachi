@@ -1,9 +1,10 @@
 import type { RequestHandler } from "express";
-import type { TachiAPIClientDocument } from "../../../../../../../common/src";
 
 import db from "#external/mongo/db";
 import { Environment } from "#lib/setup/config";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
+
+import type { TachiAPIClientDocument } from "../../../../../../../common/src";
 
 export const GetClientFromID: RequestHandler = async (req, res, next) => {
 	const client = await db["api-clients"].findOne(

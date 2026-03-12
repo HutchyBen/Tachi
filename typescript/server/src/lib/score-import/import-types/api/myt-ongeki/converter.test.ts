@@ -1,8 +1,5 @@
 import CreateLogCtx from "#lib/logger/logger";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
-import { dmf } from "#test-utils/misc";
-import ResetDBState from "#test-utils/resets";
-import { TestingOngekiChartConverter, TestingOngekiSongConverter } from "#test-utils/test-data";
 import {
 	OngekiBattleScoreRank,
 	OngekiClearStatus,
@@ -10,6 +7,9 @@ import {
 	OngekiLevel,
 	OngekiTechScoreRank,
 } from "#proto/generated/ongeki/common_pb";
+import { dmf } from "#test-utils/misc";
+import ResetDBState from "#test-utils/resets";
+import { TestingOngekiChartConverter, TestingOngekiSongConverter } from "#test-utils/test-data";
 import t from "tap";
 
 import type { MytOngekiScore } from "./types";

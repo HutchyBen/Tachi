@@ -1,10 +1,10 @@
 import type { KtLogger } from "#lib/logger/logger";
 import type { USCClientScore } from "#server/router/ir/usc/_playtype/types";
-import type { Playtypes } from "../../../../../../../common/src";
 
 import { FormatPrError } from "#utils/prudence";
 import { p, type PrudenceSchema } from "prudence";
 
+import type { Playtypes } from "../../../../../../../common/src";
 import type { ParserFunctionReturns } from "../../common/types";
 import type { IRUSCContext } from "./types";
 

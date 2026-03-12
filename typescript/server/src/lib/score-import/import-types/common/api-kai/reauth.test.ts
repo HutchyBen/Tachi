@@ -1,5 +1,3 @@
-import type { KaiAuthDocument } from "../../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { ServerConfig } from "#lib/setup/config";
@@ -7,6 +5,8 @@ import { MockJSONFetch } from "#test-utils/mock-fetch";
 import ResetDBState from "#test-utils/resets";
 import deepmerge from "deepmerge";
 import t from "tap";
+
+import type { KaiAuthDocument } from "../../../../../../../common/src";
 
 import { CreateKaiReauthFunction } from "./reauth";
 

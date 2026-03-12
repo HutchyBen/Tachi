@@ -1,5 +1,4 @@
 import type { Request } from "express";
-import type { integer } from "../../../../common/src";
 
 import { RedisClient } from "#external/redis/redis";
 import { ONE_MINUTE } from "#lib/constants/time";
@@ -8,6 +7,8 @@ import { Environment, ServerConfig, TachiConfig } from "#lib/setup/config";
 import { OmitUndefinedKeys } from "#utils/misc";
 import rateLimit, { type Options } from "express-rate-limit";
 import RateLimitRedis from "rate-limit-redis";
+
+import type { integer } from "../../../../common/src";
 
 const logger = CreateLogCtx(__filename);
 

@@ -1,9 +1,9 @@
 import CreateLogCtx from "#lib/logger/logger";
 import { MockBasicFetch, MockJSONFetch } from "#test-utils/mock-fetch";
 import ResetDBState from "#test-utils/resets";
-import { SDVX_DANS } from "../../../../../../../../common/src";
 import t from "tap";
 
+import { SDVX_DANS } from "../../../../../../../../common/src";
 import { KaiTypeToBaseURL } from "../utils";
 import { CreateKaiSDVXClassProvider } from "./class-handler";
 

@@ -1,5 +1,3 @@
-import type { ChartDocument, GPTStrings, SongDocument } from "../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import { InsertFakeTokenWithAllPerms } from "#test-utils/fake-auth";
 import mockApi from "#test-utils/mock-api";
@@ -13,6 +11,8 @@ import {
 import { Random20Hex, Sleep } from "#utils/misc";
 import deepmerge from "deepmerge";
 import t from "tap";
+
+import type { ChartDocument, GPTStrings, SongDocument } from "../../../../../../common/src";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function TestHeaders(url: string, data: any) {

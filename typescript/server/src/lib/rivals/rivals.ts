@@ -7,6 +7,7 @@ import { SendSetRivalNotification } from "#lib/notifications/notification-wrappe
 import { ServerConfig } from "#lib/setup/config";
 import { ArrayDiff } from "#utils/misc";
 import { GetUsersWithIDs, GetUserWithIDGuaranteed } from "#utils/user";
+
 import {
 	FormatGameGroup,
 	type GameGroup,

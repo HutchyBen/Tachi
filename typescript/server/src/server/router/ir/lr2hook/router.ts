@@ -4,10 +4,10 @@ import db from "#external/mongo/db";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { PR_LR2HOOK as PR_LR2_HOOK } from "#lib/score-import/import-types/ir/lr2hook/parser";
-import { UpdateClassIfGreater } from "#utils/class";
-import { Router } from "express";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
+import { UpdateClassIfGreater } from "#utils/class";
+import { Router } from "express";
 
 const router: Router = Router({ mergeParams: true });
 

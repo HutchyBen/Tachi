@@ -1,11 +1,11 @@
-import type { APITokenDocument, TachiAPIClientDocument } from "../../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import { ServerConfig } from "#lib/setup/config";
 import { CreateFakeAuthCookie } from "#test-utils/fake-auth";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
+
+import type { APITokenDocument, TachiAPIClientDocument } from "../../../../../../../common/src";
 
 const clientDataset: Array<TachiAPIClientDocument> = [
 	{

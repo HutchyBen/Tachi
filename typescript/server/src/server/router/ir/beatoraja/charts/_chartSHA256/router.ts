@@ -1,15 +1,15 @@
+import db from "#external/mongo/db";
+import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
+import CreateLogCtx from "#lib/logger/logger";
+import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
+import { type RequestHandler, Router } from "express";
+
 import type {
 	ChartDocument,
 	integer,
 	PBScoreDocument,
 	UserDocument,
 } from "../../../../../../../../common/src";
-
-import db from "#external/mongo/db";
-import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import CreateLogCtx from "#lib/logger/logger";
-import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
-import { type RequestHandler, Router } from "express";
 
 import { TachiScoreDataToBeatorajaFormat } from "./convert-scores";
 

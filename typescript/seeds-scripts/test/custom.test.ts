@@ -1,13 +1,13 @@
 import chalk from "chalk";
 import fs from "fs";
 import path from "path";
+
 import {
 	type ChartDocument,
 	type GameGroup,
 	type GPTStrings,
 	type SongDocument,
 } from "../../common/src";
-
 import { ReadCollection } from "../util";
 import { FormatFunctions } from "./test-utils";
 

@@ -1,4 +1,7 @@
 import type { DeepPartial } from "#utils/types";
+
+import deepmerge from "deepmerge";
+
 import type {
 	ChartDocument,
 	GameGroup,
@@ -16,8 +19,6 @@ import type {
 	UserDocument,
 	UserGameStats,
 } from "../../../common/src";
-
-import deepmerge from "deepmerge";
 
 import {
 	FakeGameSettings,

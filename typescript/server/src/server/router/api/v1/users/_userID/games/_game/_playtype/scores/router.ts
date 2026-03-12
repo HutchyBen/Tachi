@@ -1,10 +1,10 @@
 import db from "#external/mongo/db";
 import { SearchSpecificGameSongsAndCharts } from "#lib/search/search";
+import { HyperAggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { GetUGPT } from "#utils/req-tachi-data";
 import { FilterChartsAndSongs } from "#utils/scores";
 import { Router } from "express";
-import { HyperAggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
 
 const router: Router = Router({ mergeParams: true });
 

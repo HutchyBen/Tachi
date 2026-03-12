@@ -4,6 +4,7 @@ import db from "#external/mongo/db";
 import { CreateActivityRouteHandler } from "#lib/activity/activity";
 import { ONE_HOUR } from "#lib/constants/time";
 import { SearchUsersRegExp } from "#lib/search/search";
+import prValidate from "#server/middleware/prudence-validate";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { IsString } from "#utils/misc";
 import { GetGPT } from "#utils/req-tachi-data";
@@ -15,7 +16,7 @@ import {
 import { GetUsersWithIDs } from "#utils/user";
 import { Router } from "express";
 import NodeCache from "node-cache";
-import prValidate from "#server/middleware/prudence-validate";
+
 import {
 	FormatGameGroup,
 	type GameGroup,
@@ -24,7 +25,6 @@ import {
 	type Playtype,
 	type UserGameStats,
 } from "../../../../../../../../../common/src";
-
 import chartsRouter from "./charts/router";
 import foldersRouter from "./folders/router";
 import { ValidatePlaytypeFromParam } from "./middleware";

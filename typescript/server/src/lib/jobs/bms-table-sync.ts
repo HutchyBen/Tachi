@@ -7,6 +7,7 @@ import { DeorphanIfInQueue } from "#lib/orphan-queue/orphan-queue";
 import { InitaliseFolderChartLookup } from "#utils/folder";
 import { FormatBMSTables, WrapScriptPromise } from "#utils/misc";
 import { type BMSTableEntry, LoadBMSTable } from "bms-table-loader";
+
 import {
 	BMS_TABLES,
 	type BMSTableInfo,

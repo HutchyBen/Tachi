@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
-import { type integer } from "../../../../../common/src";
 
+import { type integer } from "../../../../../common/src";
 import logger from "../../../../logger";
 import {
 	type BGMObject,

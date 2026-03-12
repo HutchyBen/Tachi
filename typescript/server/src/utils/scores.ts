@@ -1,3 +1,5 @@
+import db from "#external/mongo/db";
+
 import type {
 	ChartDocument,
 	integer,
@@ -5,8 +7,6 @@ import type {
 	ScoreDocument,
 	SongDocument,
 } from "../../../common/src";
-
-import db from "#external/mongo/db";
 
 import { DedupeArr } from "./misc";
 

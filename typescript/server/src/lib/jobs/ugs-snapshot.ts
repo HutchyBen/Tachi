@@ -1,9 +1,9 @@
-import type { UserGameStats, UserGameStatsSnapshotDocument } from "../../../../common/src";
-
 import db from "#external/mongo/db";
 import CreateLogCtx from "#lib/logger/logger";
 import { GetMillisecondsSince } from "#utils/misc";
 import { GetAllRankings } from "#utils/user";
+
+import type { UserGameStats, UserGameStatsSnapshotDocument } from "../../../../common/src";
 
 const logger = CreateLogCtx(__filename);
 

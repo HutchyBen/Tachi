@@ -1,11 +1,12 @@
 import type { KtLogger } from "#lib/logger/logger";
-import type { KaiAuthDocument } from "../../../../../../../common/src";
 
 import db from "#external/mongo/db";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ServerConfig } from "#lib/setup/config";
 import nodeFetch from "#utils/fetch";
 import { p } from "prudence";
+
+import type { KaiAuthDocument } from "../../../../../../../common/src";
 
 import { GetKaiTypeClientCredentials, KaiTypeToBaseURL } from "./utils";
 

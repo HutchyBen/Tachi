@@ -1,8 +1,9 @@
 import type { KtLogger } from "#lib/logger/logger";
-import type { integer } from "../../../../common/src";
 
 import db from "#external/mongo/db";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
+
+import type { integer } from "../../../../common/src";
 
 export function GetKaiAuth(userID: integer, service: "EAG" | "FLO" | "MIN") {
 	return db["kai-auth-tokens"].findOne({

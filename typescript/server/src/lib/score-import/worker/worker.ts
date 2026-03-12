@@ -1,5 +1,3 @@
-import type { ImportTypes } from "../../../../../common/src";
-
 import { HandleSIGTERMGracefully } from "#lib/handlers/sigterm";
 import CreateLogCtx from "#lib/logger/logger";
 import { Environment, ServerConfig } from "#lib/setup/config";
@@ -7,6 +5,7 @@ import { FormatUserDoc, GetUserWithID } from "#utils/user";
 import { Worker } from "bullmq";
 import { EventEmitter } from "events";
 
+import type { ImportTypes } from "../../../../../common/src";
 import type ScoreImportFatalError from "../framework/score-importing/score-import-error";
 import type { ScoreImportJob, ScoreImportJobData } from "./types";
 

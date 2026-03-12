@@ -1,13 +1,13 @@
 import { Command } from "commander";
 import fjsh from "fast-json-stable-hash";
 import fs from "fs";
+
 import {
 	type ChartDocument,
 	type Difficulties,
 	type integer,
 	type SongDocument,
 } from "../../../common/src";
-
 import {
 	CreateChartID,
 	GetFreshSongIDGenerator,

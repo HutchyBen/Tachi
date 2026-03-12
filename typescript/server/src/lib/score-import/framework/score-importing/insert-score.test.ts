@@ -1,8 +1,8 @@
-import type { ScoreDocument } from "../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
+
+import type { ScoreDocument } from "../../../../../../common/src";
 
 import { InsertQueue, QueueScoreInsert } from "./insert-score";
 

@@ -1,4 +1,5 @@
 import db from "#external/mongo/db";
+
 import {
 	FormatGameGroup,
 	type GameGroup,
@@ -6,7 +7,6 @@ import {
 	type Playtype,
 	type UserDocument,
 } from "../../../../common/src";
-
 import { BulkSendNotification, SendNotification } from "./notifications";
 
 /**

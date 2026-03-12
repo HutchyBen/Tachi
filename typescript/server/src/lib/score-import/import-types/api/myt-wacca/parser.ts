@@ -1,12 +1,12 @@
 import type { KtLogger } from "#lib/logger/logger";
 import type { EmptyObject } from "#utils/types";
-import type { integer } from "../../../../../../../common/src";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
-import { credentials } from "@grpc/grpc-js";
 import { WaccaUserClient } from "#proto/generated/wacca/user_grpc_pb";
 import { PlaylogRequest, type PlaylogStreamItem } from "#proto/generated/wacca/user_pb";
+import { credentials } from "@grpc/grpc-js";
 
+import type { integer } from "../../../../../../../common/src";
 import type { ParserFunctionReturns } from "../../common/types";
 import type { MytWaccaScore } from "./types";
 

@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
+
 import {
 	type GameGroup,
 	GetGameGroupConfig,

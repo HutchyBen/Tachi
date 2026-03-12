@@ -19,6 +19,10 @@ import type {
 	Game as PgGame,
 } from "tachi-db";
 
+import fs from "fs";
+import { type Insertable, type Kysely, sql } from "kysely";
+import path from "path";
+
 import type {
 	BMSCourseDocument,
 	ChartDocument,
@@ -29,10 +33,6 @@ import type {
 	SongDocument,
 	TableDocument,
 } from "../../../../common/src";
-
-import fs from "fs";
-import { type Insertable, type Kysely, sql } from "kysely";
-import path from "path";
 
 // ── Seed types ─────────────────────────────────────────────────────────────
 

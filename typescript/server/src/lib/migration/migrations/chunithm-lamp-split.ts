@@ -1,4 +1,5 @@
 import type { Migration } from "#utils/types";
+
 import type { GetEnumValue } from "../../../../../common/src/types/metrics";
 
 import {

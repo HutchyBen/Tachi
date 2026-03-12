@@ -1,4 +1,7 @@
 import type { FilterQuery } from "mongodb";
+
+import db from "#external/mongo/db";
+
 import type {
 	ChartDocument,
 	Difficulties,
@@ -9,8 +12,6 @@ import type {
 	Playtypes,
 	Versions,
 } from "../../../../common/src";
-
-import db from "#external/mongo/db";
 
 export function FindChartWithChartID(game: GameGroup, chartID: string) {
 	return db.anyCharts[game].findOne({ chartID });

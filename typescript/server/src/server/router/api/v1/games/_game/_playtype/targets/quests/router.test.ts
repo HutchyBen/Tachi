@@ -1,9 +1,3 @@
-import type {
-	QuestDocument,
-	QuestlineDocument,
-	QuestSubscriptionDocument,
-} from "../../../../../../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
@@ -16,6 +10,12 @@ import {
 } from "#test-utils/test-data";
 import dm from "deepmerge";
 import t from "tap";
+
+import type {
+	QuestDocument,
+	QuestlineDocument,
+	QuestSubscriptionDocument,
+} from "../../../../../../../../../../../common/src";
 
 t.test("GET /api/v1/games/:game/:playtype/targets/quests", (t) => {
 	t.beforeEach(ResetDBState);

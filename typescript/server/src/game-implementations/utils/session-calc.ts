@@ -1,4 +1,5 @@
 import type { SessionCalculator } from "#game-implementations/types";
+
 import type { GPTString, integer, ScoreDocument } from "../../../../common/src";
 
 export function SessionAverageBestN(vals: Array<number | null | undefined>, n = 10) {

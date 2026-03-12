@@ -1,11 +1,11 @@
-import type { FolderDocument } from "../../../../../../../../../../common/src";
-
 import db from "#external/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import { TestingIIDXFolderSP10 } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
 import t from "tap";
+
+import type { FolderDocument } from "../../../../../../../../../../common/src";
 
 t.test("GET /api/v1/games/:game/:playtype/tables", (t) => {
 	t.beforeEach(ResetDBState);
