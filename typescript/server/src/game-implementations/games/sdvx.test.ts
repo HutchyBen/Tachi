@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -7,12 +7,7 @@ import { TestSnapshot } from "#test-utils/single-process-snapshot";
 import { TestingSDVXAlbidaChart } from "#test-utils/test-data";
 import t from "tap";
 
-import {
-	type ProvidedMetrics,
-	type ScoreData,
-	SDVX_GRADES,
-	SDVX_LAMPS,
-} from "../../../../common/src";
+import { type ProvidedMetrics, type ScoreData, SDVX_GRADES, SDVX_LAMPS } from "tachi-common";
 import { SDVX_IMPL } from "./sdvx";
 
 const baseMetrics: ProvidedMetrics["sdvx:Single"] = {
@@ -189,7 +184,7 @@ t.test("SDVX Implementation", (t) => {
 				}),
 			);
 
-			t.hasStrict(await CreatePBDoc("sdvx:Single", 1, TestingSDVXAlbidaChart, logger), {
+			t.hasStrict(await CreatePBDoc("sdvx:Single", 1, TestingSDVXAlbidaChart, log), {
 				composedFrom: [{ name: "Best Score" }, { name: "Best Lamp", scoreID: "bestLamp" }],
 				scoreData: {
 					score: mockScore.scoreData.score,
@@ -217,7 +212,7 @@ t.test("SDVX Implementation", (t) => {
 				}),
 			);
 
-			t.hasStrict(await CreatePBDoc("sdvx:Single", 1, TestingSDVXAlbidaChart, logger), {
+			t.hasStrict(await CreatePBDoc("sdvx:Single", 1, TestingSDVXAlbidaChart, log), {
 				composedFrom: [{ name: "Best Score" }, { name: "Best Lamp", scoreID: "bestLamp" }],
 				scoreData: {
 					score: mockScore.scoreData.score,

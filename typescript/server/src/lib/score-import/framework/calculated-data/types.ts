@@ -1,10 +1,7 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 
-import type { ClassConfigs, Classes, GPTString, integer } from "../../../../../../common/src";
-import type {
-	DerivedClassConfig,
-	ProvidedClassConfig,
-} from "../../../../../../common/src/types/game-config-utils";
+import type { ClassConfigs, Classes, GPTString, integer } from "tachi-common";
+import type { DerivedClassConfig, ProvidedClassConfig } from "tachi-common/types/game-config-utils";
 
 // type RecordClassProvider<GPT extends GPTString> = {
 // 	[C in keyof ClassConfigs[GPT] as ClassConfigs[GPT][C] extends ProvidedClassConfig

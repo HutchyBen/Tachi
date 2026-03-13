@@ -9,7 +9,7 @@ import {
 	type InviteCodeDocument,
 	UserAuthLevels,
 	type UserDocument,
-} from "../../../../../../../../../common/src";
+} from "tachi-common";
 
 t.test("GET /api/v1/users/:userID/invites", async (t) => {
 	t.beforeEach(ResetDBState);

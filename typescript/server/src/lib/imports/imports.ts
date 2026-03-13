@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import {
 	CheckAndSetOngoingImportLock,
 	UnsetOngoingImportLock,
@@ -6,7 +6,7 @@ import {
 import { DeleteMultipleScores } from "#lib/score-mutation/delete-scores";
 import db from "#services/mongo/db";
 
-import type { ImportDocument } from "../../../../common/src";
+import type { ImportDocument } from "tachi-common";
 
 interface OngoingImportError {
 	tag: "ONGOING_IMPORT";
@@ -20,7 +20,7 @@ interface OngoingImportError {
  * If this results in sessions being deleted, it will delete them.
  */
 export async function RevertImport(importDoc: ImportDocument): Promise<OngoingImportError | null> {
-	log.info(`Received revert-import request for import '${importDoc.importID}'`, { importDoc });
+	log.info({ importDoc }, `Received revert-import request for import '${importDoc.importID}'`);
 
 	const scores = await GetImportScores(importDoc);
 
@@ -38,8 +38,8 @@ export async function RevertImport(importDoc: ImportDocument): Promise<OngoingIm
 		await DeleteMultipleScores(scores);
 
 		log.info(
-			`Deleted ${scores.length} scores as part of reverting import '${importDoc.importID}'.`,
 			{ importDoc },
+			`Deleted ${scores.length} scores as part of reverting import '${importDoc.importID}'.`,
 		);
 
 		try {
@@ -48,8 +48,8 @@ export async function RevertImport(importDoc: ImportDocument): Promise<OngoingIm
 			log.info(`Reverted and deleted import '${importDoc.importID}'.`);
 		} catch (err) {
 			log.error(
-				`Deleted scores that were part of import, but failed to remove the actual import? There is a stale import with ID '${importDoc.importID}', which must be removed manually.`,
 				{ importDoc, err },
+				`Deleted scores that were part of import, but failed to remove the actual import? There is a stale import with ID '${importDoc.importID}', which must be removed manually.`,
 			);
 		}
 	} finally {

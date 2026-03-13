@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
 import db from "#services/mongo/db";
@@ -7,7 +7,7 @@ import { FormatUserDoc, GetUsersWithIDs, GetUserWithID } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
 
-import type { integer } from "../../../../../../../../../common/src";
+import type { integer } from "tachi-common";
 
 import { RequireSelfRequestFromUser } from "../middleware";
 
@@ -26,7 +26,7 @@ router.get("/", async (req, res) => {
 	const settings = await db["user-settings"].findOne({ userID: user.id });
 
 	if (!settings) {
-		log.error(`User ${FormatUserDoc(user)} has no settings?`, { user });
+		log.error({ user }, `User ${FormatUserDoc(user)} has no settings?`);
 
 		return res.status(500).json({
 			success: false,
@@ -71,7 +71,7 @@ router.post(
 		const settings = await db["user-settings"].findOne({ userID: user.id });
 
 		if (!settings) {
-			log.error(`User ${FormatUserDoc(user)} has no settings?`, { user });
+			log.error({ user }, `User ${FormatUserDoc(user)} has no settings?`);
 
 			return res.status(500).json({
 				success: false,
@@ -145,7 +145,7 @@ router.post(
 		const settings = await db["user-settings"].findOne({ userID: user.id });
 
 		if (!settings) {
-			log.error(`User ${FormatUserDoc(user)} has no settings?`, { user });
+			log.error({ user }, `User ${FormatUserDoc(user)} has no settings?`);
 
 			return res.status(500).json({
 				success: false,

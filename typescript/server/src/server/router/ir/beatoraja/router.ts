@@ -4,7 +4,7 @@ import type {
 } from "#lib/score-import/import-types/ir/beatoraja/types";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { ServerConfig } from "#lib/setup/config";
 import { RequireNotGuest } from "#server/middleware/auth";
@@ -15,7 +15,7 @@ import { IsRecord, NotNullish } from "#utils/misc";
 import { Router } from "express";
 import { p } from "prudence";
 
-import type { integer } from "../../../../../../common/src";
+import type { integer } from "tachi-common";
 
 import { ValidateIRClientVersion } from "./auth";
 import chartsRouter from "./charts/_chartSHA256/router";
@@ -59,9 +59,12 @@ router.post("/submit-score", RequireNotGuest, async (req, res) => {
 			);
 
 			if (!orphanInfo) {
-				log.warn(`Chart '${chart.sha256}' got SongOrChartNotFound, but was not orphaned?`, {
-					body: req.safeBody as unknown,
-				});
+				log.warn(
+					{
+						body: req.safeBody as unknown,
+					},
+					`Chart '${chart.sha256}' got SongOrChartNotFound, but was not orphaned?`,
+				);
 
 				return res.status(400).json({
 					success: false,

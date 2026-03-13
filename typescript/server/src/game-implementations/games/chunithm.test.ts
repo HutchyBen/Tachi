@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -12,7 +12,7 @@ import {
 	CHUNITHM_NOTE_LAMPS,
 	type ProvidedMetrics,
 	type ScoreData,
-} from "../../../../common/src";
+} from "tachi-common";
 import { CHUNITHM_IMPL } from "./chunithm";
 
 const baseMetrics: ProvidedMetrics["chunithm:Single"] = {
@@ -214,7 +214,7 @@ t.test("CHUNITHM Implementation", (t) => {
 				}),
 			);
 
-			t.hasStrict(await CreatePBDoc("chunithm:Single", 1, CHUNITHMBBKKChart, logger), {
+			t.hasStrict(await CreatePBDoc("chunithm:Single", 1, CHUNITHMBBKKChart, log), {
 				composedFrom: [
 					{ name: "Best Score" },
 					{ name: "Best Note Lamp", scoreID: "bestNoteLamp" },

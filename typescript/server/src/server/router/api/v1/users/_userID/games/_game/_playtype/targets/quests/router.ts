@@ -1,5 +1,5 @@
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import {
 	EvaluateQuestProgress,
@@ -210,10 +210,13 @@ router.delete(
 		const { user } = GetUGPT(req);
 		const quest = GetTachiData(req, "questDoc");
 
-		log.info(`User ${FormatUserDoc(user)} is unsubscribing from quest '${quest.name}'.`, {
-			quest,
-			user,
-		});
+		log.info(
+			{
+				quest,
+				user,
+			},
+			`User ${FormatUserDoc(user)} is unsubscribing from quest '${quest.name}'.`,
+		);
 
 		const questSub = await db["quest-subs"].findOne({
 			userID: user.id,

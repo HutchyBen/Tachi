@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { z } from "zod";
 
-import { type GameGroup, V3ToGameGroup } from "../../common/src";
+import { type GameGroup, V3ToGameGroup } from "tachi-common";
 import { GetChartCollectionGame, GetSongCollectionGame, ReadCollection } from "../util";
 import { type AllCollections, V3_SCHEMAS } from "./schemas";
 import { FormatFunctions } from "./test-utils";

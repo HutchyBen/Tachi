@@ -31,7 +31,7 @@ const DIFFICULTY_LOOKUP = {
 export const ConverterIRBarbatos: ConverterFunction<
 	BarbatosScore | BarbatosSDVX6Score,
 	BarbatosContext
-> = async (data, context, importType, logger) => {
+> = async (data, context, importType, log) => {
 	const difficulty = DIFFICULTY_LOOKUP[data.difficulty];
 
 	const chart = await FindSDVXChartOnInGameIDVersion(data.song_id, difficulty, context.version);

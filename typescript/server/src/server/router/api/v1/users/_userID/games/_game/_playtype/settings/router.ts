@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { RequirePermissions } from "#server/middleware/auth";
 import db from "#services/mongo/db";
 import { FormatPrError, optNull } from "#utils/prudence";
@@ -12,7 +12,7 @@ import {
 	GetScoreMetrics,
 	PrudenceZodShim,
 	type UGPTSettingsDocument,
-} from "../../../../../../../../../../../../common/src";
+} from "tachi-common";
 import { RequireAuthedAsUser } from "../../../../middleware";
 
 const router: Router = Router({ mergeParams: true });

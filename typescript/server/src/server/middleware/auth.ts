@@ -2,7 +2,7 @@ import type { RequestHandler } from "express";
 import type { Session, SessionData } from "express-session";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { TachiConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
 import { IsNullishOrEmptyStr, SplitAuthorizationHeader } from "#utils/misc";
@@ -12,7 +12,7 @@ import {
 	type APIPermissions,
 	type APITokenDocument,
 	UserAuthLevels,
-} from "../../../../common/src";
+} from "tachi-common";
 
 const GuestToken: APITokenDocument = {
 	token: null,

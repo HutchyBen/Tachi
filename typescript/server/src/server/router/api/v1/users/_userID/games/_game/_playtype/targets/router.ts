@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { GetRelevantGoals } from "#lib/targets/goals";
 import { GetParentQuests } from "#lib/targets/quests";
 import db from "#services/mongo/db";
@@ -97,7 +97,7 @@ router.get("/on-chart/:chartID", async (req, res) => {
 		game,
 		user.id,
 		new Set([chartID]),
-		logger,
+		log,
 		false,
 	);
 

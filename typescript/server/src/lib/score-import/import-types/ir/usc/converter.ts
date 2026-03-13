@@ -10,7 +10,7 @@ import {
 import db from "#services/mongo/db";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 import type { DryScore } from "../../../framework/common/types";
 import type { ConverterFunction } from "../../common/types";
 import type { IRUSCContext } from "./types";
@@ -77,7 +77,7 @@ export const ConverterIRUSC: ConverterFunction<USCClientScore, IRUSCContext> = a
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	if (
 		data.windows.perfect !== USC_DEFAULT_PERFECT ||
@@ -86,15 +86,18 @@ export const ConverterIRUSC: ConverterFunction<USCClientScore, IRUSCContext> = a
 		data.windows.miss !== USC_DEFAULT_MISS ||
 		data.windows.slam !== USC_DEFAULT_SLAM
 	) {
-		log.info(`Ignored score because hitWindows were modified.`, {
-			windows: data.windows,
-		});
+		log.info(
+			{
+				windows: data.windows,
+			},
+			`Ignored score because hitWindows were modified.`,
+		);
 		throw new InvalidScoreFailure(`HitWindows have been modified - Score is invalid.`);
 	}
 
 	// if any auto-like option is enabled, reject score.
 	if (data.options.autoFlags !== 0) {
-		log.verbose(`Ignored score because autoplay was enabled.`);
+		log.debug(`Ignored score because autoplay was enabled.`);
 		throw new InvalidScoreFailure(`Autoplay was enabled - Score is invalid.`);
 	}
 

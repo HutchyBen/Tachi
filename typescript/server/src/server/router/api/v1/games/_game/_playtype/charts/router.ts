@@ -1,5 +1,5 @@
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch-manual/converter";
 import { SearchSpecificGameSongs } from "#lib/search/search";
 import prValidate from "#server/middleware/prudence-validate";
@@ -14,8 +14,8 @@ import {
 	type integer,
 	type MatchTypeResolver,
 	type UGPTSettingsDocument,
-} from "../../../../../../../../../../common/src";
-import { PR_RESOLVER } from "../../../../../../../../../../common/src/lib/schemas";
+} from "tachi-common";
+import { PR_RESOLVER } from "tachi-common/lib/schemas";
 import chartIDRouter from "./_chartID/router";
 
 const router: Router = Router({ mergeParams: true });
@@ -140,7 +140,7 @@ router.post("/resolve", prValidate(PR_RESOLVER), async (req, res) => {
 		game,
 		playtype,
 	} as unknown as MatchTypeResolver;
-	const got = await ResolveSongAndChart(safeBody, logger);
+	const got = await ResolveSongAndChart(safeBody, log);
 
 	if (!got) {
 		return res.status(404).json({

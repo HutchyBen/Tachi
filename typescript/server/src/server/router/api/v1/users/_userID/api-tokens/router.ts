@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import prValidate from "#server/middleware/prudence-validate";
 import db from "#services/mongo/db";
 import { Random20Hex } from "#utils/misc";
@@ -7,11 +7,7 @@ import { FormatUserDoc } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
 
-import {
-	ALL_PERMISSIONS,
-	type APIPermissions,
-	type APITokenDocument,
-} from "../../../../../../../../../common/src";
+import { ALL_PERMISSIONS, type APIPermissions, type APITokenDocument } from "tachi-common";
 import { RequireSelfRequestFromUser } from "../middleware";
 
 const router: Router = Router({ mergeParams: true });

@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
 import {
 	MaimaiComboStatus,
@@ -47,7 +47,7 @@ t.test("#ConvertAPIMytMaimaiDx", (t) => {
 	t.beforeEach(ResetDBState);
 
 	function convert(modifier: any = {}) {
-		return ConvertAPIMytMaimaiDx(dmf(parsedScore, modifier), {}, "api/myt-maimaidx", logger);
+		return ConvertAPIMytMaimaiDx(dmf(parsedScore, modifier), {}, "api/myt-maimaidx", log);
 	}
 
 	t.test("Should return a dryScore on valid input.", async (t) => {

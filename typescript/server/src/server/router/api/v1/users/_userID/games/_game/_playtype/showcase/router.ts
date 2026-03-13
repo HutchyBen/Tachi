@@ -17,7 +17,7 @@ import {
 	GetGPTString,
 	GetScoreMetrics,
 	type ShowcaseStatDetails,
-} from "../../../../../../../../../../../../common/src";
+} from "tachi-common";
 
 const router: Router = Router({ mergeParams: true });
 

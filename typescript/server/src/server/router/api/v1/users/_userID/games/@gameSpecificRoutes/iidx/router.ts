@@ -16,8 +16,8 @@ import type {
 	PBScoreDocument,
 	Playtypes,
 	SongDocument,
-} from "../../../../../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../../../../../common/src/types/metrics";
+} from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
 const router: Router = Router({ mergeParams: true });
 

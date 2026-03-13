@@ -1,9 +1,9 @@
 import type { PrudenceError } from "prudence";
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 
-import { type TachiAPIClientDocument, UserAuthLevels } from "../../../../common/src";
+import { type TachiAPIClientDocument, UserAuthLevels } from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import db from "#services/mongo/db";
 import { DatabaseSchemas } from "#services/mongo/schemas";
@@ -313,12 +313,10 @@ async function LoadClients(clients: DefaultClients) {
 	});
 
 	if (!firstAdmin) {
-		log.warn(
-			`There are no admins on this instance of tachi-server. We cannot create default API Clients!
+		log.warn(`There are no admins on this instance of tachi-server. We cannot create default API Clients!
 Chances are, you're seeing this message because you just bootstrapped Tachi.
 You'll need to set a user's authLevel to ${UserAuthLevels.ADMIN}.
-If you have no users, go create an account using the frontend, then run pnpm make-user-admin 1.`,
-		);
+If you have no users, go create an account using the frontend, then run pnpm make-user-admin 1.`);
 		return;
 	}
 

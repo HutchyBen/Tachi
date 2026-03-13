@@ -7,7 +7,7 @@ import { Testing511SPA, TestingIIDXSPScore, TestingIIDXSPScorePB } from "#test-u
 import deepmerge from "deepmerge";
 import t from "tap";
 
-import type { ScoreDocument } from "../../../../../../../../../../../common/src";
+import type { ScoreDocument } from "tachi-common";
 
 t.test("GET /api/v1/users/:userID/games/:game/:playtype", (t) => {
 	t.beforeEach(ResetDBState);

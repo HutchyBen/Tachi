@@ -8,8 +8,8 @@ import {
 import { FindChartWithPTDF } from "#utils/queries/charts";
 import { FindSongOnTitle } from "#utils/queries/songs";
 
-import type { Difficulties } from "../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
+import type { Difficulties } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 import type { ConverterFunction } from "../../common/types";
 import type { MyPageRecordsParsedPB } from "./types";
 
@@ -26,7 +26,7 @@ const LAMPS: Record<number, GetEnumValue<"wacca:Single", "lamp">> = {
 const ConvertMyPageScraperRecordsCSV: ConverterFunction<
 	MyPageRecordsParsedPB,
 	EmptyObject
-> = async (data, context, importType, logger) => {
+> = async (data, context, importType, log) => {
 	// TODO: use inGameID
 	const song = await FindSongOnTitle("wacca", data.songTitle);
 

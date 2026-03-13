@@ -9,7 +9,7 @@ import db from "#services/mongo/db";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
 
-import type { Playtypes } from "../../../../../../../../../common/src";
+import type { Playtypes } from "tachi-common";
 
 import { ValidatePlaytypeFromParamFor } from "../../_game/_playtype/middleware";
 

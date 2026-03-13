@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 
 import db from "./db";
 
@@ -47,7 +47,7 @@ export async function InitSequenceDocs() {
 		},
 	];
 
-	log.verbose(
+	log.debug(
 		`Setting Counters -> ${Counters.map((e) => `${e.counterName}: ${e.value}`).join(", ")}`,
 	);
 

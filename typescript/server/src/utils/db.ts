@@ -1,6 +1,6 @@
 import type { FilterQuery } from "mongodb";
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 
 import {
@@ -14,7 +14,7 @@ import {
 	type QuestlineDocument,
 	type QuestSubscriptionDocument,
 	type ScoreDocument,
-} from "../../../common/src";
+} from "tachi-common";
 
 export async function GetNextCounterValue(counterName: string): Promise<integer> {
 	const sequenceDoc = await db.counters.findOneAndUpdate(
@@ -42,7 +42,7 @@ export async function GetNextCounterValue(counterName: string): Promise<integer>
 }
 
 export async function DecrementCounterValue(counterName: string): Promise<integer> {
-	log.verbose(`Decrementing Counter Value ${counterName}.`);
+	log.debug(`Decrementing Counter Value ${counterName}.`);
 
 	const sequenceDoc = await db.counters.findOneAndUpdate(
 		{
@@ -390,8 +390,8 @@ export async function GetChildQuests(questline: QuestlineDocument) {
 
 	if (quests.length !== questline.quests.length) {
 		log.warn(
-			`Expected to find ${questline.quests.length} quests in the database, but only found ${quests.length}.`,
 			{ questline },
+			`Expected to find ${questline.quests.length} quests in the database, but only found ${quests.length}.`,
 		);
 	}
 

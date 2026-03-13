@@ -6,7 +6,7 @@ import ResetDBState from "#test-utils/resets";
 import { Testing511SPA } from "#test-utils/test-data";
 import t from "tap";
 
-import { UserAuthLevels } from "../../../../../../../../common/src";
+import { UserAuthLevels } from "tachi-common";
 
 t.test("GET /api/v1/scores/:scoreID", (t) => {
 	t.beforeEach(ResetDBState);

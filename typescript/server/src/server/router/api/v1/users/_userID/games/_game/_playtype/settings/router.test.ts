@@ -1,4 +1,4 @@
-import type { UGPTSettingsDocument } from "../../../../../../../../../../../../common/src";
+import type { UGPTSettingsDocument } from "tachi-common";
 
 /* eslint-disable no-await-in-loop */
 import db from "#services/mongo/db";

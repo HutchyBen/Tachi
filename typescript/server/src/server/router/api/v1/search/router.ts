@@ -21,7 +21,7 @@ import {
 	type integer,
 	type SongDocument,
 	type UserDocument,
-} from "../../../../../../../common/src";
+} from "tachi-common";
 
 const router: Router = Router({ mergeParams: true });
 

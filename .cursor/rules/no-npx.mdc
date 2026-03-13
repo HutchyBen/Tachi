@@ -5,4 +5,4 @@ alwaysApply: true
 
 # No npx
 
-Never use `npx` to run anything. Use the local binary directly (e.g. `node_modules/.bin/tsc`) or use `pnpm exec` instead.
+Never use `npx` to run anything. Use the local binary directly (e.g. `node_modules/.bin/tsc`) or use `bun` instead.

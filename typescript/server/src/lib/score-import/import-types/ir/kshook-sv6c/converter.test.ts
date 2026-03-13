@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import ResetDBState from "#test-utils/resets";
 import { TestingKsHookSV6CScore } from "#test-utils/test-data";
 import t from "tap";
@@ -13,7 +13,7 @@ t.test("#ConverterIRKsHookSV6C", (t) => {
 			TestingKsHookSV6CScore,
 			{ timeReceived: 10 },
 			"ir/kshook-sv6c",
-			logger,
+			log,
 		);
 
 		t.hasStrict(res, {
@@ -56,7 +56,7 @@ t.test("#ConverterIRKsHookSV6C", (t) => {
 					{ ...TestingKsHookSV6CScore, music_id: 10000 },
 					{ timeReceived: 10 },
 					"ir/kshook-sv6c",
-					logger,
+					log,
 				),
 			"Should throw a SongOrChartNotFoundError if chart can't be found.",
 		);

@@ -6,7 +6,7 @@ import {
 	GAME_PT_CONFIGS,
 	GPTStringToV3,
 	V3ToGameGroup,
-} from "../../../common/src";
+} from "tachi-common";
 import { CreateChartID, CreateSongID, ReadCollection, WriteCollection } from "../../util";
 
 // ── Stability map ─────────────────────────────────────────────────────────────

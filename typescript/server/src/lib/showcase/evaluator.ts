@@ -8,7 +8,7 @@ import {
 	type ShowcaseStatChart,
 	type ShowcaseStatDetails,
 	type ShowcaseStatFolder,
-} from "../../../../common/src";
+} from "tachi-common";
 
 export function EvaluateShowcaseStat(
 	gpt: GPTString,

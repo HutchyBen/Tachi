@@ -19,13 +19,13 @@ import type {
 	ScoreRatingAlgorithms,
 	SessionRatingAlgorithms,
 	SpecificUserGameStats,
-} from "../../../common/src";
-import type { DerivedClassConfig } from "../../../common/src/types/game-config-utils";
+} from "tachi-common";
+import type { DerivedClassConfig } from "tachi-common/types/game-config-utils";
 import type {
 	AllConfMetrics,
 	ConfEnumScoreMetric,
 	ScoreMetricDeriver,
-} from "../../../common/src/types/metrics";
+} from "tachi-common/types/metrics";
 
 /**
  * Validate this chart-specific metric. This should return a string representing an

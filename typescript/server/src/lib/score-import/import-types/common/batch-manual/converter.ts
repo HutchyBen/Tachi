@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import db from "#services/mongo/db";
@@ -28,7 +28,7 @@ import {
 	type ProvidedMetrics,
 	type SongDocument,
 	type Versions,
-} from "../../../../../../../common/src";
+} from "tachi-common";
 import {
 	InternalFailure,
 	InvalidScoreFailure,
@@ -70,13 +70,13 @@ export const ConverterBatchManual: ConverterFunction<BatchManualScore, BatchManu
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	const { game, playtype } = context;
 
 	const resolver = BatchManualScoreToResolver(data, context);
 
-	const got = await ResolveSongAndChart(resolver, logger);
+	const got = await ResolveSongAndChart(resolver, log);
 
 	if (got === null) {
 		throw new SongOrChartNotFoundFailure(
@@ -281,9 +281,12 @@ export async function ResolveSongAndChart(
 			const config = GetGamePTConfig("sdvx", "Single");
 
 			if (config.difficulties.type === "DYNAMIC") {
-				log.error(`SDVX has 'DYNAMIC' difficulties set. This is completely unexpected.`, {
-					config,
-				});
+				log.error(
+					{
+						config,
+					},
+					`SDVX has 'DYNAMIC' difficulties set. This is completely unexpected.`,
+				);
 				throw new ScoreImportFatalError(
 					500,
 					`SDVX has 'DYNAMIC' difficulties set. This is completely unexpected.`,

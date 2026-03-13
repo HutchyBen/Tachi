@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import ResetDBState from "#test-utils/resets";
 import { TestingWaccaPupaExp, TestingWaccaPupaSong } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
@@ -26,7 +26,7 @@ t.test("#ConvertMyPageScraperRecordsCSV", (t) => {
 			deepmerge(parsedScore, g),
 			{},
 			"file/mypagescraper-records-csv",
-			logger,
+			log,
 		);
 	}
 

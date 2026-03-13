@@ -3,7 +3,7 @@
 
 import chalk from "chalk";
 
-import { type GameGroup, v3AllGames, type V3Game, V3ToGameGroup } from "../../common/src";
+import { type GameGroup, v3AllGames, type V3Game, V3ToGameGroup } from "tachi-common";
 import { ReadCollection } from "../util";
 import { FormatFunctions } from "./test-utils";
 

@@ -12,7 +12,7 @@ import { XMLParser } from "fast-xml-parser";
 import fs from "fs";
 import path from "path";
 
-import { type ChartDocument, type SongDocument } from "../../../common/src";
+import { type ChartDocument, type SongDocument } from "tachi-common";
 import { MutateCollection, ReadCollection } from "../../util";
 
 interface XmlNotes {

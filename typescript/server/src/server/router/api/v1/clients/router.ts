@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
 import db from "#services/mongo/db";
@@ -14,7 +14,7 @@ import {
 	type APIPermissions,
 	type TachiAPIClientDocument,
 	UserAuthLevels,
-} from "../../../../../../../common/src";
+} from "tachi-common";
 import { GetClientFromID, RequireOwnershipOfClient } from "./middleware";
 
 const router: Router = Router({ mergeParams: true });
@@ -333,13 +333,13 @@ router.delete("/:clientID", GetClientFromID, RequireOwnershipOfClient, async (re
 
 	log.info(`received request to destroy API Client ${client.name} (${client.clientID})`);
 
-	log.verbose(`Removing API Client ${clientName}.`);
+	log.debug(`Removing API Client ${clientName}.`);
 	await db["api-clients"].remove({
 		clientID: client.clientID,
 	});
 	log.info(`Removed API Client ${clientName}.`);
 
-	log.verbose(`Removing all associated api tokens.`);
+	log.debug(`Removing all associated api tokens.`);
 	const result = await db["api-tokens"].remove({
 		fromOAuth2Client: client.clientID,
 	});

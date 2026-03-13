@@ -93,7 +93,7 @@ import {
 	type UserGameStatsSnapshotDocument,
 	type UserNameChangeDocument,
 	type UserSettingsDocument,
-} from "../../../common/src";
+} from "tachi-common";
 import { buildChartIdMap, importSeeds } from "./load-seeds-pg";
 
 // ──────────────────────────────────────────────────────────────────────────────

@@ -2,7 +2,7 @@
 
 import readline from "readline";
 
-import { type ChartDocument, type SongDocument } from "../../../common/src";
+import { type ChartDocument, type SongDocument } from "tachi-common";
 import { ReadCollection, WriteCollection } from "../../util";
 
 type OngekiChart = ChartDocument<"ongeki:Single">;

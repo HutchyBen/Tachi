@@ -1,6 +1,6 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
 import { dmf } from "#test-utils/misc";
 import t from "tap";
@@ -61,7 +61,7 @@ t.test("#ConverterAPICGMuseca", (t) => {
 	};
 
 	const convert = (modifant: Partial<CGMusecaScore> = {}) =>
-		ConverterAPICGMuseca(mkInput(modifant), context, "api/cg-dev-museca", logger);
+		ConverterAPICGMuseca(mkInput(modifant), context, "api/cg-dev-museca", log);
 
 	t.test("Valid Input", async (t) => {
 		const res = await convert();

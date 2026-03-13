@@ -1,7 +1,7 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 
-import type { GameGroup, ShowcaseStatDetails } from "../../../../common/src";
+import type { GameGroup, ShowcaseStatDetails } from "tachi-common";
 
 export async function GetRelatedStatDocuments(stat: ShowcaseStatDetails, game: GameGroup) {
 	switch (stat.mode) {
@@ -9,14 +9,14 @@ export async function GetRelatedStatDocuments(stat: ShowcaseStatDetails, game: G
 			const chart = await db.anyCharts[game].findOne({ chartID: stat.chartID });
 
 			if (!chart) {
-				log.error(`This stat refers to a chart that does not exist?`, { stat });
+				log.error({ stat }, `This stat refers to a chart that does not exist?`);
 				throw new Error(`Stat refers to a chart that does not exist? ${stat.chartID}.`);
 			}
 
 			const song = await db.anySongs[game].findOne({ id: chart.songID });
 
 			if (!song) {
-				log.error(`Song-Chart Mismatch - ${chart.songID}.`, { chart });
+				log.error({ chart }, `Song-Chart Mismatch - ${chart.songID}.`);
 				throw new Error(`Song-Chart Mismatch on ${chart.songID}.`);
 			}
 
@@ -26,8 +26,8 @@ export async function GetRelatedStatDocuments(stat: ShowcaseStatDetails, game: G
 		case "folder": {
 			if (Array.isArray(stat.folderID)) {
 				log.warn(
-					`This stat is corrupt and attempted to use multiple folderIDs. This is no longer supported. Check that migrations have ran.`,
 					{ stat },
+					`This stat is corrupt and attempted to use multiple folderIDs. This is no longer supported. Check that migrations have ran.`,
 				);
 				throw new Error(`Legacy FolderIDs used in showcase stat.`);
 			}
@@ -37,7 +37,7 @@ export async function GetRelatedStatDocuments(stat: ShowcaseStatDetails, game: G
 			});
 
 			if (!folder) {
-				log.error(`This stat refers to a folder that does not exist?`, { stat });
+				log.error({ stat }, `This stat refers to a folder that does not exist?`);
 				throw new Error(`Stat refers to folder that no longer exists.`);
 			}
 
@@ -46,8 +46,8 @@ export async function GetRelatedStatDocuments(stat: ShowcaseStatDetails, game: G
 
 		default: {
 			log.error(
-				`Invalid stat - has nonsense stat.mode of ${(stat as ShowcaseStatDetails).mode}.`,
 				{ stat },
+				`Invalid stat - has nonsense stat.mode of ${(stat as ShowcaseStatDetails).mode}.`,
 			);
 			throw new Error(`Invalid stat.mode in stat?`);
 		}

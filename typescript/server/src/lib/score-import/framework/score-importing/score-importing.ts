@@ -1,12 +1,8 @@
 import type { ScoreImportJob } from "#lib/score-import/worker/types";
 
-import { AppendLogCtx, type KtLogger } from "#lib/logger/log.js";
+import { AppendLogCtx, type KtLogger } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import { ClassToObject } from "#utils/misc";
-
-import type { ConverterFnSuccessReturn, ConverterFunction } from "../../import-types/common/types";
-import type { DryScore } from "../common/types";
-
 import {
 	type ChartDocument,
 	type GameGroup,
@@ -16,7 +12,11 @@ import {
 	type integer,
 	type ScoreDocument,
 	type SongDocument,
-} from "../../../../../../common/src";
+} from "tachi-common";
+
+import type { ConverterFnSuccessReturn, ConverterFunction } from "../../import-types/common/types";
+import type { DryScore } from "../common/types";
+
 import {
 	type AmbiguousTitleFailure,
 	type ConverterFailure,
@@ -47,7 +47,7 @@ export async function ImportAllIterableData<D, C>(
 	log: KtLogger,
 	job: ScoreImportJob | undefined,
 ): Promise<Array<ImportProcessingInfo>> {
-	log.verbose("Getting Blacklist...");
+	log.debug("Getting Blacklist...");
 
 	// @optimisable: could filter harder with score.game and score.playtype
 	// stuff.
@@ -57,7 +57,7 @@ export async function ImportAllIterableData<D, C>(
 		})
 	).map((e) => e.scoreID);
 
-	log.verbose(`Starting Data Processing...`);
+	log.debug(`Starting Data Processing...`);
 
 	const processedResults = [];
 
@@ -76,7 +76,7 @@ export async function ImportAllIterableData<D, C>(
 				context,
 				game,
 				blacklist,
-				logger,
+				log,
 			),
 		);
 
@@ -89,21 +89,21 @@ export async function ImportAllIterableData<D, C>(
 
 	// We need to filter out nulls, which we don't care for (these are neither successes or failures)
 
-	log.verbose(`Finished Importing Data (${processedResults.length} datapoints).`);
+	log.debug(`Finished Importing Data (${processedResults.length} datapoints).`);
 	log.debug(`Removing null returns...`);
 
 	const datapoints = processedResults.filter((e) => e !== null) as Array<ImportProcessingInfo>;
 
 	log.debug(`Removed null from results.`);
 
-	log.verbose(`received ${datapoints.length} returns, from ${processedResults.length} data.`);
+	log.debug(`received ${datapoints.length} returns, from ${processedResults.length} data.`);
 
 	// Flush the score queue out after finishing most of the import. This ensures no scores get left in the
 	// queue.
 	const emptied = await InsertQueue(userID);
 
 	if (emptied !== 0 && emptied !== null) {
-		log.verbose(`Emptied ${emptied} documents from score queue.`);
+		log.debug(`Emptied ${emptied} documents from score queue.`);
 	}
 
 	return datapoints;
@@ -128,9 +128,9 @@ export async function ImportIterableDatapoint<D, C>(
 	log: KtLogger,
 ): Promise<ImportProcessingInfo | null> {
 	try {
-		const cfnReturn = await ConverterFunction(data, context, importType, logger);
+		const cfnReturn = await ConverterFunction(data, context, importType, log);
 
-		const res = await ProcessSuccessfulConverterReturn(userID, cfnReturn, blacklist, logger);
+		const res = await ProcessSuccessfulConverterReturn(userID, cfnReturn, blacklist, log);
 
 		return res;
 	} catch (e) {
@@ -139,9 +139,12 @@ export async function ImportIterableDatapoint<D, C>(
 		// if this isn't a converterFailure, it's just a general error.
 		// Some sort of internal issue?
 		if (!IsConverterFailure(err)) {
-			log.error(`Unknown error thrown from converter, Ignoring.`, {
-				err,
-			});
+			log.error(
+				{
+					err,
+				},
+				`Unknown error thrown from converter, Ignoring.`,
+			);
 			return {
 				success: false,
 				type: "InternalError",
@@ -159,12 +162,15 @@ export async function ImportIterableDatapoint<D, C>(
 			case "SongOrChartNotFound": {
 				const dnfErr = err as SongOrChartNotFoundFailure<ImportTypes>;
 
-				log.info(`SongOrChartNotFoundFailure: ${dnfErr.message}`, {
-					err: ClassToObject(dnfErr),
-					hideFromConsole: ["cfnReturn"],
-				});
+				log.info(
+					{
+						err: ClassToObject(dnfErr),
+						hideFromConsole: ["cfnReturn"],
+					},
+					`SongOrChartNotFoundFailure: ${dnfErr.message}`,
+				);
 
-				log.debug("Inserting orphan...", { cfnReturn: dnfErr });
+				log.debug({ cfnReturn: dnfErr }, "Inserting orphan...");
 
 				const insertOrphan = await OrphanScore(
 					dnfErr.importType,
@@ -173,13 +179,16 @@ export async function ImportIterableDatapoint<D, C>(
 					dnfErr.converterContext,
 					dnfErr.message,
 					game,
-					logger,
+					log,
 				);
 
 				if (insertOrphan.success) {
-					log.debug("Orphan inserted successfully.", {
-						orphanID: insertOrphan.orphanID,
-					});
+					log.debug(
+						{
+							orphanID: insertOrphan.orphanID,
+						},
+						"Orphan inserted successfully.",
+					);
 					return {
 						success: false,
 						type: "SongOrChartNotFound",
@@ -192,7 +201,7 @@ export async function ImportIterableDatapoint<D, C>(
 					};
 				}
 
-				log.debug(`Orphan already exists.`, { orphanID: insertOrphan.orphanID });
+				log.debug({ orphanID: insertOrphan.orphanID }, `Orphan already exists.`);
 
 				return {
 					success: false,
@@ -205,10 +214,13 @@ export async function ImportIterableDatapoint<D, C>(
 			}
 
 			case "InvalidScore": {
-				log.info(`InvalidScoreFailure: ${err.message}`, {
-					err: ClassToObject(err),
-					hideFromConsole: ["cfnReturn"],
-				});
+				log.info(
+					{
+						err: ClassToObject(err),
+						hideFromConsole: ["cfnReturn"],
+					},
+					`InvalidScoreFailure: ${err.message}`,
+				);
 				return {
 					success: false,
 					type: "InvalidDatapoint",
@@ -218,7 +230,7 @@ export async function ImportIterableDatapoint<D, C>(
 			}
 
 			case "Internal": {
-				log.error(`Internal error occured.`, { err: ClassToObject(err) });
+				log.error({ err: ClassToObject(err) }, `Internal error occured.`);
 				return {
 					success: false,
 					type: "InternalError",
@@ -232,7 +244,7 @@ export async function ImportIterableDatapoint<D, C>(
 			case "AmbiguousTitle": {
 				const atErr = err as AmbiguousTitleFailure;
 
-				log.info(`AmbiguousTitleFailure: ${err.message}`, { err: ClassToObject(err) });
+				log.info({ err: ClassToObject(err) }, `AmbiguousTitleFailure: ${err.message}`);
 
 				return {
 					type: "AmbiguousTitle",
@@ -248,9 +260,12 @@ export async function ImportIterableDatapoint<D, C>(
 				return null;
 
 			default: {
-				log.warn(`Unknown error returned as ConverterFailure, Ignoring.`, {
-					err: ClassToObject(err),
-				});
+				log.warn(
+					{
+						err: ClassToObject(err),
+					},
+					`Unknown error returned as ConverterFailure, Ignoring.`,
+				);
 				return {
 					success: false,
 					type: "InternalError",
@@ -275,7 +290,7 @@ export async function ProcessSuccessfulConverterReturn(
 		cfnReturn.chart,
 		cfnReturn.song,
 		blacklist,
-		logger,
+		log,
 		forceImmediateImport,
 	);
 
@@ -315,18 +330,18 @@ async function HydrateCheckAndInsertScore(
 	chart: ChartDocument,
 	song: SongDocument,
 	blacklist: Array<string>,
-	importlog: KtLogger,
+	importLog: KtLogger,
 	force = false,
 ): Promise<ScoreDocument | null> {
 	const gptString = GetGPTString(dryScore.game, chart.playtype);
 
-	const scoreID = CreateScoreID(gptString, userID, dryScore, chart.chartID, importLogger);
+	const scoreID = CreateScoreID(gptString, userID, dryScore, chart.chartID, importLog);
 
-	// sub-context the logger so the below logs are more accurate
-	const logger = AppendLogCtx(scoreID, importLogger);
+	// sub-context thelog so the below logs are more accurate
+	const log = AppendLogCtx(scoreID, importLog);
 
 	if (blacklist.length && blacklist.includes(scoreID)) {
-		log.verbose("Skipped score, as it was on the blacklist.");
+		log.debug("Skipped score, as it was on the blacklist.");
 		return null;
 	}
 
@@ -345,17 +360,17 @@ async function HydrateCheckAndInsertScore(
 	);
 
 	if (existingScore) {
-		log.verbose(`Skipped score.`);
+		log.debug(`Skipped score.`);
 		return null;
 	}
 
 	// If this users score queue
 	if (GetScoreQueueMaybe(userID)?.scoreIDSet.has(scoreID) === true) {
-		log.verbose(`Skipped score.`);
+		log.debug(`Skipped score.`);
 		return null;
 	}
 
-	const score = HydrateScore(userID, dryScore, chart, song, scoreID, logger);
+	const score = HydrateScore(userID, dryScore, chart, song, scoreID, log);
 
 	ValidateScore(score, chart);
 
@@ -369,7 +384,7 @@ async function HydrateCheckAndInsertScore(
 
 	// this is a last resort for avoiding doubled imports
 	if (res === null) {
-		log.verbose(`Skipped score - Race Condition protection triggered.`);
+		log.debug(`Skipped score - Race Condition protection triggered.`);
 		return null;
 	}
 

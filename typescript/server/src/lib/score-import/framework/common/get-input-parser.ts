@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 import type {
 	ImportTypeContextMap,
 	ImportTypeDataMap,
@@ -8,7 +8,7 @@ import type { ScoreImportJobData } from "#lib/score-import/worker/types";
 
 import { Parsers } from "#lib/score-import/import-types/parsers";
 
-import type { ImportTypes } from "../../../../../../common/src";
+import type { ImportTypes } from "tachi-common";
 
 export function GetInputParser<I extends ImportTypes>(jobData: ScoreImportJobData<I>) {
 	// Retrieve the set parser function for this import type.
@@ -20,7 +20,7 @@ export function GetInputParser<I extends ImportTypes>(jobData: ScoreImportJobDat
 		// actually take rest args. However, this is the only way to
 		// achieve the dynamic passing we need to, so lets just override
 		// it here.
-		ParserFunction(...jobData.parserArguments, logger) as Promise<
+		ParserFunction(...jobData.parserArguments, log) as Promise<
 			ParserFunctionReturns<ImportTypeDataMap[I], ImportTypeContextMap[I]>
 		>;
 

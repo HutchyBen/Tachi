@@ -5,7 +5,7 @@ import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
 
-import type { NotificationDocument } from "../../../../../../../../../common/src";
+import type { NotificationDocument } from "tachi-common";
 
 t.test("GET /api/v1/users/:userID/notifications", async (t) => {
 	t.beforeEach(ResetDBState);

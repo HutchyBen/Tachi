@@ -1,7 +1,7 @@
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
 
-import type { ScoreDocument } from "../../../../common/src";
+import type { ScoreDocument } from "tachi-common";
 
 import db from "./db";
 

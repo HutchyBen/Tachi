@@ -44,12 +44,12 @@ import {
 	type UserGameStatsSnapshotDocument,
 	type UserNameChangeDocument,
 	type UserSettingsDocument,
-} from "../../../../common/src";
+} from "tachi-common";
 
 // ^ These rules are disabled for good reason. We have to deal with some very nonsensical types here
 // so we just disable these rules. I know, it sucks, but we'll live.
 import { ONE_MINUTE, ONE_SECOND } from "#lib/constants/time";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { Env, ServerConfig } from "#lib/setup/config";
 import { GetMillisecondsSince } from "#utils/misc";
 
@@ -60,7 +60,7 @@ if (Env.NODE_ENV === "test") {
 	dbName = `testingdb`;
 }
 
-log.info(`Connecting to database ${Env.MONGO_URL}/${dbName}...`, { bootInfo: true });
+log.info({ bootInfo: true }, `Connecting to database ${Env.MONGO_URL}/${dbName}...`);
 const dbtime = process.hrtime.bigint();
 
 export const monkDB = monk(`${Env.MONGO_URL}/${dbName}`, {
@@ -76,9 +76,12 @@ export const monkDB = monk(`${Env.MONGO_URL}/${dbName}`, {
 /* istanbul ignore next */
 monkDB
 	.then(() => {
-		log.info(`Database connection successful: took ${GetMillisecondsSince(dbtime)}ms`, {
-			bootInfo: true,
-		});
+		log.info(
+			{
+				bootInfo: true,
+			},
+			`Database connection successful: took ${GetMillisecondsSince(dbtime)}ms`,
+		);
 	})
 	.catch((err) => {
 		log.fatal(`Failed to connect to database: ${err}`);

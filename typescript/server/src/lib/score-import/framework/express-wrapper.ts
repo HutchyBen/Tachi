@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { Random20Hex } from "#utils/misc";
 
 import type {
@@ -7,7 +7,7 @@ import type {
 	integer,
 	SuccessfulAPIResponse,
 	UnsuccessfulAPIResponse,
-} from "../../../../../common/src";
+} from "tachi-common";
 import type { ParserArguments } from "../worker/types";
 
 import { MakeScoreImport } from "./score-import";

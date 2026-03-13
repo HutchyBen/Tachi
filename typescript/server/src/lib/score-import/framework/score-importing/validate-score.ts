@@ -2,7 +2,7 @@ import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implement
 import { RunValidators } from "#game-implementations/games/_common";
 import { ONE_HOUR } from "#lib/constants/time";
 
-import type { ConfScoreMetric } from "../../../../../../common/src/types/metrics";
+import type { ConfScoreMetric } from "tachi-common/types/metrics";
 
 import {
 	type ChartDocument,
@@ -10,7 +10,7 @@ import {
 	GetGPTString,
 	type GPTString,
 	type ScoreDocument,
-} from "../../../../../../common/src";
+} from "tachi-common";
 import { InvalidScoreFailure } from "../common/converter-failures";
 
 /**

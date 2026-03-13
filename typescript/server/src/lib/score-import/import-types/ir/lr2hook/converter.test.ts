@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { dmf } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestingLR2HookScore } from "#test-utils/test-data";
@@ -15,7 +15,7 @@ t.test("#ConverterLR2Hook", (t) => {
 			TestingLR2HookScore,
 			{ timeReceived: 10_000 },
 			"ir/lr2hook",
-			logger,
+			log,
 		);
 
 		t.hasStrict(res, {
@@ -92,7 +92,7 @@ t.test("#ConverterLR2Hook", (t) => {
 			} as any),
 			{ timeReceived: 10_000 },
 			"ir/lr2hook",
-			logger,
+			log,
 		);
 
 		t.hasStrict(res, {
@@ -148,7 +148,7 @@ t.test("#ConverterLR2Hook", (t) => {
 			} as any),
 			{ timeReceived: 10 },
 			"ir/lr2hook",
-			logger,
+			log,
 		);
 
 		t.hasStrict(res, {
@@ -193,7 +193,7 @@ t.test("#ConverterLR2Hook", (t) => {
 				} as any),
 				{ timeReceived: 10 },
 				"ir/lr2hook",
-				logger,
+				log,
 			);
 
 			t.hasStrict(res, {
@@ -232,7 +232,7 @@ t.test("#ConverterLR2Hook", (t) => {
 					{ ...TestingLR2HookScore, md5: "nonsense_md5" },
 					{ timeReceived: 10 },
 					"ir/lr2hook",
-					logger,
+					log,
 				),
 			"Should throw a SongOrChartNotFoundError if chart can't be found.",
 		);

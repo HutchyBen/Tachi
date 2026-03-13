@@ -4,11 +4,6 @@ import type { ScoreImportJob } from "#lib/score-import/worker/types";
 import db from "#services/mongo/db";
 import { GetMillisecondsSince } from "#utils/misc";
 import { GetUserWithID } from "#utils/user";
-
-import type { ConverterFunction, ImportInputParser } from "../../import-types/common/types";
-import type { ClassProvider } from "../calculated-data/types";
-import type { ChartIDPlaytypeMap, ScorePlaytypeMap } from "../common/types";
-
 import {
 	type GameGroup,
 	GetGameGroupConfig,
@@ -19,10 +14,15 @@ import {
 	type integer,
 	type Playtype,
 	type UserDocument,
-} from "../../../../../../common/src";
+} from "tachi-common";
+
+import type { ConverterFunction, ImportInputParser } from "../../import-types/common/types";
+import type { ClassProvider } from "../calculated-data/types";
+import type { ChartIDPlaytypeMap, ScorePlaytypeMap } from "../common/types";
+
 import { Converters } from "../../import-types/converters";
 import { InternalFailure } from "../common/converter-failures";
-import { CreateScoreLogger } from "../common/import-log";
+import { CreateScoreLogger } from "../common/import-logger";
 import { GetAndUpdateUsersGoals } from "../goals/goals";
 import { CheckAndSetOngoingImportLock, UnsetOngoingImportLock } from "../import-locks/lock";
 import { ProcessPBs } from "../pb/process-pbs";
@@ -140,8 +140,8 @@ export default async function ScoreImportMain<D, C>(
 
 			if (r.deletedCount !== 0) {
 				log.error(
-					`An error was thrown from ImportAllIterableData, which has resulted in a potential partial-score-import. Undoing scores inserted from this import.`,
 					{ err },
+					`An error was thrown from ImportAllIterableData, which has resulted in a potential partial-score-import. Undoing scores inserted from this import.`,
 				);
 				log.error(
 					`Removed ${r.deletedCount} scores from the database to undo partial-import.`,
@@ -217,7 +217,7 @@ export default async function ScoreImportMain<D, C>(
 		if (scoreIDs.length > 500) {
 			log.info(logMessage);
 		} else if (scoreIDs.length > 1) {
-			log.verbose(logMessage);
+			log.debug(logMessage);
 		} else {
 			log.debug(logMessage);
 		}

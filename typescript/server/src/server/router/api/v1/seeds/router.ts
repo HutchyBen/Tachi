@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { PullDatabaseSeeds } from "#lib/seeds/repo";
 import { Env } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
@@ -39,11 +39,9 @@ const LOCAL_SEEDS_PATH = Env.NODE_ENV === "test" ? TEST_SEEDS_PATH : LOCAL_DEV_S
 
 if (Env.NODE_ENV === "dev" || Env.NODE_ENV === "test") {
 	if (!fsSync.existsSync(LOCAL_SEEDS_PATH)) {
-		log.error(
-			`Failed to load seeds routes, could not find any seeds/collections checked out at ${LOCAL_SEEDS_PATH}.
+		log.error(`Failed to load seeds routes, could not find any seeds/collections checked out at ${LOCAL_SEEDS_PATH}.
 These were expected to be present as this is local-development!
-All seeds routes will return 500.`,
-		);
+All seeds routes will return 500.`);
 	}
 }
 
@@ -70,7 +68,7 @@ router.get("/has-uncommitted-changes", async (req, res) => {
 	const { stdout, stderr } = await asyncExec(`git status --porcelain`);
 
 	if (stderr) {
-		log.error(`Failed to read git status --porcelain.`, { stderr });
+		log.error({ stderr }, `Failed to read git status --porcelain.`);
 		return res.status(500).json({
 			success: false,
 			description: `Failed to check current git status.`,
@@ -307,7 +305,7 @@ router.get(
 				body: commit,
 			});
 		} catch (err) {
-			log.info(`Failed to fetch commit.`, { err });
+			log.info({ err }, `Failed to fetch commit.`);
 			return res.status(404).json({
 				success: false,
 				description: `Failed to fetch commit. It may not exist.`,

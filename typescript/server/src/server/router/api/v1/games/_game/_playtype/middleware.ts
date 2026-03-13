@@ -6,7 +6,7 @@ import {
 	type GameGroup,
 	GetGameGroupConfig,
 	type Playtype,
-} from "../../../../../../../../../common/src";
+} from "tachi-common";
 
 export const ValidatePlaytypeFromParam: RequestHandler = (req, res, next) => {
 	const game = GetTachiData(req, "game");

@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { TestingLR2HookScore } from "#test-utils/test-data";
 import { ApplyNTimes } from "#utils/misc";
 import deepmerge from "deepmerge";
@@ -9,14 +9,14 @@ import { ParseLR2Hook } from "./parser";
 
 t.test("#ParseLR2Hook", (t) => {
 	const assertFail = (data: any, message: string) => {
-		t.throws(() => ParseLR2Hook(data, logger), message);
+		t.throws(() => ParseLR2Hook(data, log), message);
 	};
 
 	const assertSuccess = (data: any, message: string) => {
 		try {
-			t.doesNotThrow(() => ParseLR2Hook(data, logger), message);
+			t.doesNotThrow(() => ParseLR2Hook(data, log), message);
 
-			const res = ParseLR2Hook(data, logger);
+			const res = ParseLR2Hook(data, log);
 
 			t.equal(res.game, "bms");
 			t.type(res.context.timeReceived, "number");

@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
@@ -7,7 +7,7 @@ let s3: S3Client | null = null;
 if (ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE === "S3_BUCKET") {
 	const data = ServerConfig.CDN_CONFIG.SAVE_LOCATION;
 
-	log.info(`Using S3_BUCKET as CDN location.`, { bootInfo: true });
+	log.info({ bootInfo: true }, `Using S3_BUCKET as CDN location.`);
 	s3 = new S3Client({
 		endpoint: data.ENDPOINT,
 		region:
@@ -27,8 +27,8 @@ export function PushToS3(path: string, content: string | Buffer) {
 
 	if (!s3 || ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE !== "S3_BUCKET") {
 		log.error(
-			`Attempted to push to S3, but CDN_CONFIG.SAVE_LOCATION.TYPE was not S3_BUCKET?`,
 			ServerConfig.CDN_CONFIG,
+			`Attempted to push to S3, but CDN_CONFIG.SAVE_LOCATION.TYPE was not S3_BUCKET?`,
 		);
 		throw new Error(
 			`Attempted to push to S3, but CDN_CONFIG.SAVE_LOCATION.TYPE was not S3_BUCKET?`,
@@ -50,8 +50,8 @@ export function PushToS3(path: string, content: string | Buffer) {
 export function DeleteFromS3(path: string) {
 	if (!s3 || ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE !== "S3_BUCKET") {
 		log.error(
-			`Attempted to delete from S3, but CDN_CONFIG.SAVE_LOCATION.TYPE was not S3_BUCKET?`,
 			ServerConfig.CDN_CONFIG,
+			`Attempted to delete from S3, but CDN_CONFIG.SAVE_LOCATION.TYPE was not S3_BUCKET?`,
 		);
 		throw new Error(
 			`Attempted to delete from S3, but CDN_CONFIG.SAVE_LOCATION.TYPE was not S3_BUCKET?`,

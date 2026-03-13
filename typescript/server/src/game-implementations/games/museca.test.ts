@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -6,12 +6,7 @@ import ResetDBState from "#test-utils/resets";
 import { TestingMusecaChart } from "#test-utils/test-data";
 import t from "tap";
 
-import {
-	MUSECA_GRADES,
-	MUSECA_LAMPS,
-	type ProvidedMetrics,
-	type ScoreData,
-} from "../../../../common/src";
+import { MUSECA_GRADES, MUSECA_LAMPS, type ProvidedMetrics, type ScoreData } from "tachi-common";
 import { MUSECA_IMPL } from "./museca";
 
 const baseMetrics: ProvidedMetrics["museca:Single"] = {
@@ -117,7 +112,7 @@ t.test("MUSECA Implementation", (t) => {
 				}),
 			);
 
-			t.hasStrict(await CreatePBDoc("museca:Single", 1, TestingMusecaChart, logger), {
+			t.hasStrict(await CreatePBDoc("museca:Single", 1, TestingMusecaChart, log), {
 				composedFrom: [{ name: "Best Score" }, { name: "Best Lamp", scoreID: "bestLamp" }],
 				scoreData: {
 					score: mockScore.scoreData.score,

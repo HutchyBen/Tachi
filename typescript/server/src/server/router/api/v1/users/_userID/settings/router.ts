@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import prValidate from "#server/middleware/prudence-validate";
 import db from "#services/mongo/db";
 import { GetTachiData } from "#utils/req-tachi-data";
@@ -91,8 +91,8 @@ router.patch(
 
 		if (!settings) {
 			log.error(
-				`User ${FormatUserDoc(user)} has no settings, yet just successfully updated them?`,
 				{ user },
+				`User ${FormatUserDoc(user)} has no settings, yet just successfully updated them?`,
 			);
 			return res.status(500).json({
 				success: false,

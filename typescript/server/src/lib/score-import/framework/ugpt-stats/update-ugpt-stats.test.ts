@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import { TestingIIDXSPScorePB } from "#test-utils/test-data";
@@ -21,7 +21,7 @@ t.test("#UpdateUsersGamePlaytypeStats", (t) => {
 			await db["game-stats"].remove({});
 			await db["game-settings"].remove({});
 
-			const res = await UpdateUsersGamePlaytypeStats("iidx", "SP", 1, null, logger);
+			const res = await UpdateUsersGamePlaytypeStats("iidx", "SP", 1, null, log);
 
 			t.strictSame(res, [], "Should return an empty object");
 
@@ -77,7 +77,7 @@ t.test("#UpdateUsersGamePlaytypeStats", (t) => {
 			),
 		);
 
-		const res = await UpdateUsersGamePlaytypeStats("iidx", "SP", 1, null, logger);
+		const res = await UpdateUsersGamePlaytypeStats("iidx", "SP", 1, null, log);
 
 		t.strictSame(res, [], "Should return an empty object");
 
@@ -115,7 +115,7 @@ t.test("#UpdateUsersGamePlaytypeStats", (t) => {
 			"SP",
 			1,
 			() => ({ dan: "KAIDEN" }),
-			logger,
+			log,
 		);
 
 		t.strictSame(
@@ -169,7 +169,7 @@ t.test("#UpdateUsersGamePlaytypeStats", (t) => {
 			"SP",
 			1,
 			() => ({ dan: "KAIDEN" }),
-			logger,
+			log,
 		);
 
 		t.strictSame(

@@ -3,7 +3,7 @@ import type { FilterQuery } from "mongodb";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
-import { log, type KtLogger } from "#lib/logger/log.js";
+import { log, type KtLogger } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import { GetFolderChartIDs } from "#utils/folder";
 import fjsh from "fast-json-stable-hash";
@@ -22,7 +22,7 @@ import {
 	type Playtype,
 	type QuestDocument,
 	type QuestSubscriptionDocument,
-} from "../../../../common/src";
+} from "tachi-common";
 import { CreateGoalTitle as CreateGoalName, ValidateGoalChartsAndCriteria } from "./goal-utils";
 
 export interface EvaluatedGoalReturn {
@@ -191,10 +191,10 @@ export async function EvaluateGoalForUser(
 			// note that this seemingly nonsensical type assertion is because typescript has whittled down
 			// goal.criteria (correctly) to 'never', but we want to log if something somehow ends up here (it shouldn't).
 			log.warn(
+				{ goal },
 				`Invalid goal: ${goal.goalID}, unknown criteria.mode ${
 					(goal.criteria as GoalDocument["criteria"]).mode
 				}, ignoring.`,
-				{ goal },
 			);
 
 			return null;
@@ -381,7 +381,7 @@ export async function SubscribeToGoal(
 		return { ...userAlreadySubscribed, wasAssignedStandalone: true };
 	}
 
-	const result = await EvaluateGoalForUser(goalDocument, userID, logger);
+	const result = await EvaluateGoalForUser(goalDocument, userID, log);
 
 	if (!result) {
 		throw new Error(`Couldn't evaluate goal? See previous logs.`);
@@ -614,7 +614,7 @@ export async function GetRelevantGoals(
 
 	const goalSubs = await db["goal-subs"].find(gsQuery);
 
-	log.verbose(`Found user has ${goalSubs.length} goals.`);
+	log.debug(`Found user has ${goalSubs.length} goals.`);
 
 	if (!goalSubs.length) {
 		return { goals: [], goalSubsMap: new Map() };

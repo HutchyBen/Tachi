@@ -17,7 +17,7 @@ import {
 	type PBScoreDocument,
 	type Playtype,
 	type Versions,
-} from "../../../../common/src";
+} from "tachi-common";
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
 async function GetBestJubilityOnSongs(

@@ -7,7 +7,7 @@ import {
 	type Difficulties,
 	type integer,
 	type SongDocument,
-} from "../../../common/src";
+} from "tachi-common";
 import { CreateChartID, ReadCollection, WriteCollection } from "../../util";
 
 type LocalizedText = { en: string } & Record<string, string>;

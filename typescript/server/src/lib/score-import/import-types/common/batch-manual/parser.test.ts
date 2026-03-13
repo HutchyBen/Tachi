@@ -1,9 +1,9 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { EscapeStringRegexp } from "#utils/misc";
 import deepmerge from "deepmerge";
 import t from "tap";
 
-import type { BatchManual } from "../../../../../../../common/src";
+import type { BatchManual } from "tachi-common";
 
 import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 import { ParseBatchManualFromObject as ParserFn } from "./parser";
@@ -40,7 +40,7 @@ function dm(sc: any) {
 t.test("#ParserFn", (t) => {
 	t.test("Non-Object", (t) => {
 		t.throws(
-			() => ParserFn(false, "file/batch-manual", false, logger),
+			() => ParserFn(false, "file/batch-manual", false, log),
 			new ScoreImportFatalError(
 				400,
 				"Invalid BATCH-MANUAL (Not an object, received boolean.)",
@@ -53,7 +53,7 @@ t.test("#ParserFn", (t) => {
 
 	t.test("No Header", (t) => {
 		t.throws(
-			() => ParserFn({ scores: [] }, "file/batch-manual", false, logger),
+			() => ParserFn({ scores: [] }, "file/batch-manual", false, log),
 			new ScoreImportFatalError(
 				400,
 				"Could not retrieve meta.game - is this valid BATCH-MANUAL?",
@@ -71,7 +71,7 @@ t.test("#ParserFn", (t) => {
 					{ scores: [], meta: { service: "foo", playtype: "SP" } },
 					"file/batch-manual",
 					false,
-					logger,
+					log,
 				),
 			new ScoreImportFatalError(
 				400,
@@ -90,7 +90,7 @@ t.test("#ParserFn", (t) => {
 					{ scores: [], meta: { service: "foo", game: "iidx" } },
 					"file/batch-manual",
 					false,
-					logger,
+					log,
 				),
 			new ScoreImportFatalError(
 				400,
@@ -109,7 +109,7 @@ t.test("#ParserFn", (t) => {
 					{ scores: [], meta: { service: "foo", game: "invalid_game", playtype: "SP" } },
 					"file/batch-manual",
 					false,
-					logger,
+					log,
 				),
 			"Should throw an error.",
 		);
@@ -120,7 +120,7 @@ t.test("#ParserFn", (t) => {
 					{ scores: [], meta: { service: "foo", game: 123, playtype: "SP" } },
 					"file/batch-manual",
 					false,
-					logger,
+					log,
 				),
 			"Should throw an error.",
 		);
@@ -135,7 +135,7 @@ t.test("#ParserFn", (t) => {
 					{ scores: [], meta: { service: "1", game: "iidx", playtype: "SP" } },
 					"file/batch-manual",
 					false,
-					logger,
+					log,
 				),
 			new ScoreImportFatalError(
 				400,
@@ -150,7 +150,7 @@ t.test("#ParserFn", (t) => {
 					{ scores: [], meta: { service: 1, game: "iidx", playtype: "SP" } },
 					"file/batch-manual",
 					false,
-					logger,
+					log,
 				),
 			new ScoreImportFatalError(
 				400,
@@ -167,7 +167,7 @@ t.test("#ParserFn", (t) => {
 			{ scores: [], meta: { service: "foo", game: "iidx", playtype: "SP" } },
 			"file/batch-manual",
 			false,
-			logger,
+			log,
 		);
 
 		t.hasStrict(res, {
@@ -219,7 +219,7 @@ t.test("#ParserFn", (t) => {
 				} as BatchManual,
 				"file/batch-manual",
 				false,
-				logger,
+				log,
 			);
 
 			t.hasStrict(res, {
@@ -268,7 +268,7 @@ t.test("#ParserFn", (t) => {
 				dm({ optional: { bp: 10, gauge: 100, gaugeHistory: null, comboBreak: 7 } }),
 				"file/batch-manual",
 				false,
-				logger,
+				log,
 			);
 
 			t.hasStrict(res, {
@@ -304,7 +304,7 @@ t.test("#ParserFn", (t) => {
 				dm({ judgements: { pgreat: 1, great: null, bad: 0 } }),
 				"file/batch-manual",
 				false,
-				logger,
+				log,
 			);
 
 			t.hasStrict(res, {
@@ -343,13 +343,13 @@ t.test("#ParserFn", (t) => {
 				} as BatchManual,
 				"file/batch-manual",
 				false,
-				logger,
+				log,
 			);
 
 			t.not(res.classProvider, null);
 
-			t.strictSame(res.classProvider!("iidx:SP", 1, {}, logger), { dan: "KAIDEN" });
-			t.strictSame(res.classProvider!("iidx:DP", 1, {}, logger), {});
+			t.strictSame(res.classProvider!("iidx:SP", 1, {}, log), { dan: "KAIDEN" });
+			t.strictSame(res.classProvider!("iidx:DP", 1, {}, log), {});
 
 			t.end();
 		});
@@ -363,7 +363,7 @@ t.test("#ParserFn", (t) => {
 				} as BatchManual,
 				"file/batch-manual",
 				false,
-				logger,
+				log,
 			);
 
 			t.equal(res.classProvider, null);
@@ -394,7 +394,7 @@ t.test("#ParserFn", (t) => {
 					},
 					"file/batch-manual",
 					false,
-					logger,
+					log,
 				);
 
 			t.throws(
@@ -409,7 +409,7 @@ t.test("#ParserFn", (t) => {
 		});
 
 		t.test("Non-numeric score", (t) => {
-			const fn = () => ParserFn(dm({ score: "123" }), "file/batch-manual", false, logger);
+			const fn = () => ParserFn(dm({ score: "123" }), "file/batch-manual", false, log);
 
 			t.throws(
 				fn,
@@ -424,7 +424,7 @@ t.test("#ParserFn", (t) => {
 
 		t.test("Invalid timeAchieved", (t) => {
 			const fn = () =>
-				ParserFn(dm({ timeAchieved: "string" }), "file/batch-manual", false, logger);
+				ParserFn(dm({ timeAchieved: "string" }), "file/batch-manual", false, log);
 
 			t.throws(
 				fn,
@@ -439,7 +439,7 @@ t.test("#ParserFn", (t) => {
 					dm({ timeAchieved: 1_620_768_609_637 / 1000 }),
 					"file/batch-manual",
 					false,
-					logger,
+					log,
 				);
 
 			t.throws(
@@ -455,7 +455,7 @@ t.test("#ParserFn", (t) => {
 		});
 
 		t.test("TimeAchieved of 0 should be legal.", (t) => {
-			const res = ParserFn(dm({ timeAchieved: 0 }), "file/batch-manual", false, logger);
+			const res = ParserFn(dm({ timeAchieved: 0 }), "file/batch-manual", false, log);
 
 			t.hasStrict(res, {
 				game: "iidx",
@@ -482,7 +482,7 @@ t.test("#ParserFn", (t) => {
 
 		t.test("Invalid Identifier", (t) => {
 			// this is not a valid playtype for IIDX
-			const fn = () => ParserFn(dm({ identifier: null }), "file/batch-manual", false, logger);
+			const fn = () => ParserFn(dm({ identifier: null }), "file/batch-manual", false, log);
 
 			t.throws(
 				fn,
@@ -494,12 +494,7 @@ t.test("#ParserFn", (t) => {
 
 		t.test("Invalid MatchType", (t) => {
 			const fn = () =>
-				ParserFn(
-					dm({ matchType: "Invalid_MatchType" }),
-					"file/batch-manual",
-					false,
-					logger,
-				);
+				ParserFn(dm({ matchType: "Invalid_MatchType" }), "file/batch-manual", false, log);
 
 			t.throws(
 				fn,
@@ -514,12 +509,12 @@ t.test("#ParserFn", (t) => {
 
 		t.test("Invalid judgements", (t) => {
 			const fn = () =>
-				ParserFn(dm({ judgements: { not_key: 123 } }), "file/batch-manual", false, logger);
+				ParserFn(dm({ judgements: { not_key: 123 } }), "file/batch-manual", false, log);
 
 			t.throws(fn, mockErr("scores[0].judgements | Invalid Key not_key"));
 
 			const fn2 = () =>
-				ParserFn(dm({ judgements: { pgreat: "123" } }), "file/batch-manual", false, logger);
+				ParserFn(dm({ judgements: { pgreat: "123" } }), "file/batch-manual", false, log);
 
 			t.throws(
 				fn2,
@@ -533,22 +528,22 @@ t.test("#ParserFn", (t) => {
 
 		t.test("Invalid optional", (t) => {
 			const fn = () =>
-				ParserFn(dm({ hitMeta: { not_key: 123 } }), "file/batch-manual", false, logger);
+				ParserFn(dm({ hitMeta: { not_key: 123 } }), "file/batch-manual", false, log);
 
 			t.throws(fn, mockErr("scores[0].hitMeta | Unexpected"));
 
 			const fn2 = () =>
-				ParserFn(dm({ hitMeta: { bp: -1 } }), "file/batch-manual", false, logger);
+				ParserFn(dm({ hitMeta: { bp: -1 } }), "file/batch-manual", false, log);
 
 			t.throws(fn2, mockErr("scores[0].hitMeta.bp"));
 
 			const fn3 = () =>
-				ParserFn(dm({ optional: { not_key: 123 } }), "file/batch-manual", false, logger);
+				ParserFn(dm({ optional: { not_key: 123 } }), "file/batch-manual", false, log);
 
 			t.throws(fn3, mockErr("scores[0].optional | Unexpected"));
 
 			const fn4 = () =>
-				ParserFn(dm({ optional: { bp: -1 } }), "file/batch-manual", false, logger);
+				ParserFn(dm({ optional: { bp: -1 } }), "file/batch-manual", false, log);
 
 			t.throws(fn4, mockErr("scores[0].optional.bp"));
 
@@ -569,7 +564,7 @@ t.test("#ParserFn", (t) => {
 							} as BatchManual,
 							"file/batch-manual",
 							false,
-							logger,
+							log,
 						),
 					mockErr(
 						"Invalid BATCH-MANUAL: classes.dan | Expected any of KYU_7, KYU_6, KYU_5, KYU_4, KYU_3, KYU_2, KYU_1, DAN_1, DAN_2, DAN_3, DAN_4, DAN_5, DAN_6, DAN_7, DAN_8, DAN_9, DAN_10, CHUUDEN, KAIDEN. | Received UNKNOWN [type: string]",
@@ -590,7 +585,7 @@ t.test("#ParserFn", (t) => {
 							} as BatchManual,
 							"file/batch-manual",
 							false,
-							logger,
+							log,
 						),
 					mockErr("classes | Unexpected properties inside object: stageUp"),
 				);
@@ -609,7 +604,7 @@ t.test("#ParserFn", (t) => {
 							} as unknown as BatchManual,
 							"file/batch-manual",
 							false,
-							logger,
+							log,
 						),
 					mockErr(
 						"Invalid BATCH-MANUAL: classes.dan | Expected any of KYU_7, KYU_6, KYU_5, KYU_4, KYU_3, KYU_2, KYU_1, DAN_1, DAN_2, DAN_3, DAN_4, DAN_5, DAN_6, DAN_7, DAN_8, DAN_9, DAN_10, CHUUDEN, KAIDEN. | Received 9 [type: number].",
@@ -630,7 +625,7 @@ t.test("#ParserFn", (t) => {
 							} as unknown,
 							"file/batch-manual",
 							false,
-							logger,
+							log,
 						),
 					mockErr("classes | Unexpected properties inside object: unknownDan."),
 				);
@@ -647,7 +642,7 @@ t.test("#ParserFn", (t) => {
 							} as unknown,
 							"file/batch-manual",
 							false,
-							logger,
+							log,
 						),
 					mockErr(
 						"Invalid BATCH-MANUAL: classes | Unexpected properties inside object: stageUp.",

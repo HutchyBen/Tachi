@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -6,9 +6,9 @@ import ResetDBState from "#test-utils/resets";
 import { TestingPopnChart } from "#test-utils/test-data";
 import t from "tap";
 
-import type { ProvidedMetrics, ScoreData } from "../../../../common/src";
+import type { ProvidedMetrics, ScoreData } from "tachi-common";
 
-import { POPN_9B_CONF } from "../../../../common/src/config/game-support/popn";
+import { POPN_9B_CONF } from "tachi-common/config/game-support/popn";
 import { POPN_9B_IMPL } from "./popn";
 
 const baseMetrics: ProvidedMetrics["popn:9B"] = {
@@ -174,7 +174,7 @@ t.test("Pop'n Implementation", (t) => {
 				}),
 			);
 
-			t.hasStrict(await CreatePBDoc("popn:9B", 1, TestingPopnChart, logger), {
+			t.hasStrict(await CreatePBDoc("popn:9B", 1, TestingPopnChart, log), {
 				composedFrom: [
 					{ name: "Best Score" },
 					{ name: "Best Clear", scoreID: "bestClearMedal" },

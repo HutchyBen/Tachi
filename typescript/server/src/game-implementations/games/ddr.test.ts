@@ -8,7 +8,7 @@ import {
 	DDR_LAMPS,
 	type ProvidedMetrics,
 	type ScoreData,
-} from "../../../../common/src";
+} from "tachi-common";
 import { TestSnapshot } from "../../test-utils/single-process-snapshot";
 import { DDR_IMPL } from "./ddr";
 import { IIDX_DP_IMPL, IIDX_SP_IMPL } from "./iidx";

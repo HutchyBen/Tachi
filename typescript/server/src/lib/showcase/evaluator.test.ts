@@ -5,7 +5,7 @@ import { CreateFolderChartLookup } from "#utils/folder";
 import deepmerge from "deepmerge";
 import t from "tap";
 
-import { IIDX_LAMPS } from "../../../../common/src";
+import { IIDX_LAMPS } from "tachi-common";
 import { EvaluateShowcaseStat } from "./evaluator";
 
 /* eslint-disable no-return-await */

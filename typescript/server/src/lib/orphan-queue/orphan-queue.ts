@@ -1,6 +1,6 @@
 import type { FilterQuery } from "mongodb";
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import { GetNextCounterValue } from "#utils/db";
 import { DedupeArr } from "#utils/misc";
@@ -12,7 +12,7 @@ import type {
 	integer,
 	OrphanChartDocument,
 	SongDocument,
-} from "../../../../common/src";
+} from "tachi-common";
 
 /**
  * Handles an orphan queue request.
@@ -46,7 +46,7 @@ export async function HandleOrphanQueue<GPT extends GPTString>(
 	);
 
 	if (!orphanChart) {
-		log.verbose(`Received unknown chart ${chartName}, orphaning.`);
+		log.debug(`Received unknown chart ${chartName}, orphaning.`);
 
 		await db["orphan-chart-queue"].insert({
 			gptString,
@@ -71,7 +71,7 @@ export async function HandleOrphanQueue<GPT extends GPTString>(
 		log.info(`Song ${chartName} was unorphaned by userIDs ${uniqueUsersArr.join(", ")}.`);
 		const songID = await GetNextCounterValue(`${game}-song-id`);
 
-		log.verbose(`${chartName} has been assigned songID ${songID}.`);
+		log.debug(`${chartName} has been assigned songID ${songID}.`);
 
 		const { songDoc, chartDoc } = orphanChart;
 
@@ -90,7 +90,7 @@ export async function HandleOrphanQueue<GPT extends GPTString>(
 
 	// otherwise, update the state of this orphan.
 
-	log.verbose(`UserID ${userID} played ${chartName}, which is now at ${playcount} plays.`);
+	log.debug(`UserID ${userID} played ${chartName}, which is now at ${playcount} plays.`);
 	await db["orphan-chart-queue"].update(
 		{
 			_id: orphanChart._id,
@@ -132,7 +132,7 @@ export async function DeorphanIfInQueue<GPT extends GPTString>(
 	log.info(`Song ${songDoc.title} was unorphaned forcefully.`);
 	const songID = await GetNextCounterValue(`${game}-song-id`);
 
-	log.verbose(`${songDoc.title} has been assigned songID ${songID}.`);
+	log.debug(`${songDoc.title} has been assigned songID ${songID}.`);
 
 	songDoc.id = songID;
 	chartDoc.songID = songID;

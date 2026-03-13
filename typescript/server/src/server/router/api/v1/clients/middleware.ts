@@ -4,7 +4,7 @@ import { Env } from "#lib/setup/config";
 import db from "#services/mongo/db";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 
-import type { TachiAPIClientDocument } from "../../../../../../../common/src";
+import type { TachiAPIClientDocument } from "tachi-common";
 
 export const GetClientFromID: RequestHandler = async (req, res, next) => {
 	const client = await db["api-clients"].findOne(

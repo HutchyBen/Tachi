@@ -16,7 +16,7 @@ import {
 	type GoalDocument,
 	type GPTString,
 	type Playtype,
-} from "../../../../common/src";
+} from "tachi-common";
 
 export async function CreateGoalTitle(
 	charts: GoalDocument["charts"],

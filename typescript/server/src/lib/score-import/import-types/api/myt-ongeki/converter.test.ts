@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
 import {
 	OngekiBattleScoreRank,
@@ -51,7 +51,7 @@ t.test("#ConvertAPIMytOngeki", (t) => {
 	t.beforeEach(ResetDBState);
 
 	function convert(modifier: any = {}) {
-		return ConvertAPIMytOngeki(dmf(parsedScore, modifier), {}, "api/myt-ongeki", logger);
+		return ConvertAPIMytOngeki(dmf(parsedScore, modifier), {}, "api/myt-ongeki", log);
 	}
 
 	t.test("Should return a dryScore on valid input.", async (t) => {

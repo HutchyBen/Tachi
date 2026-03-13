@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { UpdateUsersGamePlaytypeStats } from "#lib/score-import/framework/ugpt-stats/update-ugpt-stats";
 import db from "#services/mongo/db";
 import { FormatUserDoc } from "#utils/user";
@@ -18,15 +18,13 @@ export async function RecalcGameProfiles(filter = {}) {
 			throw new Error(`User ${profile.userID} does not exist.`);
 		}
 
-		log.verbose(
-			`Recalcing ${FormatUserDoc(user)}'s ${profile.game} ${profile.playtype} stats.`,
-		);
+		log.debug(`Recalcing ${FormatUserDoc(user)}'s ${profile.game} ${profile.playtype} stats.`);
 		await UpdateUsersGamePlaytypeStats(
 			profile.game,
 			profile.playtype,
 			profile.userID,
 			null,
-			logger,
+			log,
 		);
 	}
 

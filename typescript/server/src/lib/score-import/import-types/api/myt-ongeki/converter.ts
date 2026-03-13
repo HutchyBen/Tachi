@@ -15,7 +15,7 @@ import {
 import { FindChartOnInGameID } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { ScoreData } from "../../../../../../../common/src";
+import type { ScoreData } from "tachi-common";
 import type { ConverterFunction } from "../../common/types";
 import type { MytOngekiScore } from "./types";
 
@@ -70,7 +70,7 @@ const ConvertAPIMytOngeki: ConverterFunction<MytOngekiScore, EmptyObject> = asyn
 	data,
 	_context,
 	importType,
-	logger,
+	log,
 ) => {
 	if (data.info === undefined || data.judge === undefined) {
 		throw new InvalidScoreFailure("Failed to receive score data from MYT API");
@@ -106,7 +106,7 @@ const ConvertAPIMytOngeki: ConverterFunction<MytOngekiScore, EmptyObject> = asyn
 	const song = await FindSongOnID("ongeki", chart.songID);
 
 	if (song === null) {
-		log.error(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`, { chart });
+		log.error({ chart }, `Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
 		throw new InternalFailure(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
 	}
 

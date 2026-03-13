@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
 import { MockJSONFetch } from "#test-utils/mock-fetch";
@@ -6,7 +6,7 @@ import ResetDBState from "#test-utils/resets";
 import deepmerge from "deepmerge";
 import t from "tap";
 
-import type { KaiAuthDocument } from "../../../../../../../common/src";
+import type { KaiAuthDocument } from "tachi-common";
 
 import { CreateKaiReauthFunction } from "./reauth";
 
@@ -38,7 +38,7 @@ t.test("#CreateKaiReauthFunction", (t) => {
 
 		await db["kai-auth-tokens"].insert(deepmerge(authDoc, {}));
 
-		const reauthFn = CreateKaiReauthFunction("FLO", authDoc, logger, mockFetch);
+		const reauthFn = CreateKaiReauthFunction("FLO", authDoc, log, mockFetch);
 
 		t.equal(reauthFn.length, 0, "Should return a function with arity 0.");
 
@@ -63,7 +63,7 @@ t.test("#CreateKaiReauthFunction", (t) => {
 
 		await db["kai-auth-tokens"].insert(deepmerge(authDoc, {}));
 
-		const reauthFn = CreateKaiReauthFunction("FLO", authDoc, logger, mockFetch);
+		const reauthFn = CreateKaiReauthFunction("FLO", authDoc, log, mockFetch);
 
 		t.rejects(() => reauthFn(), {
 			message: "An error has occured while attempting reauthentication.",
@@ -97,7 +97,7 @@ t.test("#CreateKaiReauthFunction", (t) => {
 
 		await db["kai-auth-tokens"].insert(deepmerge(authDoc, {}));
 
-		const reauthFn = CreateKaiReauthFunction("FLO", authDoc, logger, mockFetch);
+		const reauthFn = CreateKaiReauthFunction("FLO", authDoc, log, mockFetch);
 
 		t.rejects(() => reauthFn(), {
 			message: "An error has occured while attempting reauthentication.",

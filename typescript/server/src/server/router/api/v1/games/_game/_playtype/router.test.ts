@@ -10,7 +10,7 @@ import {
 	GetGamePTConfig,
 	type UserDocument,
 	type UserGameStats,
-} from "../../../../../../../../../common/src";
+} from "tachi-common";
 
 t.test("GET /api/v1/games/:game/:playtype", (t) => {
 	t.test("Should return information about the game:playtype.", async (t) => {

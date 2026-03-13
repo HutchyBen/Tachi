@@ -8,7 +8,7 @@ import {
 	type Difficulties,
 	type integer,
 	type SongDocument,
-} from "../../../common/src";
+} from "tachi-common";
 import {
 	CreateChartID,
 	GetFreshSongIDGenerator,

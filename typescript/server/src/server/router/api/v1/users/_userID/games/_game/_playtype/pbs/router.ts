@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { GetRivalUsers } from "#lib/rivals/rivals";
 import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch-manual/converter";
 import { SearchSpecificGameSongsAndCharts } from "#lib/search/search";
@@ -12,12 +12,8 @@ import { GetUGPT } from "#utils/req-tachi-data";
 import { FilterChartsAndSongs, GetPBOnChart, GetScoreIDsFromComposed } from "#utils/scores";
 import { GetUsersWithIDs } from "#utils/user";
 import { Router } from "express";
-
-import {
-	GetGamePTConfig,
-	type MatchTypeResolver,
-} from "../../../../../../../../../../../../common/src";
-import { PR_RESOLVER } from "../../../../../../../../../../../../common/src/lib/schemas";
+import { GetGamePTConfig, type MatchTypeResolver } from "tachi-common";
+import { PR_RESOLVER } from "tachi-common/lib/schemas";
 
 const router: Router = Router({ mergeParams: true });
 
@@ -310,7 +306,7 @@ router.post("/resolve", prValidate(PR_RESOLVER), async (req, res) => {
 		game,
 		playtype,
 	} as unknown as MatchTypeResolver;
-	const got = await ResolveSongAndChart(safeBody, logger);
+	const got = await ResolveSongAndChart(safeBody, log);
 
 	if (!got) {
 		return res.status(404).json({

@@ -10,7 +10,7 @@ import {
 	type integer,
 	type SongDocument,
 	type Versions,
-} from "../../../../common/src";
+} from "tachi-common";
 import {
 	CreateChartID,
 	GetFreshSongIDGenerator,
@@ -212,7 +212,7 @@ async function ParseIIDXMDB() {
 
 		for (const diffName of diffNames) {
 			if (isInBlacklist(`C${inp.songID}-${diffName}`)) {
-				log.verbose(
+				log.debug(
 					`Ignored ${song.title} (${inp.songID}) ${diffName} as it was in the blacklist.`,
 				);
 				continue;

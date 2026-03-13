@@ -1,6 +1,6 @@
 import type { ICollection } from "monk";
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { Env, ServerConfig } from "#lib/setup/config";
 import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
 import db, { type StaticDatabases } from "#services/mongo/db";
@@ -9,7 +9,7 @@ import fs from "fs";
 import path from "path";
 import rimraf from "rimraf";
 
-import type { GameGroup } from "../../../common/src";
+import type { GameGroup } from "tachi-common";
 
 // im installing an entire library for rm rf...
 

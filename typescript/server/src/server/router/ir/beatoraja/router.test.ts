@@ -5,7 +5,7 @@ import { MockBeatorajaBMSScore, MockBeatorajaPMSScore } from "#test-utils/test-d
 import deepmerge from "deepmerge";
 import t from "tap";
 
-import type { UserDocument } from "../../../../../../common/src";
+import type { UserDocument } from "tachi-common";
 
 const NEW_SHA256 = "769359ebb55d3d6dff3b5c6a07ec03be9b87beda1ffb0c07d7ea99590605a732";
 const NEW_MD5 = "d0f497c0f955e7edfb0278f446cdb6f8";

@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { Env, ServerConfig } from "#lib/setup/config";
 import bunyan from "bunyan";
 import nodemailer, { type SentMessageInfo, type Transporter } from "nodemailer";
@@ -6,7 +6,7 @@ import nodemailer, { type SentMessageInfo, type Transporter } from "nodemailer";
 let transporter: Transporter | undefined;
 
 if (ServerConfig.EMAIL_CONFIG) {
-	log.info(`Connecting to email server...`, { bootInfo: true });
+	log.info({ bootInfo: true }, `Connecting to email server...`);
 	const conf = ServerConfig.EMAIL_CONFIG;
 
 	try {
@@ -21,20 +21,23 @@ if (ServerConfig.EMAIL_CONFIG) {
 
 		transporter.verify((err) => {
 			if (err) {
-				log.fatal(`Could not connect to email server.`, { err });
+				log.fatal({ err }, `Could not connect to email server.`);
 				throw err;
 			} else {
-				log.info(`Successfully connected to email server.`, { bootInfo: true });
+				log.info({ bootInfo: true }, `Successfully connected to email server.`);
 			}
 		});
 	} catch (err) {
-		log.fatal(`Failed to create email client.`, { err });
+		log.fatal({ err }, `Failed to create email client.`);
 		throw err;
 	}
 } else {
-	log.warn(`No EMAIL_CONFIG present in conf, emails will not be sent from the server.`, {
-		bootInfo: true,
-	});
+	log.warn(
+		{
+			bootInfo: true,
+		},
+		`No EMAIL_CONFIG present in conf, emails will not be sent from the server.`,
+	);
 }
 
 export function SendEmail(
@@ -53,7 +56,7 @@ export function SendEmail(
 		return;
 	}
 
-	log.verbose(`Sending email to ${to}.`);
+	log.debug(`Sending email to ${to}.`);
 
 	return transporter
 		.sendMail({
@@ -66,11 +69,14 @@ export function SendEmail(
 			headers: transporter.options.headers,
 		})
 		.catch((err: unknown) => {
-			log.info(`Failed to send email to ${to}.`, {
-				err,
-				subject,
-				textContent,
-				htmlContent,
-			});
+			log.info(
+				{
+					err,
+					subject,
+					textContent,
+					htmlContent,
+				},
+				`Failed to send email to ${to}.`,
+			);
 		});
 }

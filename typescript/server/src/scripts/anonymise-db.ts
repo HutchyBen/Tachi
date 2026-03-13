@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { execSync } from "child_process";
 import { Command } from "commander";
 import monk from "monk";
@@ -52,7 +52,7 @@ async function AnonymiseDB(to: string) {
 		},
 	);
 
-	log.info(`Stripped private info.`, { r1 });
+	log.info({ r1 }, `Stripped private info.`);
 
 	const r2 = await clonedDB.get("users").update(
 		{},
@@ -75,7 +75,7 @@ async function AnonymiseDB(to: string) {
 		},
 	);
 
-	log.info(`Stripped username info.`, { r2 });
+	log.info({ r2 }, `Stripped username info.`);
 
 	const r3 = await clonedDB.get("sessions").update(
 		{},
@@ -92,7 +92,7 @@ async function AnonymiseDB(to: string) {
 		},
 	);
 
-	log.info(`Stripped session info.`, { r3 });
+	log.info({ r3 }, `Stripped session info.`);
 
 	const whitelist = [
 		"bms-course-lookup",
@@ -149,9 +149,6 @@ if (require.main === module) {
 	if (!path.includes("/anon-")) {
 		log.error(
 			`Tried to clone to and anonymise ${path}, which is illegal. Anonymised DBs must start with anon-.`,
-			() => {
-				process.exit(1);
-			},
 		);
 	} else {
 		AnonymiseDB(path)
@@ -160,9 +157,7 @@ if (require.main === module) {
 				process.exit(0);
 			})
 			.catch((err: unknown) => {
-				log.error(`Failed to anonymise database.`, { err }, () => {
-					process.exit(1);
-				});
+				log.error({ err }, `Failed to anonymise database.`);
 			});
 	}
 }

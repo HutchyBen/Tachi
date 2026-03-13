@@ -1,5 +1,5 @@
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { BulkSendNotification } from "#lib/notifications/notifications";
 import db from "#services/mongo/db";
 
@@ -11,7 +11,7 @@ import type {
 	Playtype,
 	QuestDocument,
 	QuestSubscriptionDocument,
-} from "../../../../common/src";
+} from "tachi-common";
 
 import {
 	type EvaluatedGoalReturn,
@@ -43,17 +43,20 @@ export async function GetGoalsInQuest(quest: QuestDocument) {
 
 	if (goals.length !== goalIDs.length) {
 		log.error(
-			`Quest ${quest.name} has ${goalIDs.length} goals registered, but we could only find ${goals.length} in the database?`,
 			{ goals: goals.length, quest, goalIDs: goalIDs.length },
+			`Quest ${quest.name} has ${goalIDs.length} goals registered, but we could only find ${goals.length} in the database?`,
 		);
 		throw new Error(`Quest is corrupt. Not the right amount of goals in db?`);
 	}
 
 	// this shouldn't happen, but if it does it's recoverable by just ignoring it.
 	if (goalIDs.length < 2) {
-		log.warn(`Quest ${quest.name} resolves to less than 2 goals. Isn't a valid quest?`, {
-			quest,
-		});
+		log.warn(
+			{
+				quest,
+			},
+			`Quest ${quest.name} resolves to less than 2 goals. Isn't a valid quest?`,
+		);
 	}
 
 	return goals;
@@ -162,12 +165,12 @@ export async function EvaluateQuestProgress(userID: integer, quest: QuestDocumen
 				};
 			}
 
-			const result = await EvaluateGoalForUser(goal, userID, logger);
+			const result = await EvaluateGoalForUser(goal, userID, log);
 
 			if (!result) {
 				log.error(
-					`Failed to calculate ${userID} result for goal '${goal.name}'. Is the goal valid?`,
 					{ goal, quest },
+					`Failed to calculate ${userID} result for goal '${goal.name}'. Is the goal valid?`,
 				);
 
 				throw new Error(`Goal inside quest is corrupt.`);

@@ -4,7 +4,7 @@ import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileAvgBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
 
-import { type GPTStrings, IIDXLIKE_GBOUNDARIES } from "../../../../common/src";
+import { type GPTStrings, IIDXLIKE_GBOUNDARIES } from "tachi-common";
 import {
 	GoalFmtPercent,
 	GoalOutOfFmtPercent,

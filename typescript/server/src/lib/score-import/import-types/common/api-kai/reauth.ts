@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ServerConfig } from "#lib/setup/config";
@@ -6,7 +6,7 @@ import db from "#services/mongo/db";
 import nodeFetch from "#utils/fetch";
 import { p } from "prudence";
 
-import type { KaiAuthDocument } from "../../../../../../../common/src";
+import type { KaiAuthDocument } from "tachi-common";
 
 import { GetKaiTypeClientCredentials, KaiTypeToBaseURL } from "./utils";
 
@@ -53,7 +53,7 @@ export function CreateKaiReauthFunction(
 				headers: { "Content-Type": "application/x-www-form-urlencoded" },
 			});
 		} catch (err) {
-			log.error(`Unexpected error while fetching reauth?`, { res, err });
+			log.error({ res, err }, `Unexpected error while fetching reauth?`);
 			throw new ScoreImportFatalError(
 				500,
 				"An error has occured while attempting reauthentication.",
@@ -74,7 +74,7 @@ export function CreateKaiReauthFunction(
 				);
 			}
 
-			log.error(`Unexpected ${res.status} error while fetching reauth?`, { res, text });
+			log.error({ res, text }, `Unexpected ${res.status} error while fetching reauth?`);
 			throw new ScoreImportFatalError(
 				500,
 				"An error has occured while attempting reauthentication.",
@@ -87,7 +87,7 @@ export function CreateKaiReauthFunction(
 		try {
 			json = (await res.json()) as unknown;
 		} catch (err) {
-			log.error(`Invalid JSON body in successful reauth response.`, { res, err });
+			log.error({ res, err }, `Invalid JSON body in successful reauth response.`);
 			throw new ScoreImportFatalError(
 				500,
 				"An error has occured while attempting reauthentication.",
@@ -97,7 +97,7 @@ export function CreateKaiReauthFunction(
 		const err = p(json, REAUTH_SCHEMA, {}, { allowExcessKeys: true, throwOnNonObject: false });
 
 		if (err) {
-			log.error(`Invalid JSON body in successful reauth response.`, { err, json });
+			log.error({ err, json }, `Invalid JSON body in successful reauth response.`);
 			throw new ScoreImportFatalError(
 				500,
 				"An error has occured while attempting reauthentication.",

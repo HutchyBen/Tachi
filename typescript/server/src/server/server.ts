@@ -2,12 +2,12 @@ import connectRedis from "connect-redis";
 import "express-async-errors";
 import express, { type Express } from "express";
 
-import type { integer } from "../../../common/src";
+import type { integer } from "tachi-common";
 // THIS IMPORT **MUST** GO HERE. DO NOT MOVE IT. IT MUST OCCUR BEFORE ANYTHING HAPPENS WITH EXPRESS
 // BUT AFTER EXPRESS IS IMPORTED.
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RedisClient } from "#services/redis/redis";
 import { IsNonEmptyString, IsRecord } from "#utils/misc";
@@ -21,7 +21,7 @@ import mainRouter from "./router/router";
 let store;
 
 if (Env.NODE_ENV !== "test") {
-	log.info("Connecting ExpressSession to Redis.", { bootInfo: true });
+	log.info({ bootInfo: true }, "Connecting ExpressSession to Redis.");
 	const RedisStore = connectRedis(expressSession);
 
 	store = new RedisStore({
@@ -56,9 +56,12 @@ const userSessionMiddleware = expressSession({
 const app: Express = express();
 
 if (Env.NODE_ENV !== "production" && IsNonEmptyString(ServerConfig.CLIENT_DEV_SERVER)) {
-	log.warn(`Enabling CORS requests from ${ServerConfig.CLIENT_DEV_SERVER}.`, {
-		bootInfo: true,
-	});
+	log.warn(
+		{
+			bootInfo: true,
+		},
+		`Enabling CORS requests from ${ServerConfig.CLIENT_DEV_SERVER}.`,
+	);
 
 	// Note: we have to assign it here to make sure it doesn't get modified!
 	// If we try and use ServerConfig.CLIENT_DEV_SERVER inside the callback, TS rightly
@@ -96,9 +99,12 @@ if (Env.NODE_ENV !== "production" && IsNonEmptyString(ServerConfig.CLIENT_DEV_SE
 	app.options("*", (req, res) => res.send());
 
 	if (Env.NODE_ENV !== "test") {
-		log.info("Enabling Helmet, as no CLIENT_DEV_SERVER was set, or we are in production.", {
-			bootInfo: true,
-		});
+		log.info(
+			{
+				bootInfo: true,
+			},
+			"Enabling Helmet, as no CLIENT_DEV_SERVER was set, or we are in production.",
+		);
 	}
 
 	app.use(helmet());
@@ -121,7 +127,7 @@ app.set("query parser", "simple");
 // taken from https://nodejs.org/api/process.html#process_event_unhandledrejection
 // to avoid future deprecation.
 process.on("unhandledRejection", (reason, promise) => {
-	// @ts-expect-error reason is an error, and the logger can handle errors
+	// @ts-expect-error reason is an error, and thelog can handle errors
 	// it just refuses.
 	log.error(reason, { promise });
 });
@@ -156,14 +162,17 @@ if (
 ) {
 	if (Env.NODE_ENV === "production") {
 		log.warn(
-			`Running LOCAL_FILESYSTEM OWN_CDN in production. Consider making a separate process handle your CDN for performance.`,
 			{ bootInfo: true },
+			`Running LOCAL_FILESYSTEM OWN_CDN in production. Consider making a separate process handle your CDN for performance.`,
 		);
 	}
 
-	log.info(`Running own CDN at ${ServerConfig.CDN_CONFIG.SAVE_LOCATION.LOCATION}.`, {
-		bootInfo: true,
-	});
+	log.info(
+		{
+			bootInfo: true,
+		},
+		`Running own CDN at ${ServerConfig.CDN_CONFIG.SAVE_LOCATION.LOCATION}.`,
+	);
 
 	app.use("/cdn", express.static(ServerConfig.CDN_CONFIG.SAVE_LOCATION.LOCATION));
 	app.get("/cdn/*", (req, res) => res.status(404).send("No content here."));
@@ -180,18 +189,21 @@ const MAIN_ERR_HANDLER: express.ErrorRequestHandler = (err, req, res, _next) => 
 		const expErr: ExpressJSONErr = err as ExpressJSONErr;
 
 		if (expErr.status === 400 && "body" in expErr) {
-			log.info(`JSON Parsing Error?`, {
-				url: req.originalUrl,
+			log.info(
+				{
+					url: req.originalUrl,
 
-				userID: req[SYMBOL_TACHI_API_AUTH]?.userID,
-			});
+					userID: req[SYMBOL_TACHI_API_AUTH]?.userID,
+				},
+				`JSON Parsing Error?`,
+			);
 			return res.status(400).send({ success: false, description: err.message });
 		}
 
 		// else, this isn't a JSON parsing error
 	}
 
-	log.error(`MAIN_ERR_HANDLER hit by request.`, { url: req.originalUrl, body: req.body });
+	log.error({ url: req.originalUrl, body: req.body }, `MAIN_ERR_HANDLER hit by request.`);
 
 	const unknownErr = err as unknown;
 
@@ -202,11 +214,14 @@ const MAIN_ERR_HANDLER: express.ErrorRequestHandler = (err, req, res, _next) => 
 		});
 	}
 
-	log.error("Fatal error propagated to server root? ", {
-		err: unknownErr,
-		url: req.originalUrl,
-		authInfo: req[SYMBOL_TACHI_API_AUTH],
-	});
+	log.error(
+		{
+			err: unknownErr,
+			url: req.originalUrl,
+			authInfo: req[SYMBOL_TACHI_API_AUTH],
+		},
+		"Fatal error propagated to server root? ",
+	);
 
 	return res.status(500).json({
 		success: false,

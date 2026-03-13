@@ -3,7 +3,7 @@
 import * as cheerio from "cheerio";
 import fetch from "node-fetch";
 
-import { type ChartDocument, type SongDocument } from "../../../common/src";
+import { type ChartDocument, type SongDocument } from "tachi-common";
 import { ReadCollection, WriteCollection } from "../../util";
 
 type SDVXChart = ChartDocument<"sdvx:Single">;

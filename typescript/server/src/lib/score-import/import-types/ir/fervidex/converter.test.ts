@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { CreateScoreID } from "#lib/score-import/framework/score-importing/score-id";
 import db from "#services/mongo/db";
 import { dmf, mkFakeScoreIIDXSP } from "#test-utils/misc";
@@ -158,7 +158,7 @@ t.test("#ConverterIRFervidex", (t) => {
 			baseFervidexScore,
 			{ version: "27", timeReceived: 10, userID: 1 },
 			"ir/fervidex",
-			logger,
+			log,
 		);
 
 		t.hasStrict(
@@ -190,7 +190,7 @@ t.test("#ConverterIRFervidex", (t) => {
 			deepmerge(baseFervidexScore, { option: { style_2p: "R_RANDOM" }, chart: "dpa" }),
 			{ version: "27", timeReceived: 10, userID: 1 },
 			"ir/fervidex",
-			logger,
+			log,
 		);
 
 		t.hasStrict(
@@ -213,7 +213,7 @@ t.test("#ConverterIRFervidex", (t) => {
 			deepmerge(baseFervidexScore, { dead: { measure: 1, note: 10 } }),
 			{ version: "27", timeReceived: 10, userID: 1 },
 			"ir/fervidex",
-			logger,
+			log,
 		);
 
 		t.hasStrict(
@@ -235,7 +235,7 @@ t.test("#ConverterIRFervidex", (t) => {
 				deepmerge(baseFervidexScore, { chart: "spl" }),
 				{ version: "27", timeReceived: 10, userID: 1 },
 				"ir/fervidex",
-				logger,
+				log,
 			),
 			/could not find chart/giu,
 		);
@@ -252,7 +252,7 @@ t.test("#ConverterIRFervidex", (t) => {
 				baseFervidexScore,
 				{ version: "27", timeReceived: 10, userID: 1 },
 				"ir/fervidex",
-				logger,
+				log,
 			),
 			/Song 1 \(iidx\) has no parent song/giu,
 		);
@@ -265,7 +265,7 @@ t.test("#ConverterIRFervidex", (t) => {
 			deepmerge(baseFervidexScore, { gauge: [10, 5, 249, 248] }) as FervidexScore,
 			{ version: "27", timeReceived: 10, userID: 1 },
 			"ir/fervidex",
-			logger,
+			log,
 		);
 
 		t.hasStrict(
@@ -312,7 +312,7 @@ t.test("#ConverterIRFervidex", (t) => {
 			}),
 			{ version: "27", timeReceived: 10, userID: 1 },
 			"ir/fervidex",
-			logger,
+			log,
 		);
 
 		const dbRes = await db.scores.findOne({ scoreID: fakeScore.scoreID });

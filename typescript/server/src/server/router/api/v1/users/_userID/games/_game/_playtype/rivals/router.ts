@@ -16,7 +16,7 @@ import {
 	FormatGameGroup,
 	GetGamePTConfig,
 	type integer,
-} from "../../../../../../../../../../../../common/src";
+} from "tachi-common";
 import { RequireAuthedAsUser } from "../../../../middleware";
 
 const router: Router = Router({ mergeParams: true });

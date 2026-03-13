@@ -25,7 +25,7 @@ import type {
 	SessionDocument,
 	SongDocument,
 	UserDocument,
-} from "../../../../common/src";
+} from "tachi-common";
 
 export type ActivityConstraint = FilterQuery<
 	ClassAchievementDocument & ScoreDocument & SessionDocument

@@ -1,5 +1,5 @@
 import { ONE_MINUTE } from "#lib/constants/time";
-import { ChangeRootLogLevel, GetLogLevel } from "#lib/logger/log.js";
+import { ChangeRootLogLevel, GetLogLevel } from "#lib/log/log.js";
 import { Env, ServerConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
 import { CreateFakeAuthCookie } from "#test-utils/fake-auth";
@@ -10,7 +10,7 @@ import { Sleep } from "#utils/misc";
 import deepmerge from "deepmerge";
 import t from "tap";
 
-import { type ScoreDocument, UserAuthLevels } from "../../../../../../../common/src";
+import { type ScoreDocument, UserAuthLevels } from "tachi-common";
 
 const LOG_LEVEL = Env.LOG_LEVEL;
 

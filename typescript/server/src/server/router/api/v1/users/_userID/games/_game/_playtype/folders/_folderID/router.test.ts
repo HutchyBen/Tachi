@@ -17,7 +17,7 @@ import type {
 	FolderDocument,
 	ScoreDocument,
 	SongDocument,
-} from "../../../../../../../../../../../../../common/src";
+} from "tachi-common";
 
 t.test("GET /api/v1/users/:userID/games/:game/:playtype/folders/:folderID", (t) => {
 	t.beforeEach(ResetDBState);

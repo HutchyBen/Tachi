@@ -1,11 +1,11 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import deepmerge from "deepmerge";
 import fjsh from "fast-json-stable-hash";
 import t from "tap";
 
-import type { BatchManualScore } from "../../../../../../common/src";
+import type { BatchManualScore } from "tachi-common";
 import type { BatchManualContext } from "../../import-types/common/batch-manual/types";
 import type { OrphanScoreDocument } from "../../import-types/common/types";
 
@@ -37,7 +37,7 @@ t.test("#OrphanScore", (t) => {
 			batchManualContext,
 			"Example Error Message",
 			"iidx",
-			logger,
+			log,
 		);
 
 		t.equal(res.success, true);
@@ -84,7 +84,7 @@ t.test("#OrphanScore", (t) => {
 			batchManualContext,
 			"Example Error Message",
 			"iidx",
-			logger,
+			log,
 		);
 
 		const res2 = await OrphanScore(
@@ -94,7 +94,7 @@ t.test("#OrphanScore", (t) => {
 			batchManualContext,
 			"Example Error Message",
 			"iidx",
-			logger,
+			log,
 		);
 
 		t.equal(res2.success, false);
@@ -125,7 +125,7 @@ t.test("#ReprocessOrphan", (t) => {
 	t.test("Should convert and insert an orphan if parents are found", async (t) => {
 		// this orphan doc is for 5.1.1. SPA, which definitely exists in
 		// the test DB.
-		const res = await ReprocessOrphan(orphanDoc, [], logger);
+		const res = await ReprocessOrphan(orphanDoc, [], log);
 
 		t.hasStrict(
 			res,
@@ -178,7 +178,7 @@ t.test("#ReprocessOrphan", (t) => {
 				},
 			}),
 			[],
-			logger,
+			log,
 		);
 
 		t.equal(res, null);
@@ -201,7 +201,7 @@ t.test("#ReprocessOrphan", (t) => {
 					},
 				}),
 				[],
-				logger,
+				log,
 			);
 
 			t.equal(res, false);
@@ -236,7 +236,7 @@ t.test("#ReprocessOrphan", (t) => {
 					},
 				}),
 				[],
-				logger,
+				log,
 			);
 
 			t.equal(res, false);

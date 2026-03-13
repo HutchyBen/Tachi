@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { BacksyncCollection } from "#lib/seeds/repo";
 /* eslint-disable no-await-in-loop */
 import db from "#services/mongo/db";
@@ -117,5 +117,5 @@ function ParseTierStr(tierStr: string) {
 }
 
 if (require.main === module) {
-	WrapScriptPromise(UpdateDPTiers(), logger);
+	WrapScriptPromise(UpdateDPTiers(), log);
 }

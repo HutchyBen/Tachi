@@ -1,8 +1,9 @@
 import type { ScoreImportJobData } from "#lib/score-import/worker/types";
+import type { APIImportTypes, FileUploadImportTypes } from "tachi-common";
 
 import { SIXTEEN_MEGABTYES } from "#lib/constants/filesize";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { DeorphanScores } from "#lib/score-import/framework/orphans/orphans";
 import { MakeScoreImport } from "#lib/score-import/framework/score-import";
@@ -16,15 +17,9 @@ import { FormatUserDoc, GetUserWithIDGuaranteed } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
 
-import type { APIImportTypes, FileUploadImportTypes } from "../../../../../../../common/src";
-
 const router: Router = Router({ mergeParams: true });
 
-const ParseMultipartScoredata = CreateMulterSingleUploadMiddleware(
-	"scoreData",
-	SIXTEEN_MEGABTYES,
-	logger,
-);
+const ParseMultipartScoredata = CreateMulterSingleUploadMiddleware("scoreData", SIXTEEN_MEGABTYES);
 
 const fileImportTypes = TachiConfig.IMPORT_TYPES.filter((e) => e.startsWith("file/"));
 const apiImportTypes = TachiConfig.IMPORT_TYPES.filter((e) => e.startsWith("api/"));
@@ -169,7 +164,7 @@ router.post("/orphans", RequirePermissions("submit_score"), async (req, res) => 
 
 	const { processed, removed, failed, success } = await DeorphanScores(
 		{ userID: userDoc.id },
-		logger,
+		log,
 	);
 
 	log.info(`Finished attempting deorphaning.`);

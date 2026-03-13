@@ -1,4 +1,4 @@
-import type { GameGroup, GPTString, Playtype, Versions } from "../../../../../../../common/src";
+import type { GameGroup, GPTString, Playtype, Versions } from "tachi-common";
 
 export interface BatchManualContext {
 	game: GameGroup;

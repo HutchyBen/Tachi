@@ -6,7 +6,7 @@ import ResetDBState from "#test-utils/resets";
 import { FakeOtherUser } from "#test-utils/test-data";
 import t from "tap";
 
-import type { UserDocument } from "../../../../../../../../../../../../common/src";
+import type { UserDocument } from "tachi-common";
 
 const SetupRivals = async () => {
 	await db.users.insert([FakeOtherUser, mkFakeUser(3), mkFakeUser(4)]);

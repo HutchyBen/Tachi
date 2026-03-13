@@ -8,7 +8,7 @@ import {
 	type integer,
 	type Playtypes,
 	type SongDocument,
-} from "../../../../common/src";
+} from "tachi-common";
 import { CreateChartID, GetFreshScoreIDGenerator, MutateCollection } from "../../util";
 
 interface AixChart {

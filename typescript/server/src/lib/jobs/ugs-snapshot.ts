@@ -1,9 +1,9 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import { GetMillisecondsSince } from "#utils/misc";
 import { GetAllRankings } from "#utils/user";
 
-import type { UserGameStats, UserGameStatsSnapshotDocument } from "../../../../common/src";
+import type { UserGameStats, UserGameStatsSnapshotDocument } from "tachi-common";
 
 // get the time of this midnight. it's possible this script eclipses itself when weird timezone
 // nonsense happens. we'll have to see.
@@ -55,7 +55,7 @@ export async function UGSSnapshot() {
 				batchWrite.push(ugsSnapshot);
 
 				if (batchWrite.length >= 500) {
-					log.verbose(`Flushed batch.`);
+					log.debug(`Flushed batch.`);
 					await db["game-stats-snapshots"].insert(batchWrite);
 
 					batchWrite = [];
@@ -75,9 +75,12 @@ export async function UGSSnapshot() {
 		);
 	} catch (err) {
 		// if we panic, we need to revert whatever we did.
-		log.error(`FATAL IN UGS-SNAPSHOT - Possibly failed midway through snapshotting.`, {
-			err,
-		});
+		log.error(
+			{
+				err,
+			},
+			`FATAL IN UGS-SNAPSHOT - Possibly failed midway through snapshotting.`,
+		);
 
 		log.info(`Removing all snapshots at this timestamp (${currentTime}).`);
 
@@ -96,7 +99,7 @@ if (require.main === module) {
 		})
 		.catch((err: unknown) => {
 			// This is a severe error, not an error. Running the UGS snapshot every day is necessary.
-			log.error(`Failed to snapshot user game stats.`, { err });
+			log.error({ err }, `Failed to snapshot user game stats.`);
 
 			setTimeout(() => {
 				process.exit(1);

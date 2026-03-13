@@ -1,11 +1,11 @@
 // Attempt to deoprhan lost scores.
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { DeorphanScores } from "#lib/score-import/framework/orphans/orphans";
 import { WrapScriptPromise } from "#utils/misc";
 
 export async function DeorphanScoresMain() {
-	const { success, failed, removed } = await DeorphanScores({}, logger);
+	const { success, failed, removed } = await DeorphanScores({}, log);
 
 	log.info(`Finished attempting deorphaning.`);
 
@@ -13,5 +13,5 @@ export async function DeorphanScoresMain() {
 }
 
 if (require.main === module) {
-	WrapScriptPromise(DeorphanScoresMain(), logger);
+	WrapScriptPromise(DeorphanScoresMain(), log);
 }

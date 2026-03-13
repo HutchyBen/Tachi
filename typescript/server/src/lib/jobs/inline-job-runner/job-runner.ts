@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { TachiConfig } from "#lib/setup/config";
 import { DedupeArr } from "#utils/misc";
 import { Queue, Worker } from "bullmq";
@@ -79,9 +79,9 @@ export function InitialiseJobRunner() {
 	const names = jobs.map((e) => e.name);
 
 	if (DedupeArr(names).length !== names.length) {
-		log.fatal(`Jobs has duplicate name fields, refusing to run.`, () => {
+		log.fatal(() => {
 			process.exit(1);
-		});
+		}, `Jobs has duplicate name fields, refusing to run.`);
 	}
 
 	const JobQueue = new Queue("Job Runner");

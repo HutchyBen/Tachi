@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 
 import { IsRecord } from "#utils/misc";
 import { FormatPrError } from "#utils/prudence";
@@ -23,7 +23,7 @@ export function ParseFervidexStatic(
 	headers: FervidexStaticHeaders,
 	log: KtLogger,
 ): ParserFunctionReturns<FervidexStaticScore, FervidexStaticContext> {
-	const version = SoftwareIDToVersion(headers.model, logger);
+	const version = SoftwareIDToVersion(headers.model, log);
 	const classProvider = CreateFerStaticClassProvider(body);
 
 	// if we shouldn't import scores, just sync up dans.

@@ -1,10 +1,10 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 import type { USCClientScore } from "#server/router/ir/usc/_playtype/types";
 
 import { FormatPrError } from "#utils/prudence";
 import { p, type PrudenceSchema } from "prudence";
 
-import type { Playtypes } from "../../../../../../../common/src";
+import type { Playtypes } from "tachi-common";
 import type { ParserFunctionReturns } from "../../common/types";
 import type { IRUSCContext } from "./types";
 

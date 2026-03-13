@@ -5,7 +5,7 @@ import { ProfileSumBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
 import { CuratorSkill } from "rg-stats";
 
-import { FmtNum, GetGrade, MUSECA_GBOUNDARIES } from "../../../../common/src";
+import { FmtNum, GetGrade, MUSECA_GBOUNDARIES } from "tachi-common";
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
 export const MUSECA_IMPL: GPTServerImplementation<"museca:Single"> = {

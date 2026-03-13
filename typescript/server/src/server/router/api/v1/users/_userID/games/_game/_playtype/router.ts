@@ -1,6 +1,6 @@
 import { CreateActivityRouteHandler } from "#lib/activity/activity";
 import { ONE_MONTH, ONE_WEEK, ONE_YEAR } from "#lib/constants/time";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import prValidate from "#server/middleware/prudence-validate";
 import { PasswordCompare, ValidatePassword } from "#server/router/api/v1/auth/auth";
 import db from "#services/mongo/db";
@@ -18,7 +18,6 @@ import {
 } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-
 import {
 	FormatGameGroup,
 	GetGamePTConfig,
@@ -27,7 +26,8 @@ import {
 	type PBScoreDocument,
 	type ProfileRatingAlgorithms,
 	type UserGameStatsSnapshotDocument,
-} from "../../../../../../../../../../../common/src";
+} from "tachi-common";
+
 import { RequireAuthedAsUser, RequireSelfRequestFromUser } from "../../../middleware";
 import foldersRouter from "./folders/router";
 import { CheckUserPlayedGamePlaytype } from "./middleware";
@@ -416,10 +416,10 @@ router.delete(
 
 		if (!privateInfo) {
 			log.error(
+				{ user },
 				`State desync for user ${FormatUserDoc(
 					user,
 				)}. This user has no password/email information?`,
-				{ user },
 			);
 
 			return res.status(500).json({

@@ -1,6 +1,6 @@
 import type { DeepPartial } from "#utils/types";
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -9,9 +9,9 @@ import { TestSnapshot } from "#test-utils/single-process-snapshot";
 import { TestingWaccaPupaExp } from "#test-utils/test-data";
 import t from "tap";
 
-import type { ProvidedMetrics, ScoreData, ScoreDocument } from "../../../../common/src";
+import type { ProvidedMetrics, ScoreData, ScoreDocument } from "tachi-common";
 
-import { WACCA_SINGLE_CONF } from "../../../../common/src/config/game-support/wacca";
+import { WACCA_SINGLE_CONF } from "tachi-common/config/game-support/wacca";
 import { RunValidators } from "./_common";
 import { WACCA_IMPL } from "./wacca";
 
@@ -157,7 +157,7 @@ t.test("WACCA Implementation", (t) => {
 				}),
 			);
 
-			t.hasStrict(await CreatePBDoc("wacca:Single", 1, TestingWaccaPupaExp, logger), {
+			t.hasStrict(await CreatePBDoc("wacca:Single", 1, TestingWaccaPupaExp, log), {
 				composedFrom: [{ name: "Best Score" }, { name: "Best Lamp", scoreID: "bestLamp" }],
 				scoreData: {
 					score: mockScore.scoreData.score,

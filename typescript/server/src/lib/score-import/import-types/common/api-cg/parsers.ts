@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import db from "#services/mongo/db";
@@ -16,7 +16,7 @@ import type {
 	CGSupportedGames,
 } from "./types";
 
-import { FormatPrError, type integer } from "../../../../../../../common/src";
+import { FormatPrError, type integer } from "tachi-common";
 import { FetchCGScores } from "./traverse-api";
 import { CGGameToTachiGame } from "./util";
 
@@ -119,7 +119,7 @@ export function CreateCGParser<T>(cgGame: CGSupportedGames, service: CGServices)
 			);
 		}
 
-		const scores = await FetchCGScores(service, cardInfo, cgGame, logger, fetch);
+		const scores = await FetchCGScores(service, cardInfo, cgGame, log, fetch);
 
 		const SCHEMA = CG_SCHEMAS[cgGame];
 

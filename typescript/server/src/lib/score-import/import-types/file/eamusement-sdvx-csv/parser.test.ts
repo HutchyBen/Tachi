@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { MockMulterFile } from "#test-utils/mock-multer";
 import { TestingSDVXEamusementCSV } from "#test-utils/test-data";
@@ -12,7 +12,7 @@ t.test("#ParseEamusementSDVXCSV", (t) => {
 	t.test("Valid CSV", (t) => {
 		const file = MockMulterFile(TestingSDVXEamusementCSV, "score.csv");
 
-		const { iterable, game } = ParseEamusementSDVXCSV(file, {}, logger);
+		const { iterable, game } = ParseEamusementSDVXCSV(file, {}, log);
 
 		t.equal(game, "sdvx");
 
@@ -29,7 +29,7 @@ t.test("#ParseEamusementSDVXCSV", (t) => {
 		const file = MockMulterFile(buffer, "score.csv");
 
 		t.throws(
-			() => ParseEamusementSDVXCSV(file, {}, logger),
+			() => ParseEamusementSDVXCSV(file, {}, log),
 			new ScoreImportFatalError(400, "Row 1 has an invalid amount of cells (4, expected 11)"),
 		);
 
@@ -42,7 +42,7 @@ t.test("#ParseEamusementSDVXCSV", (t) => {
 		const file = MockMulterFile(buffer, "score.csv");
 
 		t.throws(
-			() => ParseEamusementSDVXCSV(file, {}, logger),
+			() => ParseEamusementSDVXCSV(file, {}, log),
 			new ScoreImportFatalError(
 				400,
 				"Invalid CSV provided. CSV does not have the correct number of headers.",

@@ -1,7 +1,7 @@
 import type { BulkWriteUpdateOneOperation } from "mongodb";
 
 import { SetRivalsFailReasons } from "#lib/constants/err-codes";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { SendSetRivalNotification } from "#lib/notifications/notification-wrappers";
 import { ServerConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
@@ -15,7 +15,7 @@ import {
 	type integer,
 	type PBScoreDocument,
 	type Playtype,
-} from "../../../../common/src";
+} from "tachi-common";
 
 /**
  * Retrieve all of a user's set rival IDs.

@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 import type { EmptyObject } from "#utils/types";
 
 import { FormatPrError } from "#utils/prudence";
@@ -83,7 +83,7 @@ export function ParseSolidStateXML(
 
 		parsedXML = xmlParser.parse(fileData.buffer.toString("utf-8"));
 	} catch (err) {
-		log.info("S3 XML Parse Error", err);
+		log.info(err, "S3 XML Parse Error");
 
 		throw new ScoreImportFatalError(400, "Could not parse XML.");
 	}

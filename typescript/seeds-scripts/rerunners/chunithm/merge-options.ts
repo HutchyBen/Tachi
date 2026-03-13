@@ -9,7 +9,7 @@ import {
 	GetGamePTConfig,
 	type integer,
 	type SongDocument,
-} from "../../../common/src";
+} from "tachi-common";
 import { log } from "../../log.js";
 import { CreateChartID, ReadCollection, WriteCollection } from "../../util";
 

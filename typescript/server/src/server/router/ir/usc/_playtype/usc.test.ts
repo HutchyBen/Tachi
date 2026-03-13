@@ -8,7 +8,7 @@ import type {
 	PBScoreDocument,
 	ScoreDocument,
 	UserDocument,
-} from "../../../../../../../common/src";
+} from "tachi-common";
 
 import { CreatePOSTScoresResponseBody, TachiScoreToServerScore } from "./usc";
 

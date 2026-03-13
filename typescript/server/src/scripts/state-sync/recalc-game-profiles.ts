@@ -1,7 +1,7 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { UpdateUsersGamePlaytypeStats } from "#lib/score-import/framework/ugpt-stats/update-ugpt-stats";
 
-import type { GameGroup, Playtype, ScoreDocument } from "../../../../common/src";
+import type { GameGroup, Playtype, ScoreDocument } from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import db from "#services/mongo/db";
 import { WrapScriptPromise } from "#utils/misc";
@@ -34,7 +34,7 @@ export async function RecalcGameProfiles() {
 			const { game, playtype } = gpt._id;
 
 			log.info(`Updating ${FormatUserDoc(user)}'s ${game} ${playtype} stats.`);
-			await UpdateUsersGamePlaytypeStats(game, playtype, user.id, null, logger);
+			await UpdateUsersGamePlaytypeStats(game, playtype, user.id, null, log);
 		}
 	}
 
@@ -42,5 +42,5 @@ export async function RecalcGameProfiles() {
 }
 
 if (require.main === module) {
-	WrapScriptPromise(RecalcGameProfiles(), logger);
+	WrapScriptPromise(RecalcGameProfiles(), log);
 }

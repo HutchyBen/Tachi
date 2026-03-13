@@ -10,7 +10,7 @@ import {
 } from "#test-utils/test-data";
 import t from "tap";
 
-import type { ChartDocument, ScoreDocument } from "../../../../../../../../../../../../common/src";
+import type { ChartDocument, ScoreDocument } from "tachi-common";
 
 t.test("GET /api/v1/users/:userID/games/:game/:playtype/scores/recent", (t) => {
 	t.beforeEach(ResetDBState);

@@ -1,7 +1,7 @@
 import db from "#services/mongo/db";
 import t from "tap";
 
-import type { APIPermissions } from "../../../common/src";
+import type { APIPermissions } from "tachi-common";
 
 import mockApi from "./mock-api";
 import ResetDBState from "./resets";

@@ -1,19 +1,14 @@
 /* eslint-disable no-await-in-loop */
 import type { FilterQuery } from "mongodb";
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { DeorphanIfInQueue } from "#lib/orphan-queue/orphan-queue";
 import db from "#services/mongo/db";
 import { InitaliseFolderChartLookup } from "#utils/folder";
 import { FormatBMSTables, WrapScriptPromise } from "#utils/misc";
 import { type BMSTableEntry, LoadBMSTable } from "bms-table-loader";
 
-import {
-	BMS_TABLES,
-	type BMSTableInfo,
-	type ChartDocument,
-	type Playtypes,
-} from "../../../../common/src";
+import { BMS_TABLES, type BMSTableInfo, type ChartDocument, type Playtypes } from "tachi-common";
 
 /**
  * Tables might have updates that remove charts from their table.
@@ -243,7 +238,7 @@ export async function SyncBMSTables() {
 		try {
 			await UpdateTable(table);
 		} catch (err) {
-			log.error(`Failed to update table ${table.name} (${table.url}).`, { err });
+			log.error({ err }, `Failed to update table ${table.name} (${table.url}).`);
 		}
 	}
 
@@ -253,5 +248,5 @@ export async function SyncBMSTables() {
 }
 
 if (require.main === module) {
-	WrapScriptPromise(SyncBMSTables(), logger);
+	WrapScriptPromise(SyncBMSTables(), log);
 }

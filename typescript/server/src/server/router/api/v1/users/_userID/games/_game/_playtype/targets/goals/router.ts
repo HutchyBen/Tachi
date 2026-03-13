@@ -1,5 +1,5 @@
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import {
 	ConstructGoal,
@@ -15,12 +15,8 @@ import { GetGoalForIDGuaranteed } from "#utils/db";
 import { AssignToReqTachiData, GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
+import { GetGamePTConfig, type GoalDocument, type QuestDocument } from "tachi-common";
 
-import {
-	GetGamePTConfig,
-	type GoalDocument,
-	type QuestDocument,
-} from "../../../../../../../../../../../../../common/src";
 import { RequireAuthedAsUser } from "../../../../../middleware";
 
 const router: Router = Router({ mergeParams: true });
@@ -178,7 +174,7 @@ router.post(
 		} catch (e) {
 			const err = e as Error;
 
-			log.info(err.message, { err });
+			log.info({ err }, err.message);
 
 			return res.status(400).json({
 				success: false,

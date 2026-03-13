@@ -13,7 +13,7 @@ import t from "tap";
 import type {
 	UserDocument,
 	UserGameStats,
-} from "../../../../../../../../../../../../../common/src";
+} from "tachi-common";
 
 t.test("GET /api/v1/users/:userID/games/:game/:playtype/targets/quests", (t) => {
 	t.beforeEach(ResetDBState);

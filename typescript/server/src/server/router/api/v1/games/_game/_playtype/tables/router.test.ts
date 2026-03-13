@@ -5,7 +5,7 @@ import { TestingIIDXFolderSP10 } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
 import t from "tap";
 
-import type { FolderDocument } from "../../../../../../../../../../common/src";
+import type { FolderDocument } from "tachi-common";
 
 t.test("GET /api/v1/games/:game/:playtype/tables", (t) => {
 	t.beforeEach(ResetDBState);

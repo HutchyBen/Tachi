@@ -20,7 +20,7 @@ import type {
 	UserDocument,
 	UserGameStats,
 	UserSettingsDocument,
-} from "../../../common/src";
+} from "tachi-common";
 
 // Inject additional properties on express-session
 declare module "express-session" {

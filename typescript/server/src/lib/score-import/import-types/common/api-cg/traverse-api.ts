@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ServerConfig } from "#lib/setup/config";
@@ -6,7 +6,7 @@ import nodeFetch, { type NodeFetch } from "#utils/fetch";
 import { p, type PrudenceSchema } from "prudence";
 import { URLSearchParams } from "url";
 
-import type { CGCardInfo } from "../../../../../../../common/src";
+import type { CGCardInfo } from "tachi-common";
 import type { CGErrorResponse, CGScoresResponse, CGServices, CGSupportedGames } from "./types";
 
 const PR_CG_RESPONSE: PrudenceSchema = {
@@ -48,13 +48,13 @@ export async function FetchCGScores(
 		const prErr = p({ res }, { res: p.or(PR_CG_RESPONSE, PR_CG_ERR_RESPONSE) });
 
 		if (prErr) {
-			log.error(`Got unexpected data from CG.`, { res });
+			log.error({ res }, `Got unexpected data from CG.`);
 			throw new Error(`Got unexpected data from CG.`);
 		}
 
 		validatedRes = res as CGErrorResponse | CGScoresResponse<unknown>;
 	} catch (err) {
-		log.error(`Received invalid response from ${url}.`, { err });
+		log.error({ err }, `Received invalid response from ${url}.`);
 
 		throw new ScoreImportFatalError(
 			500,

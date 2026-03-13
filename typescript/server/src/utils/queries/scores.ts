@@ -1,6 +1,6 @@
 import db from "#services/mongo/db";
 
-import type { GameGroup, integer, Playtype } from "../../../../common/src";
+import type { GameGroup, integer, Playtype } from "tachi-common";
 
 export async function GetRecentUGPTScores(
 	userID: integer,

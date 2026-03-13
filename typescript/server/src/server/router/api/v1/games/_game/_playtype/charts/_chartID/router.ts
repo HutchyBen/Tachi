@@ -1,6 +1,6 @@
 import type { FilterQuery } from "mongodb";
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { SearchUsersRegExp } from "#lib/search/search";
 import db from "#services/mongo/db";
 import { IsString } from "#utils/misc";
@@ -9,7 +9,7 @@ import { ParseStrPositiveNonZeroInt } from "#utils/string-checks";
 import { GetUsersWithIDs } from "#utils/user";
 import { Router } from "express";
 
-import { type FolderDocument, FormatChart } from "../../../../../../../../../../../common/src";
+import { type FolderDocument, FormatChart } from "tachi-common";
 import { ValidateAndGetChart } from "./middleware";
 
 const router: Router = Router({ mergeParams: true });

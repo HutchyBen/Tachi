@@ -4,7 +4,7 @@ import { Testing511SPA } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
 import t from "tap";
 
-import type { ChartDocument, FolderDocument } from "../../../common/src";
+import type { ChartDocument, FolderDocument } from "tachi-common";
 
 import { GetFolderChartIDs, ResolveFolderToCharts, TransposeFolderData } from "./folder";
 

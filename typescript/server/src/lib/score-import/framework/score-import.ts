@@ -1,9 +1,9 @@
 import { JOB_RETRY_COUNT } from "#lib/constants/tachi";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import { Sleep } from "#utils/misc";
 
-import type { ImportDocument, ImportTypes, integer } from "../../../../../common/src";
+import type { ImportDocument, ImportTypes, integer } from "tachi-common";
 import type { ScoreImportJobData, ScoreImportWorkerReturns } from "../worker/types";
 
 import ScoreImportQueue, { ScoreImportQueueEvents } from "../worker/queue";
@@ -99,8 +99,8 @@ async function MakeScoreImportInner<I extends ImportTypes>(
 		}
 
 		log.error(
-			`User ${jobData.userID} didn't get an import through in around 6 hours. Has their lock gotten stuck?`,
 			jobData,
+			`User ${jobData.userID} didn't get an import through in around 6 hours. Has their lock gotten stuck?`,
 		);
 
 		await UnsetOngoingImportLock(jobData.userID);

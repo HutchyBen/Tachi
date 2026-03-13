@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { PullDatabaseSeeds } from "#lib/seeds/repo";
 /* eslint-disable no-await-in-loop */
 import db from "#services/mongo/db";
@@ -43,5 +43,5 @@ export async function BacksyncBMSPMSSongsAndCharts() {
 }
 
 if (require.main === module) {
-	WrapScriptPromise(BacksyncBMSPMSSongsAndCharts(), logger);
+	WrapScriptPromise(BacksyncBMSPMSSongsAndCharts(), log);
 }

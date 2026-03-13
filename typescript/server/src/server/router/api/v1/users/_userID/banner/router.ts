@@ -1,7 +1,7 @@
 import { CDNDelete, CDNRedirect, CDNStoreOrOverwrite } from "#lib/cdn/cdn";
 import { GetProfileBannerURL } from "#lib/cdn/url-format";
 import { ONE_MEGABYTE } from "#lib/constants/filesize";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { RequirePermissions } from "#server/middleware/auth";
 import { CreateMulterSingleUploadMiddleware } from "#server/middleware/multer-upload";
 import db from "#services/mongo/db";
@@ -34,9 +34,9 @@ router.put(
 		const user = GetTachiData(req, "requestedUser");
 
 		if (!user.customBannerLocation) {
-			log.verbose(`User ${FormatUserDoc(user)} set a custom profile banner.`);
+			log.debug(`User ${FormatUserDoc(user)} set a custom profile banner.`);
 		} else {
-			log.verbose(`User ${FormatUserDoc(user)} updated their profile banner.`);
+			log.debug(`User ${FormatUserDoc(user)} updated their profile banner.`);
 		}
 
 		if (!req.file) {

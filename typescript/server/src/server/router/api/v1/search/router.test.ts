@@ -5,7 +5,7 @@ import ResetDBState from "#test-utils/resets";
 import { LoadTachiIIDXData } from "#test-utils/test-data";
 import t from "tap";
 
-import type { ChartDocument, SongDocument } from "../../../../../../../common/src";
+import type { ChartDocument, SongDocument } from "tachi-common";
 
 t.test("GET /api/v1/search", (t) => {
 	t.beforeEach(ResetDBState);

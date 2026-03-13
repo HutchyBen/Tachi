@@ -1,7 +1,7 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 
-import type { GameGroup, integer, Playtype } from "../../../../common/src";
+import type { GameGroup, integer, Playtype } from "tachi-common";
 
 /**
  * Create GameSettings for a UGPT (which contains their preferences).

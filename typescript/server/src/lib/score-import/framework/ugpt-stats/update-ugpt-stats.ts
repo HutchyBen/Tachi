@@ -1,15 +1,9 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 
 import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
 import db from "#services/mongo/db";
 
-import type {
-	ClassDelta,
-	GameGroup,
-	integer,
-	Playtype,
-	UserGameStats,
-} from "../../../../../../common/src";
+import type { ClassDelta, GameGroup, integer, Playtype, UserGameStats } from "tachi-common";
 import type { ClassProvider } from "../calculated-data/types";
 
 import { CalculateProfileRatings } from "../calculated-data/profile";
@@ -36,20 +30,13 @@ export async function UpdateUsersGamePlaytypeStats(
 
 	log.debug(`Calculating UGSClasses...`);
 
-	const classes = await CalculateUGPTClasses(
-		game,
-		playtype,
-		userID,
-		ratings,
-		classProvider,
-		logger,
-	);
+	const classes = await CalculateUGPTClasses(game, playtype, userID, ratings, classProvider, log);
 
 	log.debug(`Finished Calculating UGSClasses`);
 
 	log.debug(`Calculating Class Deltas...`);
 
-	const deltas = await ProcessClassDeltas(game, playtype, classes, userGameStats, userID, logger);
+	const deltas = await ProcessClassDeltas(game, playtype, classes, userGameStats, userID, log);
 
 	log.debug(`Had ${deltas.length} deltas.`);
 
@@ -83,11 +70,14 @@ export async function UpdateUsersGamePlaytypeStats(
 		});
 
 		if (!hasAnyScores) {
-			log.debug("Not creating new game stats for user with no scores.", {
-				userID,
-				game,
-				playtype,
-			});
+			log.debug(
+				{
+					userID,
+					game,
+					playtype,
+				},
+				"Not creating new game stats for user with no scores.",
+			);
 			return deltas;
 		}
 

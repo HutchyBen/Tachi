@@ -8,8 +8,8 @@ import type {
 	OptionalMetrics,
 	Playtype,
 	ScoreDocument,
-} from "../../../../../../common/src";
-import type { ExtractMetrics } from "../../../../../../common/src/types/metrics";
+} from "tachi-common";
+import type { ExtractMetrics } from "tachi-common/types/metrics";
 
 /**
  * ScoreData, but it's just the provided metrics (and enumIndexes don't exist).

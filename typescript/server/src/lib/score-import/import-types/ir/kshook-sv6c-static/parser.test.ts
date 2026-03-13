@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { TestingKsHookSV6CScore, TestingKsHookSV6CStaticScore } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
 import t from "tap";
@@ -8,14 +8,14 @@ import { ParseKsHookSV6CStatic } from "./parser";
 
 t.test("#ParseKsHookSV6CStatic", (t) => {
 	const assertFail = (data: any, message: string) => {
-		t.throws(() => ParseKsHookSV6CStatic(data, logger), message);
+		t.throws(() => ParseKsHookSV6CStatic(data, log), message);
 	};
 
 	const assertSuccess = (data: any, message: string) => {
 		try {
-			t.doesNotThrow(() => ParseKsHookSV6CStatic(data, logger), message);
+			t.doesNotThrow(() => ParseKsHookSV6CStatic(data, log), message);
 
-			const res = ParseKsHookSV6CStatic(data, logger);
+			const res = ParseKsHookSV6CStatic(data, log);
 
 			t.equal(res.game, "sdvx");
 			t.ok(Array.isArray(res.iterable));

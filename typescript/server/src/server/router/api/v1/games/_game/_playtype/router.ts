@@ -24,7 +24,7 @@ import {
 	type integer,
 	type Playtype,
 	type UserGameStats,
-} from "../../../../../../../../../common/src";
+} from "tachi-common";
 import chartsRouter from "./charts/router";
 import foldersRouter from "./folders/router";
 import { ValidatePlaytypeFromParam } from "./middleware";

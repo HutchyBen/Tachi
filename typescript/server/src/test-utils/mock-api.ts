@@ -1,12 +1,12 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import supertest from "supertest";
 
 import server from "../server/server";
 
-log.verbose("Creating Mock Server Connection...");
+log.debug("Creating Mock Server Connection...");
 const connection = server.listen();
 
-log.verbose("Connecting to Supertest...");
+log.debug("Connecting to Supertest...");
 const mockApi = supertest(connection);
 
 export function CloseServerConnection() {

@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
 import {
 	WaccaMusicDifficulty,
@@ -46,7 +46,7 @@ t.test("#ConvertAPIMytWACCA", (t) => {
 	t.beforeEach(ResetDBState);
 
 	function conv(g: Partial<MytWaccaScore> = {}) {
-		return ConvertAPIMytWACCA(deepmerge(parsedScore, g), {}, "api/myt-wacca", logger);
+		return ConvertAPIMytWACCA(deepmerge(parsedScore, g), {}, "api/myt-wacca", log);
 	}
 
 	t.test("Should return a dryScore on valid input.", async (t) => {

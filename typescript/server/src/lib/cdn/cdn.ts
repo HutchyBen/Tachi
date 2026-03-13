@@ -1,6 +1,6 @@
 import type { Response } from "express";
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import fs from "fs";
 import mkdirp from "mkdirp";
@@ -22,8 +22,8 @@ const rmFilePromise = promisify(fs.rm);
 export function CDNFileSystemRoot(fileLoc: string) {
 	if (ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE !== "LOCAL_FILESYSTEM") {
 		log.error(
-			`Attempted to run CDNFileSystemRoot, but was not using LOCAL_FILESYSTEM as a CDN.`,
 			{ fileLoc, conf: ServerConfig.CDN_CONFIG },
+			`Attempted to run CDNFileSystemRoot, but was not using LOCAL_FILESYSTEM as a CDN.`,
 		);
 
 		throw new Error(
@@ -81,7 +81,7 @@ export async function CDNStoreOrOverwrite(fileLoc: string, data: string | Buffer
  * Removes a file at this CDN location.
  */
 export async function CDNDelete(fileLoc: string) {
-	log.verbose(`Deleting path ${fileLoc}.`);
+	log.debug(`Deleting path ${fileLoc}.`);
 
 	if (ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE === "LOCAL_FILESYSTEM") {
 		const loc = CDNFileSystemRoot(fileLoc);

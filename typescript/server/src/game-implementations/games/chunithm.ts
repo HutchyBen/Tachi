@@ -6,7 +6,7 @@ import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
 import { IsNullish } from "#utils/misc";
 import { CHUNITHMRating } from "rg-stats";
 
-import { CHUNITHM_GBOUNDARIES, FmtNum, GetGrade } from "../../../../common/src";
+import { CHUNITHM_GBOUNDARIES, FmtNum, GetGrade } from "tachi-common";
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
 export const CHUNITHM_IMPL: GPTServerImplementation<"chunithm:Single"> = {

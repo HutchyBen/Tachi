@@ -2,7 +2,7 @@ import type { ClassDeriver } from "#game-implementations/types";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 
-import type { ExtractedClasses, GPTString, UserGameStats } from "../../../../../../common/src";
+import type { ExtractedClasses, GPTString, UserGameStats } from "tachi-common";
 
 export function CalculateDerivedClasses<GPT extends GPTString>(
 	gptString: GPT,

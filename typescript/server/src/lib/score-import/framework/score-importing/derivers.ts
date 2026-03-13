@@ -1,9 +1,9 @@
 import type { GPTDerivers } from "#game-implementations/types";
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 
-import type { MetricValue } from "../../../../../../common/src/types/metrics";
+import type { MetricValue } from "tachi-common/types/metrics";
 import type { DryScore, DryScoreData } from "../common/types";
 
 import {
@@ -15,7 +15,7 @@ import {
 	type OptionalEnumIndexes,
 	type ScoreData,
 	type ScoreEnumIndexes,
-} from "../../../../../../common/src";
+} from "tachi-common";
 import { InternalFailure } from "../common/converter-failures";
 
 /**
@@ -68,8 +68,8 @@ export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any,
 
 		if (index === -1) {
 			log.error(
-				`Got an invalid enum value of ${metrics[key]} for ${gpt} ${key} on DryScore. Can't add indexes?`,
 				{ metrics, key, conf },
+				`Got an invalid enum value of ${metrics[key]} for ${gpt} ${key} on DryScore. Can't add indexes?`,
 			);
 
 			throw new InternalFailure(
@@ -97,8 +97,8 @@ export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any,
 
 		if (index === -1) {
 			log.error(
-				`Got an invalid enum value of ${metrics.optional[key]} for ${gpt} optional.${key} on DryScore. Can't add indexes?`,
 				{ metrics, key, conf },
+				`Got an invalid enum value of ${metrics.optional[key]} for ${gpt} optional.${key} on DryScore. Can't add indexes?`,
 			);
 
 			throw new InternalFailure(
@@ -132,7 +132,7 @@ export function CreateFullScoreData<GPT extends GPTString>(
 	} as unknown as ScoreData<GPT>;
 	// ^ hacky force-cast because these types are *really* unstable.
 
-	const { indexes, optionalIndexes } = CreateEnumIndexes(gpt, scoreData, logger);
+	const { indexes, optionalIndexes } = CreateEnumIndexes(gpt, scoreData, log);
 
 	// again, silly hacks aorund typesafety here because to be honest
 	// this stuff is more generic than TS really should ever have to implement.

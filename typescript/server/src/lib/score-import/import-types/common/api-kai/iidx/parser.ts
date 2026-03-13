@@ -1,8 +1,8 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
+import type { KaiAuthDocument } from "tachi-common";
 
 import nodeFetch from "#utils/fetch";
 
-import type { KaiAuthDocument } from "../../../../../../../../common/src";
 import type { ParserFunctionReturns } from "../../types";
 import type { KaiContext } from "../types";
 
@@ -20,7 +20,7 @@ export async function ParseKaiIIDX(
 ): Promise<ParserFunctionReturns<unknown, KaiContext>> {
 	const baseUrl = KaiTypeToBaseURL(service);
 
-	const resolvedReauthFn = reauthFn ?? CreateKaiReauthFunction(service, authDoc, logger, fetch);
+	const resolvedReauthFn = reauthFn ?? CreateKaiReauthFunction(service, authDoc, log, fetch);
 
 	// auth *before* starting import to avoid a partial-import
 	authDoc.token = await resolvedReauthFn();
@@ -30,7 +30,7 @@ export async function ParseKaiIIDX(
 			baseUrl,
 			"/api/iidx/v2/play_history",
 			authDoc.token,
-			logger,
+			log,
 			resolvedReauthFn,
 			fetch,
 		),

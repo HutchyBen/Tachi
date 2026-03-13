@@ -7,7 +7,7 @@ import {
 import { GetGPT } from "#utils/req-tachi-data";
 import { Router } from "express";
 
-import { FormatGameGroup } from "../../../../../../../../../../common/src";
+import { FormatGameGroup } from "tachi-common";
 import goalsRouter from "./goals/router";
 import questlineRouter from "./questlines/router";
 import questsRouter from "./quests/router";

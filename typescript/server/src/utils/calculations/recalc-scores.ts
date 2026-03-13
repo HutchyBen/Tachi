@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { CreateScoreCalcData } from "#lib/score-import/framework/calculated-data/score";
 import { GetAndUpdateUsersGoals } from "#lib/score-import/framework/goals/goals";
 import { ProcessPBs } from "#lib/score-import/framework/pb/process-pbs";
@@ -15,12 +15,12 @@ import {
 	type integer,
 	type Playtype,
 	type UserDocument,
-} from "../../../../common/src";
+} from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import deepmerge from "deepmerge";
 
 export async function RecalcAllScores(filter = {}) {
-	log.info(`Recalcing Scores.`, { filter });
+	log.info({ filter }, `Recalcing Scores.`);
 
 	const modifiedUsers = new Set<string>();
 	const modifiedUserIDs = new Set<integer>();
@@ -32,9 +32,12 @@ export async function RecalcAllScores(filter = {}) {
 			const chart = await db.anyCharts[c.game].findOne({ chartID: c.chartID });
 
 			if (!chart) {
-				log.error(`Can't find chartID ${c.chartID} ${c.scoreID} (${c.game})`, {
-					score: c,
-				});
+				log.error(
+					{
+						score: c,
+					},
+					`Can't find chartID ${c.chartID} ${c.scoreID} (${c.game})`,
+				);
 
 				throw new Error(`screwed`);
 			}
@@ -77,11 +80,11 @@ export async function RecalcAllScores(filter = {}) {
 
 		const userID = Number(strUserID);
 
-		await UpdateUsersGamePlaytypeStats(game, playtype, userID, null, logger);
+		await UpdateUsersGamePlaytypeStats(game, playtype, userID, null, log);
 
-		const goalInfo = await GetAndUpdateUsersGoals(game, userID, chartIDs, logger);
+		const goalInfo = await GetAndUpdateUsersGoals(game, userID, chartIDs, log);
 
-		await UpdateUsersQuests(goalInfo, game, [playtype], userID, logger);
+		await UpdateUsersQuests(goalInfo, game, [playtype], userID, log);
 	}
 
 	log.info(`Done!`);
@@ -99,7 +102,7 @@ export async function UpdateAllPBs(userIDs?: Array<integer>, filter = {}) {
 	}
 
 	for (const user of allUsers) {
-		log.verbose(`Finding ${FormatUserDoc(user)}'s scores.`);
+		log.debug(`Finding ${FormatUserDoc(user)}'s scores.`);
 
 		for (const game of TachiConfig.GAMES) {
 			const gameConfig = GetGameGroupConfig(game);
@@ -116,17 +119,17 @@ export async function UpdateAllPBs(userIDs?: Array<integer>, filter = {}) {
 					continue;
 				}
 
-				log.verbose(`PBing ${FormatUserDoc(user)}'s scores.`);
+				log.debug(`PBing ${FormatUserDoc(user)}'s scores.`);
 				await ProcessPBs(
 					game,
 					playtype,
 					user.id,
 					new Set(scores.map((e) => e.chartID)),
-					logger,
+					log,
 				);
 			}
 		}
 	}
 
-	log.verbose(`Done!`);
+	log.debug(`Done!`);
 }

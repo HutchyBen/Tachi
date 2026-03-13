@@ -8,7 +8,7 @@ import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
 import { p } from "prudence";
 
-import type { ImportTrackerDocument, ImportTypes } from "../../../../../../../../../common/src";
+import type { ImportTrackerDocument, ImportTypes } from "tachi-common";
 
 const router: Router = Router({ mergeParams: true });
 

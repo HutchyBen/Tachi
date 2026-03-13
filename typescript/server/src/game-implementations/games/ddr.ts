@@ -6,8 +6,8 @@ import type {
 	ScoreValidator,
 } from "#game-implementations/types";
 
+import db from "#services/mongo/db";
 import { DDRFlare } from "rg-stats";
-
 import {
 	type ChartDocument,
 	DDR_GBOUNDARIES,
@@ -20,9 +20,8 @@ import {
 	type Playtype,
 	type ScoreDocument,
 	type SongDocument,
-} from "../../../../common/src";
-import db from "../../external/mongo/db";
-import { log } from "../../lib/logger/log";
+} from "tachi-common";
+
 import { IsNullish } from "../../utils/misc";
 import { CreatePBMergeFor } from "../utils/pb-merge";
 import { SessionAvgBest10For } from "../utils/session-calc";

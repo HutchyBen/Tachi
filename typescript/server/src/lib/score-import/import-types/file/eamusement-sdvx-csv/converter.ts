@@ -9,8 +9,8 @@ import { AssertStrAsPositiveInt } from "#lib/score-import/framework/common/strin
 import { FindChartWithPTDF } from "#utils/queries/charts";
 import { FindSongOnTitle } from "#utils/queries/songs";
 
-import type { Difficulties } from "../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
+import type { Difficulties } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 import type { ConverterFunction } from "../../common/types";
 import type { SDVXEamusementCSVData } from "./types";
 
@@ -39,7 +39,7 @@ const ConvertEamSDVXCSV: ConverterFunction<SDVXEamusementCSVData, EmptyObject> =
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	const song = await FindSongOnTitle("sdvx", data.title);
 
@@ -127,7 +127,7 @@ const ConvertEamSDVXCSV: ConverterFunction<SDVXEamusementCSVData, EmptyObject> =
 		},
 	};
 
-	log.verbose(`Returning dryscore with ${dryScore.scoreData.score} for ${humanisedChartTitle}`);
+	log.debug(`Returning dryscore with ${dryScore.scoreData.score} for ${humanisedChartTitle}`);
 
 	return { chart, song, dryScore };
 };

@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
 import db from "#services/mongo/db";
@@ -19,7 +19,7 @@ import {
 	type integer,
 	type Playtype,
 	type UserGameStats,
-} from "../../../../../../common/src";
+} from "tachi-common";
 import { CalculateDerivedClasses } from "../calculated-data/profile-classes";
 
 /**
@@ -60,7 +60,7 @@ export async function CalculateUGPTClasses(
 	// other classes we have.
 	if (ClassProvider) {
 		log.debug(`Calling custom class handler.`);
-		const customClasses = (await ClassProvider(gptString, userID, ratings, logger)) ?? {};
+		const customClasses = (await ClassProvider(gptString, userID, ratings, log)) ?? {};
 
 		classes = deepmerge(customClasses, classes);
 	}

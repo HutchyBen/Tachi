@@ -9,12 +9,7 @@ import { ParseDateFromString } from "#lib/score-import/framework/common/score-ut
 import { FindChartOnInGameID } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type {
-	Difficulties,
-	integer,
-	Judgements,
-	Versions,
-} from "../../../../../../../../common/src";
+import type { Difficulties, integer, Judgements, Versions } from "tachi-common";
 import type { ConverterFunction } from "../../types";
 import type { CGContext, CGJubeatScore } from "../types";
 
@@ -24,7 +19,7 @@ export const ConverterAPICGJubeat: ConverterFunction<CGJubeatScore, CGContext> =
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	const difficulty = ConvertDifficulty(data.difficulty, data.hardMode);
 	const version = ConvertVersion(data.version);

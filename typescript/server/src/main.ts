@@ -3,8 +3,7 @@ import type http from "http";
 import { LoadDefaultClients } from "#lib/builtin-clients/builtin-clients";
 import { VERSION_PRETTY } from "#lib/constants/version";
 import { HandleSIGTERMGracefully } from "#lib/handlers/sigterm";
-import { log } from "#lib/logger/log.js";
-import { ApplyUnappliedMigrations } from "#lib/migration/migrations";
+import { log } from "#lib/log/log.js";
 import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 import { AddNewUser } from "#server/router/api/v1/auth/auth";
 import server from "#server/server";
@@ -17,27 +16,30 @@ import { spawn } from "child_process";
 import fs from "fs";
 import https from "https";
 import path from "path";
+import { UserAuthLevels } from "tachi-common";
+import { applyMigrations } from "tachi-db-migration-engine";
 
-import { UserAuthLevels } from "../../common/src";
+log.info(
+	{
+		bootInfo: true,
+	},
+	`Booting ${TachiConfig.NAME} - ${VERSION_PRETTY} [ENV: ${Env.NODE_ENV}]`,
+);
+log.info({ bootInfo: true }, `Log level is set to ${Env.LOG_LEVEL}.`);
 
-log.info(`Booting ${TachiConfig.NAME} - ${VERSION_PRETTY} [ENV: ${Env.NODE_ENV}]`, {
-	bootInfo: true,
-});
-log.info(`Log level is set to ${Env.LOG_LEVEL}.`, { bootInfo: true });
-
-log.info(`Loading sequence documents...`, { bootInfo: true });
+log.info({ bootInfo: true }, `Loading sequence documents...`);
 
 async function RunOnInit() {
 	await InitSequenceDocs();
 	await UpdateIndexes(monkDB, false);
 
-	await ApplyUnappliedMigrations();
+	await applyMigrations();
 
 	await db["folder-chart-lookup"].findOne().then((r) => {
 		// If there are no folder chart lookups, initialise them.
 		if (!r) {
 			InitaliseFolderChartLookup().catch((err: unknown) => {
-				log.error(`Failed to init folder-chart-lookup on first boot?`, { err });
+				log.error({ err }, `Failed to init folder-chart-lookup on first boot?`);
 			});
 		}
 	});
@@ -64,11 +66,8 @@ async function RunOnInit() {
 			);
 		} else {
 			log.fatal(
+				{ err },
 				`Cannot send HTTPS request to https://example.com. This instance of tachi-server cannot access the internet?`,
-				err,
-				() => {
-					process.exit(1);
-				},
 			);
 		}
 	}
@@ -81,8 +80,8 @@ let instance: http.Server | https.Server;
 if (ServerConfig.ENABLE_SERVER_HTTPS === true) {
 	if (Env.NODE_ENV === "production") {
 		log.warn(
-			"HTTPS Mode is enabled. This should not be used in production, and you should instead run behind a reverse proxy.",
 			{ bootInfo: true },
+			"HTTPS Mode is enabled. This should not be used in production, and you should instead run behind a reverse proxy.",
 		);
 	}
 
@@ -92,10 +91,10 @@ if (ServerConfig.ENABLE_SERVER_HTTPS === true) {
 	const httpsServer = https.createServer({ key: privateKey, cert: certificate }, server);
 
 	instance = httpsServer.listen(Env.PORT);
-	log.info(`HTTPS Listening on port ${Env.PORT}`, { bootInfo: true });
+	log.info({ bootInfo: true }, `HTTPS Listening on port ${Env.PORT}`);
 } else {
 	instance = server.listen(Env.PORT);
-	log.info(`HTTP Listening on port ${Env.PORT}`, { bootInfo: true });
+	log.info({ bootInfo: true }, `HTTP Listening on port ${Env.PORT}`);
 }
 
 process.on("SIGTERM", () => {
@@ -103,12 +102,12 @@ process.on("SIGTERM", () => {
 });
 
 if (process.env.INVOKE_JOB_RUNNER) {
-	log.info(`Spawning a tachi-server job runner inline.`, { bootInfo: true });
+	log.info({ bootInfo: true }, `Spawning a tachi-server job runner inline.`);
 
 	if (Env.NODE_ENV === "production") {
 		log.warn(
-			`Spawning inline tachi-server job runner in production. This is bad for performance.`,
 			{ bootInfo: true },
+			`Spawning inline tachi-server job runner in production. This is bad for performance.`,
 		);
 	}
 
@@ -129,9 +128,7 @@ if (process.env.INVOKE_JOB_RUNNER) {
 	);
 
 	jobProcess.on("error", (err) => {
-		log.fatal(`Failed to spawn job runner. Terminating process.`, { err }, () => {
-			process.exit(1);
-		});
+		log.fatal({ err }, `Failed to spawn job runner. Terminating process.`);
 	});
 
 	process.on("beforeExit", () => {

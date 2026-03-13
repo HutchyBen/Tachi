@@ -1,7 +1,7 @@
 import type { BMSTableHead, RawBMSTableEntry } from "bms-table-loader";
 import type { Request, Response } from "express-serve-static-core";
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { GetRivalUsers } from "#lib/rivals/rivals";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import { GetRelevantSongsAndCharts } from "#utils/db";
@@ -23,7 +23,7 @@ import {
 	type Playtypes,
 	type SongDocument,
 	type TableDocument,
-} from "../../../../common/src";
+} from "tachi-common";
 
 // Instead of just supporting existing tables, Tachi should also be able
 // to emit its own, custom BMS tables. These may be dynamic.
@@ -227,10 +227,13 @@ export async function HandleBMSTableHeaderRequest(
 
 		return res.status(200).send(header);
 	} catch (err) {
-		log.error(`Failed to load header.json for table ${bmsTable.tableName}.`, {
-			bmsTable,
-			err,
-		});
+		log.error(
+			{
+				bmsTable,
+				err,
+			},
+			`Failed to load header.json for table ${bmsTable.tableName}.`,
+		);
 		return res.status(500).send("Internal Server Error. Sorry about that.");
 	}
 }
@@ -255,10 +258,13 @@ export async function HandleBMSTableBodyRequest(
 
 		return res.status(200).send(body);
 	} catch (err) {
-		log.error(`Failed to load body.json for table ${bmsTable.tableName}.`, {
-			bmsTable,
-			err,
-		});
+		log.error(
+			{
+				bmsTable,
+				err,
+			},
+			`Failed to load body.json for table ${bmsTable.tableName}.`,
+		);
 		return res.status(500).send("Internal Server Error. Sorry about that.");
 	}
 }

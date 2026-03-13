@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 
 import {
 	EXT_BISTROVER,
@@ -20,7 +20,7 @@ import { ParseEA3SoftID } from "#utils/ea3id";
 import { FormatPrError, optNull } from "#utils/prudence";
 import { p, type PrudenceSchema, type ValidSchemaValue } from "prudence";
 
-import type { integer, Versions } from "../../../../../../../common/src";
+import type { integer, Versions } from "tachi-common";
 import type { ParserFunctionReturns } from "../../common/types";
 import type { FervidexContext, FerHeaders as FervidexHeaders, FervidexScore } from "./types";
 
@@ -163,7 +163,7 @@ export function SoftwareIDToVersion(model: string, log: KtLogger): Versions["iid
 
 		throw new ScoreImportFatalError(400, `Unsupported Software Model ${model}.`);
 	} catch (err) {
-		log.warn(`Unsupported Software Model ${model}.`, { err });
+		log.warn({ err }, `Unsupported Software Model ${model}.`);
 		throw new ScoreImportFatalError(400, `Unsupported Software Model ${model}.`);
 	}
 }
@@ -174,7 +174,7 @@ export function ParseFervidexSingle(
 	userID: integer,
 	log: KtLogger,
 ): ParserFunctionReturns<FervidexScore, FervidexContext> {
-	const version = SoftwareIDToVersion(headers.model, logger);
+	const version = SoftwareIDToVersion(headers.model, log);
 
 	// more mods may be added in the future, so lets ignore excess keys.
 	const err = p(body, PR_FERVIDEX, undefined, { allowExcessKeys: true });

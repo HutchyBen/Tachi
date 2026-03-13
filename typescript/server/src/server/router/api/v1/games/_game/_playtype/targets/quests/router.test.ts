@@ -15,7 +15,7 @@ import type {
 	QuestDocument,
 	QuestlineDocument,
 	QuestSubscriptionDocument,
-} from "../../../../../../../../../../../common/src";
+} from "tachi-common";
 
 t.test("GET /api/v1/games/:game/:playtype/targets/quests", (t) => {
 	t.beforeEach(ResetDBState);

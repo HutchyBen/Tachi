@@ -1,10 +1,9 @@
 import type { RequestHandler, Response } from "express-serve-static-core";
+import type { APITokenDocument } from "tachi-common";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { TachiConfig } from "#lib/setup/config";
-
-import type { APITokenDocument } from "../../../../common/src";
 
 // https://stackoverflow.com/a/64546368/11885828
 // Taken from Jonathan Turnock - This is an *incredibly* nice
@@ -30,10 +29,13 @@ export const RequestLoggerMiddleware: RequestHandler = (req, res, next) => {
 		}
 	}
 
-	log.debug(`Received request ${req.method} ${req.originalUrl}.`, {
-		query: req.query,
-		body: safeBody,
-	});
+	log.debug(
+		{
+			query: req.query,
+			body: safeBody,
+		},
+		`Received request ${req.method} ${req.originalUrl}.`,
+	);
 
 	// @ts-expect-error we're doing some wacky monkey patching
 	res.json = ResJsonInteceptor(res, res.json);
@@ -65,22 +67,19 @@ export const RequestLoggerMiddleware: RequestHandler = (req, res, next) => {
 		}
 
 		if (res.statusCode < 400 || res.statusCode === 404) {
-			let level: "info" | "verbose";
+			let level: "debug" | "info";
 
 			if (req.url.includes("/ir/")) {
 				level = "info";
 			} else {
-				level = "verbose";
+				level = "debug";
 			}
 
-			logger[level](
-				`(${req.method} ${req.originalUrl}) Returned ${res.statusCode}.`,
-				contents,
-			);
+			log[level](contents, `(${req.method} ${req.originalUrl}) Returned ${res.statusCode}.`);
 		} else if (res.statusCode < 500) {
-			log.info(`(${req.method} ${req.originalUrl}) Returned ${res.statusCode}.`, contents);
+			log.info(contents, `(${req.method} ${req.originalUrl}) Returned ${res.statusCode}.`);
 		} else {
-			log.error(`(${req.method} ${req.originalUrl}) Returned ${res.statusCode}.`, contents);
+			log.error(contents, `(${req.method} ${req.originalUrl}) Returned ${res.statusCode}.`);
 		}
 	});
 

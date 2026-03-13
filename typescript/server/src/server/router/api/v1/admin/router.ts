@@ -1,5 +1,5 @@
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { SendSiteAnnouncementNotification } from "#lib/notifications/notification-wrappers";
 import { UpdateGoalsForUser } from "#lib/score-import/framework/goals/goals";
 import { UpdateQuestsForUser } from "#lib/score-import/framework/quests/quests";
@@ -15,14 +15,13 @@ import { GetScoresFromSession } from "#utils/session";
 import { GetUserWithID, ResolveUser } from "#utils/user";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
-
 import {
 	type GameGroup,
 	type GoalSubscriptionDocument,
 	type integer,
 	type Playtype,
 	UserAuthLevels,
-} from "../../../../../../../common/src";
+} from "tachi-common";
 
 const router: Router = Router({ mergeParams: true });
 

@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -6,9 +6,9 @@ import ResetDBState from "#test-utils/resets";
 import { TestingMaimaiDXChart } from "#test-utils/test-data";
 import t from "tap";
 
-import type { ProvidedMetrics, ScoreData } from "../../../../common/src";
+import type { ProvidedMetrics, ScoreData } from "tachi-common";
 
-import { MAIMAI_DX_SINGLE_CONF } from "../../../../common/src/config/game-support/maimai-dx";
+import { MAIMAI_DX_SINGLE_CONF } from "tachi-common/config/game-support/maimai-dx";
 import { MAIMAIDX_IMPL } from "./maimaidx";
 
 const baseMetrics: ProvidedMetrics["maimaidx:Single"] = {
@@ -146,7 +146,7 @@ t.test("Maimai DX Implementation", (t) => {
 				}),
 			);
 
-			t.hasStrict(await CreatePBDoc("maimaidx:Single", 1, TestingMaimaiDXChart, logger), {
+			t.hasStrict(await CreatePBDoc("maimaidx:Single", 1, TestingMaimaiDXChart, log), {
 				composedFrom: [
 					{ name: "Best Percent" },
 					{ name: "Best Lamp", scoreID: "bestLamp" },

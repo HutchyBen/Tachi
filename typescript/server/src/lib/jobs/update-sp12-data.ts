@@ -1,8 +1,8 @@
-import type { ChartDocument, Difficulties, integer } from "../../../../common/src";
+import type { ChartDocument, Difficulties, integer } from "tachi-common";
 
 /* eslint-disable no-await-in-loop */
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { BacksyncCollection } from "#lib/seeds/repo";
 import db from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";
@@ -47,7 +47,7 @@ async function FetchSP12Data() {
 	});
 
 	if (err) {
-		log.error(`Got invalid/unexpected content from sp12.`, { unvalidatedRJ });
+		log.error({ unvalidatedRJ }, `Got invalid/unexpected content from sp12.`);
 
 		throw new Error(`Got invalid/unexpected content from sp12.`);
 	}
@@ -252,5 +252,5 @@ async function HumanisedTitleLookup(originalTitle: string) {
 }
 
 if (require.main === module) {
-	WrapScriptPromise(FetchSP12Data(), logger);
+	WrapScriptPromise(FetchSP12Data(), log);
 }

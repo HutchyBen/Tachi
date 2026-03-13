@@ -5,7 +5,7 @@ import { TestingIIDXSPQuest } from "#test-utils/test-data";
 import dm from "deepmerge";
 import t from "tap";
 
-import type { QuestDocument, QuestlineDocument } from "../../../../../../../../../../../common/src";
+import type { QuestDocument, QuestlineDocument } from "tachi-common";
 
 const TestingIIDXSPQuestline: QuestlineDocument = {
 	name: "Testing Questline",

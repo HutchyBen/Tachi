@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 import type { EmptyObject } from "#utils/types";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
@@ -6,7 +6,7 @@ import { WaccaUserClient } from "#proto/generated/wacca/user_grpc_pb";
 import { PlaylogRequest, type PlaylogStreamItem } from "#proto/generated/wacca/user_pb";
 import { credentials } from "@grpc/grpc-js";
 
-import type { integer } from "../../../../../../../common/src";
+import type { integer } from "tachi-common";
 import type { ParserFunctionReturns } from "../../common/types";
 import type { MytWaccaScore } from "./types";
 
@@ -31,7 +31,7 @@ export default async function ParseMytWACCA(
 	userID: integer,
 	log: KtLogger,
 ): Promise<ParserFunctionReturns<MytWaccaScore, EmptyObject>> {
-	const titleApiId = await FetchMytTitleAPIID(userID, "wacca", logger);
+	const titleApiId = await FetchMytTitleAPIID(userID, "wacca", log);
 	const endpoint = GetMytHostname();
 	let client;
 
@@ -41,10 +41,13 @@ export default async function ParseMytWACCA(
 		// Note: I don't think this actually does anything on the network, so
 		// it shouldn't really fail. Still, wrap just in case.
 
-		log.error(`Unexpected MYT during WaccaUserClient creation for ${userID}: ${err}`, {
-			userID,
-			err,
-		});
+		log.error(
+			{
+				userID,
+				err,
+			},
+			`Unexpected MYT during WaccaUserClient creation for ${userID}: ${err}`,
+		);
 
 		throw new ScoreImportFatalError(500, `Failed to connect to MYT.`);
 	}
@@ -56,7 +59,7 @@ export default async function ParseMytWACCA(
 	let iterable;
 
 	try {
-		const stream = StreamRPCAsAsync(client.getPlaylog.bind(client), req, logger);
+		const stream = StreamRPCAsAsync(client.getPlaylog.bind(client), req, log);
 
 		iterable = getObjectsFromGrpcIterable(stream);
 	} catch (err) {

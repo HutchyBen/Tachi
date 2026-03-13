@@ -11,7 +11,7 @@ import type {
 	ImportDocument,
 	ImportTypes,
 	UserGameStats,
-} from "../../../../../../../../common/src";
+} from "tachi-common";
 
 import { PasswordCompare } from "../../auth/auth";
 

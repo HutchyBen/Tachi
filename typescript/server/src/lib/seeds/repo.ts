@@ -2,9 +2,9 @@ import type { ICollection } from "monk";
 
 import fs from "fs/promises";
 
-import type { GameGroup } from "../../../../common/src";
+import type { GameGroup } from "tachi-common";
 /* eslint-disable no-await-in-loop */
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { Env, ServerConfig } from "#lib/setup/config";
 import { asyncExec } from "#utils/misc";
 import os from "os";
@@ -91,7 +91,7 @@ export class DatabaseSeedsRepo {
 	 * @returns True when a commit has occured, false when it hasn't. Throws on failure.
 	 */
 	async CommitChangesBack(commitMsg: string) {
-		log.verbose(`Received commit-back request.`);
+		log.debug(`Received commit-back request.`);
 
 		try {
 			const { stdout: statusOut } = await asyncExec(`git status --porcelain`, this.baseDir);
@@ -111,7 +111,7 @@ export class DatabaseSeedsRepo {
 			// try {
 			// 	await asyncExec(`cd "${this.baseDir}/scripts" || exit 2; pnpm install; pnpm test`);
 			// } catch ({ err, stdout, stderr }) {
-			// 	log.error(`Testing the changes failed. ${err}. Not committing back!`, { err });
+			// 	log.error({ err }, `Testing the changes failed. ${err}. Not committing back!`);
 			// 	throw err;
 			// }
 
@@ -131,7 +131,7 @@ export class DatabaseSeedsRepo {
 
 			return true;
 		} catch (err) {
-			log.error(`Failed to backport commits?`, { err });
+			log.error({ err }, `Failed to backport commits?`);
 			throw err;
 		}
 	}

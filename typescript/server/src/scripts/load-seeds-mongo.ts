@@ -1,14 +1,5 @@
 import type { BulkWriteOperation, DeleteWriteOpResultObject } from "mongodb";
 import type { ICollection } from "monk";
-
-import { log, type KtLogger } from "#lib/logger/log.js";
-import { UpdateGoalsInFolder } from "#lib/score-import/framework/goals/goals";
-import UpdateIsPrimaryStatus from "#lib/score-mutation/update-isprimary";
-import { PullDatabaseSeeds } from "#lib/seeds/repo";
-import { TachiConfig } from "#lib/setup/config";
-import { RemoveStaleFolderShowcaseStats } from "#lib/showcase/showcase";
-import { UpdateQuestSubscriptions } from "#lib/targets/quests";
-
 import type {
 	BMSCourseDocument,
 	ChartDocument,
@@ -19,7 +10,15 @@ import type {
 	QuestlineDocument,
 	SongDocument,
 	TableDocument,
-} from "../../../common/src";
+} from "tachi-common";
+
+import { type KtLogger, log } from "#lib/log/log.js";
+import { UpdateGoalsInFolder } from "#lib/score-import/framework/goals/goals";
+import UpdateIsPrimaryStatus from "#lib/score-mutation/update-isprimary";
+import { PullDatabaseSeeds } from "#lib/seeds/repo";
+import { TachiConfig } from "#lib/setup/config";
+import { RemoveStaleFolderShowcaseStats } from "#lib/showcase/showcase";
+import { UpdateQuestSubscriptions } from "#lib/targets/quests";
 /* eslint-disable no-await-in-loop */
 import db, { monkDB } from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";
@@ -44,7 +43,7 @@ async function RemoveNotPresent<T extends Record<string, any>>(
 	field: keyof T,
 	log: KtLogger,
 ) {
-	log.verbose(`Removing all documents that are no longer present.`);
+	log.debug(`Removing all documents that are no longer present.`);
 
 	// Remove anything no longer present.
 	// Note that $nin is incredibly slow.
@@ -67,10 +66,10 @@ async function GenericUpsert<T extends Record<string, any>>(
 	update = true,
 ) {
 	if (remove) {
-		await RemoveNotPresent(documents, collection, field, logger);
+		await RemoveNotPresent(documents, collection, field, log);
 	}
 
-	log.verbose(`Running bulkwrite.`);
+	log.debug(`Running bulkwrite.`);
 
 	const updateOps: Array<BulkWriteOperation<T>> = [];
 	const insertOps: Array<BulkWriteOperation<T>> = [];
@@ -90,7 +89,7 @@ async function GenericUpsert<T extends Record<string, any>>(
 	for (const document of documents) {
 		i++;
 		if (i % 10_000 === 0) {
-			log.verbose(`On document ${i}/${documents.length}.`);
+			log.debug(`On document ${i}/${documents.length}.`);
 		}
 
 		const exists = map.get(document[field]);
@@ -107,7 +106,7 @@ async function GenericUpsert<T extends Record<string, any>>(
 				continue;
 			}
 
-			log.verbose(`Updating ${document[field]}`);
+			log.debug(`Updating ${document[field]}`);
 
 			updateOps.push({
 				replaceOne: {
@@ -146,7 +145,7 @@ async function GenericUpsert<T extends Record<string, any>>(
 	const thingsChanged = updateOps.length + insertOps.length;
 
 	if (thingsChanged === 0) {
-		log.verbose(`No differences. Not performing any update.`);
+		log.debug(`No differences. Not performing any update.`);
 	} else {
 		// update first, then insert new docs
 		let up;
@@ -161,10 +160,13 @@ async function GenericUpsert<T extends Record<string, any>>(
 			ins = await collection.bulkWrite(insertOps);
 		}
 
-		log.info(`Performed bulkWrite.`, {
-			up,
-			ins,
-		});
+		log.info(
+			{
+				up,
+				ins,
+			},
+			`Performed bulkWrite.`,
+		);
 	}
 
 	return {
@@ -179,10 +181,10 @@ const syncInstructions: Array<SyncInstructions> = [
 		handler: async (
 			charts: Array<ChartDocument>,
 			collection: ICollection<ChartDocument>,
-			logger,
+			log,
 			collectionName,
 		) => {
-			const r = await GenericUpsert(charts, collection, "chartID", logger, false);
+			const r = await GenericUpsert(charts, collection, "chartID", log, false);
 
 			if (r.thingsChanged) {
 				await InitaliseFolderChartLookup();
@@ -202,10 +204,10 @@ const syncInstructions: Array<SyncInstructions> = [
 		handler: async (
 			charts: Array<ChartDocument>,
 			collection: ICollection<ChartDocument>,
-			logger,
+			log,
 			collName,
 		) => {
-			const r = await GenericUpsert(charts, collection, "chartID", logger, true);
+			const r = await GenericUpsert(charts, collection, "chartID", log, true);
 
 			if (r.thingsChanged) {
 				await InitaliseFolderChartLookup();
@@ -223,10 +225,10 @@ const syncInstructions: Array<SyncInstructions> = [
 		handler: async (
 			songs: Array<SongDocument>,
 			collection: ICollection<SongDocument>,
-			logger,
+			log,
 			collName,
 		) => {
-			const r = await GenericUpsert(songs, collection, "id", logger, false);
+			const r = await GenericUpsert(songs, collection, "id", log, false);
 
 			if (r.thingsChanged) {
 				await RecalcAllScores({
@@ -241,10 +243,10 @@ const syncInstructions: Array<SyncInstructions> = [
 		handler: async (
 			songs: Array<SongDocument>,
 			collection: ICollection<SongDocument>,
-			logger,
+			log,
 			collName,
 		) => {
-			const r = await GenericUpsert(songs, collection, "id", logger, true);
+			const r = await GenericUpsert(songs, collection, "id", log, true);
 
 			if (r.thingsChanged) {
 				await RecalcAllScores({
@@ -259,13 +261,13 @@ const syncInstructions: Array<SyncInstructions> = [
 		handler: async (
 			folders: Array<FolderDocument>,
 			collection: ICollection<FolderDocument>,
-			logger,
+			log,
 		) => {
 			const r = await GenericUpsert(
 				folders.filter((e) => TachiConfig.GAMES.includes(e.game)),
 				collection,
 				"folderID",
-				logger,
+				log,
 				true,
 			);
 
@@ -292,20 +294,18 @@ const syncInstructions: Array<SyncInstructions> = [
 
 				// update goals for everyone that was affected
 
-				await Promise.all(
-					keptFolderIDs.map((f) => UpdateGoalsInFolder(f.folderID, logger)),
-				);
+				await Promise.all(keptFolderIDs.map((f) => UpdateGoalsInFolder(f.folderID, log)));
 			}
 		},
 	},
 	{
 		pattern: /^tables/u,
-		handler: (tables: Array<TableDocument>, collection: ICollection<TableDocument>, logger) =>
+		handler: (tables: Array<TableDocument>, collection: ICollection<TableDocument>, log) =>
 			GenericUpsert(
 				tables.filter((e) => TachiConfig.GAMES.includes(e.game)),
 				collection,
 				"tableID",
-				logger,
+				log,
 				true,
 			),
 	},
@@ -314,29 +314,25 @@ const syncInstructions: Array<SyncInstructions> = [
 		handler: async (
 			bmsCourseDocuments: Array<BMSCourseDocument>,
 			collection: ICollection<BMSCourseDocument>,
-			logger,
+			log,
 		) => {
 			if (TachiConfig.TYPE === "kamai") {
 				return;
 			}
 
-			await GenericUpsert(bmsCourseDocuments, collection, "md5sums", logger);
+			await GenericUpsert(bmsCourseDocuments, collection, "md5sums", log);
 		},
 	},
 	{
 		pattern: /^goals/u,
-		handler: async (
-			goals: Array<GoalDocument>,
-			collection: ICollection<GoalDocument>,
-			logger,
-		) => {
+		handler: async (goals: Array<GoalDocument>, collection: ICollection<GoalDocument>, log) => {
 			// never remove goals. Never update goals either. Only insert new ones as
 			// they come in.
 			await GenericUpsert(
 				goals.filter((e) => IsSupported(e.game)),
 				collection,
 				"goalID",
-				logger,
+				log,
 				false,
 				false,
 			);
@@ -347,14 +343,14 @@ const syncInstructions: Array<SyncInstructions> = [
 		handler: async (
 			questlines: Array<QuestlineDocument>,
 			collection: ICollection<QuestlineDocument>,
-			logger,
+			log,
 		) => {
 			// removing and updating these is fine. Users cannot subscibe to sets.
 			await GenericUpsert(
 				questlines.filter((e) => IsSupported(e.game)),
 				collection,
 				"questlineID",
-				logger,
+				log,
 			);
 		},
 	},
@@ -363,13 +359,13 @@ const syncInstructions: Array<SyncInstructions> = [
 		handler: async (
 			quests: Array<QuestDocument>,
 			collection: ICollection<QuestDocument>,
-			logger,
+			log,
 		) => {
 			const r = await GenericUpsert(
 				quests.filter((e) => IsSupported(e.game)),
 				collection,
 				"questID",
-				logger,
+				log,
 				true,
 			);
 
@@ -393,14 +389,14 @@ async function SynchroniseDBWithSeeds() {
 			const game = collectionName.split("-")[1];
 
 			if (!TachiConfig.GAMES.includes(game as GameGroup)) {
-				log.verbose(
+				log.debug(
 					`Skipping ${collectionName} (${game}) as it isn't for ${TachiConfig.NAME}.`,
 				);
 				continue;
 			}
 		}
 
-		log.verbose(`Found ${data.length} documents.`);
+		log.debug(`Found ${data.length} documents.`);
 
 		let matchedSomething = false;
 
@@ -424,5 +420,5 @@ async function SynchroniseDBWithSeeds() {
 }
 
 if (require.main === module) {
-	WrapScriptPromise(SynchroniseDBWithSeeds(), logger);
+	WrapScriptPromise(SynchroniseDBWithSeeds(), log);
 }

@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { BacksyncCollection, PullDatabaseSeeds } from "#lib/seeds/repo";
 import db from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";
@@ -12,7 +12,7 @@ import type {
 	Playtypes,
 	SongDocument,
 	Versions,
-} from "../../../../common/src";
+} from "tachi-common";
 
 const difficultyResolve: Record<string, [Playtypes["iidx"], Difficulties["iidx:DP" | "iidx:SP"]]> =
 	{
@@ -177,5 +177,5 @@ export async function UpdatePoyashiData() {
 }
 
 if (require.main === module) {
-	WrapScriptPromise(UpdatePoyashiData(), logger);
+	WrapScriptPromise(UpdatePoyashiData(), log);
 }

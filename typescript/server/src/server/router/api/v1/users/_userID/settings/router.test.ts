@@ -5,7 +5,7 @@ import ResetDBState from "#test-utils/resets";
 import deepmerge from "deepmerge";
 import t from "tap";
 
-import type { UserDocument } from "../../../../../../../../../common/src";
+import type { UserDocument } from "tachi-common";
 
 t.test("GET /api/v1/users/:userID/settings", (t) => {
 	t.beforeEach(ResetDBState);

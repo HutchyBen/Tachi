@@ -1,6 +1,6 @@
 import { SendEmail } from "#lib/email/client";
 import { MainHTMLWrapper } from "#lib/email/formats";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { Command } from "commander";
 
 const program = new Command();
@@ -27,8 +27,7 @@ if (require.main === module) {
 
 		process.exit(0);
 	})().catch((err: unknown) => {
-		log.error(`Failed to send test email.`, { err }, () => {
-			process.exit(1);
-		});
+		log.error({ err }, `Failed to send test email.`);
+		process.exit(1);
 	});
 }

@@ -1,11 +1,12 @@
+import type { ImportTypes } from "tachi-common";
+
 import { HandleSIGTERMGracefully } from "#lib/handlers/sigterm";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { Env, ServerConfig } from "#lib/setup/config";
-import { FormatUserDoc, GetUserWithID } from "#utils/user";
+import { GetUserWithID } from "#utils/user";
 import { Worker } from "bullmq";
 import { EventEmitter } from "events";
 
-import type { ImportTypes } from "../../../../../common/src";
 import type ScoreImportFatalError from "../framework/score-importing/score-import-error";
 import type { ScoreImportJob, ScoreImportJobData } from "./types";
 
@@ -74,7 +75,7 @@ export const worker = new Worker(
 
 		job.data.parserArguments = processedArgs as ScoreImportJobData<I>["parserArguments"];
 
-		log.debug(`Received score import job ${job.id}`, { job });
+		log.debug({ job }, `Received score import job ${job.id}`);
 
 		const InputParser = GetInputParser(job.data);
 
@@ -106,9 +107,8 @@ export const worker = new Worker(
 			// no idea why or how this broke, but now `instanceof` is considered a footgun so, great.
 			if ("statusCode" in err) {
 				log.info(
-					`Job ${job.id} hit ScoreImportFatalError (User Fault) with message: ${err.message}`,
-					err,
-					job.data,
+					{ id: job.id, err, jobData: job.data },
+					`Job hit ScoreImportFatalError (User Fault) with message: ${err.message}`,
 				);
 				return { success: false, statusCode: err.statusCode, description: err.message };
 			}
@@ -127,11 +127,11 @@ export const worker = new Worker(
 
 worker.on("failed", (job, err) => {
 	// any errors that escalate this far are unexpected, as they haven't been caught by previous calls.
-	log.error(`Job ${job.id} failed unexpectedly with message: ${err.message}`, err);
+	log.error(err, `Job ${job.id} failed unexpectedly with message: ${err.message}`);
 });
 
 worker.on("completed", (job, result) => {
-	log.debug(`Job ${job.id} finished successfully.`, result);
+	log.debug(result, `Job ${job.id} finished successfully.`);
 });
 
 process.on("SIGTERM", () => {

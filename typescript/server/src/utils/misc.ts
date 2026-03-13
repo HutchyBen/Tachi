@@ -1,12 +1,10 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 
 import { ONE_MEGABYTE } from "#lib/constants/filesize";
 import { ONE_HOUR, ONE_SECOND } from "#lib/constants/time";
 import { TachiConfig } from "#lib/setup/config";
 import { exec } from "child_process";
 import crypto from "crypto";
-import { URL } from "url";
-
 import {
 	type GameGroup,
 	type GamePTConfig,
@@ -16,7 +14,8 @@ import {
 	type integer,
 	type Playtype,
 	type Versions,
-} from "../../../common/src";
+} from "tachi-common";
+import { URL } from "url";
 
 // https://github.com/sindresorhus/escape-string-regexp/blob/main/index.js
 // the developer of this has migrated everything to Force ES6 style modules,
@@ -322,26 +321,18 @@ export function IsRecord(maybeRecord: unknown): maybeRecord is Record<string, un
  * when it completes.
  */
 export function WrapScriptPromise(promise: Promise<unknown>, log: KtLogger) {
-	let code = 0;
-
 	void promise
 		.then(() => {
 			log.info(`Finished executing.`);
 		})
 		.catch((err: Error) => {
-			log.error(`Failed executing.`, { err });
-
-			code = 1;
+			log.error({ err }, `Failed executing.`);
 		})
 		.finally(() => {
-			// die in 10 seconds or when the logger ends, whatever ends earlier.
+			// die in 10 seconds or when the log ends, whatever ends earlier.
 			setTimeout(() => {
 				process.exit(1);
 			}, ONE_SECOND * 10);
-
-			log.end(() => {
-				process.exit(code);
-			});
 		});
 }
 

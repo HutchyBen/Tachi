@@ -1,6 +1,6 @@
 import type { BulkWriteOperation, FilterQuery } from "mongodb";
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { TachiConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
 import deepmerge from "deepmerge";
@@ -20,7 +20,7 @@ import {
 	type Playtype,
 	type SongDocument,
 	type TableDocument,
-} from "../../../common/src";
+} from "tachi-common";
 import { GetFolderForIDGuaranteed } from "./db";
 
 // overloads!
@@ -70,10 +70,13 @@ export async function ResolveFolderToCharts(
 		case "charts": {
 			const folderDataTransposed = TransposeFolderData(folder.data);
 
-			log.debug(`Transposed folder data in resolve-folder-to-charts.`, {
-				folder,
-				folderDataTransposed,
-			});
+			log.debug(
+				{
+					folder,
+					folderDataTransposed,
+				},
+				`Transposed folder data in resolve-folder-to-charts.`,
+			);
 
 			const fx = deepmerge.all([filter, { playtype: folder.playtype }, folderDataTransposed]);
 
@@ -205,7 +208,7 @@ export async function CreateFolderChartLookup(folder: FolderDocument, flush = fa
 		// create a folder-chart-lookup at the same time.
 		await db["folder-chart-lookup"].bulkWrite(ops);
 	} catch (err) {
-		log.error(`Failed to create folder chart lookup for ${folder.title}.`, { folder, err });
+		log.error({ folder, err }, `Failed to create folder chart lookup for ${folder.title}.`);
 		throw err;
 	}
 }

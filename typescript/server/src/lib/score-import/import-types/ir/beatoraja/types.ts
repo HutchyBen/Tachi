@@ -1,4 +1,4 @@
-import type { integer } from "../../../../../../../common/src";
+import type { integer } from "tachi-common";
 
 export interface BeatorajaContext {
 	client: "beatoraja" | "lr2oraja";

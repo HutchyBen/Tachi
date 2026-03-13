@@ -1,6 +1,6 @@
 import type { PrivateUserInfoDocument } from "#utils/types";
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { Env, ServerConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
 import nodeFetch from "#utils/fetch";
@@ -15,7 +15,7 @@ import {
 	UserAuthLevels,
 	type UserDocument,
 	type UserSettingsDocument,
-} from "../../../../../../../common/src";
+} from "tachi-common";
 
 const BCRYPT_SALT_ROUNDS = 12;
 
@@ -88,7 +88,7 @@ export async function AddNewUser(
 ) {
 	const hashedPassword = await HashPassword(plaintext);
 
-	log.verbose(`Hashed password for ${username}.`);
+	log.debug(`Hashed password for ${username}.`);
 
 	const userDoc: UserDocument = {
 		id: userID,
@@ -130,7 +130,7 @@ export function InsertPrivateUserInfo(userID: integer, hashedPassword: string, e
 }
 
 export function InsertDefaultUserSettings(userID: integer) {
-	log.verbose(`Inserting default settings for ${userID}.`);
+	log.debug(`Inserting default settings for ${userID}.`);
 	const UserSettingsDocument: UserSettingsDocument = {
 		userID,
 		following: [],
@@ -164,8 +164,8 @@ export async function ValidateCaptcha(
 
 	if (err) {
 		log.warn(
-			`Google ReCaptcha returned something without a success property? Assuming this captcha check failed.`,
 			{ googleCaptchaRes, err },
+			`Google ReCaptcha returned something without a success property? Assuming this captcha check failed.`,
 		);
 		return false;
 	}
@@ -174,7 +174,7 @@ export async function ValidateCaptcha(
 	const gcr = googleCaptchaRes as { success: boolean };
 
 	if (!gcr.success) {
-		log.verbose(`Failed GCaptcha response`, { gcr });
+		log.debug({ gcr }, `Failed GCaptcha response`);
 	}
 
 	return gcr.success;

@@ -2,10 +2,10 @@ import type { ScoreImportJobData } from "#lib/score-import/worker/types";
 
 import { CDNStoreOrOverwrite } from "#lib/cdn/cdn";
 import { GetScoreImportInputURL } from "#lib/cdn/url-format";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 
-import type { ImportTypes } from "../../../../../../common/src";
+import type { ImportTypes } from "tachi-common";
 import type ScoreImportFatalError from "../score-importing/score-import-error";
 
 /**
@@ -51,13 +51,12 @@ export async function StartTrackingImport(jobData: ScoreImportJobData<ImportType
 	CDNStoreOrOverwrite(GetScoreImportInputURL(jobData.importID), SerialiseJobData(jobData)).catch(
 		(err) => {
 			log.error(
-				`Failed to save score-import-input for import '${
-					jobData.importID
-				}' at path '${GetScoreImportInputURL(jobData.importID)}'.`,
-
 				// $response is a circular struct and we really don't like logging
 				// cicular structs. gf.
 				{ reason: { ...err.$error, $response: undefined } },
+				`Failed to save score-import-input for import '${
+					jobData.importID
+				}' at path '${GetScoreImportInputURL(jobData.importID)}'.`,
 			);
 		},
 	);

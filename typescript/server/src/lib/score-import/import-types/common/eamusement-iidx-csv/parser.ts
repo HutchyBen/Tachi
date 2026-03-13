@@ -1,18 +1,18 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 
 import { StringIsGameVersion } from "#utils/misc";
 import { CSVParseError, NaiveCSVParse } from "#utils/naive-csv-parser";
-
-import type { ParserFunctionReturns } from "../types";
-import type { EamusementScoreData, IIDXEamusementCSVContext, IIDXEamusementCSVData } from "./types";
-
 import {
 	GetGamePTConfig,
 	type integer,
 	Playtype,
 	type Playtypes,
 	type Versions,
-} from "../../../../../../../common/src";
+} from "tachi-common";
+
+import type { ParserFunctionReturns } from "../types";
+import type { EamusementScoreData, IIDXEamusementCSVContext, IIDXEamusementCSVData } from "./types";
+
 import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 
 export enum EAM_VERSION_NAMES {
@@ -89,12 +89,12 @@ const HV_HEADER_COUNT = 41;
 
 export function ResolveHeaders(headers: Array<string>, log: KtLogger) {
 	if (headers.length === PRE_HV_HEADER_COUNT) {
-		log.verbose("PRE_HV csv received.");
+		log.debug("PRE_HV csv received.");
 		return {
 			hasBeginnerAndLegg: false,
 		};
 	} else if (headers.length === HV_HEADER_COUNT) {
-		log.verbose("HV+ csv received.");
+		log.debug("HV+ csv received.");
 		return {
 			hasBeginnerAndLegg: true,
 		};
@@ -112,7 +112,7 @@ export function IIDXCSVParse(csvBuffer: Buffer, playtype: Playtypes["iidx"], log
 	let rawRows: Array<Array<string>>;
 
 	try {
-		({ rawHeaders, rawRows } = NaiveCSVParse(csvBuffer, logger));
+		({ rawHeaders, rawRows } = NaiveCSVParse(csvBuffer, log));
 	} catch (e) {
 		// this is probably fine
 		if (e instanceof CSVParseError) {
@@ -122,7 +122,7 @@ export function IIDXCSVParse(csvBuffer: Buffer, playtype: Playtypes["iidx"], log
 		throw e;
 	}
 
-	const { hasBeginnerAndLegg } = ResolveHeaders(rawHeaders, logger);
+	const { hasBeginnerAndLegg } = ResolveHeaders(rawHeaders, log);
 
 	const diffs = hasBeginnerAndLegg
 		? (["beginner", "normal", "hyper", "another", "leggendaria"] as const)
@@ -239,10 +239,10 @@ function GenericParseEamIIDXCSV(
 	const { hasBeginnerAndLegg, version, iterableData } = IIDXCSVParse(
 		fileData.buffer,
 		playtype,
-		logger,
+		log,
 	);
 
-	log.verbose("Successfully parsed CSV.");
+	log.debug("Successfully parsed CSV.");
 
 	const context: IIDXEamusementCSVContext = {
 		playtype,
@@ -251,7 +251,7 @@ function GenericParseEamIIDXCSV(
 		service,
 	};
 
-	log.verbose(`Successfully Parsed with ${iterableData.length} results.`);
+	log.debug(`Successfully Parsed with ${iterableData.length} results.`);
 
 	return {
 		iterable: iterableData,

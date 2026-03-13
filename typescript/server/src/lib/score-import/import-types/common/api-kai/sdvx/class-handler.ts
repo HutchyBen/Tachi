@@ -5,8 +5,8 @@ import { IsRecord } from "#utils/misc";
 
 import type { KaiAPIReauthFunction } from "../traverse-api";
 
-import { SDVX_DANS } from "../../../../../../../../common/src";
-import { SDVXDans } from "../../../../../../../../common/src/config/game-support/sdvx";
+import { SDVX_DANS } from "tachi-common";
+import { SDVXDans } from "tachi-common/config/game-support/sdvx";
 import { KaiTypeToBaseURL } from "../utils";
 
 export async function CreateKaiSDVXClassProvider(
@@ -44,20 +44,26 @@ export async function CreateKaiSDVXClassProvider(
 		err = e;
 	}
 
-	return (gptString, userID, ratings, logger) => {
-		log.info(`Got return from ${baseUrl}/api/sdvx/v1/player_profile.`, {
-			json,
-		});
+	return (gptString, userID, ratings, log) => {
+		log.info(
+			{
+				json,
+			},
+			`Got return from ${baseUrl}/api/sdvx/v1/player_profile.`,
+		);
 
 		if (err !== undefined) {
-			log.error(`An error occured while updating classes for ${baseUrl}.`, { err });
+			log.error({ err }, `An error occured while updating classes for ${baseUrl}.`);
 			return {};
 		}
 
 		if (!IsRecord(json)) {
-			log.error(`JSON Returned from server was not an object? Not updating anything.`, {
-				json,
-			});
+			log.error(
+				{
+					json,
+				},
+				`JSON Returned from server was not an object? Not updating anything.`,
+			);
 			return {};
 		}
 
@@ -66,9 +72,12 @@ export async function CreateKaiSDVXClassProvider(
 			json.skill_level === undefined ||
 			typeof json.skill_level !== "number"
 		) {
-			log.info(`User has no/invalid skill_level. Not updating anything.`, {
-				skillLevel: json.skill_level,
-			});
+			log.info(
+				{
+					skillLevel: json.skill_level,
+				},
+				`User has no/invalid skill_level. Not updating anything.`,
+			);
 			return {};
 		}
 

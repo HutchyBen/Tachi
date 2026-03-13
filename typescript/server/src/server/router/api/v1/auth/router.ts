@@ -1,6 +1,8 @@
+import type { integer } from "tachi-common";
+
 import { SendEmail } from "#lib/email/client";
 import { EmailFormatResetPassword, EmailFormatVerifyEmail } from "#lib/email/formats";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
 import {
@@ -21,8 +23,6 @@ import {
 } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-
-import type { integer } from "../../../../../../../common/src";
 
 import {
 	AddNewUser,
@@ -57,7 +57,7 @@ router.post(
 			captcha: "Please fill out the captcha.",
 		},
 		undefined,
-		"verbose",
+		"debug",
 	),
 	async (req, res) => {
 		if (req.session.tachi?.user.id !== undefined) {
@@ -71,22 +71,22 @@ router.post(
 			username: string;
 		};
 
-		log.verbose(`Received login request with username ${body.username} (${req.ip})`);
+		log.debug(`Received login request with username ${body.username} (${req.ip})`);
 
 		/* istanbul ignore next */
 		if (Env.NODE_ENV === "production" || Env.NODE_ENV === "staging") {
-			log.verbose("Validating captcha...");
+			log.debug("Validating captcha...");
 			const validCaptcha = await ValidateCaptcha(body.captcha, req.socket.remoteAddress);
 
 			if (!validCaptcha) {
-				log.verbose("Captcha failed.");
+				log.debug("Captcha failed.");
 				return res.status(400).json({
 					success: false,
 					description: `Captcha failed.`,
 				});
 			}
 
-			log.verbose("Captcha validated!");
+			log.debug("Captcha validated!");
 		} else {
 			log.warn("Skipped captcha check because not in production.");
 		}
@@ -94,7 +94,7 @@ router.post(
 		const requestedUser = await GetUserCaseInsensitive(body.username);
 
 		if (!requestedUser) {
-			log.verbose(`Invalid username for login ${body.username}.`);
+			log.debug(`Invalid username for login ${body.username}.`);
 			return res.status(404).json({
 				success: false,
 				description: `This user does not exist.`,
@@ -105,10 +105,10 @@ router.post(
 
 		if (!privateInfo) {
 			log.error(
+				{ requestedUser },
 				`State desync for user ${FormatUserDoc(
 					requestedUser,
 				)}. This user has no password/email information?`,
-				{ requestedUser },
 			);
 
 			return res.status(500).json({
@@ -120,7 +120,7 @@ router.post(
 		const passwordMatch = await PasswordCompare(body["!password"], privateInfo.password);
 
 		if (!passwordMatch) {
-			log.verbose("Invalid password provided.");
+			log.debug("Invalid password provided.");
 			return res.status(403).json({
 				success: false,
 				description: `Invalid password.`,
@@ -130,7 +130,7 @@ router.post(
 		const user = await GetUserWithID(requestedUser.id);
 
 		if (!user) {
-			log.error(`User logged in as someone who does not exist?`, { requestedUser });
+			log.error({ requestedUser }, `User logged in as someone who does not exist?`);
 			return res.status(500).json({
 				success: false,
 				description: `An internal server error has occured.`,
@@ -146,7 +146,7 @@ router.post(
 
 		MountAuthCookie(req, user, settings);
 
-		log.verbose(`${FormatUserDoc(requestedUser)} Logged in.`);
+		log.debug(`${FormatUserDoc(requestedUser)} Logged in.`);
 
 		return res.status(200).json({
 			success: true,
@@ -181,7 +181,7 @@ router.post(
 			captcha: "Please fill out the captcha.",
 		},
 		undefined,
-		"verbose",
+		"debug",
 	),
 	async (req, res) => {
 		if (!TachiConfig.SIGNUPS_ENABLED) {
@@ -209,22 +209,22 @@ router.post(
 			});
 		}
 
-		log.verbose(`received register request with username ${body.username} (${req.ip})`);
+		log.debug(`received register request with username ${body.username} (${req.ip})`);
 
 		/* istanbul ignore next */
 		if (Env.NODE_ENV === "production" || Env.NODE_ENV === "staging") {
-			log.verbose("Validating captcha...");
+			log.debug("Validating captcha...");
 			const validCaptcha = await ValidateCaptcha(body.captcha, req.socket.remoteAddress);
 
 			if (!validCaptcha) {
-				log.verbose("Captcha failed.");
+				log.debug("Captcha failed.");
 				return res.status(400).json({
 					success: false,
 					description: `Captcha failed.`,
 				});
 			}
 
-			log.verbose("Captcha validated.");
+			log.debug("Captcha validated.");
 		} else {
 			log.warn("Skipped captcha check because not in production.");
 		}
@@ -232,7 +232,7 @@ router.post(
 		const existingUser = await GetUserCaseInsensitive(body.username);
 
 		if (existingUser) {
-			log.verbose(`Invalid username ${body.username}, already in use.`);
+			log.debug(`Invalid username ${body.username}, already in use.`);
 			return res.status(409).json({
 				success: false,
 				description: "This username is already in use.",
@@ -320,7 +320,7 @@ router.post(
 				body: user,
 			});
 		} catch (err) {
-			log.error(`Bailed on user creation ${body.username}.`, { err });
+			log.error({ err }, `Bailed on user creation ${body.username}.`);
 
 			if (ServerConfig.INVITE_CODE_CONFIG && body.inviteCode !== undefined) {
 				await ReinstateInvite(body.inviteCode);
@@ -497,7 +497,7 @@ router.post(
 
 			const code = `M${Random20Hex()}`;
 
-			log.verbose(`Created password reset code for ${FormatUserDoc(user)}.`);
+			log.debug(`Created password reset code for ${FormatUserDoc(user)}.`);
 
 			await db["password-reset-codes"].insert({
 				code,

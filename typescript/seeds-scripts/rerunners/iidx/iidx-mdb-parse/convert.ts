@@ -5,7 +5,7 @@ import fs, { mkdirSync } from "fs";
 import iconv from "iconv-lite";
 import path from "path";
 
-import { type integer } from "../../../../common/src";
+import { type integer } from "tachi-common";
 import { ParseDotOneFile } from "./dot-one-parser/parser";
 import { type IIDXConvertOutput } from "./dot-one-parser/types";
 
@@ -201,7 +201,7 @@ export async function ParseIIDXData(
 			continue;
 		}
 
-		log.verbose(`Parsing data/sound/${songID}/${songID}.1`);
+		log.debug(`Parsing data/sound/${songID}/${songID}.1`);
 		try {
 			const charts = await ParseDotOneFile(dotOnePath, {
 				genre,

@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { RecalcAllScores, UpdateAllPBs } from "#utils/calculations/recalc-scores";
 import { RecalcSessions } from "#utils/calculations/recalc-sessions";
 
@@ -12,11 +12,9 @@ import { RecalcGameProfiles } from "./recalc-game-profiles";
 	await RecalcGameProfiles();
 	await RecalcSessions();
 
-	log.info(`Completely done!`, () => {
-		process.exit(0);
-	});
+	log.info(`Completely done!`);
+	process.exit(0);
 })().catch((err: unknown) => {
-	log.error(`Failed to sync state.`, { err }, () => {
-		process.exit(1);
-	});
+	log.error({ err }, `Failed to sync state.`);
+	process.exit(1);
 });

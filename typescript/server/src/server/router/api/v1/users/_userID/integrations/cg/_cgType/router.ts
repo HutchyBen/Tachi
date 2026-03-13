@@ -7,7 +7,7 @@ import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
 import { p } from "prudence";
 
-import type { CGCardInfo } from "../../../../../../../../../../../common/src";
+import type { CGCardInfo } from "tachi-common";
 
 import { RequireSelfRequestFromUser } from "../../../middleware";
 

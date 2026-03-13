@@ -51,7 +51,7 @@ const ConvertAPIMytChunithm: ConverterFunction<MytChunithmScore, EmptyObject> = 
 	data,
 	_context,
 	importType,
-	logger,
+	log,
 ) => {
 	if (data.info === undefined || data.judge === undefined) {
 		throw new InvalidScoreFailure("Failed to receive score data from MYT API");
@@ -93,7 +93,7 @@ const ConvertAPIMytChunithm: ConverterFunction<MytChunithmScore, EmptyObject> = 
 	const song = await FindSongOnID("chunithm", chart.songID);
 
 	if (song === null) {
-		log.error(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`, { chart });
+		log.error({ chart }, `Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
 		throw new InternalFailure(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
 	}
 

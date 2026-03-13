@@ -1,8 +1,8 @@
 import { ONE_DAY, ONE_HOUR } from "#lib/constants/time";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 
-import type { integer } from "../../../../../../common/src";
+import type { integer } from "tachi-common";
 
 /**
  * If a user has no ongoing import, enable the import lock and return true.

@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import ResetDBState from "#test-utils/resets";
 import { MockBarbatosScore } from "#test-utils/test-data";
 import t from "tap";
@@ -11,7 +11,7 @@ t.test("#ParseBarbatosSingle", (t) => {
 	t.test("Should return the score as a payload", (t) => {
 		const res = ParseBarbatosSingle(
 			MockBarbatosScore as unknown as Record<string, unknown>,
-			logger,
+			log,
 		);
 
 		t.hasStrict(res, {
@@ -24,7 +24,7 @@ t.test("#ParseBarbatosSingle", (t) => {
 	});
 
 	t.test("Should reject invalid scores", (t) => {
-		t.throws(() => ParseBarbatosSingle({}, logger), {
+		t.throws(() => ParseBarbatosSingle({}, log), {
 			message: "Invalid Barbatos Request",
 		});
 

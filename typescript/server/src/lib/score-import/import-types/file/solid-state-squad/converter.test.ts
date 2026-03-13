@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import ResetDBState from "#test-utils/resets";
 import {
 	LoadTachiIIDXData,
@@ -14,7 +14,7 @@ import type { S3Score } from "./types";
 import { ConvertFileS3, ParseDifficulty, ResolveS3Lamp } from "./converter";
 
 function cfile(data: S3Score) {
-	return ConvertFileS3(data, {}, "file/solid-state-squad", logger);
+	return ConvertFileS3(data, {}, "file/solid-state-squad", log);
 }
 
 t.test("#ConvertFileS3", (t) => {

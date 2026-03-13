@@ -40,7 +40,7 @@ import {
 	type ScoreDocument,
 	SDVXLIKE_GBOUNDARIES,
 	type SpecificUserGameStats,
-} from "../../../../common/src";
+} from "tachi-common";
 
 export const EX_SCORE_CHECK: ChartSpecificMetricValidator<IIDXLikes> = (exScore, chart) => {
 	if (exScore < 0) {

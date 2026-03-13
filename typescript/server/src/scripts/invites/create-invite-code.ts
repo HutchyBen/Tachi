@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import { Random20Hex } from "#utils/misc";
 import { Command } from "commander";
@@ -26,12 +26,10 @@ db.invites
 		consumedAt: null,
 	})
 	.then(() => {
-		log.info(`Created invite ${code}.`, () => {
+		log.info(() => {
 			process.exit(0);
-		});
+		}, `Created invite ${code}.`);
 	})
 	.catch((err: unknown) => {
-		log.error(`Failed to create invite ${code}`, { err }, () => {
-			process.exit(1);
-		});
+		log.error({ err }, `Failed to create invite ${code}`);
 	});

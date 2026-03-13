@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 import type { Mutable } from "#utils/types";
 
 import { HandleOrphanQueue } from "#lib/orphan-queue/orphan-queue";
@@ -8,7 +8,7 @@ import { Random20Hex } from "#utils/misc";
 import { FindChartOnSHA256, FindChartOnSHA256Playtype } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { ChartDocument, Playtypes, SongDocument } from "../../../../../../../common/src";
+import type { ChartDocument, Playtypes, SongDocument } from "tachi-common";
 import type { DryScore } from "../../../framework/common/types";
 import type { ConverterFunction } from "../../common/types";
 import type { BeatorajaChart, BeatorajaContext, BeatorajaScore } from "./types";
@@ -63,7 +63,7 @@ async function HandleOrphanChartProcess(
 		// If you're someone forking tachi looking to remove this
 		// check, remember to change the entire score import
 		// framework and database to be able to handle variable notecounts.
-		log.verbose(`Declined to orphan chart ${chartName} as it has #RANDOM declarations.`);
+		log.debug(`Declined to orphan chart ${chartName} as it has #RANDOM declarations.`);
 		throw new InvalidScoreFailure(`${TachiConfig.NAME} will not support #RANDOM charts.`);
 	}
 
@@ -137,7 +137,7 @@ async function HandleOrphanChartProcess(
 		);
 	}
 
-	await DeorphanScores(criteria, logger);
+	await DeorphanScores(criteria, log);
 
 	return chart;
 }
@@ -149,7 +149,7 @@ export const ConverterIRBeatoraja: ConverterFunction<BeatorajaScore, BeatorajaCo
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	// ALWAYS USE CHART.LNTYPE, NOT DATA.LNTYPE!
 	// beatoraja has a bug where IRScore LNTypes are always set to 0.
@@ -189,7 +189,7 @@ export const ConverterIRBeatoraja: ConverterFunction<BeatorajaScore, BeatorajaCo
 	}
 
 	if (!chart) {
-		chart = await HandleOrphanChartProcess(game, data, context, logger);
+		chart = await HandleOrphanChartProcess(game, data, context, log);
 	}
 
 	const song = await FindSongOnID(game, chart.songID);

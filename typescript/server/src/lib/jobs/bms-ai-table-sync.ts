@@ -1,9 +1,9 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { PullDatabaseSeeds } from "#lib/seeds/repo";
 import { WrapScriptPromise } from "#utils/misc";
 import fetch from "node-fetch";
 
-import type { ChartDocument } from "../../../../common/src";
+import type { ChartDocument } from "tachi-common";
 
 const AI_URL = "https://bms.hexlataia.xyz/tables/json/ai.json";
 
@@ -31,5 +31,5 @@ export async function UpdateAILevels() {
 }
 
 if (require.main === module) {
-	WrapScriptPromise(UpdateAILevels(), logger);
+	WrapScriptPromise(UpdateAILevels(), log);
 }

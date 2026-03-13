@@ -1,4 +1,6 @@
-import { log } from "#lib/logger/log.js";
+import type { GoalDocument } from "tachi-common";
+
+import { log } from "#lib/log/log.js";
 import { CreateGoalTitle, ValidateGoalChartsAndCriteria } from "#lib/targets/goal-utils";
 import { GetQuestsThatContainGoal } from "#lib/targets/goals";
 import prValidate from "#server/middleware/prudence-validate";
@@ -8,8 +10,6 @@ import { AssignToReqTachiData, GetGPT, GetTachiData } from "#utils/req-tachi-dat
 import { GetUsersWithIDs } from "#utils/user";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
-
-import type { GoalDocument } from "../../../../../../../../../../../common/src";
 
 const router: Router = Router({ mergeParams: true });
 
@@ -96,7 +96,7 @@ router.post(
 		},
 		undefined,
 		undefined,
-		"verbose",
+		"debug",
 	),
 	async (req, res) => {
 		const { game, playtype } = GetGPT(req);

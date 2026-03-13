@@ -45,7 +45,7 @@ coverage
 out.*
 failed-tests.log
 
-tsconfig.json.tsbuildinfo
+*.tsbuildinfo
 
 # legacy bootstrap flag
 I_HAVE_BOOTSTRAPPED_OK

@@ -10,8 +10,8 @@ import type {
 	ConfProvidedMetrics,
 	GPTString,
 	ScoreDocument,
-} from "../../../../common/src";
-import type { ExtractEnumMetricNames } from "../../../../common/src/types/metrics";
+} from "tachi-common";
+import type { ExtractEnumMetricNames } from "tachi-common/types/metrics";
 
 // insane typemagic to get mongodb-safe names for this GPT's metrics.
 type MetricKeys<GPT extends GPTString> = Exclude<

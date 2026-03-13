@@ -1,14 +1,14 @@
 import type { Request } from "express";
 
 import { ONE_MINUTE } from "#lib/constants/time";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RedisClient } from "#services/redis/redis";
 import { OmitUndefinedKeys } from "#utils/misc";
 import rateLimit, { type Options } from "express-rate-limit";
 import RateLimitRedis from "rate-limit-redis";
 
-import type { integer } from "../../../../common/src";
+import type { integer } from "tachi-common";
 
 function CreateStore(name: string) {
 	// undefined forces a default to an in-memory store
@@ -29,11 +29,14 @@ const CreateRateLimitOptions = (max: integer, name: string, windowMs?: number): 
 	OmitUndefinedKeys({
 		max,
 		onLimitReached: (req: Request) => {
-			log.warn(`User ${req.ip} hit rate limit.`, {
-				url: req.url,
-				method: req.method,
-				hideFromConsole: ["req"],
-			});
+			log.warn(
+				{
+					url: req.url,
+					method: req.method,
+					hideFromConsole: ["req"],
+				},
+				`User ${req.ip} hit rate limit.`,
+			);
 		},
 		store: CreateStore(name),
 		message: {

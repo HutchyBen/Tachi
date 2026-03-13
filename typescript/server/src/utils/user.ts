@@ -1,9 +1,8 @@
 import type { FindOneResult } from "monk";
 
 import { ONE_DAY } from "#lib/constants/time";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
-
 import {
 	type APITokenDocument,
 	type GameGroup,
@@ -15,7 +14,7 @@ import {
 	UserAuthLevels,
 	type UserDocument,
 	type UserGameStats,
-} from "../../../common/src";
+} from "tachi-common";
 
 /**
  * Returns a user's username from their ID. Throws if no user with that ID exists.
@@ -85,8 +84,8 @@ export async function GetUsersWithIDs(userIDs: Array<integer>) {
 	// as passing [1, 1, 1] is perfectly legal to this function.
 	if (users.length !== new Set(userIDs).size) {
 		log.error(
-			`GetUsersWithIDs was given ${userIDs.length} userIDs, but only matched ${users.length} -- state desync likely.`,
 			{ userIDs, users },
+			`GetUsersWithIDs was given ${userIDs.length} userIDs, but only matched ${users.length} -- state desync likely.`,
 		);
 		throw new Error(
 			`GetUsersWithIDs was given ${userIDs.length} userIDs, but only matched ${users.length}.`,

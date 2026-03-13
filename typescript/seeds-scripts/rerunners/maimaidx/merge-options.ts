@@ -10,7 +10,7 @@ import {
 	type Difficulties,
 	GetGamePTConfig,
 	type SongDocument,
-} from "../../../common/src";
+} from "tachi-common";
 import { CreateChartID, ReadCollection, WriteCollection } from "../../util";
 
 const VERSION_DISPLAY_NAMES = [
@@ -271,7 +271,7 @@ for (const optionsDir of options.input) {
 			const inGameID = Number(musicData.name.id);
 
 			if (isInBlacklist(`S${inGameID}`)) {
-				log.verbose(
+				log.debug(
 					`Ignored ${musicData.artistName.str} - ${musicData.name.str} (inGameID ${inGameID}) as it is in the blacklist.`,
 				);
 				continue;
@@ -379,7 +379,7 @@ for (const optionsDir of options.input) {
 				}
 
 				if (isInBlacklist(`C${inGameID}-${difficultyName}`)) {
-					log.verbose(
+					log.debug(
 						`Ignoring ${musicData.artistName.str} - ${musicData.name.str} [${difficultyName}] (inGameID ${inGameID}) as it is in the blacklist.`,
 					);
 					continue;

@@ -1,9 +1,9 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 
 import { FormatPrError } from "#utils/prudence";
 import { p } from "prudence";
 
-import type { integer } from "../../../../../../../common/src";
+import type { integer } from "tachi-common";
 import type { ParserFunctionReturns } from "../../common/types";
 import type { BeatorajaChart, BeatorajaContext, BeatorajaScore } from "./types";
 

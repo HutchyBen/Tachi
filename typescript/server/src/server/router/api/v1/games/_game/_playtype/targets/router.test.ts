@@ -5,7 +5,7 @@ import ResetDBState from "#test-utils/resets";
 import { HC511UserGoal } from "#test-utils/test-data";
 import t from "tap";
 
-import type { GoalSubscriptionDocument } from "../../../../../../../../../../common/src";
+import type { GoalSubscriptionDocument } from "tachi-common";
 
 t.test("GET /api/v1/games/:game/:playtype/targets/recently-achieved", (t) => {
 	t.beforeEach(ResetDBState);

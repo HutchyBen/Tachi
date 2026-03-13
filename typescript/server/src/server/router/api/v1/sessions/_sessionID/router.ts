@@ -16,8 +16,8 @@ import {
 	GetScoreMetrics,
 	type integer,
 	type ScoreDocument,
-} from "../../../../../../../../common/src";
-import { optNull } from "../../../../../../../../common/src/lib/schemas";
+} from "tachi-common";
+import { optNull } from "tachi-common/lib/schemas";
 import { GetSessionFromParam, RequireOwnershipOfSession } from "./middleware";
 
 const router: Router = Router({ mergeParams: true });

@@ -10,8 +10,8 @@ import { ParseDateFromString } from "#lib/score-import/framework/common/score-ut
 import { FindChartOnInGameIDVersion } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { Difficulties, integer, Versions } from "../../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../../common/src/types/metrics";
+import type { Difficulties, integer, Versions } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 import type { ConverterFunction } from "../../types";
 import type { CGContext, CGPopnScore } from "../types";
 
@@ -21,7 +21,7 @@ export const ConverterAPICGPopn: ConverterFunction<CGPopnScore, CGContext> = asy
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	const difficulty = ConvertDifficulty(data.difficulty);
 	const version = ConvertVersion(data.version);

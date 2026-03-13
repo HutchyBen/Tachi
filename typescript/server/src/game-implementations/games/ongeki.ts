@@ -16,7 +16,7 @@ import {
 	type integer,
 	ONGEKI_GBOUNDARIES,
 	type Playtype,
-} from "../../../../common/src";
+} from "tachi-common";
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
 const isUnranked = (chart: ChartDocument<"ongeki:Single">) =>

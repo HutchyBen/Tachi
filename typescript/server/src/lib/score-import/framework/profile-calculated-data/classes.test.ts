@@ -1,13 +1,13 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
 
-import { GITADORA_COLOURS, type UserGameStats } from "../../../../../../common/src";
+import { GITADORA_COLOURS, type UserGameStats } from "tachi-common";
 import { CalculateUGPTClasses, ProcessClassDeltas } from "./classes";
 
 t.test("#CalculateUGPTClasses", (t) => {
 	t.test("Should produce an empty object by default", async (t) => {
-		const res = await CalculateUGPTClasses("iidx", "SP", 1, {}, null, logger);
+		const res = await CalculateUGPTClasses("iidx", "SP", 1, {}, null, log);
 
 		t.strictSame(res, {});
 
@@ -15,14 +15,7 @@ t.test("#CalculateUGPTClasses", (t) => {
 	});
 
 	t.test("Should call and merge the ClassHandler", async (t) => {
-		const res = await CalculateUGPTClasses(
-			"iidx",
-			"SP",
-			1,
-			{},
-			() => ({ dan: "DAN_2" }),
-			logger,
-		);
+		const res = await CalculateUGPTClasses("iidx", "SP", 1, {}, () => ({ dan: "DAN_2" }), log);
 
 		t.strictSame(res, { dan: "DAN_2" });
 
@@ -38,7 +31,7 @@ t.test("#CalculateUGPTClasses", (t) => {
 				naiveSkill: 9000,
 			},
 			null,
-			logger,
+			log,
 		);
 
 		t.strictSame(res, { colour: "RAINBOW" });
@@ -53,7 +46,7 @@ t.test("#ProcessClassDeltas", (t) => {
 	t.beforeEach(ResetDBState);
 
 	t.test("Should return improved classes from null", async (t) => {
-		const res = await ProcessClassDeltas("iidx", "SP", { dan: "KAIDEN" }, null, 1, logger);
+		const res = await ProcessClassDeltas("iidx", "SP", { dan: "KAIDEN" }, null, 1, log);
 
 		t.strictSame(res, [
 			{
@@ -75,7 +68,7 @@ t.test("#ProcessClassDeltas", (t) => {
 			{ dan: "KAIDEN" },
 			{ classes: {} } as UserGameStats,
 			1,
-			logger,
+			log,
 		);
 
 		t.strictSame(res, [
@@ -98,7 +91,7 @@ t.test("#ProcessClassDeltas", (t) => {
 			{ dan: "KAIDEN" },
 			{ classes: { dan: "CHUUDEN" } } as unknown as UserGameStats,
 			1,
-			logger,
+			log,
 		);
 
 		t.strictSame(res, [
@@ -121,7 +114,7 @@ t.test("#ProcessClassDeltas", (t) => {
 			{ dan: "KAIDEN" },
 			{ classes: { dan: "KAIDEN" } } as unknown as UserGameStats,
 			1,
-			logger,
+			log,
 		);
 
 		t.strictSame(res, []);
@@ -136,7 +129,7 @@ t.test("#ProcessClassDeltas", (t) => {
 			{ dan: "DAN_10" },
 			{ classes: { dan: "KAIDEN" } } as unknown as UserGameStats,
 			1,
-			logger,
+			log,
 		);
 
 		t.strictSame(res, []);
@@ -151,7 +144,7 @@ t.test("#ProcessClassDeltas", (t) => {
 			{ vfClass: "DANDELION_I" },
 			{ classes: { vfClass: "DANDELION_II" } } as unknown as UserGameStats,
 			1,
-			logger,
+			log,
 		);
 
 		t.strictSame(res, [

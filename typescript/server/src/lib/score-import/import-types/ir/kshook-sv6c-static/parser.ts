@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 import type { EmptyObject } from "#utils/types";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";

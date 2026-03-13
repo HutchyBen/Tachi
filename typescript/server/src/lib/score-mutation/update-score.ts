@@ -1,13 +1,12 @@
 import type { DryScoreData } from "#lib/score-import/framework/common/types";
 
-import { log, type KtLogger } from "#lib/logger/log.js";
+import { log as globalLog, type KtLogger } from "#lib/log/log.js";
 import { CreateScoreCalcData } from "#lib/score-import/framework/calculated-data/score";
 import { CreateSessionCalcData } from "#lib/score-import/framework/calculated-data/session";
 import { UpdateChartRanking } from "#lib/score-import/framework/pb/create-pb-doc";
 import { CreateFullScoreData } from "#lib/score-import/framework/score-importing/derivers";
 import { CreateScoreID } from "#lib/score-import/framework/score-importing/score-id";
-
-import { GetGPTString, type GPTString, type ScoreDocument } from "../../../../common/src";
+import { GetGPTString, type GPTString, type ScoreDocument } from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import db from "#services/mongo/db";
 import { UpdateAllPBs } from "#utils/calculations/recalc-scores";
@@ -37,7 +36,7 @@ export default async function UpdateScore(
 	const user = await GetUserWithID(userID);
 
 	if (!user) {
-		log.error(
+		globalLog.error(
 			`User ${userID} does not exist, yet a score update was called for them? Panicking.`,
 		);
 		throw new Error(
@@ -52,7 +51,7 @@ export default async function UpdateScore(
 	});
 
 	if (!chart) {
-		log.error(
+		globalLog.error(
 			`Chart ${chartID} does not exist, yet a score update was called for it? Panicking.`,
 		);
 		throw new Error(
@@ -80,16 +79,16 @@ export default async function UpdateScore(
 
 	newScore.scoreID = newScoreID;
 
-	const logger = log.child({
+	const log = globalLog.child({
 		context: ["Update Score", oldScore.scoreID, newScore.scoreID, FormatUserDoc(user)],
 	}) as KtLogger;
 
-	log.verbose("Received Update Score request.");
+	log.debug("Received Update Score request.");
 
 	const gpt = GetGPTString(newScore.game, newScore.playtype);
 
 	// rehydrate this scoredata, incase we got passed a new score thats dry
-	newScore.scoreData = CreateFullScoreData(gpt, newScore.scoreData, chart, logger);
+	newScore.scoreData = CreateFullScoreData(gpt, newScore.scoreData, chart, log);
 
 	newScore.calculatedData = CreateScoreCalcData(newScore.game, newScore.scoreData, chart);
 
@@ -123,12 +122,12 @@ export default async function UpdateScore(
 	}
 
 	if (oldScoreID === newScoreID) {
-		log.verbose(`Done updating score.`);
+		log.debug(`Done updating score.`);
 		return;
 	}
 
 	if (dangerouslySkipUpdatingRefs) {
-		log.verbose(`Done updating score.`);
+		log.debug(`Done updating score.`);
 		return;
 	}
 
@@ -142,7 +141,7 @@ export default async function UpdateScore(
 		scoreIDs: newScoreID,
 	});
 
-	log.verbose(`Updating ${sessions.length} sessions.`);
+	log.debug(`Updating ${sessions.length} sessions.`);
 
 	// For every session that interacts with this score ID (there should only ever be one)
 	for (const session of sessions) {
@@ -188,7 +187,7 @@ export default async function UpdateScore(
 	}
 
 	if (!skipUpdatingPBs) {
-		log.verbose(`Updating PBs.`);
+		log.debug(`Updating PBs.`);
 
 		// Update the PBs to reference properly.
 		// We run updateAllPbs on just the modified chart -- the reason
@@ -212,7 +211,7 @@ export default async function UpdateScore(
 		scoreIDs: oldScoreID,
 	});
 
-	log.verbose(`Updating ${imports.length} imports.`);
+	log.debug(`Updating ${imports.length} imports.`);
 
 	for (const importDoc of imports) {
 		await db.imports.update(
@@ -227,5 +226,5 @@ export default async function UpdateScore(
 		);
 	}
 
-	log.verbose(`Done updating score.`);
+	log.debug(`Done updating score.`);
 }

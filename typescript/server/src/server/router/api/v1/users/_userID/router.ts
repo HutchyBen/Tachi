@@ -2,7 +2,7 @@ import { GetRecentActivity } from "#lib/activity/activity";
 import { ONE_MONTH } from "#lib/constants/time";
 import { SendEmail } from "#lib/email/client";
 import { EmailFormatVerifyEmail } from "#lib/email/formats";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { GetRivalIDs } from "#lib/rivals/rivals";
 import { ServerConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
@@ -34,7 +34,7 @@ import type {
 	ImportTypes,
 	integer,
 	UserGameStats,
-} from "../../../../../../../../common/src";
+} from "tachi-common";
 
 import { HashPassword, PasswordCompare, ValidateEmail, ValidatePassword } from "../../auth/auth";
 import apiTokensRouter from "./api-tokens/router";
@@ -200,8 +200,8 @@ router.patch(
 
 		if (!newUser) {
 			log.error(
-				`User ${FormatUserDoc(user)} updated profile but user doc no longer exists?`,
 				{ user },
+				`User ${FormatUserDoc(user)} updated profile but user doc no longer exists?`,
 			);
 
 			return res.status(500).json({
@@ -482,7 +482,7 @@ router.post(
 
 		/* istanbul ignore next */
 		if (!privateInfo) {
-			log.error(`User ${FormatUserDoc(user)} has no private information?`, { user });
+			log.error({ user }, `User ${FormatUserDoc(user)} has no private information?`);
 			return res.status(500).json({
 				success: false,
 				description: `An internal server error has occured.`,
@@ -572,7 +572,7 @@ router.post(
 
 		/* istanbul ignore next */
 		if (!privateInfo) {
-			log.error(`User ${FormatUserDoc(user)} has no private information?`, { user });
+			log.error({ user }, `User ${FormatUserDoc(user)} has no private information?`);
 			return res.status(500).json({
 				success: false,
 				description: `An internal server error has occured.`,
@@ -591,7 +591,7 @@ router.post(
 		const existingUser = await GetUserCaseInsensitive(body.newUsername);
 
 		if (existingUser) {
-			log.verbose(`Invalid username ${body.newUsername}, already in use.`);
+			log.debug(`Invalid username ${body.newUsername}, already in use.`);
 			return res.status(409).json({
 				success: false,
 				description: "This username is already in use.",

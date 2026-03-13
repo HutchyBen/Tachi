@@ -1,5 +1,5 @@
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { FormatUserDoc, GetUserWithID } from "#utils/user";
 import { Router } from "express";
 
@@ -22,11 +22,14 @@ const router: Router = Router({ mergeParams: true });
 
 router.use(async (req, res, next) => {
 	if (!req[SYMBOL_TACHI_API_AUTH]) {
-		log.info(`IR import request received from: ${req.header("Authorization")}`, {
-			body: req.body,
-			query: req.query,
-			url: req.url,
-		});
+		log.info(
+			{
+				body: req.body,
+				query: req.query,
+				url: req.url,
+			},
+			`IR import request received from: ${req.header("Authorization")}`,
+		);
 
 		next();
 		return;
@@ -40,12 +43,15 @@ router.use(async (req, res, next) => {
 		user = null;
 	}
 
-	log.info(`IR import request received from: ${user ? FormatUserDoc(user) : "Unknown"}`, {
-		user,
-		body: req.body,
-		query: req.query,
-		url: req.url,
-	});
+	log.info(
+		{
+			user,
+			body: req.body,
+			query: req.query,
+			url: req.url,
+		},
+		`IR import request received from: ${user ? FormatUserDoc(user) : "Unknown"}`,
+	);
 
 	next();
 });

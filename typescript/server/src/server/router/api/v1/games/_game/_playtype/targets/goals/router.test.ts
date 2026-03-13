@@ -13,7 +13,7 @@ import t from "tap";
 import type {
 	GoalDocument,
 	GoalSubscriptionDocument,
-} from "../../../../../../../../../../../common/src";
+} from "tachi-common";
 
 // this is my lazy sample data for these tests.
 const LoadLazySampleData = async () => {

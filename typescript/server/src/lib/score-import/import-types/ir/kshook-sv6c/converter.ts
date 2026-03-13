@@ -8,7 +8,7 @@ import {
 import { FindSDVXChartOnInGameIDVersion } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 import type { ConverterFunction } from "../../common/types";
 import type { KsHookSV6CContext, KsHookSV6CScore } from "./types";
 
@@ -16,7 +16,7 @@ export const ConverterIRKsHookSV6C: ConverterFunction<KsHookSV6CScore, KsHookSV6
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	const diff = SV6CConvertDifficulty(data.difficulty);
 

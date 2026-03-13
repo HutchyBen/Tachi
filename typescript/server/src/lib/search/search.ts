@@ -1,7 +1,7 @@
 import type { FilterQuery } from "mongodb";
 import type { ICollection } from "monk";
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { TachiConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
 import { GetSongForIDGuaranteed } from "#utils/db";
@@ -21,7 +21,7 @@ import {
 	type SongDocument,
 	SplitGPT,
 	type UserDocument,
-} from "../../../../common/src";
+} from "tachi-common";
 import { AsyncFzf } from "./fzf/main";
 
 interface SearchControls {

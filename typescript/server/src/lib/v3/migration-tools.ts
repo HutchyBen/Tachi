@@ -5,7 +5,7 @@ import {
 	type OptionalMetrics,
 	type ProvidedMetrics,
 	type ScoreData,
-} from "../../../../common/src";
+} from "tachi-common";
 
 interface RetVal<GPT extends GPTString> {
 	derived: DerivedMetrics[GPT];

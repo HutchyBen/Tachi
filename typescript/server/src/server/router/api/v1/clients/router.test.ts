@@ -5,7 +5,7 @@ import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
 
-import type { APITokenDocument, TachiAPIClientDocument } from "../../../../../../../common/src";
+import type { APITokenDocument, TachiAPIClientDocument } from "tachi-common";
 
 const clientDataset: Array<TachiAPIClientDocument> = [
 	{

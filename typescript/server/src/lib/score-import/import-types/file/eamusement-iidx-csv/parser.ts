@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 
 import type {
 	IIDXEamusementCSVContext,
@@ -13,7 +13,7 @@ function ParseEamusementIIDXCSV(
 	body: Record<string, unknown>,
 	log: KtLogger,
 ): ParserFunctionReturns<IIDXEamusementCSVData, IIDXEamusementCSVContext> {
-	return GenericParseEamIIDXCSV(fileData, body, "e-amusement", logger);
+	return GenericParseEamIIDXCSV(fileData, body, "e-amusement", log);
 }
 
 export default ParseEamusementIIDXCSV;

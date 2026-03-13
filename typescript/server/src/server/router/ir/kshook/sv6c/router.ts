@@ -1,6 +1,6 @@
 import { MODEL_SDVX3_KONASTE } from "#lib/constants/ea3id";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import db from "#services/mongo/db";
 import { ParseEA3SoftID } from "#utils/ea3id";
@@ -60,7 +60,7 @@ const ValidateHeaders: RequestHandler = (req, res, next) => {
 			});
 		}
 	} catch (err) {
-		log.info(`Invalid softID from ${req[SYMBOL_TACHI_API_AUTH].userID}.`, { err });
+		log.info({ err }, `Invalid softID from ${req[SYMBOL_TACHI_API_AUTH].userID}.`);
 		return res.status(400).json({
 			success: false,
 			error: `Invalid X-Software-Model.`,

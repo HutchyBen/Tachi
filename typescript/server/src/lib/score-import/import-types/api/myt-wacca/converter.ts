@@ -15,8 +15,8 @@ import {
 import { FindChartOnInGameID } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { Difficulties } from "../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
+import type { Difficulties } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 import type { ConverterFunction } from "../../common/types";
 import type { MytWaccaScore } from "./types";
 
@@ -62,7 +62,7 @@ const ConvertAPIMytWACCA: ConverterFunction<MytWaccaScore, EmptyObject> = async 
 	data,
 	_context,
 	importType,
-	logger,
+	log,
 ) => {
 	const difficulty = DIFFICULTIES[data.musicDifficulty];
 
@@ -86,7 +86,7 @@ const ConvertAPIMytWACCA: ConverterFunction<MytWaccaScore, EmptyObject> = async 
 	const song = await FindSongOnID("wacca", chart.songID);
 
 	if (song === null) {
-		log.error(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`, { chart });
+		log.error({ chart }, `Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
 		throw new InternalFailure(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
 	}
 

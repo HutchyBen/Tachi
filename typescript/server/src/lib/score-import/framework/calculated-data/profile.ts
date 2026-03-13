@@ -6,7 +6,7 @@ import {
 	type integer,
 	type Playtype,
 	type UserGameStats,
-} from "../../../../../../common/src";
+} from "tachi-common";
 
 /**
  * Calculate profile ratings for this UGPT.

@@ -3,8 +3,8 @@ import { FindSDVXChartOnInGameIDVersion } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 import { p } from "prudence";
 
-import type { Versions } from "../../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../../common/src/types/metrics";
+import type { Versions } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 import type { DryScore } from "../../../../framework/common/types";
 import type { ConverterFunction } from "../../types";
 import type { KaiContext, KaiSDVXScore } from "../types";
@@ -36,7 +36,7 @@ export const ConvertAPIKaiSDVX: ConverterFunction<unknown, KaiContext> = async (
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	const err = p(data, PR_KAI_SDVX_SCORE, {}, { allowExcessKeys: true });
 

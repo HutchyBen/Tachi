@@ -1,5 +1,5 @@
 import { USCIR_ADJACENT_SCORE_N } from "#lib/constants/usc-ir";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import { MStoS } from "#utils/misc";
 import { GetPBOnChart, GetServerRecordOnChart } from "#utils/scores";
@@ -10,8 +10,8 @@ import type {
 	integer,
 	PBScoreDocument,
 	ScoreDocument,
-} from "../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
+} from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 import type { USCServerScore } from "./types";
 
 export const TACHI_LAMP_TO_USC: Record<
@@ -98,10 +98,13 @@ export async function CreatePOSTScoresResponseBody(
 	> | null;
 
 	if (!scorePB) {
-		log.error(`Score was imported for chart, but no ScorePB was available on this chart?`, {
-			chartDoc,
-			scoreID,
-		});
+		log.error(
+			{
+				chartDoc,
+				scoreID,
+			},
+			`Score was imported for chart, but no ScorePB was available on this chart?`,
+		);
 		throw new Error(
 			`Score was imported for chart, but no ScorePB was available on this chart?`,
 		);
@@ -115,11 +118,11 @@ export async function CreatePOSTScoresResponseBody(
 	/* istanbul ignore next */
 	if (!ktServerRecord) {
 		log.error(
-			`Score was imported for chart, but no Server Record was available on this chart?`,
 			{
 				chartDoc,
 				scoreID,
 			},
+			`Score was imported for chart, but no Server Record was available on this chart?`,
 		);
 		throw new Error(
 			`Score was imported for chart, but no Server Record was available on this chart?`,

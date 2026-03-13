@@ -8,7 +8,7 @@ import {
 	v3AllGames,
 	type V3Game,
 	V3ToGPTString,
-} from "../../common/src";
+} from "tachi-common";
 
 export type AllCollections =
 	| "bms-course-lookup.json"

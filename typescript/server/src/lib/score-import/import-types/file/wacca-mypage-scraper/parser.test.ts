@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { MockMulterFile } from "#test-utils/mock-multer";
 import { TestingWaccaMyPageScraperRecordsCSV } from "#test-utils/test-data";
@@ -6,14 +6,14 @@ import t from "tap";
 
 import type { MyPageRecordsParsedPB } from "./types";
 
-import { WACCA_STAGEUPS } from "../../../../../../../common/src/constants/game";
+import { WACCA_STAGEUPS } from "tachi-common/constants/game";
 import { ParseMyPageScraperPlayerCSV, ParseMyPageScraperRecordsCSV } from "./parser";
 
 t.test("#ParseMyPageScraperRecordsCSV", (t) => {
 	t.test("Valid CSV", (t) => {
 		// This example file is cg505's actual records dump.
 		const file = MockMulterFile(TestingWaccaMyPageScraperRecordsCSV, "records.csv");
-		const { iterable, game } = ParseMyPageScraperRecordsCSV(file, {}, logger);
+		const { iterable, game } = ParseMyPageScraperRecordsCSV(file, {}, log);
 
 		t.equal(game, "wacca");
 
@@ -35,7 +35,7 @@ t.test("#ParseMyPageScraperRecordsCSV", (t) => {
 
 		const file = MockMulterFile(buffer, "records.csv");
 
-		const { iterable, game } = ParseMyPageScraperRecordsCSV(file, {}, logger);
+		const { iterable, game } = ParseMyPageScraperRecordsCSV(file, {}, log);
 
 		t.equal(game, "wacca");
 
@@ -62,7 +62,7 @@ t.test("#ParseMyPageScraperRecordsCSV", (t) => {
 		const file = MockMulterFile(buffer, "records.csv");
 
 		t.throws(
-			() => ParseMyPageScraperRecordsCSV(file, {}, logger),
+			() => ParseMyPageScraperRecordsCSV(file, {}, log),
 			new ScoreImportFatalError(
 				400,
 				"Failed to parse CSV: Invalid Record Length: columns length is 8, got 7 on line 2",
@@ -81,7 +81,7 @@ t.test("#ParseMyPageScraperRecordsCSV", (t) => {
 		const file = MockMulterFile(buffer, "records.csv");
 
 		t.throws(
-			() => ParseMyPageScraperRecordsCSV(file, {}, logger),
+			() => ParseMyPageScraperRecordsCSV(file, {}, log),
 			new ScoreImportFatalError(
 				400,
 				"Malformed CSV, invalid column(s) (music_title: undefined): Expected string.",
@@ -100,7 +100,7 @@ t.test("#ParseMyPageScraperRecordsCSV", (t) => {
 		const file = MockMulterFile(buffer, "records.csv");
 
 		t.throws(
-			() => ParseMyPageScraperRecordsCSV(file, {}, logger),
+			() => ParseMyPageScraperRecordsCSV(file, {}, log),
 			new ScoreImportFatalError(
 				400,
 				"Malformed CSV, invalid column(s) (music_achieves: undefined): Expected string.",
@@ -126,7 +126,7 @@ t.test("#ParseMyPageScraperPlayerCSV", (t) => {
 			iterable,
 			game,
 			classProvider: classProvider,
-		} = ParseMyPageScraperPlayerCSV(file, {}, logger);
+		} = ParseMyPageScraperPlayerCSV(file, {}, log);
 
 		t.equal(game, "wacca");
 
@@ -136,7 +136,7 @@ t.test("#ParseMyPageScraperPlayerCSV", (t) => {
 
 		// There's no good way to test that the classProvider got a valid
 		// MyPagePlayerStage, so we just call it to see.
-		t.strictSame(classProvider!("wacca:Single", 0, {}, logger), {
+		t.strictSame(classProvider!("wacca:Single", 0, {}, log), {
 			stageUp: "XII",
 		});
 
@@ -152,7 +152,7 @@ t.test("#ParseMyPageScraperPlayerCSV", (t) => {
 		const file = MockMulterFile(buffer, "player.csv");
 
 		t.throws(
-			() => ParseMyPageScraperPlayerCSV(file, {}, logger),
+			() => ParseMyPageScraperPlayerCSV(file, {}, log),
 			new ScoreImportFatalError(
 				400,
 				"Failed to parse CSV: Invalid Record Length: columns length is 9, got 8 on line 2",
@@ -171,7 +171,7 @@ t.test("#ParseMyPageScraperPlayerCSV", (t) => {
 		const file = MockMulterFile(buffer, "player.csv");
 
 		t.throws(
-			() => ParseMyPageScraperPlayerCSV(file, {}, logger),
+			() => ParseMyPageScraperPlayerCSV(file, {}, log),
 			new ScoreImportFatalError(400, "Malformed CSV: no player_stage column."),
 		);
 
@@ -185,7 +185,7 @@ t.test("#ParseMyPageScraperPlayerCSV", (t) => {
 		const file = MockMulterFile(buffer, "player.csv");
 
 		t.throws(
-			() => ParseMyPageScraperPlayerCSV(file, {}, logger),
+			() => ParseMyPageScraperPlayerCSV(file, {}, log),
 			new ScoreImportFatalError(400, "Malformed player_stage entry."),
 		);
 

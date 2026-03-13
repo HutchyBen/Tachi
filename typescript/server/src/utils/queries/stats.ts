@@ -2,7 +2,7 @@ import { ONE_HOUR } from "#lib/constants/time";
 import db from "#services/mongo/db";
 import NodeCache from "node-cache";
 
-import type { Classes, GameGroup, GPTString, integer, Playtype } from "../../../../common/src";
+import type { Classes, GameGroup, GPTString, integer, Playtype } from "tachi-common";
 
 const classDistCache = new NodeCache();
 

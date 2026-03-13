@@ -1,6 +1,6 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 
-import type { BatchManualScore } from "../../../../../../../common/src";
+import type { BatchManualScore } from "tachi-common";
 import type { BatchManualContext } from "../../common/batch-manual/types";
 import type { ParserFunctionReturns } from "../../common/types";
 
@@ -16,7 +16,7 @@ function ParseDirectManual(
 	inferTimestamp: boolean,
 	log: KtLogger,
 ): ParserFunctionReturns<BatchManualScore, BatchManualContext> {
-	return ParseBatchManualFromObject(body, "ir/direct-manual", inferTimestamp, logger);
+	return ParseBatchManualFromObject(body, "ir/direct-manual", inferTimestamp, log);
 }
 
 export default ParseDirectManual;

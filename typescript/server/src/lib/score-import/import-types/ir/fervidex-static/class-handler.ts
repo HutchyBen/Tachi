@@ -1,11 +1,11 @@
 import type { ClassProvider } from "#lib/score-import/framework/calculated-data/types";
 
-import type { integer } from "../../../../../../../common/src";
+import type { integer } from "tachi-common";
 
-import { IIDXDans } from "../../../../../../../common/src/config/game-support/iidx";
+import { IIDXDans } from "tachi-common/config/game-support/iidx";
 
 export function CreateFerStaticClassProvider(body: Record<string, unknown>): ClassProvider {
-	return (gptString, userID, ratings, logger) => {
+	return (gptString, userID, ratings, log) => {
 		let index;
 
 		if (gptString === "iidx:SP") {
@@ -24,7 +24,7 @@ export function CreateFerStaticClassProvider(body: Record<string, unknown>): Cla
 		}
 
 		if (!Number.isInteger(index)) {
-			log.info(`received invalid fer-static class of ${index} (${gptString}).`, { body });
+			log.info({ body }, `received invalid fer-static class of ${index} (${gptString}).`);
 			return;
 		}
 

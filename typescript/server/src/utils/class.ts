@@ -1,5 +1,5 @@
 import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
 import db from "#services/mongo/db";
 
@@ -12,7 +12,7 @@ import {
 	type integer,
 	type Playtype,
 	type UserGameStats,
-} from "../../../common/src";
+} from "tachi-common";
 
 /**
  * Returns the provided class if it is greater than the one in userGameStats

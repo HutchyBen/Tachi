@@ -12,7 +12,7 @@ import {
 	IIDX_GRADES,
 	IIDX_LAMPS,
 	type UserDocument,
-} from "../../../../../../../../../../../../common/src";
+} from "tachi-common";
 
 const SetFolders = async () => {
 	await db.folders.insert(TestingIIDXFolderSP10);

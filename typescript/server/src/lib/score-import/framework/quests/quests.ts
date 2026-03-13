@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 import type { BulkWriteUpdateOneOperation } from "mongodb";
 
 import { EvaluateQuestProgress } from "#lib/targets/quests";
@@ -13,7 +13,7 @@ import type {
 	QuestDocument,
 	QuestImportInfo,
 	QuestSubscriptionDocument,
-} from "../../../../../../common/src";
+} from "tachi-common";
 
 export async function UpdateUsersQuests(
 	importGoalInfo: Array<GoalImportInfo>,
@@ -24,9 +24,9 @@ export async function UpdateUsersQuests(
 ) {
 	const goalIDs = importGoalInfo.map((e) => e.goalID);
 
-	const { quests, questSubs } = await GetRelevantQuests(goalIDs, game, playtypes, userID, logger);
+	const { quests, questSubs } = await GetRelevantQuests(goalIDs, game, playtypes, userID, log);
 
-	return UpdateQuestsForUser(quests, questSubs, game, userID, logger);
+	return UpdateQuestsForUser(quests, questSubs, game, userID, log);
 }
 
 export async function UpdateQuestsForUser(

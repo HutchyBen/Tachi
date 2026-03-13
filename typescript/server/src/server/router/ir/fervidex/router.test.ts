@@ -12,7 +12,7 @@ import { Random20Hex, Sleep } from "#utils/misc";
 import deepmerge from "deepmerge";
 import t from "tap";
 
-import type { ChartDocument, GPTStrings, SongDocument } from "../../../../../../common/src";
+import type { ChartDocument, GPTStrings, SongDocument } from "tachi-common";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function TestHeaders(url: string, data: any) {

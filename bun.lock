@@ -409,6 +409,7 @@
         "semver": "catalog:",
         "tachi-common": "workspace:*",
         "tachi-db": "workspace:*",
+        "tachi-db-migration-engine": "workspace:*",
         "ts-node": "catalog:",
         "typescript": "catalog:",
         "uuidv7": "catalog:",

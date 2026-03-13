@@ -7,8 +7,8 @@ import {
 import { FindBMSChartOnHash } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { ScoreDocument } from "../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
+import type { ScoreDocument } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 import type { ConverterFunction } from "../../common/types";
 import type { LR2HookContext, LR2HookScore } from "./types";
 
@@ -16,7 +16,7 @@ export const ConverterLR2Hook: ConverterFunction<LR2HookScore, LR2HookContext> =
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	const chart = await FindBMSChartOnHash(data.md5);
 

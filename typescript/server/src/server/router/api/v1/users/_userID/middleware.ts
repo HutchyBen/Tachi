@@ -1,12 +1,12 @@
 import type { RequestHandler } from "express";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { IsNullish } from "#utils/misc";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { GetUserWithID, ResolveUser } from "#utils/user";
 
-import { UserAuthLevels } from "../../../../../../../../common/src";
+import { UserAuthLevels } from "tachi-common";
 
 export const GetUserFromParam: RequestHandler = async (req, res, next) => {
 	if (!req.params.userID) {

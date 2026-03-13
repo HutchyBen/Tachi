@@ -5,7 +5,7 @@ import ResetDBState from "#test-utils/resets";
 import { Testing511SPA, TestingIIDXSPScorePB } from "#test-utils/test-data";
 import t from "tap";
 
-import type { PBScoreDocument, UserDocument } from "../../../../../../../../../../../common/src";
+import type { PBScoreDocument, UserDocument } from "tachi-common";
 
 t.test("GET /api/v1/games/:game/:playtype/charts/:chartID", (t) => {
 	t.beforeEach(ResetDBState);

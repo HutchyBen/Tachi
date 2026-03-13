@@ -2,7 +2,7 @@
 
 import fs from "fs/promises";
 
-import { type ChartDocument, type Difficulties, type SongDocument } from "../../../common/src";
+import { type ChartDocument, type Difficulties, type SongDocument } from "tachi-common";
 import { CreateChartID, ReadCollection, WriteCollection } from "../../util";
 
 type OngekiChart = ChartDocument<"ongeki:Single">;

@@ -1,8 +1,8 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import fetch from "#utils/fetch";
 
-import type { WebhookEvents } from "../../../../common/src";
+import type { WebhookEvents } from "tachi-common";
 
 // @todo make use of aggressive caching here?
 export async function GetWebhookUrlInfo() {
@@ -20,7 +20,7 @@ export async function GetWebhookUrlInfo() {
 export async function EmitWebhookEvent(content: WebhookEvents) {
 	const webhookUrls = await GetWebhookUrlInfo();
 
-	log.verbose(`Emitting webhook event ${content.type} to ${webhookUrls.length} clients.`);
+	log.debug(`Emitting webhook event ${content.type} to ${webhookUrls.length} clients.`);
 
 	// We don't actually care about the response of these. Just fire them and forget.
 	for (const client of webhookUrls) {

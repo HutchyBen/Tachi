@@ -1,10 +1,8 @@
+import { log } from "#lib/log/log.js";
 import JSON5 from "json5";
 import { allSupportedGameGroups, type GameGroup, type ImportTypes } from "tachi-common";
 import { allImportTypes } from "tachi-common/constants/import-types";
 import { z } from "zod";
-
-// stub - having a real logger here creates a circular dependency.
-const logger = console;
 
 const rawConf = process.env.TCHIS_CONF;
 
@@ -18,7 +16,7 @@ let config: unknown;
 try {
 	config = JSON5.parse(rawConf);
 } catch (err) {
-	log.error("Failed to parse TCHIS_CONF as JSON5.", { err });
+	log.error({ err }, "Failed to parse TCHIS_CONF as JSON5.");
 	process.exit(1);
 }
 
@@ -154,7 +152,7 @@ if (Number.isNaN(PORT) && process.env.IS_SERVER) {
 const REDIS_URL = process.env.REDIS_URL;
 
 if (!REDIS_URL) {
-	// n.b. These logs should be critical level, but the logger cant actually instantiate
+	// n.b. These logs should be critical level, but thelog cant actually instantiate
 	// itself in this file, because this file also controlls the log. Ouch!
 	log.error(`No REDIS_URL specified in environment. Terminating.`);
 	process.exit(1);

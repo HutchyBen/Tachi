@@ -5,8 +5,8 @@ import { IsRecord } from "#utils/misc";
 
 import type { KaiAPIReauthFunction } from "../traverse-api";
 
-import { IIDX_DANS } from "../../../../../../../../common/src";
-import { IIDXDans } from "../../../../../../../../common/src/config/game-support/iidx";
+import { IIDX_DANS } from "tachi-common";
+import { IIDXDans } from "tachi-common/config/game-support/iidx";
 import { KaiTypeToBaseURL } from "../utils";
 
 export async function CreateKaiIIDXClassProvider(
@@ -52,16 +52,19 @@ export async function CreateKaiIIDXClassProvider(
 		err = e;
 	}
 
-	return (gptString, userID, ratings, logger) => {
+	return (gptString, userID, ratings, log) => {
 		if (err !== undefined) {
-			log.error(`An error occured while updating classes for ${baseUrl}.`, { err });
+			log.error({ err }, `An error occured while updating classes for ${baseUrl}.`);
 			return {};
 		}
 
 		if (!IsRecord(json)) {
-			log.error(`JSON Returned from server was not an object? Not updating anything.`, {
-				json,
-			});
+			log.error(
+				{
+					json,
+				},
+				`JSON Returned from server was not an object? Not updating anything.`,
+			);
 			return {};
 		}
 

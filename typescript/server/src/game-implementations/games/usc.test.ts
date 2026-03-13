@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -13,7 +13,7 @@ import {
 	type ScoreData,
 	SDVX_GRADES,
 	USC_LAMPS,
-} from "../../../../common/src";
+} from "tachi-common";
 import { USC_CONTROLLER_IMPL, USC_KEYBOARD_IMPL } from "./usc";
 
 const baseMetrics: ProvidedMetrics[GPTStrings["usc"]] = {
@@ -179,7 +179,7 @@ for (const [playtype, impl] of [
 				);
 
 				t.hasStrict(
-					await CreatePBDoc(GetGPTString("usc", playtype), 1, TestingUSCChart, logger),
+					await CreatePBDoc(GetGPTString("usc", playtype), 1, TestingUSCChart, log),
 					{
 						composedFrom: [
 							{ name: "Best Score" },

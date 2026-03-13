@@ -1,6 +1,6 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
 import { dmf } from "#test-utils/misc";
 import t from "tap";
@@ -61,7 +61,7 @@ t.test("#ConverterAPICGPopn", (t) => {
 	};
 
 	const convert = (modifant: Partial<CGPopnScore> = {}) =>
-		ConverterAPICGPopn(mkInput(modifant), context, "api/cg-dev-popn", logger);
+		ConverterAPICGPopn(mkInput(modifant), context, "api/cg-dev-popn", log);
 
 	t.test("Valid Input", async (t) => {
 		const res = await convert();

@@ -6,7 +6,7 @@ import { CreateFolderChartLookup } from "#utils/folder";
 import deepmerge from "deepmerge";
 import t from "tap";
 
-import type { FolderDocument } from "../../../../../../../../../../common/src";
+import type { FolderDocument } from "tachi-common";
 
 const mockFolder: FolderDocument = {
 	folderID: "foo",

@@ -3,13 +3,13 @@ import type { IndexOptions } from "mongodb";
 import monk, { type IMonkManager } from "monk";
 
 /* eslint-disable no-await-in-loop */
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { TachiConfig } from "#lib/setup/config";
 import { DedupeArr, Random20Hex } from "#utils/misc";
 
 import type { Databases } from "./db";
 
-import { GAME_PT_CONFIGS } from "../../../../common/src";
+import { GAME_PT_CONFIGS } from "tachi-common";
 
 interface Index {
 	fields: Record<string, unknown>;

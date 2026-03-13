@@ -1,6 +1,6 @@
 import type { USCClientScore } from "#server/router/ir/usc/_playtype/types";
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import { TestingUSCChart, uscScore } from "#test-utils/test-data";
@@ -86,7 +86,7 @@ const dm = (p: Partial<USCClientScore>) =>
 			timeReceived: 10,
 		},
 		"ir/usc",
-		logger,
+		log,
 	);
 
 t.test("#ConverterIRUSC", (t) => {

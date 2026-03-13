@@ -1,15 +1,15 @@
+import type { ScoreDocument, SessionDocument, UserDocument } from "tachi-common";
+
 import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import { TestingIIDXSPScore, TestingIIDXSPScorePB } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
 import t from "tap";
 
-import type { ScoreDocument, SessionDocument, UserDocument } from "../../../../../../common/src";
-
 import { CreateScoreLogger } from "../common/import-logger";
 import { CreateSessions, LoadScoresIntoSessions } from "./sessions";
 
-const logger = CreateScoreLogger(
+const log = CreateScoreLogger(
 	{ username: "test_zkldi", id: 1 } as UserDocument,
 	"foo",
 	"ir/direct-manual",
@@ -20,7 +20,7 @@ t.test("#CreateSessions", (t) => {
 	t.beforeEach(() => db.sessions.remove({}));
 
 	t.test("Should compose sessions from one timestamped score provided.", async (t) => {
-		const res = await CreateSessions(1, "iidx", { SP: [TestingIIDXSPScore] }, logger);
+		const res = await CreateSessions(1, "iidx", { SP: [TestingIIDXSPScore] }, log);
 
 		t.match(res, [
 			{
@@ -61,7 +61,7 @@ t.test("#CreateSessions", (t) => {
 			1,
 			"iidx",
 			{ SP: [deepmerge(TestingIIDXSPScore, { timeAchieved: null })] },
-			logger,
+			log,
 		);
 
 		t.strictSame(res, []);
@@ -78,7 +78,7 @@ t.test("#CreateSessions", (t) => {
 			1,
 			"iidx",
 			{ DP: [deepmerge(TestingIIDXSPScore, { playtype: "DP" })], SP: [TestingIIDXSPScore] },
-			logger,
+			log,
 		);
 
 		t.equal(res.length, 2);
@@ -111,7 +111,7 @@ t.test("#LoadScoresIntoSessions", (t) => {
 			) as Array<ScoreDocument>,
 			"iidx",
 			"SP",
-			logger,
+			log,
 		);
 
 		t.match(res, [
@@ -144,7 +144,7 @@ t.test("#LoadScoresIntoSessions", (t) => {
 			) as Array<ScoreDocument>,
 			"iidx",
 			"SP",
-			logger,
+			log,
 		);
 
 		t.match(res, [
@@ -187,7 +187,7 @@ t.test("#LoadScoresIntoSessions", (t) => {
 			) as Array<ScoreDocument>,
 			"iidx",
 			"SP",
-			logger,
+			log,
 		);
 
 		t.match(res, [
@@ -229,7 +229,7 @@ t.test("#LoadScoresIntoSessions", (t) => {
 			) as Array<ScoreDocument>,
 			"iidx",
 			"SP",
-			logger,
+			log,
 		);
 
 		t.strictSame(res, [
@@ -273,7 +273,7 @@ t.test("#LoadScoresIntoSessions", (t) => {
 			) as Array<ScoreDocument>,
 			"iidx",
 			"SP",
-			logger,
+			log,
 		);
 
 		t.strictSame(res, [
@@ -302,7 +302,7 @@ t.test("#LoadScoresIntoSessions", (t) => {
 	t.test("Should calculate pbDifferences if a scorePB exists.", async (t) => {
 		await db["personal-bests"].insert(TestingIIDXSPScorePB);
 
-		const res = await LoadScoresIntoSessions(1, [TestingIIDXSPScore], "iidx", "SP", logger);
+		const res = await LoadScoresIntoSessions(1, [TestingIIDXSPScore], "iidx", "SP", log);
 
 		t.match(res, [
 			{

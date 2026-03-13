@@ -32,7 +32,7 @@ import type {
 	QuestlineDocument,
 	SongDocument,
 	TableDocument,
-} from "../../../../common/src";
+} from "tachi-common";
 
 // ── Seed types ─────────────────────────────────────────────────────────────
 

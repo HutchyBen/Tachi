@@ -1,10 +1,10 @@
 /* eslint-disable no-await-in-loop */
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { CreateSessionCalcData } from "#lib/score-import/framework/calculated-data/session";
 import db from "#services/mongo/db";
 
-import { GetGPTString } from "../../../../common/src";
+import { GetGPTString } from "tachi-common";
 
 export async function RecalcSessions(filter = {}) {
 	const allSessions = await db.sessions.find(filter);
@@ -29,7 +29,7 @@ export async function RecalcSessions(filter = {}) {
 		try {
 			c = CreateSessionCalcData(GetGPTString(session.game, session.playtype), scores);
 		} catch (err) {
-			log.error(`Recalcing ${session.game} (${session.playtype}) failed.`, { err });
+			log.error({ err }, `Recalcing ${session.game} (${session.playtype}) failed.`);
 			log.warn(`Destroying session!`);
 			await db.sessions.remove({ sessionID: session.sessionID });
 			continue;

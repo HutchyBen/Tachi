@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ServerConfig } from "#lib/setup/config";
@@ -15,7 +15,7 @@ import {
 } from "@grpc/grpc-js";
 import { Status } from "@grpc/grpc-js/build/src/constants";
 
-import { type GameGroup, GetGameGroupConfig, type integer } from "../../../../../../../common/src";
+import { type GameGroup, GetGameGroupConfig, type integer } from "tachi-common";
 import { GameToMytGame } from "./util";
 
 // Hardcode all requests to time out after 10m.
@@ -175,16 +175,19 @@ export async function FetchMytTitleAPIID(
 				throw new ScoreImportFatalError(401, `Card not found on MYT: ${err.details}`);
 			}
 
-			log.error(`Received unexpected status from ${hostname}`, {
-				err,
-				code: err.code,
-				details: err.details,
-				req: req.toObject(),
-			});
+			log.error(
+				{
+					err,
+					code: err.code,
+					details: err.details,
+					req: req.toObject(),
+				},
+				`Received unexpected status from ${hostname}`,
+			);
 			throw new ScoreImportFatalError(500, `Unexpected response from MYT - ${err.code}`);
 		}
 
-		log.error(`Received invalid response`, { err });
+		log.error({ err }, `Received invalid response`);
 
 		throw new ScoreImportFatalError(500, `Failed to look up card at MYT. Are they down?`);
 	}

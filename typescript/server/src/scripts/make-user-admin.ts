@@ -1,9 +1,9 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import { WrapScriptPromise } from "#utils/misc";
 import { FormatUserDoc, ResolveUser } from "#utils/user";
 
-import { UserAuthLevels } from "../../../common/src";
+import { UserAuthLevels } from "tachi-common";
 
 const userID = process.argv[2];
 
@@ -35,5 +35,5 @@ if (!userID) {
 }
 
 if (require.main === module) {
-	WrapScriptPromise(MakeUserAdmin(userID), logger);
+	WrapScriptPromise(MakeUserAdmin(userID), log);
 }

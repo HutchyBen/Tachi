@@ -6,7 +6,7 @@ import { CreateFolderChartLookup } from "#utils/folder";
 import deepmerge from "deepmerge";
 import t from "tap";
 
-import type { FolderDocument } from "../../../../../../../../../../../../common/src";
+import type { FolderDocument } from "tachi-common";
 
 t.test("GET /api/v1/users/:userID/games/:game/:playtype/tables/:tableID", (t) => {
 	t.beforeEach(ResetDBState);

@@ -1,10 +1,10 @@
 import { ONE_MINUTE, ONE_SECOND } from "#lib/constants/time";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { Env } from "#lib/setup/config";
 import { GetMillisecondsSince } from "#utils/misc";
 import redis from "redis";
 
-log.verbose("Instantiated Redis Store", { bootInfo: true });
+log.debug({ bootInfo: true }, "Instantiated Redis Store");
 
 export const RedisClient = redis.createClient({
 	url: `redis://${Env.REDIS_URL}`,
@@ -12,7 +12,7 @@ export const RedisClient = redis.createClient({
 
 const startConnect = process.hrtime.bigint();
 
-log.verbose("Instantiated Redis Client", { bootInfo: true });
+log.debug({ bootInfo: true }, "Instantiated Redis Client");
 
 function EmitCritical() {
 	/* istanbul ignore next */
@@ -31,9 +31,12 @@ function EmitCritical() {
 const ref = setTimeout(EmitCritical, ONE_MINUTE * 5);
 
 RedisClient.on("connect", () => {
-	log.info(`Connected to Redis. Took ${GetMillisecondsSince(startConnect)}ms`, {
-		bootInfo: true,
-	});
+	log.info(
+		{
+			bootInfo: true,
+		},
+		`Connected to Redis. Took ${GetMillisecondsSince(startConnect)}ms`,
+	);
 
 	clearTimeout(ref);
 });

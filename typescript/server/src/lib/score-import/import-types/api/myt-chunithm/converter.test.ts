@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
 import {
 	ChunithmClearStatus,
@@ -44,7 +44,7 @@ t.test("#ConvertAPIMytChunithm", (t) => {
 	t.beforeEach(ResetDBState);
 
 	function convert(modifier: any = {}) {
-		return ConvertAPIMytChunithm(dmf(parsedScore, modifier), {}, "api/myt-chunithm", logger);
+		return ConvertAPIMytChunithm(dmf(parsedScore, modifier), {}, "api/myt-chunithm", log);
 	}
 
 	t.test("Should return a dryScore on valid input.", async (t) => {

@@ -15,7 +15,7 @@ import type {
 	GoalSubscriptionDocument,
 	QuestDocument,
 	QuestSubscriptionDocument,
-} from "../../../../../../../../../../../../common/src";
+} from "tachi-common";
 
 function mkGoalSub(merge: Partial<GoalSubscriptionDocument>) {
 	return dm(HC511UserGoal, merge);

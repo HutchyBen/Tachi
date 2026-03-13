@@ -10,7 +10,7 @@ import {
 	GetGamePTConfig,
 	type SessionDocument,
 	type SessionScoreInfo,
-} from "../../../../../../../../../../../../common/src";
+} from "tachi-common";
 
 const router: Router = Router({ mergeParams: true });
 

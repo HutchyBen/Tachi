@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import {
 	GetKaiTypeClientCredentials,
 	KaiTypeToBaseURL,
@@ -142,7 +142,7 @@ router.post(
 				method: "POST",
 			});
 		} catch (err) {
-			log.error(`Completely failed to getTokenRes from ${url}.`, err);
+			log.error(err, `Completely failed to getTokenRes from ${url}.`);
 			return res.status(500).json({
 				success: false,
 				description: `We failed to reach this site. Are they down?`,
@@ -163,10 +163,13 @@ router.post(
 		try {
 			json = await getTokenRes.json();
 		} catch (err) {
-			log.error(`Error parsing JSON in response body from getTokenRes.`, {
-				res: getTokenRes,
-				err,
-			});
+			log.error(
+				{
+					res: getTokenRes,
+					err,
+				},
+				`Error parsing JSON in response body from getTokenRes.`,
+			);
 
 			return res.status(500).json({
 				success: false,
@@ -177,7 +180,7 @@ router.post(
 		const err = p(json, KAI_OAUTH2_RETURN_SCHEMA, {}, { allowExcessKeys: true });
 
 		if (err) {
-			log.error(`Validation error in JSON return from ${url}.`, { err });
+			log.error({ err }, `Validation error in JSON return from ${url}.`);
 			return res.status(500).json({
 				success: false,
 				description: `Failed to validate JSON returned from this service. Is their server malfunctioning?`,

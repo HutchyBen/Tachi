@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -15,7 +15,7 @@ import {
 	IIDX_LAMPS,
 	type ProvidedMetrics,
 	type ScoreData,
-} from "../../../../common/src";
+} from "tachi-common";
 import { BMS_7K_IMPL, BMS_14K_IMPL, PMS_CONTROLLER_IMPL, PMS_KEYBOARD_IMPL } from "./bms-pms";
 
 type BMSPMS = GPTStrings["bms" | "pms"];
@@ -311,7 +311,7 @@ for (const [game, playtype, impl] of [
 				}),
 			);
 
-			t.hasStrict(await CreatePBDoc(gptStr, 1, chart, logger), {
+			t.hasStrict(await CreatePBDoc(gptStr, 1, chart, log), {
 				composedFrom: [{ name: "Best Score" }, { name: "Best Lamp", scoreID: "bestLamp" }],
 				scoreData: {
 					score: 3570,
@@ -337,7 +337,7 @@ for (const [game, playtype, impl] of [
 				}),
 			]);
 
-			t.hasStrict(await CreatePBDoc(gptStr, 1, chart, logger), {
+			t.hasStrict(await CreatePBDoc(gptStr, 1, chart, log), {
 				composedFrom: [{ name: "Best Score" }, { name: "Lowest BP", scoreID: "lowestBP" }],
 				scoreData: {
 					score: 3570,

@@ -1,6 +1,6 @@
 import { MODEL_INFINITAS_2, REV_2DXBMS } from "#lib/constants/ea3id";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { SoftwareIDToVersion } from "#lib/score-import/import-types/ir/fervidex/parser";
 import { RequirePermissions } from "#server/middleware/auth";
@@ -17,7 +17,7 @@ import {
 	type integer,
 	type Playtypes,
 	type SpecificGamePTConfig,
-} from "../../../../../../common/src";
+} from "tachi-common";
 
 const router: Router = Router({ mergeParams: true });
 
@@ -101,11 +101,11 @@ const ValidateModelHeader: RequestHandler = (req, res, next) => {
 		}
 
 		try {
-			SoftwareIDToVersion(swModel, logger);
+			SoftwareIDToVersion(swModel, log);
 		} catch (err) {
 			log.info(
-				`Rejected invalid Software Model ${swModel} from user ${req[SYMBOL_TACHI_API_AUTH].userID}.`,
 				{ err },
+				`Rejected invalid Software Model ${swModel} from user ${req[SYMBOL_TACHI_API_AUTH].userID}.`,
 			);
 			return res.status(400).json({
 				success: false,
@@ -191,9 +191,12 @@ async function ShouldImportScoresFromProfileSubmit(swModel: string, userID: inte
 
 		return model === MODEL_INFINITAS_2;
 	} catch (err) {
-		log.warn(`Unexpected fail while parsing swModel ${swModel}, has already been validated?.`, {
-			err,
-		});
+		log.warn(
+			{
+				err,
+			},
+			`Unexpected fail while parsing swModel ${swModel}, has already been validated?.`,
+		);
 
 		// try some good-natured attempt to recover, since this isn't that severe of an
 		// issue.

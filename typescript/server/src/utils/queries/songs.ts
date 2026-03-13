@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 import type { FindOneResult } from "monk";
 
 import {
@@ -7,7 +7,7 @@ import {
 } from "#lib/score-import/framework/common/converter-failures";
 import db from "#services/mongo/db";
 
-import type { GameGroup, integer, SongDocument } from "../../../../common/src";
+import type { GameGroup, integer, SongDocument } from "tachi-common";
 
 import { EscapeStringRegexp } from "../misc";
 

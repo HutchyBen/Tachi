@@ -10,7 +10,7 @@ import {
 import deepmerge from "deepmerge";
 import t from "tap";
 
-import type { BatchManual, BatchManualScore } from "../../../../../../common/src";
+import type { BatchManual, BatchManualScore } from "tachi-common";
 
 t.test("POST /ir/direct-manual/import", async (t) => {
 	const cookie = await CreateFakeAuthCookie(mockApi);

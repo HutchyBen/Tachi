@@ -6,7 +6,7 @@ import { TestingKsHookSV6CScore, TestingKsHookSV6CStaticScore } from "#test-util
 import deepmerge from "deepmerge";
 import t from "tap";
 
-import { ALL_PERMISSIONS } from "../../../../../../../common/src";
+import { ALL_PERMISSIONS } from "tachi-common";
 
 t.test("POST /ir/kshook/sv6c/score/save", (t) => {
 	t.beforeEach(ResetDBState);

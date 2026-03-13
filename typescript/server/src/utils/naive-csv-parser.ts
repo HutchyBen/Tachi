@@ -1,4 +1,4 @@
-import { type KtLogger, log } from "#lib/logger/log.js";
+import { type KtLogger, log } from "#lib/log/log.js";
 
 import { IsNonEmptyString } from "./misc";
 
@@ -75,16 +75,16 @@ export function NaiveCSVParse(csvBuffer: Buffer, log: KtLogger) {
 
 		// an empty string split on "," is an array with one empty value.
 		if (cells.length === 1) {
-			log.verbose(`Skipped empty row ${rowNumber}.`);
+			log.debug(`Skipped empty row ${rowNumber}.`);
 			continue;
 		}
 
 		if (cells.length !== rawHeaders.length) {
 			log.info(
-				`csv has row (${rowNumber}) with invalid cell count of ${cells.length}, rejecting.`,
 				{
 					data,
 				},
+				`csv has row (${rowNumber}) with invalid cell count of ${cells.length}, rejecting.`,
 			);
 			throw new CSVParseError(
 				`Row ${rowNumber} has an invalid amount of cells (${cells.length}, expected ${rawHeaders.length}).`,

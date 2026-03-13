@@ -1,7 +1,7 @@
 import { CDNDelete, CDNRedirect, CDNStoreOrOverwrite } from "#lib/cdn/cdn";
 import { GetProfilePictureURL } from "#lib/cdn/url-format";
 import { ONE_MEGABYTE } from "#lib/constants/filesize";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { RequirePermissions } from "#server/middleware/auth";
 import { CreateMulterSingleUploadMiddleware } from "#server/middleware/multer-upload";
 import db from "#services/mongo/db";
@@ -32,9 +32,9 @@ router.put(
 		const user = GetTachiData(req, "requestedUser");
 
 		if (!user.customPfpLocation) {
-			log.verbose(`User ${FormatUserDoc(user)} set a custom profile picture.`);
+			log.debug(`User ${FormatUserDoc(user)} set a custom profile picture.`);
 		} else {
-			log.verbose(`User ${FormatUserDoc(user)} updated their profile picture.`);
+			log.debug(`User ${FormatUserDoc(user)} updated their profile picture.`);
 		}
 
 		if (!req.file) {
@@ -89,7 +89,7 @@ router.put(
 router.get("/", (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	log.debug("User Info for /:userID/pfp request is ", user);
+	log.debug(user, "User Info for /:userID/pfp request is ");
 
 	if (!user.customPfpLocation) {
 		res.setHeader("Content-Type", "image/png");

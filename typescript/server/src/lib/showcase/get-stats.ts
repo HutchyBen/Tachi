@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 
 import {
@@ -8,7 +8,7 @@ import {
 	type integer,
 	type Playtype,
 	type ShowcaseStatDetails,
-} from "../../../../common/src";
+} from "tachi-common";
 import { EvaluateShowcaseStat } from "./evaluator";
 import { GetRelatedStatDocuments } from "./get-related";
 

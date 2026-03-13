@@ -1,6 +1,6 @@
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { CreatePBDoc, UpdateChartRanking } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -15,7 +15,7 @@ import {
 	type PBScoreDocument,
 	type ProvidedMetrics,
 	type ScoreData,
-} from "../../../../common/src";
+} from "tachi-common";
 import { ONGEKI_IMPL } from "./ongeki";
 
 const baseMetrics: ProvidedMetrics["ongeki:Single"] = {
@@ -294,7 +294,7 @@ t.test("ONGEKI Implementation", (t: any) => {
 				}),
 			);
 
-			t.hasStrict(await CreatePBDoc("ongeki:Single", 1, TestingOngekiChart, logger), {
+			t.hasStrict(await CreatePBDoc("ongeki:Single", 1, TestingOngekiChart, log), {
 				composedFrom: [
 					{ name: "Best Score" },
 					{ name: "Best Note Lamp", scoreID: "bestLamp" },
@@ -326,7 +326,7 @@ t.test("ONGEKI Implementation", (t: any) => {
 				}),
 			);
 
-			t.hasStrict(await CreatePBDoc("ongeki:Single", 1, TestingOngekiChart, logger), {
+			t.hasStrict(await CreatePBDoc("ongeki:Single", 1, TestingOngekiChart, log), {
 				composedFrom: [
 					{ name: "Best Score" },
 					{ name: "Best Platinum Score", scoreID: "bestPlatinum" },

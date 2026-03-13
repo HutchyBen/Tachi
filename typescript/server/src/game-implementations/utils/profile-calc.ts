@@ -7,7 +7,7 @@ import type {
 	PBScoreDocument,
 	Playtype,
 	ScoreRatingAlgorithms,
-} from "../../../../common/src";
+} from "tachi-common";
 
 /**
  * Curries a function that returns the sum of N best ratings on `key`.

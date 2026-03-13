@@ -23,7 +23,7 @@ import {
 	IIDX_GRADES,
 	IIDX_LAMPS,
 	type PBScoreDocument,
-} from "../../../../../../../../../../../../../common/src";
+} from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import dm from "deepmerge";
 import t from "tap";

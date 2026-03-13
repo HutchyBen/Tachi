@@ -1,4 +1,4 @@
-import type { integer, Versions } from "../../../../../../../common/src";
+import type { integer, Versions } from "tachi-common";
 
 export interface BarbatosScore {
 	difficulty: 0 | 1 | 2 | 3 | 4;

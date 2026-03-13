@@ -5,7 +5,7 @@ import { TestingIIDXSPScore, TestingSDVXScore } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
 import t from "tap";
 
-import type { ImportDocument, ScoreDocument, SessionDocument } from "../../../../common/src";
+import type { ImportDocument, ScoreDocument, SessionDocument } from "tachi-common";
 
 import { DeleteScore } from "./delete-scores";
 

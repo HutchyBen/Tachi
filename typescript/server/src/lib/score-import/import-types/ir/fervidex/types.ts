@@ -1,4 +1,4 @@
-import type { integer, Versions } from "../../../../../../../common/src";
+import type { integer, Versions } from "tachi-common";
 
 export interface FervidexScore {
 	chart: `${"dp" | "sp"}${"a" | "b" | "h" | "l" | "n"}`;

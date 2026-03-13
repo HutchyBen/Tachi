@@ -1,6 +1,6 @@
 import type { DeepPartial } from "#utils/types";
 
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -16,7 +16,7 @@ import {
 	type ProvidedMetrics,
 	type ScoreData,
 	type ScoreDocument,
-} from "../../../../common/src";
+} from "tachi-common";
 import { RunValidators } from "./_common";
 import { ARCAEA_IMPL } from "./arcaea";
 
@@ -158,7 +158,7 @@ t.test("Arcaea Implementation", (t) => {
 				}),
 			);
 
-			t.hasStrict(await CreatePBDoc("arcaea:Touch", 1, TestingArcaeaSheriruthFTR, logger), {
+			t.hasStrict(await CreatePBDoc("arcaea:Touch", 1, TestingArcaeaSheriruthFTR, log), {
 				composedFrom: [{ name: "Best Score" }, { name: "Best Lamp", scoreID: "bestLamp" }],
 				scoreData: {
 					score: mockScore.scoreData.score,

@@ -6,7 +6,7 @@ import type {
 	PBScoreDocument,
 	ScoreDocument,
 	SongDocument,
-} from "../../../common/src";
+} from "tachi-common";
 
 import { DedupeArr } from "./misc";
 

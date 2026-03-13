@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 
 import { TachiConfig } from "#lib/setup/config";
 import { IsRecord, IsValidGame, IsValidPlaytype } from "#utils/misc";
@@ -16,8 +16,8 @@ import {
 	GetGPTString,
 	type ImportTypes,
 	type Playtype,
-} from "../../../../../../../common/src";
-import { PR_BATCH_MANUAL } from "../../../../../../../common/src/lib/schemas";
+} from "tachi-common";
+import { PR_BATCH_MANUAL } from "tachi-common/lib/schemas";
 import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 import { CreateBatchManualClassProvider } from "./class-handler";
 

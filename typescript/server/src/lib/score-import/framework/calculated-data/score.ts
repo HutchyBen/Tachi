@@ -7,7 +7,7 @@ import {
 	type GameGroup,
 	GetGPTString,
 	type GPTString,
-} from "../../../../../../common/src";
+} from "tachi-common";
 
 /**
  * Create calculated data for a score.

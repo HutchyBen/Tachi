@@ -12,7 +12,7 @@ import {
 	GetScoreMetricConf,
 	type ScoreDocument,
 	ValidateMetric,
-} from "../../../../../../../../../../../../../common/src";
+} from "tachi-common";
 import { GetFolderFromParam } from "../../../../../../../games/_game/_playtype/folders/middleware";
 import { RequireSelfRequestFromUser } from "../../../../../middleware";
 

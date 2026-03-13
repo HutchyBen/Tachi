@@ -11,7 +11,7 @@ import type {
 	Playtype,
 	Playtypes,
 	Versions,
-} from "../../../../common/src";
+} from "tachi-common";
 
 export function FindChartWithChartID(game: GameGroup, chartID: string) {
 	return db.anyCharts[game].findOne({ chartID });

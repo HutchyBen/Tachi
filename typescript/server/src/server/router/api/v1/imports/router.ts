@@ -3,7 +3,7 @@ import type { FilterQuery } from "mongodb";
 
 import { JOB_RETRY_COUNT } from "#lib/constants/tachi";
 import { RevertImport } from "#lib/imports/imports";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import ScoreImportQueue, { ScoreImportQueueEvents } from "#lib/score-import/worker/queue";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RequirePermissions } from "#server/middleware/auth";
@@ -16,7 +16,7 @@ import { GetUsersWithIDs, GetUserWithID } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
 
-import type { ImportTrackerDocument, ImportTypes } from "../../../../../../../common/src";
+import type { ImportTrackerDocument, ImportTypes } from "tachi-common";
 
 import { GetImportFromParam, RequireOwnershipOfImportOrAdmin } from "./middleware";
 
@@ -319,7 +319,7 @@ router.get("/:importID/poll-status", async (req, res) => {
 	// job.isFailed() actually means a critical error has occured.
 	// As in, an unhandled exception was thrown.
 	if (isFailed) {
-		log.error("Internal Server Error with job?", { job });
+		log.error({ job }, "Internal Server Error with job?");
 
 		return res.status(500).json({
 			success: false,

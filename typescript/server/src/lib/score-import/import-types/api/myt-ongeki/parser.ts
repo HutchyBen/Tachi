@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 import type { EmptyObject } from "#utils/types";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
@@ -6,7 +6,7 @@ import { OngekiUserClient } from "#proto/generated/ongeki/user_grpc_pb";
 import { GetPlaylogRequest, type GetPlaylogStreamItem } from "#proto/generated/ongeki/user_pb";
 import { credentials } from "@grpc/grpc-js";
 
-import type { integer } from "../../../../../../../common/src";
+import type { integer } from "tachi-common";
 import type { ParserFunctionReturns } from "../../common/types";
 import type { MytOngekiScore } from "./types";
 
@@ -28,7 +28,7 @@ export default async function ParseMytOngeki(
 	userID: integer,
 	log: KtLogger,
 ): Promise<ParserFunctionReturns<MytOngekiScore, EmptyObject>> {
-	const profileApiId = await FetchMytTitleAPIID(userID, "ongeki", logger);
+	const profileApiId = await FetchMytTitleAPIID(userID, "ongeki", log);
 	const endpoint = GetMytHostname();
 	const client = new OngekiUserClient(endpoint, credentials.createSsl());
 	const request = new GetPlaylogRequest();
@@ -38,7 +38,7 @@ export default async function ParseMytOngeki(
 	let iterable;
 
 	try {
-		const stream = StreamRPCAsAsync(client.getPlaylog.bind(client), request, logger);
+		const stream = StreamRPCAsAsync(client.getPlaylog.bind(client), request, log);
 
 		iterable = getObjectsFromGrpcIterable(stream);
 	} catch (err) {

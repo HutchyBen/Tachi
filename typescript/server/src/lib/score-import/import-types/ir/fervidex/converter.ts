@@ -8,7 +8,7 @@ import type { DryScore } from "../../../framework/common/types";
 import type { ConverterFunction } from "../../common/types";
 import type { FervidexContext, FervidexScore } from "./types";
 
-import { type Difficulties, GetGPTString, type Playtypes } from "../../../../../../../common/src";
+import { type Difficulties, GetGPTString, type Playtypes } from "tachi-common";
 import {
 	InternalFailure,
 	InvalidScoreFailure,
@@ -149,7 +149,7 @@ export const ConverterIRFervidex: ConverterFunction<FervidexScore, FervidexConte
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	// eslint-disable-next-line prefer-const
 	let { difficulty, playtype } = SplitFervidexChartRef(data.chart);

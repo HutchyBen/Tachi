@@ -5,7 +5,7 @@ import { expressRequestMock } from "#test-utils/mock-request";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
 
-import { ALL_PERMISSIONS } from "../../../../common/src";
+import { ALL_PERMISSIONS } from "tachi-common";
 import { SetRequestPermissions } from "./auth";
 
 t.test("#SetRequestPermissions", (t) => {

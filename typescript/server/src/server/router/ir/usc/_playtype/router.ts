@@ -3,7 +3,7 @@ import { GetUSCIRReplayURL } from "#lib/cdn/url-format";
 import { ONE_MEGABYTE } from "#lib/constants/filesize";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { USCIR_MAX_LEADERBOARD_N } from "#lib/constants/usc-ir";
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { AssertStrAsPositiveNonZeroInt } from "#lib/score-import/framework/common/string-asserts";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
@@ -24,7 +24,7 @@ import {
 	type PBScoreDocument,
 	type Playtypes,
 	type SuccessfulAPIResponse,
-} from "../../../../../../../common/src";
+} from "tachi-common";
 import { CreatePOSTScoresResponseBody, TachiScoreToServerScore } from "./usc";
 
 const router: Router = Router({ mergeParams: true });
@@ -316,10 +316,13 @@ router.post("/scores", RequirePermissions("submit_score"), async (req, res) => {
 	// If the import failed, AND the import failure WAS NOT that the chart didnt exist
 	// report that error instead.
 	if (importDoc.errors[0] && importDoc.errors[0].type !== "SongOrChartNotFound") {
-		log.info(`USC Import Failed ${importDoc.errors[0].message}`, {
-			importDoc,
-			userID,
-		});
+		log.info(
+			{
+				importDoc,
+				userID,
+			},
+			`USC Import Failed ${importDoc.errors[0].message}`,
+		);
 
 		return res.status(200).json({
 			statusCode: STATUS_CODES.BAD_REQ,
@@ -339,10 +342,13 @@ router.post("/scores", RequirePermissions("submit_score"), async (req, res) => {
 
 	// If the chartDoc exists, any error is a failure here.
 	if (importDoc.errors[0]) {
-		log.info(`USC Import Failed ${importDoc.errors[0].message}`, {
-			importDoc,
-			userID,
-		});
+		log.info(
+			{
+				importDoc,
+				userID,
+			},
+			`USC Import Failed ${importDoc.errors[0].message}`,
+		);
 
 		return res.status(200).json({
 			statusCode: STATUS_CODES.BAD_REQ,
@@ -429,7 +435,7 @@ router.post(
 		} catch (err) {
 			// impossible to test pretty much.
 			/* istanbul ignore next */
-			log.error(`USCIR Replay Store error.`, { err });
+			log.error({ err }, `USCIR Replay Store error.`);
 			/* istanbul ignore next */
 			return res.status(200).json({
 				statusCode: STATUS_CODES.SERVER_ERROR,

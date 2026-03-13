@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 import type { FilterQuery } from "mongodb";
 
 import db from "#services/mongo/db";
@@ -6,7 +6,7 @@ import { GetBlacklist } from "#utils/queries/blacklist";
 import { GetUserWithID } from "#utils/user";
 import fjsh from "fast-json-stable-hash";
 
-import type { GameGroup, ImportTypes, integer } from "../../../../../../common/src";
+import type { GameGroup, ImportTypes, integer } from "tachi-common";
 import type {
 	ConverterFnReturnOrFailure,
 	ConverterFunction,
@@ -42,14 +42,14 @@ export async function OrphanScore<T extends ImportTypes = ImportTypes>(
 		userID,
 	};
 
-	log.debug("Orphaning document", orphan);
+	log.debug(orphan, "Orphaning document");
 
 	let orphanID;
 
 	try {
 		orphanID = `O${fjsh.hash(orphan, "sha256")}`;
 	} catch (err) {
-		log.error(`Failed to orphan score -- `, { err, orphan });
+		log.error({ err, orphan }, `Failed to orphan score -- `);
 		throw new Error(`Failed to orphan score. ${(err as Error).message}`);
 	}
 
@@ -68,7 +68,7 @@ export async function OrphanScore<T extends ImportTypes = ImportTypes>(
 		timeInserted: Date.now(),
 	};
 
-	log.debug(`Inserting orphanScoreDoc...`, orphanScoreDoc);
+	log.debug(orphanScoreDoc, `Inserting orphanScoreDoc...`);
 
 	await db["orphan-scores"].insert(orphanScoreDoc);
 
@@ -96,7 +96,7 @@ export async function ReprocessOrphan(
 	let res: ConverterFnReturnOrFailure;
 
 	try {
-		res = await ConverterFunction(orphan.data, orphan.context, orphan.importType, logger);
+		res = await ConverterFunction(orphan.data, orphan.context, orphan.importType, log);
 	} catch (e) {
 		const err = e as ConverterFailure | Error;
 
@@ -104,11 +104,11 @@ export async function ReprocessOrphan(
 		/* istanbul ignore next */
 		if (!("failureType" in err)) {
 			log.error(
-				`Converter function ${orphan.importType} returned unexpected error. ID=${orphan.orphanID}`,
 				{
 					err,
 					orphan,
 				},
+				`Converter function ${orphan.importType} returned unexpected error. ID=${orphan.orphanID}`,
 			);
 
 			// throw this higher up, i guess.
@@ -150,7 +150,7 @@ export async function ReprocessOrphan(
 			orphan.userID,
 			res,
 			blacklist,
-			logger,
+			log,
 			true,
 		);
 	} catch (err) {
@@ -185,7 +185,7 @@ export async function ReprocessOrphan(
 		orphan.importType,
 		orphan.game,
 		null,
-		logger,
+		log,
 		undefined,
 	);
 
@@ -199,7 +199,7 @@ export async function DeorphanScores(query: FilterQuery<OrphanScoreDocument>, lo
 	// ScoreIDs are essentially userID dependent, so this is fine.
 	const blacklist = await GetBlacklist();
 
-	log.info(`Found ${orphans.length} orphans.`, { query });
+	log.info({ query }, `Found ${orphans.length} orphans.`);
 
 	let failed = 0;
 	let success = 0;
@@ -216,7 +216,7 @@ export async function DeorphanScores(query: FilterQuery<OrphanScoreDocument>, lo
 
 		try {
 			// eslint-disable-next-line no-await-in-loop
-			const r = await ReprocessOrphan(or, blacklist, logger);
+			const r = await ReprocessOrphan(or, blacklist, log);
 
 			if (r === null) {
 				removed++;
@@ -226,7 +226,7 @@ export async function DeorphanScores(query: FilterQuery<OrphanScoreDocument>, lo
 				success++;
 			}
 		} catch (err) {
-			log.error(`Failed to reprocess orphan.`, { orphanID: or.orphanID, err });
+			log.error({ orphanID: or.orphanID, err }, `Failed to reprocess orphan.`);
 			failed++;
 		}
 	}

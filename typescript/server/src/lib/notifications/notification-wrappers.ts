@@ -6,7 +6,7 @@ import {
 	type integer,
 	type Playtype,
 	type UserDocument,
-} from "../../../../common/src";
+} from "tachi-common";
 import { BulkSendNotification, SendNotification } from "./notifications";
 
 /**

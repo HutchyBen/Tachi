@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import { TestingAlbidaADV, TestingSDVXAlbidaSong } from "#test-utils/test-data";
@@ -33,7 +33,7 @@ t.test("#ConvertAPIKaiSDVX", (t) => {
 	t.beforeEach(ResetDBState);
 
 	t.test("Should return a dryScore on valid input.", async (t) => {
-		const res = await ConvertAPIKaiSDVX(sdvxScore, { service: "FLO" }, "api/flo-sdvx", logger);
+		const res = await ConvertAPIKaiSDVX(sdvxScore, { service: "FLO" }, "api/flo-sdvx", log);
 
 		t.hasStrict(res, {
 			song: TestingSDVXAlbidaSong,
@@ -73,7 +73,7 @@ t.test("#ConvertAPIKaiSDVX", (t) => {
 					deepmerge(sdvxScore, { music_id: 0 }),
 					{ service: "FLO" },
 					"api/flo-sdvx",
-					logger,
+					log,
 				),
 			{
 				message: /Could not find chart with songID 0 \(ADV - Version exceed\)/u,
@@ -90,7 +90,7 @@ t.test("#ConvertAPIKaiSDVX", (t) => {
 					deepmerge(sdvxScore, { music_id: "foo" }),
 					{ service: "FLO" },
 					"api/flo-sdvx",
-					logger,
+					log,
 				),
 			{
 				message:
@@ -104,7 +104,7 @@ t.test("#ConvertAPIKaiSDVX", (t) => {
 	t.test("Should throw InternalFailure on song-chart desync", async (t) => {
 		await db.songs.sdvx.remove({});
 
-		t.rejects(() => ConvertAPIKaiSDVX(sdvxScore, { service: "FLO" }, "api/flo-sdvx", logger), {
+		t.rejects(() => ConvertAPIKaiSDVX(sdvxScore, { service: "FLO" }, "api/flo-sdvx", log), {
 			message: /Song-Chart desync/u,
 		});
 

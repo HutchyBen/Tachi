@@ -2,7 +2,7 @@ import { log } from "#log";
 import fs from "fs/promises";
 import path from "path";
 
-import { type integer } from "../../../../../common/src";
+import { type integer } from "tachi-common";
 import {
 	type BGMObject,
 	type BPMObject,
@@ -465,7 +465,7 @@ export function ParseDotOne(
 		const dir = dirs[i];
 
 		if (!dir || (dir.offset === 0 && dir.length === 0)) {
-			log.verbose(`Skipped directory ${i}, as there was no data.`);
+			log.debug(`Skipped directory ${i}, as there was no data.`);
 			continue; // no data.
 		}
 

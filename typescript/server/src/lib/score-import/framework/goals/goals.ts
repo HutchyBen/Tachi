@@ -1,15 +1,9 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
+import type { GameGroup, GoalDocument, GoalSubscriptionDocument, integer } from "tachi-common";
 
 import { EvaluateGoalForUser, GetRelevantGoals } from "#lib/targets/goals";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
 import db from "#services/mongo/db";
-
-import type {
-	GameGroup,
-	GoalDocument,
-	GoalSubscriptionDocument,
-	integer,
-} from "../../../../../../common/src";
 
 /**
  * Update a user's progress on all of their set goals.
@@ -20,16 +14,16 @@ export async function GetAndUpdateUsersGoals(
 	chartIDs: Set<string>,
 	log: KtLogger,
 ) {
-	const { goals, goalSubsMap } = await GetRelevantGoals(game, userID, chartIDs, logger);
+	const { goals, goalSubsMap } = await GetRelevantGoals(game, userID, chartIDs, log);
 
 	if (!goals.length) {
 		// if we hit the below code with an empty array mongodb will flip out on the bulkwrite op
 		return [];
 	}
 
-	log.verbose(`Found ${goals.length} relevant goals.`);
+	log.debug(`Found ${goals.length} relevant goals.`);
 
-	return UpdateGoalsForUser(goals, goalSubsMap, userID, logger);
+	return UpdateGoalsForUser(goals, goalSubsMap, userID, log);
 }
 
 export async function UpdateGoalsForUser(
@@ -55,10 +49,10 @@ export async function UpdateGoalsForUser(
 				return null;
 			}
 
-			return ProcessGoal(goal, goalSub, userID, logger).catch((err: Error) => {
+			return ProcessGoal(goal, goalSub, userID, log).catch((err: Error) => {
 				log.warn(
-					`Failed to process goal '${goal.name}' for ${userID}, ${err.message}. Skipping.`,
 					{ goal, err, userID, goalSub },
+					`Failed to process goal '${goal.name}' for ${userID}, ${err.message}. Skipping.`,
 				);
 
 				return null;
@@ -113,7 +107,7 @@ export async function ProcessGoal(
 	userID: integer,
 	log: KtLogger,
 ) {
-	const res = await EvaluateGoalForUser(goal, userID, logger);
+	const res = await EvaluateGoalForUser(goal, userID, log);
 
 	if (!res) {
 		// some sort of error occured - its logged by the previous function.
@@ -181,11 +175,14 @@ export async function ProcessGoal(
 	// If this goal was achieved, and is now *not* achieved, we need to unset
 	// some things.
 	if (goalSub.achieved && !res.achieved) {
-		log.info(`User ${userID} lost their achieved status on ${goal.name}.`, {
-			goal,
-			res,
-			goalSub,
-		});
+		log.info(
+			{
+				goal,
+				res,
+				goalSub,
+			},
+			`User ${userID} lost their achieved status on ${goal.name}.`,
+		);
 
 		// This goal can't be marked as instantly achieved, since it was lost.
 		setData.wasInstantlyAchieved = false;
@@ -245,7 +242,7 @@ export async function UpdateGoalsInFolder(folderID: string, log: KtLogger) {
 		promises.push(async () => {
 			// hack: pass *all* goals here to avoid mass allocations
 			// use `skipMismatch` to ignore the cases where they don't match
-			await UpdateGoalsForUser(goals, goalSubsMap, userID, logger, true);
+			await UpdateGoalsForUser(goals, goalSubsMap, userID, log, true);
 		});
 	}
 

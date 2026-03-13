@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/log.js";
+import type { KtLogger } from "#lib/log/log.js";
 import type { EmptyObject } from "#utils/types";
 
 import { CSVParseError, NaiveCSVParse } from "#utils/naive-csv-parser";
@@ -34,7 +34,7 @@ export default function ParseEamusementSDVXCSV(
 	let rawRows: Array<Array<string>>;
 
 	try {
-		({ rawHeaders, rawRows } = NaiveCSVParse(fileData.buffer, logger));
+		({ rawHeaders, rawRows } = NaiveCSVParse(fileData.buffer, log));
 	} catch (e) {
 		// This is probably fine.
 		if (e instanceof CSVParseError) {

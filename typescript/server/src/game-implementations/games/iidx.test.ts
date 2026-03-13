@@ -1,4 +1,4 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkFakePBIIDXSP, mkFakeScoreIIDXSP } from "#test-utils/misc";
@@ -15,7 +15,7 @@ import {
 	IIDXLIKE_GBOUNDARIES,
 	type ProvidedMetrics,
 	type ScoreData,
-} from "../../../../common/src";
+} from "tachi-common";
 import { IIDX_DP_IMPL, IIDX_SP_IMPL } from "./iidx";
 
 const baseMetrics: ProvidedMetrics["iidx:DP" | "iidx:SP"] = {
@@ -410,7 +410,7 @@ t.test("IIDX Implementation", (t) => {
 					}),
 				);
 
-				t.hasStrict(await CreatePBDoc(gptStr, 1, Testing511SPA, logger), {
+				t.hasStrict(await CreatePBDoc(gptStr, 1, Testing511SPA, log), {
 					composedFrom: [
 						{ name: "Best Score" },
 						{ name: "Best Lamp", scoreID: "bestLamp" },
@@ -443,7 +443,7 @@ t.test("IIDX Implementation", (t) => {
 					}),
 				]);
 
-				t.hasStrict(await CreatePBDoc(gptStr, 1, Testing511SPA, logger), {
+				t.hasStrict(await CreatePBDoc(gptStr, 1, Testing511SPA, log), {
 					composedFrom: [
 						{ name: "Best Score" },
 						{ name: "Lowest BP", scoreID: "lowestBP" },

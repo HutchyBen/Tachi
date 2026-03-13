@@ -13,7 +13,7 @@ import t from "tap";
 import type {
 	ChartDocument,
 	PBScoreDocument,
-} from "../../../../../../../../../../../../common/src";
+} from "tachi-common";
 
 t.test("GET /api/v1/users/:userID/games/:game/:playtype/pbs/best", (t) => {
 	t.beforeEach(ResetDBState);

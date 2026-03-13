@@ -39,7 +39,7 @@ import {
 	type SongDocument,
 	type UGPTSettingsDocument,
 	type UserDocument,
-} from "../../../common/src";
+} from "tachi-common";
 import { dmf } from "./misc";
 
 const file = (name: string) => path.join(__dirname, "/test-data", name);

@@ -1,6 +1,6 @@
 import { type FolderDocument } from "tachi-common";
 
-import { JUBEAT_SINGLE_CONF } from "../../../common/src/config/game-support/jubeat";
+import { JUBEAT_SINGLE_CONF } from "tachi-common/config/game-support/jubeat";
 import { CreateFolderID, MutateCollection } from "../../util";
 
 function CreateFolder(criteria, title) {

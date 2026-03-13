@@ -5,7 +5,7 @@ import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
 import { p } from "prudence";
 
-import type { MytCardInfo } from "../../../../../../../../../../common/src";
+import type { MytCardInfo } from "tachi-common";
 
 import { RequireSelfRequestFromUser } from "../../middleware";
 

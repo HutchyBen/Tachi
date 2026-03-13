@@ -1,10 +1,10 @@
-import { log } from "#lib/logger/log.js";
+import { log } from "#lib/log/log.js";
 import t from "tap";
 
 import { SoftwareIDToVersion } from "./parser";
 
 t.test("#SoftwareIDToVersion", (t) => {
-	const f = (sid: string) => SoftwareIDToVersion(sid, logger);
+	const f = (sid: string) => SoftwareIDToVersion(sid, log);
 
 	t.throws(() => f("a"), {}, "Should throw on invalid string.");
 	t.throws(() => f("LDJ:J:B:Q:2020092900"), {}, "Should throw on unknown HV revision.");

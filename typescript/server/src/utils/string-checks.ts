@@ -5,7 +5,7 @@ import {
 	type GameGroup,
 	GetGamePTConfig,
 	type Playtype,
-} from "../../../common/src";
+} from "tachi-common";
 import { IsString } from "./misc";
 
 const isIntegerRegex = /^-?\d+$/u;
