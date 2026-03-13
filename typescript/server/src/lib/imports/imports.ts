@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import {
 	CheckAndSetOngoingImportLock,
 	UnsetOngoingImportLock,
@@ -7,8 +7,6 @@ import { DeleteMultipleScores } from "#lib/score-mutation/delete-scores";
 import db from "#services/mongo/db";
 
 import type { ImportDocument } from "../../../../common/src";
-
-const logger = CreateLogCtx(__filename);
 
 interface OngoingImportError {
 	tag: "ONGOING_IMPORT";
@@ -22,16 +20,14 @@ interface OngoingImportError {
  * If this results in sessions being deleted, it will delete them.
  */
 export async function RevertImport(importDoc: ImportDocument): Promise<OngoingImportError | null> {
-	logger.info(`Received revert-import request for import '${importDoc.importID}'`, { importDoc });
+	log.info(`Received revert-import request for import '${importDoc.importID}'`, { importDoc });
 
 	const scores = await GetImportScores(importDoc);
 
 	const hasNoOngoingImport = await CheckAndSetOngoingImportLock(importDoc.userID);
 
 	if (hasNoOngoingImport) {
-		logger.info(
-			`User ${importDoc.userID} tried to revert an import while they had one ongoing.`,
-		);
+		log.info(`User ${importDoc.userID} tried to revert an import while they had one ongoing.`);
 
 		return {
 			tag: "ONGOING_IMPORT",
@@ -41,7 +37,7 @@ export async function RevertImport(importDoc: ImportDocument): Promise<OngoingIm
 	try {
 		await DeleteMultipleScores(scores);
 
-		logger.info(
+		log.info(
 			`Deleted ${scores.length} scores as part of reverting import '${importDoc.importID}'.`,
 			{ importDoc },
 		);
@@ -49,9 +45,9 @@ export async function RevertImport(importDoc: ImportDocument): Promise<OngoingIm
 		try {
 			await db.imports.remove({ importID: importDoc.importID });
 
-			logger.info(`Reverted and deleted import '${importDoc.importID}'.`);
+			log.info(`Reverted and deleted import '${importDoc.importID}'.`);
 		} catch (err) {
-			logger.severe(
+			log.error(
 				`Deleted scores that were part of import, but failed to remove the actual import? There is a stale import with ID '${importDoc.importID}', which must be removed manually.`,
 				{ importDoc, err },
 			);

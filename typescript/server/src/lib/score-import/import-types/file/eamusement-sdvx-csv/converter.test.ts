@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import ResetDBState from "#test-utils/resets";
 import { GetKTDataJSON, TestingAlbidaADV, TestingSDVXAlbidaSong } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
@@ -7,8 +7,6 @@ import t from "tap";
 import type { SDVXEamusementCSVData } from "./types";
 
 import ConvertEamSDVXCSV from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 const parsedScore = {
 	title: "ALBIDA Powerless Mix",

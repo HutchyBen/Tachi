@@ -1,4 +1,4 @@
-import CreateLogCtx, { type KtLogger } from "#lib/logger/logger";
+import { log, type KtLogger } from "#lib/logger/log.js";
 import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import {
@@ -14,8 +14,6 @@ import { IIDX_GRADES, IIDX_LAMPS } from "../../../../../../common/src";
 import { CreatePBDoc, type PBScoreDocumentNoRank } from "./create-pb-doc";
 
 const IIDXScore = TestingIIDXSPScore;
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#CreatePBDoc", (t) => {
 	t.beforeEach(ResetDBState);

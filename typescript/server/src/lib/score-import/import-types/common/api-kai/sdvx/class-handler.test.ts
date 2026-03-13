@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { MockBasicFetch, MockJSONFetch } from "#test-utils/mock-fetch";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
@@ -6,8 +6,6 @@ import t from "tap";
 import { SDVX_DANS } from "../../../../../../../../common/src";
 import { KaiTypeToBaseURL } from "../utils";
 import { CreateKaiSDVXClassProvider } from "./class-handler";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#CreateKaiSDVXClassProvider", async (t) => {
 	t.beforeEach(ResetDBState);

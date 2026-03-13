@@ -1,6 +1,6 @@
 import { CDNStoreOrOverwrite } from "#lib/cdn/cdn";
 import { GetProfileBannerURL } from "#lib/cdn/url-format";
-import { rootLogger } from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import db from "#services/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
@@ -29,7 +29,7 @@ t.test("GET /api/v1/users/:userID/banner", (t) => {
 		t.equal(res.statusCode, 200, "Should return 200.");
 
 		if (res.statusCode !== 200) {
-			rootLogger.info("Unexpected non-200 in CDN tests, received this as a body.", {
+			log.info("Unexpected non-200 in CDN tests, received this as a body.", {
 				body: res.body,
 			});
 		}

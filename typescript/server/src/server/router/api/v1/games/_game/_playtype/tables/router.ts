@@ -1,6 +1,6 @@
 import type { FilterQuery } from "mongodb";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import db from "#services/mongo/db";
 import { GetFoldersFromTable } from "#utils/folder";
 import { GetGPT, GetTachiData } from "#utils/req-tachi-data";
@@ -10,8 +10,6 @@ import { FormatGameGroup, type TableDocument } from "../../../../../../../../../
 import { GetTableFromParam } from "./middleware";
 
 const router: Router = Router({ mergeParams: true });
-
-const logger = CreateLogCtx(__filename);
 
 /**
  * Return all the tables for this game.
@@ -32,7 +30,7 @@ router.get("/", async (req, res) => {
 	const tables = await db.tables.find(query);
 
 	if (tables.length === 0) {
-		logger.error(
+		log.error(
 			`The game ${FormatGameGroup(
 				game,
 				playtype,

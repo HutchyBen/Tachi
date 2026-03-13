@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { GetRelevantGoals } from "#lib/targets/goals";
 import { GetParentQuests } from "#lib/targets/quests";
 import db from "#services/mongo/db";
@@ -14,8 +14,6 @@ import { Router } from "express";
 
 import goalsRouter from "./goals/router";
 import questsRouter from "./quests/router";
-
-const logger = CreateLogCtx(__filename);
 
 const router: Router = Router({ mergeParams: true });
 

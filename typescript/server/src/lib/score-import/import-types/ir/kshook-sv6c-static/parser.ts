@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 import type { EmptyObject } from "#utils/types";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
@@ -28,7 +28,7 @@ const PR_KSHOOK_SV6C_STATIC: PrudenceSchema = {
 
 export function ParseKsHookSV6CStatic(
 	body: Record<string, unknown>,
-	_logger: KtLogger,
+	_log: KtLogger,
 ): ParserFunctionReturns<KsHookSV6CStaticScore, EmptyObject> {
 	// Ignore excess keys, as SV6C might add more features in the future.
 	const err = p(body, PR_KSHOOK_SV6C_STATIC, undefined, { allowExcessKeys: true });

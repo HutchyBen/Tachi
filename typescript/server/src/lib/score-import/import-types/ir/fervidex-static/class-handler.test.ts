@@ -1,11 +1,9 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
 
 import { IIDXDans } from "../../../../../../../common/src/config/game-support/iidx";
 import { CreateFerStaticClassProvider } from "./class-handler";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#FerStaticClassProvider", (t) => {
 	t.beforeEach(ResetDBState);

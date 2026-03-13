@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import { TestingAlbidaADV, TestingSDVXAlbidaSong } from "#test-utils/test-data";
@@ -6,8 +6,6 @@ import deepmerge from "deepmerge";
 import t from "tap";
 
 import { ConvertAPIKaiSDVX, ConvertDifficulty, ConvertVersion, ResolveKaiLamp } from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 const sdvxScore = {
 	sdvx_id: 32157055,

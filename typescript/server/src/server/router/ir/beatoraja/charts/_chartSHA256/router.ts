@@ -1,5 +1,5 @@
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import db from "#services/mongo/db";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
@@ -14,8 +14,6 @@ import type {
 import { TachiScoreDataToBeatorajaFormat } from "./convert-scores";
 
 const router: Router = Router({ mergeParams: true });
-
-const logger = CreateLogCtx(__filename);
 
 const GetChartDocument: RequestHandler = async (req, res, next) => {
 	let chart: ChartDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"> | null =
@@ -82,7 +80,7 @@ router.get("/scores", async (req, res) => {
 		const username = userMap.get(score.userID)?.username;
 
 		if (!username) {
-			logger.warn(
+			log.warn(
 				`A PB on ${score.chartID} refers to user ${score.userID}, who apparantly doesn't exist? Skipping for beatoraja score returns, but this might be severe!`,
 			);
 			continue;

@@ -1,11 +1,9 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import ResetDBState from "#test-utils/resets";
 import { TestingKsHookSV6CStaticScore } from "#test-utils/test-data";
 import t from "tap";
 
 import { ConverterKsHookSV6CStatic } from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#ConverterKsHookSV6CStatic", (t) => {
 	t.beforeEach(ResetDBState);

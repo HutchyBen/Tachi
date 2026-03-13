@@ -1,5 +1,5 @@
 import type { GPTDerivers } from "#game-implementations/types";
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 
@@ -50,7 +50,7 @@ function DeriveMetrics<GPT extends GPTString>(
 	return derivedMetrics as DerivedMetrics[GPT];
 }
 
-export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any, logger: KtLogger) {
+export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any, log: KtLogger) {
 	const gptConfig = GetGPTConfig(gpt);
 
 	const indexes: Record<string, integer> = {};
@@ -67,7 +67,7 @@ export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any,
 		const index = conf.values.indexOf(metrics[key]);
 
 		if (index === -1) {
-			logger.error(
+			log.error(
 				`Got an invalid enum value of ${metrics[key]} for ${gpt} ${key} on DryScore. Can't add indexes?`,
 				{ metrics, key, conf },
 			);
@@ -96,7 +96,7 @@ export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any,
 		const index = conf.values.indexOf(metrics.optional[key]);
 
 		if (index === -1) {
-			logger.error(
+			log.error(
 				`Got an invalid enum value of ${metrics.optional[key]} for ${gpt} optional.${key} on DryScore. Can't add indexes?`,
 				{ metrics, key, conf },
 			);
@@ -122,7 +122,7 @@ export function CreateFullScoreData<GPT extends GPTString>(
 	gpt: GPT,
 	dryScoreData: DryScore<GPT>["scoreData"],
 	chart: ChartDocument<GPT>,
-	logger: KtLogger,
+	log: KtLogger,
 ) {
 	const derivedMetrics = DeriveMetrics(gpt, dryScoreData, chart);
 

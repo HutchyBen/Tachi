@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import { ONE_MEGABYTE } from "#lib/constants/filesize";
 import { ONE_HOUR, ONE_SECOND } from "#lib/constants/time";
@@ -321,15 +321,15 @@ export function IsRecord(maybeRecord: unknown): maybeRecord is Record<string, un
  * Wrap a promise in an error handler that exits the process safely, and logs
  * when it completes.
  */
-export function WrapScriptPromise(promise: Promise<unknown>, logger: KtLogger) {
+export function WrapScriptPromise(promise: Promise<unknown>, log: KtLogger) {
 	let code = 0;
 
 	void promise
 		.then(() => {
-			logger.info(`Finished executing.`);
+			log.info(`Finished executing.`);
 		})
 		.catch((err: Error) => {
-			logger.error(`Failed executing.`, { err });
+			log.error(`Failed executing.`, { err });
 
 			code = 1;
 		})
@@ -339,7 +339,7 @@ export function WrapScriptPromise(promise: Promise<unknown>, logger: KtLogger) {
 				process.exit(1);
 			}, ONE_SECOND * 10);
 
-			logger.end(() => {
+			log.end(() => {
 				process.exit(code);
 			});
 		});

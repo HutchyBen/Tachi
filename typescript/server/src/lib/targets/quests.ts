@@ -1,5 +1,5 @@
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { BulkSendNotification } from "#lib/notifications/notifications";
 import db from "#services/mongo/db";
 
@@ -20,8 +20,6 @@ import {
 	UnsubscribeFromGoal,
 	UnsubscribeFromOrphanedGoalSubs,
 } from "./goals";
-
-const logger = CreateLogCtx(__filename);
 
 /**
  * Retrieves the goalID documents in a single array from the
@@ -44,7 +42,7 @@ export async function GetGoalsInQuest(quest: QuestDocument) {
 	});
 
 	if (goals.length !== goalIDs.length) {
-		logger.error(
+		log.error(
 			`Quest ${quest.name} has ${goalIDs.length} goals registered, but we could only find ${goals.length} in the database?`,
 			{ goals: goals.length, quest, goalIDs: goalIDs.length },
 		);
@@ -53,7 +51,7 @@ export async function GetGoalsInQuest(quest: QuestDocument) {
 
 	// this shouldn't happen, but if it does it's recoverable by just ignoring it.
 	if (goalIDs.length < 2) {
-		logger.warn(`Quest ${quest.name} resolves to less than 2 goals. Isn't a valid quest?`, {
+		log.warn(`Quest ${quest.name} resolves to less than 2 goals. Isn't a valid quest?`, {
 			quest,
 		});
 	}
@@ -125,14 +123,14 @@ export async function EvaluateQuestProgress(userID: integer, quest: QuestDocumen
 				if (!goalSub) {
 					// shouldn't happen. Let's just correct the user silently.
 
-					logger.warn(
+					log.warn(
 						`User ${userID} has a corrupt subscription to quest '${quest.name}', They do not have all the goals in this quest assigned. Automatically subscribing them to the new goal.`,
 					);
 
 					const newGoalSub = await SubscribeToGoal(userID, goal, false);
 
 					if (newGoalSub === SubscribeFailReasons.ALREADY_SUBSCRIBED) {
-						logger.error(
+						log.error(
 							`User ${userID} wasn't subscribed to a goal (${goal.goalID}), but subscription failed because they were already subscribed. This should never happen.`,
 						);
 						throw new Error(
@@ -142,7 +140,7 @@ export async function EvaluateQuestProgress(userID: integer, quest: QuestDocumen
 
 					if (newGoalSub === SubscribeFailReasons.ALREADY_ACHIEVED) {
 						// lol, wut
-						logger.error(
+						log.error(
 							`Impossible via typesystem: attempted resubscription for user ${userID} on goal ${goal.goalID}, was rejected for being already achieved. Not possible, as we allow already achieved goals here.`,
 						);
 
@@ -167,7 +165,7 @@ export async function EvaluateQuestProgress(userID: integer, quest: QuestDocumen
 			const result = await EvaluateGoalForUser(goal, userID, logger);
 
 			if (!result) {
-				logger.error(
+				log.error(
 					`Failed to calculate ${userID} result for goal '${goal.name}'. Is the goal valid?`,
 					{ goal, quest },
 				);
@@ -264,7 +262,7 @@ export async function SubscribeToQuest(
 
 	await db["quest-subs"].insert(questSub);
 
-	logger.info(`User ${userID} subscribed to '${quest.name}'.`);
+	log.info(`User ${userID} subscribed to '${quest.name}'.`);
 
 	return { questSub, goals: result.goals, goalResults: result.goalResults };
 }
@@ -279,7 +277,7 @@ export async function SubscribeToQuest(
  * A quest that removes goals will not result in those users having goal subs removed.
  */
 export async function UpdateQuestSubscriptions(questID: string) {
-	logger.info(`Received update-subscribe call to quest ${questID}.`);
+	log.info(`Received update-subscribe call to quest ${questID}.`);
 
 	const subscriptions = await db["quest-subs"].find({ questID });
 
@@ -302,9 +300,7 @@ export async function UpdateQuestSubscriptions(questID: string) {
 			subscriptions.map((e) => UnsubscribeFromOrphanedGoalSubs(e.userID, e.game, e.playtype)),
 		);
 
-		logger.info(
-			`Quest ${questID} has been deleted. Unsubscribed ${subscriptions.length} users.`,
-		);
+		log.info(`Quest ${questID} has been deleted. Unsubscribed ${subscriptions.length} users.`);
 
 		return;
 	}

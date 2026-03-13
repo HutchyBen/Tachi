@@ -1,6 +1,6 @@
 import type { ScoreImportJob } from "#lib/score-import/worker/types";
 
-import { AppendLogCtx, type KtLogger } from "#lib/logger/logger";
+import { AppendLogCtx, type KtLogger } from "#lib/logger/log.js";
 import db from "#services/mongo/db";
 import { ClassToObject } from "#utils/misc";
 
@@ -44,10 +44,10 @@ export async function ImportAllIterableData<D, C>(
 	ConverterFunction: ConverterFunction<D, C>,
 	context: C,
 	game: GameGroup,
-	logger: KtLogger,
+	log: KtLogger,
 	job: ScoreImportJob | undefined,
 ): Promise<Array<ImportProcessingInfo>> {
-	logger.verbose("Getting Blacklist...");
+	log.verbose("Getting Blacklist...");
 
 	// @optimisable: could filter harder with score.game and score.playtype
 	// stuff.
@@ -57,7 +57,7 @@ export async function ImportAllIterableData<D, C>(
 		})
 	).map((e) => e.scoreID);
 
-	logger.verbose(`Starting Data Processing...`);
+	log.verbose(`Starting Data Processing...`);
 
 	const processedResults = [];
 
@@ -89,21 +89,21 @@ export async function ImportAllIterableData<D, C>(
 
 	// We need to filter out nulls, which we don't care for (these are neither successes or failures)
 
-	logger.verbose(`Finished Importing Data (${processedResults.length} datapoints).`);
-	logger.debug(`Removing null returns...`);
+	log.verbose(`Finished Importing Data (${processedResults.length} datapoints).`);
+	log.debug(`Removing null returns...`);
 
 	const datapoints = processedResults.filter((e) => e !== null) as Array<ImportProcessingInfo>;
 
-	logger.debug(`Removed null from results.`);
+	log.debug(`Removed null from results.`);
 
-	logger.verbose(`received ${datapoints.length} returns, from ${processedResults.length} data.`);
+	log.verbose(`received ${datapoints.length} returns, from ${processedResults.length} data.`);
 
 	// Flush the score queue out after finishing most of the import. This ensures no scores get left in the
 	// queue.
 	const emptied = await InsertQueue(userID);
 
 	if (emptied !== 0 && emptied !== null) {
-		logger.verbose(`Emptied ${emptied} documents from score queue.`);
+		log.verbose(`Emptied ${emptied} documents from score queue.`);
 	}
 
 	return datapoints;
@@ -125,7 +125,7 @@ export async function ImportIterableDatapoint<D, C>(
 	context: C,
 	game: GameGroup,
 	blacklist: Array<string>,
-	logger: KtLogger,
+	log: KtLogger,
 ): Promise<ImportProcessingInfo | null> {
 	try {
 		const cfnReturn = await ConverterFunction(data, context, importType, logger);
@@ -139,7 +139,7 @@ export async function ImportIterableDatapoint<D, C>(
 		// if this isn't a converterFailure, it's just a general error.
 		// Some sort of internal issue?
 		if (!IsConverterFailure(err)) {
-			logger.error(`Unknown error thrown from converter, Ignoring.`, {
+			log.error(`Unknown error thrown from converter, Ignoring.`, {
 				err,
 			});
 			return {
@@ -159,12 +159,12 @@ export async function ImportIterableDatapoint<D, C>(
 			case "SongOrChartNotFound": {
 				const dnfErr = err as SongOrChartNotFoundFailure<ImportTypes>;
 
-				logger.info(`SongOrChartNotFoundFailure: ${dnfErr.message}`, {
+				log.info(`SongOrChartNotFoundFailure: ${dnfErr.message}`, {
 					err: ClassToObject(dnfErr),
 					hideFromConsole: ["cfnReturn"],
 				});
 
-				logger.debug("Inserting orphan...", { cfnReturn: dnfErr });
+				log.debug("Inserting orphan...", { cfnReturn: dnfErr });
 
 				const insertOrphan = await OrphanScore(
 					dnfErr.importType,
@@ -177,7 +177,7 @@ export async function ImportIterableDatapoint<D, C>(
 				);
 
 				if (insertOrphan.success) {
-					logger.debug("Orphan inserted successfully.", {
+					log.debug("Orphan inserted successfully.", {
 						orphanID: insertOrphan.orphanID,
 					});
 					return {
@@ -192,7 +192,7 @@ export async function ImportIterableDatapoint<D, C>(
 					};
 				}
 
-				logger.debug(`Orphan already exists.`, { orphanID: insertOrphan.orphanID });
+				log.debug(`Orphan already exists.`, { orphanID: insertOrphan.orphanID });
 
 				return {
 					success: false,
@@ -205,7 +205,7 @@ export async function ImportIterableDatapoint<D, C>(
 			}
 
 			case "InvalidScore": {
-				logger.info(`InvalidScoreFailure: ${err.message}`, {
+				log.info(`InvalidScoreFailure: ${err.message}`, {
 					err: ClassToObject(err),
 					hideFromConsole: ["cfnReturn"],
 				});
@@ -218,7 +218,7 @@ export async function ImportIterableDatapoint<D, C>(
 			}
 
 			case "Internal": {
-				logger.error(`Internal error occured.`, { err: ClassToObject(err) });
+				log.error(`Internal error occured.`, { err: ClassToObject(err) });
 				return {
 					success: false,
 					type: "InternalError",
@@ -232,7 +232,7 @@ export async function ImportIterableDatapoint<D, C>(
 			case "AmbiguousTitle": {
 				const atErr = err as AmbiguousTitleFailure;
 
-				logger.info(`AmbiguousTitleFailure: ${err.message}`, { err: ClassToObject(err) });
+				log.info(`AmbiguousTitleFailure: ${err.message}`, { err: ClassToObject(err) });
 
 				return {
 					type: "AmbiguousTitle",
@@ -248,7 +248,7 @@ export async function ImportIterableDatapoint<D, C>(
 				return null;
 
 			default: {
-				logger.warn(`Unknown error returned as ConverterFailure, Ignoring.`, {
+				log.warn(`Unknown error returned as ConverterFailure, Ignoring.`, {
 					err: ClassToObject(err),
 				});
 				return {
@@ -266,7 +266,7 @@ export async function ProcessSuccessfulConverterReturn(
 	userID: integer,
 	cfnReturn: ConverterFnSuccessReturn,
 	blacklist: Array<string>,
-	logger: KtLogger,
+	log: KtLogger,
 	forceImmediateImport = false,
 ): Promise<ImportProcessingInfo | null> {
 	const result = await HydrateCheckAndInsertScore(
@@ -286,7 +286,7 @@ export async function ProcessSuccessfulConverterReturn(
 		return null;
 	}
 
-	logger.debug(`Successfully imported score: ${result.scoreID}`);
+	log.debug(`Successfully imported score: ${result.scoreID}`);
 
 	return {
 		success: true,
@@ -315,7 +315,7 @@ async function HydrateCheckAndInsertScore(
 	chart: ChartDocument,
 	song: SongDocument,
 	blacklist: Array<string>,
-	importLogger: KtLogger,
+	importlog: KtLogger,
 	force = false,
 ): Promise<ScoreDocument | null> {
 	const gptString = GetGPTString(dryScore.game, chart.playtype);
@@ -326,7 +326,7 @@ async function HydrateCheckAndInsertScore(
 	const logger = AppendLogCtx(scoreID, importLogger);
 
 	if (blacklist.length && blacklist.includes(scoreID)) {
-		logger.verbose("Skipped score, as it was on the blacklist.");
+		log.verbose("Skipped score, as it was on the blacklist.");
 		return null;
 	}
 
@@ -345,13 +345,13 @@ async function HydrateCheckAndInsertScore(
 	);
 
 	if (existingScore) {
-		logger.verbose(`Skipped score.`);
+		log.verbose(`Skipped score.`);
 		return null;
 	}
 
 	// If this users score queue
 	if (GetScoreQueueMaybe(userID)?.scoreIDSet.has(scoreID) === true) {
-		logger.verbose(`Skipped score.`);
+		log.verbose(`Skipped score.`);
 		return null;
 	}
 
@@ -369,7 +369,7 @@ async function HydrateCheckAndInsertScore(
 
 	// this is a last resort for avoiding doubled imports
 	if (res === null) {
-		logger.verbose(`Skipped score - Race Condition protection triggered.`);
+		log.verbose(`Skipped score - Race Condition protection triggered.`);
 		return null;
 	}
 

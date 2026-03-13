@@ -4,7 +4,6 @@ import { log } from "#utils/log";
 
 import { BotConfig } from "../config";
 
-
 /**
  * Middleware that checks that a webhook request has Authorization set to
  * exactly "Bearer $CLIENT_SECRET".
@@ -34,9 +33,7 @@ export const ValidateWebhookRequest: RequestHandler = (req, res, next) => {
 	}
 
 	if (value !== BotConfig.OAUTH.CLIENT_SECRET) {
-		log.warn(
-			`Recieved invalid auth value from ${req.ip}. Has the client secret been changed?`,
-		);
+		log.warn(`Recieved invalid auth value from ${req.ip}. Has the client secret been changed?`);
 		return res.status(403).json({
 			success: false,
 			description: "Unauthorised.",

@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import {
 	EXT_BISTROVER,
@@ -95,10 +95,7 @@ const PR_FERVIDEX: PrudenceSchema = {
 /**
  * Converts a string of the form LDJ:X:X:X:2020092900 into a game version.
  */
-export function SoftwareIDToVersion(
-	model: string,
-	logger: KtLogger,
-): Versions["iidx:DP" | "iidx:SP"] {
+export function SoftwareIDToVersion(model: string, log: KtLogger): Versions["iidx:DP" | "iidx:SP"] {
 	try {
 		const data = ParseEA3SoftID(model);
 
@@ -166,7 +163,7 @@ export function SoftwareIDToVersion(
 
 		throw new ScoreImportFatalError(400, `Unsupported Software Model ${model}.`);
 	} catch (err) {
-		logger.warn(`Unsupported Software Model ${model}.`, { err });
+		log.warn(`Unsupported Software Model ${model}.`, { err });
 		throw new ScoreImportFatalError(400, `Unsupported Software Model ${model}.`);
 	}
 }
@@ -175,7 +172,7 @@ export function ParseFervidexSingle(
 	body: Record<string, unknown>,
 	headers: FervidexHeaders,
 	userID: integer,
-	logger: KtLogger,
+	log: KtLogger,
 ): ParserFunctionReturns<FervidexScore, FervidexContext> {
 	const version = SoftwareIDToVersion(headers.model, logger);
 

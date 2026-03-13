@@ -54,12 +54,12 @@ export async function CreateKaiIIDXClassProvider(
 
 	return (gptString, userID, ratings, logger) => {
 		if (err !== undefined) {
-			logger.error(`An error occured while updating classes for ${baseUrl}.`, { err });
+			log.error(`An error occured while updating classes for ${baseUrl}.`, { err });
 			return {};
 		}
 
 		if (!IsRecord(json)) {
-			logger.error(`JSON Returned from server was not an object? Not updating anything.`, {
+			log.error(`JSON Returned from server was not an object? Not updating anything.`, {
 				json,
 			});
 			return {};
@@ -72,7 +72,7 @@ export async function CreateKaiIIDXClassProvider(
 		} else if (gptString === "iidx:DP") {
 			maybeIIDXDan = json.dp;
 		} else {
-			logger.warn(`KAIIIDXClassUpdater called with invalid gptString of ${gptString}.`);
+			log.warn(`KAIIIDXClassUpdater called with invalid gptString of ${gptString}.`);
 			return {};
 		}
 
@@ -81,26 +81,26 @@ export async function CreateKaiIIDXClassProvider(
 			maybeIIDXDan === undefined ||
 			typeof maybeIIDXDan !== "number"
 		) {
-			logger.info(`User has no ${gptString} dan. Not updating anything.`);
+			log.info(`User has no ${gptString} dan. Not updating anything.`);
 			return {};
 		}
 
 		const iidxDan: number = maybeIIDXDan;
 
 		if (!Number.isInteger(iidxDan)) {
-			logger.warn(`${baseUrl} returned a dan of ${iidxDan}, which was not a number.`);
+			log.warn(`${baseUrl} returned a dan of ${iidxDan}, which was not a number.`);
 			return {};
 		}
 
 		if (iidxDan > IIDX_DANS.KAIDEN) {
-			logger.warn(
+			log.warn(
 				`${baseUrl} returned a dan of ${iidxDan}, which was greater than KAIDEN (${IIDX_DANS.KAIDEN}.)`,
 			);
 			return {};
 		}
 
 		if (iidxDan < IIDX_DANS.KYU_7) {
-			logger.warn(
+			log.warn(
 				`${baseUrl} returned a dan of ${iidxDan}, which was less than KYU_7 (${IIDX_DANS.KYU_7}.)`,
 			);
 			return {};
@@ -109,9 +109,7 @@ export async function CreateKaiIIDXClassProvider(
 		const value = IIDXDans[iidxDan];
 
 		if (!value) {
-			logger.warn(
-				`${baseUrl} returned a dan of ${iidxDan}, which has no corresponding value.`,
-			);
+			log.warn(`${baseUrl} returned a dan of ${iidxDan}, which has no corresponding value.`);
 			return {};
 		}
 

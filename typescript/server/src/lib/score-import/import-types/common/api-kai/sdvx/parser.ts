@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import nodeFetch from "#utils/fetch";
 
@@ -14,7 +14,7 @@ import { CreateKaiSDVXClassProvider } from "./class-handler";
 export async function ParseKaiSDVX(
 	service: "EAG" | "FLO" | "MIN",
 	authDoc: KaiAuthDocument,
-	logger: KtLogger,
+	log: KtLogger,
 	fetch = nodeFetch,
 	reauthFn: KaiAPIReauthFunction | null = null,
 ): Promise<ParserFunctionReturns<unknown, KaiContext>> {

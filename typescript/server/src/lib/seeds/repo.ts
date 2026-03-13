@@ -4,13 +4,11 @@ import fs from "fs/promises";
 
 import type { GameGroup } from "../../../../common/src";
 /* eslint-disable no-await-in-loop */
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { Env, ServerConfig } from "#lib/setup/config";
 import { asyncExec } from "#utils/misc";
 import os from "os";
 import path from "path";
-
-const logger = CreateLogCtx(__filename);
 
 export type SeedsCollections =
 	| "bms-course-lookup"
@@ -24,7 +22,6 @@ export type SeedsCollections =
  */
 export class DatabaseSeedsRepo {
 	private readonly baseDir: string;
-	private readonly logger;
 	private readonly shouldDestroy: "YES_IM_SURE_PLEASE_LET_THIS_DIRECTORY_BE_RM_RFD" | false;
 
 	/**
@@ -40,7 +37,6 @@ export class DatabaseSeedsRepo {
 		shouldDestroy: "YES_IM_SURE_PLEASE_LET_THIS_DIRECTORY_BE_RM_RFD" | false = false,
 	) {
 		this.baseDir = baseDir;
-		this.logger = CreateLogCtx(`DatabaseSeeds:${baseDir}`);
 		this.shouldDestroy = shouldDestroy;
 	}
 
@@ -95,13 +91,13 @@ export class DatabaseSeedsRepo {
 	 * @returns True when a commit has occured, false when it hasn't. Throws on failure.
 	 */
 	async CommitChangesBack(commitMsg: string) {
-		this.logger.verbose(`Received commit-back request.`);
+		log.verbose(`Received commit-back request.`);
 
 		try {
 			const { stdout: statusOut } = await asyncExec(`git status --porcelain`, this.baseDir);
 
 			if (statusOut === "") {
-				this.logger.info(`No changes. Not committing any changes back.`);
+				log.info(`No changes. Not committing any changes back.`);
 				return false;
 			}
 
@@ -115,11 +111,11 @@ export class DatabaseSeedsRepo {
 			// try {
 			// 	await asyncExec(`cd "${this.baseDir}/scripts" || exit 2; pnpm install; pnpm test`);
 			// } catch ({ err, stdout, stderr }) {
-			// 	logger.error(`Testing the changes failed. ${err}. Not committing back!`, { err });
+			// 	log.error(`Testing the changes failed. ${err}. Not committing back!`, { err });
 			// 	throw err;
 			// }
 
-			this.logger.info(`Changes detected. Authenticating with Github.`);
+			log.info(`Changes detected. Authenticating with Github.`);
 
 			await this.#AuthenticateWithGitServer();
 
@@ -131,11 +127,11 @@ export class DatabaseSeedsRepo {
 
 			await asyncExec(`git push`, this.baseDir);
 
-			this.logger.info(`Commit: ${commitOut}.`);
+			log.info(`Commit: ${commitOut}.`);
 
 			return true;
 		} catch (err) {
-			this.logger.error(`Failed to backport commits?`, { err });
+			log.error(`Failed to backport commits?`, { err });
 			throw err;
 		}
 	}
@@ -146,7 +142,7 @@ export class DatabaseSeedsRepo {
 			return fs.rm(this.baseDir, { recursive: true, force: true });
 		}
 
-		this.logger.info(`Refusing to delete seeds as they were instantiated locally.`);
+		log.info(`Refusing to delete seeds as they were instantiated locally.`);
 	}
 
 	async *IterateCollections() {
@@ -193,11 +189,11 @@ export class DatabaseSeedsRepo {
 			// prevent an awful interaction where a user edits stuff on their disk
 			// and tries to run pnpm load-seeds
 			// but it fails because pull can't rebase with changes.
-			this.logger.warn(`Not pulling any updates to seeds as we're in local dev.`);
+			log.warn(`Not pulling any updates to seeds as we're in local dev.`);
 			return;
 		}
 
-		this.logger.info(`Pulling updates.`);
+		log.info(`Pulling updates.`);
 		return asyncExec(`git pull`);
 	}
 
@@ -221,7 +217,7 @@ export class DatabaseSeedsRepo {
 	 * fail if there are uncommitted changes.
 	 */
 	switchBranch(newBranch: string) {
-		this.logger.info(`Switching to '${newBranch}'...`);
+		log.info(`Switching to '${newBranch}'...`);
 		return asyncExec(`git switch '${newBranch}'`, this.baseDir);
 	}
 
@@ -246,7 +242,7 @@ export async function PullDatabaseSeeds() {
 	if (ServerConfig.SEEDS_CONFIG?.TYPE === "GIT_REPO") {
 		const seedsDir = await fs.mkdtemp(path.join(os.tmpdir(), "tachi-seeds-"));
 
-		logger.info(`Cloning data to ${seedsDir}.`);
+		log.info(`Cloning data to ${seedsDir}.`);
 
 		await fs.rm(seedsDir, { recursive: true, force: true });
 
@@ -282,7 +278,7 @@ export async function PullDatabaseSeeds() {
 			);
 		} catch (e) {
 			const { err, stderr } = e as { err: Error; stderr: string };
-			logger.error(`Error cloning seeds. ${stderr}.`);
+			log.error(`Error cloning seeds. ${stderr}.`);
 			throw err;
 		}
 	} else if (ServerConfig.SEEDS_CONFIG?.TYPE === "LOCAL_FILES") {

@@ -1,6 +1,6 @@
 import type { DryScoreData } from "#lib/score-import/framework/common/types";
 
-import { type KtLogger, rootLogger } from "#lib/logger/logger";
+import { log, type KtLogger } from "#lib/logger/log.js";
 import { CreateScoreCalcData } from "#lib/score-import/framework/calculated-data/score";
 import { CreateSessionCalcData } from "#lib/score-import/framework/calculated-data/session";
 import { UpdateChartRanking } from "#lib/score-import/framework/pb/create-pb-doc";
@@ -37,7 +37,7 @@ export default async function UpdateScore(
 	const user = await GetUserWithID(userID);
 
 	if (!user) {
-		rootLogger.severe(
+		log.error(
 			`User ${userID} does not exist, yet a score update was called for them? Panicking.`,
 		);
 		throw new Error(
@@ -52,7 +52,7 @@ export default async function UpdateScore(
 	});
 
 	if (!chart) {
-		rootLogger.severe(
+		log.error(
 			`Chart ${chartID} does not exist, yet a score update was called for it? Panicking.`,
 		);
 		throw new Error(
@@ -80,11 +80,11 @@ export default async function UpdateScore(
 
 	newScore.scoreID = newScoreID;
 
-	const logger = rootLogger.child({
+	const logger = log.child({
 		context: ["Update Score", oldScore.scoreID, newScore.scoreID, FormatUserDoc(user)],
 	}) as KtLogger;
 
-	logger.verbose("Received Update Score request.");
+	log.verbose("Received Update Score request.");
 
 	const gpt = GetGPTString(newScore.game, newScore.playtype);
 
@@ -98,7 +98,7 @@ export default async function UpdateScore(
 		// the update.
 		// @ts-expect-error this shouldn't happen according to types.
 		if (newScore._id) {
-			logger.warn(
+			log.warn(
 				`Passed a score with _id to UpdateScore. This property should not be set. Deleting this property and continuing anyway.`,
 			);
 
@@ -113,8 +113,8 @@ export default async function UpdateScore(
 			{ $set: newScore as ScoreDocument },
 		);
 	} catch (err) {
-		logger.error(err);
-		logger.warn(
+		log.error(err);
+		log.warn(
 			`Score ID ${newScoreID} already existed -- this update caused a collision. Removing old score and updating old references anyway.`,
 		);
 		await db.scores.remove({
@@ -123,12 +123,12 @@ export default async function UpdateScore(
 	}
 
 	if (oldScoreID === newScoreID) {
-		logger.verbose(`Done updating score.`);
+		log.verbose(`Done updating score.`);
 		return;
 	}
 
 	if (dangerouslySkipUpdatingRefs) {
-		logger.verbose(`Done updating score.`);
+		log.verbose(`Done updating score.`);
 		return;
 	}
 
@@ -142,7 +142,7 @@ export default async function UpdateScore(
 		scoreIDs: newScoreID,
 	});
 
-	logger.verbose(`Updating ${sessions.length} sessions.`);
+	log.verbose(`Updating ${sessions.length} sessions.`);
 
 	// For every session that interacts with this score ID (there should only ever be one)
 	for (const session of sessions) {
@@ -188,7 +188,7 @@ export default async function UpdateScore(
 	}
 
 	if (!skipUpdatingPBs) {
-		logger.verbose(`Updating PBs.`);
+		log.verbose(`Updating PBs.`);
 
 		// Update the PBs to reference properly.
 		// We run updateAllPbs on just the modified chart -- the reason
@@ -212,7 +212,7 @@ export default async function UpdateScore(
 		scoreIDs: oldScoreID,
 	});
 
-	logger.verbose(`Updating ${imports.length} imports.`);
+	log.verbose(`Updating ${imports.length} imports.`);
 
 	for (const importDoc of imports) {
 		await db.imports.update(
@@ -227,5 +227,5 @@ export default async function UpdateScore(
 		);
 	}
 
-	logger.verbose(`Done updating score.`);
+	log.verbose(`Done updating score.`);
 }

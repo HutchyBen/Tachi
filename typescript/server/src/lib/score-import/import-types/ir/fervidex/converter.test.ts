@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { CreateScoreID } from "#lib/score-import/framework/score-importing/score-id";
 import db from "#services/mongo/db";
 import { dmf, mkFakeScoreIIDXSP } from "#test-utils/misc";
@@ -18,8 +18,6 @@ import {
 	TachifyRandom,
 	TachifyRange,
 } from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#SplitFervidexChartRef", (t) => {
 	t.strictSame(SplitFervidexChartRef("spn"), { playtype: "SP", difficulty: "NORMAL" });

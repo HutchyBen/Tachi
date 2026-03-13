@@ -1,11 +1,10 @@
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { ONE_MINUTE } from "#lib/constants/time";
-import CreateLogCtx, { ChangeRootLogLevel, GetLogLevel } from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { SendSiteAnnouncementNotification } from "#lib/notifications/notification-wrappers";
 import { UpdateGoalsForUser } from "#lib/score-import/framework/goals/goals";
 import { UpdateQuestsForUser } from "#lib/score-import/framework/quests/quests";
 import { DeleteMultipleScores, DeleteScore } from "#lib/score-mutation/delete-scores";
-import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
+import { TachiConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
 import db from "#services/mongo/db";
 import { RecalcAllScores, UpdateAllPBs } from "#utils/calculations/recalc-scores";
@@ -25,8 +24,6 @@ import {
 	UserAuthLevels,
 } from "../../../../../../../common/src";
 
-const logger = CreateLogCtx(__filename);
-
 const router: Router = Router({ mergeParams: true });
 
 const RequireAdminLevel: RequestHandler = async (req, res, next) => {
@@ -40,7 +37,7 @@ const RequireAdminLevel: RequestHandler = async (req, res, next) => {
 	const userDoc = await GetUserWithID(req[SYMBOL_TACHI_API_AUTH].userID);
 
 	if (!userDoc) {
-		logger.severe(
+		log.error(
 			`Api Token ${req[SYMBOL_TACHI_API_AUTH].token} is assigned to ${req[SYMBOL_TACHI_API_AUTH].userID}, who does not exist?`,
 		);
 
@@ -60,66 +57,7 @@ const RequireAdminLevel: RequestHandler = async (req, res, next) => {
 	next();
 };
 
-const LOG_LEVEL = Env.LOG_LEVEL;
-
 router.use(RequireAdminLevel);
-
-let currentLogLevelTimer: NodeJS.Timeout | null = null;
-
-/**
- * Changes the current server log level to the provided `logLevel` in the request body.
- *
- * @param logLevel - The log level to change to.
- * @param duration - The amount of minutes to wait before changing the log level back to the default.
- * Defaults to 60 minutes.
- * @param noReset - If true, do not ever reset this decision.
- *
- * @name POST /api/v1/admin/change-log-level
- */
-router.post(
-	"/change-log-level",
-	prValidate({
-		logLevel: p.isIn("crit", "severe", "error", "warn", "info", "verbose", "debug"),
-		duration: p.optional(p.isPositiveNonZero),
-		noReset: p.optional("boolean"),
-	}),
-	(req, res) => {
-		const body = req.safeBody as {
-			duration?: integer;
-			logLevel: "crit" | "debug" | "error" | "info" | "severe" | "verbose" | "warn";
-			noReset?: boolean;
-		};
-
-		const logLevel = GetLogLevel();
-
-		ChangeRootLogLevel(body.logLevel);
-
-		const duration = body.duration ?? 60;
-
-		if (currentLogLevelTimer) {
-			logger.verbose(`Removing last timer to reset log level to ${LOG_LEVEL}.`);
-			clearTimeout(currentLogLevelTimer);
-		}
-
-		logger.info(`Log level has been changed to ${body.logLevel}.`);
-
-		if (body.noReset !== true) {
-			logger.info(`This will reset to "${LOG_LEVEL}" level in ${duration} minutes.`);
-
-			currentLogLevelTimer = setTimeout(() => {
-				logger.verbose(`Changing log level back to ${LOG_LEVEL}.`);
-				ChangeRootLogLevel(LOG_LEVEL);
-				logger.info(`Reset log level back to ${LOG_LEVEL}.`);
-			}, duration * ONE_MINUTE);
-		}
-
-		return res.status(200).json({
-			success: true,
-			description: `Changed log level from ${logLevel} to ${body.logLevel}.`,
-			body: {},
-		});
-	},
-);
 
 /**
  * Resynchronises all PBs that match the given query or users.
@@ -441,8 +379,6 @@ router.post("/reprocess-all-goals", async (req, res) => {
 
 	for (const ugpt of ugpts) {
 		promises.push(async () => {
-			const logger = CreateLogCtx(`${ugpt.userID} ${ugpt.game}`);
-
 			const goalSubs = await db["goal-subs"].find({
 				game: ugpt.game,
 				playtype: ugpt.playtype,
@@ -459,7 +395,7 @@ router.post("/reprocess-all-goals", async (req, res) => {
 				goalID: { $in: goalSubs.map((e) => e.goalID) },
 			});
 
-			await UpdateGoalsForUser(goals, goalSubsMap, ugpt.userID, logger);
+			await UpdateGoalsForUser(goals, goalSubsMap, ugpt.userID, log);
 
 			const allQuestSubs = await db["quest-subs"].find({
 				game: ugpt.game,
@@ -471,7 +407,7 @@ router.post("/reprocess-all-goals", async (req, res) => {
 				questID: { $in: allQuestSubs.map((e) => e.questID) },
 			});
 
-			await UpdateQuestsForUser(quests, allQuestSubs, ugpt.game, ugpt.userID, logger);
+			await UpdateQuestsForUser(quests, allQuestSubs, ugpt.game, ugpt.userID, log);
 		});
 	}
 

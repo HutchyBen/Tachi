@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import { FormatPrError } from "#utils/prudence";
 import { p } from "prudence";
@@ -59,7 +59,7 @@ const PR_BARBATOS_SDVX6 = {
 
 export function ParseBarbatosSingle(
 	body: Record<string, unknown>,
-	_logger: KtLogger,
+	_log: KtLogger,
 ): ParserFunctionReturns<BarbatosScore | BarbatosSDVX6Score, BarbatosContext> {
 	// this is an extremely sketchy way of sniffing out whether it's sdvx6 or not.
 	// We could ask barbatos to send a header, but what difference does it make?

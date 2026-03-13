@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import db from "#services/mongo/db";
 
 import {
@@ -11,8 +11,6 @@ import {
 } from "../../../../common/src";
 import { EvaluateShowcaseStat } from "./evaluator";
 import { GetRelatedStatDocuments } from "./get-related";
-
-const logger = CreateLogCtx(__filename);
 
 /**
  * Evaluate a users set Stats Showcase.
@@ -33,7 +31,7 @@ export async function EvaluateUsersStatsShowcase(
 	});
 
 	if (!settings) {
-		logger.error(
+		log.error(
 			`User ${getSettingsID} has no game-settings, yet a call to EvaluateUsersStatsShowcase was made.`,
 		);
 

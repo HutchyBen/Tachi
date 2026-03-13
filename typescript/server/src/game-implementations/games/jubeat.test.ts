@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -11,8 +11,6 @@ import type { ProvidedMetrics, ScoreData } from "../../../../common/src";
 
 import { JUBEAT_SINGLE_CONF } from "../../../../common/src/config/game-support/jubeat";
 import { JUBEAT_IMPL } from "./jubeat";
-
-const logger = CreateLogCtx(__filename);
 
 const baseMetrics: ProvidedMetrics["jubeat:Single"] = {
 	lamp: "CLEAR",

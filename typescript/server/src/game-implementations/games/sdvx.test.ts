@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -14,8 +14,6 @@ import {
 	SDVX_LAMPS,
 } from "../../../../common/src";
 import { SDVX_IMPL } from "./sdvx";
-
-const logger = CreateLogCtx(__filename);
 
 const baseMetrics: ProvidedMetrics["sdvx:Single"] = {
 	lamp: "CLEAR",

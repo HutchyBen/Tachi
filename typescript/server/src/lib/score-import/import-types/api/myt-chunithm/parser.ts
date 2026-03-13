@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 import type { EmptyObject } from "#utils/types";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
@@ -26,7 +26,7 @@ async function* getObjectsFromGrpcIterable(
 
 export default async function ParseMytChunithm(
 	userID: integer,
-	logger: KtLogger,
+	log: KtLogger,
 ): Promise<ParserFunctionReturns<MytChunithmScore, EmptyObject>> {
 	const profileApiId = await FetchMytTitleAPIID(userID, "chunithm", logger);
 	const endpoint = GetMytHostname();
@@ -42,7 +42,7 @@ export default async function ParseMytChunithm(
 
 		iterable = getObjectsFromGrpcIterable(stream);
 	} catch (err) {
-		logger.error(
+		log.error(
 			`Unexpected MYT error while streaming Chunithm playlog items for userID ${userID}: ${err}`,
 		);
 

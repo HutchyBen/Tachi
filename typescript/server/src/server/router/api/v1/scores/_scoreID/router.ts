@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { DeleteScore } from "#lib/score-mutation/delete-scores";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
@@ -11,8 +11,6 @@ import { p } from "prudence";
 import { GetScoreFromParam, RequireOwnershipOfScoreOrAdmin } from "./middleware";
 
 const router: Router = Router({ mergeParams: true });
-
-const logger = CreateLogCtx(__filename);
 
 router.use(GetScoreFromParam);
 
@@ -34,7 +32,7 @@ router.get("/", async (req, res) => {
 		]);
 
 		if (!user || !chart || !song) {
-			logger.error(
+			log.error(
 				`Score ${
 					score.scoreID
 				} refers to non-existent data: [user,chart,song] [${!!user} ${!!chart} ${!!song}]`,

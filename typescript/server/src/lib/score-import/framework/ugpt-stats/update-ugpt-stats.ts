@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
 import db from "#services/mongo/db";
@@ -20,9 +20,9 @@ export async function UpdateUsersGamePlaytypeStats(
 	playtype: Playtype,
 	userID: integer,
 	classProvider: ClassProvider | null,
-	logger: KtLogger,
+	log: KtLogger,
 ): Promise<Array<ClassDelta>> {
-	logger.debug(`Calculating Ratings...`);
+	log.debug(`Calculating Ratings...`);
 
 	const ratings = await CalculateProfileRatings(game, playtype, userID);
 
@@ -34,7 +34,7 @@ export async function UpdateUsersGamePlaytypeStats(
 		userID,
 	});
 
-	logger.debug(`Calculating UGSClasses...`);
+	log.debug(`Calculating UGSClasses...`);
 
 	const classes = await CalculateUGPTClasses(
 		game,
@@ -45,16 +45,16 @@ export async function UpdateUsersGamePlaytypeStats(
 		logger,
 	);
 
-	logger.debug(`Finished Calculating UGSClasses`);
+	log.debug(`Finished Calculating UGSClasses`);
 
-	logger.debug(`Calculating Class Deltas...`);
+	log.debug(`Calculating Class Deltas...`);
 
 	const deltas = await ProcessClassDeltas(game, playtype, classes, userGameStats, userID, logger);
 
-	logger.debug(`Had ${deltas.length} deltas.`);
+	log.debug(`Had ${deltas.length} deltas.`);
 
 	if (userGameStats) {
-		logger.debug(`Updated player gamestats for ${game} (${playtype})`);
+		log.debug(`Updated player gamestats for ${game} (${playtype})`);
 
 		const updateClasses: Record<string, string> = {};
 
@@ -83,7 +83,7 @@ export async function UpdateUsersGamePlaytypeStats(
 		});
 
 		if (!hasAnyScores) {
-			logger.debug("Not creating new game stats for user with no scores.", {
+			log.debug("Not creating new game stats for user with no scores.", {
 				userID,
 				game,
 				playtype,
@@ -99,7 +99,7 @@ export async function UpdateUsersGamePlaytypeStats(
 			classes,
 		};
 
-		logger.info(`Created new gamestats for ${game} (${playtype})`);
+		log.info(`Created new gamestats for ${game} (${playtype})`);
 		await db["game-stats"].insert(newStats);
 		await CreateGameSettings(userID, game, playtype);
 	}

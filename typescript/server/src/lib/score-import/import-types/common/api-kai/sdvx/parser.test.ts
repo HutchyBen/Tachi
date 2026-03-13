@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { MockJSONFetch } from "#test-utils/mock-fetch";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
@@ -11,8 +11,6 @@ const fakeAuth = {
 	service: "FLO" as const,
 	token: "bar",
 };
-
-const logger = CreateLogCtx(__filename);
 
 const NO_REAUTH = () => Promise.resolve("");
 

@@ -1,5 +1,5 @@
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch-manual/converter";
 import { SearchSpecificGameSongs } from "#lib/search/search";
 import prValidate from "#server/middleware/prudence-validate";
@@ -18,7 +18,6 @@ import {
 import { PR_RESOLVER } from "../../../../../../../../../../common/src/lib/schemas";
 import chartIDRouter from "./_chartID/router";
 
-const logger = CreateLogCtx(__filename);
 const router: Router = Router({ mergeParams: true });
 
 /**

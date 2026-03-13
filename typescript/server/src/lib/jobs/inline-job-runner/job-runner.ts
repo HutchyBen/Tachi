@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { TachiConfig } from "#lib/setup/config";
 import { DedupeArr } from "#utils/misc";
 import { Queue, Worker } from "bullmq";
@@ -69,19 +69,17 @@ if (TachiConfig.TYPE !== "kamai") {
 	});
 }
 
-const logger = CreateLogCtx("JOB_RUNNER");
-
 /**
  * Initalises a tachi-server job runner.
  * This runs the list of jobs defined in jobConfig.jobs.
  */
 export function InitialiseJobRunner() {
-	logger.info(`Booting up Job Runner.`);
+	log.info(`Booting up Job Runner.`);
 
 	const names = jobs.map((e) => e.name);
 
 	if (DedupeArr(names).length !== names.length) {
-		logger.crit(`Jobs has duplicate name fields, refusing to run.`, () => {
+		log.fatal(`Jobs has duplicate name fields, refusing to run.`, () => {
 			process.exit(1);
 		});
 	}
@@ -98,12 +96,12 @@ export function InitialiseJobRunner() {
 	const worker = new Worker("Job Runner", async (j) => {
 		const { jobName } = j.data as { jobName: string };
 
-		logger.info(`Running job ${jobName}.`);
+		log.info(`Running job ${jobName}.`);
 
 		const jobInfo = jobNameMap.get(jobName);
 
 		if (!jobInfo) {
-			logger.severe(`Unknown job name ${jobName}, couldn't find a run function?`);
+			log.error(`Unknown job name ${jobName}, couldn't find a run function?`);
 			return false;
 		}
 
@@ -112,7 +110,7 @@ export function InitialiseJobRunner() {
 		return true;
 	});
 
-	logger.info(`Initialised ${jobs.length} jobs (${jobs.map((e) => e.name).join(", ")}).`);
+	log.info(`Initialised ${jobs.length} jobs (${jobs.map((e) => e.name).join(", ")}).`);
 
 	return worker;
 }

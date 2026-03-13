@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { GetRivalUsers } from "#lib/rivals/rivals";
 import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch-manual/converter";
 import { SearchSpecificGameSongsAndCharts } from "#lib/search/search";
@@ -20,7 +20,6 @@ import {
 import { PR_RESOLVER } from "../../../../../../../../../../../../common/src/lib/schemas";
 
 const router: Router = Router({ mergeParams: true });
-const logger = CreateLogCtx(__filename);
 
 /**
  * Searches a user's personal bests.

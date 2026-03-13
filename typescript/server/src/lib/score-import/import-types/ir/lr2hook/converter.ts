@@ -32,7 +32,7 @@ export const ConverterLR2Hook: ConverterFunction<LR2HookScore, LR2HookContext> =
 	const song = await FindSongOnID("bms", chart.songID);
 
 	if (!song) {
-		logger.severe(`Song ${chart.songID} (bms) has no parent song?`);
+		log.error(`Song ${chart.songID} (bms) has no parent song?`);
 		throw new InternalFailure(`Song ${chart.songID} (bms) has no parent song?`);
 	}
 

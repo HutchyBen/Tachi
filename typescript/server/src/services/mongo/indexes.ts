@@ -3,15 +3,13 @@ import type { IndexOptions } from "mongodb";
 import monk, { type IMonkManager } from "monk";
 
 /* eslint-disable no-await-in-loop */
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { TachiConfig } from "#lib/setup/config";
 import { DedupeArr, Random20Hex } from "#utils/misc";
 
 import type { Databases } from "./db";
 
 import { GAME_PT_CONFIGS } from "../../../../common/src";
-
-const logger = CreateLogCtx(__filename);
 
 interface Index {
 	fields: Record<string, unknown>;
@@ -193,7 +191,7 @@ export async function UpdateIndexes(db: IMonkManager, reset: boolean) {
 
 		if (reset) {
 			await db.get(collection).dropIndexes();
-			logger.debug(`Reset ${collection}.`);
+			log.debug(`Reset ${collection}.`);
 		}
 
 		for (const index of values) {
@@ -202,16 +200,16 @@ export async function UpdateIndexes(db: IMonkManager, reset: boolean) {
 				// that this sucks...
 				const r = await db.get(collection).createIndex(index.fields, index.options);
 
-				logger.debug(r);
+				log.debug(r);
 			} catch (err) {
-				logger.debug(err);
+				log.debug(err);
 
 				// index already exists.
 			}
 		}
 	}
 
-	logger.debug("Done.");
+	log.debug("Done.");
 }
 
 export async function SetIndexes(mongoUrl: string, reset: boolean) {

@@ -13,7 +13,7 @@ export function CreateFerStaticClassProvider(body: Record<string, unknown>): Cla
 		} else if (gptString === "iidx:DP") {
 			index = body.dp_dan;
 		} else {
-			logger.warn(
+			log.warn(
 				`Invalid gptString ${gptString} passed to FerStaticClassProvider. Attempting to continue.`,
 			);
 			return;
@@ -24,14 +24,14 @@ export function CreateFerStaticClassProvider(body: Record<string, unknown>): Cla
 		}
 
 		if (!Number.isInteger(index)) {
-			logger.info(`received invalid fer-static class of ${index} (${gptString}).`, { body });
+			log.info(`received invalid fer-static class of ${index} (${gptString}).`, { body });
 			return;
 		}
 
 		const dan = IIDXDans[index as integer];
 
 		if (!dan) {
-			logger.warn(`Invalid fer-static class of ${index}. Skipping.`);
+			log.warn(`Invalid fer-static class of ${index}. Skipping.`);
 			return;
 		}
 

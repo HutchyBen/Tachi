@@ -104,7 +104,6 @@
 		"discord.js": "13.6.0",
 		"express": "4.20.0",
 		"json5": "2.2.0",
-		"mei-logger": "^1.0.1",
 		"monk": "^7.3.4",
 		"node-fetch": "2.6.7",
 		"seq-logging": "1.1.1",

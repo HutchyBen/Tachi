@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 import type { Mutable } from "#utils/types";
 
 import { HandleOrphanQueue } from "#lib/orphan-queue/orphan-queue";
@@ -45,7 +45,7 @@ async function HandleOrphanChartProcess(
 	game: "bms" | "pms",
 	data: BeatorajaScore,
 	context: BeatorajaContext,
-	logger: KtLogger,
+	log: KtLogger,
 ) {
 	const chartName = `${context.chart.artist} (${context.chart.subartist})- ${context.chart.title} (${context.chart.subtitle})`;
 
@@ -63,7 +63,7 @@ async function HandleOrphanChartProcess(
 		// If you're someone forking tachi looking to remove this
 		// check, remember to change the entire score import
 		// framework and database to be able to handle variable notecounts.
-		logger.verbose(`Declined to orphan chart ${chartName} as it has #RANDOM declarations.`);
+		log.verbose(`Declined to orphan chart ${chartName} as it has #RANDOM declarations.`);
 		throw new InvalidScoreFailure(`${TachiConfig.NAME} will not support #RANDOM charts.`);
 	}
 
@@ -195,7 +195,7 @@ export const ConverterIRBeatoraja: ConverterFunction<BeatorajaScore, BeatorajaCo
 	const song = await FindSongOnID(game, chart.songID);
 
 	if (!song) {
-		logger.severe(`Song-Chart Desync with ${game} ${chart.chartID}.`);
+		log.error(`Song-Chart Desync with ${game} ${chart.chartID}.`);
 		throw new InternalFailure(`Song-Chart Desync with ${game} ${chart.chartID}.`);
 	}
 

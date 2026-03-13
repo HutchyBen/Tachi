@@ -29,7 +29,7 @@ export function CreateBatchManualClassProvider(
 			const index = ClassToIndex(gptString, set, classID);
 
 			if (index === null) {
-				logger.warn(
+				log.warn(
 					`User passed invalid class of ${classID} for set ${set}. Expected any of ${gptConfig.classes[
 						set
 					]!.values.map((e) => e.id).join(", ")}`,

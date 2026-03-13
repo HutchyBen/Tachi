@@ -1,10 +1,8 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import db from "#services/mongo/db";
 import fetch from "#utils/fetch";
 
 import type { WebhookEvents } from "../../../../common/src";
-
-const logger = CreateLogCtx(__filename);
 
 // @todo make use of aggressive caching here?
 export async function GetWebhookUrlInfo() {
@@ -22,7 +20,7 @@ export async function GetWebhookUrlInfo() {
 export async function EmitWebhookEvent(content: WebhookEvents) {
 	const webhookUrls = await GetWebhookUrlInfo();
 
-	logger.verbose(`Emitting webhook event ${content.type} to ${webhookUrls.length} clients.`);
+	log.verbose(`Emitting webhook event ${content.type} to ${webhookUrls.length} clients.`);
 
 	// We don't actually care about the response of these. Just fire them and forget.
 	for (const client of webhookUrls) {
@@ -36,7 +34,7 @@ export async function EmitWebhookEvent(content: WebhookEvents) {
 			},
 		}).catch((err: Error) => {
 			// We don't care about errors. It's probably on their end.
-			logger.info(err.message);
+			log.info(err.message);
 		});
 	}
 }

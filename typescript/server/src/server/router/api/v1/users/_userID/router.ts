@@ -2,7 +2,7 @@ import { GetRecentActivity } from "#lib/activity/activity";
 import { ONE_MONTH } from "#lib/constants/time";
 import { SendEmail } from "#lib/email/client";
 import { EmailFormatVerifyEmail } from "#lib/email/formats";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { GetRivalIDs } from "#lib/rivals/rivals";
 import { ServerConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
@@ -50,8 +50,6 @@ import notifsRouter from "./notifications/router";
 import pfpRouter from "./pfp/router";
 import sessionsRouter from "./sessions/router";
 import settingsRouter from "./settings/router";
-
-const logger = CreateLogCtx(__filename);
 
 const router: Router = Router({ mergeParams: true });
 
@@ -201,7 +199,7 @@ router.patch(
 		const newUser = await GetUserWithID(user.id);
 
 		if (!newUser) {
-			logger.severe(
+			log.error(
 				`User ${FormatUserDoc(user)} updated profile but user doc no longer exists?`,
 				{ user },
 			);
@@ -342,7 +340,7 @@ router.get("/email", RequireSelfRequestFromUser, async (req, res) => {
 		});
 	}
 
-	logger.error(`User ${user.id} doesn't have private info?`);
+	log.error(`User ${user.id} doesn't have private info?`);
 
 	return res.status(500).json({
 		success: false,
@@ -375,7 +373,7 @@ router.post(
 		});
 
 		if (!privateInfo) {
-			logger.error(`User ${user.id} has no associated private info?`);
+			log.error(`User ${user.id} has no associated private info?`);
 			return res.status(500).json({
 				success: false,
 				description: `Internal server error.`,
@@ -394,14 +392,14 @@ router.post(
 		const existingEmail = await CheckIfEmailInUse(body.email);
 
 		if (existingEmail) {
-			logger.info(`User attempted to change to email that was already in use.`);
+			log.info(`User attempted to change to email that was already in use.`);
 			return res.status(409).json({
 				success: false,
 				description: `This email is already in use.`,
 			});
 		}
 
-		logger.info(`User ${user.id} changed email from ${privateInfo.email} to ${body.email}`);
+		log.info(`User ${user.id} changed email from ${privateInfo.email} to ${body.email}`);
 
 		await db["user-private-information"].update(
 			{
@@ -467,7 +465,7 @@ router.post(
 
 		/* istanbul ignore next */
 		if (!user) {
-			logger.severe(
+			log.error(
 				`IP ${req.ip} got to /change-password without a user, but passed RequireSelfRequest?`,
 			);
 
@@ -484,7 +482,7 @@ router.post(
 
 		/* istanbul ignore next */
 		if (!privateInfo) {
-			logger.severe(`User ${FormatUserDoc(user)} has no private information?`, { user });
+			log.error(`User ${FormatUserDoc(user)} has no private information?`, { user });
 			return res.status(500).json({
 				success: false,
 				description: `An internal server error has occured.`,
@@ -557,7 +555,7 @@ router.post(
 
 		/* istanbul ignore next */
 		if (!user) {
-			logger.severe(
+			log.error(
 				`IP ${req.ip} got to /change-username without a user, but passed RequireSelfRequest?`,
 			);
 
@@ -574,7 +572,7 @@ router.post(
 
 		/* istanbul ignore next */
 		if (!privateInfo) {
-			logger.severe(`User ${FormatUserDoc(user)} has no private information?`, { user });
+			log.error(`User ${FormatUserDoc(user)} has no private information?`, { user });
 			return res.status(500).json({
 				success: false,
 				description: `An internal server error has occured.`,
@@ -593,7 +591,7 @@ router.post(
 		const existingUser = await GetUserCaseInsensitive(body.newUsername);
 
 		if (existingUser) {
-			logger.verbose(`Invalid username ${body.newUsername}, already in use.`);
+			log.verbose(`Invalid username ${body.newUsername}, already in use.`);
 			return res.status(409).json({
 				success: false,
 				description: "This username is already in use.",
@@ -772,7 +770,7 @@ router.get(
 		const settings = await db["user-settings"].findOne({ userID: user.id });
 
 		if (!settings) {
-			logger.error(`User ${FormatUserDoc(user)} doesn't have any settings?`);
+			log.error(`User ${FormatUserDoc(user)} doesn't have any settings?`);
 			return res.status(500).json({
 				success: false,
 				description: `This user has no settings.`,

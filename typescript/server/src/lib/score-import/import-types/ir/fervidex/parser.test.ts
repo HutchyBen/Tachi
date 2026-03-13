@@ -1,9 +1,7 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import t from "tap";
 
 import { SoftwareIDToVersion } from "./parser";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#SoftwareIDToVersion", (t) => {
 	const f = (sid: string) => SoftwareIDToVersion(sid, logger);

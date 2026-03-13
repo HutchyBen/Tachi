@@ -1,5 +1,5 @@
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import {
 	EvaluateQuestProgress,
@@ -14,8 +14,6 @@ import { FormatUserDoc } from "#utils/user";
 import { type RequestHandler, Router } from "express";
 
 import { RequireAuthedAsUser } from "../../../../../middleware";
-
-const logger = CreateLogCtx(__filename);
 
 const router: Router = Router({ mergeParams: true });
 
@@ -38,7 +36,7 @@ router.get("/", async (req, res) => {
 	});
 
 	if (quests.length !== questSubs.length) {
-		logger.error(
+		log.error(
 			`Found ${questSubs.length} subscriptions, but got ${quests.length} parents. This is a state desync.`,
 		);
 		throw new Error("Failed to fetch quests");
@@ -212,7 +210,7 @@ router.delete(
 		const { user } = GetUGPT(req);
 		const quest = GetTachiData(req, "questDoc");
 
-		logger.info(`User ${FormatUserDoc(user)} is unsubscribing from quest '${quest.name}'.`, {
+		log.info(`User ${FormatUserDoc(user)} is unsubscribing from quest '${quest.name}'.`, {
 			quest,
 			user,
 		});

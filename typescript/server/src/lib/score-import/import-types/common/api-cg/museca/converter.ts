@@ -44,7 +44,7 @@ export const ConverterAPICGMuseca: ConverterFunction<CGMusecaScore, CGContext> =
 	const song = await FindSongOnID("museca", chart.songID);
 
 	if (!song) {
-		logger.severe(`Song-Chart desync with song ID ${chart.songID} (museca).`);
+		log.error(`Song-Chart desync with song ID ${chart.songID} (museca).`);
 		throw new InternalFailure(`Song-Chart desync with song ID ${chart.songID} (museca).`);
 	}
 

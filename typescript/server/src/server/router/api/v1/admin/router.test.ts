@@ -1,5 +1,5 @@
 import { ONE_MINUTE } from "#lib/constants/time";
-import { ChangeRootLogLevel, GetLogLevel } from "#lib/logger/logger";
+import { ChangeRootLogLevel, GetLogLevel } from "#lib/logger/log.js";
 import { Env, ServerConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
 import { CreateFakeAuthCookie } from "#test-utils/fake-auth";

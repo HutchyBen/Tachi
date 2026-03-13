@@ -1,7 +1,7 @@
 import { CDNDelete, CDNRedirect, CDNStoreOrOverwrite } from "#lib/cdn/cdn";
 import { GetProfilePictureURL } from "#lib/cdn/url-format";
 import { ONE_MEGABYTE } from "#lib/constants/filesize";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { RequirePermissions } from "#server/middleware/auth";
 import { CreateMulterSingleUploadMiddleware } from "#server/middleware/multer-upload";
 import db from "#services/mongo/db";
@@ -11,8 +11,6 @@ import { FormatUserDoc } from "#utils/user";
 import { Router } from "express";
 
 import { RequireAuthedAsUser } from "../middleware";
-
-const logger = CreateLogCtx(__filename);
 
 const router: Router = Router({ mergeParams: true });
 
@@ -29,18 +27,18 @@ router.put(
 	"/",
 	RequireAuthedAsUser,
 	RequirePermissions("customise_profile"),
-	CreateMulterSingleUploadMiddleware("pfp", ONE_MEGABYTE, logger),
+	CreateMulterSingleUploadMiddleware("pfp", ONE_MEGABYTE),
 	async (req, res) => {
 		const user = GetTachiData(req, "requestedUser");
 
 		if (!user.customPfpLocation) {
-			logger.verbose(`User ${FormatUserDoc(user)} set a custom profile picture.`);
+			log.verbose(`User ${FormatUserDoc(user)} set a custom profile picture.`);
 		} else {
-			logger.verbose(`User ${FormatUserDoc(user)} updated their profile picture.`);
+			log.verbose(`User ${FormatUserDoc(user)} updated their profile picture.`);
 		}
 
 		if (!req.file) {
-			logger.error(
+			log.error(
 				`Conflicting state - no req.file has been populated but passed middleware? (${FormatUserDoc(
 					user,
 				)})`,
@@ -91,7 +89,7 @@ router.put(
 router.get("/", (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	logger.debug("User Info for /:userID/pfp request is ", user);
+	log.debug("User Info for /:userID/pfp request is ", user);
 
 	if (!user.customPfpLocation) {
 		res.setHeader("Content-Type", "image/png");

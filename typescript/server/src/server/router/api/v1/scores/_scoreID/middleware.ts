@@ -1,12 +1,10 @@
 import type { RequestHandler } from "express";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import db from "#services/mongo/db";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { IsRequesterAdmin } from "#utils/user";
-
-const logger = CreateLogCtx(__filename);
 
 export const GetScoreFromParam: RequestHandler = async (req, res, next) => {
 	const score = await db.scores.findOne({ scoreID: req.params.scoreID });
@@ -36,7 +34,7 @@ export const RequireOwnershipOfScoreOrAdmin: RequestHandler = async (req, res, n
 
 	if (score.userID !== userID) {
 		if (await IsRequesterAdmin(req[SYMBOL_TACHI_API_AUTH])) {
-			logger.info(`Admin ${userID} interacted with someone elses .`);
+			log.info(`Admin ${userID} interacted with someone elses .`);
 			next();
 			return;
 		}

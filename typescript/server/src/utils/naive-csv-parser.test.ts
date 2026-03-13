@@ -1,10 +1,8 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { TestingIIDXEamusementCSV27 } from "#test-utils/test-data";
 import t from "tap";
 
 import { CSVParseError, NaiveCSVParse } from "./naive-csv-parser";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#ParseCSV", (t) => {
 	t.test("Valid Basic CSV", (t) => {

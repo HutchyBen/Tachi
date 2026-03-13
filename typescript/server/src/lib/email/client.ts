@@ -1,14 +1,12 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { Env, ServerConfig } from "#lib/setup/config";
 import bunyan from "bunyan";
 import nodemailer, { type SentMessageInfo, type Transporter } from "nodemailer";
 
-const logger = CreateLogCtx(__filename);
-
 let transporter: Transporter | undefined;
 
 if (ServerConfig.EMAIL_CONFIG) {
-	logger.info(`Connecting to email server...`, { bootInfo: true });
+	log.info(`Connecting to email server...`, { bootInfo: true });
 	const conf = ServerConfig.EMAIL_CONFIG;
 
 	try {
@@ -23,18 +21,18 @@ if (ServerConfig.EMAIL_CONFIG) {
 
 		transporter.verify((err) => {
 			if (err) {
-				logger.crit(`Could not connect to email server.`, { err });
+				log.fatal(`Could not connect to email server.`, { err });
 				throw err;
 			} else {
-				logger.info(`Successfully connected to email server.`, { bootInfo: true });
+				log.info(`Successfully connected to email server.`, { bootInfo: true });
 			}
 		});
 	} catch (err) {
-		logger.crit(`Failed to create email client.`, { err });
+		log.fatal(`Failed to create email client.`, { err });
 		throw err;
 	}
 } else {
-	logger.warn(`No EMAIL_CONFIG present in conf, emails will not be sent from the server.`, {
+	log.warn(`No EMAIL_CONFIG present in conf, emails will not be sent from the server.`, {
 		bootInfo: true,
 	});
 }
@@ -46,16 +44,16 @@ export function SendEmail(
 	textContent: string,
 ): Promise<SentMessageInfo> | undefined {
 	if (Env.NODE_ENV === "test") {
-		logger.debug(`Stubbed out SendEmail as env was test.`);
+		log.debug(`Stubbed out SendEmail as env was test.`);
 		return;
 	}
 
 	if (!transporter || !ServerConfig.EMAIL_CONFIG) {
-		logger.debug(`Stubbed out SendEmail as no EMAIL_CONFIG was set.`);
+		log.debug(`Stubbed out SendEmail as no EMAIL_CONFIG was set.`);
 		return;
 	}
 
-	logger.verbose(`Sending email to ${to}.`);
+	log.verbose(`Sending email to ${to}.`);
 
 	return transporter
 		.sendMail({
@@ -68,7 +66,7 @@ export function SendEmail(
 			headers: transporter.options.headers,
 		})
 		.catch((err: unknown) => {
-			logger.info(`Failed to send email to ${to}.`, {
+			log.info(`Failed to send email to ${to}.`, {
 				err,
 				subject,
 				textContent,

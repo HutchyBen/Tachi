@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
 import {
 	ChunithmClearStatus,
@@ -15,8 +15,6 @@ import t from "tap";
 import type { MytChunithmScore } from "./types";
 
 import ConvertAPIMytChunithm from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 const parsedScore: MytChunithmScore = {
 	playlogApiId: "346907fc-ba1a-4ff9-a5a3-37a62b5f2e6c",

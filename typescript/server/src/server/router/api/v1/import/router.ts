@@ -2,7 +2,7 @@ import type { ScoreImportJobData } from "#lib/score-import/worker/types";
 
 import { SIXTEEN_MEGABTYES } from "#lib/constants/filesize";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { DeorphanScores } from "#lib/score-import/framework/orphans/orphans";
 import { MakeScoreImport } from "#lib/score-import/framework/score-import";
@@ -17,8 +17,6 @@ import { Router } from "express";
 import { p } from "prudence";
 
 import type { APIImportTypes, FileUploadImportTypes } from "../../../../../../../common/src";
-
-const logger = CreateLogCtx(__filename);
 
 const router: Router = Router({ mergeParams: true });
 
@@ -167,16 +165,16 @@ router.post(
 router.post("/orphans", RequirePermissions("submit_score"), async (req, res) => {
 	const userDoc = await GetUserWithIDGuaranteed(req[SYMBOL_TACHI_API_AUTH].userID!);
 
-	logger.info(`User ${FormatUserDoc(userDoc)} forced an orphan sync.`);
+	log.info(`User ${FormatUserDoc(userDoc)} forced an orphan sync.`);
 
 	const { processed, removed, failed, success } = await DeorphanScores(
 		{ userID: userDoc.id },
 		logger,
 	);
 
-	logger.info(`Finished attempting deorphaning.`);
+	log.info(`Finished attempting deorphaning.`);
 
-	logger.info(`Success: ${success} | Failed ${failed} | Removed ${removed}.`);
+	log.info(`Success: ${success} | Failed ${failed} | Removed ${removed}.`);
 
 	return res.status(200).json({
 		success: true,

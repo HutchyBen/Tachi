@@ -1,6 +1,6 @@
 import type { FilterQuery } from "mongodb";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { SearchUsersRegExp } from "#lib/search/search";
 import db from "#services/mongo/db";
 import { IsString } from "#utils/misc";
@@ -11,8 +11,6 @@ import { Router } from "express";
 
 import { type FolderDocument, FormatChart } from "../../../../../../../../../../../common/src";
 import { ValidateAndGetChart } from "./middleware";
-
-const logger = CreateLogCtx(__filename);
 
 const router: Router = Router({ mergeParams: true });
 
@@ -32,7 +30,7 @@ router.get("/", async (req, res) => {
 	});
 
 	if (!song) {
-		logger.severe(
+		log.error(
 			`Song ${chart.songID} does not exist, yet chart ${chart.chartID} has it as a parent?`,
 		);
 

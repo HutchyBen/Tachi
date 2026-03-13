@@ -86,7 +86,7 @@ const ConvertAPIMytWACCA: ConverterFunction<MytWaccaScore, EmptyObject> = async 
 	const song = await FindSongOnID("wacca", chart.songID);
 
 	if (song === null) {
-		logger.severe(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`, { chart });
+		log.error(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`, { chart });
 		throw new InternalFailure(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
 	}
 

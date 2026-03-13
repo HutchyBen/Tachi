@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { dmf } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestingLR2HookScore } from "#test-utils/test-data";
@@ -6,8 +6,6 @@ import { ApplyNTimes } from "#utils/misc";
 import t from "tap";
 
 import { ConverterLR2Hook } from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#ConverterLR2Hook", (t) => {
 	t.beforeEach(ResetDBState);

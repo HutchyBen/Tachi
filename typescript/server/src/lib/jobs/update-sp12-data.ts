@@ -2,7 +2,7 @@ import type { ChartDocument, Difficulties, integer } from "../../../../common/sr
 
 /* eslint-disable no-await-in-loop */
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { BacksyncCollection } from "#lib/seeds/repo";
 import db from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";
@@ -11,8 +11,6 @@ import { FindChartWithPTDF } from "#utils/queries/charts";
 import { FindSongOnTitle } from "#utils/queries/songs";
 import fetch from "node-fetch";
 import { p } from "prudence";
-
-const logger = CreateLogCtx(__filename);
 
 interface SP12Data {
 	id: integer;
@@ -49,7 +47,7 @@ async function FetchSP12Data() {
 	});
 
 	if (err) {
-		logger.error(`Got invalid/unexpected content from sp12.`, { unvalidatedRJ });
+		log.error(`Got invalid/unexpected content from sp12.`, { unvalidatedRJ });
 
 		throw new Error(`Got invalid/unexpected content from sp12.`);
 	}
@@ -66,7 +64,7 @@ async function FetchSP12Data() {
 		try {
 			chart = await HumanisedTitleLookup(sh.title);
 		} catch (err) {
-			logger.error((err as Error).message);
+			log.error((err as Error).message);
 			continue;
 		}
 
@@ -189,21 +187,21 @@ async function FetchSP12Data() {
 				},
 			);
 
-			logger.info(`Saved ${sh.title} value ${key} = ${val} (${text}).`);
+			log.info(`Saved ${sh.title} value ${key} = ${val} (${text}).`);
 		}
 	}
 
 	if (updatedChartIDs.length !== 0) {
-		logger.info(`Finished applying SP12 changes. Recalcing.`);
-		logger.info("These changes will be backsynced by a separate script.");
+		log.info(`Finished applying SP12 changes. Recalcing.`);
+		log.info("These changes will be backsynced by a separate script.");
 
-		logger.info(`Recalcing scores.`);
+		log.info(`Recalcing scores.`);
 		await RecalcAllScores({
 			game: "iidx",
 			chartID: { $in: updatedChartIDs },
 		});
 
-		logger.info(`Finished recalcing scores.`);
+		log.info(`Finished recalcing scores.`);
 
 		await BacksyncCollection("charts-iidx", db.charts.iidx, "Update SP12 Tierlist");
 	}

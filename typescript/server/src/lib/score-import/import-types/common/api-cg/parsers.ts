@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import db from "#services/mongo/db";
@@ -106,10 +106,7 @@ const CG_SCHEMAS: Record<CGSupportedGames, PrudenceSchema> = {
  * identical, this basically just placeholders cgGame and service.
  */
 export function CreateCGParser<T>(cgGame: CGSupportedGames, service: CGServices) {
-	return async (
-		userID: integer,
-		logger: KtLogger,
-	): Promise<ParserFunctionReturns<T, CGContext>> => {
+	return async (userID: integer, log: KtLogger): Promise<ParserFunctionReturns<T, CGContext>> => {
 		const cardInfo = await db["cg-card-info"].findOne({
 			userID,
 			service,

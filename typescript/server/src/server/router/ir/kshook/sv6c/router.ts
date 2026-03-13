@@ -1,6 +1,6 @@
 import { MODEL_SDVX3_KONASTE } from "#lib/constants/ea3id";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import db from "#services/mongo/db";
 import { ParseEA3SoftID } from "#utils/ea3id";
@@ -9,13 +9,11 @@ import { type RequestHandler, Router } from "express";
 
 const router: Router = Router({ mergeParams: true });
 
-const logger = CreateLogCtx(__filename);
-
 const ValidateHeaders: RequestHandler = (req, res, next) => {
 	const agent = req.header("User-Agent");
 
 	if (IsNullishOrEmptyStr(agent)) {
-		logger.debug(
+		log.debug(
 			`Rejected KsHook client with no agent from user ${req[SYMBOL_TACHI_API_AUTH].userID}.`,
 		);
 		return res.status(400).json({
@@ -25,7 +23,7 @@ const ValidateHeaders: RequestHandler = (req, res, next) => {
 	}
 
 	if (!agent.startsWith("kshook/")) {
-		logger.info(
+		log.info(
 			`Rejected KsHook client with invalid agent ${agent} from user ${req[SYMBOL_TACHI_API_AUTH].userID}.`,
 		);
 		return res.status(400).json({
@@ -40,7 +38,7 @@ const ValidateHeaders: RequestHandler = (req, res, next) => {
 	const softID = req.header("X-Software-Model");
 
 	if (IsNullishOrEmptyStr(softID)) {
-		logger.debug(
+		log.debug(
 			`received request without X-Software-Model from ${req[SYMBOL_TACHI_API_AUTH].userID}.`,
 		);
 		return res.status(400).json({
@@ -53,7 +51,7 @@ const ValidateHeaders: RequestHandler = (req, res, next) => {
 		const modelInfo = ParseEA3SoftID(softID);
 
 		if (modelInfo.model !== MODEL_SDVX3_KONASTE) {
-			logger.info(
+			log.info(
 				`received unexpected softID ${softID}. Expected ${MODEL_SDVX3_KONASTE} as model.`,
 			);
 			return res.status(400).json({
@@ -62,7 +60,7 @@ const ValidateHeaders: RequestHandler = (req, res, next) => {
 			});
 		}
 	} catch (err) {
-		logger.info(`Invalid softID from ${req[SYMBOL_TACHI_API_AUTH].userID}.`, { err });
+		log.info(`Invalid softID from ${req[SYMBOL_TACHI_API_AUTH].userID}.`, { err });
 		return res.status(400).json({
 			success: false,
 			error: `Invalid X-Software-Model.`,

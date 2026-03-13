@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 import type { BulkWriteUpdateOneOperation } from "mongodb";
 
 import { EvaluateQuestProgress } from "#lib/targets/quests";
@@ -20,7 +20,7 @@ export async function UpdateUsersQuests(
 	game: GameGroup,
 	playtypes: Array<Playtype>,
 	userID: integer,
-	logger: KtLogger,
+	log: KtLogger,
 ) {
 	const goalIDs = importGoalInfo.map((e) => e.goalID);
 
@@ -35,7 +35,7 @@ export async function UpdateQuestsForUser(
 
 	game: GameGroup,
 	userID: integer,
-	logger: KtLogger,
+	log: KtLogger,
 ) {
 	// create a map here to avoid linear searching when
 	// co-iterating
@@ -56,7 +56,7 @@ export async function UpdateQuestsForUser(
 			const questSub = questSubMap.get(quest.questID);
 
 			if (!questSub) {
-				logger.warn(
+				log.warn(
 					`Invalid state achieved in quest processing - processed quest that user did not have? ${quest.questID}`,
 				);
 
@@ -126,7 +126,7 @@ async function GetRelevantQuests(
 	game: GameGroup,
 	playtypes: Array<Playtype>,
 	userID: integer,
-	logger: KtLogger,
+	log: KtLogger,
 ) {
 	const questSubs = await db["quest-subs"].find({
 		game,
@@ -134,14 +134,14 @@ async function GetRelevantQuests(
 		userID,
 	});
 
-	logger.debug(`Found ${questSubs.length} quest-subs.`);
+	log.debug(`Found ${questSubs.length} quest-subs.`);
 
 	const quests = await db.quests.find({
 		questID: { $in: questSubs.map((e) => e.questID) },
 		"questData.goals.goalID": { $in: goalIDs },
 	});
 
-	logger.debug(`Found ${quests.length} relevant quests.`);
+	log.debug(`Found ${quests.length} relevant quests.`);
 
 	return { questSubs, quests };
 }

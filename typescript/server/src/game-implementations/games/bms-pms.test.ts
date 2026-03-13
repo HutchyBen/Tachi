@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -44,8 +44,6 @@ function percentToScore(percent: number) {
 function scoreToPercent(score: number) {
 	return (100 * score) / max;
 }
-
-const logger = CreateLogCtx(__filename);
 
 for (const [game, playtype, impl] of [
 	["bms", "7K", BMS_7K_IMPL],

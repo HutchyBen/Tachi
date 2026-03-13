@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import db from "#services/mongo/db";
 import { GetChartForIDGuaranteed } from "#utils/db";
@@ -19,7 +19,7 @@ export async function ProcessPBs(
 	playtype: Playtype,
 	userID: integer,
 	chartIDs: Set<string>,
-	logger: KtLogger,
+	log: KtLogger,
 ): Promise<void> {
 	if (chartIDs.size === 0) {
 		return;

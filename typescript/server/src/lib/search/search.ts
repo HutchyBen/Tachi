@@ -1,7 +1,7 @@
 import type { FilterQuery } from "mongodb";
 import type { ICollection } from "monk";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { TachiConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
 import { GetSongForIDGuaranteed } from "#utils/db";
@@ -23,8 +23,6 @@ import {
 	type UserDocument,
 } from "../../../../common/src";
 import { AsyncFzf } from "./fzf/main";
-
-const logger = CreateLogCtx(__filename);
 
 interface SearchControls {
 	keys: Array<string>;
@@ -231,7 +229,7 @@ export async function SearchGlobalGameSongsAndCharts(
 		const song = songMap.get(chart.songID);
 
 		if (!song) {
-			logger.warn(`Failed to find parent song for ${chart.songID} (${game})? Skipping.`);
+			log.warn(`Failed to find parent song for ${chart.songID} (${game})? Skipping.`);
 			continue;
 		}
 

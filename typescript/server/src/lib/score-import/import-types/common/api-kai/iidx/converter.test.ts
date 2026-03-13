@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import { LoadTachiIIDXData, Testing511Song, Testing511SPA } from "#test-utils/test-data";
@@ -6,8 +6,6 @@ import deepmerge from "deepmerge";
 import t from "tap";
 
 import { ConvertAPIKaiIIDX } from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 const iidxScore = {
 	chart_id: 3848,

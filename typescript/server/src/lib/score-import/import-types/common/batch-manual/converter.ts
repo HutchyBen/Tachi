@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import db from "#services/mongo/db";
@@ -136,7 +136,7 @@ export const ConverterBatchManual: ConverterFunction<BatchManualScore, BatchManu
 
 export async function ResolveSongAndChart(
 	resolver: MatchTypeResolver,
-	logger: KtLogger,
+	log: KtLogger,
 ): Promise<{ chart: ChartDocument; song: SongDocument } | null> {
 	const { game, playtype } = resolver;
 
@@ -178,7 +178,7 @@ export async function ResolveSongAndChart(
 			const song = await FindSongOnID(game, chart.songID);
 
 			if (!song) {
-				logger.severe(`BMS songID ${chart.songID} has charts but no parent song.`);
+				log.error(`BMS songID ${chart.songID} has charts but no parent song.`);
 				throw new InternalFailure(
 					`BMS songID ${chart.songID} has charts but no parent song.`,
 				);
@@ -197,7 +197,7 @@ export async function ResolveSongAndChart(
 			const song = await FindSongOnID(game, chart.songID);
 
 			if (!song) {
-				logger.severe(`ITG songID ${chart.songID} has charts but no parent song.`);
+				log.error(`ITG songID ${chart.songID} has charts but no parent song.`);
 				throw new InternalFailure(
 					`ITG songID ${chart.songID} has charts but no parent song.`,
 				);
@@ -223,7 +223,7 @@ export async function ResolveSongAndChart(
 			const song = await FindSongOnID(game, chart.songID);
 
 			if (!song) {
-				logger.severe(`Pop'n songID ${chart.songID} has charts but no parent song.`);
+				log.error(`Pop'n songID ${chart.songID} has charts but no parent song.`);
 				throw new InternalFailure(
 					`Pop'n songID ${chart.songID} has charts but no parent song.`,
 				);
@@ -281,10 +281,9 @@ export async function ResolveSongAndChart(
 			const config = GetGamePTConfig("sdvx", "Single");
 
 			if (config.difficulties.type === "DYNAMIC") {
-				logger.error(
-					`SDVX has 'DYNAMIC' difficulties set. This is completely unexpected.`,
-					{ config },
-				);
+				log.error(`SDVX has 'DYNAMIC' difficulties set. This is completely unexpected.`, {
+					config,
+				});
 				throw new ScoreImportFatalError(
 					500,
 					`SDVX has 'DYNAMIC' difficulties set. This is completely unexpected.`,
@@ -329,7 +328,7 @@ export async function ResolveSongAndChart(
 			const song = await db.anySongs[game].findOne({ id: chart.songID });
 
 			if (!song) {
-				logger.severe(`Song-Chart desync on ${chart.songID}.`);
+				log.error(`Song-Chart desync on ${chart.songID}.`);
 				throw new InternalFailure(`Failed to get song for a chart that exists.`);
 			}
 
@@ -366,7 +365,7 @@ export async function ResolveSongAndChart(
 			const song = await db.anySongs[game].findOne({ id: chart.songID });
 
 			if (!song) {
-				logger.severe(`Song-Chart desync on ${chart.songID}.`);
+				log.error(`Song-Chart desync on ${chart.songID}.`);
 				throw new InternalFailure(`Failed to get song for a chart that exists.`);
 			}
 
@@ -401,7 +400,7 @@ export async function ResolveSongAndChart(
 			const song = await db.anySongs[game].findOne({ id: chart.songID });
 
 			if (!song) {
-				logger.severe(`Song-Chart desync on ${chart.songID}.`);
+				log.error(`Song-Chart desync on ${chart.songID}.`);
 				throw new InternalFailure(`Failed to get song for a chart that exists.`);
 			}
 
@@ -429,7 +428,7 @@ export async function ResolveSongAndChart(
 			const song = await db.anySongs[game].findOne({ id: chart.songID });
 
 			if (!song) {
-				logger.severe(`Song-Chart desync on ${chart.songID}.`);
+				log.error(`Song-Chart desync on ${chart.songID}.`);
 				throw new InternalFailure(`Failed to get song for a chart that exists.`);
 			}
 
@@ -457,7 +456,7 @@ export async function ResolveSongAndChart(
 			});
 
 			if (!chartSync) {
-				logger.severe(`Song-Chart desync on ${song.id}.`);
+				log.error(`Song-Chart desync on ${song.id}.`);
 				throw new InternalFailure(`Failed to get chart for a song that exists.`);
 			}
 
@@ -489,7 +488,7 @@ export async function ResolveSongAndChart(
 		default: {
 			const { matchType } = resolver;
 
-			logger.error(
+			log.error(
 				`Invalid matchType ${matchType} ended up in conversion - should have been rejected by prudence?`,
 			);
 

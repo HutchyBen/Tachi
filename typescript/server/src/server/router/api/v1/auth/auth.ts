@@ -1,6 +1,6 @@
 import type { PrivateUserInfoDocument } from "#utils/types";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { Env, ServerConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
 import nodeFetch from "#utils/fetch";
@@ -16,8 +16,6 @@ import {
 	type UserDocument,
 	type UserSettingsDocument,
 } from "../../../../../../../common/src";
-
-const logger = CreateLogCtx(__filename);
 
 const BCRYPT_SALT_ROUNDS = 12;
 
@@ -38,7 +36,7 @@ export function PasswordCompare(plaintext: string, password: string) {
 }
 
 export function ReinstateInvite(code: string) {
-	logger.info(`Reinstated Invite ${code}`);
+	log.info(`Reinstated Invite ${code}`);
 	return db.invites.update(
 		{
 			code,
@@ -65,7 +63,7 @@ export async function AddNewInvite(user: UserDocument) {
 		consumedBy: null,
 	});
 
-	logger.info(`User ${FormatUserDoc(user)} created an invite.`);
+	log.info(`User ${FormatUserDoc(user)} created an invite.`);
 
 	return result;
 }
@@ -90,7 +88,7 @@ export async function AddNewUser(
 ) {
 	const hashedPassword = await HashPassword(plaintext);
 
-	logger.verbose(`Hashed password for ${username}.`);
+	log.verbose(`Hashed password for ${username}.`);
 
 	const userDoc: UserDocument = {
 		id: userID,
@@ -132,7 +130,7 @@ export function InsertPrivateUserInfo(userID: integer, hashedPassword: string, e
 }
 
 export function InsertDefaultUserSettings(userID: integer) {
-	logger.verbose(`Inserting default settings for ${userID}.`);
+	log.verbose(`Inserting default settings for ${userID}.`);
 	const UserSettingsDocument: UserSettingsDocument = {
 		userID,
 		following: [],
@@ -165,7 +163,7 @@ export async function ValidateCaptcha(
 	);
 
 	if (err) {
-		logger.warn(
+		log.warn(
 			`Google ReCaptcha returned something without a success property? Assuming this captcha check failed.`,
 			{ googleCaptchaRes, err },
 		);
@@ -176,7 +174,7 @@ export async function ValidateCaptcha(
 	const gcr = googleCaptchaRes as { success: boolean };
 
 	if (!gcr.success) {
-		logger.verbose(`Failed GCaptcha response`, { gcr });
+		log.verbose(`Failed GCaptcha response`, { gcr });
 	}
 
 	return gcr.success;

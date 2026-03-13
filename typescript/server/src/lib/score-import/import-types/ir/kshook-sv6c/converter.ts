@@ -34,7 +34,7 @@ export const ConverterIRKsHookSV6C: ConverterFunction<KsHookSV6CScore, KsHookSV6
 	const song = await FindSongOnID("sdvx", chart.songID);
 
 	if (!song) {
-		logger.severe(`Song ${chart.songID} (sdvx) has no parent song?`);
+		log.error(`Song ${chart.songID} (sdvx) has no parent song?`);
 		throw new InternalFailure(`Song ${chart.songID} (sdvx) has no parent song?`);
 	}
 

@@ -1,8 +1,8 @@
+import { log } from "#log";
 import { execFileSync } from "child_process";
 import { Command } from "commander";
 import { XMLParser } from "fast-xml-parser";
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
-import { CreateLogger } from "mei-logger";
 import path from "path";
 
 import {
@@ -11,14 +11,7 @@ import {
 	GetGamePTConfig,
 	type SongDocument,
 } from "../../../common/src";
-import {
-	CreateChartID,
-	GetFreshSongIDGenerator,
-	ReadCollection,
-	WriteCollection,
-} from "../../util";
-
-const logger = CreateLogger("merge-options");
+import { CreateChartID, ReadCollection, WriteCollection } from "../../util";
 
 const VERSION_DISPLAY_NAMES = [
 	"maimai",
@@ -152,7 +145,7 @@ for (const chart of existingCharts) {
 	const song = songMap.get(chart.songID);
 
 	if (song === undefined) {
-		logger.error(
+		log.error(
 			`CONSISTENCY ERROR: Chart ID ${chart.chartID} does not belong to any songs! (songID was ${chart.songID})`,
 		);
 		process.exit(1);
@@ -208,18 +201,16 @@ if (options.vgmsBinary) {
 					const res = JSON.parse(stdout);
 
 					if (res.sampleRate !== 48000) {
-						logger.warn(
-							`Sample rate of ${cuePath} is not 48000Hz (${res.sampleRate}Hz)`,
-						);
+						log.warn(`Sample rate of ${cuePath} is not 48000Hz (${res.sampleRate}Hz)`);
 					}
 
 					const duration = Number((res.numberOfSamples / res.sampleRate).toFixed(3));
 
 					durationMap.set(cueName, duration);
 
-					logger.info(`Cue file ${cueName} has duration ${duration} seconds.`);
+					log.info(`Cue file ${cueName} has duration ${duration} seconds.`);
 				} catch (e) {
-					logger.error(`Error parsing song duration: ${e}`);
+					log.error(`Error parsing song duration: ${e}`);
 				}
 			}
 		}
@@ -251,11 +242,11 @@ for (const optionsDir of options.input) {
 		const musicsDir = path.join(optionDir, "music");
 
 		if (!existsSync(musicsDir)) {
-			logger.warn(`Option at ${optionDir} does not have a "music" folder.`);
+			log.warn(`Option at ${optionDir} does not have a "music" folder.`);
 			continue;
 		}
 
-		logger.info(`Scanning music directory ${musicsDir} for songs.`);
+		log.info(`Scanning music directory ${musicsDir} for songs.`);
 
 		for (const music of readdirSync(musicsDir)) {
 			if (!music.match(/music\d+$/u)) {
@@ -271,7 +262,7 @@ for (const optionsDir of options.input) {
 			const musicXmlLocation = path.join(musicDir, "Music.xml");
 
 			if (!existsSync(musicXmlLocation)) {
-				logger.warn(`Music folder at ${musicDir} does not have a Music.xml file.`);
+				log.warn(`Music folder at ${musicDir} does not have a Music.xml file.`);
 				continue;
 			}
 
@@ -280,7 +271,7 @@ for (const optionsDir of options.input) {
 			const inGameID = Number(musicData.name.id);
 
 			if (isInBlacklist(`S${inGameID}`)) {
-				logger.verbose(
+				log.verbose(
 					`Ignored ${musicData.artistName.str} - ${musicData.name.str} (inGameID ${inGameID}) as it is in the blacklist.`,
 				);
 				continue;
@@ -296,7 +287,7 @@ for (const optionsDir of options.input) {
 			// Has this song been disabled in-game?
 			if (musicData.disable || Number(musicData.eventName.id) === 0) {
 				if (tachiSongID !== undefined) {
-					logger.info(
+					log.info(
 						`Removing charts of song ID ${tachiSongID} from version ${options.version}, because the disable flag in Music.xml is enabled.`,
 					);
 
@@ -335,7 +326,7 @@ for (const optionsDir of options.input) {
 			const duration = durationMap.get(`music${musicData.cueName.id.padStart(6, "0")}`);
 
 			if (!duration) {
-				logger.warn(
+				log.warn(
 					`Unknown duration for music ID ${inGameID}, cue ID ${musicData.cueName.id}.`,
 				);
 			}
@@ -360,7 +351,7 @@ for (const optionsDir of options.input) {
 				songTitleArtistMap.set(`${songDoc.title}-${songDoc.artist}`, tachiSongID);
 				songMap.set(tachiSongID, songDoc);
 
-				logger.info(
+				log.info(
 					`Added new song ${songDoc.artist} - ${songDoc.title} (inGameID ${inGameID}, tachiSongID ${tachiSongID}).`,
 				);
 			} else {
@@ -388,7 +379,7 @@ for (const optionsDir of options.input) {
 				}
 
 				if (isInBlacklist(`C${inGameID}-${difficultyName}`)) {
-					logger.verbose(
+					log.verbose(
 						`Ignoring ${musicData.artistName.str} - ${musicData.name.str} [${difficultyName}] (inGameID ${inGameID}) as it is in the blacklist.`,
 					);
 					continue;
@@ -415,18 +406,18 @@ for (const optionsDir of options.input) {
 					const displayName = `${musicData.artistName.str} - ${musicData.name.str} [${exists.difficulty}] (${exists.chartID})`;
 
 					if (exists.data.inGameID === null) {
-						logger.info(`Adding inGameID ${inGameID} for chart ${displayName}.`);
+						log.info(`Adding inGameID ${inGameID} for chart ${displayName}.`);
 						exists.data.inGameID = inGameID;
 					} else if (exists.data.inGameID !== inGameID) {
-						logger.warn(
+						log.warn(
 							`The chart ${displayName} already exists in charts-maimaidx under a different inGameID (${exists.data.inGameID} != ${inGameID}). Is this a duplicate with a different inGameID?`,
 						);
 
 						if (options.force) {
-							logger.warn("Overwriting anyways, because --force has been requested.");
+							log.warn("Overwriting anyways, because --force has been requested.");
 							exists.data.inGameID = inGameID;
 						} else {
-							logger.warn(
+							log.warn(
 								"Must be resolved manually. Use --force to overwrite anyways.",
 							);
 						}
@@ -440,14 +431,14 @@ for (const optionsDir of options.input) {
 
 					if (isLatestVersion) {
 						if (exists.level !== level) {
-							logger.info(
+							log.info(
 								`Chart ${displayName} has had a level change: ${exists.level} -> ${level}.`,
 							);
 							exists.level = level;
 						}
 
 						if (exists.levelNum !== levelNum) {
-							logger.info(
+							log.info(
 								`Chart ${displayName} has had a levelNum change: ${exists.levelNum} -> ${levelNum}.`,
 							);
 							exists.levelNum = levelNum;
@@ -476,7 +467,7 @@ for (const optionsDir of options.input) {
 
 				newCharts.push(chartDoc);
 
-				logger.info(
+				log.info(
 					`Inserted new chart ${musicData.artistName.str} - ${musicData.name.str} [${chartDoc.difficulty}] (${chartDoc.chartID}).`,
 				);
 			}

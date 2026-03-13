@@ -1,12 +1,10 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { MockMulterFile } from "#test-utils/mock-multer";
 import ResetDBState from "#test-utils/resets";
 import { GetKTDataBuffer } from "#test-utils/test-data";
 import t from "tap";
 
 import { ParseSolidStateXML } from "./parser";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#ParseSolidStateXML", (t) => {
 	t.beforeEach(ResetDBState);

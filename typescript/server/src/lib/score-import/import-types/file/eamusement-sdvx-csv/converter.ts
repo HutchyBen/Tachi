@@ -55,7 +55,7 @@ const ConvertEamSDVXCSV: ConverterFunction<SDVXEamusementCSVData, EmptyObject> =
 	const difficulty = DIFFICULTY_MAP.get(data.difficulty);
 
 	if (!difficulty) {
-		logger.info(`Invalid difficulty of ${data.difficulty} provided.`);
+		log.info(`Invalid difficulty of ${data.difficulty} provided.`);
 		throw new InvalidScoreFailure(`${data.title} - Invalid difficulty of ${data.difficulty}.`);
 	}
 
@@ -104,7 +104,7 @@ const ConvertEamSDVXCSV: ConverterFunction<SDVXEamusementCSVData, EmptyObject> =
 	const lamp = LAMP_MAP.get(data.lamp);
 
 	if (!lamp) {
-		logger.info(`Invalid lamp of ${data.lamp} provided.`);
+		log.info(`Invalid lamp of ${data.lamp} provided.`);
 		throw new InvalidScoreFailure(`${humanisedChartTitle} - Invalid lamp of ${data.lamp}.`);
 	}
 
@@ -127,9 +127,7 @@ const ConvertEamSDVXCSV: ConverterFunction<SDVXEamusementCSVData, EmptyObject> =
 		},
 	};
 
-	logger.verbose(
-		`Returning dryscore with ${dryScore.scoreData.score} for ${humanisedChartTitle}`,
-	);
+	log.verbose(`Returning dryscore with ${dryScore.scoreData.score} for ${humanisedChartTitle}`);
 
 	return { chart, song, dryScore };
 };

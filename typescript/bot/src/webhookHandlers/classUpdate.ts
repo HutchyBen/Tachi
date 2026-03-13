@@ -14,7 +14,7 @@ import { client } from "../main";
 import { GetUGPTStats, GetUserInfo } from "../utils/apiRequests";
 import { CreateEmbed } from "../utils/embeds";
 import { PrependTachiUrl } from "../utils/fetchTachi";
-import { log } from "#utils/log"
+import { log } from "#utils/log";
 import { FormatClass, GetGameChannel } from "../utils/misc";
 
 export async function HandleClassUpdateV1(

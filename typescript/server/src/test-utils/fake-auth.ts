@@ -1,13 +1,11 @@
 import type supertest from "supertest";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
 import db from "#services/mongo/db";
 
 import { ALL_PERMISSIONS } from "../../../common/src";
 import ResetDBState from "./resets";
-
-const logger = CreateLogCtx(__filename);
 
 export async function CreateFakeAuthCookie(mockApi: supertest.SuperTest<supertest.Test>) {
 	await ResetDBState();
@@ -21,7 +19,7 @@ export async function CreateFakeAuthCookie(mockApi: supertest.SuperTest<supertes
 	});
 
 	if (res.status !== 200) {
-		logger.crit("Failed to login. Cannot generate auth cookie.");
+		log.fatal("Failed to login. Cannot generate auth cookie.");
 		throw res.body;
 	}
 

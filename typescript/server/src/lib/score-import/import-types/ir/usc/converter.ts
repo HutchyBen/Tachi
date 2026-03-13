@@ -86,7 +86,7 @@ export const ConverterIRUSC: ConverterFunction<USCClientScore, IRUSCContext> = a
 		data.windows.miss !== USC_DEFAULT_MISS ||
 		data.windows.slam !== USC_DEFAULT_SLAM
 	) {
-		logger.info(`Ignored score because hitWindows were modified.`, {
+		log.info(`Ignored score because hitWindows were modified.`, {
 			windows: data.windows,
 		});
 		throw new InvalidScoreFailure(`HitWindows have been modified - Score is invalid.`);
@@ -94,7 +94,7 @@ export const ConverterIRUSC: ConverterFunction<USCClientScore, IRUSCContext> = a
 
 	// if any auto-like option is enabled, reject score.
 	if (data.options.autoFlags !== 0) {
-		logger.verbose(`Ignored score because autoplay was enabled.`);
+		log.verbose(`Ignored score because autoplay was enabled.`);
 		throw new InvalidScoreFailure(`Autoplay was enabled - Score is invalid.`);
 	}
 
@@ -115,7 +115,7 @@ export const ConverterIRUSC: ConverterFunction<USCClientScore, IRUSCContext> = a
 	const song = await FindSongOnID("usc", chartDoc.songID);
 
 	if (!song) {
-		logger.severe(`Song-Chart desync on USCIR ${chartDoc.songID}.`);
+		log.error(`Song-Chart desync on USCIR ${chartDoc.songID}.`);
 		throw new InternalFailure(`Song-Chart desync on USCIR ${chartDoc.songID}.`);
 	}
 

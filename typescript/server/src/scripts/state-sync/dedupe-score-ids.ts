@@ -1,12 +1,10 @@
 import type { IObjectID } from "monk";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import db from "#services/mongo/db";
 import { WrapScriptPromise } from "#utils/misc";
 
 import type { integer } from "../../../../common/src";
-
-const logger = CreateLogCtx(__filename);
 
 async function DedupeScoreIDs() {
 	const dups: Array<{ count: integer; dups: Array<IObjectID>; id: string }> =
@@ -28,7 +26,7 @@ async function DedupeScoreIDs() {
 			{ allowDiskUse: true },
 		);
 
-	logger.info(`Found ${dups.length} dups.`);
+	log.info(`Found ${dups.length} dups.`);
 
 	for (const dup of dups) {
 		dup.dups.shift();

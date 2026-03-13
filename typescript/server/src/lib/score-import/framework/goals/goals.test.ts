@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import db from "#services/mongo/db";
 import { dmf } from "#test-utils/misc.js";
 import ResetDBState from "#test-utils/resets";
@@ -14,8 +14,6 @@ import t from "tap";
 import type { GoalDocument, GoalSubscriptionDocument } from "../../../../../../common/src";
 
 import { ProcessGoal, UpdateGoalsForUser } from "./goals";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#UpdateGoalsForUser", (t) => {
 	t.beforeEach(ResetDBState);

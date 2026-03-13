@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -33,8 +33,6 @@ const scoreData: ScoreData<"museca:Single"> = {
 
 const mockScore = mkMockScore("museca", "Single", TestingMusecaChart, scoreData);
 const mockPB = mkMockPB("museca", "Single", TestingMusecaChart, scoreData);
-
-const logger = CreateLogCtx(__filename);
 
 t.test("MUSECA Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {

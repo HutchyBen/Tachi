@@ -247,7 +247,7 @@ export const ConvertAPIKaiIIDX: ConverterFunction<unknown, KaiContext> = async (
 	const song = await FindSongOnID("iidx", chart.songID);
 
 	if (!song) {
-		logger.severe(`Song-Chart desync with song ID ${chart.songID} (iidx).`);
+		log.error(`Song-Chart desync with song ID ${chart.songID} (iidx).`);
 		throw new InternalFailure(`Song-Chart desync with song ID ${chart.songID} (iidx).`);
 	}
 

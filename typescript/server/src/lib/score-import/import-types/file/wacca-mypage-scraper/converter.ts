@@ -69,7 +69,7 @@ const ConvertMyPageScraperRecordsCSV: ConverterFunction<
 	const lamp = LAMPS[data.lamp];
 
 	if (lamp === undefined) {
-		logger.info(`Invalid lamp of ${data.lamp} provided.`);
+		log.info(`Invalid lamp of ${data.lamp} provided.`);
 		throw new InvalidScoreFailure(`${humanisedChartTitle} - Invalid lamp of ${data.lamp}.`);
 	}
 

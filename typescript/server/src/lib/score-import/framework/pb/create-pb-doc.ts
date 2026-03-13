@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 import type { BulkWriteUpdateOneOperation, FilterQuery, SortOptionObject } from "mongodb";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
@@ -33,7 +33,7 @@ export async function CreatePBDoc(
 	gpt: GPTString,
 	userID: integer,
 	chart: ChartDocument,
-	logger: KtLogger,
+	log: KtLogger,
 	asOfTimestamp?: number,
 ) {
 	const chartID = chart.chartID;
@@ -62,13 +62,10 @@ export async function CreatePBDoc(
 			return;
 		}
 
-		logger.warn(
-			`User ${userID} has no scores on chart, but a PB was attempted to be created?`,
-			{
-				chartID,
-				userID,
-			},
-		);
+		log.warn(`User ${userID} has no scores on chart, but a PB was attempted to be created?`, {
+			chartID,
+			userID,
+		});
 		return;
 	}
 

@@ -49,11 +49,9 @@ import {
 // ^ These rules are disabled for good reason. We have to deal with some very nonsensical types here
 // so we just disable these rules. I know, it sucks, but we'll live.
 import { ONE_MINUTE, ONE_SECOND } from "#lib/constants/time";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { Env, ServerConfig } from "#lib/setup/config";
 import { GetMillisecondsSince } from "#utils/misc";
-
-const logger = CreateLogCtx(__filename);
 
 let dbName = ServerConfig.MONGO_DATABASE_NAME;
 
@@ -62,7 +60,7 @@ if (Env.NODE_ENV === "test") {
 	dbName = `testingdb`;
 }
 
-logger.info(`Connecting to database ${Env.MONGO_URL}/${dbName}...`, { bootInfo: true });
+log.info(`Connecting to database ${Env.MONGO_URL}/${dbName}...`, { bootInfo: true });
 const dbtime = process.hrtime.bigint();
 
 export const monkDB = monk(`${Env.MONGO_URL}/${dbName}`, {
@@ -78,12 +76,12 @@ export const monkDB = monk(`${Env.MONGO_URL}/${dbName}`, {
 /* istanbul ignore next */
 monkDB
 	.then(() => {
-		logger.info(`Database connection successful: took ${GetMillisecondsSince(dbtime)}ms`, {
+		log.info(`Database connection successful: took ${GetMillisecondsSince(dbtime)}ms`, {
 			bootInfo: true,
 		});
 	})
 	.catch((err) => {
-		logger.crit(`Failed to connect to database: ${err}`);
+		log.fatal(`Failed to connect to database: ${err}`);
 
 		// can't connect. kill self after 1 second.
 		setTimeout(() => {

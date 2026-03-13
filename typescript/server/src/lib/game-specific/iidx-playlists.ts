@@ -1,10 +1,8 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import db from "#services/mongo/db";
 import { PoyashiBPI } from "rg-stats";
 
 import type { ChartDocument, integer, Playtypes } from "../../../../common/src";
-
-const logger = CreateLogCtx(__filename);
 
 interface PlaylistEntry {
 	entry_id: integer;
@@ -55,7 +53,7 @@ function ChartsToPlaylistFormat(
 
 			if (el === undefined) {
 				// wut, chart has an empty array of ingameids?
-				logger.warn(`Chart '${chart.chartID}' has an empty array of inGameIDs.`);
+				log.warn(`Chart '${chart.chartID}' has an empty array of inGameIDs.`);
 				continue;
 			}
 

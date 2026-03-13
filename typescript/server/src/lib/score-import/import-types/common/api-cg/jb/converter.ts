@@ -52,7 +52,7 @@ export const ConverterAPICGJubeat: ConverterFunction<CGJubeatScore, CGContext> =
 	const song = await FindSongOnID("jubeat", chart.songID);
 
 	if (!song) {
-		logger.severe(`Song-Chart desync with song ID ${chart.songID} (jubeat).`);
+		log.error(`Song-Chart desync with song ID ${chart.songID} (jubeat).`);
 		throw new InternalFailure(`Song-Chart desync with song ID ${chart.songID} (jubeat).`);
 	}
 

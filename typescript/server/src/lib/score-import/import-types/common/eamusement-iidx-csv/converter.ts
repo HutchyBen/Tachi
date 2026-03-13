@@ -125,7 +125,7 @@ const ConvertEamIIDXCSV: ConverterFunction<
 	const lamp = EAMUSEMENT_LAMP_RESOLVER.get(eamScore.lamp);
 
 	if (!lamp) {
-		logger.info(`Invalid lamp of ${eamScore.lamp} provided.`);
+		log.info(`Invalid lamp of ${eamScore.lamp} provided.`);
 		throw new InvalidScoreFailure(
 			`${HUMANISED_CHART_TITLE} - Invalid Lamp of ${eamScore.lamp}.`,
 		);
@@ -164,11 +164,11 @@ const ConvertEamIIDXCSV: ConverterFunction<
 
 		dryScore.scoreData.optional.bp = numBP;
 	} else if (eamScore.bp === "---") {
-		logger.debug(
+		log.debug(
 			`Skipped assigning BP for score as it had expected null value of ${eamScore.bp}.`,
 		);
 	} else {
-		logger.info(`Skipped assigning BP for score. Had unexpected value of ${eamScore.bp}.`);
+		log.info(`Skipped assigning BP for score. Had unexpected value of ${eamScore.bp}.`);
 	}
 
 	return { chart: tachiChart, dryScore, song: tachiSong };

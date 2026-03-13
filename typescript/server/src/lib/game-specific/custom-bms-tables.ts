@@ -1,7 +1,7 @@
 import type { BMSTableHead, RawBMSTableEntry } from "bms-table-loader";
 import type { Request, Response } from "express-serve-static-core";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { GetRivalUsers } from "#lib/rivals/rivals";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import { GetRelevantSongsAndCharts } from "#utils/db";
@@ -25,8 +25,6 @@ import {
 	type TableDocument,
 } from "../../../../common/src";
 
-const logger = CreateLogCtx(__filename);
-
 // Instead of just supporting existing tables, Tachi should also be able
 // to emit its own, custom BMS tables. These may be dynamic.
 
@@ -48,7 +46,7 @@ function AppendAndConvertChartsToBMSBody(
 				md5: chart.data.hashMD5,
 			});
 		} else {
-			logger.warn(`BMS Chart md5=${chart.data.hashMD5} has no parent song.`);
+			log.warn(`BMS Chart md5=${chart.data.hashMD5} has no parent song.`);
 			body.push({
 				level,
 				md5: chart.data.hashMD5,
@@ -80,7 +78,7 @@ export async function TachiTableToBMSTableJSON(
 		const folder = folderMap.get(folderID);
 
 		if (!folder) {
-			logger.warn(
+			log.warn(
 				`Table '${table.title}' refers to folder '${folderID}', yet no such folder exists in the db?`,
 			);
 			continue;
@@ -229,7 +227,7 @@ export async function HandleBMSTableHeaderRequest(
 
 		return res.status(200).send(header);
 	} catch (err) {
-		logger.error(`Failed to load header.json for table ${bmsTable.tableName}.`, {
+		log.error(`Failed to load header.json for table ${bmsTable.tableName}.`, {
 			bmsTable,
 			err,
 		});
@@ -257,7 +255,7 @@ export async function HandleBMSTableBodyRequest(
 
 		return res.status(200).send(body);
 	} catch (err) {
-		logger.error(`Failed to load body.json for table ${bmsTable.tableName}.`, {
+		log.error(`Failed to load body.json for table ${bmsTable.tableName}.`, {
 			bmsTable,
 			err,
 		});

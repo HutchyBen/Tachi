@@ -1,6 +1,6 @@
 import type { ICollection } from "monk";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { Env, ServerConfig } from "#lib/setup/config";
 import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
 import db, { type StaticDatabases } from "#services/mongo/db";
@@ -18,8 +18,6 @@ if (ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE !== "LOCAL_FILESYSTEM") {
 		`Cannot run tests when CDN_CONFIG.SAVE_LOCATION.TYPE is not LOCAL_FILESYSTEM! (Got ${ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE}.)`,
 	);
 }
-
-const logger = CreateLogCtx(__filename);
 
 const DATA_DIR = path.join(__dirname, "./mock-db");
 
@@ -118,10 +116,10 @@ export async function SetIndexesForDB() {
 	await ResetDBState();
 	const url = `${Env.MONGO_URL}/testingdb`;
 
-	logger.info(`Setting indexes for ${url}`);
+	log.info(`Setting indexes for ${url}`);
 
 	await SetIndexes(url, true);
 
-	logger.info(`Done.`);
+	log.info(`Done.`);
 	return true;
 }

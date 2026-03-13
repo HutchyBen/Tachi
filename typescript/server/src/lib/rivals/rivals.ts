@@ -1,7 +1,7 @@
 import type { BulkWriteUpdateOneOperation } from "mongodb";
 
 import { SetRivalsFailReasons } from "#lib/constants/err-codes";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { SendSetRivalNotification } from "#lib/notifications/notification-wrappers";
 import { ServerConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
@@ -16,8 +16,6 @@ import {
 	type PBScoreDocument,
 	type Playtype,
 } from "../../../../common/src";
-
-const logger = CreateLogCtx(__filename);
 
 /**
  * Retrieve all of a user's set rival IDs.
@@ -125,7 +123,7 @@ export async function SetRivals(
 	});
 
 	if (!currentGameSettings) {
-		logger.severe(
+		log.error(
 			`User ${userID} attempted to set rivals for ${FormatGameGroup(
 				game,
 				playtype,

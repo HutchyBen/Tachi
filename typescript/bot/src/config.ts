@@ -43,7 +43,6 @@ function ParseBotConfig(fileLoc = "conf.json5"): BotConfig {
 	try {
 		const contents = fs.readFileSync(fileLoc, "utf-8");
 
-		 
 		data = JSON5.parse(contents);
 	} catch (err) {
 		log.error({ err }, "Failed to find/parse a valid conf.json5 file. Cannot boot.");
@@ -148,7 +147,7 @@ async function GetServerConfig() {
 	// this fetch is complete, and it saves us having to do a singleton pattern or worse.
 	// This *should* be solved with top-level-await, but good luck actually getting
 	// typescript to output the right stuff here.
-	 
+
 	const res = await fetch(`${BotConfig.TACHI_SERVER_LOCATION}/api/v1/config`).then((res) =>
 		res.json(),
 	);

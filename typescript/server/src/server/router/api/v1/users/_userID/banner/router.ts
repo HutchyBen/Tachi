@@ -1,7 +1,7 @@
 import { CDNDelete, CDNRedirect, CDNStoreOrOverwrite } from "#lib/cdn/cdn";
 import { GetProfileBannerURL } from "#lib/cdn/url-format";
 import { ONE_MEGABYTE } from "#lib/constants/filesize";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { RequirePermissions } from "#server/middleware/auth";
 import { CreateMulterSingleUploadMiddleware } from "#server/middleware/multer-upload";
 import db from "#services/mongo/db";
@@ -13,8 +13,6 @@ import { Router } from "express";
 import { RequireAuthedAsUser } from "../middleware";
 
 // note: this is just the ../pfp/router.ts code copied and altered.
-
-const logger = CreateLogCtx(__filename);
 
 const router: Router = Router({ mergeParams: true });
 
@@ -31,18 +29,18 @@ router.put(
 	"/",
 	RequireAuthedAsUser,
 	RequirePermissions("customise_profile"),
-	CreateMulterSingleUploadMiddleware("banner", ONE_MEGABYTE, logger),
+	CreateMulterSingleUploadMiddleware("banner", ONE_MEGABYTE),
 	async (req, res) => {
 		const user = GetTachiData(req, "requestedUser");
 
 		if (!user.customBannerLocation) {
-			logger.verbose(`User ${FormatUserDoc(user)} set a custom profile banner.`);
+			log.verbose(`User ${FormatUserDoc(user)} set a custom profile banner.`);
 		} else {
-			logger.verbose(`User ${FormatUserDoc(user)} updated their profile banner.`);
+			log.verbose(`User ${FormatUserDoc(user)} updated their profile banner.`);
 		}
 
 		if (!req.file) {
-			logger.error(
+			log.error(
 				`Conflicting state - no req.file has been populated but passed middleware? (${FormatUserDoc(
 					user,
 				)})`,

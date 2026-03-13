@@ -1,6 +1,6 @@
 import { SendEmail } from "#lib/email/client";
 import { EmailFormatResetPassword, EmailFormatVerifyEmail } from "#lib/email/formats";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
 import {
@@ -35,8 +35,6 @@ import {
 	ValidateEmail,
 	ValidatePassword,
 } from "./auth";
-
-const logger = CreateLogCtx(__filename);
 
 const router: Router = Router({ mergeParams: true });
 
@@ -73,30 +71,30 @@ router.post(
 			username: string;
 		};
 
-		logger.verbose(`Received login request with username ${body.username} (${req.ip})`);
+		log.verbose(`Received login request with username ${body.username} (${req.ip})`);
 
 		/* istanbul ignore next */
 		if (Env.NODE_ENV === "production" || Env.NODE_ENV === "staging") {
-			logger.verbose("Validating captcha...");
+			log.verbose("Validating captcha...");
 			const validCaptcha = await ValidateCaptcha(body.captcha, req.socket.remoteAddress);
 
 			if (!validCaptcha) {
-				logger.verbose("Captcha failed.");
+				log.verbose("Captcha failed.");
 				return res.status(400).json({
 					success: false,
 					description: `Captcha failed.`,
 				});
 			}
 
-			logger.verbose("Captcha validated!");
+			log.verbose("Captcha validated!");
 		} else {
-			logger.warn("Skipped captcha check because not in production.");
+			log.warn("Skipped captcha check because not in production.");
 		}
 
 		const requestedUser = await GetUserCaseInsensitive(body.username);
 
 		if (!requestedUser) {
-			logger.verbose(`Invalid username for login ${body.username}.`);
+			log.verbose(`Invalid username for login ${body.username}.`);
 			return res.status(404).json({
 				success: false,
 				description: `This user does not exist.`,
@@ -106,7 +104,7 @@ router.post(
 		const privateInfo = await GetUserPrivateInfo(requestedUser.id);
 
 		if (!privateInfo) {
-			logger.severe(
+			log.error(
 				`State desync for user ${FormatUserDoc(
 					requestedUser,
 				)}. This user has no password/email information?`,
@@ -122,7 +120,7 @@ router.post(
 		const passwordMatch = await PasswordCompare(body["!password"], privateInfo.password);
 
 		if (!passwordMatch) {
-			logger.verbose("Invalid password provided.");
+			log.verbose("Invalid password provided.");
 			return res.status(403).json({
 				success: false,
 				description: `Invalid password.`,
@@ -132,7 +130,7 @@ router.post(
 		const user = await GetUserWithID(requestedUser.id);
 
 		if (!user) {
-			logger.severe(`User logged in as someone who does not exist?`, { requestedUser });
+			log.error(`User logged in as someone who does not exist?`, { requestedUser });
 			return res.status(500).json({
 				success: false,
 				description: `An internal server error has occured.`,
@@ -142,13 +140,13 @@ router.post(
 		let settings = await GetSettingsForUser(requestedUser.id);
 
 		if (!settings) {
-			logger.warn(`User ${FormatUserDoc(user)} has no settings. Inserting default settings.`);
+			log.warn(`User ${FormatUserDoc(user)} has no settings. Inserting default settings.`);
 			settings = await InsertDefaultUserSettings(user.id);
 		}
 
 		MountAuthCookie(req, user, settings);
 
-		logger.verbose(`${FormatUserDoc(requestedUser)} Logged in.`);
+		log.verbose(`${FormatUserDoc(requestedUser)} Logged in.`);
 
 		return res.status(200).json({
 			success: true,
@@ -211,30 +209,30 @@ router.post(
 			});
 		}
 
-		logger.verbose(`received register request with username ${body.username} (${req.ip})`);
+		log.verbose(`received register request with username ${body.username} (${req.ip})`);
 
 		/* istanbul ignore next */
 		if (Env.NODE_ENV === "production" || Env.NODE_ENV === "staging") {
-			logger.verbose("Validating captcha...");
+			log.verbose("Validating captcha...");
 			const validCaptcha = await ValidateCaptcha(body.captcha, req.socket.remoteAddress);
 
 			if (!validCaptcha) {
-				logger.verbose("Captcha failed.");
+				log.verbose("Captcha failed.");
 				return res.status(400).json({
 					success: false,
 					description: `Captcha failed.`,
 				});
 			}
 
-			logger.verbose("Captcha validated.");
+			log.verbose("Captcha validated.");
 		} else {
-			logger.warn("Skipped captcha check because not in production.");
+			log.warn("Skipped captcha check because not in production.");
 		}
 
 		const existingUser = await GetUserCaseInsensitive(body.username);
 
 		if (existingUser) {
-			logger.verbose(`Invalid username ${body.username}, already in use.`);
+			log.verbose(`Invalid username ${body.username}, already in use.`);
 			return res.status(409).json({
 				success: false,
 				description: "This username is already in use.",
@@ -244,7 +242,7 @@ router.post(
 		const existingEmail = await CheckIfEmailInUse(body.email);
 
 		if (existingEmail) {
-			logger.info(`User attempted to sign up with email that was already in use.`);
+			log.info(`User attempted to sign up with email that was already in use.`);
 			return res.status(409).json({
 				success: false,
 				description: `This email is already in use.`,
@@ -272,14 +270,14 @@ router.post(
 				);
 
 				if (!inviteCodeDoc) {
-					logger.info(`Invalid invite code given: ${body.inviteCode}.`);
+					log.info(`Invalid invite code given: ${body.inviteCode}.`);
 					return res.status(401).json({
 						success: false,
 						description: `This invite code is not valid.`,
 					});
 				}
 
-				logger.info(`Consumed invite ${inviteCodeDoc.code}.`);
+				log.info(`Consumed invite ${inviteCodeDoc.code}.`);
 			}
 
 			// if we get to this point, We're good to create the user.
@@ -322,14 +320,14 @@ router.post(
 				body: user,
 			});
 		} catch (err) {
-			logger.error(`Bailed on user creation ${body.username}.`, { err });
+			log.error(`Bailed on user creation ${body.username}.`, { err });
 
 			if (ServerConfig.INVITE_CODE_CONFIG && body.inviteCode !== undefined) {
 				await ReinstateInvite(body.inviteCode);
 			}
 
 			if (hasInsertedUserID !== null) {
-				logger.warn(
+				log.warn(
 					`Removing user ${body.username} (#${hasInsertedUserID}), as their document was created, but creation still failed.`,
 				);
 				await db.users.remove({ username: body.username });
@@ -416,9 +414,7 @@ router.post("/resend-verify-email", HyperAggressiveRateLimitMiddleware, async (r
 	const verifyInfo = await db["verify-email-codes"].findOne({ userID });
 
 	if (!verifyInfo) {
-		logger.warn(
-			`Attempted to send reset email to ${userID}, but no verifyInfo was set for them.`,
-		);
+		log.warn(`Attempted to send reset email to ${userID}, but no verifyInfo was set for them.`);
 		return;
 	}
 
@@ -476,7 +472,7 @@ router.post(
 
 		body.email = body.email.toLowerCase();
 
-		logger.debug(`received password reset request for ${body.email}.`);
+		log.debug(`received password reset request for ${body.email}.`);
 
 		// For timing attack and infosec reasons, we can't do anything but **immediately** return here.
 		res.status(202).json({
@@ -493,7 +489,7 @@ router.post(
 			const user = await db.users.findOne({ id: userPrivateInfo.userID });
 
 			if (!user) {
-				logger.severe(
+				log.error(
 					`User ${userPrivateInfo.userID} has private information but no real account.`,
 				);
 				return;
@@ -501,7 +497,7 @@ router.post(
 
 			const code = `M${Random20Hex()}`;
 
-			logger.verbose(`Created password reset code for ${FormatUserDoc(user)}.`);
+			log.verbose(`Created password reset code for ${FormatUserDoc(user)}.`);
 
 			await db["password-reset-codes"].insert({
 				code,
@@ -513,7 +509,7 @@ router.post(
 
 			void SendEmail(userPrivateInfo.email, "Reset Password", html, text);
 		} else {
-			logger.info(
+			log.info(
 				`Silently rejected password reset request for ${body.email}, as no user has this email.`,
 			);
 		}
@@ -566,7 +562,7 @@ router.post(
 			},
 		);
 
-		logger.info(`User ${code.userID} reset their password.`);
+		log.info(`User ${code.userID} reset their password.`);
 
 		return res.status(200).json({
 			success: true,

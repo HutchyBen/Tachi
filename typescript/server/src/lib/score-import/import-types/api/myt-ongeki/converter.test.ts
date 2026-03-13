@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
 import {
 	OngekiBattleScoreRank,
@@ -15,8 +15,6 @@ import t from "tap";
 import type { MytOngekiScore } from "./types";
 
 import ConvertAPIMytOngeki from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 const parsedScore: MytOngekiScore = {
 	playlogApiId: "806ca7ac-76f5-4d99-8760-770df60e1ff5",

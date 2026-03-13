@@ -1,3 +1,4 @@
+import { log } from "#log";
 import { execSync } from "child_process";
 /* eslint-disable no-control-regex */
 import fs, { mkdirSync } from "fs";
@@ -5,7 +6,6 @@ import iconv from "iconv-lite";
 import path from "path";
 
 import { type integer } from "../../../../common/src";
-import logger from "../../../logger";
 import { ParseDotOneFile } from "./dot-one-parser/parser";
 import { type IIDXConvertOutput } from "./dot-one-parser/types";
 
@@ -38,7 +38,7 @@ mkdirSync(ifsOUT, { recursive: true });
  * Extracts an IFS file into the ./ifs-output cache directory.
  */
 function ifsExtract(ifsPath: string) {
-	logger.info(`Extracting ${ifsPath}...`);
+	log.info(`Extracting ${ifsPath}...`);
 	execSync(`ifstools "${ifsPath}" -o "${ifsOUT}" -y --super-disable`, { stdio: "ignore" });
 }
 
@@ -52,7 +52,7 @@ export async function ParseIIDXData(
 	omni: boolean,
 	alwaysExtract: boolean,
 ) {
-	logger.info(`Parsing from ${basedir}.`);
+	log.info(`Parsing from ${basedir}.`);
 
 	const mdbPath = path.join(
 		basedir,
@@ -61,7 +61,7 @@ export async function ParseIIDXData(
 		omni ? "music_omni.bin" : "music_data.bin",
 	);
 
-	logger.info(`Parsing MDB ${mdbPath}.`);
+	log.info(`Parsing MDB ${mdbPath}.`);
 
 	const buffer = fs.readFileSync(mdbPath);
 
@@ -197,11 +197,11 @@ export async function ParseIIDXData(
 			if (buffer.length <= curLoc) {
 				moreData = false;
 			}
-			logger.error(`${dotOnePath} cannot find file. neither exist.`);
+			log.error(`${dotOnePath} cannot find file. neither exist.`);
 			continue;
 		}
 
-		logger.verbose(`Parsing data/sound/${songID}/${songID}.1`);
+		log.verbose(`Parsing data/sound/${songID}/${songID}.1`);
 		try {
 			const charts = await ParseDotOneFile(dotOnePath, {
 				genre,
@@ -215,7 +215,7 @@ export async function ParseIIDXData(
 
 				if (chart.difficulty === "LEGGENDARIA") {
 					if (notecount !== 0 && notecounts[`${chart.playtype}-LEGGENDARIA`]) {
-						logger.warn(
+						log.warn(
 							`${chart.artist} - ${chart.title} has conflicting ${
 								chart.playtype
 							} LEGGENDARIAs.
@@ -228,7 +228,7 @@ Picking the INLINE version, as it's likely to be the correct one, but confirm th
 				notecounts[`${chart.playtype}-${chart.difficulty}`] = notecount;
 			}
 		} catch (err) {
-			logger.error(err);
+			log.error(err);
 			curLoc += structSize;
 
 			if (buffer.length <= curLoc) {
@@ -266,7 +266,7 @@ Picking the INLINE version, as it's likely to be the correct one, but confirm th
 		}
 	}
 
-	logger.info(`Done parsing.`);
+	log.info(`Done parsing.`);
 
 	return parsedData;
 }

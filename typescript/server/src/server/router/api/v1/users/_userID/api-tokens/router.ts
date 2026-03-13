@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import prValidate from "#server/middleware/prudence-validate";
 import db from "#services/mongo/db";
 import { Random20Hex } from "#utils/misc";
@@ -13,8 +13,6 @@ import {
 	type APITokenDocument,
 } from "../../../../../../../../../common/src";
 import { RequireSelfRequestFromUser } from "../middleware";
-
-const logger = CreateLogCtx(__filename);
 
 const router: Router = Router({ mergeParams: true });
 
@@ -114,16 +112,14 @@ router.post(
 			identifier = client.name;
 			fromAPIClient = client.clientID;
 
-			logger.info(
+			log.info(
 				`Creating API Key for ${FormatUserDoc(user)} from ${client.name} specification.`,
 			);
 		} else if (body.permissions) {
 			permissions = body.permissions;
 			identifier = body.identifier ?? "Custom Token";
 
-			logger.info(
-				`Creating API Key for ${FormatUserDoc(user)} with ${permissions.join(", ")}.`,
-			);
+			log.info(`Creating API Key for ${FormatUserDoc(user)} with ${permissions.join(", ")}.`);
 		} else {
 			return res.status(400).json({
 				success: false,
@@ -143,7 +139,7 @@ router.post(
 
 		await db["api-tokens"].insert(apiTokenDocument);
 
-		logger.info(`Inserted new API Key for ${FormatUserDoc(user)}.`);
+		log.info(`Inserted new API Key for ${FormatUserDoc(user)}.`);
 
 		return res.status(200).json({
 			success: true,
@@ -161,9 +157,7 @@ router.post(
 router.delete("/:token", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	logger.info(
-		`received request from ${FormatUserDoc(user)} to delete token ${req.params.token}.`,
-	);
+	log.info(`received request from ${FormatUserDoc(user)} to delete token ${req.params.token}.`);
 
 	const token = await db["api-tokens"].findOne({
 		token: req.params.token,
@@ -179,7 +173,7 @@ router.delete("/:token", async (req, res) => {
 
 	await db["api-tokens"].remove({ token: req.params.token });
 
-	logger.info(`Deleted ${req.params.token}, which belonged to ${FormatUserDoc(user)}.`);
+	log.info(`Deleted ${req.params.token}, which belonged to ${FormatUserDoc(user)}.`);
 
 	return res.status(200).json({
 		success: true,

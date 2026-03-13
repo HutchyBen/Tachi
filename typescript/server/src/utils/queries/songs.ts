@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 import type { FindOneResult } from "monk";
 
 import {
@@ -117,11 +117,11 @@ export function FindSongOnID(
 	});
 }
 
-export async function FindSongOnIDGuaranteed(game: GameGroup, songID: integer, logger: KtLogger) {
+export async function FindSongOnIDGuaranteed(game: GameGroup, songID: integer, log: KtLogger) {
 	const song = await FindSongOnID(game, songID);
 
 	if (!song) {
-		logger.severe(`Song-Chart desync for ${songID}. Has charts, but no song.`);
+		log.error(`Song-Chart desync for ${songID}. Has charts, but no song.`);
 		throw new InternalFailure(`Song-Chart desync for ${songID}. Has charts, but no song.`);
 	}
 

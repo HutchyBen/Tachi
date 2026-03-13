@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import { TachiConfig } from "#lib/setup/config";
 import { IsRecord, IsValidGame, IsValidPlaytype } from "#utils/misc";
@@ -30,7 +30,7 @@ export function ParseBatchManualFromObject(
 	object: unknown,
 	importType: ImportTypes,
 	inferTimestamp: boolean,
-	_logger: KtLogger,
+	_log: KtLogger,
 ): ParserFunctionReturns<BatchManualScore, BatchManualContext> {
 	// now to perform some basic validation so we can return
 	// the iterable

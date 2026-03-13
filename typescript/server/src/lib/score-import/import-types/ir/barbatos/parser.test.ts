@@ -1,11 +1,9 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import ResetDBState from "#test-utils/resets";
 import { MockBarbatosScore } from "#test-utils/test-data";
 import t from "tap";
 
 import { ParseBarbatosSingle } from "./parser";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#ParseBarbatosSingle", (t) => {
 	t.beforeEach(ResetDBState);

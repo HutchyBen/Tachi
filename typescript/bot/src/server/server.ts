@@ -15,7 +15,6 @@ import { ValidateWebhookRequest } from "./middleware";
 
 export const app: Express = express();
 
-
 app.use(express.json());
 
 // Let NGINX work its magic.
@@ -88,8 +87,7 @@ app.get("/oauth/callback", async (req, res) => {
 	const whoamiRes = await TachiServerV1Get<UserDocument>("/users/me", apiToken);
 
 	if (!whoamiRes.success) {
-		log.error({ discordID }
-			, "Failed to request user with token we just got?");
+		log.error({ discordID }, "Failed to request user with token we just got?");
 		return res
 			.status(500)
 			.send(
@@ -208,7 +206,10 @@ const MainExpressErrorHandler: express.ErrorRequestHandler = (err, req, res, _ne
 		const expErr: ExpressJSONErr = err as ExpressJSONErr;
 
 		if (expErr.status === 400 && "body" in expErr) {
-		log.info({ url: req.originalUrl, err: err }, `Error in parsing JSON in request body from ${req.url}`);
+			log.info(
+				{ url: req.originalUrl, err: err },
+				`Error in parsing JSON in request body from ${req.url}`,
+			);
 			return res.status(400).send({ success: false, description: err.message });
 		}
 

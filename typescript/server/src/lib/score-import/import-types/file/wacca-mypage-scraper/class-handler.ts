@@ -50,7 +50,7 @@ export function CreateMyPageScraperClassProvider(stage: MyPagePlayerStage): Clas
 		}
 
 		if (`ステージ${stageName}` !== stage.name) {
-			logger.warn(
+			log.warn(
 				`Stage up ${stageName} with id ${stage.id} did not correspond to the CSV name ${stage.name}.`,
 			);
 		}

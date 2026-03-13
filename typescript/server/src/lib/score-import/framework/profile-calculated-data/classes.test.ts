@@ -1,11 +1,9 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
 
 import { GITADORA_COLOURS, type UserGameStats } from "../../../../../../common/src";
 import { CalculateUGPTClasses, ProcessClassDeltas } from "./classes";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#CalculateUGPTClasses", (t) => {
 	t.test("Should produce an empty object by default", async (t) => {

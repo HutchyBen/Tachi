@@ -7,7 +7,10 @@ import { URLSearchParams } from "url";
 import { BotConfig } from "../config";
 import { VERSION_STR } from "../version";
 
-export type APIResponse<T> = (({ body: null } & UnsuccessfulAPIResponse) | SuccessfulAPIResponse<T>) & {
+export type APIResponse<T> = (
+	| ({ body: null } & UnsuccessfulAPIResponse)
+	| SuccessfulAPIResponse<T>
+) & {
 	statusCode: integer;
 };
 
@@ -132,9 +135,7 @@ export function PrependTachiUrl(url: string, version: "1" = "1"): string {
  */
 function LogRequestResult(logUrl: string, res: APIResponse<unknown>): void {
 	if (!res.success) {
-		log.warn(
-			`Request ${logUrl} was unsuccessful: ${res.description} (${res.statusCode})`,
-		);
+		log.warn(`Request ${logUrl} was unsuccessful: ${res.description} (${res.statusCode})`);
 	} else {
 		log.debug(`Request ${logUrl} was successful: ${res.description} (${res.statusCode})`);
 	}

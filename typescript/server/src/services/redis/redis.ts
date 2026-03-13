@@ -1,12 +1,10 @@
 import { ONE_MINUTE, ONE_SECOND } from "#lib/constants/time";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { Env } from "#lib/setup/config";
 import { GetMillisecondsSince } from "#utils/misc";
 import redis from "redis";
 
-const logger = CreateLogCtx(__filename);
-
-logger.verbose("Instantiated Redis Store", { bootInfo: true });
+log.verbose("Instantiated Redis Store", { bootInfo: true });
 
 export const RedisClient = redis.createClient({
 	url: `redis://${Env.REDIS_URL}`,
@@ -14,12 +12,12 @@ export const RedisClient = redis.createClient({
 
 const startConnect = process.hrtime.bigint();
 
-logger.verbose("Instantiated Redis Client", { bootInfo: true });
+log.verbose("Instantiated Redis Client", { bootInfo: true });
 
 function EmitCritical() {
 	/* istanbul ignore next */
 	if (!RedisClient.connected) {
-		logger.crit(`Could not connect to redis in time. No more information is available.`);
+		log.fatal(`Could not connect to redis in time. No more information is available.`);
 
 		// can't connect. kill self after 1 second.
 		setTimeout(() => {
@@ -33,7 +31,7 @@ function EmitCritical() {
 const ref = setTimeout(EmitCritical, ONE_MINUTE * 5);
 
 RedisClient.on("connect", () => {
-	logger.info(`Connected to Redis. Took ${GetMillisecondsSince(startConnect)}ms`, {
+	log.info(`Connected to Redis. Took ${GetMillisecondsSince(startConnect)}ms`, {
 		bootInfo: true,
 	});
 

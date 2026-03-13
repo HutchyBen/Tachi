@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import nodeFetch from "#utils/fetch";
 
@@ -14,7 +14,7 @@ import { CreateKaiIIDXClassProvider } from "./class-handler";
 export async function ParseKaiIIDX(
 	service: "EAG" | "FLO",
 	authDoc: KaiAuthDocument,
-	logger: KtLogger,
+	log: KtLogger,
 	fetch = nodeFetch,
 	reauthFn: (() => Promise<string>) | null = null,
 ): Promise<ParserFunctionReturns<unknown, KaiContext>> {

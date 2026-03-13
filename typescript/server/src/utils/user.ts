@@ -1,7 +1,7 @@
 import type { FindOneResult } from "monk";
 
 import { ONE_DAY } from "#lib/constants/time";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import db from "#services/mongo/db";
 
 import {
@@ -16,8 +16,6 @@ import {
 	type UserDocument,
 	type UserGameStats,
 } from "../../../common/src";
-
-const logger = CreateLogCtx(__filename);
 
 /**
  * Returns a user's username from their ID. Throws if no user with that ID exists.
@@ -86,7 +84,7 @@ export async function GetUsersWithIDs(userIDs: Array<integer>) {
 	// Note that we should dedupe this by making a set
 	// as passing [1, 1, 1] is perfectly legal to this function.
 	if (users.length !== new Set(userIDs).size) {
-		logger.severe(
+		log.error(
 			`GetUsersWithIDs was given ${userIDs.length} userIDs, but only matched ${users.length} -- state desync likely.`,
 			{ userIDs, users },
 		);
@@ -107,7 +105,7 @@ export async function GetUserWithIDGuaranteed(userID: integer): Promise<UserDocu
 	const userDoc = await GetUserWithID(userID);
 
 	if (!userDoc) {
-		logger.severe(
+		log.error(
 			`User ${userID} does not have an associated user document, but one was expected.`,
 		);
 		throw new Error(

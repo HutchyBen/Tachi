@@ -6,7 +6,6 @@ import type { DiscordUserMapDocument } from "./documents";
 
 import db from "./mongo";
 
-
 export function GetUserAndTokenForDiscordID(
 	discordID: string,
 ): Promise<DiscordUserMapDocument | null> {

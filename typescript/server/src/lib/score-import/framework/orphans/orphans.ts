@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 import type { FilterQuery } from "mongodb";
 
 import db from "#services/mongo/db";
@@ -33,7 +33,7 @@ export async function OrphanScore<T extends ImportTypes = ImportTypes>(
 	context: ImportTypeContextMap[T],
 	errMsg: string | null,
 	game: GameGroup,
-	logger: KtLogger,
+	log: KtLogger,
 ) {
 	const orphan: Pick<OrphanScoreDocument, "context" | "data" | "importType" | "userID"> = {
 		importType,
@@ -42,21 +42,21 @@ export async function OrphanScore<T extends ImportTypes = ImportTypes>(
 		userID,
 	};
 
-	logger.debug("Orphaning document", orphan);
+	log.debug("Orphaning document", orphan);
 
 	let orphanID;
 
 	try {
 		orphanID = `O${fjsh.hash(orphan, "sha256")}`;
 	} catch (err) {
-		logger.error(`Failed to orphan score -- `, { err, orphan });
+		log.error(`Failed to orphan score -- `, { err, orphan });
 		throw new Error(`Failed to orphan score. ${(err as Error).message}`);
 	}
 
 	const exists = await db["orphan-scores"].findOne({ orphanID });
 
 	if (exists) {
-		logger.debug(`Skipped orphaning score ${orphanID} because it already exists.`);
+		log.debug(`Skipped orphaning score ${orphanID} because it already exists.`);
 		return { success: false, orphanID };
 	}
 
@@ -68,7 +68,7 @@ export async function OrphanScore<T extends ImportTypes = ImportTypes>(
 		timeInserted: Date.now(),
 	};
 
-	logger.debug(`Inserting orphanScoreDoc...`, orphanScoreDoc);
+	log.debug(`Inserting orphanScoreDoc...`, orphanScoreDoc);
 
 	await db["orphan-scores"].insert(orphanScoreDoc);
 
@@ -86,7 +86,7 @@ export async function OrphanScore<T extends ImportTypes = ImportTypes>(
 export async function ReprocessOrphan(
 	orphan: OrphanScoreDocument,
 	blacklist: Array<string>,
-	logger: KtLogger,
+	log: KtLogger,
 ) {
 	const ConverterFunction = Converters[orphan.importType] as ConverterFunction<
 		ImportTypeDataMap[ImportTypes],
@@ -103,7 +103,7 @@ export async function ReprocessOrphan(
 		// this is impossible to test, so we're going to ignore it
 		/* istanbul ignore next */
 		if (!("failureType" in err)) {
-			logger.error(
+			log.error(
 				`Converter function ${orphan.importType} returned unexpected error. ID=${orphan.orphanID}`,
 				{
 					err,
@@ -121,16 +121,16 @@ export async function ReprocessOrphan(
 	if ("failureType" in res) {
 		// If the data still can't be found, we do nothing about it.
 		if (res.failureType === "SongOrChartNotFound") {
-			logger.debug(`Unorphaning ${orphan.orphanID} failed. (${res.message})`);
+			log.debug(`Unorphaning ${orphan.orphanID} failed. (${res.message})`);
 			return false;
 		} else if (res.failureType === "Internal") {
-			logger.error(`Orphan Internal Failure - ${res.message}, OrphanID ${orphan.orphanID}`);
+			log.error(`Orphan Internal Failure - ${res.message}, OrphanID ${orphan.orphanID}`);
 
 			return false;
 		}
 
 		// otherwise, it's another converterfailure we don't need to specifically handle.
-		logger.warn(
+		log.warn(
 			`received ConverterFailure ${res.message} on orphan ${orphan.orphanID}. Removing orphan.`,
 		);
 
@@ -172,7 +172,7 @@ export async function ReprocessOrphan(
 	const user = await GetUserWithID(orphan.userID);
 
 	if (!user) {
-		logger.severe(
+		log.error(
 			`Orphan ${orphan.orphanID} belongs to ${orphan.userID}, but that user no longer exists in the database. Going to skip this and remove the orphan.`,
 		);
 		await db["orphan-scores"].remove({ orphanID: orphan.orphanID });
@@ -193,13 +193,13 @@ export async function ReprocessOrphan(
 	return converterReturns;
 }
 
-export async function DeorphanScores(query: FilterQuery<OrphanScoreDocument>, logger: KtLogger) {
+export async function DeorphanScores(query: FilterQuery<OrphanScoreDocument>, log: KtLogger) {
 	const orphans = await db["orphan-scores"].find(query);
 
 	// ScoreIDs are essentially userID dependent, so this is fine.
 	const blacklist = await GetBlacklist();
 
-	logger.info(`Found ${orphans.length} orphans.`, { query });
+	log.info(`Found ${orphans.length} orphans.`, { query });
 
 	let failed = 0;
 	let success = 0;
@@ -226,7 +226,7 @@ export async function DeorphanScores(query: FilterQuery<OrphanScoreDocument>, lo
 				success++;
 			}
 		} catch (err) {
-			logger.error(`Failed to reprocess orphan.`, { orphanID: or.orphanID, err });
+			log.error(`Failed to reprocess orphan.`, { orphanID: or.orphanID, err });
 			failed++;
 		}
 	}

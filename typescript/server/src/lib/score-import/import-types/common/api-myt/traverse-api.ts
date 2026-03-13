@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ServerConfig } from "#lib/setup/config";
@@ -85,7 +85,7 @@ export async function* StreamRPCAsAsync<TIn, TOut>(
 		options: CallOptions,
 	) => ClientReadableStream<TOut>,
 	argument: TIn,
-	logger: KtLogger,
+	log: KtLogger,
 ): AsyncIterable<TOut> {
 	try {
 		const stream = streamingCall(
@@ -114,7 +114,7 @@ export async function* StreamRPCAsAsync<TIn, TOut>(
 			throw fixedErr;
 		}
 	} catch (err) {
-		logger.error(`Error while streaming score data from MYT: ${err}`);
+		log.error(`Error while streaming score data from MYT: ${err}`);
 
 		// Avoid rethrowing the error as it may reveal things like the upstream
 		// server IP address.
@@ -136,7 +136,7 @@ function errIsServiceError(err: Error): err is ServiceError {
 export async function FetchMytTitleAPIID(
 	userID: integer,
 	game: GameGroup,
-	logger: KtLogger,
+	log: KtLogger,
 ): Promise<string> {
 	const mytGame = GameToMytGame(game);
 
@@ -175,7 +175,7 @@ export async function FetchMytTitleAPIID(
 				throw new ScoreImportFatalError(401, `Card not found on MYT: ${err.details}`);
 			}
 
-			logger.error(`Received unexpected status from ${hostname}`, {
+			log.error(`Received unexpected status from ${hostname}`, {
 				err,
 				code: err.code,
 				details: err.details,
@@ -184,7 +184,7 @@ export async function FetchMytTitleAPIID(
 			throw new ScoreImportFatalError(500, `Unexpected response from MYT - ${err.code}`);
 		}
 
-		logger.error(`Received invalid response`, { err });
+		log.error(`Received invalid response`, { err });
 
 		throw new ScoreImportFatalError(500, `Failed to look up card at MYT. Are they down?`);
 	}

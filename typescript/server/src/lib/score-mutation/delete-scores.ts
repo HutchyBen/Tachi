@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { GetAndUpdateUsersGoals } from "#lib/score-import/framework/goals/goals";
 import { UpdateChartRanking } from "#lib/score-import/framework/pb/create-pb-doc";
 import { ProcessPBs } from "#lib/score-import/framework/pb/process-pbs";
@@ -9,8 +9,6 @@ import type { GameGroup, Playtype, ScoreDocument } from "../../../../common/src"
 /* eslint-disable no-await-in-loop */
 import db from "#services/mongo/db";
 import { RecalcSessions } from "#utils/calculations/recalc-sessions";
-
-const logger = CreateLogCtx(__filename);
 
 /**
  * Deletes the provided score. This needs a dedicated helper method due to
@@ -112,7 +110,7 @@ export async function DeleteScore(
 		});
 
 		if (!alreadyBlacklisted) {
-			logger.info(`Blacklisted ${score.scoreID}.`);
+			log.info(`Blacklisted ${score.scoreID}.`);
 			await db["score-blacklist"].insert({
 				userID: score.userID,
 				scoreID: score.scoreID,
@@ -123,7 +121,7 @@ export async function DeleteScore(
 }
 
 export async function DeleteMultipleScores(scores: Array<ScoreDocument>, blacklist = false) {
-	logger.info(`Received request to delete ${scores.length} score(s) (Blacklist: ${blacklist}).`);
+	log.info(`Received request to delete ${scores.length} score(s) (Blacklist: ${blacklist}).`);
 
 	const scoreIDs = scores.map((e) => e.scoreID);
 	const chartIDs = scores.map((e) => e.chartID);
@@ -225,7 +223,7 @@ export async function DeleteMultipleScores(scores: Array<ScoreDocument>, blackli
 			});
 
 			if (!alreadyBlacklisted) {
-				logger.info(`Blacklisted ${score.scoreID}.`);
+				log.info(`Blacklisted ${score.scoreID}.`);
 				await db["score-blacklist"].insert({
 					userID: score.userID,
 					scoreID: score.scoreID,
@@ -256,5 +254,5 @@ export async function DeleteMultipleScores(scores: Array<ScoreDocument>, blackli
 		await UpdateUsersGamePlaytypeStats(game, playtype, userID, null, logger);
 	}
 
-	logger.info(`Finished deleting ${scores.length} scores.`);
+	log.info(`Finished deleting ${scores.length} scores.`);
 }

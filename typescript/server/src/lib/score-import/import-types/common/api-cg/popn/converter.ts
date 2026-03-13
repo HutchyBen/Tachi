@@ -50,7 +50,7 @@ export const ConverterAPICGPopn: ConverterFunction<CGPopnScore, CGContext> = asy
 	const song = await FindSongOnID("popn", chart.songID);
 
 	if (!song) {
-		logger.severe(`Song-Chart desync with song ID ${chart.songID} (popn).`);
+		log.error(`Song-Chart desync with song ID ${chart.songID} (popn).`);
 		throw new InternalFailure(`Song-Chart desync with song ID ${chart.songID} (popn).`);
 	}
 

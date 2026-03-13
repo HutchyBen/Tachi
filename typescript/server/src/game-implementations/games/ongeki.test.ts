@@ -1,6 +1,6 @@
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { CreatePBDoc, UpdateChartRanking } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -43,8 +43,6 @@ const scoreData: ScoreData<"ongeki:Single"> = {
 
 const mockScore = mkMockScore("ongeki", "Single", TestingOngekiChart, scoreData);
 const mockPB = mkMockPB("ongeki", "Single", TestingOngekiChart, scoreData);
-
-const logger = CreateLogCtx(__filename);
 
 t.test("ONGEKI Implementation", (t: any) => {
 	t.test("Grade Deriver", (t: any) => {

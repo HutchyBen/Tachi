@@ -1,6 +1,6 @@
 import type { DeepPartial } from "#utils/types";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -43,8 +43,6 @@ const scoreData: ScoreData<"arcaea:Touch"> = {
 
 const mockScore = mkMockScore("arcaea", "Touch", TestingArcaeaSheriruthFTR, scoreData);
 const mockPB = mkMockPB("arcaea", "Touch", TestingArcaeaSheriruthFTR, scoreData);
-
-const logger = CreateLogCtx(__filename);
 
 t.test("Arcaea Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {

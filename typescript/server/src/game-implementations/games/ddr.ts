@@ -22,13 +22,11 @@ import {
 	type SongDocument,
 } from "../../../../common/src";
 import db from "../../external/mongo/db";
-import CreateLogCtx from "../../lib/logger/logger";
+import { log } from "../../lib/logger/log";
 import { IsNullish } from "../../utils/misc";
 import { CreatePBMergeFor } from "../utils/pb-merge";
 import { SessionAvgBest10For } from "../utils/session-calc";
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
-
-const logger = CreateLogCtx(__filename);
 
 interface PBScoreDocumentWithSong extends PBScoreDocument<"ddr:DP" | "ddr:SP"> {
 	song: SongDocument<"ddr">;

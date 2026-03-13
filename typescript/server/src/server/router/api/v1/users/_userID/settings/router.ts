@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import prValidate from "#server/middleware/prudence-validate";
 import db from "#services/mongo/db";
 import { GetTachiData } from "#utils/req-tachi-data";
@@ -7,7 +7,6 @@ import { Router } from "express";
 
 import { RequireSelfRequestFromUser } from "../middleware";
 
-const logger = CreateLogCtx(__filename);
 const router: Router = Router({ mergeParams: true });
 
 /**
@@ -23,7 +22,7 @@ router.get("/", async (req, res) => {
 	});
 
 	if (!settings) {
-		logger.severe(`User ${FormatUserDoc(user)} has no settings?`);
+		log.error(`User ${FormatUserDoc(user)} has no settings?`);
 		return res.status(500).json({
 			success: false,
 			description: `An internal server error has occured.`,
@@ -91,7 +90,7 @@ router.patch(
 		const settings = await GetSettingsForUser(user.id);
 
 		if (!settings) {
-			logger.severe(
+			log.error(
 				`User ${FormatUserDoc(user)} has no settings, yet just successfully updated them?`,
 				{ user },
 			);

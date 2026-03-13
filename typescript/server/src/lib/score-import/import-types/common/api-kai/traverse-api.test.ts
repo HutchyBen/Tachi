@@ -1,6 +1,6 @@
 import type { NodeFetch } from "#utils/fetch";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { agta } from "#test-utils/misc";
 import { MockBasicFetch, MockJSONFetch } from "#test-utils/mock-fetch";
 import ResetDBState from "#test-utils/resets";
@@ -8,8 +8,6 @@ import t from "tap";
 
 import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 import { TraverseKaiAPI } from "./traverse-api";
-
-const logger = CreateLogCtx(__filename);
 
 const fakeAuth = "bar";
 

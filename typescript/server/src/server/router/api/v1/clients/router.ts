@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
 import db from "#services/mongo/db";
@@ -16,8 +16,6 @@ import {
 	UserAuthLevels,
 } from "../../../../../../../common/src";
 import { GetClientFromID, RequireOwnershipOfClient } from "./middleware";
-
-const logger = CreateLogCtx(__filename);
 
 const router: Router = Router({ mergeParams: true });
 
@@ -158,7 +156,7 @@ router.post(
 
 		await db["api-clients"].insert(clientDoc);
 
-		logger.info(
+		log.info(
 			`User ${FormatUserDoc(req.session.tachi.user)} created a new API Client ${
 				body.name
 			} (${clientID}).`,
@@ -274,7 +272,7 @@ router.patch(
 			},
 		);
 
-		logger.info(
+		log.info(
 			`API Client ${client.name} (${client.clientID}) has been renamed to ${body.name}.`,
 		);
 
@@ -300,7 +298,7 @@ router.post(
 		const client = GetTachiData(req, "apiClientDoc");
 		const clientName = `${client.name} (${client.clientID})`;
 
-		logger.info(`received request to reset client secret for ${clientName}`);
+		log.info(`received request to reset client secret for ${clientName}`);
 
 		const newSecret = Random20Hex();
 
@@ -313,7 +311,7 @@ router.post(
 			},
 		);
 
-		logger.info(`Reset secret for ${clientName}.`);
+		log.info(`Reset secret for ${clientName}.`);
 
 		return res.status(200).json({
 			success: true,
@@ -333,20 +331,20 @@ router.delete("/:clientID", GetClientFromID, RequireOwnershipOfClient, async (re
 
 	const clientName = `${client.name} (${client.clientID})`;
 
-	logger.info(`received request to destroy API Client ${client.name} (${client.clientID})`);
+	log.info(`received request to destroy API Client ${client.name} (${client.clientID})`);
 
-	logger.verbose(`Removing API Client ${clientName}.`);
+	log.verbose(`Removing API Client ${clientName}.`);
 	await db["api-clients"].remove({
 		clientID: client.clientID,
 	});
-	logger.info(`Removed API Client ${clientName}.`);
+	log.info(`Removed API Client ${clientName}.`);
 
-	logger.verbose(`Removing all associated api tokens.`);
+	log.verbose(`Removing all associated api tokens.`);
 	const result = await db["api-tokens"].remove({
 		fromOAuth2Client: client.clientID,
 	});
 
-	logger.info(`Removed ${result.deletedCount} api tokens from ${clientName}.`);
+	log.info(`Removed ${result.deletedCount} api tokens from ${clientName}.`);
 
 	return res.status(200).json({
 		success: true,

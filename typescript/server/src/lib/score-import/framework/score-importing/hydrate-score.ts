@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import type { DryScore } from "../common/types";
 
@@ -23,7 +23,7 @@ export function HydrateScore(
 	chart: ChartDocument,
 	song: SongDocument,
 	scoreID: string,
-	logger: KtLogger,
+	log: KtLogger,
 ): ScoreDocument {
 	const gpt = GetGPTString(dryScore.game, chart.playtype);
 

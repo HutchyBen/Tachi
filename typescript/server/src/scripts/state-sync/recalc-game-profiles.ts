@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { UpdateUsersGamePlaytypeStats } from "#lib/score-import/framework/ugpt-stats/update-ugpt-stats";
 
 import type { GameGroup, Playtype, ScoreDocument } from "../../../../common/src";
@@ -6,8 +6,6 @@ import type { GameGroup, Playtype, ScoreDocument } from "../../../../common/src"
 import db from "#services/mongo/db";
 import { WrapScriptPromise } from "#utils/misc";
 import { FormatUserDoc } from "#utils/user";
-
-const logger = CreateLogCtx(__filename);
 
 export async function RecalcGameProfiles() {
 	const users = await db.users.find({});
@@ -30,17 +28,17 @@ export async function RecalcGameProfiles() {
 				},
 			]);
 
-		logger.info(`Found ${gpts.length} GPTs for ${FormatUserDoc(user)}`);
+		log.info(`Found ${gpts.length} GPTs for ${FormatUserDoc(user)}`);
 
 		for (const gpt of gpts) {
 			const { game, playtype } = gpt._id;
 
-			logger.info(`Updating ${FormatUserDoc(user)}'s ${game} ${playtype} stats.`);
+			log.info(`Updating ${FormatUserDoc(user)}'s ${game} ${playtype} stats.`);
 			await UpdateUsersGamePlaytypeStats(game, playtype, user.id, null, logger);
 		}
 	}
 
-	logger.info(`Done.`);
+	log.info(`Done.`);
 }
 
 if (require.main === module) {

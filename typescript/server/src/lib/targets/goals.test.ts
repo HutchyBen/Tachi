@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import db from "#services/mongo/db";
 import { dmf, mkFakePBIIDXSP } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
@@ -25,8 +25,6 @@ import {
 	GetRelevantGoals,
 	HumaniseGoalProgress,
 } from "./goals";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#EvaluateGoalForUser", (t) => {
 	t.beforeEach(ResetDBState);

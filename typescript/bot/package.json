@@ -38,7 +38,6 @@
 		"json5": "catalog:",
 		"lodash": "catalog:",
 		"luxon": "catalog:",
-		"mei-log": "catalog:",
 		"monk": "catalog:",
 		"node-fetch": "catalog:",
 		"pino": "catalog:",

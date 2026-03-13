@@ -1,7 +1,6 @@
 import { Command } from "commander";
 import { XMLParser } from "fast-xml-parser";
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
-import { CreateLogger } from "mei-logger";
 import path from "path";
 
 import {
@@ -11,9 +10,8 @@ import {
 	type integer,
 	type SongDocument,
 } from "../../../common/src";
+import { log } from "../../log.js";
 import { CreateChartID, ReadCollection, WriteCollection } from "../../util";
-
-const logger = CreateLogger("chunithm/merge-options");
 
 const OMNIMIX_OPTION_NAMES = ["AOMN", "AOLD", "AKON"];
 const DISPLAY_VERSIONS = [
@@ -152,7 +150,7 @@ const newCharts: Array<ChartDocument<"chunithm:Single">> = [];
 for (const optionsDir of options.input) {
 	for (const option of readdirSync(optionsDir)) {
 		if (!isOmnimixVersion && OMNIMIX_OPTION_NAMES.includes(option)) {
-			logger.warn(
+			log.warn(
 				`Ignoring omnimix option ${option} because the version specified is not an omnimix version.`,
 			);
 			continue;
@@ -170,11 +168,11 @@ for (const optionsDir of options.input) {
 		}
 
 		if (!existsSync(musicsDir) || !statSync(musicsDir).isDirectory()) {
-			logger.warn(`Option at ${optionDir} does not have a "music" directory.`);
+			log.warn(`Option at ${optionDir} does not have a "music" directory.`);
 			continue;
 		}
 
-		logger.info(`Scanning music directory ${musicsDir} for songs.`);
+		log.info(`Scanning music directory ${musicsDir} for songs.`);
 
 		for (const music of readdirSync(musicsDir)) {
 			const musicDir = path.join(musicsDir, music);
@@ -184,14 +182,14 @@ for (const optionsDir of options.input) {
 			}
 
 			if (!statSync(musicDir).isDirectory()) {
-				logger.warn(`Ignoring ${musicDir} because it is not a directory.`);
+				log.warn(`Ignoring ${musicDir} because it is not a directory.`);
 				continue;
 			}
 
 			const musicXmlLocation = path.join(musicDir, "Music.xml");
 
 			if (!existsSync(musicXmlLocation) || !statSync(musicXmlLocation).isFile()) {
-				logger.warn(`Music directory at ${musicDir} does not have a Music.xml file.`);
+				log.warn(`Music directory at ${musicDir} does not have a Music.xml file.`);
 				continue;
 			}
 			const data = parser.parse(readFileSync(musicXmlLocation)) as MusicXML;
@@ -209,7 +207,7 @@ for (const optionsDir of options.input) {
 			// Has this song been disabled in-game?
 			if (musicData.disableFlag) {
 				if (tachiSongID !== undefined) {
-					logger.info(
+					log.info(
 						`Removing charts of song ${musicData.artistName.str} - ${musicData.name.str} (ID ${tachiSongID}) from version ${options.version}, because disableFlag is enabled.`,
 					);
 
@@ -232,14 +230,14 @@ for (const optionsDir of options.input) {
 				const existingTitle = songTitleMap.get(musicData.name.str);
 
 				if (existingTitle) {
-					logger.warn(
+					log.warn(
 						`A song called ${musicData.name.str} already exists in songs-chunithm (ID ${existingTitle.id}). Is this a duplicate with a given inGameID?`,
 					);
 
 					if (options.force) {
-						logger.warn("--force was requested, adding this song anyways.");
+						log.warn("--force was requested, adding this song anyways.");
 					} else {
-						logger.warn("Must be resolved manually. Use --force to overwrite anyways.");
+						log.warn("Must be resolved manually. Use --force to overwrite anyways.");
 						continue;
 					}
 				}
@@ -270,7 +268,7 @@ for (const optionsDir of options.input) {
 				inGameIDToSongIDMap.set(inGameID, tachiSongID);
 				songMap.set(tachiSongID, songDoc);
 
-				logger.info(`Added new song ${songDoc.artist} - ${songDoc.title}.`);
+				log.info(`Added new song ${songDoc.artist} - ${songDoc.title}.`);
 			} else if (songMap.has(tachiSongID)) {
 				const songDoc = songMap.get(tachiSongID)!;
 
@@ -308,7 +306,7 @@ for (const optionsDir of options.input) {
 
 					if (!difficulty.enable) {
 						if (versionIndex !== -1) {
-							logger.info(
+							log.info(
 								`Removing ${displayName} from version ${options.version} because it has been disabled.`,
 							);
 							exists.versions.splice(versionIndex, 1);
@@ -318,19 +316,19 @@ for (const optionsDir of options.input) {
 					}
 
 					if (versionIndex === -1) {
-						logger.info(`Adding ${displayName} to version ${options.version}.`);
+						log.info(`Adding ${displayName} to version ${options.version}.`);
 						exists.versions.push(options.version);
 					}
 
 					if (isLatestVersion && exists.level !== level) {
-						logger.info(
+						log.info(
 							`Chart ${displayName} has had a level change: ${exists.level} -> ${level}`,
 						);
 						exists.level = level;
 					}
 
 					if (isLatestVersion && exists.levelNum !== levelNum) {
-						logger.info(
+						log.info(
 							`Chart ${displayName} has had a levelNum change: ${exists.levelNum} -> ${levelNum}`,
 						);
 						exists.levelNum = levelNum;
@@ -344,7 +342,7 @@ for (const optionsDir of options.input) {
 				}
 
 				if (difficultyName === "WORLD'S END") {
-					logger.warn(
+					log.warn(
 						`Song ${musicData.artistName.str} - ${musicData.name.str} (inGameID=${musicData.name.id}) contains a WORLD'S END chart, which should be impossible. Refusing to process this difficulty.`,
 					);
 					continue;
@@ -370,7 +368,7 @@ for (const optionsDir of options.input) {
 				// track of that too. Awesome.
 				existingCharts.set(`${inGameID}-${difficultyName}`, chartDoc);
 
-				logger.info(
+				log.info(
 					`Added chart ${musicData.artistName.str} - ${musicData.name.str} [${difficultyName}] (${chartDoc.chartID}).`,
 				);
 			}

@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 import type { EmptyObject } from "#utils/types";
 
 import { FormatPrError } from "#utils/prudence";
@@ -73,7 +73,7 @@ type PreStringifiedS3Score = { songname: number | string } & Omit<S3Score, "song
 export function ParseSolidStateXML(
 	fileData: Express.Multer.File,
 	body: Record<string, unknown>,
-	logger: KtLogger,
+	log: KtLogger,
 ): ParserFunctionReturns<S3Score, EmptyObject> {
 	let parsedXML;
 
@@ -83,7 +83,7 @@ export function ParseSolidStateXML(
 
 		parsedXML = xmlParser.parse(fileData.buffer.toString("utf-8"));
 	} catch (err) {
-		logger.info("S3 XML Parse Error", err);
+		log.info("S3 XML Parse Error", err);
 
 		throw new ScoreImportFatalError(400, "Could not parse XML.");
 	}

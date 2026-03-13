@@ -9,7 +9,7 @@ const logger = console;
 const rawConf = process.env.TCHIS_CONF;
 
 if (!rawConf) {
-	logger.error("TCHIS_CONF environment variable is not set. Terminating.");
+	log.error("TCHIS_CONF environment variable is not set. Terminating.");
 	process.exit(1);
 }
 
@@ -18,7 +18,7 @@ let config: unknown;
 try {
 	config = JSON5.parse(rawConf);
 } catch (err) {
-	logger.error("Failed to parse TCHIS_CONF as JSON5.", { err });
+	log.error("Failed to parse TCHIS_CONF as JSON5.", { err });
 	process.exit(1);
 }
 
@@ -147,7 +147,7 @@ export const ServerConfig: TachiServerConfig = result.data;
 let PORT = Number(process.env.PORT);
 
 if (Number.isNaN(PORT) && process.env.IS_SERVER) {
-	logger.warn(`No/invalid PORT specified in environment, defaulting to 8080.`);
+	log.warn(`No/invalid PORT specified in environment, defaulting to 8080.`);
 	PORT = 8080;
 }
 
@@ -155,27 +155,27 @@ const REDIS_URL = process.env.REDIS_URL;
 
 if (!REDIS_URL) {
 	// n.b. These logs should be critical level, but the logger cant actually instantiate
-	// itself in this file, because this file also controlls the logger. Ouch!
-	logger.error(`No REDIS_URL specified in environment. Terminating.`);
+	// itself in this file, because this file also controlls the log. Ouch!
+	log.error(`No REDIS_URL specified in environment. Terminating.`);
 	process.exit(1);
 }
 
 const MONGO_URL = process.env.MONGO_URL;
 
 if (!MONGO_URL) {
-	logger.error(`No MONGO_URL specified in environment. Terminating.`);
+	log.error(`No MONGO_URL specified in environment. Terminating.`);
 	process.exit(1);
 }
 
 const NODE_ENV = process.env.NODE_ENV;
 
 if (!NODE_ENV) {
-	logger.error(`No NODE_ENV specified in environment. Terminating.`);
+	log.error(`No NODE_ENV specified in environment. Terminating.`);
 	process.exit(1);
 }
 
 if (!["dev", "production", "staging", "test"].includes(NODE_ENV)) {
-	logger.error(
+	log.error(
 		`Invalid NODE_ENV set in environment. Expected dev, production, test or staging. Got ${NODE_ENV}.`,
 	);
 	process.exit(1);
@@ -183,9 +183,7 @@ if (!["dev", "production", "staging", "test"].includes(NODE_ENV)) {
 
 // if (bms XOR pms) is enabled
 if (TachiConfig.GAMES.includes("bms") !== TachiConfig.GAMES.includes("pms")) {
-	logger.error(
-		`BMS and PMS MUST be enabled at the same time, due to how the beatoraja IR works.`,
-	);
+	log.error(`BMS and PMS MUST be enabled at the same time, due to how the beatoraja IR works.`);
 
 	process.exit(1);
 }
@@ -193,7 +191,7 @@ if (TachiConfig.GAMES.includes("bms") !== TachiConfig.GAMES.includes("pms")) {
 const logLevel = process.env.LOG_LEVEL ?? "info";
 
 if (!["crit", "debug", "error", "info", "severe", "verbose", "warn"].includes(logLevel)) {
-	logger.error(`Invalid LOG_LEVEL of ${logLevel}.`);
+	log.error(`Invalid LOG_LEVEL of ${logLevel}.`);
 
 	process.exit(1);
 }
@@ -201,7 +199,7 @@ if (!["crit", "debug", "error", "info", "severe", "verbose", "warn"].includes(lo
 const POSTGRES_URL = process.env.POSTGRES_URL ?? "";
 
 if (!POSTGRES_URL) {
-	logger.error(`No POSTGRES_URL specified in environment. Terminating.`);
+	log.error(`No POSTGRES_URL specified in environment. Terminating.`);
 	process.exit(1);
 }
 
@@ -213,5 +211,6 @@ export const Env = {
 	POSTGRES_URL,
 	NODE_ENV: NODE_ENV as "dev" | "production" | "staging" | "test",
 	COMMIT_HASH: process.env.COMMIT_HASH,
+	VERSION: process.env.VERSION,
 	LOG_LEVEL: logLevel as "crit" | "debug" | "error" | "info" | "severe" | "verbose" | "warn",
 };

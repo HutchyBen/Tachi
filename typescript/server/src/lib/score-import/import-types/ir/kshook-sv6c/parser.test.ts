@@ -1,12 +1,10 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { TestingKsHookSV6CScore } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
 import t from "tap";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ParseKsHookSV6C } from "./parser";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#ParseKsHookSV6C", (t) => {
 	const assertFail = (data: any, message: string) => {

@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import { StringIsGameVersion } from "#utils/misc";
 import { CSVParseError, NaiveCSVParse } from "#utils/naive-csv-parser";
@@ -87,27 +87,27 @@ const HV_HEADER_COUNT = 41;
 //     "timestamp",
 // ];
 
-export function ResolveHeaders(headers: Array<string>, logger: KtLogger) {
+export function ResolveHeaders(headers: Array<string>, log: KtLogger) {
 	if (headers.length === PRE_HV_HEADER_COUNT) {
-		logger.verbose("PRE_HV csv received.");
+		log.verbose("PRE_HV csv received.");
 		return {
 			hasBeginnerAndLegg: false,
 		};
 	} else if (headers.length === HV_HEADER_COUNT) {
-		logger.verbose("HV+ csv received.");
+		log.verbose("HV+ csv received.");
 		return {
 			hasBeginnerAndLegg: true,
 		};
 	}
 
-	logger.info(`Invalid CSV header count of ${headers.length} received.`);
+	log.info(`Invalid CSV header count of ${headers.length} received.`);
 	throw new ScoreImportFatalError(
 		400,
 		"Invalid CSV provided. CSV does not have the correct amount of headers.",
 	);
 }
 
-export function IIDXCSVParse(csvBuffer: Buffer, playtype: Playtypes["iidx"], logger: KtLogger) {
+export function IIDXCSVParse(csvBuffer: Buffer, playtype: Playtypes["iidx"], log: KtLogger) {
 	let rawHeaders: Array<string>;
 	let rawRows: Array<Array<string>>;
 
@@ -141,7 +141,7 @@ export function IIDXCSVParse(csvBuffer: Buffer, playtype: Playtypes["iidx"], log
 		const versionNum = EAM_VERSION_NAMES[version] as number | undefined;
 
 		if (versionNum === undefined) {
-			logger.info(`Invalid/Unsupported EAM_VERSION_NAME ${version}.`);
+			log.info(`Invalid/Unsupported EAM_VERSION_NAME ${version}.`);
 			throw new ScoreImportFatalError(
 				400,
 				`Invalid/Unsupported Eamusement Version Name ${version}.`,
@@ -204,7 +204,7 @@ function GenericParseEamIIDXCSV(
 	fileData: Express.Multer.File,
 	body: Record<string, unknown>,
 	service: string,
-	logger: KtLogger,
+	log: KtLogger,
 ): ParserFunctionReturns<IIDXEamusementCSVData, IIDXEamusementCSVContext> {
 	let playtype: "DP" | "SP";
 
@@ -213,7 +213,7 @@ function GenericParseEamIIDXCSV(
 	} else if (body.playtype === "DP") {
 		playtype = "DP";
 	} else {
-		logger.info(`Invalid playtype of ${body.playtype} passed to ParseEamusementCSV.`);
+		log.info(`Invalid playtype of ${body.playtype} passed to ParseEamusementCSV.`);
 		throw new ScoreImportFatalError(400, `Invalid playtype of ${body.playtype} given.`);
 	}
 
@@ -224,7 +224,7 @@ function GenericParseEamIIDXCSV(
 		((lowercaseFilename.includes("sp") && playtype === "DP") ||
 			(lowercaseFilename.includes("dp") && playtype === "SP"))
 	) {
-		logger.info(
+		log.info(
 			`File was uploaded with filename ${fileData.originalname}, but this was set as a ${playtype} import. Sanity check refusing.`,
 		);
 
@@ -242,7 +242,7 @@ function GenericParseEamIIDXCSV(
 		logger,
 	);
 
-	logger.verbose("Successfully parsed CSV.");
+	log.verbose("Successfully parsed CSV.");
 
 	const context: IIDXEamusementCSVContext = {
 		playtype,
@@ -251,7 +251,7 @@ function GenericParseEamIIDXCSV(
 		service,
 	};
 
-	logger.verbose(`Successfully Parsed with ${iterableData.length} results.`);
+	log.verbose(`Successfully Parsed with ${iterableData.length} results.`);
 
 	return {
 		iterable: iterableData,

@@ -45,17 +45,17 @@ export async function CreateKaiSDVXClassProvider(
 	}
 
 	return (gptString, userID, ratings, logger) => {
-		logger.info(`Got return from ${baseUrl}/api/sdvx/v1/player_profile.`, {
+		log.info(`Got return from ${baseUrl}/api/sdvx/v1/player_profile.`, {
 			json,
 		});
 
 		if (err !== undefined) {
-			logger.error(`An error occured while updating classes for ${baseUrl}.`, { err });
+			log.error(`An error occured while updating classes for ${baseUrl}.`, { err });
 			return {};
 		}
 
 		if (!IsRecord(json)) {
-			logger.error(`JSON Returned from server was not an object? Not updating anything.`, {
+			log.error(`JSON Returned from server was not an object? Not updating anything.`, {
 				json,
 			});
 			return {};
@@ -66,7 +66,7 @@ export async function CreateKaiSDVXClassProvider(
 			json.skill_level === undefined ||
 			typeof json.skill_level !== "number"
 		) {
-			logger.info(`User has no/invalid skill_level. Not updating anything.`, {
+			log.info(`User has no/invalid skill_level. Not updating anything.`, {
 				skillLevel: json.skill_level,
 			});
 			return {};
@@ -75,12 +75,12 @@ export async function CreateKaiSDVXClassProvider(
 		const sdvxDan: number | null = json.skill_level - 1;
 
 		if (!Number.isInteger(sdvxDan)) {
-			logger.warn(`${baseUrl} returned a dan of ${sdvxDan}, which was not an integer.`);
+			log.warn(`${baseUrl} returned a dan of ${sdvxDan}, which was not an integer.`);
 			return {};
 		}
 
 		if (sdvxDan > SDVX_DANS.INF) {
-			logger.warn(
+			log.warn(
 				`${baseUrl} returned a dan of ${sdvxDan}, which was greater than INF (${SDVX_DANS.INF}.)`,
 			);
 			return {};
@@ -93,7 +93,7 @@ export async function CreateKaiSDVXClassProvider(
 		}
 
 		if (sdvxDan < SDVX_DANS.DAN_1) {
-			logger.warn(
+			log.warn(
 				`${baseUrl} returned a dan of ${sdvxDan}, which was less than DAN_1 (${SDVX_DANS.DAN_1}.)`,
 			);
 			return {};
@@ -102,9 +102,7 @@ export async function CreateKaiSDVXClassProvider(
 		const value = SDVXDans[sdvxDan];
 
 		if (!value) {
-			logger.warn(
-				`${baseUrl} returned a dan of ${sdvxDan}, which has no corresponding value.`,
-			);
+			log.warn(`${baseUrl} returned a dan of ${sdvxDan}, which has no corresponding value.`);
 			return {};
 		}
 

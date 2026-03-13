@@ -64,7 +64,7 @@ export const ConvertAPIKaiSDVX: ConverterFunction<unknown, KaiContext> = async (
 	const song = await FindSongOnID("sdvx", chart.songID);
 
 	if (!song) {
-		logger.severe(`Song-Chart desync with song ID ${chart.songID} (sdvx).`);
+		log.error(`Song-Chart desync with song ID ${chart.songID} (sdvx).`);
 		throw new InternalFailure(`Song-Chart desync with song ID ${chart.songID} (sdvx).`);
 	}
 

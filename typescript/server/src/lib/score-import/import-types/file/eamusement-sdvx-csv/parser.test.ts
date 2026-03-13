@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { MockMulterFile } from "#test-utils/mock-multer";
 import { TestingSDVXEamusementCSV } from "#test-utils/test-data";
@@ -7,8 +7,6 @@ import t from "tap";
 import type { SDVXEamusementCSVData } from "./types";
 
 import ParseEamusementSDVXCSV from "./parser";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#ParseEamusementSDVXCSV", (t) => {
 	t.test("Valid CSV", (t) => {

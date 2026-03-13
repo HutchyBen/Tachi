@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { MockMulterFile } from "#test-utils/mock-multer";
 import { TestingWaccaMyPageScraperRecordsCSV } from "#test-utils/test-data";
@@ -8,8 +8,6 @@ import type { MyPageRecordsParsedPB } from "./types";
 
 import { WACCA_STAGEUPS } from "../../../../../../../common/src/constants/game";
 import { ParseMyPageScraperPlayerCSV, ParseMyPageScraperRecordsCSV } from "./parser";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#ParseMyPageScraperRecordsCSV", (t) => {
 	t.test("Valid CSV", (t) => {

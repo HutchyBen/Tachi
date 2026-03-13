@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 import type { USCClientScore } from "#server/router/ir/usc/_playtype/types";
 
 import { FormatPrError } from "#utils/prudence";
@@ -39,7 +39,7 @@ export function ParseIRUSC(
 	body: Record<string, unknown>,
 	chartHash: string,
 	playtype: Playtypes["usc"],
-	_logger: KtLogger,
+	_log: KtLogger,
 ): ParserFunctionReturns<USCClientScore, IRUSCContext> {
 	const err = p(
 		body.score,

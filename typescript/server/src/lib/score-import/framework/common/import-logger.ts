@@ -1,4 +1,4 @@
-import { type KtLogger, rootLogger } from "#lib/logger/logger";
+import { type KtLogger, log } from "#lib/logger/log.js";
 import { FormatUserDoc } from "#utils/user";
 
 import type { ImportTypes, UserDocument } from "../../../../../../common/src";
@@ -8,15 +8,8 @@ export function CreateScoreLogger(
 	importID: string,
 	importType: ImportTypes,
 ): KtLogger {
-	const meta = {
+	return log.child({
 		context: ["Score Import", importType, FormatUserDoc(user)],
 		importID,
-	};
-
-	// used so appendLogCtx works
-	const childLogger = rootLogger.child(meta);
-
-	childLogger.defaultMeta = meta;
-
-	return childLogger as KtLogger;
+	});
 }

@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkFakePBIIDXSP, mkFakeScoreIIDXSP } from "#test-utils/misc";
@@ -22,8 +22,6 @@ const baseMetrics: ProvidedMetrics["iidx:DP" | "iidx:SP"] = {
 	lamp: "HARD CLEAR",
 	score: 1000,
 };
-
-const logger = CreateLogCtx(__filename);
 
 const max = Testing511SPA.data.notecount * 2;
 

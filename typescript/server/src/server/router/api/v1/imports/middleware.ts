@@ -1,12 +1,10 @@
 import type { RequestHandler } from "express";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import db from "#services/mongo/db";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { IsRequesterAdmin } from "#utils/user";
-
-const logger = CreateLogCtx(__filename);
 
 export const GetImportFromParam: RequestHandler = async (req, res, next) => {
 	const importDoc = await db.imports.findOne({ importID: req.params.importID });
@@ -36,7 +34,7 @@ export const RequireOwnershipOfImportOrAdmin: RequestHandler = async (req, res, 
 
 	if (importDoc.userID !== userID) {
 		if (await IsRequesterAdmin(req[SYMBOL_TACHI_API_AUTH])) {
-			logger.info(`Admin ${userID} interacted with someone elses import.`);
+			log.info(`Admin ${userID} interacted with someone elses import.`);
 			next();
 			return;
 		}

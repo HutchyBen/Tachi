@@ -1,5 +1,5 @@
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { FormatUserDoc, GetUserWithID } from "#utils/user";
 import { Router } from "express";
 
@@ -20,11 +20,9 @@ import uscIR from "./usc/router";
 
 const router: Router = Router({ mergeParams: true });
 
-const logger = CreateLogCtx(__filename);
-
 router.use(async (req, res, next) => {
 	if (!req[SYMBOL_TACHI_API_AUTH]) {
-		logger.info(`IR import request received from: ${req.header("Authorization")}`, {
+		log.info(`IR import request received from: ${req.header("Authorization")}`, {
 			body: req.body,
 			query: req.query,
 			url: req.url,
@@ -42,7 +40,7 @@ router.use(async (req, res, next) => {
 		user = null;
 	}
 
-	logger.info(`IR import request received from: ${user ? FormatUserDoc(user) : "Unknown"}`, {
+	log.info(`IR import request received from: ${user ? FormatUserDoc(user) : "Unknown"}`, {
 		user,
 		body: req.body,
 		query: req.query,

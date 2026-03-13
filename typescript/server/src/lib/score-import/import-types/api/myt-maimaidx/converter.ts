@@ -108,7 +108,7 @@ const ConvertAPIMytMaimaiDx: ConverterFunction<MytMaimaiDxScore, EmptyObject> = 
 	const song = await FindSongOnID("maimaidx", chart.songID);
 
 	if (song === null) {
-		logger.severe(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`, { chart });
+		log.error(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`, { chart });
 		throw new InternalFailure(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
 	}
 

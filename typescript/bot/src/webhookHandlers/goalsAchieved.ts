@@ -1,6 +1,6 @@
 import { BotConfig } from "#config";
 import { PrependTachiUrl } from "#utils/fetchTachi";
-import { log } from "#utils/log"
+import { log } from "#utils/log";
 import {
 	GetGameGroupConfig,
 	type GoalDocument,

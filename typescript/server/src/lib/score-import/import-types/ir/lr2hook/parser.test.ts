@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { TestingLR2HookScore } from "#test-utils/test-data";
 import { ApplyNTimes } from "#utils/misc";
 import deepmerge from "deepmerge";
@@ -6,8 +6,6 @@ import t from "tap";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ParseLR2Hook } from "./parser";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#ParseLR2Hook", (t) => {
 	const assertFail = (data: any, message: string) => {

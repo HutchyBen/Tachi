@@ -1,6 +1,6 @@
 import { CreateActivityRouteHandler } from "#lib/activity/activity";
 import { ONE_MONTH, ONE_WEEK, ONE_YEAR } from "#lib/constants/time";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import prValidate from "#server/middleware/prudence-validate";
 import { PasswordCompare, ValidatePassword } from "#server/router/api/v1/auth/auth";
 import db from "#services/mongo/db";
@@ -39,8 +39,6 @@ import settingsRouter from "./settings/router";
 import showcaseRouter from "./showcase/router";
 import tablesRouter from "./tables/router";
 import targetsRouter from "./targets/router";
-
-const logger = CreateLogCtx(__filename);
 
 const router: Router = Router({ mergeParams: true });
 
@@ -410,14 +408,14 @@ router.delete(
 			"!password": string;
 		};
 
-		logger.info(
+		log.info(
 			`Recieved request to delete UGPT ${FormatUserDoc(user)} ${FormatGameGroup(game, playtype)}`,
 		);
 
 		const privateInfo = await GetUserPrivateInfo(user.id);
 
 		if (!privateInfo) {
-			logger.severe(
+			log.error(
 				`State desync for user ${FormatUserDoc(
 					user,
 				)}. This user has no password/email information?`,

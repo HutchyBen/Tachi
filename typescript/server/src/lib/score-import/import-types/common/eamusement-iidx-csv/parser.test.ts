@@ -1,12 +1,10 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { MockMulterFile } from "#test-utils/mock-multer";
 import { TestingIIDXEamusementCSV26, TestingIIDXEamusementCSV27 } from "#test-utils/test-data";
 import t from "tap";
 
 import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 import GenericParseEamIIDXCSV, { IIDXCSVParse, ResolveHeaders } from "./parser";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#ParseEamusementCSV", (t) => {
 	t.test("Valid Rootage-Type CSV", (t) => {

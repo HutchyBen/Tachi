@@ -3,7 +3,7 @@ import type { FilterQuery } from "mongodb";
 
 import { JOB_RETRY_COUNT } from "#lib/constants/tachi";
 import { RevertImport } from "#lib/imports/imports";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import ScoreImportQueue, { ScoreImportQueueEvents } from "#lib/score-import/worker/queue";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RequirePermissions } from "#server/middleware/auth";
@@ -21,8 +21,6 @@ import type { ImportTrackerDocument, ImportTypes } from "../../../../../../../co
 import { GetImportFromParam, RequireOwnershipOfImportOrAdmin } from "./middleware";
 
 const router: Router = Router({ mergeParams: true });
-
-const logger = CreateLogCtx(__filename);
 
 /**
  * Query imports. Returns the 500 most recently-finished imports.
@@ -146,7 +144,7 @@ router.get("/:importID", GetImportFromParam, async (req, res) => {
 	const user = await GetUserWithID(importDoc.userID);
 
 	if (!user) {
-		logger.severe(`User ${importDoc.userID} doesn't exist, yet has a session?`);
+		log.error(`User ${importDoc.userID} doesn't exist, yet has a session?`);
 		return res.status(500).json({
 			success: false,
 			description: `An internal server error has occured.`,
@@ -305,7 +303,7 @@ router.get("/:importID/poll-status", async (req, res) => {
 	try {
 		isFailed = await job.isFailed();
 	} catch (err) {
-		logger.info(`Failed to read job: ${err}`);
+		log.info(`Failed to read job: ${err}`);
 		isFailed = true;
 	}
 
@@ -314,14 +312,14 @@ router.get("/:importID/poll-status", async (req, res) => {
 	try {
 		isCompleted = await job.isCompleted();
 	} catch (err) {
-		logger.info(`Failed to read job: ${err}`);
+		log.info(`Failed to read job: ${err}`);
 		isCompleted = false;
 	}
 
 	// job.isFailed() actually means a critical error has occured.
 	// As in, an unhandled exception was thrown.
 	if (isFailed) {
-		logger.error("Internal Server Error with job?", { job });
+		log.error("Internal Server Error with job?", { job });
 
 		return res.status(500).json({
 			success: false,

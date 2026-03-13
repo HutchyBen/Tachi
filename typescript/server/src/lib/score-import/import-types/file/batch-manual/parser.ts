@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import type { BatchManualScore } from "../../../../../../../common/src";
 import type { BatchManualContext } from "../../common/batch-manual/types";
@@ -15,7 +15,7 @@ import { ParseBatchManualFromObject } from "../../common/batch-manual/parser";
 function ParseBatchManual(
 	fileData: Express.Multer.File,
 	body: Record<string, unknown>,
-	logger: KtLogger,
+	log: KtLogger,
 ): ParserFunctionReturns<BatchManualScore, BatchManualContext> {
 	let jsonData: unknown;
 

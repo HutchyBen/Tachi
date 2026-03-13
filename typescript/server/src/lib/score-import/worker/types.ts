@@ -6,7 +6,7 @@ import type { Parsers } from "../import-types/parsers";
 // Ok so, please hear me out on this one.
 // We need a type that removes the last element from an array.
 // This is because parser functions have variable signatures, but all
-// end with requiring a logger. We don't want to have to pass the logger,
+// end with requiring a log. We don't want to have to pass the logger,
 // we just want to pass those other arguments.
 type RemoveLast<T extends Array<unknown>> = T extends [...infer RemoveLast, unknown]
 	? RemoveLast

@@ -1,4 +1,4 @@
-import { CreateLogger } from "mei-logger";
+import { log } from "#log";
 
 import { type ChartDocument, type Difficulties, type SongDocument } from "../../../common/src";
 import {
@@ -7,8 +7,6 @@ import {
 	ReadCollection,
 	WriteCollection,
 } from "../../util";
-
-const logger = CreateLogger("parse-maimaidx-dataset");
 
 type BaseDifficulty = "adv" | "bas" | "exp" | "mas" | "remas";
 type MaimaiDXDifficulty = `${"" | "dx_"}lev_${BaseDifficulty}`;
@@ -109,7 +107,7 @@ async function ParseInternalLevelData(
 		const dx = Number(dxMatch[1]!);
 
 		if (dx !== 0 && dx !== 1) {
-			logger.warn(`DX should be 0 or 1, found ${dxMatch[1]} in ${line}`);
+			log.warn(`DX should be 0 or 1, found ${dxMatch[1]} in ${line}`);
 			continue;
 		}
 
@@ -119,7 +117,7 @@ async function ParseInternalLevelData(
 			const tmp = JSON.parse(lvMatch[1]!);
 
 			if (!Array.isArray(tmp) || tmp.some((c) => typeof c !== "number")) {
-				logger.warn(`lv should be an array of numbers, found ${lvMatch[1]} in ${line}`);
+				log.warn(`lv should be an array of numbers, found ${lvMatch[1]} in ${line}`);
 				continue;
 			}
 
@@ -138,7 +136,7 @@ async function ParseInternalLevelData(
 				lv.remas = tmp[4];
 			}
 		} catch (e) {
-			logger.warn(`lv should be an array of numbers, found ${lvMatch[1]} in ${line}`);
+			log.warn(`lv should be an array of numbers, found ${lvMatch[1]} in ${line}`);
 			continue;
 		}
 
@@ -159,11 +157,11 @@ async function ParseMaimaiDXDataset() {
 	const existingSongMap = new Map(songs.map((s) => [`${s.title}-${s.artist}`, s]));
 	const existingChartMap = new Map(charts.map((c) => [`${c.songID}-${c.difficulty}`, c]));
 
-	logger.info(`Fetching official song information from ${DATA_URL}...`);
+	log.info(`Fetching official song information from ${DATA_URL}...`);
 
 	const datum: Array<MaimaiDXSong> = await fetch(DATA_URL).then((r) => r.json());
 
-	logger.info(`Fetching internal level information from ${INTERNAL_LEVEL_URL}...`);
+	log.info(`Fetching internal level information from ${INTERNAL_LEVEL_URL}...`);
 
 	const internalLevelData = await ParseInternalLevelData(INTERNAL_LEVEL_URL);
 	const internalLevelDataMap = new Map(
@@ -182,7 +180,7 @@ async function ParseMaimaiDXDataset() {
 
 		if (version > CURRENT_VERSION_NUM) {
 			// Skipping songs that are newer than currently supported version.
-			logger.warn(
+			log.warn(
 				`Ignoring song ${data.artist} - ${data.title}, which is newer than CURRENT_VERSION_NUM.`,
 			);
 			continue;
@@ -221,7 +219,7 @@ async function ParseMaimaiDXDataset() {
 
 			songs.push(songDoc);
 
-			logger.info(`Added new song ${songDoc.artist} - ${songDoc.title} (ID ${tachiSongID}).`);
+			log.info(`Added new song ${songDoc.artist} - ${songDoc.title} (ID ${tachiSongID}).`);
 		}
 
 		for (const [key, difficulty] of Object.entries(DIFFICULTY_TO_TACHI_DIFFICULTY) as [
@@ -260,7 +258,7 @@ async function ParseMaimaiDXDataset() {
 				}
 
 				if (existingChart.level !== level) {
-					logger.info(
+					log.info(
 						`Chart ${displayName} has had a level change: ${existingChart.level} -> ${level}.`,
 					);
 					existingChart.level = level;
@@ -268,7 +266,7 @@ async function ParseMaimaiDXDataset() {
 				}
 
 				if (existingChart.levelNum !== levelNum) {
-					logger.info(
+					log.info(
 						`Chart ${displayName} has had a levelNum change: ${existingChart.levelNum} -> ${levelNum}.`,
 					);
 					existingChart.levelNum = levelNum;
@@ -293,7 +291,7 @@ async function ParseMaimaiDXDataset() {
 
 			charts.push(chartDoc);
 
-			logger.info(`Added new chart ${data.artist} - ${data.title} [${difficulty}].`);
+			log.info(`Added new chart ${data.artist} - ${data.title} [${difficulty}].`);
 		}
 	}
 

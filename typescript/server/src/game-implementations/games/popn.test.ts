@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -36,8 +36,6 @@ const scoreData: ScoreData<"popn:9B"> = {
 
 const mockScore = mkMockScore("popn", "9B", TestingPopnChart, scoreData);
 const mockPB = mkMockPB("popn", "9B", TestingPopnChart, scoreData);
-
-const logger = CreateLogCtx(__filename);
 
 t.test("Pop'n Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {

@@ -1,6 +1,6 @@
 import type { DeepPartial } from "#utils/types";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -37,8 +37,6 @@ const scoreData: ScoreData<"wacca:Single"> = {
 
 const mockScore = mkMockScore("wacca", "Single", TestingWaccaPupaExp, scoreData);
 const mockPB = mkMockPB("wacca", "Single", TestingWaccaPupaExp, scoreData);
-
-const logger = CreateLogCtx(__filename);
 
 t.test("WACCA Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {

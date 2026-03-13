@@ -7,7 +7,7 @@ import type { integer } from "../../../common/src";
 // BUT AFTER EXPRESS IS IMPORTED.
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RedisClient } from "#services/redis/redis";
 import { IsNonEmptyString, IsRecord } from "#utils/misc";
@@ -18,12 +18,10 @@ import helmet from "helmet";
 import { RequestLoggerMiddleware } from "./middleware/request-logger";
 import mainRouter from "./router/router";
 
-const logger = CreateLogCtx(__filename);
-
 let store;
 
 if (Env.NODE_ENV !== "test") {
-	logger.info("Connecting ExpressSession to Redis.", { bootInfo: true });
+	log.info("Connecting ExpressSession to Redis.", { bootInfo: true });
 	const RedisStore = connectRedis(expressSession);
 
 	store = new RedisStore({
@@ -58,7 +56,7 @@ const userSessionMiddleware = expressSession({
 const app: Express = express();
 
 if (Env.NODE_ENV !== "production" && IsNonEmptyString(ServerConfig.CLIENT_DEV_SERVER)) {
-	logger.warn(`Enabling CORS requests from ${ServerConfig.CLIENT_DEV_SERVER}.`, {
+	log.warn(`Enabling CORS requests from ${ServerConfig.CLIENT_DEV_SERVER}.`, {
 		bootInfo: true,
 	});
 
@@ -98,7 +96,7 @@ if (Env.NODE_ENV !== "production" && IsNonEmptyString(ServerConfig.CLIENT_DEV_SE
 	app.options("*", (req, res) => res.send());
 
 	if (Env.NODE_ENV !== "test") {
-		logger.info("Enabling Helmet, as no CLIENT_DEV_SERVER was set, or we are in production.", {
+		log.info("Enabling Helmet, as no CLIENT_DEV_SERVER was set, or we are in production.", {
 			bootInfo: true,
 		});
 	}
@@ -125,7 +123,7 @@ app.set("query parser", "simple");
 process.on("unhandledRejection", (reason, promise) => {
 	// @ts-expect-error reason is an error, and the logger can handle errors
 	// it just refuses.
-	logger.error(reason, { promise });
+	log.error(reason, { promise });
 });
 
 // enable reading json bodies
@@ -157,13 +155,13 @@ if (
 	ServerConfig.CDN_CONFIG.SAVE_LOCATION.SERVE_OWN_CDN === true
 ) {
 	if (Env.NODE_ENV === "production") {
-		logger.warn(
+		log.warn(
 			`Running LOCAL_FILESYSTEM OWN_CDN in production. Consider making a separate process handle your CDN for performance.`,
 			{ bootInfo: true },
 		);
 	}
 
-	logger.info(`Running own CDN at ${ServerConfig.CDN_CONFIG.SAVE_LOCATION.LOCATION}.`, {
+	log.info(`Running own CDN at ${ServerConfig.CDN_CONFIG.SAVE_LOCATION.LOCATION}.`, {
 		bootInfo: true,
 	});
 
@@ -182,7 +180,7 @@ const MAIN_ERR_HANDLER: express.ErrorRequestHandler = (err, req, res, _next) => 
 		const expErr: ExpressJSONErr = err as ExpressJSONErr;
 
 		if (expErr.status === 400 && "body" in expErr) {
-			logger.info(`JSON Parsing Error?`, {
+			log.info(`JSON Parsing Error?`, {
 				url: req.originalUrl,
 
 				userID: req[SYMBOL_TACHI_API_AUTH]?.userID,
@@ -193,7 +191,7 @@ const MAIN_ERR_HANDLER: express.ErrorRequestHandler = (err, req, res, _next) => 
 		// else, this isn't a JSON parsing error
 	}
 
-	logger.error(`MAIN_ERR_HANDLER hit by request.`, { url: req.originalUrl, body: req.body });
+	log.error(`MAIN_ERR_HANDLER hit by request.`, { url: req.originalUrl, body: req.body });
 
 	const unknownErr = err as unknown;
 
@@ -204,7 +202,7 @@ const MAIN_ERR_HANDLER: express.ErrorRequestHandler = (err, req, res, _next) => 
 		});
 	}
 
-	logger.error("Fatal error propagated to server root? ", {
+	log.error("Fatal error propagated to server root? ", {
 		err: unknownErr,
 		url: req.originalUrl,
 		authInfo: req[SYMBOL_TACHI_API_AUTH],

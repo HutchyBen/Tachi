@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
 import db from "#services/mongo/db";
@@ -49,7 +49,7 @@ export async function CalculateUGPTClasses(
 	userID: integer,
 	ratings: Record<string, number | null>,
 	ClassProvider: ClassProvider | null,
-	logger: KtLogger,
+	log: KtLogger,
 ): Promise<ExtractedClasses[GPTString]> {
 	const gptString = GetGPTString(game, playtype);
 
@@ -59,7 +59,7 @@ export async function CalculateUGPTClasses(
 	// If this import method is providing us classes, merge those with the
 	// other classes we have.
 	if (ClassProvider) {
-		logger.debug(`Calling custom class handler.`);
+		log.debug(`Calling custom class handler.`);
 		const customClasses = (await ClassProvider(gptString, userID, ratings, logger)) ?? {};
 
 		classes = deepmerge(customClasses, classes);
@@ -86,7 +86,7 @@ export async function ProcessClassDeltas(
 	classes: AnyClasses,
 	userGameStats: UserGameStats | null,
 	userID: integer,
-	logger: KtLogger,
+	log: KtLogger,
 ): Promise<Array<ClassDelta>> {
 	const gptString = GetGPTString(game, playtype);
 
@@ -101,7 +101,7 @@ export async function ProcessClassDeltas(
 		const classVal = classes[classSet];
 
 		if (classVal === undefined || classVal === null) {
-			logger.debug(`Skipped deltaing-class ${classSet}.`);
+			log.debug(`Skipped deltaing-class ${classSet}.`);
 			continue;
 		}
 
@@ -159,7 +159,7 @@ export async function ProcessClassDeltas(
 				deltas.push(delta);
 			}
 		} catch (err) {
-			logger.error(err);
+			log.error(err);
 		}
 	}
 

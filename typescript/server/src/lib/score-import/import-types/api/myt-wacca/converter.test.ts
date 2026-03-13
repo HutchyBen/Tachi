@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
 import {
 	WaccaMusicDifficulty,
@@ -13,8 +13,6 @@ import t from "tap";
 import type { MytWaccaScore } from "./types";
 
 import ConvertAPIMytWACCA from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 const parsedScore: MytWaccaScore = {
 	musicId: 2085,

@@ -1,10 +1,8 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { TestingUSCChart, uscScore } from "#test-utils/test-data";
 import t from "tap";
 
 import { ParseIRUSC } from "./parser";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#ParseIRUSC", (t) => {
 	t.test("Should validate and convert a score into an iterable", (t) => {

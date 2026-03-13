@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
 import {
 	MaimaiComboStatus,
@@ -14,8 +14,6 @@ import t from "tap";
 import type { MytMaimaiDxScore } from "./types";
 
 import ConvertAPIMytMaimaiDx from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 const parsedScore: MytMaimaiDxScore = {
 	playlogApiId: "6071c489-6ab9-4674-a443-f88b603fa596",

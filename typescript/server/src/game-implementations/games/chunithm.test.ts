@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -37,8 +37,6 @@ const scoreData: ScoreData<"chunithm:Single"> = {
 
 const mockScore = mkMockScore("chunithm", "Single", CHUNITHMBBKKChart, scoreData);
 const mockPB = mkMockPB("chunithm", "Single", CHUNITHMBBKKChart, scoreData);
-
-const logger = CreateLogCtx(__filename);
 
 t.test("CHUNITHM Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {

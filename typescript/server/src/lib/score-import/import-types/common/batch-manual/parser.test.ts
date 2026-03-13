@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { EscapeStringRegexp } from "#utils/misc";
 import deepmerge from "deepmerge";
 import t from "tap";
@@ -14,8 +14,6 @@ const mockErr = (...msg: Array<string>) =>
 		message: new RegExp(msg.map((e) => `${EscapeStringRegexp(e)}.*`).join(""), "u"),
 		name: "Error",
 	}) as unknown as ScoreImportFatalError;
-
-const logger = CreateLogCtx(__filename);
 
 const baseBatchManual = {
 	scores: [],

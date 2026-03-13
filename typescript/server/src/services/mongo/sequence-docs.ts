@@ -1,8 +1,6 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 
 import db from "./db";
-
-const logger = CreateLogCtx(__filename);
 
 export async function InitSequenceDocs() {
 	await db.counters.remove({});
@@ -49,7 +47,7 @@ export async function InitSequenceDocs() {
 		},
 	];
 
-	logger.verbose(
+	log.verbose(
 		`Setting Counters -> ${Counters.map((e) => `${e.counterName}: ${e.value}`).join(", ")}`,
 	);
 

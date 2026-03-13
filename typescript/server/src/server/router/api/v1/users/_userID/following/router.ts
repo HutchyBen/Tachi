@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
 import db from "#services/mongo/db";
@@ -13,8 +13,6 @@ import { RequireSelfRequestFromUser } from "../middleware";
 
 const router: Router = Router({ mergeParams: true });
 
-const logger = CreateLogCtx(__filename);
-
 /**
  * Retrieve who this user is following.
  *
@@ -28,7 +26,7 @@ router.get("/", async (req, res) => {
 	const settings = await db["user-settings"].findOne({ userID: user.id });
 
 	if (!settings) {
-		logger.error(`User ${FormatUserDoc(user)} has no settings?`, { user });
+		log.error(`User ${FormatUserDoc(user)} has no settings?`, { user });
 
 		return res.status(500).json({
 			success: false,
@@ -73,7 +71,7 @@ router.post(
 		const settings = await db["user-settings"].findOne({ userID: user.id });
 
 		if (!settings) {
-			logger.error(`User ${FormatUserDoc(user)} has no settings?`, { user });
+			log.error(`User ${FormatUserDoc(user)} has no settings?`, { user });
 
 			return res.status(500).json({
 				success: false,
@@ -147,7 +145,7 @@ router.post(
 		const settings = await db["user-settings"].findOne({ userID: user.id });
 
 		if (!settings) {
-			logger.error(`User ${FormatUserDoc(user)} has no settings?`, { user });
+			log.error(`User ${FormatUserDoc(user)} has no settings?`, { user });
 
 			return res.status(500).json({
 				success: false,

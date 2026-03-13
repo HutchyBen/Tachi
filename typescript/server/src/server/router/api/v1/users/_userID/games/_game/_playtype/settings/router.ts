@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { RequirePermissions } from "#server/middleware/auth";
 import db from "#services/mongo/db";
 import { FormatPrError, optNull } from "#utils/prudence";
@@ -14,8 +14,6 @@ import {
 	type UGPTSettingsDocument,
 } from "../../../../../../../../../../../../common/src";
 import { RequireAuthedAsUser } from "../../../../middleware";
-
-const logger = CreateLogCtx(__filename);
 
 const router: Router = Router({ mergeParams: true });
 
@@ -141,7 +139,7 @@ router.patch(
 		});
 
 		if (!settings) {
-			logger.error(
+			log.error(
 				`User ${FormatUserDoc(
 					user,
 				)} has no game-settings, but has played ${game} ${playtype}?`,

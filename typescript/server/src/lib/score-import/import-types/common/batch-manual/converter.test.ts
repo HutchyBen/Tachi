@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { InvalidScoreFailure } from "#lib/score-import/framework/common/converter-failures";
 import db from "#services/mongo/db";
 import { dmf } from "#test-utils/misc";
@@ -41,8 +41,6 @@ const context = {
 	service: "foo",
 	version: null,
 };
-
-const logger = CreateLogCtx(__filename);
 
 const importType = "file/batch-manual" as const;
 

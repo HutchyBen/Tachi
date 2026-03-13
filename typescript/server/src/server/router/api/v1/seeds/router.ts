@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { PullDatabaseSeeds } from "#lib/seeds/repo";
 import { Env } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
@@ -9,8 +9,6 @@ import { Router } from "express";
 import fsSync from "fs";
 import fs from "fs/promises";
 import path from "path";
-
-const logger = CreateLogCtx(__filename);
 
 // Routes for interacting with the `seeds` folder in this instance of Tachi.
 
@@ -41,7 +39,7 @@ const LOCAL_SEEDS_PATH = Env.NODE_ENV === "test" ? TEST_SEEDS_PATH : LOCAL_DEV_S
 
 if (Env.NODE_ENV === "dev" || Env.NODE_ENV === "test") {
 	if (!fsSync.existsSync(LOCAL_SEEDS_PATH)) {
-		logger.error(
+		log.error(
 			`Failed to load seeds routes, could not find any seeds/collections checked out at ${LOCAL_SEEDS_PATH}.
 These were expected to be present as this is local-development!
 All seeds routes will return 500.`,
@@ -72,7 +70,7 @@ router.get("/has-uncommitted-changes", async (req, res) => {
 	const { stdout, stderr } = await asyncExec(`git status --porcelain`);
 
 	if (stderr) {
-		logger.error(`Failed to read git status --porcelain.`, { stderr });
+		log.error(`Failed to read git status --porcelain.`, { stderr });
 		return res.status(500).json({
 			success: false,
 			description: `Failed to check current git status.`,
@@ -309,7 +307,7 @@ router.get(
 				body: commit,
 			});
 		} catch (err) {
-			logger.info(`Failed to fetch commit.`, { err });
+			log.info(`Failed to fetch commit.`, { err });
 			return res.status(404).json({
 				success: false,
 				description: `Failed to fetch commit. It may not exist.`,

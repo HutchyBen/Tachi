@@ -1,6 +1,6 @@
 import type { Response } from "express";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import fs from "fs";
 import mkdirp from "mkdirp";
@@ -13,8 +13,6 @@ const readFilePromise = promisify(fs.readFile);
 const writeFilePromise = promisify(fs.writeFile);
 const rmFilePromise = promisify(fs.rm);
 
-const logger = CreateLogCtx(__filename);
-
 /**
  * Joins a file location against the location of the CDN static store.
  *
@@ -23,7 +21,7 @@ const logger = CreateLogCtx(__filename);
  */
 export function CDNFileSystemRoot(fileLoc: string) {
 	if (ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE !== "LOCAL_FILESYSTEM") {
-		logger.severe(
+		log.error(
 			`Attempted to run CDNFileSystemRoot, but was not using LOCAL_FILESYSTEM as a CDN.`,
 			{ fileLoc, conf: ServerConfig.CDN_CONFIG },
 		);
@@ -43,7 +41,7 @@ export function CDNFileSystemRoot(fileLoc: string) {
  * As in, this ruins the purpose of a CDN! make sure you have one running.
  */
 export function CDNRetrieve(fileLoc: string) {
-	logger.debug(`Retrieving path ${fileLoc} locally.`);
+	log.debug(`Retrieving path ${fileLoc} locally.`);
 
 	return readFilePromise(CDNFileSystemRoot(fileLoc));
 }
@@ -56,7 +54,7 @@ export function CDNRedirect(res: Response, fileLoc: string) {
 		throw new Error(`Invalid fileLoc - did not start with /.`);
 	}
 
-	logger.debug(`CDN Redirecting to ${ServerConfig.CDN_CONFIG.WEB_LOCATION}${fileLoc}.`);
+	log.debug(`CDN Redirecting to ${ServerConfig.CDN_CONFIG.WEB_LOCATION}${fileLoc}.`);
 
 	res.redirect(`${ServerConfig.CDN_CONFIG.WEB_LOCATION}${fileLoc}`);
 }
@@ -65,7 +63,7 @@ export function CDNRedirect(res: Response, fileLoc: string) {
  * Stores a file at fileLoc. If it already exists, overwrite it.
  */
 export async function CDNStoreOrOverwrite(fileLoc: string, data: string | Buffer): Promise<void> {
-	logger.debug(`Storing or overwriting path ${fileLoc}.`);
+	log.debug(`Storing or overwriting path ${fileLoc}.`);
 
 	if (ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE === "LOCAL_FILESYSTEM") {
 		const loc = CDNFileSystemRoot(fileLoc);
@@ -83,7 +81,7 @@ export async function CDNStoreOrOverwrite(fileLoc: string, data: string | Buffer
  * Removes a file at this CDN location.
  */
 export async function CDNDelete(fileLoc: string) {
-	logger.verbose(`Deleting path ${fileLoc}.`);
+	log.verbose(`Deleting path ${fileLoc}.`);
 
 	if (ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE === "LOCAL_FILESYSTEM") {
 		const loc = CDNFileSystemRoot(fileLoc);

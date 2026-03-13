@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import deepmerge from "deepmerge";
@@ -10,8 +10,6 @@ import type { BatchManualContext } from "../../import-types/common/batch-manual/
 import type { OrphanScoreDocument } from "../../import-types/common/types";
 
 import { OrphanScore, ReprocessOrphan } from "./orphans";
-
-const logger = CreateLogCtx(__filename);
 
 const batchManualScore: BatchManualScore = {
 	score: 500,

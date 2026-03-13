@@ -8,12 +8,7 @@ import {
 	type integer,
 	type SongDocument,
 } from "../../../common/src";
-import {
-	CreateChartID,
-	GetFreshSongIDGenerator,
-	ReadCollection,
-	WriteCollection,
-} from "../../util";
+import { CreateChartID, ReadCollection, WriteCollection } from "../../util";
 
 type LocalizedText = { en: string } & Record<string, string>;
 type LocalizedSearchTerms = Record<string, Array<string>>;

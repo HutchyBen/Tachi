@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import type { BatchManualScore } from "../../../../../../../common/src";
 import type { BatchManualContext } from "../../common/batch-manual/types";
@@ -14,7 +14,7 @@ import { ParseBatchManualFromObject } from "../../common/batch-manual/parser";
 function ParseDirectManual(
 	body: Record<string, unknown>,
 	inferTimestamp: boolean,
-	logger: KtLogger,
+	log: KtLogger,
 ): ParserFunctionReturns<BatchManualScore, BatchManualContext> {
 	return ParseBatchManualFromObject(body, "ir/direct-manual", inferTimestamp, logger);
 }

@@ -1,10 +1,8 @@
 import { ONE_DAY, ONE_HOUR } from "#lib/constants/time";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import db from "#services/mongo/db";
 
 import type { integer } from "../../../../../../common/src";
-
-const logger = CreateLogCtx(__filename);
 
 /**
  * If a user has no ongoing import, enable the import lock and return true.
@@ -26,7 +24,7 @@ export async function CheckAndSetOngoingImportLock(userID: integer) {
 			lockedAt: null,
 		});
 	} else if (lockExists.locked && lockExists.lockedAt! + ONE_DAY < Date.now()) {
-		logger.warn(`Removed import lock for ${userID} as it is ostensibly stuck.`);
+		log.warn(`Removed import lock for ${userID} as it is ostensibly stuck.`);
 		await db["import-locks"].update(
 			{
 				userID,
@@ -56,7 +54,7 @@ export async function CheckAndSetOngoingImportLock(userID: integer) {
 
 	if (lockWasSet.lockedAt !== null) {
 		if (Date.now() - lockWasSet.lockedAt > ONE_HOUR) {
-			logger.error(
+			log.error(
 				`User ${userID} has been locked for an hour. Automatically freeing the lock as they're stuck.`,
 			);
 			await UnsetOngoingImportLock(userID);

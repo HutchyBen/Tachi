@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import { EvaluateGoalForUser, GetRelevantGoals } from "#lib/targets/goals";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
@@ -18,7 +18,7 @@ export async function GetAndUpdateUsersGoals(
 	game: GameGroup,
 	userID: integer,
 	chartIDs: Set<string>,
-	logger: KtLogger,
+	log: KtLogger,
 ) {
 	const { goals, goalSubsMap } = await GetRelevantGoals(game, userID, chartIDs, logger);
 
@@ -27,7 +27,7 @@ export async function GetAndUpdateUsersGoals(
 		return [];
 	}
 
-	logger.verbose(`Found ${goals.length} relevant goals.`);
+	log.verbose(`Found ${goals.length} relevant goals.`);
 
 	return UpdateGoalsForUser(goals, goalSubsMap, userID, logger);
 }
@@ -36,7 +36,7 @@ export async function UpdateGoalsForUser(
 	goals: Array<GoalDocument>,
 	goalSubsMap: Map<string, GoalSubscriptionDocument>,
 	userID: integer,
-	logger: KtLogger,
+	log: KtLogger,
 	skipMismatch = false,
 ) {
 	const returns = await Promise.all(
@@ -48,7 +48,7 @@ export async function UpdateGoalsForUser(
 					return null;
 				}
 
-				logger.error(
+				log.error(
 					`UserGoal:GoalID mismatch ${goal.goalID} - this user has no goalSub for this, yet it is set.`,
 				);
 
@@ -56,7 +56,7 @@ export async function UpdateGoalsForUser(
 			}
 
 			return ProcessGoal(goal, goalSub, userID, logger).catch((err: Error) => {
-				logger.warn(
+				log.warn(
 					`Failed to process goal '${goal.name}' for ${userID}, ${err.message}. Skipping.`,
 					{ goal, err, userID, goalSub },
 				);
@@ -111,7 +111,7 @@ export async function ProcessGoal(
 	goal: GoalDocument,
 	goalSub: GoalSubscriptionDocument,
 	userID: integer,
-	logger: KtLogger,
+	log: KtLogger,
 ) {
 	const res = await EvaluateGoalForUser(goal, userID, logger);
 
@@ -181,7 +181,7 @@ export async function ProcessGoal(
 	// If this goal was achieved, and is now *not* achieved, we need to unset
 	// some things.
 	if (goalSub.achieved && !res.achieved) {
-		logger.info(`User ${userID} lost their achieved status on ${goal.name}.`, {
+		log.info(`User ${userID} lost their achieved status on ${goal.name}.`, {
 			goal,
 			res,
 			goalSub,
@@ -211,19 +211,19 @@ export async function ProcessGoal(
 	};
 }
 
-export async function UpdateGoalsInFolder(folderID: string, logger: KtLogger) {
+export async function UpdateGoalsInFolder(folderID: string, log: KtLogger) {
 	const goals = await db.goals.find({
 		"charts.type": "folder",
 		"charts.data": folderID,
 	});
 
-	logger.info(`Updating ${goals.length} goals for ${folderID}`);
+	log.info(`Updating ${goals.length} goals for ${folderID}`);
 
 	const goalSubs = await db["goal-subs"].find({
 		goalID: { $in: goals.map((e) => e.goalID) },
 	});
 
-	logger.info(`Updating ${goalSubs.length} goal subs for ${folderID}`);
+	log.info(`Updating ${goalSubs.length} goal subs for ${folderID}`);
 
 	// (User -> (goalID -> GoalSub))
 	const ugsMap = new Map<integer, Map<string, GoalSubscriptionDocument>>();

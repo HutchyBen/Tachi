@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import db from "#services/mongo/db";
 import fjsh from "fast-json-stable-hash";

@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/logger/log.js";
 
 import type { ClassConfigs, Classes, GPTString, integer } from "../../../../../../common/src";
 import type {
@@ -19,5 +19,5 @@ export type ClassProvider<GPT extends GPTString = GPTString> = (
 	gptString: GPT,
 	userID: integer,
 	ratings: Record<string, number | null>,
-	logger: KtLogger,
+	log: KtLogger,
 ) => Partial<RecordClassProvider<GPT>> | Promise<Partial<RecordClassProvider<GPT>>> | undefined;

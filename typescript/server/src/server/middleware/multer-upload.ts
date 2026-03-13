@@ -1,12 +1,10 @@
 import type { RequestHandler } from "express";
 
 import { SIXTEEN_MEGABTYES } from "#lib/constants/filesize";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import multer, { MulterError } from "multer";
 
 import type { integer } from "../../../../common/src";
-
-const defaultLogger = CreateLogCtx(__filename);
 
 // 16MB
 export const DefaultMulterUpload = multer({ limits: { fileSize: 1024 * 1024 * 16 } });
@@ -14,7 +12,6 @@ export const DefaultMulterUpload = multer({ limits: { fileSize: 1024 * 1024 * 16
 export const CreateMulterSingleUploadMiddleware = (
 	fieldName: string,
 	fileSize: integer = SIXTEEN_MEGABTYES,
-	logger = defaultLogger,
 	throwOnNoFile = true,
 ): RequestHandler => {
 	const UploadMW = multer({ limits: { fileSize } }).single(fieldName);
@@ -22,7 +19,7 @@ export const CreateMulterSingleUploadMiddleware = (
 	return (req, res, next) => {
 		UploadMW(req, res, (err: unknown) => {
 			if (err instanceof MulterError) {
-				logger.info(`Multer Error.`, { err });
+				log.info(`Multer Error.`, { err });
 
 				return res.status(400).json({
 					success: false,
@@ -30,7 +27,7 @@ export const CreateMulterSingleUploadMiddleware = (
 						"File provided was too large, corrupt, or provided in the wrong field.",
 				});
 			} else if (err !== undefined && err !== null) {
-				logger.error(`Unknown file import error.`, { err });
+				log.error(`Unknown file import error.`, { err });
 
 				return res.status(500).json({
 					success: false,

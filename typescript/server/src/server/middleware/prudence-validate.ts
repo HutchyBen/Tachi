@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express-serve-static-core";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import {
 	type ErrorMessages,
 	type MiddlewareErrorHandler,
@@ -8,8 +8,6 @@ import {
 	type PrudenceOptions,
 	type PrudenceSchema,
 } from "prudence";
-
-const logger = CreateLogCtx(__filename);
 
 export function TruncateString(string: string, len = 30) {
 	if (string.length < len) {

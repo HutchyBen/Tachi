@@ -1,5 +1,5 @@
 import { HandleSIGTERMGracefully } from "#lib/handlers/sigterm";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { Env, ServerConfig } from "#lib/setup/config";
 import { FormatUserDoc, GetUserWithID } from "#utils/user";
 import { Worker } from "bullmq";
@@ -29,16 +29,12 @@ EventEmitter.defaultMaxListeners = 20;
 // Explicitly set this before importing anything!
 process.env.IS_SCORE_WORKER_SERVER = "true";
 
-const workerLogger = CreateLogCtx(`Import Worker`);
-
 // Exit if we're not called with node. Think of this like if __name__ != "__main__" in python.
 if (require.main !== module) {
-	workerLogger.crit(
+	log.fatal(
 		"The Score Import Worker was imported, instead of ran directly with node. This is a fatal error. Exiting.",
-		() => {
-			process.exit(1);
-		},
 	);
+	process.exit(1);
 }
 
 /**
@@ -51,7 +47,7 @@ export const worker = new Worker(
 		const user = await GetUserWithID(job.data.userID);
 
 		if (!user) {
-			workerLogger.severe(
+			log.error(
 				`Couldn't find user with ID ${job.data.userID}. Yet a score import from them was made? (Job ID ${job.id}).`,
 			);
 			throw new Error(
@@ -78,17 +74,11 @@ export const worker = new Worker(
 
 		job.data.parserArguments = processedArgs as ScoreImportJobData<I>["parserArguments"];
 
-		// Create a logger that we can pass around for context.
-		// This helps us debug what score import did what!
-		const logger = CreateLogCtx(
-			`Import ${job.data.importType} ${FormatUserDoc(user)} ${job.id}`,
-		);
-
-		logger.debug(`Received score import job ${job.id}`, { job });
+		log.debug(`Received score import job ${job.id}`, { job });
 
 		const InputParser = GetInputParser(job.data);
 
-		logger.debug(`Starting import.`);
+		log.debug(`Starting import.`);
 
 		void job.updateProgress({
 			description: "Importing Scores.",
@@ -101,11 +91,11 @@ export const worker = new Worker(
 				job.data.importType,
 				InputParser,
 				job.data.importID,
-				logger,
+				undefined,
 				job,
 			);
 
-			logger.debug(`Finished import.`);
+			log.debug(`Finished import.`);
 
 			return { success: true, importDocument };
 		} catch (e) {
@@ -115,7 +105,7 @@ export const worker = new Worker(
 			// has suddenly made all `instanceof` calls faulty. I still - to this day - have absolutely
 			// no idea why or how this broke, but now `instanceof` is considered a footgun so, great.
 			if ("statusCode" in err) {
-				logger.info(
+				log.info(
 					`Job ${job.id} hit ScoreImportFatalError (User Fault) with message: ${err.message}`,
 					err,
 					job.data,
@@ -135,15 +125,13 @@ export const worker = new Worker(
 	},
 );
 
-const logger = CreateLogCtx("Score Import Worker");
-
 worker.on("failed", (job, err) => {
 	// any errors that escalate this far are unexpected, as they haven't been caught by previous calls.
-	logger.error(`Job ${job.id} failed unexpectedly with message: ${err.message}`, err);
+	log.error(`Job ${job.id} failed unexpectedly with message: ${err.message}`, err);
 });
 
 worker.on("completed", (job, result) => {
-	logger.debug(`Job ${job.id} finished successfully.`, result);
+	log.debug(`Job ${job.id} finished successfully.`, result);
 });
 
 process.on("SIGTERM", () => {

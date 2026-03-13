@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
 import { MockJSONFetch } from "#test-utils/mock-fetch";
@@ -9,8 +9,6 @@ import t from "tap";
 import type { KaiAuthDocument } from "../../../../../../../common/src";
 
 import { CreateKaiReauthFunction } from "./reauth";
-
-const logger = CreateLogCtx(__filename);
 
 const authDoc: KaiAuthDocument = {
 	refreshToken: "REFRESH_TOKEN",

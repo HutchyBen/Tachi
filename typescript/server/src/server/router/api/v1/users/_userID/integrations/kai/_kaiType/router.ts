@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import {
 	GetKaiTypeClientCredentials,
 	KaiTypeToBaseURL,
@@ -18,8 +18,6 @@ import { RequireSelfRequestFromUser } from "../../../middleware";
 import { ValidateKaiType } from "./middleware";
 
 const router: Router = Router({ mergeParams: true });
-
-const logger = CreateLogCtx(__filename);
 
 router.use(RequireKamaitachi, RequireSelfRequestFromUser, ValidateKaiType);
 
@@ -111,7 +109,7 @@ router.post(
 		const maybeCredentials = GetKaiTypeClientCredentials(kaiType);
 
 		if (!maybeCredentials) {
-			logger.severe(
+			log.error(
 				`Attempted to /callback ${kaiType}, but this server has no oauth2 credentials configured for that type.`,
 			);
 			return res.status(500).json({
@@ -132,7 +130,7 @@ router.post(
 		params.append("client_id", CLIENT_ID);
 		params.append("redirect_uri", REDIRECT_URI);
 
-		logger.info(`Making token reify request from ${baseUrl}/oauth/token`);
+		log.info(`Making token reify request from ${baseUrl}/oauth/token`);
 		let getTokenRes;
 
 		try {
@@ -144,7 +142,7 @@ router.post(
 				method: "POST",
 			});
 		} catch (err) {
-			logger.error(`Completely failed to getTokenRes from ${url}.`, err);
+			log.error(`Completely failed to getTokenRes from ${url}.`, err);
 			return res.status(500).json({
 				success: false,
 				description: `We failed to reach this site. Are they down?`,
@@ -152,7 +150,7 @@ router.post(
 		}
 
 		if (getTokenRes.status !== 200) {
-			logger.error(`Unexpected status of ${getTokenRes.status} from ${url} oauth2 flow.`);
+			log.error(`Unexpected status of ${getTokenRes.status} from ${url} oauth2 flow.`);
 
 			return res.status(getTokenRes.status < 500 ? 400 : 500).json({
 				success: false,
@@ -165,7 +163,7 @@ router.post(
 		try {
 			json = await getTokenRes.json();
 		} catch (err) {
-			logger.error(`Error parsing JSON in response body from getTokenRes.`, {
+			log.error(`Error parsing JSON in response body from getTokenRes.`, {
 				res: getTokenRes,
 				err,
 			});
@@ -179,7 +177,7 @@ router.post(
 		const err = p(json, KAI_OAUTH2_RETURN_SCHEMA, {}, { allowExcessKeys: true });
 
 		if (err) {
-			logger.error(`Validation error in JSON return from ${url}.`, { err });
+			log.error(`Validation error in JSON return from ${url}.`, { err });
 			return res.status(500).json({
 				success: false,
 				description: `Failed to validate JSON returned from this service. Is their server malfunctioning?`,
@@ -206,7 +204,7 @@ router.post(
 			},
 		);
 
-		logger.info(`Updated Auth for ${kaiType} for user ${FormatUserDoc(user)}.`);
+		log.info(`Updated Auth for ${kaiType} for user ${FormatUserDoc(user)}.`);
 
 		return res.status(200).json({
 			success: true,

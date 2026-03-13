@@ -1,7 +1,7 @@
 import type { BulkWriteOperation, DeleteWriteOpResultObject } from "mongodb";
 import type { ICollection } from "monk";
 
-import CreateLogCtx, { type KtLogger } from "#lib/logger/logger";
+import { log, type KtLogger } from "#lib/logger/log.js";
 import { UpdateGoalsInFolder } from "#lib/score-import/framework/goals/goals";
 import UpdateIsPrimaryStatus from "#lib/score-mutation/update-isprimary";
 import { PullDatabaseSeeds } from "#lib/seeds/repo";
@@ -33,7 +33,7 @@ interface SyncInstructions {
 	handler: (
 		c: Array<any>,
 		collection: ICollection,
-		logger: KtLogger,
+		log: KtLogger,
 		collectionName: string,
 	) => Promise<unknown>;
 }
@@ -42,9 +42,9 @@ async function RemoveNotPresent<T extends Record<string, any>>(
 	documents: Array<T>,
 	collection: ICollection<T>,
 	field: keyof T,
-	logger: KtLogger,
+	log: KtLogger,
 ) {
-	logger.verbose(`Removing all documents that are no longer present.`);
+	log.verbose(`Removing all documents that are no longer present.`);
 
 	// Remove anything no longer present.
 	// Note that $nin is incredibly slow.
@@ -54,7 +54,7 @@ async function RemoveNotPresent<T extends Record<string, any>>(
 	})) as DeleteWriteOpResultObject;
 
 	if (r.deletedCount !== undefined && r.deletedCount > 0) {
-		logger.info(`Removed ${r.deletedCount} documents.`);
+		log.info(`Removed ${r.deletedCount} documents.`);
 	}
 }
 
@@ -62,7 +62,7 @@ async function GenericUpsert<T extends Record<string, any>>(
 	documents: Array<T>,
 	collection: ICollection<T>,
 	field: keyof T,
-	logger: KtLogger,
+	log: KtLogger,
 	remove = false,
 	update = true,
 ) {
@@ -70,7 +70,7 @@ async function GenericUpsert<T extends Record<string, any>>(
 		await RemoveNotPresent(documents, collection, field, logger);
 	}
 
-	logger.verbose(`Running bulkwrite.`);
+	log.verbose(`Running bulkwrite.`);
 
 	const updateOps: Array<BulkWriteOperation<T>> = [];
 	const insertOps: Array<BulkWriteOperation<T>> = [];
@@ -90,7 +90,7 @@ async function GenericUpsert<T extends Record<string, any>>(
 	for (const document of documents) {
 		i++;
 		if (i % 10_000 === 0) {
-			logger.verbose(`On document ${i}/${documents.length}.`);
+			log.verbose(`On document ${i}/${documents.length}.`);
 		}
 
 		const exists = map.get(document[field]);
@@ -107,7 +107,7 @@ async function GenericUpsert<T extends Record<string, any>>(
 				continue;
 			}
 
-			logger.verbose(`Updating ${document[field]}`);
+			log.verbose(`Updating ${document[field]}`);
 
 			updateOps.push({
 				replaceOne: {
@@ -146,7 +146,7 @@ async function GenericUpsert<T extends Record<string, any>>(
 	const thingsChanged = updateOps.length + insertOps.length;
 
 	if (thingsChanged === 0) {
-		logger.verbose(`No differences. Not performing any update.`);
+		log.verbose(`No differences. Not performing any update.`);
 	} else {
 		// update first, then insert new docs
 		let up;
@@ -161,7 +161,7 @@ async function GenericUpsert<T extends Record<string, any>>(
 			ins = await collection.bulkWrite(insertOps);
 		}
 
-		logger.info(`Performed bulkWrite.`, {
+		log.info(`Performed bulkWrite.`, {
 			up,
 			ins,
 		});
@@ -382,8 +382,6 @@ const syncInstructions: Array<SyncInstructions> = [
 	},
 ];
 
-const logger = CreateLogCtx("Database Sync");
-
 async function SynchroniseDBWithSeeds() {
 	// Wait for mongo to connect first.
 	await monkDB.then(() => void 0);
@@ -391,45 +389,36 @@ async function SynchroniseDBWithSeeds() {
 	const databaseSeedsRepo = await PullDatabaseSeeds();
 
 	for await (const { collectionName, data } of databaseSeedsRepo.IterateCollections()) {
-		const spawnLogger = CreateLogCtx(`${collectionName} Sync`);
-
 		if (collectionName.startsWith("songs-") || collectionName.startsWith("charts-")) {
 			const game = collectionName.split("-")[1];
 
 			if (!TachiConfig.GAMES.includes(game as GameGroup)) {
-				spawnLogger.verbose(
+				log.verbose(
 					`Skipping ${collectionName} (${game}) as it isn't for ${TachiConfig.NAME}.`,
 				);
 				continue;
 			}
 		}
 
-		spawnLogger.verbose(`Found ${data.length} documents.`);
+		log.verbose(`Found ${data.length} documents.`);
 
 		let matchedSomething = false;
 
 		for (const syncInst of syncInstructions) {
 			if (syncInst.pattern.exec(collectionName)) {
-				spawnLogger.info(`Starting handler...`);
-				await syncInst.handler(
-					data,
-					monkDB.get(collectionName),
-					spawnLogger,
-					collectionName,
-				);
+				log.info(`Starting handler...`);
+				await syncInst.handler(data, monkDB.get(collectionName), log, collectionName);
 				matchedSomething = true;
 				break;
 			}
 		}
 
 		if (!matchedSomething) {
-			spawnLogger.warn(
-				`Collection ${collectionName} didn't match any sync instructions. Skipping.`,
-			);
+			log.warn(`Collection ${collectionName} didn't match any sync instructions. Skipping.`);
 		}
 	}
 
-	logger.info(`Done.`);
+	log.info(`Done.`);
 
 	await databaseSeedsRepo.Destroy();
 }

@@ -1,5 +1,5 @@
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import {
 	ConstructGoal,
@@ -24,8 +24,6 @@ import {
 import { RequireAuthedAsUser } from "../../../../../middleware";
 
 const router: Router = Router({ mergeParams: true });
-
-const logger = CreateLogCtx(__filename);
 
 /**
  * Retrieves this user's set goals for this GPT.
@@ -180,7 +178,7 @@ router.post(
 		} catch (e) {
 			const err = e as Error;
 
-			logger.info(err.message, { err });
+			log.info(err.message, { err });
 
 			return res.status(400).json({
 				success: false,

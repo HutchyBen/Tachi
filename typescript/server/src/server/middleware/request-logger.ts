@@ -1,12 +1,10 @@
 import type { RequestHandler, Response } from "express-serve-static-core";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { TachiConfig } from "#lib/setup/config";
 
 import type { APITokenDocument } from "../../../../common/src";
-
-const logger = CreateLogCtx(__filename);
 
 // https://stackoverflow.com/a/64546368/11885828
 // Taken from Jonathan Turnock - This is an *incredibly* nice
@@ -32,7 +30,7 @@ export const RequestLoggerMiddleware: RequestHandler = (req, res, next) => {
 		}
 	}
 
-	logger.debug(`Received request ${req.method} ${req.originalUrl}.`, {
+	log.debug(`Received request ${req.method} ${req.originalUrl}.`, {
 		query: req.query,
 		body: safeBody,
 	});
@@ -80,12 +78,9 @@ export const RequestLoggerMiddleware: RequestHandler = (req, res, next) => {
 				contents,
 			);
 		} else if (res.statusCode < 500) {
-			logger.info(`(${req.method} ${req.originalUrl}) Returned ${res.statusCode}.`, contents);
+			log.info(`(${req.method} ${req.originalUrl}) Returned ${res.statusCode}.`, contents);
 		} else {
-			logger.error(
-				`(${req.method} ${req.originalUrl}) Returned ${res.statusCode}.`,
-				contents,
-			);
+			log.error(`(${req.method} ${req.originalUrl}) Returned ${res.statusCode}.`, contents);
 		}
 	});
 

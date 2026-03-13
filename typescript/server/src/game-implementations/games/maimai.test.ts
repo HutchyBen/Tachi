@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -11,8 +11,6 @@ import type { integer, ProvidedMetrics, ScoreData } from "../../../../common/src
 
 import { MAIMAI_SINGLE_CONF } from "../../../../common/src/config/game-support/maimai";
 import { MAIMAI_IMPL } from "./maimai";
-
-const logger = CreateLogCtx(__filename);
 
 const baseMetrics: ProvidedMetrics["maimai:Single"] = {
 	lamp: "CLEAR",

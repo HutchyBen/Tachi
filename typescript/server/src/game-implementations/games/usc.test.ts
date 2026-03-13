@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
@@ -15,8 +15,6 @@ import {
 	USC_LAMPS,
 } from "../../../../common/src";
 import { USC_CONTROLLER_IMPL, USC_KEYBOARD_IMPL } from "./usc";
-
-const logger = CreateLogCtx(__filename);
 
 const baseMetrics: ProvidedMetrics[GPTStrings["usc"]] = {
 	lamp: "CLEAR",

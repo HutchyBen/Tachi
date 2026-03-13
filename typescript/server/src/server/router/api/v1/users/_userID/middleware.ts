@@ -1,14 +1,12 @@
 import type { RequestHandler } from "express";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/logger/log.js";
 import { IsNullish } from "#utils/misc";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { GetUserWithID, ResolveUser } from "#utils/user";
 
 import { UserAuthLevels } from "../../../../../../../../common/src";
-
-const logger = CreateLogCtx(__filename);
 
 export const GetUserFromParam: RequestHandler = async (req, res, next) => {
 	if (!req.params.userID) {
@@ -72,7 +70,7 @@ export const RequireAuthedAsUser: RequestHandler = async (req, res, next) => {
 	const requestingUser = await GetUserWithID(requestingUserID);
 
 	if (!requestingUser) {
-		logger.severe(`${requestingUserID} is signed in as someone who does not exist.`);
+		log.error(`${requestingUserID} is signed in as someone who does not exist.`);
 		return res.status(500).json({
 			success: false,
 			description: `You are signed in as someone who does not exist.`,
