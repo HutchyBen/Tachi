@@ -2,7 +2,6 @@ import type { ClassProvider } from "#lib/score-import/framework/calculated-data/
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ClassToIndex } from "#utils/class";
-
 import { type Classes, GetGPTConfig, type GPTString } from "tachi-common";
 
 // Note: This is tested by batch-manuals parser.test.ts.

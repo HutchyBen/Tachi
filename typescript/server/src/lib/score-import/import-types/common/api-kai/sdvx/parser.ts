@@ -1,8 +1,8 @@
 import type { KtLogger } from "#lib/log/log.js";
+import type { KaiAuthDocument } from "tachi-common";
 
 import nodeFetch from "#utils/fetch";
 
-import type { KaiAuthDocument } from "tachi-common";
 import type { ParserFunctionReturns } from "../../types";
 import type { KaiContext } from "../types";
 

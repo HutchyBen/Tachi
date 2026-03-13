@@ -33,7 +33,7 @@ async function RunOnInit() {
 	await InitSequenceDocs();
 	await UpdateIndexes(monkDB, false);
 
-	await applyMigrations();
+	await applyMigrations(Env.POSTGRES_URL, path.join(__dirname, "../migrations"));
 
 	await db["folder-chart-lookup"].findOne().then((r) => {
 		// If there are no folder chart lookups, initialise them.

@@ -1,3 +1,13 @@
+import type {
+	BMSCourseDocument,
+	ChartDocument,
+	FolderDocument,
+	GoalDocument,
+	QuestDocument,
+	QuestlineDocument,
+	SongDocument,
+	TableDocument,
+} from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import type {
 	Database,
@@ -22,17 +32,6 @@ import type {
 import fs from "fs";
 import { type Insertable, type Kysely, sql } from "kysely";
 import path from "path";
-
-import type {
-	BMSCourseDocument,
-	ChartDocument,
-	FolderDocument,
-	GoalDocument,
-	QuestDocument,
-	QuestlineDocument,
-	SongDocument,
-	TableDocument,
-} from "tachi-common";
 
 // ── Seed types ─────────────────────────────────────────────────────────────
 

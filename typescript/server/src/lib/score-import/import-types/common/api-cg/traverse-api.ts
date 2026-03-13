@@ -1,4 +1,5 @@
 import type { KtLogger } from "#lib/log/log.js";
+import type { CGCardInfo } from "tachi-common";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ServerConfig } from "#lib/setup/config";
@@ -6,7 +7,6 @@ import nodeFetch, { type NodeFetch } from "#utils/fetch";
 import { p, type PrudenceSchema } from "prudence";
 import { URLSearchParams } from "url";
 
-import type { CGCardInfo } from "tachi-common";
 import type { CGErrorResponse, CGScoresResponse, CGServices, CGSupportedGames } from "./types";
 
 const PR_CG_RESPONSE: PrudenceSchema = {

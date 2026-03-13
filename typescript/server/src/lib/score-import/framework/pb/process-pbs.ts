@@ -2,8 +2,8 @@ import type { KtLogger } from "#lib/log/log.js";
 
 import db from "#services/mongo/db";
 import { GetChartForIDGuaranteed } from "#utils/db";
-
 import { type GameGroup, GetGPTString, type integer, type Playtype } from "tachi-common";
+
 import { CreatePBDoc, type PBScoreDocumentNoRank, UpdateChartRanking } from "./create-pb-doc";
 
 /**

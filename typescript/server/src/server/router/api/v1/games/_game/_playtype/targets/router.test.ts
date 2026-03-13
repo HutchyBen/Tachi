@@ -1,11 +1,11 @@
+import type { GoalSubscriptionDocument } from "tachi-common";
+
 import db from "#services/mongo/db";
 import { mkFakeGoal, mkFakeGoalSub } from "#test-utils/misc";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import { HC511UserGoal } from "#test-utils/test-data";
 import t from "tap";
-
-import type { GoalSubscriptionDocument } from "tachi-common";
 
 t.test("GET /api/v1/games/:game/:playtype/targets/recently-achieved", (t) => {
 	t.beforeEach(ResetDBState);

@@ -1,3 +1,5 @@
+import type { PBScoreDocument, ScoreDocument, UserDocument } from "tachi-common";
+
 import { CDNRetrieve } from "#lib/cdn/cdn";
 import db from "#services/mongo/db";
 import { dmf } from "#test-utils/misc.js";
@@ -5,8 +7,6 @@ import mockApi from "#test-utils/mock-api";
 import ResetDBState, { ResetCDN } from "#test-utils/resets";
 import { GetKTDataBuffer } from "#test-utils/test-data";
 import t from "tap";
-
-import type { PBScoreDocument, ScoreDocument, UserDocument } from "tachi-common";
 
 async function InsertFakeUSCAuth() {
 	await db["api-tokens"].insert({

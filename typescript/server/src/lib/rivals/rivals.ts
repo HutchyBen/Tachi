@@ -7,7 +7,6 @@ import { ServerConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
 import { ArrayDiff } from "#utils/misc";
 import { GetUsersWithIDs, GetUserWithIDGuaranteed } from "#utils/user";
-
 import {
 	FormatGameGroup,
 	type GameGroup,

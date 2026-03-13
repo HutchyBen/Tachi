@@ -1,10 +1,9 @@
 import type { IObjectID } from "monk";
+import type { integer } from "tachi-common";
 
 import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import { WrapScriptPromise } from "#utils/misc";
-
-import type { integer } from "tachi-common";
 
 async function DedupeScoreIDs() {
 	const dups: Array<{ count: integer; dups: Array<IObjectID>; id: string }> =

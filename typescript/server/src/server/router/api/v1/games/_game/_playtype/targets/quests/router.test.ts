@@ -1,3 +1,5 @@
+import type { QuestDocument, QuestlineDocument, QuestSubscriptionDocument } from "tachi-common";
+
 import db from "#services/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
@@ -10,12 +12,6 @@ import {
 } from "#test-utils/test-data";
 import dm from "deepmerge";
 import t from "tap";
-
-import type {
-	QuestDocument,
-	QuestlineDocument,
-	QuestSubscriptionDocument,
-} from "tachi-common";
 
 t.test("GET /api/v1/games/:game/:playtype/targets/quests", (t) => {
 	t.beforeEach(ResetDBState);

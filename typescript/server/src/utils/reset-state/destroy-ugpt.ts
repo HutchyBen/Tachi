@@ -1,7 +1,7 @@
+import type { GameGroup, integer, Playtype } from "tachi-common";
+
 import db from "#services/mongo/db";
 import { UpdateAllPBs } from "#utils/calculations/recalc-scores";
-
-import type { GameGroup, integer, Playtype } from "tachi-common";
 
 /**
  * Completely resets a UGPT profile.

@@ -1,7 +1,7 @@
+import type { GameGroup, ShowcaseStatDetails } from "tachi-common";
+
 import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
-
-import type { GameGroup, ShowcaseStatDetails } from "tachi-common";
 
 export async function GetRelatedStatDocuments(stat: ShowcaseStatDetails, game: GameGroup) {
 	switch (stat.mode) {

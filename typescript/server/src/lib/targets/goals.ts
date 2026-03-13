@@ -3,11 +3,10 @@ import type { FilterQuery } from "mongodb";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
-import { log, type KtLogger } from "#lib/log/log.js";
+import { type KtLogger, log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import { GetFolderChartIDs } from "#utils/folder";
 import fjsh from "fast-json-stable-hash";
-
 import {
 	FormatGameGroup,
 	type GameGroup,
@@ -23,6 +22,7 @@ import {
 	type QuestDocument,
 	type QuestSubscriptionDocument,
 } from "tachi-common";
+
 import { CreateGoalTitle as CreateGoalName, ValidateGoalChartsAndCriteria } from "./goal-utils";
 
 export interface EvaluatedGoalReturn {

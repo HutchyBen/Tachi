@@ -1,3 +1,5 @@
+import type { UserDocument } from "tachi-common";
+
 import db from "#services/mongo/db";
 import { CreateFakeAuthCookie } from "#test-utils/fake-auth";
 import { mkFakeGameSettings, mkFakeUser } from "#test-utils/misc";
@@ -5,8 +7,6 @@ import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import { FakeOtherUser } from "#test-utils/test-data";
 import t from "tap";
-
-import type { UserDocument } from "tachi-common";
 
 const SetupRivals = async () => {
 	await db.users.insert([FakeOtherUser, mkFakeUser(3), mkFakeUser(4)]);

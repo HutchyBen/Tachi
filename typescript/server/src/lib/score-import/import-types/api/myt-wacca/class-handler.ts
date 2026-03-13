@@ -4,8 +4,8 @@ import type { WaccaUserClient } from "#proto/generated/wacca/user_grpc_pb";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { WaccaVersion } from "#proto/generated/wacca/common_pb";
 import { DataRequest, type DataResponse } from "#proto/generated/wacca/user_pb";
-
 import { WaccaStageUps } from "tachi-common/config/game-support/wacca";
+
 import { UnaryRPCAsAsync } from "../../common/api-myt/traverse-api";
 
 export default async function CreateMytWACCAClassHandler(

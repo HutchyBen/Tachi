@@ -8,7 +8,6 @@ import { IsString } from "#utils/misc";
 import { FindChartsOnPopularity } from "#utils/queries/charts";
 import { GetGPT } from "#utils/req-tachi-data";
 import { Router } from "express";
-
 import {
 	type ChartDocument,
 	type integer,
@@ -16,6 +15,7 @@ import {
 	type UGPTSettingsDocument,
 } from "tachi-common";
 import { PR_RESOLVER } from "tachi-common/lib/schemas";
+
 import chartIDRouter from "./_chartID/router";
 
 const router: Router = Router({ mergeParams: true });

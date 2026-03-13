@@ -1,3 +1,5 @@
+import type { integer } from "tachi-common";
+
 import { log } from "#lib/log/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
@@ -6,8 +8,6 @@ import { GetUser } from "#utils/req-tachi-data";
 import { FormatUserDoc, GetUsersWithIDs, GetUserWithID } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-
-import type { integer } from "tachi-common";
 
 import { RequireSelfRequestFromUser } from "../middleware";
 

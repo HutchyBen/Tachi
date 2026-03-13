@@ -1,5 +1,3 @@
-import db from "#services/mongo/db";
-
 import type {
 	ChartDocument,
 	integer,
@@ -7,6 +5,8 @@ import type {
 	ScoreDocument,
 	SongDocument,
 } from "tachi-common";
+
+import db from "#services/mongo/db";
 
 import { DedupeArr } from "./misc";
 

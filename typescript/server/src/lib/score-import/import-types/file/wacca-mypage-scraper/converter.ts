@@ -1,5 +1,7 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
 import type { EmptyObject } from "#utils/types";
+import type { Difficulties } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import {
 	InvalidScoreFailure,
@@ -8,8 +10,6 @@ import {
 import { FindChartWithPTDF } from "#utils/queries/charts";
 import { FindSongOnTitle } from "#utils/queries/songs";
 
-import type { Difficulties } from "tachi-common";
-import type { GetEnumValue } from "tachi-common/types/metrics";
 import type { ConverterFunction } from "../../common/types";
 import type { MyPageRecordsParsedPB } from "./types";
 

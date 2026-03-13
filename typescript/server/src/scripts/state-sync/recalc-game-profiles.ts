@@ -1,7 +1,7 @@
+import type { GameGroup, Playtype, ScoreDocument } from "tachi-common";
+
 import { log } from "#lib/log/log.js";
 import { UpdateUsersGamePlaytypeStats } from "#lib/score-import/framework/ugpt-stats/update-ugpt-stats";
-
-import type { GameGroup, Playtype, ScoreDocument } from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import db from "#services/mongo/db";
 import { WrapScriptPromise } from "#utils/misc";

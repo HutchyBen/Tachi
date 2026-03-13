@@ -1,4 +1,5 @@
 import type { ICollection } from "monk";
+import type { GameGroup } from "tachi-common";
 
 import { log } from "#lib/log/log.js";
 import { Env, ServerConfig } from "#lib/setup/config";
@@ -8,8 +9,6 @@ import { SetIndexes } from "#services/mongo/indexes";
 import fs from "fs";
 import path from "path";
 import rimraf from "rimraf";
-
-import type { GameGroup } from "tachi-common";
 
 // im installing an entire library for rm rf...
 

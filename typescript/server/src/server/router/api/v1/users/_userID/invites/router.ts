@@ -5,8 +5,8 @@ import { Random20Hex } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { GetUsersWithIDs } from "#utils/user";
 import { Router } from "express";
-
 import { type InviteCodeDocument, UserAuthLevels } from "tachi-common";
+
 import { RequireSelfRequestFromUser } from "../middleware";
 
 const router: Router = Router({ mergeParams: true });

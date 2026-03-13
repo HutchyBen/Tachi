@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
-
 import { GAME_GROUP_CONFIGS, GAME_PT_CONFIGS, GPTStringToV3 } from "tachi-common";
+
 import { ReadCollection, WriteCollection } from "../../util";
 
 const COLLECTIONS_DIR = path.join(__dirname, "../../../collections");

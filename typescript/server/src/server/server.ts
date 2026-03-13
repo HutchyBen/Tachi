@@ -1,8 +1,8 @@
-import connectRedis from "connect-redis";
-import "express-async-errors";
-import express, { type Express } from "express";
-
 import type { integer } from "tachi-common";
+
+import "express-async-errors";
+import connectRedis from "connect-redis";
+import express, { type Express } from "express";
 // THIS IMPORT **MUST** GO HERE. DO NOT MOVE IT. IT MUST OCCUR BEFORE ANYTHING HAPPENS WITH EXPRESS
 // BUT AFTER EXPRESS IS IMPORTED.
 

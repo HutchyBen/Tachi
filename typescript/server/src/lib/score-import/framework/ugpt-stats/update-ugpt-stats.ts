@@ -1,9 +1,9 @@
 import type { KtLogger } from "#lib/log/log.js";
+import type { ClassDelta, GameGroup, integer, Playtype, UserGameStats } from "tachi-common";
 
 import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
 import db from "#services/mongo/db";
 
-import type { ClassDelta, GameGroup, integer, Playtype, UserGameStats } from "tachi-common";
 import type { ClassProvider } from "../calculated-data/types";
 
 import { CalculateProfileRatings } from "../calculated-data/profile";

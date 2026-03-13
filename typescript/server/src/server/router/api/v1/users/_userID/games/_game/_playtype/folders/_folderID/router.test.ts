@@ -1,3 +1,5 @@
+import type { ChartDocument, FolderDocument, ScoreDocument, SongDocument } from "tachi-common";
+
 import db from "#services/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
@@ -11,13 +13,6 @@ import {
 import { CreateFolderChartLookup } from "#utils/folder";
 import deepmerge from "deepmerge";
 import t from "tap";
-
-import type {
-	ChartDocument,
-	FolderDocument,
-	ScoreDocument,
-	SongDocument,
-} from "tachi-common";
 
 t.test("GET /api/v1/users/:userID/games/:game/:playtype/folders/:folderID", (t) => {
 	t.beforeEach(ResetDBState);

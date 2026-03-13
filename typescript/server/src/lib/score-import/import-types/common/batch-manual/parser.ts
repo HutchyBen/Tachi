@@ -4,10 +4,6 @@ import { TachiConfig } from "#lib/setup/config";
 import { IsRecord, IsValidGame, IsValidPlaytype } from "#utils/misc";
 import { FormatPrError } from "#utils/prudence";
 import { p } from "prudence";
-
-import type { ParserFunctionReturns } from "../types";
-import type { BatchManualContext } from "./types";
-
 import {
 	type BatchManual,
 	type BatchManualScore,
@@ -18,6 +14,10 @@ import {
 	type Playtype,
 } from "tachi-common";
 import { PR_BATCH_MANUAL } from "tachi-common/lib/schemas";
+
+import type { ParserFunctionReturns } from "../types";
+import type { BatchManualContext } from "./types";
+
 import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 import { CreateBatchManualClassProvider } from "./class-handler";
 

@@ -1,8 +1,7 @@
 import type { ICollection } from "monk";
+import type { GameGroup } from "tachi-common";
 
 import fs from "fs/promises";
-
-import type { GameGroup } from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import { log } from "#lib/log/log.js";
 import { Env, ServerConfig } from "#lib/setup/config";

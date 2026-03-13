@@ -1,5 +1,6 @@
 import type { ScoreImportWorkerReturns } from "#lib/score-import/worker/types";
 import type { FilterQuery } from "mongodb";
+import type { ImportTrackerDocument, ImportTypes } from "tachi-common";
 
 import { JOB_RETRY_COUNT } from "#lib/constants/tachi";
 import { RevertImport } from "#lib/imports/imports";
@@ -15,8 +16,6 @@ import { GetTachiData } from "#utils/req-tachi-data";
 import { GetUsersWithIDs, GetUserWithID } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-
-import type { ImportTrackerDocument, ImportTypes } from "tachi-common";
 
 import { GetImportFromParam, RequireOwnershipOfImportOrAdmin } from "./middleware";
 

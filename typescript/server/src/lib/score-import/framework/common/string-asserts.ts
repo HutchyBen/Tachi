@@ -5,6 +5,7 @@ import {
 	type GPTString,
 	type Playtype,
 } from "tachi-common";
+
 import { InvalidScoreFailure } from "./converter-failures";
 
 export function AssertStrAsDifficulty(

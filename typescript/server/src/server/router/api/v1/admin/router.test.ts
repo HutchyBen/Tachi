@@ -8,9 +8,8 @@ import ResetDBState from "#test-utils/resets";
 import { TestingIIDXSPScore } from "#test-utils/test-data";
 import { Sleep } from "#utils/misc";
 import deepmerge from "deepmerge";
-import t from "tap";
-
 import { type ScoreDocument, UserAuthLevels } from "tachi-common";
+import t from "tap";
 
 const LOG_LEVEL = Env.LOG_LEVEL;
 

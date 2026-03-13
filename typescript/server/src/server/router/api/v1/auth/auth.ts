@@ -9,7 +9,6 @@ import { CreateURLWithParams } from "#utils/url";
 import { FormatUserDoc } from "#utils/user";
 import bcrypt from "bcryptjs";
 import { p } from "prudence";
-
 import {
 	type integer,
 	UserAuthLevels,

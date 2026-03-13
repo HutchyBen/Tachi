@@ -1,4 +1,4 @@
-import { log, type KtLogger } from "#lib/log/log.js";
+import { type KtLogger, log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import {
@@ -8,9 +8,9 @@ import {
 	TestingIIDXSPScore,
 } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
+import { IIDX_GRADES, IIDX_LAMPS } from "tachi-common";
 import t from "tap";
 
-import { IIDX_GRADES, IIDX_LAMPS } from "tachi-common";
 import { CreatePBDoc, type PBScoreDocumentNoRank } from "./create-pb-doc";
 
 const IIDXScore = TestingIIDXSPScore;

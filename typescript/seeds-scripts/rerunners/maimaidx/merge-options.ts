@@ -4,13 +4,13 @@ import { Command } from "commander";
 import { XMLParser } from "fast-xml-parser";
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import path from "path";
-
 import {
 	type ChartDocument,
 	type Difficulties,
 	GetGamePTConfig,
 	type SongDocument,
 } from "tachi-common";
+
 import { CreateChartID, ReadCollection, WriteCollection } from "../../util";
 
 const VERSION_DISPLAY_NAMES = [

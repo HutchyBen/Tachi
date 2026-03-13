@@ -1,3 +1,10 @@
+import type {
+	GoalDocument,
+	GoalSubscriptionDocument,
+	QuestDocument,
+	QuestSubscriptionDocument,
+} from "tachi-common";
+
 import db from "#services/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
@@ -9,13 +16,6 @@ import {
 } from "#test-utils/test-data";
 import dm from "deepmerge";
 import t from "tap";
-
-import type {
-	GoalDocument,
-	GoalSubscriptionDocument,
-	QuestDocument,
-	QuestSubscriptionDocument,
-} from "tachi-common";
 
 function mkGoalSub(merge: Partial<GoalSubscriptionDocument>) {
 	return dm(HC511UserGoal, merge);

@@ -1,9 +1,9 @@
+import type { BatchManual } from "tachi-common";
+
 import { log } from "#lib/log/log.js";
 import { EscapeStringRegexp } from "#utils/misc";
 import deepmerge from "deepmerge";
 import t from "tap";
-
-import type { BatchManual } from "tachi-common";
 
 import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 import { ParseBatchManualFromObject as ParserFn } from "./parser";

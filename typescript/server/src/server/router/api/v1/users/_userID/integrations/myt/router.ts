@@ -1,11 +1,11 @@
+import type { MytCardInfo } from "tachi-common";
+
 import prValidate from "#server/middleware/prudence-validate";
 import { RequireKamaitachi } from "#server/middleware/type-require";
 import db from "#services/mongo/db";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
 import { p } from "prudence";
-
-import type { MytCardInfo } from "tachi-common";
 
 import { RequireSelfRequestFromUser } from "../../middleware";
 

@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
-
 import { type GameGroup, GetGPTString, GPTStringToV3, type Playtype } from "tachi-common";
+
 import { CreateFolderID, CreateTableID, ReadCollection, WriteCollection } from "../../util";
 
 // ── Stability map ─────────────────────────────────────────────────────────────

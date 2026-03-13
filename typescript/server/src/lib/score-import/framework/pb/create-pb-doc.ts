@@ -5,7 +5,6 @@ import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implement
 import { GetEveryonesRivalIDs } from "#lib/rivals/rivals";
 import db from "#services/mongo/db";
 import { DeleteUndefinedProps } from "#utils/misc";
-
 import {
 	type ChartDocument,
 	type GameGroup,
@@ -17,6 +16,7 @@ import {
 	type Playtype,
 	type ScoreDocument,
 } from "tachi-common";
+
 import { CreateScoreCalcData } from "../calculated-data/score";
 import { CreateEnumIndexes } from "../score-importing/derivers";
 

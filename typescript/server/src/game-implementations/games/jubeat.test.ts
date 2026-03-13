@@ -1,3 +1,5 @@
+import type { ProvidedMetrics, ScoreData } from "tachi-common";
+
 import { log } from "#lib/log/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
@@ -5,11 +7,9 @@ import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestSnapshot } from "#test-utils/single-process-snapshot";
 import { TestingJubeatChart } from "#test-utils/test-data";
+import { JUBEAT_SINGLE_CONF } from "tachi-common/config/game-support/jubeat";
 import t from "tap";
 
-import type { ProvidedMetrics, ScoreData } from "tachi-common";
-
-import { JUBEAT_SINGLE_CONF } from "tachi-common/config/game-support/jubeat";
 import { JUBEAT_IMPL } from "./jubeat";
 
 const baseMetrics: ProvidedMetrics["jubeat:Single"] = {

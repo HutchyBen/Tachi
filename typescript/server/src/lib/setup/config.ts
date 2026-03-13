@@ -194,10 +194,17 @@ if (!["crit", "debug", "error", "info", "severe", "verbose", "warn"].includes(lo
 	process.exit(1);
 }
 
-const POSTGRES_URL = process.env.POSTGRES_URL ?? "";
+const POSTGRES_URL = process.env.POSTGRES_URL;
 
 if (!POSTGRES_URL) {
 	log.error(`No POSTGRES_URL specified in environment. Terminating.`);
+	process.exit(1);
+}
+
+const MIGRATIONS_DIR = process.env.MIGRATIONS_DIR;
+
+if (!MIGRATIONS_DIR) {
+	log.error(`No MIGRATIONS_DIR specified in environment. Terminating.`);
 	process.exit(1);
 }
 
@@ -207,6 +214,7 @@ export const Env = {
 	REDIS_URL,
 	MONGO_URL,
 	POSTGRES_URL,
+	MIGRATIONS_DIR,
 	NODE_ENV: NODE_ENV as "dev" | "production" | "staging" | "test",
 	COMMIT_HASH: process.env.COMMIT_HASH,
 	VERSION: process.env.VERSION,

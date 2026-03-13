@@ -1,11 +1,11 @@
+import type { GameGroup, Playtype, ScoreDocument } from "tachi-common";
+
 import { log } from "#lib/log/log.js";
 import { GetAndUpdateUsersGoals } from "#lib/score-import/framework/goals/goals";
 import { UpdateChartRanking } from "#lib/score-import/framework/pb/create-pb-doc";
 import { ProcessPBs } from "#lib/score-import/framework/pb/process-pbs";
 import { UpdateUsersQuests } from "#lib/score-import/framework/quests/quests";
 import { UpdateUsersGamePlaytypeStats } from "#lib/score-import/framework/ugpt-stats/update-ugpt-stats";
-
-import type { GameGroup, Playtype, ScoreDocument } from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import db from "#services/mongo/db";
 import { RecalcSessions } from "#utils/calculations/recalc-sessions";

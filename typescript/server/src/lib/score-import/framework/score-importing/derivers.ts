@@ -1,11 +1,8 @@
 import type { GPTDerivers } from "#game-implementations/types";
 import type { KtLogger } from "#lib/log/log.js";
+import type { MetricValue } from "tachi-common/types/metrics";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
-
-import type { MetricValue } from "tachi-common/types/metrics";
-import type { DryScore, DryScoreData } from "../common/types";
-
 import {
 	type ChartDocument,
 	type DerivedMetrics,
@@ -16,6 +13,9 @@ import {
 	type ScoreData,
 	type ScoreEnumIndexes,
 } from "tachi-common";
+
+import type { DryScore, DryScoreData } from "../common/types";
+
 import { InternalFailure } from "../common/converter-failures";
 
 /**

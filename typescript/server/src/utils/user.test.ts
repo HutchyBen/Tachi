@@ -1,10 +1,10 @@
+import type { UserDocument } from "tachi-common";
+
 import db from "#services/mongo/db";
 import { DatabaseSchemas } from "#services/mongo/schemas";
 import { mkFakeUser } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
-
-import type { UserDocument } from "tachi-common";
 
 import { FormatUserDoc, GetUserCaseInsensitive, GetUsersWithIDs } from "./user";
 

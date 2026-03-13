@@ -1,12 +1,7 @@
 import type { RequestHandler } from "express";
 
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
-
-import {
-	type GameGroup,
-	GetGameGroupConfig,
-	type Playtype,
-} from "tachi-common";
+import { type GameGroup, GetGameGroupConfig, type Playtype } from "tachi-common";
 
 export const ValidatePlaytypeFromParam: RequestHandler = (req, res, next) => {
 	const game = GetTachiData(req, "game");

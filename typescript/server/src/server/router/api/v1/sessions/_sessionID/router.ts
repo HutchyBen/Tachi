@@ -8,7 +8,6 @@ import { GetTachiData } from "#utils/req-tachi-data";
 import { GetUserWithID } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-
 import {
 	type FolderDocument,
 	GetGamePTConfig,
@@ -18,6 +17,7 @@ import {
 	type ScoreDocument,
 } from "tachi-common";
 import { optNull } from "tachi-common/lib/schemas";
+
 import { GetSessionFromParam, RequireOwnershipOfSession } from "./middleware";
 
 const router: Router = Router({ mergeParams: true });

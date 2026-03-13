@@ -6,13 +6,13 @@ import { GetUGPT } from "#utils/req-tachi-data";
 import { FormatUserDoc } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-
 import {
 	GetGamePTConfig,
 	GetScoreMetrics,
 	PrudenceZodShim,
 	type UGPTSettingsDocument,
 } from "tachi-common";
+
 import { RequireAuthedAsUser } from "../../../../middleware";
 
 const router: Router = Router({ mergeParams: true });

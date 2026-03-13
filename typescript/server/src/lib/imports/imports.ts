@@ -1,3 +1,5 @@
+import type { ImportDocument } from "tachi-common";
+
 import { log } from "#lib/log/log.js";
 import {
 	CheckAndSetOngoingImportLock,
@@ -5,8 +7,6 @@ import {
 } from "#lib/score-import/framework/import-locks/lock";
 import { DeleteMultipleScores } from "#lib/score-mutation/delete-scores";
 import db from "#services/mongo/db";
-
-import type { ImportDocument } from "tachi-common";
 
 interface OngoingImportError {
 	tag: "ONGOING_IMPORT";

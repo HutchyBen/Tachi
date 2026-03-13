@@ -1,5 +1,4 @@
 import chalk from "chalk";
-
 import {
 	type ChartDocument,
 	GetGPTConfig,
@@ -10,6 +9,7 @@ import {
 	type V3Game,
 	V3ToGPTString,
 } from "tachi-common";
+
 import { ReadCollection } from "../util";
 
 // check that a given matchType works for a given game.

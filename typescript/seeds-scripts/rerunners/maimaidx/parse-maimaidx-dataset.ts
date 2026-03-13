@@ -1,6 +1,6 @@
 import { log } from "#log";
-
 import { type ChartDocument, type Difficulties, type SongDocument } from "tachi-common";
+
 import {
 	CreateChartID,
 	GetFreshSongIDGenerator,

@@ -1,5 +1,4 @@
 import type { Mutable } from "#utils/types";
-
 import type {
 	ConfProvidedMetrics,
 	GPTString,

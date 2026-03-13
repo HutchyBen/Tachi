@@ -1,9 +1,10 @@
 import type { ClassProvider } from "#lib/score-import/framework/calculated-data/types";
 
-import type { MyPagePlayerStage } from "./types";
-
 import { WACCA_STAGEUPS } from "tachi-common";
 import { WaccaStageUps } from "tachi-common/config/game-support/wacca";
+
+import type { MyPagePlayerStage } from "./types";
+
 import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 
 const STAGES: Record<number, number> = {

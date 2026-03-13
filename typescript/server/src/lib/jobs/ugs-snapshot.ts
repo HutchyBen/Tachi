@@ -1,9 +1,9 @@
+import type { UserGameStats, UserGameStatsSnapshotDocument } from "tachi-common";
+
 import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import { GetMillisecondsSince } from "#utils/misc";
 import { GetAllRankings } from "#utils/user";
-
-import type { UserGameStats, UserGameStatsSnapshotDocument } from "tachi-common";
 
 // get the time of this midnight. it's possible this script eclipses itself when weird timezone
 // nonsense happens. we'll have to see.

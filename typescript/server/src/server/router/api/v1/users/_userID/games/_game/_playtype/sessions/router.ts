@@ -4,7 +4,6 @@ import db from "#services/mongo/db";
 import { GetUGPT } from "#utils/req-tachi-data";
 import { CheckStrSessionAlg } from "#utils/string-checks";
 import { Router } from "express";
-
 import {
 	type AnySessionRatingAlg,
 	GetGamePTConfig,

@@ -1,3 +1,5 @@
+import type { ChartDocument, PBScoreDocument } from "tachi-common";
+
 import db from "#services/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
@@ -9,11 +11,6 @@ import {
 	TestingIIDXSPScorePB,
 } from "#test-utils/test-data";
 import t from "tap";
-
-import type {
-	ChartDocument,
-	PBScoreDocument,
-} from "tachi-common";
 
 t.test("GET /api/v1/users/:userID/games/:game/:playtype/pbs/best", (t) => {
 	t.beforeEach(ResetDBState);

@@ -1,10 +1,3 @@
-import { log } from "#lib/log/log.js";
-import { BacksyncCollection, PullDatabaseSeeds } from "#lib/seeds/repo";
-import db from "#services/mongo/db";
-import { RecalcAllScores } from "#utils/calculations/recalc-scores";
-import fetch from "#utils/fetch";
-import { WrapScriptPromise } from "#utils/misc";
-
 import type {
 	ChartDocument,
 	Difficulties,
@@ -13,6 +6,13 @@ import type {
 	SongDocument,
 	Versions,
 } from "tachi-common";
+
+import { log } from "#lib/log/log.js";
+import { BacksyncCollection, PullDatabaseSeeds } from "#lib/seeds/repo";
+import db from "#services/mongo/db";
+import { RecalcAllScores } from "#utils/calculations/recalc-scores";
+import fetch from "#utils/fetch";
+import { WrapScriptPromise } from "#utils/misc";
 
 const difficultyResolve: Record<string, [Playtypes["iidx"], Difficulties["iidx:DP" | "iidx:SP"]]> =
 	{

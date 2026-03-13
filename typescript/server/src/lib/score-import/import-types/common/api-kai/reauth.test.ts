@@ -1,3 +1,5 @@
+import type { KaiAuthDocument } from "tachi-common";
+
 import { log } from "#lib/log/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
@@ -5,8 +7,6 @@ import { MockJSONFetch } from "#test-utils/mock-fetch";
 import ResetDBState from "#test-utils/resets";
 import deepmerge from "deepmerge";
 import t from "tap";
-
-import type { KaiAuthDocument } from "tachi-common";
 
 import { CreateKaiReauthFunction } from "./reauth";
 

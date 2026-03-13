@@ -1,8 +1,8 @@
 import { log } from "#lib/log/log.js";
 import ResetDBState from "#test-utils/resets";
+import { IIDXDans } from "tachi-common/config/game-support/iidx";
 import t from "tap";
 
-import { IIDXDans } from "tachi-common/config/game-support/iidx";
 import { CreateFerStaticClassProvider } from "./class-handler";
 
 t.test("#FerStaticClassProvider", (t) => {

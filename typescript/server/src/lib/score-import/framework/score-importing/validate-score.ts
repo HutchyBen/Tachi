@@ -1,9 +1,8 @@
+import type { ConfScoreMetric } from "tachi-common/types/metrics";
+
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import { RunValidators } from "#game-implementations/games/_common";
 import { ONE_HOUR } from "#lib/constants/time";
-
-import type { ConfScoreMetric } from "tachi-common/types/metrics";
-
 import {
 	type ChartDocument,
 	GetGPTConfig,
@@ -11,6 +10,7 @@ import {
 	type GPTString,
 	type ScoreDocument,
 } from "tachi-common";
+
 import { InvalidScoreFailure } from "../common/converter-failures";
 
 /**

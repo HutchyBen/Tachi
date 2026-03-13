@@ -1,5 +1,4 @@
 import type { GPTServerImplementation } from "#game-implementations/types";
-
 import type { GPTStrings } from "tachi-common";
 
 import {

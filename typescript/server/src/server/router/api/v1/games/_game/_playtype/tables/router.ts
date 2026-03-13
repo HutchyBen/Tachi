@@ -5,8 +5,8 @@ import db from "#services/mongo/db";
 import { GetFoldersFromTable } from "#utils/folder";
 import { GetGPT, GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
-
 import { FormatGameGroup, type TableDocument } from "tachi-common";
+
 import { GetTableFromParam } from "./middleware";
 
 const router: Router = Router({ mergeParams: true });

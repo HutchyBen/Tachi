@@ -1,3 +1,5 @@
+import type { GoalDocument, GoalSubscriptionDocument } from "tachi-common";
+
 import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import { dmf } from "#test-utils/misc.js";
@@ -10,8 +12,6 @@ import {
 } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
 import t from "tap";
-
-import type { GoalDocument, GoalSubscriptionDocument } from "tachi-common";
 
 import { ProcessGoal, UpdateGoalsForUser } from "./goals";
 

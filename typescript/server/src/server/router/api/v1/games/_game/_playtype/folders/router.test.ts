@@ -1,3 +1,5 @@
+import type { FolderDocument } from "tachi-common";
+
 import db from "#services/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
@@ -5,8 +7,6 @@ import { Testing511SPA } from "#test-utils/test-data";
 import { CreateFolderChartLookup } from "#utils/folder";
 import deepmerge from "deepmerge";
 import t from "tap";
-
-import type { FolderDocument } from "tachi-common";
 
 const mockFolder: FolderDocument = {
 	folderID: "foo",

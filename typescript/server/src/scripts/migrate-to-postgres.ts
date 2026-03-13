@@ -66,7 +66,6 @@ import { type Insertable, Kysely, PostgresDialect, sql } from "kysely";
 import monk from "monk";
 import path from "path";
 import { Pool } from "pg";
-
 import {
 	type CGCardInfo,
 	type ClassAchievementDocument,
@@ -94,6 +93,7 @@ import {
 	type UserNameChangeDocument,
 	type UserSettingsDocument,
 } from "tachi-common";
+
 import { buildChartIdMap, importSeeds } from "./load-seeds-pg";
 
 // ──────────────────────────────────────────────────────────────────────────────

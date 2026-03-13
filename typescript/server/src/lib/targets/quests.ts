@@ -1,8 +1,3 @@
-import { SubscribeFailReasons } from "#lib/constants/err-codes";
-import { log } from "#lib/log/log.js";
-import { BulkSendNotification } from "#lib/notifications/notifications";
-import db from "#services/mongo/db";
-
 import type {
 	GameGroup,
 	GoalDocument,
@@ -12,6 +7,11 @@ import type {
 	QuestDocument,
 	QuestSubscriptionDocument,
 } from "tachi-common";
+
+import { SubscribeFailReasons } from "#lib/constants/err-codes";
+import { log } from "#lib/log/log.js";
+import { BulkSendNotification } from "#lib/notifications/notifications";
+import db from "#services/mongo/db";
 
 import {
 	type EvaluatedGoalReturn,

@@ -1,4 +1,6 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { Difficulties, integer, Versions } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import {
 	InternalFailure,
@@ -10,8 +12,6 @@ import { ParseDateFromString } from "#lib/score-import/framework/common/score-ut
 import { FindChartOnInGameIDVersion } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { Difficulties, integer, Versions } from "tachi-common";
-import type { GetEnumValue } from "tachi-common/types/metrics";
 import type { ConverterFunction } from "../../types";
 import type { CGContext, CGPopnScore } from "../types";
 

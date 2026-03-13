@@ -1,6 +1,7 @@
+import type { ImportTypes } from "tachi-common";
+
 import { Never } from "#utils/misc";
 
-import type { ImportTypes } from "tachi-common";
 import type { ConverterFunction, ImportTypeContextMap, ImportTypeDataMap } from "./common/types";
 
 import ConvertAPIMytChunithm from "./api/myt-chunithm/converter";

@@ -1,9 +1,9 @@
+import type { UserDocument } from "tachi-common";
+
 import db from "#services/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
-
-import type { UserDocument } from "tachi-common";
 
 t.test("GET /api/v1/users", (t) => {
 	t.beforeEach(ResetDBState);

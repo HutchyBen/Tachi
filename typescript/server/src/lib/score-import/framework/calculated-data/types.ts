@@ -1,5 +1,4 @@
 import type { KtLogger } from "#lib/log/log.js";
-
 import type { ClassConfigs, Classes, GPTString, integer } from "tachi-common";
 import type { DerivedClassConfig, ProvidedClassConfig } from "tachi-common/types/game-config-utils";
 

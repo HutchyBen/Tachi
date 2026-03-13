@@ -1,5 +1,4 @@
 import type { ClassProvider } from "#lib/score-import/framework/calculated-data/types";
-
 import type { integer } from "tachi-common";
 
 import { IIDXDans } from "tachi-common/config/game-support/iidx";

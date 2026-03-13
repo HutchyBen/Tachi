@@ -1,6 +1,6 @@
 import chalk from "chalk";
-
 import { type GoalDocument } from "tachi-common";
+
 import { CreateGoalID, ReadCollection } from "../util";
 import { FormatFunctions } from "./test-utils";
 

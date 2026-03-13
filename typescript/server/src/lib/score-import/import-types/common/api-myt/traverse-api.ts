@@ -14,8 +14,8 @@ import {
 	type ServiceError,
 } from "@grpc/grpc-js";
 import { Status } from "@grpc/grpc-js/build/src/constants";
-
 import { type GameGroup, GetGameGroupConfig, type integer } from "tachi-common";
+
 import { GameToMytGame } from "./util";
 
 // Hardcode all requests to time out after 10m.

@@ -11,11 +11,6 @@ import {
 	FindSDVXChartOnInGameIDVersion,
 } from "#utils/queries/charts";
 import { FindSongOnID, FindSongOnTitleInsensitive } from "#utils/queries/songs";
-
-import type { DryScore } from "../../../framework/common/types";
-import type { ConverterFunction } from "../types";
-import type { BatchManualContext } from "./types";
-
 import {
 	type BatchManualScore,
 	type ChartDocument,
@@ -29,6 +24,11 @@ import {
 	type SongDocument,
 	type Versions,
 } from "tachi-common";
+
+import type { DryScore } from "../../../framework/common/types";
+import type { ConverterFunction } from "../types";
+import type { BatchManualContext } from "./types";
+
 import {
 	InternalFailure,
 	InvalidScoreFailure,

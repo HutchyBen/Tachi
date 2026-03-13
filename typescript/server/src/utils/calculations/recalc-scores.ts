@@ -8,7 +8,6 @@ import { TachiConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
 import { EfficientDBIterate } from "#utils/efficient-db-iterate";
 import { FormatUserDoc } from "#utils/user";
-
 import {
 	type GameGroup,
 	GetGameGroupConfig,

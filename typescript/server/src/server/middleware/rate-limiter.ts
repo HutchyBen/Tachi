@@ -1,4 +1,5 @@
 import type { Request } from "express";
+import type { integer } from "tachi-common";
 
 import { ONE_MINUTE } from "#lib/constants/time";
 import { log } from "#lib/log/log.js";
@@ -7,8 +8,6 @@ import { RedisClient } from "#services/redis/redis";
 import { OmitUndefinedKeys } from "#utils/misc";
 import rateLimit, { type Options } from "express-rate-limit";
 import RateLimitRedis from "rate-limit-redis";
-
-import type { integer } from "tachi-common";
 
 function CreateStore(name: string) {
 	// undefined forces a default to an in-memory store

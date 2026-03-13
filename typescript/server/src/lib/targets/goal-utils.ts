@@ -5,7 +5,6 @@ import db from "#services/mongo/db";
 import { GetFolderForIDGuaranteed, HumaniseChartID } from "#utils/db";
 import { GetFolderChartIDs } from "#utils/folder";
 import { HumanisedJoinArray, OnlyFloatToDP } from "#utils/misc";
-
 import {
 	FormatGameGroup,
 	type GameGroup,

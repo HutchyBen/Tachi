@@ -1,11 +1,11 @@
 import type { ScoreImportJobData } from "#lib/score-import/worker/types";
+import type { ImportTypes } from "tachi-common";
 
 import { CDNStoreOrOverwrite } from "#lib/cdn/cdn";
 import { GetScoreImportInputURL } from "#lib/cdn/url-format";
 import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 
-import type { ImportTypes } from "tachi-common";
 import type ScoreImportFatalError from "../score-importing/score-import-error";
 
 /**

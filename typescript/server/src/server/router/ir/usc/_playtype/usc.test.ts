@@ -1,14 +1,9 @@
+import type { ChartDocument, PBScoreDocument, ScoreDocument, UserDocument } from "tachi-common";
+
 import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import deepmerge from "deepmerge";
 import t from "tap";
-
-import type {
-	ChartDocument,
-	PBScoreDocument,
-	ScoreDocument,
-	UserDocument,
-} from "tachi-common";
 
 import { CreatePOSTScoresResponseBody, TachiScoreToServerScore } from "./usc";
 

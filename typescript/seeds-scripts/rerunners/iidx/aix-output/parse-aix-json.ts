@@ -1,6 +1,5 @@
 import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
-
 import {
 	type ChartDocument,
 	type Difficulties,
@@ -9,6 +8,7 @@ import {
 	type Playtypes,
 	type SongDocument,
 } from "tachi-common";
+
 import { CreateChartID, GetFreshScoreIDGenerator, MutateCollection } from "../../util";
 
 interface AixChart {

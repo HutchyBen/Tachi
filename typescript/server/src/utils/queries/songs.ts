@@ -1,13 +1,12 @@
 import type { KtLogger } from "#lib/log/log.js";
 import type { FindOneResult } from "monk";
+import type { GameGroup, integer, SongDocument } from "tachi-common";
 
 import {
 	AmbiguousTitleFailure,
 	InternalFailure,
 } from "#lib/score-import/framework/common/converter-failures";
 import db from "#services/mongo/db";
-
-import type { GameGroup, integer, SongDocument } from "tachi-common";
 
 import { EscapeStringRegexp } from "../misc";
 

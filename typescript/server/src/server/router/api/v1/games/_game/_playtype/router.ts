@@ -16,7 +16,6 @@ import {
 import { GetUsersWithIDs } from "#utils/user";
 import { Router } from "express";
 import NodeCache from "node-cache";
-
 import {
 	FormatGameGroup,
 	type GameGroup,
@@ -25,6 +24,7 @@ import {
 	type Playtype,
 	type UserGameStats,
 } from "tachi-common";
+
 import chartsRouter from "./charts/router";
 import foldersRouter from "./folders/router";
 import { ValidatePlaytypeFromParam } from "./middleware";

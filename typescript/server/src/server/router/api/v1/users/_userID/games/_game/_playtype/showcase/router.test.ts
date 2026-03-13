@@ -5,14 +5,8 @@ import ResetDBState from "#test-utils/resets";
 import { Testing511SPA, TestingIIDXFolderSP10, TestingIIDXSPScorePB } from "#test-utils/test-data";
 import { CreateFolderChartLookup } from "#utils/folder";
 import deepmerge from "deepmerge";
+import { type ChartDocument, IIDX_GRADES, IIDX_LAMPS, type UserDocument } from "tachi-common";
 import t from "tap";
-
-import {
-	type ChartDocument,
-	IIDX_GRADES,
-	IIDX_LAMPS,
-	type UserDocument,
-} from "tachi-common";
 
 const SetFolders = async () => {
 	await db.folders.insert(TestingIIDXFolderSP10);

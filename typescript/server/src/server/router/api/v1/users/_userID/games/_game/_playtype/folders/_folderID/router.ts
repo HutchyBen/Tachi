@@ -6,13 +6,13 @@ import { GetEnumDistForFolder, GetFolderCharts, GetPBsOnFolder } from "#utils/fo
 import { GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import { ParseStrPositiveInt } from "#utils/string-checks";
 import { Router } from "express";
-
 import {
 	GetGamePTConfig,
 	GetScoreMetricConf,
 	type ScoreDocument,
 	ValidateMetric,
 } from "tachi-common";
+
 import { GetFolderFromParam } from "../../../../../../../games/_game/_playtype/folders/middleware";
 import { RequireSelfRequestFromUser } from "../../../../../middleware";
 

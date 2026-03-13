@@ -1,4 +1,6 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ScoreDocument } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import {
 	InternalFailure,
@@ -7,8 +9,6 @@ import {
 import { FindBMSChartOnHash } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { ScoreDocument } from "tachi-common";
-import type { GetEnumValue } from "tachi-common/types/metrics";
 import type { ConverterFunction } from "../../common/types";
 import type { LR2HookContext, LR2HookScore } from "./types";
 

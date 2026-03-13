@@ -6,10 +6,9 @@ import monk, { type IMonkManager } from "monk";
 import { log } from "#lib/log/log.js";
 import { TachiConfig } from "#lib/setup/config";
 import { DedupeArr, Random20Hex } from "#utils/misc";
+import { GAME_PT_CONFIGS } from "tachi-common";
 
 import type { Databases } from "./db";
-
-import { GAME_PT_CONFIGS } from "tachi-common";
 
 interface Index {
 	fields: Record<string, unknown>;

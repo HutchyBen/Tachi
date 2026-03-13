@@ -1,7 +1,7 @@
+import type { integer, NotificationBody, NotificationDocument } from "tachi-common";
+
 import db from "#services/mongo/db";
 import { Random20Hex } from "#utils/misc";
-
-import type { integer, NotificationBody, NotificationDocument } from "tachi-common";
 
 function ConstructNotificationDoc(
 	title: string,

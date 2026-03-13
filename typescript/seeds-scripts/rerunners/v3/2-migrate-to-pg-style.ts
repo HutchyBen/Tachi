@@ -1,12 +1,7 @@
 import fs from "fs";
 import path from "path";
+import { GAME_GROUP_CONFIGS, GAME_PT_CONFIGS, GPTStringToV3, V3ToGameGroup } from "tachi-common";
 
-import {
-	GAME_GROUP_CONFIGS,
-	GAME_PT_CONFIGS,
-	GPTStringToV3,
-	V3ToGameGroup,
-} from "tachi-common";
 import { CreateChartID, CreateSongID, ReadCollection, WriteCollection } from "../../util";
 
 // ── Stability map ─────────────────────────────────────────────────────────────

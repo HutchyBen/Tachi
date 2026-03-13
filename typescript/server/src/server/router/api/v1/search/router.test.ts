@@ -1,11 +1,11 @@
+import type { ChartDocument, SongDocument } from "tachi-common";
+
 import db from "#services/mongo/db";
 import { mkFakeGameSettings, mkFakeUser } from "#test-utils/misc";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import { LoadTachiIIDXData } from "#test-utils/test-data";
 import t from "tap";
-
-import type { ChartDocument, SongDocument } from "tachi-common";
 
 t.test("GET /api/v1/search", (t) => {
 	t.beforeEach(ResetDBState);

@@ -1,5 +1,4 @@
 import db from "#services/mongo/db";
-
 import {
 	FormatGameGroup,
 	type GameGroup,
@@ -7,6 +6,7 @@ import {
 	type Playtype,
 	type UserDocument,
 } from "tachi-common";
+
 import { BulkSendNotification, SendNotification } from "./notifications";
 
 /**

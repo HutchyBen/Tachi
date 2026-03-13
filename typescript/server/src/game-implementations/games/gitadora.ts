@@ -5,8 +5,8 @@ import { ProfileSumBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
 import { IsNullish } from "#utils/misc";
 import { GITADORASkill } from "rg-stats";
-
 import { GetGrade, GITADORA_GBOUNDARIES } from "tachi-common";
+
 import { GoalFmtPercent, GoalOutOfFmtPercent, GradeGoalFormatter } from "./_common";
 
 const GITADORA_IMPL: GPTServerImplementation<"gitadora:Dora" | "gitadora:Gita"> = {

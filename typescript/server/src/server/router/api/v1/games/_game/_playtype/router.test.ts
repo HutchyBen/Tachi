@@ -4,13 +4,8 @@ import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import { FakeOtherUser } from "#test-utils/test-data";
 import dm from "deepmerge";
+import { GetGamePTConfig, type UserDocument, type UserGameStats } from "tachi-common";
 import t from "tap";
-
-import {
-	GetGamePTConfig,
-	type UserDocument,
-	type UserGameStats,
-} from "tachi-common";
 
 t.test("GET /api/v1/games/:game/:playtype", (t) => {
 	t.test("Should return information about the game:playtype.", async (t) => {

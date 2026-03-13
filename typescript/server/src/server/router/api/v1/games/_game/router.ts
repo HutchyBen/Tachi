@@ -1,7 +1,7 @@
 import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
-
 import { GetGameGroupConfig } from "tachi-common";
+
 import playtypeRouter from "./_playtype/router";
 import { ValidateGameFromParam } from "./middleware";
 

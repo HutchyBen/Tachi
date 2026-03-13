@@ -4,6 +4,7 @@ import ScoreImportFatalError from "#lib/score-import/framework/score-importing/s
 import db from "#services/mongo/db";
 import fetch from "node-fetch";
 import { p, type PrudenceSchema } from "prudence";
+import { FormatPrError, type integer } from "tachi-common";
 
 import type { ParserFunctionReturns } from "../types";
 import type {
@@ -16,7 +17,6 @@ import type {
 	CGSupportedGames,
 } from "./types";
 
-import { FormatPrError, type integer } from "tachi-common";
 import { FetchCGScores } from "./traverse-api";
 import { CGGameToTachiGame } from "./util";
 

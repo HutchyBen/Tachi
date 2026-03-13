@@ -21,7 +21,6 @@ import db from "#services/mongo/db";
 import { ApplyNTimes, RFA } from "#utils/misc";
 import fs from "fs";
 import path from "path";
-
 import {
 	type ChartDocument,
 	CHUNITHM_CLEAR_LAMPS,
@@ -40,6 +39,7 @@ import {
 	type UGPTSettingsDocument,
 	type UserDocument,
 } from "tachi-common";
+
 import { dmf } from "./misc";
 
 const file = (name: string) => path.join(__dirname, "/test-data", name);

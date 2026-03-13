@@ -16,7 +16,6 @@ import {
 	TestingIIDXSPScorePB,
 } from "#test-utils/test-data";
 import { CreateFolderChartLookup } from "#utils/folder";
-
 import {
 	type ChartDocument,
 	type GoalSubscriptionDocument,

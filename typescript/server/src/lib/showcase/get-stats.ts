@@ -1,6 +1,5 @@
 import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
-
 import {
 	type GameGroup,
 	GetGPTString,
@@ -9,6 +8,7 @@ import {
 	type Playtype,
 	type ShowcaseStatDetails,
 } from "tachi-common";
+
 import { EvaluateShowcaseStat } from "./evaluator";
 import { GetRelatedStatDocuments } from "./get-related";
 

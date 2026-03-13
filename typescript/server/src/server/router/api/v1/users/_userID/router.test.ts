@@ -1,3 +1,5 @@
+import type { GameGroup, ImportDocument, ImportTypes, UserGameStats } from "tachi-common";
+
 import { ONE_DAY, ONE_YEAR } from "#lib/constants/time";
 import db from "#services/mongo/db";
 import { CreateFakeAuthCookie } from "#test-utils/fake-auth";
@@ -5,13 +7,6 @@ import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import { Random20Hex } from "#utils/misc";
 import t from "tap";
-
-import type {
-	GameGroup,
-	ImportDocument,
-	ImportTypes,
-	UserGameStats,
-} from "tachi-common";
 
 import { PasswordCompare } from "../../auth/auth";
 

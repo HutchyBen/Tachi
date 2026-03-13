@@ -3,12 +3,12 @@ import db from "#services/mongo/db";
 import { DeleteUndefinedProps, IsNullishOrEmptyStr } from "#utils/misc";
 import { FindIIDXChartOnInGameIDVersion, FindIIDXChartWith2DXtraHash } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
+import { type Difficulties, GetGPTString, type Playtypes } from "tachi-common";
 
 import type { DryScore } from "../../../framework/common/types";
 import type { ConverterFunction } from "../../common/types";
 import type { FervidexContext, FervidexScore } from "./types";
 
-import { type Difficulties, GetGPTString, type Playtypes } from "tachi-common";
 import {
 	InternalFailure,
 	InvalidScoreFailure,

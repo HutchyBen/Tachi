@@ -1,8 +1,8 @@
 import { log } from "#lib/log/log.js";
 import ResetDBState from "#test-utils/resets";
+import { GITADORA_COLOURS, type UserGameStats } from "tachi-common";
 import t from "tap";
 
-import { GITADORA_COLOURS, type UserGameStats } from "tachi-common";
 import { CalculateUGPTClasses, ProcessClassDeltas } from "./classes";
 
 t.test("#CalculateUGPTClasses", (t) => {

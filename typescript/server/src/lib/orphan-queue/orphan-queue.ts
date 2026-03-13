@@ -1,10 +1,4 @@
 import type { FilterQuery } from "mongodb";
-
-import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
-import { GetNextCounterValue } from "#utils/db";
-import { DedupeArr } from "#utils/misc";
-
 import type {
 	ChartDocument,
 	GPTString,
@@ -13,6 +7,11 @@ import type {
 	OrphanChartDocument,
 	SongDocument,
 } from "tachi-common";
+
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
+import { GetNextCounterValue } from "#utils/db";
+import { DedupeArr } from "#utils/misc";
 
 /**
  * Handles an orphan queue request.

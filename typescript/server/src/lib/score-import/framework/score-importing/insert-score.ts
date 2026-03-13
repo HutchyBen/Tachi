@@ -1,7 +1,7 @@
+import type { integer, ScoreDocument } from "tachi-common";
+
 import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
-
-import type { integer, ScoreDocument } from "tachi-common";
 
 const MAX_PIPELINE_LENGTH = 500;
 

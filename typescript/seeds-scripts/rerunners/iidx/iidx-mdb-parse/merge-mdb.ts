@@ -2,7 +2,6 @@ import { log } from "#log";
 import { Command } from "commander";
 import fs from "fs";
 import path from "path";
-
 import {
 	type ChartDocument,
 	type Difficulties,
@@ -11,6 +10,7 @@ import {
 	type SongDocument,
 	type Versions,
 } from "tachi-common";
+
 import {
 	CreateChartID,
 	GetFreshSongIDGenerator,

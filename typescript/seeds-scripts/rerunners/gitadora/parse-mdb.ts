@@ -1,7 +1,6 @@
 import { Command } from "commander";
 import { XMLParser } from "fast-xml-parser";
 import { readFileSync } from "fs";
-
 import {
 	type ChartDocument,
 	type Difficulties,
@@ -10,6 +9,7 @@ import {
 	type Versions,
 } from "tachi-common";
 import { GITADORA_GITA_CONF } from "tachi-common/config/game-support/gitadora";
+
 import { CreateChartID, MutateCollection, ReadCollection, WriteCollection } from "../../util";
 
 const supportedVersions = Object.keys(GITADORA_GITA_CONF.versions);

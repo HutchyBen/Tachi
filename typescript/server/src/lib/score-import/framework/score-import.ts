@@ -1,9 +1,10 @@
+import type { ImportDocument, ImportTypes, integer } from "tachi-common";
+
 import { JOB_RETRY_COUNT } from "#lib/constants/tachi";
 import { log } from "#lib/log/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import { Sleep } from "#utils/misc";
 
-import type { ImportDocument, ImportTypes, integer } from "tachi-common";
 import type { ScoreImportJobData, ScoreImportWorkerReturns } from "../worker/types";
 
 import ScoreImportQueue, { ScoreImportQueueEvents } from "../worker/queue";

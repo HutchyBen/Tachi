@@ -2,7 +2,6 @@ import type { FilterQuery } from "mongodb";
 
 import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
-
 import {
 	FormatChart,
 	type GameGroup,

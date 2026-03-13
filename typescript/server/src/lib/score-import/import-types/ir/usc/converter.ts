@@ -1,4 +1,5 @@
 import type { USCClientScore } from "#server/router/ir/usc/_playtype/types";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import {
 	USC_DEFAULT_HOLD,
@@ -10,7 +11,6 @@ import {
 import db from "#services/mongo/db";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { GetEnumValue } from "tachi-common/types/metrics";
 import type { DryScore } from "../../../framework/common/types";
 import type { ConverterFunction } from "../../common/types";
 import type { IRUSCContext } from "./types";

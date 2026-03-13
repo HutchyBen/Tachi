@@ -5,10 +5,9 @@ import type {
 	ParserFunctionReturns,
 } from "#lib/score-import/import-types/common/types";
 import type { ScoreImportJobData } from "#lib/score-import/worker/types";
+import type { ImportTypes } from "tachi-common";
 
 import { Parsers } from "#lib/score-import/import-types/parsers";
-
-import type { ImportTypes } from "tachi-common";
 
 export function GetInputParser<I extends ImportTypes>(jobData: ScoreImportJobData<I>) {
 	// Retrieve the set parser function for this import type.

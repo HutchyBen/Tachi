@@ -5,8 +5,8 @@ import { ProfileSumBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBestNFor } from "#game-implementations/utils/session-calc";
 import { NumToDP } from "#utils/misc";
 import { ITGHighestUnbroken } from "rg-stats";
-
 import { GetGrade, ITG_GBOUNDARIES } from "tachi-common";
+
 import { GoalFmtPercent, GradeGoalFormatter } from "./_common";
 
 export const ITG_STAMINA_IMPL: GPTServerImplementation<"itg:Stamina"> = {

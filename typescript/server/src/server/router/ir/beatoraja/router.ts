@@ -2,6 +2,7 @@ import type {
 	BeatorajaChart,
 	BeatorajaScore,
 } from "#lib/score-import/import-types/ir/beatoraja/types";
+import type { integer } from "tachi-common";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log.js";
@@ -14,8 +15,6 @@ import { UpdateClassIfGreater } from "#utils/class";
 import { IsRecord, NotNullish } from "#utils/misc";
 import { Router } from "express";
 import { p } from "prudence";
-
-import type { integer } from "tachi-common";
 
 import { ValidateIRClientVersion } from "./auth";
 import chartsRouter from "./charts/_chartSHA256/router";

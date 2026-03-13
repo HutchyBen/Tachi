@@ -4,8 +4,6 @@ import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestSnapshot } from "#test-utils/single-process-snapshot";
-import t from "tap";
-
 import {
 	type ChartDocument,
 	type ChartDocumentData,
@@ -16,6 +14,8 @@ import {
 	type ProvidedMetrics,
 	type ScoreData,
 } from "tachi-common";
+import t from "tap";
+
 import { BMS_7K_IMPL, BMS_14K_IMPL, PMS_CONTROLLER_IMPL, PMS_KEYBOARD_IMPL } from "./bms-pms";
 
 type BMSPMS = GPTStrings["bms" | "pms"];

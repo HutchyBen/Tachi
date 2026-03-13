@@ -1,3 +1,11 @@
+import type {
+	AnyProfileRatingAlg,
+	GPTString,
+	ImportTypes,
+	integer,
+	UserGameStats,
+} from "tachi-common";
+
 import { GetRecentActivity } from "#lib/activity/activity";
 import { ONE_MONTH } from "#lib/constants/time";
 import { SendEmail } from "#lib/email/client";
@@ -27,14 +35,6 @@ import {
 } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-
-import type {
-	AnyProfileRatingAlg,
-	GPTString,
-	ImportTypes,
-	integer,
-	UserGameStats,
-} from "tachi-common";
 
 import { HashPassword, PasswordCompare, ValidateEmail, ValidatePassword } from "../../auth/auth";
 import apiTokensRouter from "./api-tokens/router";

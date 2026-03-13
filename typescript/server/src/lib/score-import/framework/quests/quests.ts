@@ -1,10 +1,5 @@
 import type { KtLogger } from "#lib/log/log.js";
 import type { BulkWriteUpdateOneOperation } from "mongodb";
-
-import { EvaluateQuestProgress } from "#lib/targets/quests";
-import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
-import db from "#services/mongo/db";
-
 import type {
 	GameGroup,
 	GoalImportInfo,
@@ -14,6 +9,10 @@ import type {
 	QuestImportInfo,
 	QuestSubscriptionDocument,
 } from "tachi-common";
+
+import { EvaluateQuestProgress } from "#lib/targets/quests";
+import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
+import db from "#services/mongo/db";
 
 export async function UpdateUsersQuests(
 	importGoalInfo: Array<GoalImportInfo>,

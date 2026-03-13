@@ -3,8 +3,8 @@ import type supertest from "supertest";
 import { log } from "#lib/log/log.js";
 import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
 import db from "#services/mongo/db";
-
 import { ALL_PERMISSIONS } from "tachi-common";
+
 import ResetDBState from "./resets";
 
 export async function CreateFakeAuthCookie(mockApi: supertest.SuperTest<supertest.Test>) {

@@ -1,13 +1,12 @@
 import type { CGServices } from "#lib/score-import/import-types/common/api-cg/types";
 import type { RequestHandler } from "express-serve-static-core";
+import type { CGCardInfo } from "tachi-common";
 
 import prValidate from "#server/middleware/prudence-validate";
 import db from "#services/mongo/db";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
 import { p } from "prudence";
-
-import type { CGCardInfo } from "tachi-common";
 
 import { RequireSelfRequestFromUser } from "../../../middleware";
 

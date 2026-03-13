@@ -5,8 +5,8 @@ import { ProfileAvgBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
 import { IsNullish } from "#utils/misc";
 import { MaimaiRate } from "rg-stats";
-
 import { GetGrade, MAIMAI_GBOUNDARIES } from "tachi-common";
+
 import { GoalFmtPercent, GoalOutOfFmtPercent, GradeGoalFormatter } from "./_common";
 
 export const MAIMAI_IMPL: GPTServerImplementation<"maimai:Single"> = {

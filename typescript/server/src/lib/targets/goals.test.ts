@@ -11,14 +11,14 @@ import {
 } from "#test-utils/test-data";
 import { CreateFolderChartLookup } from "#utils/folder";
 import crypto from "crypto";
-import t from "tap";
-
 import {
 	type ChartDocument,
 	type GoalDocument,
 	IIDX_GRADES,
 	type SongDocument,
 } from "tachi-common";
+import t from "tap";
+
 import {
 	EvaluateGoalForUser,
 	GetRelevantFolderGoals,

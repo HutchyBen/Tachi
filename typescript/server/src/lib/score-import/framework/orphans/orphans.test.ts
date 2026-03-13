@@ -1,3 +1,5 @@
+import type { BatchManualScore } from "tachi-common";
+
 import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
@@ -5,7 +7,6 @@ import deepmerge from "deepmerge";
 import fjsh from "fast-json-stable-hash";
 import t from "tap";
 
-import type { BatchManualScore } from "tachi-common";
 import type { BatchManualContext } from "../../import-types/common/batch-manual/types";
 import type { OrphanScoreDocument } from "../../import-types/common/types";
 

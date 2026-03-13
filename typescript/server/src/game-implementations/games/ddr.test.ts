@@ -1,7 +1,5 @@
 import { dmf, mkFakePBDDRSP } from "#test-utils/misc";
 import { Testing511SPA, TestingDDRSP, TestingDDRSPScore } from "#test-utils/test-data";
-import t from "tap";
-
 import {
 	type ChartDocumentData,
 	DDR_GRADES,
@@ -9,6 +7,8 @@ import {
 	type ProvidedMetrics,
 	type ScoreData,
 } from "tachi-common";
+import t from "tap";
+
 import { TestSnapshot } from "../../test-utils/single-process-snapshot";
 import { DDR_IMPL } from "./ddr";
 import { IIDX_DP_IMPL, IIDX_SP_IMPL } from "./iidx";

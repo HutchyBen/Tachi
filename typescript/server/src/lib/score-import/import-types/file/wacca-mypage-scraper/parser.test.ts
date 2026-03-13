@@ -2,11 +2,11 @@ import { log } from "#lib/log/log.js";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { MockMulterFile } from "#test-utils/mock-multer";
 import { TestingWaccaMyPageScraperRecordsCSV } from "#test-utils/test-data";
+import { WACCA_STAGEUPS } from "tachi-common/constants/game";
 import t from "tap";
 
 import type { MyPageRecordsParsedPB } from "./types";
 
-import { WACCA_STAGEUPS } from "tachi-common/constants/game";
 import { ParseMyPageScraperPlayerCSV, ParseMyPageScraperRecordsCSV } from "./parser";
 
 t.test("#ParseMyPageScraperRecordsCSV", (t) => {

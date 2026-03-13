@@ -1,3 +1,12 @@
+import type {
+	ChartDocument,
+	integer,
+	PBScoreDocument,
+	Playtypes,
+	SongDocument,
+} from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
+
 import {
 	CUSTOM_TACHI_IIDX_PLAYLISTS,
 	type TachiIIDXPlaylist,
@@ -9,15 +18,6 @@ import { ValidatePlaytypeFromParamFor } from "#server/router/api/v1/games/_game/
 import db from "#services/mongo/db";
 import { GetUser } from "#utils/req-tachi-data";
 import { Router } from "express";
-
-import type {
-	ChartDocument,
-	integer,
-	PBScoreDocument,
-	Playtypes,
-	SongDocument,
-} from "tachi-common";
-import type { GetEnumValue } from "tachi-common/types/metrics";
 
 const router: Router = Router({ mergeParams: true });
 

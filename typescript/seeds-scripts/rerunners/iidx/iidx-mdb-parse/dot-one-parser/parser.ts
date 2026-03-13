@@ -1,8 +1,8 @@
 import { log } from "#log";
 import fs from "fs/promises";
 import path from "path";
-
 import { type integer } from "tachi-common";
+
 import {
 	type BGMObject,
 	type BPMObject,

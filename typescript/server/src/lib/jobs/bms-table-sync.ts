@@ -7,7 +7,6 @@ import db from "#services/mongo/db";
 import { InitaliseFolderChartLookup } from "#utils/folder";
 import { FormatBMSTables, WrapScriptPromise } from "#utils/misc";
 import { type BMSTableEntry, LoadBMSTable } from "bms-table-loader";
-
 import { BMS_TABLES, type BMSTableInfo, type ChartDocument, type Playtypes } from "tachi-common";
 
 /**

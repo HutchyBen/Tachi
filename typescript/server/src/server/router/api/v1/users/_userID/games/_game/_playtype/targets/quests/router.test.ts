@@ -1,3 +1,5 @@
+import type { UserDocument, UserGameStats } from "tachi-common";
+
 import db from "#services/mongo/db";
 import { CreateFakeAuthCookie } from "#test-utils/fake-auth";
 import mockApi from "#test-utils/mock-api";
@@ -9,11 +11,6 @@ import {
 	TestingIIDXSPQuestSub,
 } from "#test-utils/test-data";
 import t from "tap";
-
-import type {
-	UserDocument,
-	UserGameStats,
-} from "tachi-common";
 
 t.test("GET /api/v1/users/:userID/games/:game/:playtype/targets/quests", (t) => {
 	t.beforeEach(ResetDBState);

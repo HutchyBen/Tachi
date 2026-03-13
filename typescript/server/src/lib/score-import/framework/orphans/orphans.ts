@@ -1,12 +1,12 @@
 import type { KtLogger } from "#lib/log/log.js";
 import type { FilterQuery } from "mongodb";
+import type { GameGroup, ImportTypes, integer } from "tachi-common";
 
 import db from "#services/mongo/db";
 import { GetBlacklist } from "#utils/queries/blacklist";
 import { GetUserWithID } from "#utils/user";
 import fjsh from "fast-json-stable-hash";
 
-import type { GameGroup, ImportTypes, integer } from "tachi-common";
 import type {
 	ConverterFnReturnOrFailure,
 	ConverterFunction,

@@ -5,7 +5,6 @@ import { log } from "#lib/log/log.js";
 import { IsNullish } from "#utils/misc";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { GetUserWithID, ResolveUser } from "#utils/user";
-
 import { UserAuthLevels } from "tachi-common";
 
 export const GetUserFromParam: RequestHandler = async (req, res, next) => {

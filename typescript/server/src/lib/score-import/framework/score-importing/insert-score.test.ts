@@ -1,8 +1,8 @@
+import type { ScoreDocument } from "tachi-common";
+
 import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
-
-import type { ScoreDocument } from "tachi-common";
 
 import { InsertQueue, QueueScoreInsert } from "./insert-score";
 

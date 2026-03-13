@@ -1,5 +1,6 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
 import type { EmptyObject } from "#utils/types";
+import type { ScoreData } from "tachi-common";
 
 import {
 	InternalFailure,
@@ -15,7 +16,6 @@ import {
 import { FindChartOnInGameID } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { ScoreData } from "tachi-common";
 import type { ConverterFunction } from "../../common/types";
 import type { MytOngekiScore } from "./types";
 

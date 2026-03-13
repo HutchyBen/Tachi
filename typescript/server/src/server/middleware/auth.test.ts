@@ -3,9 +3,9 @@ import db from "#services/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import { expressRequestMock } from "#test-utils/mock-request";
 import ResetDBState from "#test-utils/resets";
+import { ALL_PERMISSIONS } from "tachi-common";
 import t from "tap";
 
-import { ALL_PERMISSIONS } from "tachi-common";
 import { SetRequestPermissions } from "./auth";
 
 t.test("#SetRequestPermissions", (t) => {

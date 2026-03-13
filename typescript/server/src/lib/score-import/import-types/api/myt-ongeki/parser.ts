@@ -1,12 +1,12 @@
 import type { KtLogger } from "#lib/log/log.js";
 import type { EmptyObject } from "#utils/types";
+import type { integer } from "tachi-common";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { OngekiUserClient } from "#proto/generated/ongeki/user_grpc_pb";
 import { GetPlaylogRequest, type GetPlaylogStreamItem } from "#proto/generated/ongeki/user_pb";
 import { credentials } from "@grpc/grpc-js";
 
-import type { integer } from "tachi-common";
 import type { ParserFunctionReturns } from "../../common/types";
 import type { MytOngekiScore } from "./types";
 

@@ -1,9 +1,3 @@
-import { USCIR_ADJACENT_SCORE_N } from "#lib/constants/usc-ir";
-import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
-import { MStoS } from "#utils/misc";
-import { GetPBOnChart, GetServerRecordOnChart } from "#utils/scores";
-
 import type {
 	ChartDocument,
 	GPTStrings,
@@ -12,6 +6,13 @@ import type {
 	ScoreDocument,
 } from "tachi-common";
 import type { GetEnumValue } from "tachi-common/types/metrics";
+
+import { USCIR_ADJACENT_SCORE_N } from "#lib/constants/usc-ir";
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
+import { MStoS } from "#utils/misc";
+import { GetPBOnChart, GetServerRecordOnChart } from "#utils/scores";
+
 import type { USCServerScore } from "./types";
 
 export const TACHI_LAMP_TO_USC: Record<

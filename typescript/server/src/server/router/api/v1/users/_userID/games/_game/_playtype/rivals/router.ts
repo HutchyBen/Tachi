@@ -11,12 +11,8 @@ import { CheckStrScoreAlg } from "#utils/string-checks";
 import { GetUsersWithIDs } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
+import { FormatGameGroup, GetGamePTConfig, type integer } from "tachi-common";
 
-import {
-	FormatGameGroup,
-	GetGamePTConfig,
-	type integer,
-} from "tachi-common";
 import { RequireAuthedAsUser } from "../../../../middleware";
 
 const router: Router = Router({ mergeParams: true });

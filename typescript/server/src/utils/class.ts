@@ -2,7 +2,6 @@ import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
 import { log } from "#lib/log/log.js";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
 import db from "#services/mongo/db";
-
 import {
 	type Classes,
 	type GameGroup,

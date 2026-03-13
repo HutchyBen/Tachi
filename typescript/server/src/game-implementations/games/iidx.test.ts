@@ -5,8 +5,6 @@ import { dmf, mkFakePBIIDXSP, mkFakeScoreIIDXSP } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestSnapshot } from "#test-utils/single-process-snapshot";
 import { Testing511SPA, TestingIIDXSPScore } from "#test-utils/test-data";
-import t from "tap";
-
 import {
 	type ChartDocumentData,
 	GetGrade,
@@ -16,6 +14,8 @@ import {
 	type ProvidedMetrics,
 	type ScoreData,
 } from "tachi-common";
+import t from "tap";
+
 import { IIDX_DP_IMPL, IIDX_SP_IMPL } from "./iidx";
 
 const baseMetrics: ProvidedMetrics["iidx:DP" | "iidx:SP"] = {

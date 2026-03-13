@@ -1,3 +1,10 @@
+import type {
+	BatchManualScore,
+	ChartDocument,
+	MatchTypeResolver,
+	MatchTypeResolverWithDifficulty,
+} from "tachi-common";
+
 import { log } from "#lib/log/log.js";
 import { InvalidScoreFailure } from "#lib/score-import/framework/common/converter-failures";
 import db from "#services/mongo/db";
@@ -12,13 +19,6 @@ import {
 } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
 import t from "tap";
-
-import type {
-	BatchManualScore,
-	ChartDocument,
-	MatchTypeResolver,
-	MatchTypeResolverWithDifficulty,
-} from "tachi-common";
 
 import {
 	BatchManualScoreToResolver,

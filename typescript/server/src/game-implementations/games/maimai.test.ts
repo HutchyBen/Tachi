@@ -1,3 +1,5 @@
+import type { integer, ProvidedMetrics, ScoreData } from "tachi-common";
+
 import { log } from "#lib/log/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
@@ -5,11 +7,9 @@ import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestSnapshot } from "#test-utils/single-process-snapshot";
 import { TestingMaimaiChart } from "#test-utils/test-data";
+import { MAIMAI_SINGLE_CONF } from "tachi-common/config/game-support/maimai";
 import t from "tap";
 
-import type { integer, ProvidedMetrics, ScoreData } from "tachi-common";
-
-import { MAIMAI_SINGLE_CONF } from "tachi-common/config/game-support/maimai";
 import { MAIMAI_IMPL } from "./maimai";
 
 const baseMetrics: ProvidedMetrics["maimai:Single"] = {

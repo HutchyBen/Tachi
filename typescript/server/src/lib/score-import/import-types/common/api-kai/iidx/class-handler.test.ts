@@ -1,9 +1,9 @@
 import { log } from "#lib/log/log.js";
 import { MockBasicFetch, MockJSONFetch } from "#test-utils/mock-fetch";
 import ResetDBState from "#test-utils/resets";
+import { IIDX_DANS } from "tachi-common";
 import t from "tap";
 
-import { IIDX_DANS } from "tachi-common";
 import { KaiTypeToBaseURL } from "../utils";
 import { CreateKaiIIDXClassProvider } from "./class-handler";
 

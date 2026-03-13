@@ -11,7 +11,6 @@ import { ParseEA3SoftID } from "#utils/ea3id";
 import { IsNullishOrEmptyStr } from "#utils/misc";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
-
 import {
 	GetGamePTConfig,
 	type integer,

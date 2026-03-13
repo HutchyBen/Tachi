@@ -2,11 +2,11 @@ import type { ClassProvider } from "#lib/score-import/framework/calculated-data/
 
 import nodeFetch from "#utils/fetch";
 import { IsRecord } from "#utils/misc";
+import { IIDX_DANS } from "tachi-common";
+import { IIDXDans } from "tachi-common/config/game-support/iidx";
 
 import type { KaiAPIReauthFunction } from "../traverse-api";
 
-import { IIDX_DANS } from "tachi-common";
-import { IIDXDans } from "tachi-common/config/game-support/iidx";
 import { KaiTypeToBaseURL } from "../utils";
 
 export async function CreateKaiIIDXClassProvider(

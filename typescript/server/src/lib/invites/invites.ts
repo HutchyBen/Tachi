@@ -1,8 +1,8 @@
+import type { UserDocument } from "tachi-common";
+
 import { ONE_MONTH } from "#lib/constants/time";
 import { log } from "#lib/log/log.js";
 import { ServerConfig } from "#lib/setup/config";
-
-import type { UserDocument } from "tachi-common";
 
 /**
  * Users are only allowed to invite so many users, and their invites are

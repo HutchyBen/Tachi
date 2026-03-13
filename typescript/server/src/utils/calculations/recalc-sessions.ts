@@ -3,7 +3,6 @@
 import { log } from "#lib/log/log.js";
 import { CreateSessionCalcData } from "#lib/score-import/framework/calculated-data/session";
 import db from "#services/mongo/db";
-
 import { GetGPTString } from "tachi-common";
 
 export async function RecalcSessions(filter = {}) {

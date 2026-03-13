@@ -1,5 +1,3 @@
-import { z, type ZodType } from "zod";
-
 import {
 	allSupportedGameGroups,
 	GAME_GROUP_CONFIGS,
@@ -9,6 +7,7 @@ import {
 	type V3Game,
 	V3ToGPTString,
 } from "tachi-common";
+import { z, type ZodType } from "zod";
 
 export type AllCollections =
 	| "bms-course-lookup.json"

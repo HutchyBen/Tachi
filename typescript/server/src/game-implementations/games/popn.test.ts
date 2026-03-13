@@ -1,14 +1,14 @@
+import type { ProvidedMetrics, ScoreData } from "tachi-common";
+
 import { log } from "#lib/log/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
 import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestingPopnChart } from "#test-utils/test-data";
+import { POPN_9B_CONF } from "tachi-common/config/game-support/popn";
 import t from "tap";
 
-import type { ProvidedMetrics, ScoreData } from "tachi-common";
-
-import { POPN_9B_CONF } from "tachi-common/config/game-support/popn";
 import { POPN_9B_IMPL } from "./popn";
 
 const baseMetrics: ProvidedMetrics["popn:9B"] = {

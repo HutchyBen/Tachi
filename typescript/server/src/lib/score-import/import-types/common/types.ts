@@ -2,7 +2,6 @@ import type { KtLogger } from "#lib/log/log.js";
 import type { ClassProvider } from "#lib/score-import/framework/calculated-data/types";
 import type { USCClientScore } from "#server/router/ir/usc/_playtype/types";
 import type { EmptyObject } from "#utils/types";
-
 import type {
 	BatchManualScore,
 	ChartDocument,
@@ -11,6 +10,7 @@ import type {
 	integer,
 	SongDocument,
 } from "tachi-common";
+
 import type { ConverterFailure } from "../../framework/common/converter-failures";
 import type { DryScore } from "../../framework/common/types";
 import type { MytChunithmScore } from "../api/myt-chunithm/types";

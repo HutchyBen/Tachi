@@ -1,6 +1,6 @@
-import db from "#services/mongo/db";
-
 import type { PBScoreDocument } from "tachi-common";
+
+import db from "#services/mongo/db";
 
 export async function GetAdjacentAbove(userPB: PBScoreDocument, size = 5) {
 	const adjAbove = (await db["personal-bests"].find(

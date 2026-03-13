@@ -1,3 +1,5 @@
+import type { GoalDocument, GoalSubscriptionDocument } from "tachi-common";
+
 import db from "#services/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
@@ -9,11 +11,6 @@ import {
 } from "#test-utils/test-data";
 import dm from "deepmerge";
 import t from "tap";
-
-import type {
-	GoalDocument,
-	GoalSubscriptionDocument,
-} from "tachi-common";
 
 // this is my lazy sample data for these tests.
 const LoadLazySampleData = async () => {

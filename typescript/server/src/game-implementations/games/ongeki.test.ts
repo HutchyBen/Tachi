@@ -6,8 +6,6 @@ import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestingOngekiChart, TestingOngekiScorePB } from "#test-utils/test-data";
-import t from "tap";
-
 import {
 	ONGEKI_BELL_LAMPS,
 	ONGEKI_GRADES,
@@ -16,6 +14,8 @@ import {
 	type ProvidedMetrics,
 	type ScoreData,
 } from "tachi-common";
+import t from "tap";
+
 import { ONGEKI_IMPL } from "./ongeki";
 
 const baseMetrics: ProvidedMetrics["ongeki:Single"] = {

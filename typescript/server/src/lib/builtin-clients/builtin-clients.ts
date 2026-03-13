@@ -2,7 +2,6 @@ import type { PrudenceError } from "prudence";
 
 import { log } from "#lib/log/log.js";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
-
 import { type TachiAPIClientDocument, UserAuthLevels } from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import db from "#services/mongo/db";

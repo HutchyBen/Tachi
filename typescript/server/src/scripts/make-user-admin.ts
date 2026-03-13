@@ -2,7 +2,6 @@ import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import { WrapScriptPromise } from "#utils/misc";
 import { FormatUserDoc, ResolveUser } from "#utils/user";
-
 import { UserAuthLevels } from "tachi-common";
 
 const userID = process.argv[2];

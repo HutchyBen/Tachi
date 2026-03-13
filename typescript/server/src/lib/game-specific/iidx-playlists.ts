@@ -1,8 +1,8 @@
+import type { ChartDocument, integer, Playtypes } from "tachi-common";
+
 import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import { PoyashiBPI } from "rg-stats";
-
-import type { ChartDocument, integer, Playtypes } from "tachi-common";
 
 interface PlaylistEntry {
 	entry_id: integer;

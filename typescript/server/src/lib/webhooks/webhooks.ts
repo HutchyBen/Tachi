@@ -1,8 +1,8 @@
+import type { WebhookEvents } from "tachi-common";
+
 import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import fetch from "#utils/fetch";
-
-import type { WebhookEvents } from "tachi-common";
 
 // @todo make use of aggressive caching here?
 export async function GetWebhookUrlInfo() {

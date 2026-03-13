@@ -1,10 +1,10 @@
+import type { ChartDocument, integer, PBScoreDocument, UserDocument } from "tachi-common";
+
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log.js";
 import db from "#services/mongo/db";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
-
-import type { ChartDocument, integer, PBScoreDocument, UserDocument } from "tachi-common";
 
 import { TachiScoreDataToBeatorajaFormat } from "./convert-scores";
 

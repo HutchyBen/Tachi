@@ -10,7 +10,6 @@ import { GetUGPT } from "#utils/req-tachi-data";
 import { ResolveUser } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-
 import {
 	FormatGameGroup,
 	GetGamePTConfig,

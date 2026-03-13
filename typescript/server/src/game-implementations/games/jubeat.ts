@@ -7,7 +7,6 @@ import db from "#services/mongo/db";
 import { IsNullish } from "#utils/misc";
 import { p } from "prudence";
 import { Jubility } from "rg-stats";
-
 import {
 	FmtNum,
 	type GameGroup,
@@ -18,6 +17,7 @@ import {
 	type Playtype,
 	type Versions,
 } from "tachi-common";
+
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
 async function GetBestJubilityOnSongs(

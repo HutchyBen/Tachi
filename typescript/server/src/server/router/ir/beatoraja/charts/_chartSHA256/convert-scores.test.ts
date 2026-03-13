@@ -1,9 +1,9 @@
+import type { PBScoreDocument } from "tachi-common";
+
 import { dmf } from "#test-utils/misc.js";
 import ResetDBState from "#test-utils/resets";
 import { BMSGazerChart } from "#test-utils/test-data";
 import t from "tap";
-
-import type { PBScoreDocument } from "tachi-common";
 
 import { TachiScoreDataToBeatorajaFormat } from "./convert-scores";
 

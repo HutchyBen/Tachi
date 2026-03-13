@@ -1,6 +1,6 @@
-import db from "#services/mongo/db";
-
 import type { ScoreDocument, SessionDocument } from "tachi-common";
+
+import db from "#services/mongo/db";
 
 /**
  * Returns all the score documents inside a session.

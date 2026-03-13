@@ -11,7 +11,6 @@ import { TachiConfig } from "#lib/setup/config";
 import { IsString } from "#utils/misc";
 import { GetAllUserRivals, GetUserPlayedGPTs } from "#utils/user";
 import { Router } from "express";
-
 import {
 	type FolderDocument,
 	GameGroup,

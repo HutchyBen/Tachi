@@ -8,6 +8,7 @@ import {
 	type Versions,
 } from "tachi-common";
 import { DDR_FLARE_CATEGORIES } from "tachi-common/config/game-support/ddr";
+
 import { CreateChartID, MutateCollection, ReadCollection, WriteCollection } from "../../util";
 
 const gameConfig = GetGameGroupConfig("ddr") as GameConfig<"ddr">;

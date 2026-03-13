@@ -6,7 +6,6 @@ import { log } from "#lib/log/log.js";
 import { TachiConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
 import { IsNullishOrEmptyStr, SplitAuthorizationHeader } from "#utils/misc";
-
 import {
 	ALL_PERMISSIONS,
 	type APIPermissions,

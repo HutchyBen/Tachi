@@ -1,5 +1,4 @@
 import type { TachiBMSTable } from "#lib/game-specific/custom-bms-tables";
-
 import type {
 	ChartDocument,
 	FolderDocument,

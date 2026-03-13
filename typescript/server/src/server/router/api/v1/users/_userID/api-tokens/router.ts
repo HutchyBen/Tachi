@@ -6,8 +6,8 @@ import { GetTachiData } from "#utils/req-tachi-data";
 import { FormatUserDoc } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-
 import { ALL_PERMISSIONS, type APIPermissions, type APITokenDocument } from "tachi-common";
+
 import { RequireSelfRequestFromUser } from "../middleware";
 
 const router: Router = Router({ mergeParams: true });

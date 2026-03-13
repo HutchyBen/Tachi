@@ -1,4 +1,5 @@
 import type { KtLogger } from "#lib/log/log.js";
+import type { integer, Versions } from "tachi-common";
 
 import {
 	EXT_BISTROVER,
@@ -20,7 +21,6 @@ import { ParseEA3SoftID } from "#utils/ea3id";
 import { FormatPrError, optNull } from "#utils/prudence";
 import { p, type PrudenceSchema, type ValidSchemaValue } from "prudence";
 
-import type { integer, Versions } from "tachi-common";
 import type { ParserFunctionReturns } from "../../common/types";
 import type { FervidexContext, FerHeaders as FervidexHeaders, FervidexScore } from "./types";
 

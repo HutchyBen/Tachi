@@ -1,7 +1,5 @@
 import type { KtLogger } from "#lib/log/log.js";
 
-import type { DryScore } from "../common/types";
-
 import {
 	type ChartDocument,
 	GetGPTString,
@@ -9,6 +7,9 @@ import {
 	type ScoreDocument,
 	type SongDocument,
 } from "tachi-common";
+
+import type { DryScore } from "../common/types";
+
 import { CreateScoreCalcData } from "../calculated-data/score";
 import { CreateFullScoreData } from "./derivers";
 

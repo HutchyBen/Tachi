@@ -1,4 +1,5 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { Difficulties, Versions } from "tachi-common";
 
 import {
 	InternalFailure,
@@ -9,7 +10,6 @@ import { MusecaGetLamp, ParseDateFromString } from "#lib/score-import/framework/
 import { FindChartOnInGameIDVersion } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { Difficulties, Versions } from "tachi-common";
 import type { ConverterFunction } from "../../types";
 import type { CGContext, CGMusecaScore } from "../types";
 

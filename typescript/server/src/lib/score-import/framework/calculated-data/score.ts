@@ -1,13 +1,7 @@
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
+import { type ChartDocument, type GameGroup, GetGPTString, type GPTString } from "tachi-common";
 
 import type { DryScoreData } from "../common/types";
-
-import {
-	type ChartDocument,
-	type GameGroup,
-	GetGPTString,
-	type GPTString,
-} from "tachi-common";
 
 /**
  * Create calculated data for a score.

@@ -1,12 +1,11 @@
 import type { KtLogger } from "#lib/log/log.js";
+import type { KaiAuthDocument } from "tachi-common";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ServerConfig } from "#lib/setup/config";
 import db from "#services/mongo/db";
 import nodeFetch from "#utils/fetch";
 import { p } from "prudence";
-
-import type { KaiAuthDocument } from "tachi-common";
 
 import { GetKaiTypeClientCredentials, KaiTypeToBaseURL } from "./utils";
 

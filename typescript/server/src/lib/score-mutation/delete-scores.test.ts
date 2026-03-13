@@ -1,11 +1,11 @@
+import type { ImportDocument, ScoreDocument, SessionDocument } from "tachi-common";
+
 import db from "#services/mongo/db";
 import { mkFakeSDVXChart, mkFakeSDVXPB } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestingIIDXSPScore, TestingSDVXScore } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
 import t from "tap";
-
-import type { ImportDocument, ScoreDocument, SessionDocument } from "tachi-common";
 
 import { DeleteScore } from "./delete-scores";
 

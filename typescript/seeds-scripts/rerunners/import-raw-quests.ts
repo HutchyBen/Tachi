@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import fs from "fs";
-
 import { type GoalDocument, type QuestDocument } from "tachi-common";
+
 import { CreateGoalID, CreateQuestID, MutateCollection } from "../util";
 
 const program = new Command();

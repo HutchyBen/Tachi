@@ -14,9 +14,6 @@ import { FormatPrError } from "#utils/prudence";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
-
-import type { USCClientChart } from "./types";
-
 import {
 	type ChartDocument,
 	GetGamePTConfig,
@@ -25,6 +22,9 @@ import {
 	type Playtypes,
 	type SuccessfulAPIResponse,
 } from "tachi-common";
+
+import type { USCClientChart } from "./types";
+
 import { CreatePOSTScoresResponseBody, TachiScoreToServerScore } from "./usc";
 
 const router: Router = Router({ mergeParams: true });

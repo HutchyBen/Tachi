@@ -4,8 +4,6 @@ import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { CHUNITHMBBKKChart, TestingChunithmScorePB } from "#test-utils/test-data";
-import t from "tap";
-
 import {
 	CHUNITHM_CLEAR_LAMPS,
 	CHUNITHM_GRADES,
@@ -13,6 +11,8 @@ import {
 	type ProvidedMetrics,
 	type ScoreData,
 } from "tachi-common";
+import t from "tap";
+
 import { CHUNITHM_IMPL } from "./chunithm";
 
 const baseMetrics: ProvidedMetrics["chunithm:Single"] = {

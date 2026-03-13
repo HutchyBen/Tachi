@@ -1,7 +1,4 @@
 import type { FilterQuery } from "mongodb";
-
-import db from "#services/mongo/db";
-
 import type {
 	ChartDocument,
 	Difficulties,
@@ -12,6 +9,8 @@ import type {
 	Playtypes,
 	Versions,
 } from "tachi-common";
+
+import db from "#services/mongo/db";
 
 export function FindChartWithChartID(game: GameGroup, chartID: string) {
 	return db.anyCharts[game].findOne({ chartID });

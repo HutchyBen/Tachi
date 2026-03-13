@@ -1,11 +1,11 @@
+import type { ImportDocument, ScoreDocument, SessionDocument } from "tachi-common";
+
 import { CreateScoreID } from "#lib/score-import/framework/score-importing/score-id";
 import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import { TestingIIDXSPScore } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
 import t from "tap";
-
-import type { ImportDocument, ScoreDocument, SessionDocument } from "tachi-common";
 
 import UpdateScore from "./update-score";
 

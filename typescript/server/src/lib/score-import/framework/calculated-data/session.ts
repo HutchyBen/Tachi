@@ -1,5 +1,4 @@
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
-
 import { type GPTString, type ScoreDocument } from "tachi-common";
 
 /**

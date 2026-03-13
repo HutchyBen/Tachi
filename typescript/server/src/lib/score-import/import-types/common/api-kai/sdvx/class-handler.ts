@@ -2,11 +2,11 @@ import type { ClassProvider } from "#lib/score-import/framework/calculated-data/
 
 import nodeFetch from "#utils/fetch";
 import { IsRecord } from "#utils/misc";
+import { SDVX_DANS } from "tachi-common";
+import { SDVXDans } from "tachi-common/config/game-support/sdvx";
 
 import type { KaiAPIReauthFunction } from "../traverse-api";
 
-import { SDVX_DANS } from "tachi-common";
-import { SDVXDans } from "tachi-common/config/game-support/sdvx";
 import { KaiTypeToBaseURL } from "../utils";
 
 export async function CreateKaiSDVXClassProvider(

@@ -2,13 +2,13 @@ import { Command } from "commander";
 import { XMLParser } from "fast-xml-parser";
 import fs from "fs";
 import { decode } from "iconv-lite";
-
 import {
 	type ChartDocument,
 	type Difficulties,
 	type integer,
 	type SongDocument,
 } from "tachi-common";
+
 import {
 	CreateChartID,
 	GetFreshSongIDGenerator,
