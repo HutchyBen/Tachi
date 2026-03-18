@@ -196,8 +196,8 @@ CREATE TYPE action_result AS ENUM ('GOOD', 'BAD', 'THROW');
 
 CREATE TABLE "action" (
 	row_id UUID PRIMARY KEY DEFAULT uuidv7(),
-	user_id BIGSERIAL REFERENCES account(id),
-	ip INET NOT NULL,
+	user_id BIGINT REFERENCES account(id),
+	ip INET,
 	app TEXT NOT NULL,
 	kind TEXT NOT NULL,
 	result ACTION_RESULT NOT NULL,

@@ -5,12 +5,12 @@ import type { account_id } from './Account';
 import type { default as ActionResult } from './ActionResult';
 import type { ColumnType, Selectable, Insertable, Updateable } from 'kysely';
 
-/** Identifier type for public.action */
-export type action_row_id = string;
+/** Identifier type for public.priv_action */
+export type priv_action_row_id = string;
 
-/** Represents the table public.action */
-export default interface ActionTable {
-  row_id: ColumnType<action_row_id, action_row_id | undefined, action_row_id>;
+/** Represents the table public.priv_action */
+export default interface PrivActionTable {
+  row_id: ColumnType<priv_action_row_id, priv_action_row_id | undefined, priv_action_row_id>;
 
   user_id: ColumnType<account_id | null, account_id | null, account_id | null>;
 
@@ -31,8 +31,8 @@ export default interface ActionTable {
   ts_end: ColumnType<string, string, string>;
 }
 
-export type Action = Selectable<ActionTable>;
+export type PrivAction = Selectable<PrivActionTable>;
 
-export type NewAction = Insertable<ActionTable>;
+export type NewPrivAction = Insertable<PrivActionTable>;
 
-export type ActionUpdate = Updateable<ActionTable>;
+export type PrivActionUpdate = Updateable<PrivActionTable>;

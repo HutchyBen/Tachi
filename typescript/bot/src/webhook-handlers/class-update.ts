@@ -12,9 +12,9 @@ import {
 
 import { BotConfig } from "../config";
 import { client } from "../main";
-import { GetUGPTStats, GetUserInfo } from "../utils/apiRequests";
+import { GetUGPTStats, GetUserInfo } from "../utils/api-requests";
 import { CreateEmbed } from "../utils/embeds";
-import { PrependTachiUrl } from "../utils/fetchTachi";
+import { PrependTachiUrl } from "../utils/fetch-tachi";
 import { FormatClass, GetGameChannel } from "../utils/misc";
 
 export async function HandleClassUpdateV1(

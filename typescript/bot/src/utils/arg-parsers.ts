@@ -1,11 +1,11 @@
 import type { CommandInteraction } from "discord.js";
+import type { PrivDiscordUserMap } from "tachi-db";
 
 import { type GameGroup, type Playtype, type UserDocument } from "tachi-common";
 
-import type { DiscordUserMapDocument } from "../query/documents";
-import type { Emittable } from "../slashCommands/types";
+import type { Emittable } from "../slash-commands/types";
 
-import { GetUserInfo } from "./apiRequests";
+import { GetUserInfo } from "./api-requests";
 import { ParseGPT } from "./misc";
 
 /**
@@ -14,12 +14,12 @@ import { ParseGPT } from "./misc";
  */
 export async function GetGPTAndUser(
 	interaction: CommandInteraction,
-	requestingUser: DiscordUserMapDocument,
+	requestingUser: PrivDiscordUserMap,
 ): Promise<
 	| { content: { game: GameGroup; playtype: Playtype; userDoc: UserDocument }; error: null }
 	| { error: Emittable }
 > {
-	const userID = interaction.options.getString("other_user") ?? requestingUser.userID.toString();
+	const userID = interaction.options.getString("other_user") ?? requestingUser.user_id.toString();
 
 	if (!/^[a-zA-Z0-9_-]{0,20}$/u.test(userID)) {
 		return { error: `Invalid userID. Can't query this!` };

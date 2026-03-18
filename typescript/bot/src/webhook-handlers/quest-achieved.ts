@@ -1,10 +1,10 @@
 import { BotConfig } from "#config";
-import { PrependTachiUrl } from "#utils/fetchTachi";
+import { PrependTachiUrl } from "#utils/fetch-tachi.js";
 import { log } from "#utils/log";
 import { GetGameGroupConfig, type integer, type WebhookEventQuestAchievedV1 } from "tachi-common";
 
 import { client } from "../main";
-import { GetQuestWithID, GetUserInfo } from "../utils/apiRequests";
+import { GetQuestWithID, GetUserInfo } from "../utils/api-requests";
 import { CreateEmbed } from "../utils/embeds";
 import { GetGameChannel } from "../utils/misc";
 

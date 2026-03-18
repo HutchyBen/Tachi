@@ -1,5 +1,5 @@
 import { BotConfig } from "#config";
-import { PrependTachiUrl } from "#utils/fetchTachi";
+import { PrependTachiUrl } from "#utils/fetch-tachi.js";
 import { log } from "#utils/log";
 import {
 	GetGameGroupConfig,
@@ -9,7 +9,7 @@ import {
 } from "tachi-common";
 
 import { client } from "../main";
-import { GetGoalWithID, GetUserInfo } from "../utils/apiRequests";
+import { GetGoalWithID, GetUserInfo } from "../utils/api-requests";
 import { CreateEmbed } from "../utils/embeds";
 import { GetGameChannel, Pluralise } from "../utils/misc";
 

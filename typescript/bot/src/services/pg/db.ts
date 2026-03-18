@@ -1,6 +1,6 @@
 import type { Database } from "tachi-db";
 
-import { Env as Env } from "#config";
+import { Env } from "#config";
 import { Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";
 

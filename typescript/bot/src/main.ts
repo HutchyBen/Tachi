@@ -3,10 +3,10 @@ import { GetLimboChannel } from "#utils/misc";
 import { Client, type CommandInteraction, Intents, type SelectMenuInteraction } from "discord.js";
 
 import { BotConfig, Env, ServerConfig } from "./config";
-import { handleIsCommand } from "./interactionHandlers/handleIsCommand";
-import { GetUserAndTokenForDiscordID } from "./query/user_map";
+import { handleIsCommand } from "./interaction-handlers/handle-is-command";
+import { GetUserAndTokenForDiscordID } from "./query/user-map";
 import { app } from "./server/server";
-import { RegisterSlashCommands } from "./slashCommands/register";
+import { RegisterSlashCommands } from "./slash-commands/register";
 import { VERSION_PRETTY } from "./version";
 
 // hack: DiscordJS's endpoints sometimes return bigints that end up in our log.

@@ -1,16 +1,16 @@
 import type { APITokenDocument, UserDocument, WebhookEvents } from "tachi-common";
 
 import { log } from "#utils/log.js";
-import { HandleQuestAchievedV1 } from "#webhookHandlers/questAchieved";
+import { HandleQuestAchievedV1 } from "#webhook-handlers/quest-achieved.js";
 import express, { type Express } from "express";
 import path from "path";
 
+import { ACTION_Register } from "../actions/register";
 import { BotConfig, Env } from "../config";
-import pgDb from "../services/pg/db";
-import { RequestTypes, TachiServerV1Get, TachiServerV1Request } from "../utils/fetchTachi";
+import { RequestTypes, TachiServerV1Get, TachiServerV1Request } from "../utils/fetch-tachi";
 import { VERSION_PRETTY } from "../version";
-import { HandleClassUpdateV1 } from "../webhookHandlers/classUpdate";
-import { HandleGoalAchievedV1 } from "../webhookHandlers/goalsAchieved";
+import { HandleClassUpdateV1 } from "../webhook-handlers/class-update";
+import { HandleGoalAchievedV1 } from "../webhook-handlers/goal-achieved";
 import { ValidateWebhookRequest } from "./middleware";
 
 export const app: Express = express();
@@ -99,26 +99,14 @@ app.get("/oauth/callback", async (req, res) => {
 
 	log.info(`Saving user-discord-link for ${user.username} (id: ${user.id}).`);
 
-	const existingLink = await pgDb
-		.selectFrom("priv_discord_user_map")
-		.select("user_id")
-		.where("user_id", "=", user.id)
-		.executeTakeFirst();
+	const { was_update } = await ACTION_Register(
+		{ ip: req.ip },
+		{ user_id: user.id, discord_id: discordID, "!api_token": apiToken },
+	);
 
-	if (existingLink) {
-		log.info(`Updating user-discord-link for ${user.username} (id: ${user.id})`);
-
-		await pgDb
-			.updateTable("priv_discord_user_map")
-			.set({ discord_id: discordID, api_token: apiToken })
-			.where("user_id", "=", user.id)
-			.execute();
-	} else {
-		await pgDb
-			.insertInto("priv_discord_user_map")
-			.values({ user_id: user.id, discord_id: discordID, api_token: apiToken })
-			.execute();
-	}
+	log.info(
+		`${was_update ? "Updated" : "Created"} discord link for ${user.username} (id: ${user.id}).`,
+	);
 
 	res.sendFile(path.join(__dirname, "../../pages/account-linked.html"));
 });

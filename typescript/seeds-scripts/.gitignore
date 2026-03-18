@@ -7,3 +7,4 @@ scripts/personal/*
 scripts/rerunners/bpi-output.json
 scripts/rerunners/aix-ina/*.json
 
+failed-tests.log

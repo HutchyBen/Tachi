@@ -1,17 +1,18 @@
 import type { integer } from "tachi-common";
 
 import db from "#services/pg/db";
+import { type RequestingUser } from "#slash-commands/types.js";
 import { log } from "#utils/log.js";
-import { type PrivDiscordUserMap } from "tachi-db";
 
 export async function GetUserAndTokenForDiscordID(
 	discordID: string,
-): Promise<PrivDiscordUserMap | null> {
+): Promise<RequestingUser | null> {
 	log.debug(`Fetching linked user & token with DiscordID: ${discordID}.`);
 
 	const row = await db
 		.selectFrom("priv_discord_user_map")
-		.selectAll()
+		.innerJoin("account", "priv_discord_user_map.user_id", "account.id")
+		.select(["api_token", "user_id", "discord_id", "account.username"])
 		.where("discord_id", "=", discordID)
 		.executeTakeFirst();
 
@@ -19,7 +20,11 @@ export async function GetUserAndTokenForDiscordID(
 		return null;
 	}
 
-	return { user_id: row.user_id, discord_id: row.discord_id, api_token: row.api_token };
+	return {
+		acct: { id: row.user_id, username: row.username },
+		api_token: row.api_token,
+		discord_id: row.discord_id,
+	};
 }
 
 export async function GetUserIDForDiscordID(discordID: string): Promise<integer | null> {

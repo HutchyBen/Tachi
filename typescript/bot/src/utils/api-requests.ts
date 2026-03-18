@@ -15,9 +15,9 @@ import type {
 import { BotConfig } from "#config";
 import { log } from "#utils/log";
 
-import type { ImportDeferred, ImportPollStatus, UGPTStats } from "./returnTypes";
+import type { ImportDeferred, ImportPollStatus, UGPTStats } from "./return-types";
 
-import { RequestTypes, TachiServerV1Get, TachiServerV1Request } from "./fetchTachi";
+import { RequestTypes, TachiServerV1Get, TachiServerV1Request } from "./fetch-tachi";
 import { Sleep } from "./misc";
 
 export async function GetUserInfo(userID: string | integer) {

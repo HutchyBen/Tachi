@@ -1,10 +1,12 @@
-import { ServerConfig } from "#config";
+import { BotConfig, ServerConfig } from "#config";
 import { SlashCommandBuilder } from "@discordjs/builders";
 
 import type { SlashCommand } from "../types";
 
-import { PerformScoreImport } from "../../utils/apiRequests";
-import { CreateImportEmbed } from "../../utils/embeds";
+import { ExpectedErr } from "../../actions";
+import { ACTION_Sync } from "../../actions/sync";
+import { CreateEmbed } from "../../utils/embeds";
+import { Pluralise } from "../../utils/misc";
 
 const choices: Array<[string, string]> = (
 	[
@@ -45,22 +47,34 @@ const command: SlashCommand = {
 	exec: async (interaction, requestingUser) => {
 		await interaction.editReply(`Importing scores...`);
 
-		const importType = interaction.options.getString("service", true);
+		const import_type = interaction.options.getString("service", true);
 
-		const importDoc = await PerformScoreImport(
-			`/import/from-api`,
-			requestingUser.tachiApiToken,
-			{
-				importType,
-			},
-			interaction,
-		);
+		try {
+			const result = await ACTION_Sync(
+				{
+					acct: requestingUser.acct,
+					ip: null,
+				},
+				{ import_type, "!api_token": requestingUser.api_token },
+			);
 
-		if (typeof importDoc === "string") {
-			return importDoc;
+			return CreateEmbed()
+				.setTitle(
+					`Imported ${result.score_count} ${Pluralise(result.score_count, "score")}!`,
+				)
+				.addField("Created Sessions", result.session_count.toString(), true)
+				.addField("Errors", result.error_count.toString(), true)
+				.addField(
+					"Your Profile",
+					`${BotConfig.TACHI_SERVER_LOCATION}/u/${result.user_id}/games/${result.game}`,
+				);
+		} catch (e) {
+			if (ExpectedErr.is(e)) {
+				return e.reason;
+			}
+
+			throw e;
 		}
-
-		return CreateImportEmbed(importDoc);
 	},
 };
 

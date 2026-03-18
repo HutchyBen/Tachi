@@ -7,12 +7,15 @@ import { URLSearchParams } from "url";
 import { BotConfig } from "../config";
 import { VERSION_STR } from "../version";
 
+type ApiResponseBase = {
+	statusCode: integer;
+};
+
 export type APIResponse<T> = (
 	| ({ body: null } & UnsuccessfulAPIResponse)
 	| SuccessfulAPIResponse<T>
-) & {
-	statusCode: integer;
-};
+) &
+	ApiResponseBase;
 
 export enum RequestTypes {
 	DELETE = "DELETE",
