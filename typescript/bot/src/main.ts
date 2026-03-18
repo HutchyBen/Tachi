@@ -2,9 +2,9 @@ import { log } from "#utils/log.js";
 import { GetLimboChannel } from "#utils/misc";
 import { Client, type CommandInteraction, Intents, type SelectMenuInteraction } from "discord.js";
 
-import { BotConfig, ProcessEnv, ServerConfig } from "./config";
-import { GetUserAndTokenForDiscordID } from "./database/queries";
+import { BotConfig, Env, ServerConfig } from "./config";
 import { handleIsCommand } from "./interactionHandlers/handleIsCommand";
+import { GetUserAndTokenForDiscordID } from "./query/user_map";
 import { app } from "./server/server";
 import { RegisterSlashCommands } from "./slashCommands/register";
 import { VERSION_PRETTY } from "./version";
@@ -84,7 +84,7 @@ void (async () => {
 		log.info(`Logged in successfully to ${client.guilds.cache.size} guilds.`);
 
 		// Mount our express server.
-		app.listen(ProcessEnv.port);
+		app.listen(Env.PORT);
 
 		log.info(
 			`Invite URL: https://discord.com/api/oauth2/authorize?client_id=${

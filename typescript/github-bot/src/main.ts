@@ -147,5 +147,7 @@ const expressApp = express();
 
 expressApp.use(serverMiddleware);
 
+expressApp.get("/.deploy/up", (_req, res) => res.sendStatus(200));
+
 console.log(`Listening on port ${ProcessEnv.port}.`);
 expressApp.listen(ProcessEnv.port);

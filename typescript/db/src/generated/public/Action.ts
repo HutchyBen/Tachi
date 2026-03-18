@@ -12,9 +12,11 @@ export type action_row_id = string;
 export default interface ActionTable {
   row_id: ColumnType<action_row_id, action_row_id | undefined, action_row_id>;
 
-  user_id: ColumnType<account_id, account_id | undefined, account_id>;
+  user_id: ColumnType<account_id | null, account_id | null | undefined, account_id | null>;
 
   ip: ColumnType<string, string, string>;
+
+  app: ColumnType<string, string, string>;
 
   kind: ColumnType<string, string, string>;
 

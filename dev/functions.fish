@@ -50,7 +50,7 @@ function fish_greeting
 		echo ""
 		echo $(rgb "Something went wrong and Tachi didn't set up correctly." ff0000 000000)
 		echo ""
-		echo $(rgb "Please run" ff0000 000000) $(cmd "just bootstrap"). $(rgb "An incorrectly setup Tachi might not launch." ff0000 000000)
+		echo $(rgb "Please run" ff0000 000000) $(cmd "just setup"). $(rgb "An incorrectly setup Tachi might not launch." ff0000 000000)
 		return
 	end
 

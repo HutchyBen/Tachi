@@ -12,15 +12,14 @@ import { applyMigrations, getMigrationInfo, revertLastMigration } from "tachi-db
 // Helpers
 // ---------------------------------------------------------------------------
 
-const DEFAULT_TACHI_DATABASE_URL = "postgresql://tachi:tachi@postgres/tachi_dev";
-const DEFAULT_MIGRATIONS_DIR = "db/migrations";
+const DEFAULT_MIGRATIONS_DIR = "/tachi/db/migrations";
 
 function getConnectionString(opts: { databaseUrl?: string }): string {
-	const url = opts.databaseUrl ?? process.env.DATABASE_URL ?? DEFAULT_TACHI_DATABASE_URL;
+	const url = opts.databaseUrl ?? process.env.DATABASE_URL;
 
 	if (!url) {
 		console.error(
-			"[migrate] No database URL provided. Set DATABASE_URL or POSTGRES_URL, or pass --database-url.",
+			"[migrate] No database URL provided. Set DATABASE_URL, or pass --database-url.",
 		);
 		process.exit(1);
 	}

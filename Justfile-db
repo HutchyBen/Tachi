@@ -1,4 +1,4 @@
-POSTGRES_URL := "postgresql://tachi:tachi@postgres"
+POSTGRES_URL := "postgresql://tachi:tachi@tachi-postgres"
 DEFAULT_DB := "tachi_dev"
 
 # Open a psql shell against the local dev Postgres instance.
@@ -21,3 +21,7 @@ db-migrate-status POSTGRES_DB=DEFAULT_DB:
 		 FROM \"_migration\" \
 		 ORDER BY version"
 
+# Load the seeds into the database.
+db-load-seeds POSTGRES_DB=DEFAULT_DB:
+	cd typescript/server && POSTGRES_URL="{{POSTGRES_URL}}/{{POSTGRES_DB}}" \
+		bun run src/scripts/load-seeds-pg.ts

@@ -5,8 +5,8 @@ import { HandleQuestAchievedV1 } from "#webhookHandlers/questAchieved";
 import express, { type Express } from "express";
 import path from "path";
 
-import { BotConfig, ProcessEnv } from "../config";
-import db from "../database/mongo";
+import { BotConfig, Env } from "../config";
+import pgDb from "../services/pg/db";
 import { RequestTypes, TachiServerV1Get, TachiServerV1Request } from "../utils/fetchTachi";
 import { VERSION_PRETTY } from "../version";
 import { HandleClassUpdateV1 } from "../webhookHandlers/classUpdate";
@@ -99,28 +99,25 @@ app.get("/oauth/callback", async (req, res) => {
 
 	log.info(`Saving user-discord-link for ${user.username} (id: ${user.id}).`);
 
-	const existingLink = await db.discordUserMap.findOne({ userID: user.id });
+	const existingLink = await pgDb
+		.selectFrom("priv_discord_user_map")
+		.select("user_id")
+		.where("user_id", "=", user.id)
+		.executeTakeFirst();
 
 	if (existingLink) {
 		log.info(`Updating user-discord-link for ${user.username} (id: ${user.id})`);
 
-		await db.discordUserMap.update(
-			{
-				userID: user.id,
-			},
-			{
-				$set: {
-					discordID,
-					tachiApiToken: apiToken,
-				},
-			},
-		);
+		await pgDb
+			.updateTable("priv_discord_user_map")
+			.set({ discord_id: discordID, api_token: apiToken })
+			.where("user_id", "=", user.id)
+			.execute();
 	} else {
-		await db.discordUserMap.insert({
-			discordID,
-			tachiApiToken: apiToken,
-			userID: user.id,
-		});
+		await pgDb
+			.insertInto("priv_discord_user_map")
+			.values({ user_id: user.id, discord_id: discordID, api_token: apiToken })
+			.execute();
 	}
 
 	res.sendFile(path.join(__dirname, "../../pages/account-linked.html"));
@@ -174,6 +171,8 @@ app.post("/webhook", ValidateWebhookRequest, async (req, res) => {
 	return res.sendStatus(statusCode);
 });
 
+app.get("/.deploy/up", (_req, res) => res.sendStatus(200));
+
 /**
  * 404 Handler. If something gets to this point, they haven't matched with anything.
  *
@@ -226,4 +225,4 @@ const MainExpressErrorHandler: express.ErrorRequestHandler = (err, req, res, _ne
 
 app.use(MainExpressErrorHandler);
 
-log.info(`Starting express server on port ${ProcessEnv.port}.`);
+log.info(`Starting express server on port ${Env.PORT}.`);

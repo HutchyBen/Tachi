@@ -6,7 +6,7 @@
  *
  * Required env vars:
  *   MONGO_URL      – MongoDB connection string, e.g. mongodb://mongo/tachi
- *   POSTGRES_URL   – PostgreSQL connection string, e.g. postgresql://tachi:tachi@postgres/tachi_dev
+ *   POSTGRES_URL   – PostgreSQL connection string, e.g. postgresql://tachi:tachi@tachi-postgres/tachi_dev
  *
  * Run with:
  *   cd server && MONGO_URL=... POSTGRES_URL=... ts-node -r tsconfig-paths/register src/scripts/migrate-to-postgres.ts

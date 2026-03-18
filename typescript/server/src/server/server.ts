@@ -55,6 +55,8 @@ const userSessionMiddleware = expressSession({
 
 const app: Express = express();
 
+app.get("/.deploy/up", (_req, res) => res.sendStatus(200));
+
 if (Env.NODE_ENV !== "production" && IsNonEmptyString(ServerConfig.CLIENT_DEV_SERVER)) {
 	log.warn(
 		{

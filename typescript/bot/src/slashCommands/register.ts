@@ -4,7 +4,7 @@ import { log } from "#utils/log";
 import { REST } from "@discordjs/rest";
 import { Routes } from "discord-api-types/v9";
 
-import { BotConfig, ProcessEnv } from "../config";
+import { BotConfig, Env } from "../config";
 import { SLASH_COMMANDS } from "./commands";
 
 const rest = new REST({
@@ -24,7 +24,7 @@ export async function RegisterSlashCommands(client: Client): Promise<void> {
 
 		await UnregisterAllCommands(client);
 
-		if (ProcessEnv.nodeEnv === "production") {
+		if (Env.NODE_ENV === "production") {
 			log.info(`Updating global commands.`);
 
 			await rest.put(Routes.applicationCommands(client.application!.id), {

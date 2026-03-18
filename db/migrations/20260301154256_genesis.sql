@@ -198,6 +198,7 @@ CREATE TABLE "action" (
 	row_id UUID PRIMARY KEY DEFAULT uuidv7(),
 	user_id BIGSERIAL REFERENCES account(id),
 	ip INET NOT NULL,
+	app TEXT NOT NULL,
 	kind TEXT NOT NULL,
 	result ACTION_RESULT NOT NULL,
 	input JSONB NOT NULL,
@@ -211,7 +212,7 @@ CREATE TABLE "action" (
 
 CREATE INDEX ON "action" (user_id, ts_start DESC);
 CREATE INDEX ON "action" (ip, ts_start DESC);
-CREATE INDEX ON "action" (kind, ts_start DESC);
+CREATE INDEX ON "action" (app, kind, ts_start DESC);
 -- <== End another Zenith Essential
 
 CREATE TABLE "account_settings" (
@@ -1104,3 +1105,15 @@ CREATE UNIQUE INDEX chart_maimaidx_ingamestr_idx
 	ON chart ((data->>'inGameStrID'), difficulty) WHERE game = 'maimaidx';
 
 -- <== End indexes
+
+-- ==> Bot: discord-user-map
+-- Maps Discord user IDs to Tachi accounts for the Discord bot integration.
+-- Stored in private namespace because it contains API tokens.
+CREATE TABLE "priv_discord_user_map" (
+	user_id    BIGINT REFERENCES account(id) ON DELETE CASCADE NOT NULL,
+	discord_id TEXT UNIQUE NOT NULL,
+	api_token  TEXT REFERENCES priv_api_token(token) ON DELETE CASCADE NOT NULL
+);
+
+CREATE UNIQUE INDEX priv_discord_user_map_user_id_idx ON priv_discord_user_map (user_id);
+-- <== End bot

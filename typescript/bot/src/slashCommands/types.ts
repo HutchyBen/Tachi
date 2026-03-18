@@ -6,7 +6,7 @@ import type {
 } from "discord.js";
 import type { APIApplicationCommandOption } from "discord-api-types";
 
-import type { DiscordUserMapDocument } from "../database/documents";
+import type { DiscordUserMapDocument } from "../query/documents";
 
 export type Emittable = string | InteractionReplyOptions | MessageEmbed | MessagePayload;
 

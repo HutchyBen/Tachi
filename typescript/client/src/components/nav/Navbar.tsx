@@ -79,7 +79,7 @@ export default function Navbar({ children }: NavbarProps) {
 		if (!React.isValidElement(child)) {
 			return null;
 		}
-		if (process.env.NODE_ENV === "development") {
+		if (import.meta.env.VITE_IS_DEVELOPMENT) {
 			if (child.type === React.Fragment) {
 				console.error("The navbar doesn't accept React fragments; Pass an array instead");
 			}

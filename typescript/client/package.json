@@ -28,7 +28,6 @@
 		]
 	},
 	"dependencies": {
-		"@babel/core": "catalog:",
 		"@fortawesome/fontawesome-free": "catalog:",
 		"@fullcalendar/core": "catalog:",
 		"@fullcalendar/daygrid": "catalog:",

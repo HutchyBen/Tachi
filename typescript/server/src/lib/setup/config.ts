@@ -4,10 +4,10 @@ import { allSupportedGameGroups, type GameGroup, type ImportTypes } from "tachi-
 import { allImportTypes } from "tachi-common/constants/import-types";
 import { z } from "zod";
 
-const rawConf = process.env.TCHIS_CONF;
+const rawConf = process.env.TACHI_CONFIG;
 
 if (!rawConf) {
-	log.error("TCHIS_CONF environment variable is not set. Terminating.");
+	log.error("TACHI_CONFIG environment variable is not set. Terminating.");
 	process.exit(1);
 }
 
@@ -16,7 +16,7 @@ let config: unknown;
 try {
 	config = JSON5.parse(rawConf);
 } catch (err) {
-	log.error({ err }, "Failed to parse TCHIS_CONF as JSON5.");
+	log.error({ err }, "Failed to parse TACHI_CONFIG as JSON5.");
 	process.exit(1);
 }
 
@@ -208,6 +208,20 @@ if (!MIGRATIONS_DIR) {
 	process.exit(1);
 }
 
+const VERSION = process.env.VERSION;
+
+if (!VERSION) {
+	log.error(`No VERSION specified in environment. Terminating.`);
+	process.exit(1);
+}
+
+const COMMIT_HASH = process.env.COMMIT_HASH;
+
+if (!COMMIT_HASH) {
+	log.error(`No COMMIT_HASH specified in environment. Terminating.`);
+	process.exit(1);
+}
+
 // Typed variant of process.env
 export const Env = {
 	PORT,
@@ -215,8 +229,8 @@ export const Env = {
 	MONGO_URL,
 	POSTGRES_URL,
 	MIGRATIONS_DIR,
+	VERSION,
+	COMMIT_HASH,
 	NODE_ENV: NODE_ENV as "dev" | "production" | "staging" | "test",
-	COMMIT_HASH: process.env.COMMIT_HASH,
-	VERSION: process.env.VERSION,
 	LOG_LEVEL: logLevel as "crit" | "debug" | "error" | "info" | "severe" | "verbose" | "warn",
 };

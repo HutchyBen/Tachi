@@ -5,6 +5,19 @@ set -eo pipefail
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
+FORCE=0
+
+while getopts "f" opt; do
+	case $opt in
+		f)
+			FORCE=1
+			;;
+		*)
+			echo "Invalid option: -$opt"
+			exit 1
+	esac
+done
+
 cd "$SCRIPT_DIR";
 cd ..;
 
@@ -84,7 +97,7 @@ mvExampleFiles
 selfSignHTTPS
 bunInstall
 
-if [ -e BOOTSTRAP_OK ]; then
+if [ -e _SETUP_OK ] && [ $FORCE -eq 0 ]; then
 	echo "Already bootstrapped."
 	exit 0
 fi
@@ -93,13 +106,13 @@ syncDatabaseWithSeeds
 
 echo "Bootstrap Complete."
 
-cat << EOF > BOOTSTRAP_OK
-Tachi was bootstrapped here on $(date).
+cat << EOF > _SETUP_OK
+Tachi(v3) was setup here on $(date).
 
-The existence of this file stops Tachi from bootstrapping again.
-There's nothing harmful about this -- you can bootstrap as much as you want!
-We just don't want to necessarily bootstrap *each* time we boot Tachi.
+The existence of this file stops Tachi from running a setup again.
+There's nothing harmful about this -- you can setup as much as you want!
+We just don't want to necessarily setup *each* time we boot Tachi.
 
-To bootstrap again (in case you think something has gone wrong)
-Delete this file and re-run ./dev/bootstrap.sh
+To setup again (in case you think something has gone wrong)
+run 'just setup'.
 EOF

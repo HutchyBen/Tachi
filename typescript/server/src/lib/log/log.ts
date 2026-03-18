@@ -1,4 +1,5 @@
 import pino from "pino";
+import pretty from "pino-pretty";
 
 export type KtLogger = pino.Logger;
 
@@ -6,17 +7,11 @@ export type KtLogger = pino.Logger;
 // Deliberately process.env here instead of importing ENV to avoid a circular dep.
 const useJson = process.env.LOG_JSON === "1" || process.env.LOG_JSON === "true";
 
-export const log = pino({
-	level: process.env.LOG_LEVEL ?? "info",
-	...(useJson
-		? {}
-		: {
-				transport: {
-					options: { colorize: true },
-					target: "pino-pretty",
-				},
-			}),
-});
+// pino's transport API spawns a worker thread, which Bun doesn't handle well.
+// Using a pino-pretty stream directly avoids the worker thread entirely.
+export const log = useJson
+	? pino({ level: process.env.LOG_LEVEL ?? "info" })
+	: pino({ level: process.env.LOG_LEVEL ?? "info" }, pretty({ colorize: true }));
 
 export function AppendLogCtx(context: string, parent: KtLogger = log): KtLogger {
 	return parent.child({ context });

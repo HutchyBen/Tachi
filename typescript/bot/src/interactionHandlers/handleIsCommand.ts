@@ -1,7 +1,6 @@
 import { log } from "#utils/log";
 import { type CommandInteraction, MessageEmbed } from "discord.js";
-
-import type { DiscordUserMapDocument } from "../database/documents";
+import { type PrivDiscordUserMap } from "tachi-db";
 
 import { SLASH_COMMANDS } from "../slashCommands/commands";
 
@@ -15,7 +14,7 @@ import { SLASH_COMMANDS } from "../slashCommands/commands";
  */
 export async function handleIsCommand(
 	interaction: CommandInteraction,
-	requestingUser: DiscordUserMapDocument,
+	requestingUser: PrivDiscordUserMap,
 ) {
 	try {
 		const command = SLASH_COMMANDS.get(interaction.commandName);

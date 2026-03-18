@@ -3,7 +3,7 @@ import { type TachiServerCoreConfig } from "tachi-common";
 // @ts-expect-error No types available...
 import syncFetch from "sync-fetch";
 
-const mode = process.env.VITE_TCHIC_MODE;
+const mode = import.meta.env.VITE_TCHIC_MODE;
 
 if (!mode) {
 	throw new Error("No VITE_TCHIC_MODE set in Process Environment, refusing to boot.");
@@ -38,7 +38,7 @@ try {
 	<div class="box">
 
 		${
-			process.env.VITE_IS_LOCAL_DEV
+			import.meta.env.VITE_IS_LOCAL_DEV
 				? `
 			<hr />
 			<h1><b>Couldn't connect to the server.</b></h1>
@@ -86,5 +86,5 @@ if (mode === "kamai") {
 export const TachiConfig = conf;
 export const ColourConfig = colourConf;
 export const ClientConfig = {
-	MANDATE_LOGIN: process.env.VITE_MANDATE_LOGIN,
+	MANDATE_LOGIN: import.meta.env.VITE_MANDATE_LOGIN,
 };

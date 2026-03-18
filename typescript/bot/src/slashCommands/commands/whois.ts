@@ -3,7 +3,7 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 import type { SlashCommand } from "../types";
 
 import { ServerConfig } from "../../config";
-import { GetUserIDForDiscordID } from "../../database/queries";
+import { GetUserIDForDiscordID } from "../../query/user_map";
 import { GetUserInfo } from "../../utils/apiRequests";
 import { CreateUserEmbed } from "../../utils/embeds";
 

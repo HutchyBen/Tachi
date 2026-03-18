@@ -2,7 +2,7 @@ import type { CommandInteraction } from "discord.js";
 
 import { type GameGroup, type Playtype, type UserDocument } from "tachi-common";
 
-import type { DiscordUserMapDocument } from "../database/documents";
+import type { DiscordUserMapDocument } from "../query/documents";
 import type { Emittable } from "../slashCommands/types";
 
 import { GetUserInfo } from "./apiRequests";

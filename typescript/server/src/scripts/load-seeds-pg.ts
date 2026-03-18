@@ -3,8 +3,6 @@
  * BMS courses) from the local seeds directory into PostgreSQL.
  *
  * Songs and charts must have been processed by the v3 rerunner scripts first:
- *   1-migrate-to-pg-style.ts  — assigns hex `id`, preserves legacy integer ids
- *   2-split-charts-by-playtype.ts — splits charts-iidx.json → charts-iidx-sp.json etc.
  *
  * Required env vars:
  *   POSTGRES_URL – PostgreSQL connection string
@@ -13,7 +11,7 @@
  *   SEEDS_DIR – path to the seeds/collections directory
  *
  * Run with:
- *   cd server && POSTGRES_URL=... ts-node -r tsconfig-paths/register src/scripts/load-seeds-pg.ts
+ *   just db-load-seeds
  */
 
 import type { Database } from "tachi-db";
@@ -28,7 +26,7 @@ export { buildChartIdMap, importSeeds, toPgGame };
 
 // ── Standalone entrypoint ──────────────────────────────────────────────────
 
-const DEFAULT_SEEDS_DIR = path.resolve(__dirname, "../../../db/seeds");
+const DEFAULT_SEEDS_DIR = path.resolve(__dirname, "../../../../db/seeds");
 
 if (require.main === module) {
 	const POSTGRES_URL = process.env.POSTGRES_URL;

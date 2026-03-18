@@ -1,8 +1,6 @@
 import type { GameGroup, integer, TachiServerCoreConfig } from "tachi-common";
 
 import { config } from "dotenv";
-import fs from "fs";
-import JSON5 from "json5";
 import { p } from "prudence";
 
 import { IsRecord } from "./utils/predicates";
@@ -10,9 +8,6 @@ import { FormatPrError } from "./utils/prudence";
 
 // Initialise .env.
 config();
-
-// Reads the bots config file from $pwd/conf.json5.
-// Validates it using prudence.
 
 // the real log tries to bind to discord, and is dependent on the options
 // below.
@@ -37,73 +32,90 @@ export interface BotConfig {
 	};
 }
 
-function ParseBotConfig(fileLoc = "conf.json5"): BotConfig {
-	let data;
+function ParseGameChannels(raw: string | undefined): Partial<Record<GameGroup, string>> {
+	if (!raw) {
+		return {};
+	}
+
+	let parsed: unknown;
 
 	try {
-		const contents = fs.readFileSync(fileLoc, "utf-8");
-
-		data = JSON5.parse(contents);
+		parsed = JSON.parse(raw);
 	} catch (err) {
-		log.error({ err }, "Failed to find/parse a valid conf.json5 file. Cannot boot.");
-
-		throw err;
+		throw new Error(`DISCORD_GAME_CHANNELS is not valid JSON: ${err}`);
 	}
 
-	const err = p(data, {
-		TACHI_SERVER_LOCATION: "string",
-		HTTP_SERVER: {
-			URL: "string",
+	if (!IsRecord(parsed)) {
+		throw new Error(
+			"DISCORD_GAME_CHANNELS must be a JSON object mapping game names to channel IDs.",
+		);
+	}
+
+	for (const [key, value] of Object.entries(parsed)) {
+		if (typeof value !== "string") {
+			throw new Error(
+				`DISCORD_GAME_CHANNELS: invalid value for key ${key}. Expected a string channel ID.`,
+			);
+		}
+	}
+
+	return parsed as Partial<Record<GameGroup, string>>;
+}
+
+function ParseBotConfig(): BotConfig {
+	const err = p(
+		process.env,
+		{
+			TACHI_SERVER_LOCATION: "string",
+			HTTP_SERVER_URL: "string",
+			OAUTH_CLIENT_ID: "string",
+			OAUTH_CLIENT_SECRET: "string",
+			DISCORD_TOKEN: "string",
+			DISCORD_SERVER_ID: "string",
+			DISCORD_GAME_CHANNELS: "*string",
+			DISCORD_ADMIN_USERS: "*string",
+			DISCORD_APPROVED_ROLE: "*string",
+			DISCORD_LIMBO_CHANNEL: "*string",
 		},
-		OAUTH: {
-			CLIENT_SECRET: "string",
-			CLIENT_ID: "string",
-		},
-		DISCORD: {
-			TOKEN: "string",
-			SERVER_ID: "string",
-			GAME_CHANNELS: (self) => {
-				if (!IsRecord(self)) {
-					return "Expected an object that maps games to discord channel IDs.";
-				}
-
-				for (const [key, value] of Object.entries(self)) {
-					// note: properly validating that these are valid games
-					// is slightly harder, since that is also controlled by the config.
-					// ah well.
-					if (typeof key !== "string" || typeof value !== "string") {
-						return `Invalid value ${key}:${value}. Expected two strings.`;
-					}
-				}
-
-				return true;
-			},
-
-			// A list of users that are allowed to do powerful stuff.
-			ADMIN_USERS: ["string"],
-
-			// when users are authenticated with the bot, this role will be assigned
-			// to them.
-			// if this is not set, no role will be assigned.
-			APPROVED_ROLE: "*string",
-
-			LIMBO_CHANNEL: "*string",
-		},
-	});
+		{},
+		{ allowExcessKeys: true },
+	);
 
 	if (err) {
-		log.error(FormatPrError(err, "Invalid conf.json5 file. Cannot safely boot."));
-
+		log.error(FormatPrError(err, "Invalid environment. Cannot safely boot."));
 		throw err;
 	}
 
-	return data;
+	const gameChannels = ParseGameChannels(process.env.DISCORD_GAME_CHANNELS);
+
+	const adminUsers = process.env.DISCORD_ADMIN_USERS
+		? process.env.DISCORD_ADMIN_USERS.split(",").filter(Boolean)
+		: [];
+
+	return {
+		TACHI_SERVER_LOCATION: process.env.TACHI_SERVER_LOCATION!,
+		HTTP_SERVER: {
+			URL: process.env.HTTP_SERVER_URL!,
+		},
+		OAUTH: {
+			CLIENT_ID: process.env.OAUTH_CLIENT_ID!,
+			CLIENT_SECRET: process.env.OAUTH_CLIENT_SECRET!,
+		},
+		DISCORD: {
+			TOKEN: process.env.DISCORD_TOKEN!,
+			SERVER_ID: process.env.DISCORD_SERVER_ID!,
+			GAME_CHANNELS: gameChannels,
+			ADMIN_USERS: adminUsers,
+			APPROVED_ROLE: process.env.DISCORD_APPROVED_ROLE,
+			LIMBO_CHANNEL: process.env.DISCORD_LIMBO_CHANNEL,
+		},
+	};
 }
 
 export interface ProcessEnvironment {
-	nodeEnv: "dev" | "production" | "staging" | "test";
-	mongoUrl: string;
-	port: integer;
+	NODE_ENV: "dev" | "production" | "staging" | "test";
+	POSTGRES_URL: string;
+	PORT: integer;
 }
 
 function ParseEnvVars() {
@@ -116,7 +128,7 @@ function ParseEnvVars() {
 			LOG_LEVEL: p.optional(
 				p.isIn("debug", "verbose", "info", "warn", "error", "severe", "crit"),
 			),
-			MONGO_URL: "string",
+			POSTGRES_URL: "string",
 			PORT: (self) =>
 				p.isPositiveInteger(Number(self)) === true ||
 				"Should be a string representing a whole integer port.",
@@ -132,13 +144,13 @@ function ParseEnvVars() {
 	}
 
 	return {
-		nodeEnv: process.env.NODE_ENV,
-		mongoUrl: process.env.MONGO_URL,
-		port: Number(process.env.PORT),
+		NODE_ENV: process.env.NODE_ENV,
+		POSTGRES_URL: process.env.POSTGRES_URL,
+		PORT: Number(process.env.PORT),
 	} as ProcessEnvironment;
 }
 
-export const BotConfig: BotConfig = ParseBotConfig(process.env.CONF_JSON5_LOCATION);
+export const BotConfig: BotConfig = ParseBotConfig();
 
 // The Tachi Server exports all of the information about it. This saves us having to
 // sync more metadata across instances.
@@ -164,14 +176,14 @@ async function GetServerConfig() {
 
 export const ServerConfig = await GetServerConfig();
 
-export const ProcessEnv = ParseEnvVars();
+export const Env = ParseEnvVars();
 
 // General warnings for config misuse.
 // This warns people if their parent server supports games that they aren't acknowledging.
 for (const game of ServerConfig.GAMES) {
 	if (!Object.prototype.hasOwnProperty.call(BotConfig.DISCORD.GAME_CHANNELS, game)) {
 		log.warn(
-			`${ServerConfig.NAME} declares support for ${game}, but no channel is mapped to it in your conf.json5.`,
+			`${ServerConfig.NAME} declares support for ${game}, but no channel is mapped to it. Set DISCORD_GAME_CHANNELS to include it.`,
 		);
 	}
 }
