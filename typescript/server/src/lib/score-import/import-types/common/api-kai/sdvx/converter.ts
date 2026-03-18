@@ -1,5 +1,5 @@
-import type { Versions } from "../../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../../common/src/types/metrics";
+import type { Versions } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import { FormatPrError } from "#utils/prudence";
 import { FindSDVXChartOnInGameIDVersion } from "#utils/queries/charts";
@@ -37,7 +37,7 @@ export const ConvertAPIKaiSDVX: ConverterFunction<unknown, KaiContext> = async (
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	const err = p(data, PR_KAI_SDVX_SCORE, {}, { allowExcessKeys: true });
 
@@ -65,7 +65,7 @@ export const ConvertAPIKaiSDVX: ConverterFunction<unknown, KaiContext> = async (
 	const song = await FindSongOnID("sdvx", chart.songID);
 
 	if (!song) {
-		logger.severe(`Song-Chart desync with song ID ${chart.songID} (sdvx).`);
+		log.error(`Song-Chart desync with song ID ${chart.songID} (sdvx).`);
 		throw new InternalFailure(`Song-Chart desync with song ID ${chart.songID} (sdvx).`);
 	}
 

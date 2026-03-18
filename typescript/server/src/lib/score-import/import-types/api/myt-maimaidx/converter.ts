@@ -1,6 +1,6 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
 import type { EmptyObject } from "#utils/types";
-import type { ScoreData } from "../../../../../../../common/src";
+import type { ScoreData } from "tachi-common";
 
 import {
 	InternalFailure,
@@ -9,9 +9,9 @@ import {
 	SongOrChartNotFoundFailure,
 } from "#lib/score-import/framework/common/converter-failures";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
+import { MaimaiComboStatus, MaimaiLevel } from "#proto/generated/maimai/common_pb";
 import { FindChartOnInGameID } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
-import { MaimaiComboStatus, MaimaiLevel } from "#proto/generated/maimai/common_pb";
 
 import type { ConverterFunction } from "../../common/types";
 import type { MytMaimaiDxScore } from "./types";
@@ -65,7 +65,7 @@ const ConvertAPIMytMaimaiDx: ConverterFunction<MytMaimaiDxScore, EmptyObject> = 
 	data,
 	_context,
 	importType,
-	logger,
+	log,
 ) => {
 	if (data.info === undefined || data.judge === undefined) {
 		throw new InvalidScoreFailure("Failed to receive score data from MYT API");
@@ -108,7 +108,7 @@ const ConvertAPIMytMaimaiDx: ConverterFunction<MytMaimaiDxScore, EmptyObject> = 
 	const song = await FindSongOnID("maimaidx", chart.songID);
 
 	if (song === null) {
-		logger.severe(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`, { chart });
+		log.error({ chart }, `Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
 		throw new InternalFailure(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
 	}
 

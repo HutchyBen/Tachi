@@ -1,8 +1,8 @@
-import { Environment, TachiConfig } from "#lib/setup/config";
+import { Env, TachiConfig } from "#lib/setup/config";
 import { Queue, QueueEvents } from "bullmq";
 
 const ScoreImportQueue = new Queue(`${TachiConfig.NAME} Score Import Queue`, {
-	connection: { host: Environment.redisUrl, port: 6379 },
+	connection: { host: Env.REDIS_URL, port: 6379 },
 	defaultJobOptions: {
 		removeOnComplete: true,
 		removeOnFail: 10, // keep the last 10 failed jobs, but start pruning beyond that.
@@ -12,7 +12,7 @@ const ScoreImportQueue = new Queue(`${TachiConfig.NAME} Score Import Queue`, {
 export default ScoreImportQueue;
 
 export const ScoreImportQueueEvents = new QueueEvents(ScoreImportQueue.name, {
-	connection: { host: Environment.redisUrl, port: 6379 },
+	connection: { host: Env.REDIS_URL, port: 6379 },
 });
 
 export async function CloseScoreImportQueue() {

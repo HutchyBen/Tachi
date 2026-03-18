@@ -1,6 +1,6 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/log/log.js";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import fjsh from "fast-json-stable-hash";
 import {
 	GetGPTConfig,
@@ -8,7 +8,7 @@ import {
 	type integer,
 	type OptionalMetrics,
 	type ProvidedMetrics,
-} from "../../../../../../common/src";
+} from "tachi-common";
 
 import type { DryScore } from "../common/types";
 
@@ -50,7 +50,7 @@ export function CreateScoreID(
 	try {
 		hash = fjsh.hash(elements, "sha256");
 	} catch (err) {
-		logger?.error(`Failed to checksum score: ${err}`, { elements, dryScore });
+		logger?.error({ err, elements, dryScore }, `Failed to checksum score`);
 		throw err;
 	}
 

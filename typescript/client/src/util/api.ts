@@ -7,8 +7,8 @@ const BASE_OPTIONS = {
 	credentials: "include",
 };
 
-const BASE_URL = process.env.VITE_SERVER_URL ?? "";
-const CDN_URL = process.env.VITE_CDN_URL;
+const BASE_URL = import.meta.env.VITE_SERVER_URL ?? "";
+const CDN_URL = import.meta.env.VITE_CDN_URL;
 
 if (!CDN_URL) {
 	throw new Error(`Cannot run -- no VITE_CDN_URL provided?`);

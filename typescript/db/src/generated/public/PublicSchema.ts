@@ -16,6 +16,7 @@ import type { default as CronTaskExecutionTable } from './CronTaskExecution';
 import type { default as NotificationTable } from './Notification';
 import type { default as ImportLockTable } from './ImportLock';
 import type { default as ScoreBlacklistTable } from './ScoreBlacklist';
+import type { default as PrivDiscordUserMapTable } from './PrivDiscordUserMap';
 import type { default as TableFolderTable } from './TableFolder';
 import type { default as GameStatsTable } from './GameStats';
 import type { default as PrivOauth2AuthTokenTable } from './PrivOauth2AuthToken';
@@ -99,6 +100,8 @@ export default interface PublicSchema {
   import_lock: ImportLockTable;
 
   score_blacklist: ScoreBlacklistTable;
+
+  priv_discord_user_map: PrivDiscordUserMapTable;
 
   table_folder: TableFolderTable;
 

@@ -10,7 +10,6 @@ import type { KsHookSV6CStaticScore } from "#lib/score-import/import-types/ir/ks
 import type { LR2HookScore } from "#lib/score-import/import-types/ir/lr2hook/types";
 import type { USCClientScore } from "#server/router/ir/usc/_playtype/types";
 
-import db from "#external/mongo/db";
 import {
 	USC_DEFAULT_HOLD,
 	USC_DEFAULT_MISS,
@@ -18,10 +17,10 @@ import {
 	USC_DEFAULT_PERFECT,
 	USC_DEFAULT_SLAM,
 } from "#lib/constants/usc-ir";
+import db from "#services/mongo/db";
 import { ApplyNTimes, RFA } from "#utils/misc";
 import fs from "fs";
 import path from "path";
-
 import {
 	type ChartDocument,
 	CHUNITHM_CLEAR_LAMPS,
@@ -39,7 +38,8 @@ import {
 	type SongDocument,
 	type UGPTSettingsDocument,
 	type UserDocument,
-} from "../../../common/src";
+} from "tachi-common";
+
 import { dmf } from "./misc";
 
 const file = (name: string) => path.join(__dirname, "/test-data", name);

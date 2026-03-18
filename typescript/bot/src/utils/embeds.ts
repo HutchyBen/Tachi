@@ -3,7 +3,7 @@ import type { ImportDocument, integer, UserDocument } from "tachi-common";
 import { MessageEmbed } from "discord.js";
 
 import { BotConfig, ServerConfig } from "../config";
-import { PrependTachiUrl } from "./fetchTachi";
+import { PrependTachiUrl } from "./fetch-tachi";
 import { FormatDate, Pluralise } from "./misc";
 
 export function CreateEmbed(userID?: integer) {

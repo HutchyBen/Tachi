@@ -430,7 +430,3 @@ this will log a warning, and nothing will be sent to Seq.
 ### NODE_ENV
 
 Expected to be either "dev", "production", "staging" or "test". If not set, this will terminate the process.
-
-### REPLICA_IDENTITY
-
-Optional. If present, this declares the identity of this server as a replica.

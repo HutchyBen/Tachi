@@ -1,7 +1,7 @@
 import type { z } from "zod";
 
 import chalk from "chalk";
-import { v3AllGames, V3FormatGame } from "../../common/src";
+import { v3AllGames, V3FormatGame } from "tachi-common";
 
 import { ReadCollection } from "../util";
 import { type V3_TABLE_SCHEMA } from "./schemas";

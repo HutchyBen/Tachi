@@ -3,7 +3,7 @@ const fs = require("fs");
 const fetch = require("node-fetch");
 const path = require("path");
 
-const logger = require("../../logger");
+const logger = require("../../log");
 const { MutateCollection, ReadCollection } = require("../../util");
 
 const program = new Command();

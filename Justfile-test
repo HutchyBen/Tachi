@@ -13,6 +13,14 @@ check:
 typecheck:
 	bun run --filter '!tachi-seeds-scripts' typecheck
 
+fix: fmt
+	#!/bin/bash
+	set -euo pipefail
+
+	just gen
+	bun run --filter '*' lint-fix
+	.scripts/ts_autoinherit.js
+
 # Automatically fix any issues we can in the codebase and then
 # make a commit for them
 autofix: fmt
@@ -25,8 +33,7 @@ autofix: fmt
 		SHOULD_COMMIT=1
 	fi
 
-	just gen
-	bun run --filter '*' lint-fix
+	just fix
 
 	if [ $SHOULD_COMMIT -eq 1 ]; then
 		git add .
@@ -58,3 +65,7 @@ test-typescript:
 	set -euo pipefail
 
 	bun run --filter '*' test -- --coverage.reporter=lcov --reporter=default --reporter=junit --outputFile.junit=test-results/junit.xml
+
+# Run all parity suites, or a single one if a name is given.
+test-parity suite="":
+	TACHI_SERVER=https://127.0.0.1:8080 bun vitest run {{ if suite != "" { "tests/" + suite + ".test.ts" } else { "" } }}

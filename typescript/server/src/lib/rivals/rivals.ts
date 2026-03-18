@@ -1,10 +1,10 @@
 import type { BulkWriteUpdateOneOperation } from "mongodb";
 
-import db from "#external/mongo/db";
 import { SetRivalsFailReasons } from "#lib/constants/err-codes";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { SendSetRivalNotification } from "#lib/notifications/notification-wrappers";
 import { ServerConfig } from "#lib/setup/config";
+import db from "#services/mongo/db";
 import { ArrayDiff } from "#utils/misc";
 import { GetUsersWithIDs, GetUserWithIDGuaranteed } from "#utils/user";
 import {
@@ -14,9 +14,7 @@ import {
 	type integer,
 	type PBScoreDocument,
 	type Playtype,
-} from "../../../../common/src";
-
-const logger = CreateLogCtx(__filename);
+} from "tachi-common";
 
 /**
  * Retrieve all of a user's set rival IDs.
@@ -124,7 +122,7 @@ export async function SetRivals(
 	});
 
 	if (!currentGameSettings) {
-		logger.severe(
+		log.error(
 			`User ${userID} attempted to set rivals for ${FormatGameGroup(
 				game,
 				playtype,

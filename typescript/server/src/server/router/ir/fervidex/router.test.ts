@@ -1,6 +1,6 @@
-import type { ChartDocument, GPTStrings, SongDocument } from "../../../../../../common/src";
+import type { ChartDocument, GPTStrings, SongDocument } from "tachi-common";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import { InsertFakeTokenWithAllPerms } from "#test-utils/fake-auth";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";

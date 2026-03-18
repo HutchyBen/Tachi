@@ -1,6 +1,6 @@
 services:
-  mongo:
-    container_name: mongo
+  tachi-mongo:
+    container_name: tachi-mongo
     command: "--config /etc/mongod.conf"
     image: mongo:5
     restart: unless-stopped
@@ -10,17 +10,17 @@ services:
       - tachi-volume:/data/db
       - "./dev/mongod.conf:/etc/mongod.conf"
 
-  redis:
-    container_name: redis
+  tachi-redis:
+    container_name: tachi-redis
     command: redis-server --save 60 1 --loglevel warning
-    image: redis:6
+    image: redis:7.4.1
     restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
       - tachi-redis:/data
-  postgres:
-    container_name: postgres
+  tachi-postgres:
+    container_name: tachi-postgres
     image: postgres:18
     restart: unless-stopped
     ports:
@@ -32,6 +32,18 @@ services:
     volumes:
       - tachi-postgres:/var/lib/postgresql
       - "./dev/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql"
+  tachi-s3:
+    container_name: tachi-s3
+    image: quay.io/minio/minio:RELEASE.2024-10-29T16-01-48Z
+    environment:
+        MINIO_ROOT_USER: minio
+        MINIO_ROOT_PASSWORD: password
+    ports:
+        - "9000:9000"
+        - "9001:9001"
+    volumes:
+        - tachi-minio:/data
+    entrypoint: /usr/bin/minio server /data --console-address=':9001'
 
   tachi-dev:
     user: "1000:1000"
@@ -56,3 +68,4 @@ volumes:
   tachi-redis:
   tachi-logs:
   tachi-postgres:
+  tachi-minio:

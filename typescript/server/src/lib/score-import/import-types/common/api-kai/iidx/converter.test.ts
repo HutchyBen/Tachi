@@ -1,13 +1,11 @@
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import { LoadTachiIIDXData, Testing511Song, Testing511SPA } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
 import t from "tap";
 
 import { ConvertAPIKaiIIDX } from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 const iidxScore = {
 	chart_id: 3848,
@@ -31,7 +29,7 @@ t.test("#ConvertAPIKaiIIDX", (t) => {
 	t.beforeEach(ResetDBState);
 
 	t.test("Should return a dryScore on valid input.", async (t) => {
-		const res = await ConvertAPIKaiIIDX(iidxScore, { service: "FLO" }, "api/flo-iidx", logger);
+		const res = await ConvertAPIKaiIIDX(iidxScore, { service: "FLO" }, "api/flo-iidx", log);
 
 		t.hasStrict(res, {
 			song: Testing511Song,
@@ -66,7 +64,7 @@ t.test("#ConvertAPIKaiIIDX", (t) => {
 			deepmerge(iidxScore, { music_id: 24101 }),
 			{ service: "FLO" },
 			"api/flo-iidx",
-			logger,
+			log,
 		);
 
 		t.hasStrict(res, {
@@ -109,7 +107,7 @@ t.test("#ConvertAPIKaiIIDX", (t) => {
 					deepmerge(iidxScore, { music_id: 0 }),
 					{ service: "FLO" },
 					"api/flo-iidx",
-					logger,
+					log,
 				),
 			{
 				message: /Could not find chart with songID 0 \(SP ANOTHER - Version 26\)/u,
@@ -126,7 +124,7 @@ t.test("#ConvertAPIKaiIIDX", (t) => {
 					deepmerge(iidxScore, { music_id: "foo" }),
 					{ service: "FLO" },
 					"api/flo-iidx",
-					logger,
+					log,
 				),
 			{
 				message:
@@ -140,7 +138,7 @@ t.test("#ConvertAPIKaiIIDX", (t) => {
 	t.test("Should throw InternalFailure on song-chart desync", async (t) => {
 		await db.songs.iidx.remove({});
 
-		t.rejects(() => ConvertAPIKaiIIDX(iidxScore, { service: "FLO" }, "api/flo-iidx", logger), {
+		t.rejects(() => ConvertAPIKaiIIDX(iidxScore, { service: "FLO" }, "api/flo-iidx", log), {
 			message: /Song-Chart desync/u,
 		});
 

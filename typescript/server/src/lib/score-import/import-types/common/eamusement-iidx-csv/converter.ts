@@ -1,5 +1,5 @@
-import type { ChartDocument } from "../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
+import type { ChartDocument } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import { FindChartWithPTDFVersion } from "#utils/queries/charts";
 import { FindSongOnTitle } from "#utils/queries/songs";
@@ -32,7 +32,7 @@ const NINE_HOURS = 1000 * 60 * 60 * 9;
 const ConvertEamIIDXCSV: ConverterFunction<
 	IIDXEamusementCSVData,
 	IIDXEamusementCSVContext
-> = async (data, context, importType, logger) => {
+> = async (data, context, importType, log) => {
 	const eamScore = data.score;
 
 	if (eamScore.exscore === "0") {
@@ -126,7 +126,7 @@ const ConvertEamIIDXCSV: ConverterFunction<
 	const lamp = EAMUSEMENT_LAMP_RESOLVER.get(eamScore.lamp);
 
 	if (!lamp) {
-		logger.info(`Invalid lamp of ${eamScore.lamp} provided.`);
+		log.info(`Invalid lamp of ${eamScore.lamp} provided.`);
 		throw new InvalidScoreFailure(
 			`${HUMANISED_CHART_TITLE} - Invalid Lamp of ${eamScore.lamp}.`,
 		);
@@ -165,11 +165,11 @@ const ConvertEamIIDXCSV: ConverterFunction<
 
 		dryScore.scoreData.optional.bp = numBP;
 	} else if (eamScore.bp === "---") {
-		logger.debug(
+		log.debug(
 			`Skipped assigning BP for score as it had expected null value of ${eamScore.bp}.`,
 		);
 	} else {
-		logger.info(`Skipped assigning BP for score. Had unexpected value of ${eamScore.bp}.`);
+		log.info(`Skipped assigning BP for score. Had unexpected value of ${eamScore.bp}.`);
 	}
 
 	return { chart: tachiChart, dryScore, song: tachiSong };

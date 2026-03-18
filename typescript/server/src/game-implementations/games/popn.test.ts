@@ -1,12 +1,12 @@
-import type { ProvidedMetrics, ScoreData } from "../../../../common/src";
+import type { ProvidedMetrics, ScoreData } from "tachi-common";
 
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
+import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestingPopnChart } from "#test-utils/test-data";
-import { POPN_9B_CONF } from "../../../../common/src/config/game-support/popn";
+import { POPN_9B_CONF } from "tachi-common/config/game-support/popn";
 import t from "tap";
 
 import { POPN_9B_IMPL } from "./popn";
@@ -36,8 +36,6 @@ const scoreData: ScoreData<"popn:9B"> = {
 
 const mockScore = mkMockScore("popn", "9B", TestingPopnChart, scoreData);
 const mockPB = mkMockPB("popn", "9B", TestingPopnChart, scoreData);
-
-const logger = CreateLogCtx(__filename);
 
 t.test("Pop'n Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {
@@ -176,7 +174,7 @@ t.test("Pop'n Implementation", (t) => {
 				}),
 			);
 
-			t.hasStrict(await CreatePBDoc("popn:9B", 1, TestingPopnChart, logger), {
+			t.hasStrict(await CreatePBDoc("popn:9B", 1, TestingPopnChart, log), {
 				composedFrom: [
 					{ name: "Best Score" },
 					{ name: "Best Clear", scoreID: "bestClearMedal" },

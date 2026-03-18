@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/log/log.js";
 
 import { IsRecord } from "#utils/misc";
 import { FormatPrError } from "#utils/prudence";
@@ -21,9 +21,9 @@ const PR_FERVIDEX_STATIC: PrudenceSchema = {
 export function ParseFervidexStatic(
 	body: Record<string, unknown>,
 	headers: FervidexStaticHeaders,
-	logger: KtLogger,
+	log: KtLogger,
 ): ParserFunctionReturns<FervidexStaticScore, FervidexStaticContext> {
-	const version = SoftwareIDToVersion(headers.model, logger);
+	const version = SoftwareIDToVersion(headers.model, log);
 	const classProvider = CreateFerStaticClassProvider(body);
 
 	// if we shouldn't import scores, just sync up dans.

@@ -1,0 +1,24 @@
+start:
+	#!/bin/bash
+	ARGS=(server client)
+
+	echo "Starting: ${ARGS[@]}"
+	set -e
+	pids=()
+	for target in ${ARGS[@]}; do
+		(just "$target") &
+		pids+=($!)
+	done
+	trap 'echo "Stopping all..."; kill -TERM ${pids[@]}; wait' SIGINT
+	wait
+
+
+server:
+	cd typescript/server && \
+		TACHI_CONFIG=$(cat conf.json5) \
+		VERSION=$(jq -r .version package.json) \
+		COMMIT_HASH=$(git rev-parse --short HEAD) \
+		bun --watch src/main.ts
+
+client:
+	cd typescript/client && vite --open

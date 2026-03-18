@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { MockMulterFile } from "#test-utils/mock-multer";
 import { TestingIIDXEamusementCSV26, TestingIIDXEamusementCSV27 } from "#test-utils/test-data";
 import t from "tap";
@@ -6,14 +6,12 @@ import t from "tap";
 import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 import GenericParseEamIIDXCSV, { IIDXCSVParse, ResolveHeaders } from "./parser";
 
-const logger = CreateLogCtx(__filename);
-
 t.test("#ParseEamusementCSV", (t) => {
 	t.test("Valid Rootage-Type CSV", (t) => {
 		const { iterableData, hasBeginnerAndLegg, version } = IIDXCSVParse(
 			TestingIIDXEamusementCSV26,
 			"SP",
-			logger,
+			log,
 		);
 
 		t.equal(iterableData.length, 456, "Should return exactly 456 datapoints.");
@@ -27,7 +25,7 @@ t.test("#ParseEamusementCSV", (t) => {
 		const { iterableData, hasBeginnerAndLegg, version } = IIDXCSVParse(
 			TestingIIDXEamusementCSV27,
 			"SP",
-			logger,
+			log,
 		);
 
 		t.equal(iterableData.length, 6285, "Should return exactly 6285 datapoints.");
@@ -47,7 +45,7 @@ t.test("#ParseEamusementCSV", (t) => {
 		const buffer = Buffer.from(`${"a,".repeat(26)}a\n${"a,".repeat(3)}a`);
 
 		t.throws(
-			() => IIDXCSVParse(buffer, "SP", logger),
+			() => IIDXCSVParse(buffer, "SP", log),
 			new ScoreImportFatalError(400, "Row 1 has an invalid amount of cells (4, expected 27)"),
 		);
 
@@ -62,7 +60,7 @@ t.test("#ParseEamusementCSV", (t) => {
 		const InvalidVersions = Buffer.from(`${headerStr}\n${row}`);
 
 		t.throws(
-			() => IIDXCSVParse(InvalidVersions, "SP", logger),
+			() => IIDXCSVParse(InvalidVersions, "SP", log),
 			new ScoreImportFatalError(
 				400,
 				"Invalid/Unsupported Eamusement Version Name GARBAGE VERSION.",
@@ -75,7 +73,7 @@ t.test("#ParseEamusementCSV", (t) => {
 		let { version } = IIDXCSVParse(
 			Buffer.from([headerStr, row27th, row17th].join("\n")),
 			"SP",
-			logger,
+			log,
 		);
 
 		t.equal(version, "27", "Should pick the largest version from the list of scores.");
@@ -83,7 +81,7 @@ t.test("#ParseEamusementCSV", (t) => {
 		({ version } = IIDXCSVParse(
 			Buffer.from([headerStr, row17th, row27th].join("\n")),
 			"SP",
-			logger,
+			log,
 		));
 
 		// this is technically allowing invalid eam-csv, but, who cares?
@@ -131,7 +129,7 @@ t.test("#ResolveHeader", (t) => {
 				"ANOTHER DJ LEVEL",
 				"最終プレー日時",
 			],
-			logger,
+			log,
 		);
 
 		t.equal(hasBeginnerAndLegg, false, "Should return false for hasBeginnerAndLegg");
@@ -184,7 +182,7 @@ t.test("#ResolveHeader", (t) => {
 				"LEGGENDARIA DJ LEVEL",
 				"最終プレー日時",
 			],
-			logger,
+			log,
 		);
 
 		t.equal(hasBeginnerAndLegg, true, "Should return true for hasBeginnerAndLegg");
@@ -194,7 +192,7 @@ t.test("#ResolveHeader", (t) => {
 
 	t.test("No headers", (t) => {
 		t.throws(
-			() => ResolveHeaders([], logger),
+			() => ResolveHeaders([], log),
 			new ScoreImportFatalError(
 				400,
 				"Invalid CSV provided. CSV does not have the correct amount of headers.",
@@ -207,7 +205,7 @@ t.test("#ResolveHeader", (t) => {
 
 	t.test("Too Many Headers", (t) => {
 		t.throws(
-			() => ResolveHeaders(Array(1000), logger),
+			() => ResolveHeaders(Array(1000), log),
 			new ScoreImportFatalError(
 				400,
 				"Invalid CSV provided. CSV does not have the correct amount of headers.",
@@ -226,7 +224,7 @@ t.test("#ParseEamusementCSV", (t) => {
 		const validSPFile = MockMulterFile(TestingIIDXEamusementCSV27, "iidx_27_sp.csv");
 
 		t.throws(
-			() => GenericParseEamIIDXCSV(validSPFile, {}, "e-amusement", logger),
+			() => GenericParseEamIIDXCSV(validSPFile, {}, "e-amusement", log),
 			new ScoreImportFatalError(400, "Invalid playtype of undefined given."),
 		);
 
@@ -234,24 +232,19 @@ t.test("#ParseEamusementCSV", (t) => {
 			validSPFile,
 			{ playtype: "SP" },
 			"e-amusement",
-			logger,
+			log,
 		);
 
 		t.equal(context.playtype, "SP", "Should correctly assert SP for a body of SP.");
 
 		const mockDPFile = MockMulterFile(TestingIIDXEamusementCSV27, "iidx_27_dp.csv");
 
-		({ context } = GenericParseEamIIDXCSV(
-			mockDPFile,
-			{ playtype: "DP" },
-			"e-amusement",
-			logger,
-		));
+		({ context } = GenericParseEamIIDXCSV(mockDPFile, { playtype: "DP" }, "e-amusement", log));
 
 		t.equal(context.playtype, "DP", "Should correctly assert DP for a body of DP.");
 
 		t.throws(
-			() => GenericParseEamIIDXCSV(validSPFile, { playtype: "DP" }, "e-amusement", logger),
+			() => GenericParseEamIIDXCSV(validSPFile, { playtype: "DP" }, "e-amusement", log),
 			new ScoreImportFatalError(
 				400,
 				"Safety Triggered: Filename contained 'SP', but was marked as a DP import. Are you *absolutely* sure this is right?",
@@ -263,7 +256,7 @@ t.test("#ParseEamusementCSV", (t) => {
 			mockDPFile,
 			{ playtype: "DP", assertPlaytypeCorrect: true },
 			"e-amusement",
-			logger,
+			log,
 		));
 
 		t.equal(

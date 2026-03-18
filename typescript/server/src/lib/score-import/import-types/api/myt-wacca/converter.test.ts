@@ -1,20 +1,18 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
-import ResetDBState from "#test-utils/resets";
-import { TestingWaccaPupaExp, TestingWaccaPupaSong } from "#test-utils/test-data";
-import deepmerge from "deepmerge";
 import {
 	WaccaMusicDifficulty,
 	WaccaMusicScoreGrade,
 	WaccaPlayMode,
 } from "#proto/generated/wacca/common_pb";
+import ResetDBState from "#test-utils/resets";
+import { TestingWaccaPupaExp, TestingWaccaPupaSong } from "#test-utils/test-data";
+import deepmerge from "deepmerge";
 import t from "tap";
 
 import type { MytWaccaScore } from "./types";
 
 import ConvertAPIMytWACCA from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 const parsedScore: MytWaccaScore = {
 	musicId: 2085,
@@ -48,7 +46,7 @@ t.test("#ConvertAPIMytWACCA", (t) => {
 	t.beforeEach(ResetDBState);
 
 	function conv(g: Partial<MytWaccaScore> = {}) {
-		return ConvertAPIMytWACCA(deepmerge(parsedScore, g), {}, "api/myt-wacca", logger);
+		return ConvertAPIMytWACCA(deepmerge(parsedScore, g), {}, "api/myt-wacca", log);
 	}
 
 	t.test("Should return a dryScore on valid input.", async (t) => {

@@ -1,8 +1,5 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
-import { dmf } from "#test-utils/misc";
-import ResetDBState from "#test-utils/resets";
-import { TestingChunithmChartConverter, TestingChunithmSongConverter } from "#test-utils/test-data";
 import {
 	ChunithmClearStatus,
 	ChunithmComboStatus,
@@ -10,13 +7,14 @@ import {
 	ChunithmLevel,
 	ChunithmScoreRank,
 } from "#proto/generated/chunithm/common_pb";
+import { dmf } from "#test-utils/misc";
+import ResetDBState from "#test-utils/resets";
+import { TestingChunithmChartConverter, TestingChunithmSongConverter } from "#test-utils/test-data";
 import t from "tap";
 
 import type { MytChunithmScore } from "./types";
 
 import ConvertAPIMytChunithm from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 const parsedScore: MytChunithmScore = {
 	playlogApiId: "346907fc-ba1a-4ff9-a5a3-37a62b5f2e6c",
@@ -46,7 +44,7 @@ t.test("#ConvertAPIMytChunithm", (t) => {
 	t.beforeEach(ResetDBState);
 
 	function convert(modifier: any = {}) {
-		return ConvertAPIMytChunithm(dmf(parsedScore, modifier), {}, "api/myt-chunithm", logger);
+		return ConvertAPIMytChunithm(dmf(parsedScore, modifier), {}, "api/myt-chunithm", log);
 	}
 
 	t.test("Should return a dryScore on valid input.", async (t) => {

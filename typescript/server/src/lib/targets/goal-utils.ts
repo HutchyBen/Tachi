@@ -1,10 +1,10 @@
 import type { GoalCriteriaFormatter } from "#game-implementations/types";
 
-import db from "#external/mongo/db";
+import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
+import db from "#services/mongo/db";
 import { GetFolderForIDGuaranteed, HumaniseChartID } from "#utils/db";
 import { GetFolderChartIDs } from "#utils/folder";
 import { HumanisedJoinArray, OnlyFloatToDP } from "#utils/misc";
-import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import {
 	FormatGameGroup,
 	type GameGroup,
@@ -15,7 +15,7 @@ import {
 	type GoalDocument,
 	type GPTString,
 	type Playtype,
-} from "../../../../common/src";
+} from "tachi-common";
 
 export async function CreateGoalTitle(
 	charts: GoalDocument["charts"],

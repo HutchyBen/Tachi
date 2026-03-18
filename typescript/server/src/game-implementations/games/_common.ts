@@ -19,10 +19,10 @@ import type {
 	ScoreValidator,
 } from "#game-implementations/types";
 
-import { IsNullish, NumToDP } from "#utils/misc";
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileAvgBestN, ProfileSumBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
+import { IsNullish, NumToDP } from "#utils/misc";
 import { Volforce } from "rg-stats";
 import {
 	type ChartDocument,
@@ -39,7 +39,7 @@ import {
 	type ScoreDocument,
 	SDVXLIKE_GBOUNDARIES,
 	type SpecificUserGameStats,
-} from "../../../../common/src";
+} from "tachi-common";
 
 export const EX_SCORE_CHECK: ChartSpecificMetricValidator<IIDXLikes> = (exScore, chart) => {
 	if (exScore < 0) {

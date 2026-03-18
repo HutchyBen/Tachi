@@ -1,14 +1,14 @@
 import type { ICollection } from "monk";
-import type { GameGroup } from "../../../common/src";
+import type { GameGroup } from "tachi-common";
 
-import db, { type StaticDatabases } from "#external/mongo/db";
-import { SetIndexes } from "#external/mongo/indexes";
-import CreateLogCtx from "#lib/logger/logger";
-import { Environment, ServerConfig } from "#lib/setup/config";
+import { log } from "#lib/log/log.js";
+import { Env, ServerConfig } from "#lib/setup/config";
+import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
+import db, { type StaticDatabases } from "#services/mongo/db";
+import { SetIndexes } from "#services/mongo/indexes";
 import fs from "fs";
 import path from "path";
 import rimraf from "rimraf";
-import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
 
 // im installing an entire library for rm rf...
 
@@ -17,8 +17,6 @@ if (ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE !== "LOCAL_FILESYSTEM") {
 		`Cannot run tests when CDN_CONFIG.SAVE_LOCATION.TYPE is not LOCAL_FILESYSTEM! (Got ${ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE}.)`,
 	);
 }
-
-const logger = CreateLogCtx(__filename);
 
 const DATA_DIR = path.join(__dirname, "./mock-db");
 
@@ -115,12 +113,12 @@ export function ResetCDN() {
 
 export async function SetIndexesForDB() {
 	await ResetDBState();
-	const url = `${Environment.mongoUrl}/testingdb`;
+	const url = `${Env.MONGO_URL}/testingdb`;
 
-	logger.info(`Setting indexes for ${url}`);
+	log.info(`Setting indexes for ${url}`);
 
 	await SetIndexes(url, true);
 
-	logger.info(`Done.`);
+	log.info(`Done.`);
 	return true;
 }

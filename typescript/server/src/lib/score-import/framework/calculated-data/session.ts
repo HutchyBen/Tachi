@@ -1,5 +1,5 @@
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
-import { type GPTString, type ScoreDocument } from "../../../../../../common/src";
+import { type GPTString, type ScoreDocument } from "tachi-common";
 
 /**
  * Create calculated data for a session of this game and playtype.

@@ -1,11 +1,11 @@
 import type { GPTServerImplementation } from "#game-implementations/types";
 
-import { IsNullish } from "#utils/misc";
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileAvgBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
+import { IsNullish } from "#utils/misc";
 import { Potential } from "rg-stats";
-import { ARCAEA_GBOUNDARIES, FmtNum, GetGrade, type GPTStrings } from "../../../../common/src";
+import { ARCAEA_GBOUNDARIES, FmtNum, GetGrade, type GPTStrings } from "tachi-common";
 
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 

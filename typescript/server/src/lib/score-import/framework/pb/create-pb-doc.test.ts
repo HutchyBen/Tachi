@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
-import CreateLogCtx, { type KtLogger } from "#lib/logger/logger";
+import { type KtLogger, log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import {
 	BMSGazerChart,
@@ -8,14 +8,12 @@ import {
 	TestingIIDXSPScore,
 } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
-import { IIDX_GRADES, IIDX_LAMPS } from "../../../../../../common/src";
+import { IIDX_GRADES, IIDX_LAMPS } from "tachi-common";
 import t from "tap";
 
 import { CreatePBDoc, type PBScoreDocumentNoRank } from "./create-pb-doc";
 
 const IIDXScore = TestingIIDXSPScore;
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#CreatePBDoc", (t) => {
 	t.beforeEach(ResetDBState);
@@ -91,7 +89,7 @@ t.test("#CreatePBDoc", (t) => {
 				}),
 			]);
 
-			const res = await CreatePBDoc("iidx:SP", 1, Testing511SPA, logger);
+			const res = await CreatePBDoc("iidx:SP", 1, Testing511SPA, log);
 
 			t.not(res, undefined, "Should actually return something.");
 
@@ -135,7 +133,7 @@ t.test("#CreatePBDoc", (t) => {
 		await db.scores.remove({});
 		await db.scores.insert([IIDXScore, d]);
 
-		const res = await CreatePBDoc("iidx:SP", 1, Testing511SPA, logger);
+		const res = await CreatePBDoc("iidx:SP", 1, Testing511SPA, log);
 
 		t.not(res, undefined, "Should actually return something.");
 
@@ -195,7 +193,7 @@ t.test("#CreatePBDoc", (t) => {
 			}),
 		]);
 
-		const res = (await CreatePBDoc("bms:7K", 1, BMSGazerChart, logger)) as
+		const res = (await CreatePBDoc("bms:7K", 1, BMSGazerChart, log)) as
 			| PBScoreDocumentNoRank<"bms:7K" | "bms:14K">
 			| undefined;
 
@@ -244,7 +242,7 @@ t.test("#CreatePBDoc", (t) => {
 			}),
 		]);
 
-		const res = (await CreatePBDoc("bms:7K", 1, BMSGazerChart, logger)) as
+		const res = (await CreatePBDoc("bms:7K", 1, BMSGazerChart, log)) as
 			| PBScoreDocumentNoRank<"bms:7K" | "bms:14K">
 			| undefined;
 

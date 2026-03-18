@@ -1,12 +1,10 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { MockMulterFile } from "#test-utils/mock-multer";
 import ResetDBState from "#test-utils/resets";
 import { GetKTDataBuffer } from "#test-utils/test-data";
 import t from "tap";
 
 import { ParseSolidStateXML } from "./parser";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#ParseSolidStateXML", (t) => {
 	t.beforeEach(ResetDBState);
@@ -15,7 +13,7 @@ t.test("#ParseSolidStateXML", (t) => {
 		const res = ParseSolidStateXML(
 			MockMulterFile(GetKTDataBuffer("./s3/valid.xml"), "valid.xml"),
 			{},
-			logger,
+			log,
 		);
 
 		t.hasStrict(
@@ -71,7 +69,7 @@ t.test("#ParseSolidStateXML", (t) => {
 		const res = ParseSolidStateXML(
 			MockMulterFile(GetKTDataBuffer("./s3/one-score.xml"), "one-score.xml"),
 			{},
-			logger,
+			log,
 		);
 
 		t.hasStrict(
@@ -108,7 +106,7 @@ t.test("#ParseSolidStateXML", (t) => {
 		const res = ParseSolidStateXML(
 			MockMulterFile(GetKTDataBuffer("./s3/point-five-nine.xml"), "point-five-nine.xml"),
 			{},
-			logger,
+			log,
 		);
 
 		t.hasStrict(
@@ -148,7 +146,7 @@ t.test("#ParseSolidStateXML", (t) => {
 					MockMulterFile(GetKTDataBuffer("./s3/no-score-data.xml"), "no-score-data.xml"),
 
 					{},
-					logger,
+					log,
 				),
 			{ message: /Invalid S3 XML/u },
 		);
@@ -162,7 +160,7 @@ t.test("#ParseSolidStateXML", (t) => {
 				ParseSolidStateXML(
 					MockMulterFile(GetKTDataBuffer("./s3/invalid-lamp.xml"), "invalid-lamp.xml"),
 					{},
-					logger,
+					log,
 				),
 			{ message: /Invalid S3 XML.*cleartype.*BAD LAMP/u },
 		);
@@ -179,7 +177,7 @@ t.test("#ParseSolidStateXML", (t) => {
 						"malicious-mods.xml",
 					),
 					{},
-					logger,
+					log,
 				),
 			{ message: /Invalid S3 XML.*object.*1/u },
 		);
@@ -196,7 +194,7 @@ t.test("#ParseSolidStateXML", (t) => {
 						"malicious-scorebreakdown.xml",
 					),
 					{},
-					logger,
+					log,
 				),
 			{ message: /Invalid S3 XML.*object.*1/u },
 		);
@@ -213,7 +211,7 @@ t.test("#ParseSolidStateXML", (t) => {
 						"invalid-exscore.xml",
 					),
 					{},
-					logger,
+					log,
 				),
 			{ message: /Invalid S3 XML.*exscore.*positive integer.*-1/u },
 		);
@@ -232,7 +230,7 @@ t.test("#ParseSolidStateXML", (t) => {
 						"billion-laughs.xml",
 					),
 					{},
-					logger,
+					log,
 				),
 			{ message: /Invalid S3 XML/u },
 		);
@@ -249,7 +247,7 @@ t.test("#ParseSolidStateXML", (t) => {
 				"specific-blaugh.xml",
 			),
 			{},
-			logger,
+			log,
 		);
 
 		// @ts-expect-error shush

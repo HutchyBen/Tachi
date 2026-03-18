@@ -6,8 +6,8 @@ import {
 	type Playtypes,
 	type SongDocument,
 	type Versions,
-} from "../../../common/src";
-import { DDR_FLARE_CATEGORIES } from "../../../common/src/config/game-support/ddr";
+} from "tachi-common";
+import { DDR_FLARE_CATEGORIES } from "tachi-common/config/game-support/ddr";
 
 import { CreateChartID, MutateCollection, ReadCollection, WriteCollection } from "../../util";
 

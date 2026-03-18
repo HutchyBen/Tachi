@@ -48,8 +48,7 @@ for (const game of games) {
 		}
 
 		if (!entry._added) {
-			entry._added =
-				entry.legacySongID !== undefined ? NOW + entry.legacySongID : NOW;
+			entry._added = entry.legacySongID !== undefined ? NOW + entry.legacySongID : NOW;
 		}
 	}
 

@@ -1,10 +1,8 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { TestingUSCChart, uscScore } from "#test-utils/test-data";
 import t from "tap";
 
 import { ParseIRUSC } from "./parser";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#ParseIRUSC", (t) => {
 	t.test("Should validate and convert a score into an iterable", (t) => {
@@ -12,7 +10,7 @@ t.test("#ParseIRUSC", (t) => {
 			{ score: uscScore } as unknown as Record<string, unknown>,
 			TestingUSCChart.data.hashSHA1 as string,
 			"Controller",
-			logger,
+			log,
 		);
 
 		t.hasStrict(res, {
@@ -27,13 +25,10 @@ t.test("#ParseIRUSC", (t) => {
 	});
 
 	t.test("Should reject empty bodies", (t) => {
-		t.throws(
-			() => ParseIRUSC({}, TestingUSCChart.data.hashSHA1 as string, "Controller", logger),
-			{
-				statusCode: 400,
-				message: /invalid usc score/iu,
-			},
-		);
+		t.throws(() => ParseIRUSC({}, TestingUSCChart.data.hashSHA1 as string, "Controller", log), {
+			statusCode: 400,
+			message: /invalid usc score/iu,
+		});
 
 		t.end();
 	});

@@ -1,9 +1,9 @@
 import type { GPTServerImplementation } from "#game-implementations/types";
 
-import { IsNullish } from "#utils/misc";
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileAvgBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
+import { IsNullish } from "#utils/misc";
 import { ONGEKIRating } from "rg-stats";
 import {
 	type ChartDocument,
@@ -15,7 +15,7 @@ import {
 	type integer,
 	ONGEKI_GBOUNDARIES,
 	type Playtype,
-} from "../../../../common/src";
+} from "tachi-common";
 
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 

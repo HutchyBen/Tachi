@@ -1,3 +1,4 @@
+import { log } from "#log";
 import { Command } from "commander";
 import fs from "fs";
 import path from "path";
@@ -8,9 +9,8 @@ import {
 	type integer,
 	type SongDocument,
 	type Versions,
-} from "../../../../common/src";
+} from "tachi-common";
 
-import logger from "../../../logger";
 import {
 	CreateChartID,
 	GetFreshSongIDGenerator,
@@ -135,7 +135,7 @@ async function ParseIIDXMDB() {
 
 	for (const inp of mdbCharts) {
 		if (isInBlacklist(`S${inp.songID}`)) {
-			logger.verbose(
+			log.debug(
 				`Skipped ${inp.artist} - ${inp.title} (${inp.songID}) as it was in the blacklist.`,
 			);
 			continue;
@@ -150,17 +150,17 @@ async function ParseIIDXMDB() {
 			const titleAlreadyExists = songTitleMap.get(inp.title);
 
 			if (titleAlreadyExists) {
-				logger.warn(
+				log.warn(
 					`A song called '${inp.title}' already exists in songs-iidx (songID:${titleAlreadyExists.id}). Is this a duplicate with a different inGameID?`,
 				);
 
 				if (!options.force) {
-					logger.warn(
+					log.warn(
 						`Must be resolved manually. Use --force to blindly overwrite it anyway.`,
 					);
 					continue;
 				} else {
-					logger.warn(`--force provided, adding it to the DB anyway.`);
+					log.warn(`--force provided, adding it to the DB anyway.`);
 				}
 			}
 
@@ -181,16 +181,16 @@ async function ParseIIDXMDB() {
 				altTitles: [],
 			};
 
-			logger.info(`Added new song ${inp.title}.`);
+			log.info(`Added new song ${inp.title}.`);
 
 			if (inp.title.match(/\?/gu)) {
-				logger.warn(
+				log.warn(
 					`${inp.title} has a potentially konami-screwed title. Investigate it manually.`,
 				);
 			}
 
 			if (inp.artist.match(/\?/gu)) {
-				logger.warn(
+				log.warn(
 					`${inp.artist} - ${inp.title} has a potentially konami-screwed title. Investigate it manually.`,
 				);
 			}
@@ -202,7 +202,7 @@ async function ParseIIDXMDB() {
 			const sxng = songMap.get(anySongIDMatch.songID);
 
 			if (!sxng) {
-				logger.error(`Song ${anySongIDMatch.songID} has charts but no song?`);
+				log.error(`Song ${anySongIDMatch.songID} has charts but no song?`);
 				throw new Error(`Song ${anySongIDMatch.songID} has charts but no song?`);
 			}
 			song = sxng;
@@ -212,7 +212,7 @@ async function ParseIIDXMDB() {
 
 		for (const diffName of diffNames) {
 			if (isInBlacklist(`C${inp.songID}-${diffName}`)) {
-				logger.verbose(
+				log.debug(
 					`Ignored ${song.title} (${inp.songID}) ${diffName} as it was in the blacklist.`,
 				);
 				continue;
@@ -224,7 +224,7 @@ async function ParseIIDXMDB() {
 			const level = inp.levels[diffName];
 
 			if (level === 0 && notecount && notecount > 0) {
-				logger.info(
+				log.info(
 					`Chart ${song.title} ${diffName} has notecount ${notecount}, but has no level assigned. Skipping.`,
 				);
 				continue;
@@ -262,11 +262,11 @@ async function ParseIIDXMDB() {
 					},
 				};
 
-				logger.info(`Inserting new chart ${inp.title} ${diffName}.`);
+				log.info(`Inserting new chart ${inp.title} ${diffName}.`);
 				existingCharts.push(tachiChart);
 			} else {
 				if (!notecount) {
-					logger.warn(
+					log.warn(
 						`Chart ${inp.title} ${diffName} already exists, but has no notecount anymore. Not marking it as part of this version.`,
 					);
 					continue;
@@ -274,11 +274,11 @@ async function ParseIIDXMDB() {
 
 				// chart already exists, diff notecounts.
 				if (chart.data.notecount !== notecount) {
-					logger.warn(
+					log.warn(
 						`Chart ${inp.title} ${diffName} has a different notecount in the JSON to the data just parsed. Has this chart been edited? OLD: ${chart.data.notecount} -> NEW: ${notecount}.`,
 					);
 					if (!options.force) {
-						logger.warn(
+						log.warn(
 							`Must be resolved manually. Use --force to blindly overwrite it anyway.`,
 						);
 						continue;
@@ -287,7 +287,7 @@ async function ParseIIDXMDB() {
 				}
 
 				if (chart.levelNum !== level) {
-					logger.info(
+					log.info(
 						`Chart ${inp.title} ${diffName} has had a level change. ${chart.level} -> ${level}. Updating this.`,
 					);
 					chart.level = level.toString();

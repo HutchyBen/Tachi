@@ -1,5 +1,5 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
-import type { Difficulties, Versions } from "../../../../../../../../common/src";
+import type { Difficulties, Versions } from "tachi-common";
 
 import {
 	InternalFailure,
@@ -19,7 +19,7 @@ export const ConverterAPICGMuseca: ConverterFunction<CGMusecaScore, CGContext> =
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	const difficulty = ConvertDifficulty(data.difficulty);
 	const version = ConvertVersion(data.version);
@@ -44,7 +44,7 @@ export const ConverterAPICGMuseca: ConverterFunction<CGMusecaScore, CGContext> =
 	const song = await FindSongOnID("museca", chart.songID);
 
 	if (!song) {
-		logger.severe(`Song-Chart desync with song ID ${chart.songID} (museca).`);
+		log.error(`Song-Chart desync with song ID ${chart.songID} (museca).`);
 		throw new InternalFailure(`Song-Chart desync with song ID ${chart.songID} (museca).`);
 	}
 

@@ -2,14 +2,14 @@ import type { ClassProvider } from "#lib/score-import/framework/calculated-data/
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ClassToIndex } from "#utils/class";
-import { type Classes, GetGPTConfig, type GPTString } from "../../../../../../../common/src";
+import { type Classes, GetGPTConfig, type GPTString } from "tachi-common";
 
 // Note: This is tested by batch-manuals parser.test.ts.
 export function CreateBatchManualClassProvider(
 	outerGptString: GPTString,
 	classes: Partial<Record<Classes[GPTString], string | null>>,
 ): ClassProvider {
-	return (gptString, userID, ratings, logger) => {
+	return (gptString, userID, ratings, log) => {
 		if (outerGptString !== gptString) {
 			return {};
 		}
@@ -28,7 +28,7 @@ export function CreateBatchManualClassProvider(
 			const index = ClassToIndex(gptString, set, classID);
 
 			if (index === null) {
-				logger.warn(
+				log.warn(
 					`User passed invalid class of ${classID} for set ${set}. Expected any of ${gptConfig.classes[
 						set
 					]!.values.map((e) => e.id).join(", ")}`,

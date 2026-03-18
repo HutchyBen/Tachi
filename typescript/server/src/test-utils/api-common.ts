@@ -1,6 +1,6 @@
-import type { APIPermissions } from "../../../common/src";
+import type { APIPermissions } from "tachi-common";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import t from "tap";
 
 import mockApi from "./mock-api";

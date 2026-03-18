@@ -1,6 +1,6 @@
-import type { ImportTypes, UserDocument } from "../../../../../../common/src";
+import type { ImportTypes, UserDocument } from "tachi-common";
 
-import { type KtLogger, rootLogger } from "#lib/logger/logger";
+import { type KtLogger, log } from "#lib/log/log.js";
 import { FormatUserDoc } from "#utils/user";
 
 export function CreateScoreLogger(
@@ -8,15 +8,8 @@ export function CreateScoreLogger(
 	importID: string,
 	importType: ImportTypes,
 ): KtLogger {
-	const meta = {
+	return log.child({
 		context: ["Score Import", importType, FormatUserDoc(user)],
 		importID,
-	};
-
-	// used so appendLogCtx works
-	const childLogger = rootLogger.child(meta);
-
-	childLogger.defaultMeta = meta;
-
-	return childLogger as KtLogger;
+	});
 }

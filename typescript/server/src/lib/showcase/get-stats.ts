@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 import {
 	type GameGroup,
 	GetGPTString,
@@ -7,12 +7,10 @@ import {
 	type integer,
 	type Playtype,
 	type ShowcaseStatDetails,
-} from "../../../../common/src";
+} from "tachi-common";
 
 import { EvaluateShowcaseStat } from "./evaluator";
 import { GetRelatedStatDocuments } from "./get-related";
-
-const logger = CreateLogCtx(__filename);
 
 /**
  * Evaluate a users set Stats Showcase.
@@ -33,7 +31,7 @@ export async function EvaluateUsersStatsShowcase(
 	});
 
 	if (!settings) {
-		logger.error(
+		log.error(
 			`User ${getSettingsID} has no game-settings, yet a call to EvaluateUsersStatsShowcase was made.`,
 		);
 

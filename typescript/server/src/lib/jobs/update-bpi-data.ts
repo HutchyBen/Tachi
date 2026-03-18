@@ -5,16 +5,14 @@ import type {
 	Playtypes,
 	SongDocument,
 	Versions,
-} from "../../../../common/src";
+} from "tachi-common";
 
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { BacksyncCollection, PullDatabaseSeeds } from "#lib/seeds/repo";
+import db from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";
 import fetch from "#utils/fetch";
 import { WrapScriptPromise } from "#utils/misc";
-
-const logger = CreateLogCtx(__filename);
 
 const difficultyResolve: Record<string, [Playtypes["iidx"], Difficulties["iidx:DP" | "iidx:SP"]]> =
 	{
@@ -56,12 +54,12 @@ interface PoyashiProxyData {
 export async function UpdatePoyashiData() {
 	const repo = await PullDatabaseSeeds();
 
-	logger.info("Fetching data from proxy...");
+	log.info("Fetching data from proxy...");
 	const data = (await fetch("https://proxy.poyashi.me/?type=bpi").then((r) =>
 		r.json(),
 	)) as PoyashiProxyData;
 
-	logger.info("Fetched data.");
+	log.info("Fetched data.");
 
 	const iidxSongs: Array<SongDocument<"iidx">> = await repo.ReadCollection("songs-iidx");
 	const iidxCharts: Array<ChartDocument<"iidx:DP" | "iidx:SP">> =
@@ -114,7 +112,7 @@ export async function UpdatePoyashiData() {
 		const tachiSong = FindSongOnTitle(d.title);
 
 		if (!tachiSong) {
-			logger.warn(`Cannot find song ${d.title}?`);
+			log.warn(`Cannot find song ${d.title}?`);
 			continue;
 		}
 
@@ -122,7 +120,7 @@ export async function UpdatePoyashiData() {
 		const tachiChart = FindChartWithPTDFVersion(tachiSong.id, playtype, diff, "29");
 
 		if (!tachiChart) {
-			logger.warn(
+			log.warn(
 				`Cannot find chart ${tachiSong.title} (${tachiSong.id}) ${playtype}, ${diff}?`,
 			);
 			continue;
@@ -131,14 +129,12 @@ export async function UpdatePoyashiData() {
 		const kavg = Number(d.avg);
 
 		if (kavg < 0) {
-			logger.warn(
-				`${tachiSong.title} (${playtype} ${diff}). Invalid kavg ${d.avg}, Skipping.`,
-			);
+			log.warn(`${tachiSong.title} (${playtype} ${diff}). Invalid kavg ${d.avg}, Skipping.`);
 			continue;
 		}
 
 		if (d.removed === true) {
-			logger.info(`Skipping removed chart ${tachiSong.title}.`);
+			log.info(`Skipping removed chart ${tachiSong.title}.`);
 			continue;
 		}
 
@@ -164,15 +160,15 @@ export async function UpdatePoyashiData() {
 	await repo.WriteCollection("charts-iidx", iidxCharts);
 
 	if (updatedChartIDs.length !== 0) {
-		logger.info(`Finished applying BPI changes. These changes will be backsynced later.`);
+		log.info(`Finished applying BPI changes. These changes will be backsynced later.`);
 
-		logger.info(`Recalcing scores.`);
+		log.info(`Recalcing scores.`);
 		await RecalcAllScores({
 			game: "iidx",
 			chartID: { $in: updatedChartIDs },
 		});
 
-		logger.info(`Finished recalcing scores.`);
+		log.info(`Finished recalcing scores.`);
 	}
 
 	await repo.Destroy();
@@ -181,5 +177,5 @@ export async function UpdatePoyashiData() {
 }
 
 if (require.main === module) {
-	WrapScriptPromise(UpdatePoyashiData(), logger);
+	WrapScriptPromise(UpdatePoyashiData(), log);
 }

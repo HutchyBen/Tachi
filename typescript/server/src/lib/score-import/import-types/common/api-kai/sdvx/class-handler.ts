@@ -2,11 +2,11 @@ import type { ClassProvider } from "#lib/score-import/framework/calculated-data/
 
 import nodeFetch from "#utils/fetch";
 import { IsRecord } from "#utils/misc";
+import { SDVX_DANS } from "tachi-common";
+import { SDVXDans } from "tachi-common/config/game-support/sdvx";
 
 import type { KaiAPIReauthFunction } from "../traverse-api";
 
-import { SDVX_DANS } from "../../../../../../../../common/src";
-import { SDVXDans } from "../../../../../../../../common/src/config/game-support/sdvx";
 import { KaiTypeToBaseURL } from "../utils";
 
 export async function CreateKaiSDVXClassProvider(
@@ -44,20 +44,26 @@ export async function CreateKaiSDVXClassProvider(
 		err = e;
 	}
 
-	return (gptString, userID, ratings, logger) => {
-		logger.info(`Got return from ${baseUrl}/api/sdvx/v1/player_profile.`, {
-			json,
-		});
+	return (gptString, userID, ratings, log) => {
+		log.info(
+			{
+				json,
+			},
+			`Got return from ${baseUrl}/api/sdvx/v1/player_profile.`,
+		);
 
 		if (err !== undefined) {
-			logger.error(`An error occured while updating classes for ${baseUrl}.`, { err });
+			log.error({ err }, `An error occured while updating classes for ${baseUrl}.`);
 			return {};
 		}
 
 		if (!IsRecord(json)) {
-			logger.error(`JSON Returned from server was not an object? Not updating anything.`, {
-				json,
-			});
+			log.error(
+				{
+					json,
+				},
+				`JSON Returned from server was not an object? Not updating anything.`,
+			);
 			return {};
 		}
 
@@ -66,21 +72,24 @@ export async function CreateKaiSDVXClassProvider(
 			json.skill_level === undefined ||
 			typeof json.skill_level !== "number"
 		) {
-			logger.info(`User has no/invalid skill_level. Not updating anything.`, {
-				skillLevel: json.skill_level,
-			});
+			log.info(
+				{
+					skillLevel: json.skill_level,
+				},
+				`User has no/invalid skill_level. Not updating anything.`,
+			);
 			return {};
 		}
 
 		const sdvxDan: number | null = json.skill_level - 1;
 
 		if (!Number.isInteger(sdvxDan)) {
-			logger.warn(`${baseUrl} returned a dan of ${sdvxDan}, which was not an integer.`);
+			log.warn(`${baseUrl} returned a dan of ${sdvxDan}, which was not an integer.`);
 			return {};
 		}
 
 		if (sdvxDan > SDVX_DANS.INF) {
-			logger.warn(
+			log.warn(
 				`${baseUrl} returned a dan of ${sdvxDan}, which was greater than INF (${SDVX_DANS.INF}.)`,
 			);
 			return {};
@@ -93,7 +102,7 @@ export async function CreateKaiSDVXClassProvider(
 		}
 
 		if (sdvxDan < SDVX_DANS.DAN_1) {
-			logger.warn(
+			log.warn(
 				`${baseUrl} returned a dan of ${sdvxDan}, which was less than DAN_1 (${SDVX_DANS.DAN_1}.)`,
 			);
 			return {};
@@ -102,9 +111,7 @@ export async function CreateKaiSDVXClassProvider(
 		const value = SDVXDans[sdvxDan];
 
 		if (!value) {
-			logger.warn(
-				`${baseUrl} returned a dan of ${sdvxDan}, which has no corresponding value.`,
-			);
+			log.warn(`${baseUrl} returned a dan of ${sdvxDan}, which has no corresponding value.`);
 			return {};
 		}
 

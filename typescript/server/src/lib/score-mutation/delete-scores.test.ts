@@ -1,6 +1,6 @@
-import type { ImportDocument, ScoreDocument, SessionDocument } from "../../../../common/src";
+import type { ImportDocument, ScoreDocument, SessionDocument } from "tachi-common";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import { mkFakeSDVXChart, mkFakeSDVXPB } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestingIIDXSPScore, TestingSDVXScore } from "#test-utils/test-data";

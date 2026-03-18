@@ -1,7 +1,7 @@
-import db from "#external/mongo/db";
 import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
+import db from "#services/mongo/db";
 import {
 	type Classes,
 	type GameGroup,
@@ -11,9 +11,7 @@ import {
 	type integer,
 	type Playtype,
 	type UserGameStats,
-} from "../../../common/src";
-
-const logger = CreateLogCtx(__filename);
+} from "tachi-common";
 
 /**
  * Returns the provided class if it is greater than the one in userGameStats
@@ -31,7 +29,7 @@ export function ReturnClassIfGreater(
 	const classInfo = gptConfig.classes[classSet];
 
 	if (!classInfo) {
-		logger.warn(
+		log.warn(
 			`Invalid ReturnClassIfGreater call. Attempted to index set '${classSet}' on ${gptString}. No such class is defined for this game.`,
 		);
 
@@ -68,7 +66,7 @@ export function ClassToIndex(gptString: GPTString, classSet: Classes[GPTString],
 	const classInfo = gptConfig.classes[classSet];
 
 	if (!classInfo) {
-		logger.warn(
+		log.warn(
 			`Invalid ClassToIndex call. Attempted to index set '${classSet}' on ${gptString}. No such class is defined for this game. Returning null.`,
 		);
 		return null;
@@ -77,7 +75,7 @@ export function ClassToIndex(gptString: GPTString, classSet: Classes[GPTString],
 	const v = classInfo.values.map((e) => e.id).indexOf(classVal);
 
 	if (v === -1) {
-		logger.warn(
+		log.warn(
 			`Attempted to index a class that doesn't exist: ${classVal} on ${classSet} (${gptString}). Returning null.`,
 		);
 		return null;
@@ -128,7 +126,7 @@ export async function UpdateClassIfGreater(
 			},
 		});
 
-		logger.info(`Created new player gamestats for ${userID} (${game} ${playtype})`);
+		log.info(`Created new player gamestats for ${userID} (${game} ${playtype})`);
 
 		await CreateGameSettings(userID, game, playtype);
 	}

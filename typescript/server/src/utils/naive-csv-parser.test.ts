@@ -1,10 +1,8 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { TestingIIDXEamusementCSV27 } from "#test-utils/test-data";
 import t from "tap";
 
 import { CSVParseError, NaiveCSVParse } from "./naive-csv-parser";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#ParseCSV", (t) => {
 	t.test("Valid Basic CSV", (t) => {
@@ -19,7 +17,7 @@ t.test("#ParseCSV", (t) => {
 
 		const csvBuffer = Buffer.from(`${headersStr}\n${rowsStr}`);
 
-		const { rawHeaders, rawRows } = NaiveCSVParse(csvBuffer, logger);
+		const { rawHeaders, rawRows } = NaiveCSVParse(csvBuffer, log);
 
 		t.strictSame(rawHeaders, headers);
 		t.strictSame(rawRows, rows);
@@ -39,7 +37,7 @@ t.test("#ParseCSV", (t) => {
 
 		const csvBuffer = Buffer.from(`${headersStr}\n${rowsStr}\n`);
 
-		const { rawHeaders, rawRows } = NaiveCSVParse(csvBuffer, logger);
+		const { rawHeaders, rawRows } = NaiveCSVParse(csvBuffer, log);
 
 		t.strictSame(rawHeaders, headers);
 		t.strictSame(rawRows, rows);
@@ -48,7 +46,7 @@ t.test("#ParseCSV", (t) => {
 	});
 
 	t.test("IIDX CSV", (t) => {
-		const { rawHeaders, rawRows } = NaiveCSVParse(TestingIIDXEamusementCSV27, logger);
+		const { rawHeaders, rawRows } = NaiveCSVParse(TestingIIDXEamusementCSV27, log);
 
 		t.equal(rawHeaders.length, 41);
 		t.equal(rawRows.length, 1257);
@@ -69,14 +67,14 @@ t.test("#ParseCSV", (t) => {
 		const TooShort = Buffer.from(`${headerStr}\n${"a,".repeat(3)}a`);
 
 		t.throws(
-			() => NaiveCSVParse(TooShort, logger),
+			() => NaiveCSVParse(TooShort, log),
 			new CSVParseError("Row 1 has an invalid amount of cells (4, expected 27)"),
 		);
 
 		const TooLong = Buffer.from(`${headerStr}\n${"a,".repeat(50)}a`);
 
 		t.throws(
-			() => NaiveCSVParse(TooLong, logger),
+			() => NaiveCSVParse(TooLong, log),
 			new CSVParseError("Row 1 has an invalid amount of cells (51, expected 27)"),
 		);
 
@@ -87,14 +85,14 @@ t.test("#ParseCSV", (t) => {
 		const LongHeaders = Buffer.from(`${"a".repeat(1000)},a`);
 
 		t.throws(
-			() => NaiveCSVParse(LongHeaders, logger),
+			() => NaiveCSVParse(LongHeaders, log),
 			new CSVParseError("Headers were longer than 1000 characters long."),
 		);
 
 		const TooManyHeaders = Buffer.from(`${"a,".repeat(50)}a`);
 
 		t.throws(
-			() => NaiveCSVParse(TooManyHeaders, logger),
+			() => NaiveCSVParse(TooManyHeaders, log),
 			new CSVParseError("Too many CSV headers."),
 		);
 

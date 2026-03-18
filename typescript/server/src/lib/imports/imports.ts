@@ -1,14 +1,12 @@
-import type { ImportDocument } from "../../../../common/src";
+import type { ImportDocument } from "tachi-common";
 
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import {
 	CheckAndSetOngoingImportLock,
 	UnsetOngoingImportLock,
 } from "#lib/score-import/framework/import-locks/lock";
 import { DeleteMultipleScores } from "#lib/score-mutation/delete-scores";
-
-const logger = CreateLogCtx(__filename);
+import db from "#services/mongo/db";
 
 interface OngoingImportError {
 	tag: "ONGOING_IMPORT";
@@ -22,16 +20,14 @@ interface OngoingImportError {
  * If this results in sessions being deleted, it will delete them.
  */
 export async function RevertImport(importDoc: ImportDocument): Promise<OngoingImportError | null> {
-	logger.info(`Received revert-import request for import '${importDoc.importID}'`, { importDoc });
+	log.info({ importDoc }, `Received revert-import request for import '${importDoc.importID}'`);
 
 	const scores = await GetImportScores(importDoc);
 
 	const hasNoOngoingImport = await CheckAndSetOngoingImportLock(importDoc.userID);
 
 	if (hasNoOngoingImport) {
-		logger.info(
-			`User ${importDoc.userID} tried to revert an import while they had one ongoing.`,
-		);
+		log.info(`User ${importDoc.userID} tried to revert an import while they had one ongoing.`);
 
 		return {
 			tag: "ONGOING_IMPORT",
@@ -41,19 +37,19 @@ export async function RevertImport(importDoc: ImportDocument): Promise<OngoingIm
 	try {
 		await DeleteMultipleScores(scores);
 
-		logger.info(
-			`Deleted ${scores.length} scores as part of reverting import '${importDoc.importID}'.`,
+		log.info(
 			{ importDoc },
+			`Deleted ${scores.length} scores as part of reverting import '${importDoc.importID}'.`,
 		);
 
 		try {
 			await db.imports.remove({ importID: importDoc.importID });
 
-			logger.info(`Reverted and deleted import '${importDoc.importID}'.`);
+			log.info(`Reverted and deleted import '${importDoc.importID}'.`);
 		} catch (err) {
-			logger.severe(
-				`Deleted scores that were part of import, but failed to remove the actual import? There is a stale import with ID '${importDoc.importID}', which must be removed manually.`,
+			log.error(
 				{ importDoc, err },
+				`Deleted scores that were part of import, but failed to remove the actual import? There is a stale import with ID '${importDoc.importID}', which must be removed manually.`,
 			);
 		}
 	} finally {

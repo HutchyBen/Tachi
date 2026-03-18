@@ -14,7 +14,7 @@ import { FERVIDEX_LAMP_LOOKUP, SplitFervidexChartRef } from "../fervidex/convert
 export const ConverterIRFervidexStatic: ConverterFunction<
 	FervidexStaticScore,
 	FervidexStaticContext
-> = async (data, context, importType, logger) => {
+> = async (data, context, importType, log) => {
 	// eslint-disable-next-line prefer-const
 	let { difficulty, playtype } = SplitFervidexChartRef(data.chart);
 
@@ -47,7 +47,7 @@ export const ConverterIRFervidexStatic: ConverterFunction<
 	const song = await FindSongOnID("iidx", chart.songID);
 
 	if (!song) {
-		logger.severe(`Song ${chart.songID} (iidx) has no parent song?`);
+		log.error(`Song ${chart.songID} (iidx) has no parent song?`);
 		throw new InternalFailure(`Song ${chart.songID} (iidx) has no parent song?`);
 	}
 

@@ -1,5 +1,5 @@
-import type { KtLogger } from "#lib/logger/logger";
-import type { BatchManualScore } from "../../../../../../../common/src";
+import type { KtLogger } from "#lib/log/log.js";
+import type { BatchManualScore } from "tachi-common";
 
 import type { BatchManualContext } from "../../common/batch-manual/types";
 import type { ParserFunctionReturns } from "../../common/types";
@@ -15,7 +15,7 @@ import { ParseBatchManualFromObject } from "../../common/batch-manual/parser";
 function ParseBatchManual(
 	fileData: Express.Multer.File,
 	body: Record<string, unknown>,
-	logger: KtLogger,
+	log: KtLogger,
 ): ParserFunctionReturns<BatchManualScore, BatchManualContext> {
 	let jsonData: unknown;
 
@@ -25,7 +25,7 @@ function ParseBatchManual(
 		throw new ScoreImportFatalError(400, `Invalid JSON. (${(err as Error).message})`);
 	}
 
-	return ParseBatchManualFromObject(jsonData, "file/batch-manual", false, logger);
+	return ParseBatchManualFromObject(jsonData, "file/batch-manual", false, log);
 }
 
 export default ParseBatchManual;

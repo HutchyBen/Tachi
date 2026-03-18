@@ -1,9 +1,7 @@
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 import { Random20Hex } from "#utils/misc";
 import { Command } from "commander";
-
-const logger = CreateLogCtx(__filename);
 
 const program = new Command();
 
@@ -28,12 +26,10 @@ db.invites
 		consumedAt: null,
 	})
 	.then(() => {
-		logger.info(`Created invite ${code}.`, () => {
+		log.info(() => {
 			process.exit(0);
-		});
+		}, `Created invite ${code}.`);
 	})
 	.catch((err: unknown) => {
-		logger.error(`Failed to create invite ${code}`, { err }, () => {
-			process.exit(1);
-		});
+		log.error({ err }, `Failed to create invite ${code}`);
 	});

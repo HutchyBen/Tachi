@@ -3,11 +3,11 @@ import type {
 	ChartDocument,
 	MatchTypeResolver,
 	MatchTypeResolverWithDifficulty,
-} from "../../../../../../../common/src";
+} from "tachi-common";
 
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { InvalidScoreFailure } from "#lib/score-import/framework/common/converter-failures";
+import db from "#services/mongo/db";
 import { dmf } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import {
@@ -42,8 +42,6 @@ const context = {
 	version: null,
 };
 
-const logger = CreateLogCtx(__filename);
-
 const importType = "file/batch-manual" as const;
 
 const baseResolver: MatchTypeResolver = BatchManualScoreToResolver(baseBatchManualScore, context);
@@ -56,7 +54,7 @@ t.test("#ResolveSongAndChart", (t) => {
 	t.beforeEach(ResetDBState);
 
 	t.test("Should resolve for the songID if the matchType is songID", async (t) => {
-		const res = await ResolveSongAndChart(baseResolver, logger);
+		const res = await ResolveSongAndChart(baseResolver, log);
 
 		t.hasStrict(
 			res,
@@ -68,7 +66,7 @@ t.test("#ResolveSongAndChart", (t) => {
 			await ResolveSongAndChart(
 				// @ts-expect-error bad
 				deepmerge(baseResolver, { identifier: "90000" }),
-				logger,
+				log,
 			),
 			null,
 		);
@@ -80,7 +78,7 @@ t.test("#ResolveSongAndChart", (t) => {
 		const res = await ResolveSongAndChart(
 			// @ts-expect-error bad
 			deepmerge(baseResolver, { matchType: "songTitle", identifier: "5.1.1." }),
-			logger,
+			log,
 		);
 
 		t.hasStrict(
@@ -96,7 +94,7 @@ t.test("#ResolveSongAndChart", (t) => {
 					matchType: "songTitle",
 					identifier: "INVALID_TITLE",
 				}),
-				logger,
+				log,
 			),
 			null,
 		);
@@ -114,7 +112,7 @@ t.test("#ResolveSongAndChart", (t) => {
 				playtype: "Single",
 				version: null,
 			},
-			logger,
+			log,
 		);
 
 		t.hasStrict(
@@ -133,7 +131,7 @@ t.test("#ResolveSongAndChart", (t) => {
 					playtype: "Single",
 					version: null,
 				},
-				logger,
+				log,
 			),
 			null,
 		);
@@ -159,7 +157,7 @@ t.test("#ResolveSongAndChart", (t) => {
 				playtype: "Single",
 				version: null,
 			},
-			logger,
+			log,
 		);
 
 		t.hasStrict(
@@ -183,7 +181,7 @@ t.test("#ResolveSongAndChart", (t) => {
 				playtype: "7K",
 				version: null,
 			},
-			logger,
+			log,
 		);
 
 		t.hasStrict(
@@ -200,7 +198,7 @@ t.test("#ResolveSongAndChart", (t) => {
 				playtype: "7K",
 				version: null,
 			},
-			logger,
+			log,
 		);
 
 		t.hasStrict(
@@ -218,7 +216,7 @@ t.test("#ResolveSongAndChart", (t) => {
 					playtype: "7K",
 					version: null,
 				},
-				logger,
+				log,
 			),
 			null,
 		);
@@ -237,7 +235,7 @@ t.test("#ResolveSongAndChart", (t) => {
 				playtype: "9B",
 				version: null,
 			},
-			logger,
+			log,
 		);
 
 		t.hasStrict(
@@ -268,7 +266,7 @@ t.test("#ResolveSongAndChart", (t) => {
 					playtype: "SP",
 					version: null,
 				},
-				logger,
+				log,
 			),
 		);
 
@@ -286,7 +284,7 @@ t.test("#ResolveSongAndChart", (t) => {
 				playtype: "Controller",
 				version: null,
 			},
-			logger,
+			log,
 		);
 
 		t.hasStrict(
@@ -313,7 +311,7 @@ t.test("#ResolveSongAndChart", (t) => {
 					playtype: "Keyboard",
 					version: null,
 				},
-				logger,
+				log,
 			),
 			null,
 		);
@@ -331,7 +329,7 @@ t.test("#ResolveSongAndChart", (t) => {
 					playtype: "SP",
 					version: null,
 				},
-				logger,
+				log,
 			),
 		);
 
@@ -413,7 +411,7 @@ t.test("#ConverterFn", (t) => {
 			baseBatchManualScore,
 			{ game: "iidx", service: "foo", playtype: "SP", version: null },
 			importType,
-			logger,
+			log,
 		);
 
 		t.hasStrict(res, {
@@ -447,7 +445,7 @@ t.test("#ConverterFn", (t) => {
 			}),
 			{ game: "iidx", service: "foo", playtype: "SP", version: null },
 			importType,
-			logger,
+			log,
 		);
 
 		t.hasStrict(res, {
@@ -483,7 +481,7 @@ t.test("#ConverterFn", (t) => {
 			}),
 			{ game: "iidx", service: "foo", playtype: "SP", version: null },
 			importType,
-			logger,
+			log,
 		);
 
 		t.hasStrict(res, {
@@ -520,7 +518,7 @@ t.test("#ConverterFn", (t) => {
 			}),
 			{ game: "iidx", service: "foo", playtype: "SP", version: null },
 			importType,
-			logger,
+			log,
 		);
 
 		t.hasStrict(res, {
@@ -562,7 +560,7 @@ t.test("#ConverterFn", (t) => {
 			baseJubeatScore,
 			{ game: "jubeat", service: "foo", playtype: "Single", version: null },
 			importType,
-			logger,
+			log,
 		);
 
 		t.hasStrict(res, {
@@ -592,7 +590,7 @@ t.test("#ConverterFn", (t) => {
 			deepmerge(baseBatchManualScore, { timeAchieved: 0 }),
 			{ game: "iidx", service: "foo", playtype: "SP", version: null },
 			importType,
-			logger,
+			log,
 		);
 
 		t.hasStrict(res, {

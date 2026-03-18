@@ -1,8 +1,8 @@
+import { log } from "#log";
 import fs from "fs/promises";
 import path from "path";
-import { type integer } from "../../../../../common/src";
+import { type integer } from "tachi-common";
 
-import logger from "../../../../logger";
 import {
 	type BGMObject,
 	type BPMObject,
@@ -229,7 +229,7 @@ function ParseEvent(
 			} else if (data.param === 14) {
 				obj.col = 1;
 			} else {
-				logger.warn(
+				log.warn(
 					`(${
 						parseContext.songTitle ?? "UNKNOWN"
 					}) Unknown column of scratchObj sent to EventParser: ${
@@ -257,7 +257,7 @@ function ParseEvent(
 		};
 	} else if (type === "BPM") {
 		if (data.param === 0) {
-			logger.warn(
+			log.warn(
 				`(${
 					parseContext.songTitle ?? "UNKNOWN"
 				}) Invalid value of 0 for denominator in BPM event (numerator was ${
@@ -302,7 +302,7 @@ function ParseEvent(
 		const window = IIDX_TIMING_TO_RGC[data.param];
 
 		if (!window) {
-			logger.warn(
+			log.warn(
 				`(${
 					parseContext.songTitle ?? "UNKNOWN"
 				}) Unknown type of timingWindow: ${window}, from .1 param ${data.param}. Skipping.`,
@@ -341,7 +341,7 @@ function ParseEvent(
 
 		if (parseContext.isDP) {
 			if (data.param !== 0 && data.param !== 1) {
-				logger.warn(
+				log.warn(
 					`(${parseContext.songTitle ?? "UNKNOWN"}) Invalid parameter for measurebar of ${
 						data.param
 					}. Defaulting to 0 (left hand side).`,
@@ -374,7 +374,7 @@ function ParseEvent(
 		// charts. Maybe it was some sort of diverging bga instruction at one point?
 		return null;
 	} else {
-		logger.warn(
+		log.warn(
 			`(${parseContext.songTitle ?? "UNKNOWN"}) Unknown event type in .1: ${
 				data.type
 			} at ${ms.toFixed(2)}ms. Ignoring.`,
@@ -465,14 +465,14 @@ export function ParseDotOne(
 		const dir = dirs[i];
 
 		if (!dir || (dir.offset === 0 && dir.length === 0)) {
-			logger.verbose(`Skipped directory ${i}, as there was no data.`);
+			log.debug(`Skipped directory ${i}, as there was no data.`);
 			continue; // no data.
 		}
 
 		const difficulty = IIDX_DIFFICULTY_TO_RGC[i];
 
 		if (!difficulty) {
-			logger.warn(
+			log.warn(
 				`(${
 					context.songTitle ?? "UNKNOWN"
 				}) Data present inside directory ${i}, but this corresponds to an unknown difficulty. Ignoring.`,
@@ -486,7 +486,7 @@ export function ParseDotOne(
 		};
 
 		if (!eventContext.songTitle) {
-			logger.warn(
+			log.warn(
 				"No filename provided in context.filename to IIDXParser, subsequent warnings will have no way of referring to the chart.",
 			);
 		}

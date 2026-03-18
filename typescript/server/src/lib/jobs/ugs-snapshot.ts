@@ -1,11 +1,9 @@
-import type { UserGameStats, UserGameStatsSnapshotDocument } from "../../../../common/src";
+import type { UserGameStats, UserGameStatsSnapshotDocument } from "tachi-common";
 
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 import { GetMillisecondsSince } from "#utils/misc";
 import { GetAllRankings } from "#utils/user";
-
-const logger = CreateLogCtx(__filename);
 
 // get the time of this midnight. it's possible this script eclipses itself when weird timezone
 // nonsense happens. we'll have to see.
@@ -21,7 +19,7 @@ export async function UGSSnapshot() {
 	const alreadyExists = await db["game-stats-snapshots"].findOne({ timestamp: currentTime });
 
 	if (alreadyExists) {
-		logger.warn(
+		log.warn(
 			`There already exists snapshots at this time. Has this script been ran twice on one day? Ignoring request.`,
 		);
 
@@ -30,7 +28,7 @@ export async function UGSSnapshot() {
 		);
 	}
 
-	logger.info(`Snapshotting UserGameStats.`);
+	log.info(`Snapshotting UserGameStats.`);
 
 	try {
 		await db["game-stats"]
@@ -40,7 +38,7 @@ export async function UGSSnapshot() {
 			.each(async (ugs: UserGameStats, { pause, resume }) => {
 				pause();
 
-				logger.debug(`Snapshotting ${ugs.userID} ${ugs.playtype} ${ugs.game}.`);
+				log.debug(`Snapshotting ${ugs.userID} ${ugs.playtype} ${ugs.game}.`);
 
 				const [playcount, rankings] = await Promise.all([
 					db.scores.count({ userID: ugs.userID, playtype: ugs.playtype, game: ugs.game }),
@@ -57,7 +55,7 @@ export async function UGSSnapshot() {
 				batchWrite.push(ugsSnapshot);
 
 				if (batchWrite.length >= 500) {
-					logger.verbose(`Flushed batch.`);
+					log.debug(`Flushed batch.`);
 					await db["game-stats-snapshots"].insert(batchWrite);
 
 					batchWrite = [];
@@ -70,22 +68,25 @@ export async function UGSSnapshot() {
 			await db["game-stats-snapshots"].insert(batchWrite);
 		}
 
-		logger.info(
+		log.info(
 			`Successfully snapshotted all data as of ${new Date(
 				currentTime,
 			).toString()}. Took ${GetMillisecondsSince(timeStart)} ms.`,
 		);
 	} catch (err) {
 		// if we panic, we need to revert whatever we did.
-		logger.severe(`FATAL IN UGS-SNAPSHOT - Possibly failed midway through snapshotting.`, {
-			err,
-		});
+		log.error(
+			{
+				err,
+			},
+			`FATAL IN UGS-SNAPSHOT - Possibly failed midway through snapshotting.`,
+		);
 
-		logger.info(`Removing all snapshots at this timestamp (${currentTime}).`);
+		log.info(`Removing all snapshots at this timestamp (${currentTime}).`);
 
 		await db["game-stats-snapshots"].remove({ timestamp: currentTime });
 
-		logger.info(`Removed.`);
+		log.info(`Removed.`);
 
 		throw err;
 	}
@@ -98,7 +99,7 @@ if (require.main === module) {
 		})
 		.catch((err: unknown) => {
 			// This is a severe error, not an error. Running the UGS snapshot every day is necessary.
-			logger.severe(`Failed to snapshot user game stats.`, { err });
+			log.error({ err }, `Failed to snapshot user game stats.`);
 
 			setTimeout(() => {
 				process.exit(1);

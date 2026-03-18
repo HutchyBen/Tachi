@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
+import db from "#services/mongo/db";
 import { dmf, mkFakePBIIDXSP, mkFakeScoreIIDXSP } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestSnapshot } from "#test-utils/single-process-snapshot";
@@ -13,7 +13,7 @@ import {
 	IIDXLIKE_GBOUNDARIES,
 	type ProvidedMetrics,
 	type ScoreData,
-} from "../../../../common/src";
+} from "tachi-common";
 import t from "tap";
 
 import { IIDX_DP_IMPL, IIDX_SP_IMPL } from "./iidx";
@@ -22,8 +22,6 @@ const baseMetrics: ProvidedMetrics["iidx:DP" | "iidx:SP"] = {
 	lamp: "HARD CLEAR",
 	score: 1000,
 };
-
-const logger = CreateLogCtx(__filename);
 
 const max = Testing511SPA.data.notecount * 2;
 
@@ -412,7 +410,7 @@ t.test("IIDX Implementation", (t) => {
 					}),
 				);
 
-				t.hasStrict(await CreatePBDoc(gptStr, 1, Testing511SPA, logger), {
+				t.hasStrict(await CreatePBDoc(gptStr, 1, Testing511SPA, log), {
 					composedFrom: [
 						{ name: "Best Score" },
 						{ name: "Best Lamp", scoreID: "bestLamp" },
@@ -445,7 +443,7 @@ t.test("IIDX Implementation", (t) => {
 					}),
 				]);
 
-				t.hasStrict(await CreatePBDoc(gptStr, 1, Testing511SPA, logger), {
+				t.hasStrict(await CreatePBDoc(gptStr, 1, Testing511SPA, log), {
 					composedFrom: [
 						{ name: "Best Score" },
 						{ name: "Lowest BP", scoreID: "lowestBP" },

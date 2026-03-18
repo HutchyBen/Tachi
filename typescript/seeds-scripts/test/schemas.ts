@@ -6,7 +6,7 @@ import {
 	v3AllGames,
 	type V3Game,
 	V3ToGPTString,
-} from "../../common/src";
+} from "tachi-common";
 import { z, type ZodType } from "zod";
 
 export type AllCollections =

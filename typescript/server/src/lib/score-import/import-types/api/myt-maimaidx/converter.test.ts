@@ -1,21 +1,19 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
-import { dmf } from "#test-utils/misc";
-import ResetDBState from "#test-utils/resets";
-import { TestingMaimaiDXChartConverter, TestingMaimaiDXSongConverter } from "#test-utils/test-data";
 import {
 	MaimaiComboStatus,
 	MaimaiLevel,
 	MaimaiScoreRank,
 	MaimaiSyncStatus,
 } from "#proto/generated/maimai/common_pb";
+import { dmf } from "#test-utils/misc";
+import ResetDBState from "#test-utils/resets";
+import { TestingMaimaiDXChartConverter, TestingMaimaiDXSongConverter } from "#test-utils/test-data";
 import t from "tap";
 
 import type { MytMaimaiDxScore } from "./types";
 
 import ConvertAPIMytMaimaiDx from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 const parsedScore: MytMaimaiDxScore = {
 	playlogApiId: "6071c489-6ab9-4674-a443-f88b603fa596",
@@ -49,7 +47,7 @@ t.test("#ConvertAPIMytMaimaiDx", (t) => {
 	t.beforeEach(ResetDBState);
 
 	function convert(modifier: any = {}) {
-		return ConvertAPIMytMaimaiDx(dmf(parsedScore, modifier), {}, "api/myt-maimaidx", logger);
+		return ConvertAPIMytMaimaiDx(dmf(parsedScore, modifier), {}, "api/myt-maimaidx", log);
 	}
 
 	t.test("Should return a dryScore on valid input.", async (t) => {

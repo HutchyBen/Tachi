@@ -1,5 +1,5 @@
-import type { integer, Versions } from "../../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../../common/src/types/metrics";
+import type { integer, Versions } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import { FormatPrError } from "#utils/prudence";
 import { FindIIDXChartOnInGameIDVersion } from "#utils/queries/charts";
@@ -201,7 +201,7 @@ export const ConvertAPIKaiIIDX: ConverterFunction<unknown, KaiContext> = async (
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	const err = p(data, PR_KAI_IIDX_SCORE, {}, { allowExcessKeys: true });
 
@@ -248,7 +248,7 @@ export const ConvertAPIKaiIIDX: ConverterFunction<unknown, KaiContext> = async (
 	const song = await FindSongOnID("iidx", chart.songID);
 
 	if (!song) {
-		logger.severe(`Song-Chart desync with song ID ${chart.songID} (iidx).`);
+		log.error(`Song-Chart desync with song ID ${chart.songID} (iidx).`);
 		throw new InternalFailure(`Song-Chart desync with song ID ${chart.songID} (iidx).`);
 	}
 

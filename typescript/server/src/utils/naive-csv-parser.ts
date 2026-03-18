@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import { type KtLogger, log } from "#lib/log/log.js";
 
 import { IsNonEmptyString } from "./misc";
 
@@ -16,7 +16,7 @@ export class CSVParseError extends Error {
  * The reason we have a handrolled CSV parser instead of using an existing library is because eamusement CSVs are
  * invalid -- due to their lack of escaping. We have to do very manual parsing to actually make this work!
  */
-export function NaiveCSVParse(csvBuffer: Buffer, logger: KtLogger) {
+export function NaiveCSVParse(csvBuffer: Buffer, log: KtLogger) {
 	const csvString = csvBuffer.toString("utf-8");
 
 	const csvData = csvString.split("\n");
@@ -75,16 +75,16 @@ export function NaiveCSVParse(csvBuffer: Buffer, logger: KtLogger) {
 
 		// an empty string split on "," is an array with one empty value.
 		if (cells.length === 1) {
-			logger.verbose(`Skipped empty row ${rowNumber}.`);
+			log.debug(`Skipped empty row ${rowNumber}.`);
 			continue;
 		}
 
 		if (cells.length !== rawHeaders.length) {
-			logger.info(
-				`csv has row (${rowNumber}) with invalid cell count of ${cells.length}, rejecting.`,
+			log.info(
 				{
 					data,
 				},
+				`csv has row (${rowNumber}) with invalid cell count of ${cells.length}, rejecting.`,
 			);
 			throw new CSVParseError(
 				`Row ${rowNumber} has an invalid amount of cells (${cells.length}, expected ${rawHeaders.length}).`,

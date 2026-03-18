@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import { MockBarbatosScore, MockBarbatosSDVX6Score } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
@@ -8,8 +8,6 @@ import t from "tap";
 import type { BarbatosScore } from "./types";
 
 import { ConverterIRBarbatos } from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#ConverterIRBarbatos", (t) => {
 	t.beforeEach(ResetDBState);
@@ -45,7 +43,7 @@ t.test("#ConverterIRBarbatos", (t) => {
 			MockBarbatosScore,
 			{ timeReceived: 10, version: "vivid" },
 			"ir/barbatos",
-			logger,
+			log,
 		);
 
 		t.hasStrict(res, {
@@ -88,7 +86,7 @@ t.test("#ConverterIRBarbatos", (t) => {
 			MockBarbatosSDVX6Score,
 			{ timeReceived: 10, version: "exceed" },
 			"ir/barbatos",
-			logger,
+			log,
 		);
 
 		t.hasStrict(res, {
@@ -133,7 +131,7 @@ t.test("#ConverterIRBarbatos", (t) => {
 					deepmerge(MockBarbatosScore, { song_id: 1000 }) as BarbatosScore,
 					{ timeReceived: 10, version: "vivid" },
 					"ir/barbatos",
-					logger,
+					log,
 				),
 			{
 				message: /Could not find chart with songID 1000/u,
@@ -162,7 +160,7 @@ t.test("#ConverterIRBarbatos", (t) => {
 					MockBarbatosScore,
 					{ timeReceived: 10, version: "vivid" },
 					"ir/barbatos",
-					logger,
+					log,
 				),
 			{
 				message: /Could not find chart with songID 1/u,
@@ -182,7 +180,7 @@ t.test("#ConverterIRBarbatos", (t) => {
 					MockBarbatosScore,
 					{ timeReceived: 10, version: "vivid" },
 					"ir/barbatos",
-					logger,
+					log,
 				),
 			{
 				message: /Song 1 \(sdvx\) has no parent song/u,

@@ -1,4 +1,5 @@
 import "Justfile-gen"
+import "Justfile-apps"
 import "Justfile-db"
 import "Justfile-misc"
 import "Justfile-migrate"

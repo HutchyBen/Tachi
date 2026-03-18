@@ -7,8 +7,8 @@ import {
 	type Playtypes,
 	type SongDocument,
 	type Versions,
-} from "../../../common/src";
-import { GITADORA_GITA_CONF } from "../../../common/src/config/game-support/gitadora";
+} from "tachi-common";
+import { GITADORA_GITA_CONF } from "tachi-common/config/game-support/gitadora";
 
 import { CreateChartID, MutateCollection, ReadCollection, WriteCollection } from "../../util";
 

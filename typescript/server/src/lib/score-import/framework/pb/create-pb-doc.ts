@@ -1,10 +1,10 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/log/log.js";
 import type { BulkWriteUpdateOneOperation, FilterQuery, SortOptionObject } from "mongodb";
 
-import db from "#external/mongo/db";
-import { GetEveryonesRivalIDs } from "#lib/rivals/rivals";
-import { DeleteUndefinedProps } from "#utils/misc";
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
+import { GetEveryonesRivalIDs } from "#lib/rivals/rivals";
+import db from "#services/mongo/db";
+import { DeleteUndefinedProps } from "#utils/misc";
 import {
 	type ChartDocument,
 	type GameGroup,
@@ -15,7 +15,7 @@ import {
 	type PBScoreDocument,
 	type Playtype,
 	type ScoreDocument,
-} from "../../../../../../common/src";
+} from "tachi-common";
 
 import { CreateScoreCalcData } from "../calculated-data/score";
 import { CreateEnumIndexes } from "../score-importing/derivers";
@@ -33,7 +33,7 @@ export async function CreatePBDoc(
 	gpt: GPTString,
 	userID: integer,
 	chart: ChartDocument,
-	logger: KtLogger,
+	log: KtLogger,
 	asOfTimestamp?: number,
 ) {
 	const chartID = chart.chartID;
@@ -62,12 +62,12 @@ export async function CreatePBDoc(
 			return;
 		}
 
-		logger.warn(
-			`User ${userID} has no scores on chart, but a PB was attempted to be created?`,
+		log.warn(
 			{
 				chartID,
 				userID,
 			},
+			`User ${userID} has no scores on chart, but a PB was attempted to be created?`,
 		);
 		return;
 	}
@@ -115,7 +115,7 @@ export async function CreatePBDoc(
 	DeleteUndefinedProps(pbDoc.scoreData.optional);
 
 	// update any enum indexes that might've been altered
-	const { indexes, optionalIndexes } = CreateEnumIndexes(gpt, pbDoc.scoreData, logger);
+	const { indexes, optionalIndexes } = CreateEnumIndexes(gpt, pbDoc.scoreData, log);
 
 	pbDoc.scoreData.enumIndexes = indexes;
 	pbDoc.scoreData.optional.enumIndexes = optionalIndexes;

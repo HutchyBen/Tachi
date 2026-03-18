@@ -1,8 +1,8 @@
 import type { RequestHandler } from "express";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 
-export const UpdateLastSeen: RequestHandler = (req, res, next) => {
+export const UpdateLastSeen: RequestHandler = (req, _res, next) => {
 	if (req.session.tachi?.user.id === undefined) {
 		next();
 		return;

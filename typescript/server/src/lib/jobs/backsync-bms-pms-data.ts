@@ -1,10 +1,8 @@
-/* eslint-disable no-await-in-loop */
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { PullDatabaseSeeds } from "#lib/seeds/repo";
+/* eslint-disable no-await-in-loop */
+import db from "#services/mongo/db";
 import { WrapScriptPromise } from "#utils/misc";
-
-const logger = CreateLogCtx(__filename);
 
 /**
  * The tachi-server may have its BMS or PMS database update. It needs to sync this
@@ -14,12 +12,12 @@ export async function BacksyncBMSPMSSongsAndCharts() {
 	const repo = await PullDatabaseSeeds();
 
 	for (const game of ["bms", "pms"] as const) {
-		logger.info(`Fetching ${game} songs from DB.`);
+		log.info(`Fetching ${game} songs from DB.`);
 
 		// did you know, this code is liable to blow up in my face and OOM one day?
 		let songs = await db.anySongs[game].find({});
 
-		logger.info(`Found ${songs.length} ${game} songs.`);
+		log.info(`Found ${songs.length} ${game} songs.`);
 
 		await repo.WriteCollection(`songs-${game}`, songs);
 
@@ -28,10 +26,10 @@ export async function BacksyncBMSPMSSongsAndCharts() {
 		// tries to read even more stuff.
 		songs = null;
 
-		logger.info(`Fetching ${game} charts from DB.`);
+		log.info(`Fetching ${game} charts from DB.`);
 		let charts = await db.anyCharts[game].find({});
 
-		logger.info(`Found ${charts.length} ${game} charts.`);
+		log.info(`Found ${charts.length} ${game} charts.`);
 
 		await repo.WriteCollection(`charts-${game}`, charts);
 
@@ -45,5 +43,5 @@ export async function BacksyncBMSPMSSongsAndCharts() {
 }
 
 if (require.main === module) {
-	WrapScriptPromise(BacksyncBMSPMSSongsAndCharts(), logger);
+	WrapScriptPromise(BacksyncBMSPMSSongsAndCharts(), log);
 }

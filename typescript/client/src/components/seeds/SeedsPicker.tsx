@@ -197,9 +197,9 @@ export default function SeedsPicker({
 							<div>
 								<Select allowNull name="Repository" setValue={setRepo} value={repo}>
 									{hasLocalAPI && <option value="local">Your Local Repo</option>}
-									{process.env.VITE_GIT_REPO && (
-										<option value={process.env.VITE_GIT_REPO}>
-											{process.env.VITE_GIT_REPO}
+									{import.meta.env.VITE_GIT_REPO && (
+										<option value={import.meta.env.VITE_GIT_REPO}>
+											{import.meta.env.VITE_GIT_REPO}
 										</option>
 									)}
 								</Select>

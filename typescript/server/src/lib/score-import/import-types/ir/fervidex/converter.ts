@@ -1,9 +1,9 @@
-import db from "#external/mongo/db";
 import { CreateScoreID } from "#lib/score-import/framework/score-importing/score-id";
+import db from "#services/mongo/db";
 import { DeleteUndefinedProps, IsNullishOrEmptyStr } from "#utils/misc";
 import { FindIIDXChartOnInGameIDVersion, FindIIDXChartWith2DXtraHash } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
-import { type Difficulties, GetGPTString, type Playtypes } from "../../../../../../../common/src";
+import { type Difficulties, GetGPTString, type Playtypes } from "tachi-common";
 
 import type { DryScore } from "../../../framework/common/types";
 import type { ConverterFunction } from "../../common/types";
@@ -149,7 +149,7 @@ export const ConverterIRFervidex: ConverterFunction<FervidexScore, FervidexConte
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	// eslint-disable-next-line prefer-const
 	let { difficulty, playtype } = SplitFervidexChartRef(data.chart);
@@ -192,7 +192,7 @@ export const ConverterIRFervidex: ConverterFunction<FervidexScore, FervidexConte
 	const song = await FindSongOnID("iidx", chart.songID);
 
 	if (!song) {
-		logger.severe(`Song ${chart.songID} (iidx) has no parent song?`);
+		log.error(`Song ${chart.songID} (iidx) has no parent song?`);
 		throw new InternalFailure(`Song ${chart.songID} (iidx) has no parent song?`);
 	}
 

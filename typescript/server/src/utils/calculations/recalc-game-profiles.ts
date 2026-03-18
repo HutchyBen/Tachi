@@ -1,11 +1,9 @@
 /* eslint-disable no-await-in-loop */
 
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { UpdateUsersGamePlaytypeStats } from "#lib/score-import/framework/ugpt-stats/update-ugpt-stats";
+import db from "#services/mongo/db";
 import { FormatUserDoc } from "#utils/user";
-
-const logger = CreateLogCtx(__filename);
 
 export async function RecalcGameProfiles(filter = {}) {
 	const profiles = await db["game-stats"].find(filter);
@@ -16,21 +14,19 @@ export async function RecalcGameProfiles(filter = {}) {
 		});
 
 		if (!user) {
-			logger.severe(`User ${profile.userID} does not exist?`);
+			log.error(`User ${profile.userID} does not exist?`);
 			throw new Error(`User ${profile.userID} does not exist.`);
 		}
 
-		logger.verbose(
-			`Recalcing ${FormatUserDoc(user)}'s ${profile.game} ${profile.playtype} stats.`,
-		);
+		log.debug(`Recalcing ${FormatUserDoc(user)}'s ${profile.game} ${profile.playtype} stats.`);
 		await UpdateUsersGamePlaytypeStats(
 			profile.game,
 			profile.playtype,
 			profile.userID,
 			null,
-			logger,
+			log,
 		);
 	}
 
-	logger.info(`Done.`);
+	log.info(`Done.`);
 }

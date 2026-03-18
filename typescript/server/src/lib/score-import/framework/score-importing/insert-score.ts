@@ -1,9 +1,8 @@
-import type { integer, ScoreDocument } from "../../../../../../common/src";
+import type { integer, ScoreDocument } from "tachi-common";
 
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 
-const logger = CreateLogCtx(__filename);
 const MAX_PIPELINE_LENGTH = 500;
 
 interface ScoreQueue {
@@ -67,9 +66,9 @@ export async function InsertQueue(userID: integer) {
 		try {
 			await db.scores.insert(queuedScores);
 		} catch (err) {
-			logger.warn(
-				`Triggered duplicate key protection. Race condition protected against, but this is not good.`,
+			log.warn(
 				{ err },
+				`Triggered duplicate key protection. Race condition protected against, but this is not good.`,
 			);
 			return null;
 		}
@@ -89,16 +88,16 @@ export function QueueScoreInsert(score: ScoreDocument) {
 
 	if (scoreQueue.scoreIDSet.has(score.scoreID)) {
 		// skip
-		logger.verbose(`Score ID ${score.scoreID} was already queued to be imported.`);
+		log.debug(`Score ID ${score.scoreID} was already queued to be imported.`);
 		return null;
 	}
 
 	AddToScoreQueue(scoreQueue, score);
 
-	logger.debug(`ScoreQueue for ${score.userID} is now at ${scoreQueue.queue.length}.`);
+	log.debug(`ScoreQueue for ${score.userID} is now at ${scoreQueue.queue.length}.`);
 
 	if (scoreQueue.queue.length >= MAX_PIPELINE_LENGTH) {
-		logger.verbose(`Triggered pipeline flush with len ${scoreQueue.queue.length}.`);
+		log.debug(`Triggered pipeline flush with len ${scoreQueue.queue.length}.`);
 		return InsertQueue(score.userID);
 	}
 

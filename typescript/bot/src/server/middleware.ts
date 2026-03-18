@@ -1,10 +1,8 @@
 import type { RequestHandler } from "express";
 
-import { BotConfig } from "../config";
-import { LoggerLayers } from "../data/data";
-import { CreateLayeredLogger } from "../utils/logger";
+import { log } from "#utils/log";
 
-const logger = CreateLayeredLogger(LoggerLayers.serverAuth);
+import { BotConfig } from "../config";
 
 /**
  * Middleware that checks that a webhook request has Authorization set to
@@ -17,7 +15,7 @@ export const ValidateWebhookRequest: RequestHandler = (req, res, next) => {
 	const auth = req.header("Authorization");
 
 	if (!auth) {
-		logger.info(`Received unauthed request from ${req.ip}.`);
+		log.info(`Received unauthed request from ${req.ip}.`);
 		return res.status(401).json({
 			success: false,
 			description: "No authorization provided.",
@@ -27,7 +25,7 @@ export const ValidateWebhookRequest: RequestHandler = (req, res, next) => {
 	const [type, value] = auth.split(" ", 2);
 
 	if (type !== "Bearer") {
-		logger.info(`Received invalid auth type request from ${req.ip}, got auth type ${type}.`);
+		log.info(`Received invalid auth type request from ${req.ip}, got auth type ${type}.`);
 		return res.status(400).json({
 			success: false,
 			description: "Invalid authorization type. Expected Bearer.",
@@ -35,16 +33,14 @@ export const ValidateWebhookRequest: RequestHandler = (req, res, next) => {
 	}
 
 	if (value !== BotConfig.OAUTH.CLIENT_SECRET) {
-		logger.warn(
-			`Recieved invalid auth value from ${req.ip}. Has the client secret been changed?`,
-		);
+		log.warn(`Recieved invalid auth value from ${req.ip}. Has the client secret been changed?`);
 		return res.status(403).json({
 			success: false,
 			description: "Unauthorised.",
 		});
 	}
 
-	logger.debug("Webhook authorisation successful.");
+	log.debug("Webhook authorisation successful.");
 
 	next();
 };

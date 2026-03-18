@@ -1,15 +1,14 @@
 import type http from "http";
 import type https from "https";
 
-import { monkDB } from "#external/mongo/db";
-import { CloseRedisConnection } from "#external/redis/redis";
-import { rootLogger } from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { CloseScoreImportQueue } from "#lib/score-import/worker/queue";
-
-const logger = rootLogger;
+import { monkDB } from "#services/mongo/db";
+import { ClosePgConnection } from "#services/pg/db.js";
+import { CloseRedisConnection } from "#services/redis/redis";
 
 export function HandleSIGTERMGracefully(instance?: http.Server | https.Server) {
-	logger.info("SIGTERM Received, closing program.", { shutdownInfo: true });
+	log.info({ shutdownInfo: true }, "SIGTERM Received, closing program.");
 
 	if (instance) {
 		instance.close(() => CloseEverythingElse());
@@ -19,16 +18,22 @@ export function HandleSIGTERMGracefully(instance?: http.Server | https.Server) {
 }
 
 async function CloseEverythingElse() {
-	logger.info("Closing Mongo Database.", { shutdownInfo: true });
+	log.info({ shutdownInfo: true }, "Closing Mongo Database.");
 	await monkDB.close();
 
-	logger.info("Closing Redis Connection.", { shutdownInfo: true });
+	log.info({ shutdownInfo: true }, "Closing database...");
+	await ClosePgConnection();
+
+	log.info({ shutdownInfo: true }, "Closing Redis Connection.");
 	await CloseRedisConnection();
 
-	logger.info("Closing Score Import Queue.", { shutdownInfo: true });
+	log.info({ shutdownInfo: true }, "Closing Score Import Queue.");
 	await CloseScoreImportQueue();
 
-	logger.info("Everything closed. Waiting for process to exit naturally.", {
-		shutdownInfo: true,
-	});
+	log.info(
+		{
+			shutdownInfo: true,
+		},
+		"Everything closed. Waiting for process to exit naturally.",
+	);
 }

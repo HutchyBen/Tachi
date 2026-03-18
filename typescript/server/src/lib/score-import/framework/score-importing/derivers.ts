@@ -1,6 +1,6 @@
-import type { KtLogger } from "#lib/logger/logger";
 import type { GPTDerivers } from "#game-implementations/types";
-import type { MetricValue } from "../../../../../../common/src/types/metrics";
+import type { KtLogger } from "#lib/log/log.js";
+import type { MetricValue } from "tachi-common/types/metrics";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import {
@@ -12,7 +12,7 @@ import {
 	type OptionalEnumIndexes,
 	type ScoreData,
 	type ScoreEnumIndexes,
-} from "../../../../../../common/src";
+} from "tachi-common";
 
 import type { DryScore, DryScoreData } from "../common/types";
 
@@ -50,7 +50,7 @@ function DeriveMetrics<GPT extends GPTString>(
 	return derivedMetrics as DerivedMetrics[GPT];
 }
 
-export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any, logger: KtLogger) {
+export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any, log: KtLogger) {
 	const gptConfig = GetGPTConfig(gpt);
 
 	const indexes: Record<string, integer> = {};
@@ -67,9 +67,9 @@ export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any,
 		const index = conf.values.indexOf(metrics[key]);
 
 		if (index === -1) {
-			logger.error(
-				`Got an invalid enum value of ${metrics[key]} for ${gpt} ${key} on DryScore. Can't add indexes?`,
+			log.error(
 				{ metrics, key, conf },
+				`Got an invalid enum value of ${metrics[key]} for ${gpt} ${key} on DryScore. Can't add indexes?`,
 			);
 
 			throw new InternalFailure(
@@ -96,9 +96,9 @@ export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any,
 		const index = conf.values.indexOf(metrics.optional[key]);
 
 		if (index === -1) {
-			logger.error(
-				`Got an invalid enum value of ${metrics.optional[key]} for ${gpt} optional.${key} on DryScore. Can't add indexes?`,
+			log.error(
 				{ metrics, key, conf },
+				`Got an invalid enum value of ${metrics.optional[key]} for ${gpt} optional.${key} on DryScore. Can't add indexes?`,
 			);
 
 			throw new InternalFailure(
@@ -122,7 +122,7 @@ export function CreateFullScoreData<GPT extends GPTString>(
 	gpt: GPT,
 	dryScoreData: DryScore<GPT>["scoreData"],
 	chart: ChartDocument<GPT>,
-	logger: KtLogger,
+	log: KtLogger,
 ) {
 	const derivedMetrics = DeriveMetrics(gpt, dryScoreData, chart);
 
@@ -132,7 +132,7 @@ export function CreateFullScoreData<GPT extends GPTString>(
 	} as unknown as ScoreData<GPT>;
 	// ^ hacky force-cast because these types are *really* unstable.
 
-	const { indexes, optionalIndexes } = CreateEnumIndexes(gpt, scoreData, logger);
+	const { indexes, optionalIndexes } = CreateEnumIndexes(gpt, scoreData, log);
 
 	// again, silly hacks aorund typesafety here because to be honest
 	// this stuff is more generic than TS really should ever have to implement.

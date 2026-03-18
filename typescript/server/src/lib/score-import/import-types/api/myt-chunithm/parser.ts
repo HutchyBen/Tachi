@@ -1,11 +1,11 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/log/log.js";
 import type { EmptyObject } from "#utils/types";
-import type { integer } from "../../../../../../../common/src";
+import type { integer } from "tachi-common";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
-import { credentials } from "@grpc/grpc-js";
 import { ChunithmUserClient } from "#proto/generated/chunithm/user_grpc_pb";
 import { GetPlaylogRequest, type GetPlaylogStreamItem } from "#proto/generated/chunithm/user_pb";
+import { credentials } from "@grpc/grpc-js";
 
 import type { ParserFunctionReturns } from "../../common/types";
 import type { MytChunithmScore } from "./types";
@@ -26,9 +26,9 @@ async function* getObjectsFromGrpcIterable(
 
 export default async function ParseMytChunithm(
 	userID: integer,
-	logger: KtLogger,
+	log: KtLogger,
 ): Promise<ParserFunctionReturns<MytChunithmScore, EmptyObject>> {
-	const profileApiId = await FetchMytTitleAPIID(userID, "chunithm", logger);
+	const profileApiId = await FetchMytTitleAPIID(userID, "chunithm", log);
 	const endpoint = GetMytHostname();
 	const client = new ChunithmUserClient(endpoint, credentials.createSsl());
 	const request = new GetPlaylogRequest();
@@ -38,11 +38,11 @@ export default async function ParseMytChunithm(
 	let iterable;
 
 	try {
-		const stream = StreamRPCAsAsync(client.getPlaylog.bind(client), request, logger);
+		const stream = StreamRPCAsAsync(client.getPlaylog.bind(client), request, log);
 
 		iterable = getObjectsFromGrpcIterable(stream);
 	} catch (err) {
-		logger.error(
+		log.error(
 			`Unexpected MYT error while streaming Chunithm playlog items for userID ${userID}: ${err}`,
 		);
 

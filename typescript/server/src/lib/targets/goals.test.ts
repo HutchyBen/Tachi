@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 import { dmf, mkFakePBIIDXSP } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import {
@@ -11,22 +11,20 @@ import {
 } from "#test-utils/test-data";
 import { CreateFolderChartLookup } from "#utils/folder";
 import crypto from "crypto";
-import t from "tap";
-
 import {
 	type ChartDocument,
 	type GoalDocument,
 	IIDX_GRADES,
 	type SongDocument,
-} from "../../../../common/src";
+} from "tachi-common";
+import t from "tap";
+
 import {
 	EvaluateGoalForUser,
 	GetRelevantFolderGoals,
 	GetRelevantGoals,
 	HumaniseGoalProgress,
 } from "./goals";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#EvaluateGoalForUser", (t) => {
 	t.beforeEach(ResetDBState);
@@ -40,7 +38,7 @@ t.test("#EvaluateGoalForUser", (t) => {
 		});
 
 		t.test("Should correctly evaluate goals if user succeeds.", async (t) => {
-			const res = await EvaluateGoalForUser(HC511Goal, 1, logger);
+			const res = await EvaluateGoalForUser(HC511Goal, 1, log);
 
 			t.strictSame(
 				res,
@@ -68,7 +66,7 @@ t.test("#EvaluateGoalForUser", (t) => {
 				},
 			);
 
-			const res = await EvaluateGoalForUser(HC511Goal, 1, logger);
+			const res = await EvaluateGoalForUser(HC511Goal, 1, log);
 
 			t.strictSame(
 				res,
@@ -88,7 +86,7 @@ t.test("#EvaluateGoalForUser", (t) => {
 		t.test("Should correctly evaluate goals when user has no score.", async (t) => {
 			await db["personal-bests"].remove({});
 
-			const res = await EvaluateGoalForUser(HC511Goal, 1, logger);
+			const res = await EvaluateGoalForUser(HC511Goal, 1, log);
 
 			t.strictSame(
 				res,
@@ -129,7 +127,7 @@ t.test("#EvaluateGoalForUser", (t) => {
 		});
 
 		t.test("Should work if 511 is >= HARD CLEAR", async (t) => {
-			const res = await EvaluateGoalForUser(multiGoal, 1, logger);
+			const res = await EvaluateGoalForUser(multiGoal, 1, log);
 
 			t.strictSame(
 				res,
@@ -156,7 +154,7 @@ t.test("#EvaluateGoalForUser", (t) => {
 				{ $set: { "scoreData.lamp": "HARD CLEAR", "scoreData.enumIndexes.lamp": 5 } },
 			);
 
-			const res = await EvaluateGoalForUser(multiGoal, 1, logger);
+			const res = await EvaluateGoalForUser(multiGoal, 1, log);
 
 			t.strictSame(
 				res,
@@ -176,7 +174,7 @@ t.test("#EvaluateGoalForUser", (t) => {
 		t.test("Should work if user has no scores", async (t) => {
 			await db["personal-bests"].remove({});
 
-			const res = await EvaluateGoalForUser(multiGoal, 1, logger);
+			const res = await EvaluateGoalForUser(multiGoal, 1, log);
 
 			t.strictSame(
 				res,
@@ -234,7 +232,7 @@ t.test("#EvaluateGoalForUser", (t) => {
 		});
 
 		t.test("Should work if 511 is >= HARD CLEAR", async (t) => {
-			const res = await EvaluateGoalForUser(folderGoal, 1, logger);
+			const res = await EvaluateGoalForUser(folderGoal, 1, log);
 
 			t.strictSame(
 				res,
@@ -262,7 +260,7 @@ t.test("#EvaluateGoalForUser", (t) => {
 				{ $set: { "scoreData.lamp": "HARD CLEAR", "scoreData.enumIndexes.lamp": 5 } },
 			);
 
-			const res = await EvaluateGoalForUser(folderGoal, 1, logger);
+			const res = await EvaluateGoalForUser(folderGoal, 1, log);
 
 			t.strictSame(
 				res,
@@ -282,7 +280,7 @@ t.test("#EvaluateGoalForUser", (t) => {
 		t.test("Should work if user has no scores", async (t) => {
 			await db["personal-bests"].remove({});
 
-			const res = await EvaluateGoalForUser(folderGoal, 1, logger);
+			const res = await EvaluateGoalForUser(folderGoal, 1, log);
 
 			t.strictSame(
 				res,
@@ -462,7 +460,7 @@ t.test("#GetRelevantGoals", (t) => {
 
 			const chartIDs = new Set(ourCharts.map((e) => e.chartID));
 
-			const res = await GetRelevantGoals("iidx", 1, chartIDs, logger);
+			const res = await GetRelevantGoals("iidx", 1, chartIDs, log);
 
 			t.equal(res.goals.length, 5, "Should correctly resolve to 5 goals.");
 			t.equal(res.goalSubsMap.size, 5, "Should also return 5 goalSubs.");

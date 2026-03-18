@@ -1,328 +1,187 @@
-import type { SendMailOptions } from "nodemailer";
-
-import { FormatPrError } from "#utils/prudence";
-import {
-	allSupportedGameGroups,
-	type integer,
-	type TachiServerCoreConfig,
-} from "../../../../common/src";
-// barrel file for re-exporting env variables.
-import dotenv from "dotenv";
-import fs from "fs";
+import { log } from "#lib/log/log.js";
 import JSON5 from "json5";
-import { p } from "prudence";
-import { allImportTypes } from "../../../../common/src/constants/import-types";
-import { URL } from "url";
+import { allSupportedGameGroups, type GameGroup, type ImportTypes } from "tachi-common";
+import { allImportTypes } from "tachi-common/constants/import-types";
+import { z } from "zod";
 
-// imports things like NODE_ENV from a local .env file if one is present.
-dotenv.config();
+const rawConf = process.env.TACHI_CONFIG;
 
-// stub - having a real logger here creates a circular dependency.
-const logger = console;
-
-const confLocation = process.env.TCHIS_CONF_LOCATION ?? "./conf.json5";
-
-// reads from $pwd/conf.json5, unless an override is set
-let confFile;
-
-try {
-	confFile = fs.readFileSync(confLocation, "utf-8");
-} catch (err) {
-	logger.error("Error while trying to open conf.json5. Is one present?", {
-		err,
-	});
-
+if (!rawConf) {
+	log.error("TACHI_CONFIG environment variable is not set. Terminating.");
 	process.exit(1);
 }
 
-const config: unknown = JSON5.parse(confFile);
+let config: unknown;
 
-function isValidURL(self: unknown) {
-	if (typeof self !== "string") {
-		return `Expected URL, received type ${typeof self}`;
-	}
-
-	try {
-		new URL(self);
-		return true;
-	} catch (err) {
-		return `Invalid URL ${self} (${(err as Error).message}).`;
-	}
+try {
+	config = JSON5.parse(rawConf);
+} catch (err) {
+	log.error({ err }, "Failed to parse TACHI_CONFIG as JSON5.");
+	process.exit(1);
 }
 
-export interface OAuth2Info {
-	CLIENT_ID: string;
-	CLIENT_SECRET: string;
-	REDIRECT_URI: string;
-}
-
-export interface CGConfig {
-	API_KEY: string;
-	URL: string;
-}
-
-export interface TachiServerConfig {
-	MONGO_DATABASE_NAME: string;
-	CAPTCHA_SECRET_KEY: string;
-	SESSION_SECRET: string;
-	FLO_API_URL?: string;
-	EAG_API_URL?: string;
-	MIN_API_URL?: string;
-	ARC_API_URL?: string;
-	MYT_API_HOST?: string;
-
-	CG_DEV_CONFIG?: CGConfig;
-	CG_NAG_CONFIG?: CGConfig;
-	CG_GAN_CONFIG?: CGConfig;
-
-	FLO_OAUTH2_INFO?: OAuth2Info;
-	EAG_OAUTH2_INFO?: OAuth2Info;
-	MIN_OAUTH2_INFO?: OAuth2Info;
-	ARC_AUTH_TOKEN?: string;
-	MYT_AUTH_TOKEN?: string;
-	ENABLE_SERVER_HTTPS?: boolean;
-	CLIENT_DEV_SERVER?: string | null;
-	RATE_LIMIT: integer;
-	OAUTH_CLIENT_CAP: integer;
-	OPTIONS_ALWAYS_SUCCEEDS?: boolean;
-	USE_EXTERNAL_SCORE_IMPORT_WORKER: boolean;
-	EXTERNAL_SCORE_IMPORT_WORKER_CONCURRENCY?: integer;
-	ENABLE_METRICS: boolean;
-	SEEDS_CONFIG?:
-		| {
-				BRANCH?: string;
-				REPO_URL: string;
-				TYPE: "GIT_REPO";
-				USER_EMAIL: string | null;
-				USER_NAME: string | null;
-		  }
-		| {
-				PATH: string;
-				TYPE: "LOCAL_FILES";
-		  };
-	EMAIL_CONFIG?: {
-		DKIM?: SendMailOptions["dkim"];
-		FROM: string;
-
-		// @warning This is explicitly allowed to be any
-		// As nodemailer doesnt properly export the types we care about
-		// This should be set to SMTPTransport.Options, but it is
-		// inaccessible.
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		TRANSPORT_OPS: any;
-	};
-	USC_QUEUE_SIZE: integer;
-	BEATORAJA_QUEUE_SIZE: integer;
-	MAX_GOAL_SUBSCRIPTIONS: integer;
-	MAX_QUEST_SUBSCRIPTIONS: integer;
-	MAX_FOLLOWING_AMOUNT: integer;
-	MAX_RIVALS: integer;
-	OUR_URL: string;
-	ALLOW_RUNNING_OFFLINE?: boolean;
-	INVITE_CODE_CONFIG?: {
-		BATCH_SIZE: integer;
-		BETA_USER_BONUS: integer;
-		INVITE_CAP: integer;
-	};
-	TACHI_CONFIG: TachiServerCoreConfig;
-	CDN_CONFIG: {
-		SAVE_LOCATION:
-			| {
-					ACCESS_KEY_ID: string;
-					BUCKET: string;
-					ENDPOINT: string;
-					KEY_PREFIX?: string;
-					REGION?: string;
-					SECRET_ACCESS_KEY: string;
-					TYPE: "S3_BUCKET";
-			  }
-			| { LOCATION: string; SERVE_OWN_CDN?: boolean; TYPE: "LOCAL_FILESYSTEM" };
-		WEB_LOCATION: string;
-	};
-}
-
-const isValidOauth2 = p.optional({
-	CLIENT_ID: "string",
-	CLIENT_SECRET: "string",
-	REDIRECT_URI: "string",
+const oauth2Schema = z.object({
+	CLIENT_ID: z.string(),
+	CLIENT_SECRET: z.string(),
+	REDIRECT_URI: z.string(),
 });
 
-const isValidCGConfig = p.optional({
-	API_KEY: "string",
-	URL: "string",
+const cgConfigSchema = z.object({
+	API_KEY: z.string(),
+	URL: z.string(),
 });
 
-const err = p(config, {
-	MONGO_DATABASE_NAME: "string",
-	CAPTCHA_SECRET_KEY: "string",
-	SESSION_SECRET: "string",
-	FLO_API_URL: p.optional(isValidURL),
-	EAG_API_URL: p.optional(isValidURL),
-	MIN_API_URL: p.optional(isValidURL),
-	ARC_API_URL: p.optional(isValidURL),
-	MYT_API_HOST: "*string",
+const configSchema = z.object({
+	MONGO_DATABASE_NAME: z.string(),
+	CAPTCHA_SECRET_KEY: z.string(),
+	SESSION_SECRET: z.string(),
+	FLO_API_URL: z.url().optional(),
+	EAG_API_URL: z.url().optional(),
+	MIN_API_URL: z.url().optional(),
+	ARC_API_URL: z.url().optional(),
+	MYT_API_HOST: z.string().optional(),
 
-	CG_DEV_CONFIG: isValidCGConfig,
-	CG_NAG_CONFIG: isValidCGConfig,
-	CG_GAN_CONFIG: isValidCGConfig,
+	CG_DEV_CONFIG: cgConfigSchema.optional(),
+	CG_NAG_CONFIG: cgConfigSchema.optional(),
+	CG_GAN_CONFIG: cgConfigSchema.optional(),
 
-	FLO_OAUTH2_INFO: isValidOauth2,
-	EAG_OAUTH2_INFO: isValidOauth2,
-	MIN_OAUTH2_INFO: isValidOauth2,
-	ARC_AUTH_TOKEN: "*string",
-	MYT_AUTH_TOKEN: "*string",
-	ENABLE_SERVER_HTTPS: "*boolean",
-	CLIENT_DEV_SERVER: "*?string",
-	RATE_LIMIT: p.optional(p.isPositiveInteger),
-	OAUTH_CLIENT_CAP: p.optional(p.isPositiveInteger),
-	OPTIONS_ALWAYS_SUCCEEDS: "*boolean",
-	USE_EXTERNAL_SCORE_IMPORT_WORKER: "*boolean",
-	EXTERNAL_SCORE_IMPORT_WORKER_CONCURRENCY: p.optional(p.isPositiveInteger),
-	ALLOW_RUNNING_OFFLINE: "*boolean",
-	ENABLE_METRICS: "*boolean",
-	EMAIL_CONFIG: p.optional({
-		FROM: "string",
-		DKIM: "*object",
-
-		// WARN: This validation is improper and lazy.
-		// The actual content is just some wacky options object.
-		// I'm not going to assert this properly.
-		TRANSPORT_OPS: "*object",
+	FLO_OAUTH2_INFO: oauth2Schema.optional(),
+	EAG_OAUTH2_INFO: oauth2Schema.optional(),
+	MIN_OAUTH2_INFO: oauth2Schema.optional(),
+	ARC_AUTH_TOKEN: z.string().optional(),
+	MYT_AUTH_TOKEN: z.string().optional(),
+	ENABLE_SERVER_HTTPS: z.boolean().optional(),
+	CLIENT_DEV_SERVER: z.string().nullable().optional(),
+	RATE_LIMIT: z.number().int().positive().default(500),
+	OAUTH_CLIENT_CAP: z.number().int().positive().default(15),
+	OPTIONS_ALWAYS_SUCCEEDS: z.boolean().optional(),
+	USE_EXTERNAL_SCORE_IMPORT_WORKER: z.boolean().default(false),
+	EXTERNAL_SCORE_IMPORT_WORKER_CONCURRENCY: z.number().int().positive().optional(),
+	ALLOW_RUNNING_OFFLINE: z.boolean().optional(),
+	ENABLE_METRICS: z.boolean().default(false),
+	EMAIL_CONFIG: z
+		.object({
+			FROM: z.string(),
+			// Nodemailer does not export the DKIM type properly, so we accept any object.
+			DKIM: z.any().optional(),
+			// The actual content is just a wacky options object — not worth asserting precisely.
+			TRANSPORT_OPS: z.any().optional(),
+		})
+		.optional(),
+	USC_QUEUE_SIZE: z.number().int().gte(2).default(3),
+	BEATORAJA_QUEUE_SIZE: z.number().int().gte(2).default(3),
+	MAX_GOAL_SUBSCRIPTIONS: z.number().int().positive().default(1_000),
+	MAX_QUEST_SUBSCRIPTIONS: z.number().int().positive().default(100),
+	MAX_FOLLOWING_AMOUNT: z.number().int().positive().default(1_000),
+	MAX_RIVALS: z.number().int().positive().default(5),
+	OUR_URL: z.string().refine((s) => !s.endsWith("/"), {
+		message: "OUR_URL must not end with a trailing slash.",
 	}),
-	USC_QUEUE_SIZE: p.optional(p.gteInt(2)),
-	BEATORAJA_QUEUE_SIZE: p.optional(p.gteInt(2)),
-	MAX_GOAL_SUBSCRIPTIONS: p.optional(p.isPositiveInteger),
-	MAX_QUEST_SUBSCRIPTIONS: p.optional(p.isPositiveInteger),
-	MAX_FOLLOWING_AMOUNT: p.optional(p.isPositiveInteger),
-	MAX_RIVALS: p.optional(p.isPositiveInteger),
-	OUR_URL: (self) => {
-		if (typeof self !== "string") {
-			return "Expected a string.";
-		}
-
-		if (self.endsWith("/")) {
-			return `OUR_URL should not end with a trailing slash. Use ${self.substring(
-				0,
-				self.length - 1,
-			)} instead.`;
-		}
-
-		return true;
-	},
-	INVITE_CODE_CONFIG: p.optional({
-		BATCH_SIZE: p.isPositiveInteger,
-		INVITE_CAP: p.isPositiveInteger,
-		BETA_USER_BONUS: p.isPositiveInteger,
+	INVITE_CODE_CONFIG: z
+		.object({
+			BATCH_SIZE: z.number().int().positive(),
+			INVITE_CAP: z.number().int().positive(),
+			BETA_USER_BONUS: z.number().int().positive(),
+		})
+		.optional(),
+	TACHI_CONFIG: z.object({
+		NAME: z.string(),
+		TYPE: z.enum(["kamai", "boku", "omni"]),
+		GAMES: z.array(z.enum(allSupportedGameGroups as [GameGroup, ...GameGroup[]])),
+		IMPORT_TYPES: z.array(z.enum(allImportTypes as [ImportTypes, ...ImportTypes[]])),
+		SIGNUPS_ENABLED: z.boolean().default(true),
 	}),
-	TACHI_CONFIG: {
-		NAME: "string",
-		TYPE: p.isIn("kamai", "boku", "omni"),
-		GAMES: [p.isIn(allSupportedGameGroups)],
-		IMPORT_TYPES: [p.isIn(allImportTypes)],
-		SIGNUPS_ENABLED: p.optional("boolean"),
-	},
-	CDN_CONFIG: {
-		WEB_LOCATION: "string",
-		SAVE_LOCATION: p.or(
-			{
-				TYPE: p.is("LOCAL_FILESYSTEM"),
-				SERVE_OWN_CDN: "*boolean",
-				LOCATION: "string",
-			},
-			{
-				TYPE: p.is("S3_BUCKET"),
-				ENDPOINT: "string",
-				ACCESS_KEY_ID: "string",
-				SECRET_ACCESS_KEY: "string",
-				BUCKET: "string",
-				KEY_PREFIX: "*string",
-				REGION: "*string",
-			},
-		),
-	},
-	SEEDS_CONFIG: p.optional(
-		p.or(
-			{
-				TYPE: p.is("GIT_REPO"),
-				REPO_URL: "string",
-				USER_NAME: "?string",
-				USER_EMAIL: "?string",
-				BRANCH: "*string",
-			},
-			{
-				TYPE: p.is("LOCAL_FILES"),
-				PATH: "string",
-			},
-		),
-	),
+	CDN_CONFIG: z.object({
+		WEB_LOCATION: z.string(),
+		SAVE_LOCATION: z.union([
+			z.object({
+				TYPE: z.literal("LOCAL_FILESYSTEM"),
+				SERVE_OWN_CDN: z.boolean().optional(),
+				LOCATION: z.string(),
+			}),
+			z.object({
+				TYPE: z.literal("S3_BUCKET"),
+				ENDPOINT: z.string(),
+				ACCESS_KEY_ID: z.string(),
+				SECRET_ACCESS_KEY: z.string(),
+				BUCKET: z.string(),
+				KEY_PREFIX: z.string().optional(),
+				REGION: z.string().optional(),
+			}),
+		]),
+	}),
+	SEEDS_CONFIG: z
+		.union([
+			z.object({
+				TYPE: z.literal("GIT_REPO"),
+				REPO_URL: z.string(),
+				USER_NAME: z.string().nullable(),
+				USER_EMAIL: z.string().nullable(),
+				BRANCH: z.string().optional(),
+			}),
+			z.object({
+				TYPE: z.literal("LOCAL_FILES"),
+				PATH: z.string(),
+			}),
+		])
+		.optional(),
 });
 
-if (err) {
-	throw new Error(FormatPrError(err, "Invalid conf.json5 file."));
+export type OAuth2Info = z.infer<typeof oauth2Schema>;
+export type CGConfig = z.infer<typeof cgConfigSchema>;
+export type TachiServerConfig = z.infer<typeof configSchema>;
+
+const result = configSchema.safeParse(config);
+
+if (!result.success) {
+	throw new Error(`Invalid TCHIS_CONF: ${result.error.message}`);
 }
 
-const tachiServerConfig = config as TachiServerConfig;
-
-// default rate limit 500
-tachiServerConfig.RATE_LIMIT ??= 500;
-tachiServerConfig.OAUTH_CLIENT_CAP ??= 15;
-tachiServerConfig.USC_QUEUE_SIZE ??= 3;
-tachiServerConfig.BEATORAJA_QUEUE_SIZE ??= 3;
-tachiServerConfig.MAX_GOAL_SUBSCRIPTIONS ??= 1_000;
-tachiServerConfig.MAX_QUEST_SUBSCRIPTIONS ??= 100;
-tachiServerConfig.MAX_RIVALS ??= 5;
-tachiServerConfig.MAX_FOLLOWING_AMOUNT ??= 1_000;
-tachiServerConfig.USE_EXTERNAL_SCORE_IMPORT_WORKER ??= false;
-tachiServerConfig.TACHI_CONFIG.SIGNUPS_ENABLED ??= true;
-tachiServerConfig.ENABLE_METRICS ??= false;
-
-export const TachiConfig = tachiServerConfig.TACHI_CONFIG;
-export const ServerConfig = tachiServerConfig;
+export const TachiConfig = result.data.TACHI_CONFIG;
+export const ServerConfig: TachiServerConfig = result.data;
 
 // Environment Variable Validation
 
-let port = Number(process.env.PORT);
+let PORT = Number(process.env.PORT);
 
-if (Number.isNaN(port) && process.env.IS_SERVER) {
-	logger.warn(`No/invalid PORT specified in environment, defaulting to 8080.`);
-	port = 8080;
+if (Number.isNaN(PORT) && process.env.IS_SERVER) {
+	log.warn(`No/invalid PORT specified in environment, defaulting to 8080.`);
+	PORT = 8080;
 }
 
-const redisUrl = process.env.REDIS_URL ?? "";
+const REDIS_URL = process.env.REDIS_URL;
 
-if (!redisUrl) {
-	// n.b. These logs should be critical level, but the logger cant actually instantiate
-	// itself in this file, because this file also controlls the logger. Ouch!
-	logger.error(`No REDIS_URL specified in environment. Terminating.`);
+if (!REDIS_URL) {
+	// n.b. These logs should be critical level, but thelog cant actually instantiate
+	// itself in this file, because this file also controlls the log. Ouch!
+	log.error(`No REDIS_URL specified in environment. Terminating.`);
 	process.exit(1);
 }
 
-const mongoUrl = process.env.MONGO_URL ?? "";
+const MONGO_URL = process.env.MONGO_URL;
 
-if (!mongoUrl) {
-	logger.error(`No MONGO_URL specified in environment. Terminating.`);
+if (!MONGO_URL) {
+	log.error(`No MONGO_URL specified in environment. Terminating.`);
 	process.exit(1);
 }
 
-const nodeEnv = process.env.NODE_ENV ?? "";
+const NODE_ENV = process.env.NODE_ENV;
 
-if (!nodeEnv) {
-	logger.error(`No NODE_ENV specified in environment. Terminating.`);
+if (!NODE_ENV) {
+	log.error(`No NODE_ENV specified in environment. Terminating.`);
 	process.exit(1);
 }
 
-if (!["dev", "production", "staging", "test"].includes(nodeEnv)) {
-	logger.error(
-		`Invalid NODE_ENV set in environment. Expected dev, production, test or staging. Got ${nodeEnv}.`,
+if (!["dev", "production", "staging", "test"].includes(NODE_ENV)) {
+	log.error(
+		`Invalid NODE_ENV set in environment. Expected dev, production, test or staging. Got ${NODE_ENV}.`,
 	);
 	process.exit(1);
 }
 
-// if (bms XOR popn) is enabled
+// if (bms XOR pms) is enabled
 if (TachiConfig.GAMES.includes("bms") !== TachiConfig.GAMES.includes("pms")) {
-	logger.error(
-		`BMS and PMS MUST be enabled at the same time, due to how the beatoraja IR works.`,
-	);
+	log.error(`BMS and PMS MUST be enabled at the same time, due to how the beatoraja IR works.`);
 
 	process.exit(1);
 }
@@ -330,21 +189,48 @@ if (TachiConfig.GAMES.includes("bms") !== TachiConfig.GAMES.includes("pms")) {
 const logLevel = process.env.LOG_LEVEL ?? "info";
 
 if (!["crit", "debug", "error", "info", "severe", "verbose", "warn"].includes(logLevel)) {
-	logger.error(`Invalid LOG_LEVEL of ${logLevel}.`);
+	log.error(`Invalid LOG_LEVEL of ${logLevel}.`);
 
 	process.exit(1);
 }
 
-const replicaIdentity = process.env.REPLICA_IDENTITY;
+const POSTGRES_URL = process.env.POSTGRES_URL;
 
-export const Environment = {
-	port,
-	redisUrl,
-	mongoUrl,
-	nodeEnv: nodeEnv as "dev" | "production" | "staging" | "test",
-	replicaIdentity,
-	commitHash: process.env.COMMIT_HASH,
-	seqUrl: process.env.SEQ_URL,
-	seqApiKey: process.env.SEQ_API_KEY,
-	logLevel: logLevel as "crit" | "debug" | "error" | "info" | "severe" | "verbose" | "warn",
+if (!POSTGRES_URL) {
+	log.error(`No POSTGRES_URL specified in environment. Terminating.`);
+	process.exit(1);
+}
+
+const MIGRATIONS_DIR = process.env.MIGRATIONS_DIR;
+
+if (!MIGRATIONS_DIR) {
+	log.error(`No MIGRATIONS_DIR specified in environment. Terminating.`);
+	process.exit(1);
+}
+
+const VERSION = process.env.VERSION;
+
+if (!VERSION) {
+	log.error(`No VERSION specified in environment. Terminating.`);
+	process.exit(1);
+}
+
+const COMMIT_HASH = process.env.COMMIT_HASH;
+
+if (!COMMIT_HASH) {
+	log.error(`No COMMIT_HASH specified in environment. Terminating.`);
+	process.exit(1);
+}
+
+// Typed variant of process.env
+export const Env = {
+	PORT,
+	REDIS_URL,
+	MONGO_URL,
+	POSTGRES_URL,
+	MIGRATIONS_DIR,
+	VERSION,
+	COMMIT_HASH,
+	NODE_ENV: NODE_ENV as "dev" | "production" | "staging" | "test",
+	LOG_LEVEL: logLevel as "crit" | "debug" | "error" | "info" | "severe" | "verbose" | "warn",
 };

@@ -4,6 +4,7 @@
 		"module": "Preserve",
 		"moduleResolution": "bundler",
 		"paths": {
+			"#*": ["./src/*"],
 			"tachi-db-migration-engine": ["../db-migration-engine/src/index.ts"]
 		}
 	},

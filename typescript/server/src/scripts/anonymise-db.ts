@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { execSync } from "child_process";
 import { Command } from "commander";
 import monk from "monk";
@@ -18,8 +18,6 @@ if (!path) {
 	throw new Error("expected path!");
 }
 
-const logger = CreateLogCtx(__filename);
-
 /**
  * Strips all name and private information from the database.
  * For use for things like future tachi-db-dumps?
@@ -27,11 +25,11 @@ const logger = CreateLogCtx(__filename);
  * @param to The database to anonymise. DO NOT PASS THE PRODUCTION DATABASE TO THIS!
  */
 async function AnonymiseDB(to: string) {
-	logger.info(`Connecting to ${to}.`);
+	log.info(`Connecting to ${to}.`);
 
 	const clonedDB = monk(to);
 
-	logger.info(`Connected to ${to}.`);
+	log.info(`Connected to ${to}.`);
 
 	const r1 = await clonedDB.get("user-private-information").update(
 		{},
@@ -54,7 +52,7 @@ async function AnonymiseDB(to: string) {
 		},
 	);
 
-	logger.info(`Stripped private info.`, { r1 });
+	log.info({ r1 }, `Stripped private info.`);
 
 	const r2 = await clonedDB.get("users").update(
 		{},
@@ -77,7 +75,7 @@ async function AnonymiseDB(to: string) {
 		},
 	);
 
-	logger.info(`Stripped username info.`, { r2 });
+	log.info({ r2 }, `Stripped username info.`);
 
 	const r3 = await clonedDB.get("sessions").update(
 		{},
@@ -94,7 +92,7 @@ async function AnonymiseDB(to: string) {
 		},
 	);
 
-	logger.info(`Stripped session info.`, { r3 });
+	log.info({ r3 }, `Stripped session info.`);
 
 	const whitelist = [
 		"bms-course-lookup",
@@ -136,11 +134,11 @@ async function AnonymiseDB(to: string) {
 
 		if (!whitelist.includes(coll.name)) {
 			await coll.drop();
-			logger.info(`Removed collection ${coll.name}`);
+			log.info(`Removed collection ${coll.name}`);
 		}
 	}
 
-	logger.info(`Done! Closing.`);
+	log.info(`Done! Closing.`);
 
 	process.exit(0);
 }
@@ -149,22 +147,17 @@ if (require.main === module) {
 	// Don't run any risks -- there's no way we're ever accidentally anonymising the production database.
 	// any nsTo argument MUST start with anon-
 	if (!path.includes("/anon-")) {
-		logger.error(
+		log.error(
 			`Tried to clone to and anonymise ${path}, which is illegal. Anonymised DBs must start with anon-.`,
-			() => {
-				process.exit(1);
-			},
 		);
 	} else {
 		AnonymiseDB(path)
 			.then(() => {
-				logger.info(`Anonymised database successfully. Saved to ${path}.`);
+				log.info(`Anonymised database successfully. Saved to ${path}.`);
 				process.exit(0);
 			})
 			.catch((err: unknown) => {
-				logger.error(`Failed to anonymise database.`, { err }, () => {
-					process.exit(1);
-				});
+				log.error({ err }, `Failed to anonymise database.`);
 			});
 	}
 }

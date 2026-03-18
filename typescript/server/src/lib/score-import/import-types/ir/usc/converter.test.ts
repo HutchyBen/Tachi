@@ -1,15 +1,13 @@
 import type { USCClientScore } from "#server/router/ir/usc/_playtype/types";
 
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import { TestingUSCChart, uscScore } from "#test-utils/test-data";
 import d from "deepmerge";
 import t from "tap";
 
 import { ConverterIRUSC, DeriveLamp, DeriveNoteMod } from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#DeriveLamp", (t) => {
 	t.equal(DeriveLamp(uscScore), "EXCESSIVE CLEAR");
@@ -88,7 +86,7 @@ const dm = (p: Partial<USCClientScore>) =>
 			timeReceived: 10,
 		},
 		"ir/usc",
-		logger,
+		log,
 	);
 
 t.test("#ConverterIRUSC", (t) => {

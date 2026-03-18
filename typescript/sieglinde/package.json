@@ -19,7 +19,6 @@
 		"bms-table-loader": "catalog:",
 		"commander": "catalog:",
 		"fast-xml-parser": "catalog:",
-		"mei-logger": "catalog:",
 		"node-fetch": "catalog:",
 		"tachi-common": "workspace:*",
 		"winston": "catalog:"

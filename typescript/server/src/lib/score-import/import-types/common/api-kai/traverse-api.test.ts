@@ -1,6 +1,6 @@
 import type { NodeFetch } from "#utils/fetch";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { agta } from "#test-utils/misc";
 import { MockBasicFetch, MockJSONFetch } from "#test-utils/mock-fetch";
 import ResetDBState from "#test-utils/resets";
@@ -8,8 +8,6 @@ import t from "tap";
 
 import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 import { TraverseKaiAPI } from "./traverse-api";
-
-const logger = CreateLogCtx(__filename);
 
 const fakeAuth = "bar";
 
@@ -32,7 +30,7 @@ t.test("#TraverseKaiAPI", (t) => {
 			},
 		});
 
-		const res = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, logger, null, mockKaiAPI);
+		const res = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, log, null, mockKaiAPI);
 
 		const elements = await agta(res);
 
@@ -56,7 +54,7 @@ t.test("#TraverseKaiAPI", (t) => {
 				_items: [5, 6],
 			},
 		});
-		const res = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, logger, null, mockKaiAPI);
+		const res = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, log, null, mockKaiAPI);
 
 		t.rejects(
 			() => agta(res),
@@ -68,7 +66,7 @@ t.test("#TraverseKaiAPI", (t) => {
 
 	t.test("Should throw on invalid response JSON", (t) => {
 		const mockKaiAPI = (() => ({ json: null })) as unknown as NodeFetch;
-		const res = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, logger, null, mockKaiAPI);
+		const res = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, log, null, mockKaiAPI);
 
 		t.rejects(() => agta(res));
 
@@ -80,7 +78,7 @@ t.test("#TraverseKaiAPI", (t) => {
 			throw new Error("Fake Request timeout...");
 		};
 
-		const res = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, logger, null, mockKaiAPI);
+		const res = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, log, null, mockKaiAPI);
 
 		t.rejects(() => agta(res));
 
@@ -94,7 +92,7 @@ t.test("#TraverseKaiAPI", (t) => {
 			},
 		});
 
-		const res = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, logger, null, mockKaiAPI);
+		const res = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, log, null, mockKaiAPI);
 
 		t.rejects(() => agta(res));
 
@@ -104,7 +102,7 @@ t.test("#TraverseKaiAPI", (t) => {
 			},
 		});
 
-		const res2 = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, logger, null, mockKaiAPI2);
+		const res2 = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, log, null, mockKaiAPI2);
 
 		t.rejects(() => agta(res2));
 
@@ -118,7 +116,7 @@ t.test("#TraverseKaiAPI", (t) => {
 			},
 		});
 
-		const res = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, logger, null, mockKaiAPI);
+		const res = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, log, null, mockKaiAPI);
 
 		t.rejects(() => agta(res));
 
@@ -130,7 +128,7 @@ t.test("#TraverseKaiAPI", (t) => {
 			},
 		});
 
-		const res2 = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, logger, null, mockKaiAPI2);
+		const res2 = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, log, null, mockKaiAPI2);
 
 		t.rejects(() => agta(res2));
 
@@ -147,7 +145,7 @@ t.test("#TraverseKaiAPI", (t) => {
 			},
 		});
 
-		const res = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, logger, null, mockKaiAPI);
+		const res = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, log, null, mockKaiAPI);
 
 		t.rejects(() => agta(res));
 
@@ -164,7 +162,7 @@ t.test("#TraverseKaiAPI", (t) => {
 			},
 		});
 
-		const res = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, logger, null, mockKaiAPI);
+		const res = TraverseKaiAPI("http://url.com", "/sub", fakeAuth, log, null, mockKaiAPI);
 
 		t.rejects(() => agta(res));
 
@@ -180,7 +178,7 @@ t.test("#TraverseKaiAPI", (t) => {
 			"http://url.com",
 			"/sub",
 			fakeAuth,
-			logger,
+			log,
 
 			async () => {
 				hasAttemptedReauth = true;

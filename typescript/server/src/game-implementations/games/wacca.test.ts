@@ -1,14 +1,14 @@
 import type { DeepPartial } from "#utils/types";
-import type { ProvidedMetrics, ScoreData, ScoreDocument } from "../../../../common/src";
+import type { ProvidedMetrics, ScoreData, ScoreDocument } from "tachi-common";
 
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
+import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestSnapshot } from "#test-utils/single-process-snapshot";
 import { TestingWaccaPupaExp } from "#test-utils/test-data";
-import { WACCA_SINGLE_CONF } from "../../../../common/src/config/game-support/wacca";
+import { WACCA_SINGLE_CONF } from "tachi-common/config/game-support/wacca";
 import t from "tap";
 
 import { RunValidators } from "./_common";
@@ -36,8 +36,6 @@ const scoreData: ScoreData<"wacca:Single"> = {
 
 const mockScore = mkMockScore("wacca", "Single", TestingWaccaPupaExp, scoreData);
 const mockPB = mkMockPB("wacca", "Single", TestingWaccaPupaExp, scoreData);
-
-const logger = CreateLogCtx(__filename);
 
 t.test("WACCA Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {
@@ -158,7 +156,7 @@ t.test("WACCA Implementation", (t) => {
 				}),
 			);
 
-			t.hasStrict(await CreatePBDoc("wacca:Single", 1, TestingWaccaPupaExp, logger), {
+			t.hasStrict(await CreatePBDoc("wacca:Single", 1, TestingWaccaPupaExp, log), {
 				composedFrom: [{ name: "Best Score" }, { name: "Best Lamp", scoreID: "bestLamp" }],
 				scoreData: {
 					score: mockScore.scoreData.score,

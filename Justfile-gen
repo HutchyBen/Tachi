@@ -1,9 +1,15 @@
+# Scripts that generate code/types/etc.
+#
+# `just gen` is the god command here; runs all generation scripts.
+
 gen: gen-kanel gen-proto
 
 # Generate kanel types from the postgres definitions in Tachi.
 gen-kanel: (db-reset "templatedb")
 	bun run kanel -d "{{ POSTGRES_URL }}/templatedb" -c db/kanel_config.js
+	just fmt
 
 # Generate protobuf types from the proto definitions in the server
 gen-proto:
-	bun run --filter tachi-server gen-proto
+	cd typescript/server && grpc_tools_node_protoc --plugin=protoc-gen-ts=$(which protoc-gen-ts) --js_out=import_style=commonjs,binary:src/proto/generated --ts_out=service=grpc-node,mode=grpc-js:src/proto/generated --grpc_out=grpc_js:src/proto/generated --proto_path=src/proto/myt src/proto/myt/*/*.proto
+	just fmt

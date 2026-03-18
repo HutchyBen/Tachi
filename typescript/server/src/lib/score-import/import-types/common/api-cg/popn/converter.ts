@@ -1,6 +1,6 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
-import type { Difficulties, integer, Versions } from "../../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../../common/src/types/metrics";
+import type { Difficulties, integer, Versions } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import {
 	InternalFailure,
@@ -21,7 +21,7 @@ export const ConverterAPICGPopn: ConverterFunction<CGPopnScore, CGContext> = asy
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	const difficulty = ConvertDifficulty(data.difficulty);
 	const version = ConvertVersion(data.version);
@@ -50,7 +50,7 @@ export const ConverterAPICGPopn: ConverterFunction<CGPopnScore, CGContext> = asy
 	const song = await FindSongOnID("popn", chart.songID);
 
 	if (!song) {
-		logger.severe(`Song-Chart desync with song ID ${chart.songID} (popn).`);
+		log.error(`Song-Chart desync with song ID ${chart.songID} (popn).`);
 		throw new InternalFailure(`Song-Chart desync with song ID ${chart.songID} (popn).`);
 	}
 

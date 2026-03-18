@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/log/log.js";
 
 import {
 	type ChartDocument,
@@ -6,7 +6,7 @@ import {
 	type integer,
 	type ScoreDocument,
 	type SongDocument,
-} from "../../../../../../common/src";
+} from "tachi-common";
 
 import type { DryScore } from "../common/types";
 
@@ -24,11 +24,11 @@ export function HydrateScore(
 	chart: ChartDocument,
 	song: SongDocument,
 	scoreID: string,
-	logger: KtLogger,
+	log: KtLogger,
 ): ScoreDocument {
 	const gpt = GetGPTString(dryScore.game, chart.playtype);
 
-	const scoreData = CreateFullScoreData(gpt, dryScore.scoreData, chart, logger);
+	const scoreData = CreateFullScoreData(gpt, dryScore.scoreData, chart, log);
 
 	const calculatedData = CreateScoreCalcData(dryScore.game, dryScore.scoreData, chart);
 

@@ -1,4 +1,4 @@
-const logger = require("../logger");
+const logger = require("../log");
 const { CreateFolderID, MutateCollection, ReadCollection, WriteCollection } = require("../util");
 
 const translateMap = new Map();

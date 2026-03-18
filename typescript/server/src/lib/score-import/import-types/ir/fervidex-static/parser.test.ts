@@ -1,11 +1,9 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import ResetDBState from "#test-utils/resets";
 import { FervidexStaticBase, GetKTDataJSON } from "#test-utils/test-data";
 import t from "tap";
 
 import { ParseFervidexStatic } from "./parser";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#ParseFervidexStatic", (t) => {
 	t.beforeEach(ResetDBState);
@@ -14,7 +12,7 @@ t.test("#ParseFervidexStatic", (t) => {
 		const res = ParseFervidexStatic(
 			FervidexStaticBase,
 			{ model: "LDJ:J:B:A:2020092900", shouldImportScores: true },
-			logger,
+			log,
 		);
 
 		t.strictSame(res.iterable, [
@@ -55,7 +53,7 @@ t.test("#ParseFervidexStatic", (t) => {
 		const res = ParseFervidexStatic(
 			FervidexStaticBase,
 			{ model: "LDJ:J:B:A:2020092900", shouldImportScores: false },
-			logger,
+			log,
 		);
 
 		t.strictSame(res.iterable, []);
@@ -80,7 +78,7 @@ t.test("#ParseFervidexStatic", (t) => {
 				ParseFervidexStatic(
 					{},
 					{ model: "LDJ:J:B:A:2020092900", shouldImportScores: true },
-					logger,
+					log,
 				),
 			"Invalid body.scores",
 		);
@@ -94,7 +92,7 @@ t.test("#ParseFervidexStatic", (t) => {
 				ParseFervidexStatic(
 					{ scores: { nonsenseKey: {} } },
 					{ model: "LDJ:J:B:A:2020092900", shouldImportScores: true },
-					logger,
+					log,
 				),
 			"Invalid songID nonsenseKey",
 		);
@@ -104,7 +102,7 @@ t.test("#ParseFervidexStatic", (t) => {
 				ParseFervidexStatic(
 					{ scores: { 1000: null } },
 					{ model: "LDJ:J:B:A:2020092900", shouldImportScores: true },
-					logger,
+					log,
 				),
 			"Invalid score with songID 1000",
 		);
@@ -118,7 +116,7 @@ t.test("#ParseFervidexStatic", (t) => {
 				ParseFervidexStatic(
 					{ scores: { 1000: { spn: null } } },
 					{ model: "LDJ:J:B:A:2020092900", shouldImportScores: true },
-					logger,
+					log,
 				),
 			"Invalid score with songID 1000",
 		);
@@ -128,7 +126,7 @@ t.test("#ParseFervidexStatic", (t) => {
 				ParseFervidexStatic(
 					{ scores: { 1000: { spn: undefined } } },
 					{ model: "LDJ:J:B:A:2020092900", shouldImportScores: true },
-					logger,
+					log,
 				),
 			"Invalid score with songID 1000",
 		);
@@ -138,7 +136,7 @@ t.test("#ParseFervidexStatic", (t) => {
 				ParseFervidexStatic(
 					{ scores: { 1000: { spn: "foo" } } },
 					{ model: "LDJ:J:B:A:2020092900", shouldImportScores: true },
-					logger,
+					log,
 				),
 			"Invalid score with songID 1000",
 		);
@@ -156,7 +154,7 @@ t.test("#ParseFervidexStatic", (t) => {
 						},
 					},
 					{ model: "LDJ:J:B:A:2020092900", shouldImportScores: true },
-					logger,
+					log,
 				),
 			"Invalid score with songID 1000 at chart spn",
 		);
@@ -170,7 +168,7 @@ t.test("#ParseFervidexStatic", (t) => {
 						},
 					},
 					{ model: "LDJ:J:B:A:2020092900", shouldImportScores: true },
-					logger,
+					log,
 				),
 			"Invalid score with songID 1000 at chart spn",
 		);
@@ -184,7 +182,7 @@ t.test("#ParseFervidexStatic", (t) => {
 						},
 					},
 					{ model: "LDJ:J:B:A:2020092900", shouldImportScores: true },
-					logger,
+					log,
 				),
 			"Invalid score with songID 1000 at chart spn",
 		);
@@ -202,7 +200,7 @@ t.test("#ParseFervidexStatic", (t) => {
 						},
 					},
 					{ model: "LDJ:J:B:A:2020092900", shouldImportScores: true },
-					logger,
+					log,
 				),
 			"Invalid chart spx",
 		);

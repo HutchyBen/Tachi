@@ -1,0 +1,40 @@
+# Build context must be the repo root.
+# docker build -f docker/Dockerfile.bot .
+
+FROM oven/bun:alpine AS base
+WORKDIR /app
+
+# --- deps: install ALL deps (dev included, needed for the build) ---
+FROM base AS deps
+
+COPY package.json bun.lock bunfig.toml ./
+COPY patches ./patches
+
+COPY typescript/bot/package.json    ./typescript/bot/
+COPY typescript/common/package.json ./typescript/common/
+
+RUN bun install --frozen-lockfile
+
+# --- build: compile everything into a single native binary ---
+FROM deps AS build
+
+COPY typescript/bot    ./typescript/bot
+COPY typescript/common ./typescript/common
+
+RUN bun build \
+  --compile \
+  --target=bun \
+  ./typescript/bot/src/main.ts \
+  --outfile /bot
+
+# --- prod: nothing but the binary ---
+FROM alpine:3.21 AS prod
+
+RUN apk add --no-cache curl
+
+COPY --from=build /bot /bot
+
+HEALTHCHECK --interval=15s --timeout=5s \
+  CMD curl -sf http://localhost:${PORT:-8080}/.deploy/up || exit 1
+
+CMD ["/bot"]

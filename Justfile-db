@@ -1,4 +1,4 @@
-POSTGRES_URL := "postgresql://tachi:tachi@postgres"
+POSTGRES_URL := "postgresql://tachi:tachi@tachi-postgres"
 DEFAULT_DB := "tachi_dev"
 
 # Open a psql shell against the local dev Postgres instance.
@@ -21,3 +21,16 @@ db-migrate-status POSTGRES_DB=DEFAULT_DB:
 		 FROM \"_migration\" \
 		 ORDER BY version"
 
+# Create (or recreate) the bot test template database with all migrations applied.
+# Workers clone from this template rather than re-running migrations each time.
+bot-db-test-template-reset:
+	#!/bin/bash
+	export DATABASE_URL="{{POSTGRES_URL}}/tachi_bot_test_template"
+	tachidb database drop || true
+	tachidb database create
+	tachidb migrate run
+
+# Load the seeds into the database.
+db-load-seeds POSTGRES_DB=DEFAULT_DB:
+	cd typescript/server && POSTGRES_URL="{{POSTGRES_URL}}/{{POSTGRES_DB}}" \
+		bun run src/scripts/load-seeds-pg.ts

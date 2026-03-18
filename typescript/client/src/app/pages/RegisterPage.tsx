@@ -16,7 +16,7 @@ import { Link, useHistory } from "react-router-dom";
 import { type UserDocument } from "tachi-common";
 
 // seconds it takes for a user to actually read the rules.
-const RULES_READ_TIME = Number(process.env.VITE_RULES_READ_TIME) || 30;
+const RULES_READ_TIME = Number(import.meta.env.VITE_RULES_READ_TIME) || 30;
 
 export default function RegisterPage() {
 	useSetSubheader("Register");
@@ -275,13 +275,13 @@ function RegisterForm({
 				</Form.Group>
 			)}
 
-			{process.env.VITE_RECAPTCHA_KEY && (
+			{import.meta.env.VITE_RECAPTCHA_KEY && (
 				<ReCAPTCHA
 					onChange={(v) => {
 						formik.setFieldValue("captcha", v);
 					}}
 					ref={recaptchaRef}
-					sitekey={process.env.VITE_RECAPTCHA_KEY}
+					sitekey={import.meta.env.VITE_RECAPTCHA_KEY}
 				/>
 			)}
 

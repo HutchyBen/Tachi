@@ -1,11 +1,11 @@
 import type { GPTServerImplementation } from "#game-implementations/types";
 
-import { NumToDP } from "#utils/misc";
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileSumBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBestNFor } from "#game-implementations/utils/session-calc";
+import { NumToDP } from "#utils/misc";
 import { ITGHighestUnbroken } from "rg-stats";
-import { GetGrade, ITG_GBOUNDARIES } from "../../../../common/src";
+import { GetGrade, ITG_GBOUNDARIES } from "tachi-common";
 
 import { GoalFmtPercent, GradeGoalFormatter } from "./_common";
 

@@ -1,13 +1,11 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { MockBasicFetch, MockJSONFetch } from "#test-utils/mock-fetch";
 import ResetDBState from "#test-utils/resets";
-import { IIDX_DANS } from "../../../../../../../../common/src";
+import { IIDX_DANS } from "tachi-common";
 import t from "tap";
 
 import { KaiTypeToBaseURL } from "../utils";
 import { CreateKaiIIDXClassProvider } from "./class-handler";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#CreateKaiIIDXClassProvider", async (t) => {
 	t.beforeEach(ResetDBState);
@@ -33,7 +31,7 @@ t.test("#CreateKaiIIDXClassProvider", async (t) => {
 	);
 
 	t.test("Should call the provided URL with the authentication token", (t) => {
-		const res = fn("iidx:SP", 1, {}, logger);
+		const res = fn("iidx:SP", 1, {}, log);
 
 		t.strictSame(res, { dan: "KAIDEN" });
 
@@ -61,7 +59,7 @@ t.test("#CreateKaiIIDXClassProvider", async (t) => {
 			}),
 		);
 
-		const res = fn("iidx:SP", 1, {}, logger);
+		const res = fn("iidx:SP", 1, {}, log);
 
 		t.strictSame(res, {});
 
@@ -89,7 +87,7 @@ t.test("#CreateKaiIIDXClassProvider", async (t) => {
 			}),
 		);
 
-		const res = fn("iidx:SP", 1, {}, logger);
+		const res = fn("iidx:SP", 1, {}, log);
 
 		t.strictSame(res, {});
 
@@ -117,7 +115,7 @@ t.test("#CreateKaiIIDXClassProvider", async (t) => {
 			}),
 		);
 
-		const res = fn("iidx:SP", 1, {}, logger);
+		const res = fn("iidx:SP", 1, {}, log);
 
 		t.strictSame(res, {});
 
@@ -135,7 +133,7 @@ t.test("#CreateKaiIIDXClassProvider", async (t) => {
 			MockBasicFetch({ status: 500 }),
 		);
 
-		const res = fn("iidx:SP", 1, {}, logger);
+		const res = fn("iidx:SP", 1, {}, log);
 
 		t.strictSame(res, {});
 
@@ -155,7 +153,7 @@ t.test("#CreateKaiIIDXClassProvider", async (t) => {
 			MockBasicFetch({ status: 401 }),
 		);
 
-		fn("iidx:SP", 1, {}, logger);
+		fn("iidx:SP", 1, {}, log);
 
 		t.equal(pass, true, "Should've called the reauth fn.");
 
@@ -183,7 +181,7 @@ t.test("#CreateKaiIIDXClassProvider", async (t) => {
 			}),
 		);
 
-		const res = fn("iidx:DP", 1, {}, logger);
+		const res = fn("iidx:DP", 1, {}, log);
 
 		t.strictSame(res, {});
 
@@ -211,7 +209,7 @@ t.test("#CreateKaiIIDXClassProvider", async (t) => {
 			}),
 		);
 
-		const res = fn("bms:14K", 1, {}, logger);
+		const res = fn("bms:14K", 1, {}, log);
 
 		t.strictSame(res, {});
 

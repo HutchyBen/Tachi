@@ -1,19 +1,17 @@
 import type { RequestHandler } from "express";
 import type { Session, SessionData } from "express-session";
 
-import db from "#external/mongo/db";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { TachiConfig } from "#lib/setup/config";
+import db from "#services/mongo/db";
 import { IsNullishOrEmptyStr, SplitAuthorizationHeader } from "#utils/misc";
 import {
 	ALL_PERMISSIONS,
 	type APIPermissions,
 	type APITokenDocument,
 	UserAuthLevels,
-} from "../../../../common/src";
-
-const logger = CreateLogCtx(__filename);
+} from "tachi-common";
 
 const GuestToken: APITokenDocument = {
 	token: null,
@@ -159,9 +157,7 @@ export const RequirePermissions =
 		// This isn't possible on paper, but maybe some insane stuff has happened to lead this to happen.
 
 		if (req[SYMBOL_TACHI_API_AUTH] === undefined) {
-			logger.error(
-				`RequirePermissions middleware was hit without any TachiAPIAuthentication?`,
-			);
+			log.error(`RequirePermissions middleware was hit without any TachiAPIAuthentication?`);
 
 			return res.status(500).json({
 				success: false,
@@ -185,7 +181,7 @@ export const RequirePermissions =
 		}
 
 		if (missingPerms.length > 0) {
-			logger.info(
+			log.info(
 				`IP ${req.ip} - userID ${
 					req[SYMBOL_TACHI_API_AUTH].userID
 				} had insufficient permissions for request ${req.method} ${
@@ -209,7 +205,7 @@ const CreateRequireNotGuest =
 		// See above -- this isn't possible on paper, but I want to check it anyway.
 
 		if (req[SYMBOL_TACHI_API_AUTH] === undefined) {
-			logger.error(`RequirePermissions middleware was hit without any TachiAPIData?`);
+			log.error(`RequirePermissions middleware was hit without any TachiAPIData?`);
 			return res.status(500).json({
 				success: false,
 				description: "An internal error has occured.",
@@ -217,7 +213,7 @@ const CreateRequireNotGuest =
 		}
 
 		if (req[SYMBOL_TACHI_API_AUTH].userID === null) {
-			logger.info(`Request to ${req.method} ${req.url} was attempted by guest.`);
+			log.info(`Request to ${req.method} ${req.url} was attempted by guest.`);
 			return res.status(401).json({
 				success: false,
 				[errorKeyName]: "This endpoint requires authentication.",

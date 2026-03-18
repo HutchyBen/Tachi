@@ -1,4 +1,4 @@
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import { LoadTachiIIDXData } from "#test-utils/test-data";
 import t from "tap";

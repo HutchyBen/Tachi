@@ -1,8 +1,8 @@
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { CreatePBDoc, UpdateChartRanking } from "#lib/score-import/framework/pb/create-pb-doc";
+import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestingOngekiChart, TestingOngekiScorePB } from "#test-utils/test-data";
@@ -13,7 +13,7 @@ import {
 	type PBScoreDocument,
 	type ProvidedMetrics,
 	type ScoreData,
-} from "../../../../common/src";
+} from "tachi-common";
 import t from "tap";
 
 import { ONGEKI_IMPL } from "./ongeki";
@@ -43,8 +43,6 @@ const scoreData: ScoreData<"ongeki:Single"> = {
 
 const mockScore = mkMockScore("ongeki", "Single", TestingOngekiChart, scoreData);
 const mockPB = mkMockPB("ongeki", "Single", TestingOngekiChart, scoreData);
-
-const logger = CreateLogCtx(__filename);
 
 t.test("ONGEKI Implementation", (t: any) => {
 	t.test("Grade Deriver", (t: any) => {
@@ -296,7 +294,7 @@ t.test("ONGEKI Implementation", (t: any) => {
 				}),
 			);
 
-			t.hasStrict(await CreatePBDoc("ongeki:Single", 1, TestingOngekiChart, logger), {
+			t.hasStrict(await CreatePBDoc("ongeki:Single", 1, TestingOngekiChart, log), {
 				composedFrom: [
 					{ name: "Best Score" },
 					{ name: "Best Note Lamp", scoreID: "bestLamp" },
@@ -328,7 +326,7 @@ t.test("ONGEKI Implementation", (t: any) => {
 				}),
 			);
 
-			t.hasStrict(await CreatePBDoc("ongeki:Single", 1, TestingOngekiChart, logger), {
+			t.hasStrict(await CreatePBDoc("ongeki:Single", 1, TestingOngekiChart, log), {
 				composedFrom: [
 					{ name: "Best Score" },
 					{ name: "Best Platinum Score", scoreID: "bestPlatinum" },

@@ -1,4 +1,4 @@
-import type { Versions } from "../../../../../../../common/src";
+import type { Versions } from "tachi-common";
 
 export interface EamusementScoreData {
 	difficulty: "ANOTHER" | "BEGINNER" | "HYPER" | "LEGGENDARIA" | "NORMAL";

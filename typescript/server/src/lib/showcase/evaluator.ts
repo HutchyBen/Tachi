@@ -1,4 +1,4 @@
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import { GetFolderChartIDs } from "#utils/folder";
 import {
 	GetGPTConfig,
@@ -7,7 +7,7 @@ import {
 	type ShowcaseStatChart,
 	type ShowcaseStatDetails,
 	type ShowcaseStatFolder,
-} from "../../../../common/src";
+} from "tachi-common";
 
 export function EvaluateShowcaseStat(
 	gpt: GPTString,

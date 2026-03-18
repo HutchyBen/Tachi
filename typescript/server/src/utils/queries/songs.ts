@@ -1,12 +1,12 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/log/log.js";
 import type { FindOneResult } from "monk";
-import type { GameGroup, integer, SongDocument } from "../../../../common/src";
+import type { GameGroup, integer, SongDocument } from "tachi-common";
 
-import db from "#external/mongo/db";
 import {
 	AmbiguousTitleFailure,
 	InternalFailure,
 } from "#lib/score-import/framework/common/converter-failures";
+import db from "#services/mongo/db";
 
 import { EscapeStringRegexp } from "../misc";
 
@@ -116,11 +116,11 @@ export function FindSongOnID(
 	});
 }
 
-export async function FindSongOnIDGuaranteed(game: GameGroup, songID: integer, logger: KtLogger) {
+export async function FindSongOnIDGuaranteed(game: GameGroup, songID: integer, log: KtLogger) {
 	const song = await FindSongOnID(game, songID);
 
 	if (!song) {
-		logger.severe(`Song-Chart desync for ${songID}. Has charts, but no song.`);
+		log.error(`Song-Chart desync for ${songID}. Has charts, but no song.`);
 		throw new InternalFailure(`Song-Chart desync for ${songID}. Has charts, but no song.`);
 	}
 

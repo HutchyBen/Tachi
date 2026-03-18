@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { type FolderDocument, GetGamePTConfig } from "../../../common/src";
+import { type FolderDocument, GetGamePTConfig } from "tachi-common";
 
 import { CreateFolderID, MutateCollection } from "../../util";
 

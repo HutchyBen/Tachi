@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/log/log.js";
 
 import { ONE_MEGABYTE } from "#lib/constants/filesize";
 import { ONE_HOUR, ONE_SECOND } from "#lib/constants/time";
@@ -14,7 +14,7 @@ import {
 	type integer,
 	type Playtype,
 	type Versions,
-} from "../../../common/src";
+} from "tachi-common";
 import { URL } from "url";
 
 // https://github.com/sindresorhus/escape-string-regexp/blob/main/index.js
@@ -320,27 +320,19 @@ export function IsRecord(maybeRecord: unknown): maybeRecord is Record<string, un
  * Wrap a promise in an error handler that exits the process safely, and logs
  * when it completes.
  */
-export function WrapScriptPromise(promise: Promise<unknown>, logger: KtLogger) {
-	let code = 0;
-
+export function WrapScriptPromise(promise: Promise<unknown>, log: KtLogger) {
 	void promise
 		.then(() => {
-			logger.info(`Finished executing.`);
+			log.info(`Finished executing.`);
 		})
 		.catch((err: Error) => {
-			logger.error(`Failed executing.`, { err });
-
-			code = 1;
+			log.error({ err }, `Failed executing.`);
 		})
 		.finally(() => {
-			// die in 10 seconds or when the logger ends, whatever ends earlier.
+			// die in 10 seconds or when the log ends, whatever ends earlier.
 			setTimeout(() => {
 				process.exit(1);
 			}, ONE_SECOND * 10);
-
-			logger.end(() => {
-				process.exit(code);
-			});
 		});
 }
 

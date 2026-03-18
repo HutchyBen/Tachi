@@ -1,6 +1,6 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/log/log.js";
 import type { USCClientScore } from "#server/router/ir/usc/_playtype/types";
-import type { Playtypes } from "../../../../../../../common/src";
+import type { Playtypes } from "tachi-common";
 
 import { FormatPrError } from "#utils/prudence";
 import { p, type PrudenceSchema } from "prudence";
@@ -39,7 +39,7 @@ export function ParseIRUSC(
 	body: Record<string, unknown>,
 	chartHash: string,
 	playtype: Playtypes["usc"],
-	_logger: KtLogger,
+	_log: KtLogger,
 ): ParserFunctionReturns<USCClientScore, IRUSCContext> {
 	const err = p(
 		body.score,

@@ -1,23 +1,19 @@
 import type { APITokenDocument, UserDocument, WebhookEvents } from "tachi-common";
 
+import { log } from "#utils/log.js";
+import { HandleQuestAchievedV1 } from "#webhook-handlers/quest-achieved.js";
 import express, { type Express } from "express";
-import { client } from "#main";
 import path from "path";
-import { HandleQuestAchievedV1 } from "#webhookHandlers/questAchieved";
 
-import { BotConfig, ProcessEnv } from "../config";
-import { LoggerLayers } from "../data/data";
-import db from "../database/mongo";
-import { RequestTypes, TachiServerV1Get, TachiServerV1Request } from "../utils/fetchTachi";
-import { CreateLayeredLogger } from "../utils/logger";
+import { ACTION_Register } from "../actions/register";
+import { BotConfig, Env } from "../config";
+import { RequestTypes, TachiServerV1Get, TachiServerV1Request } from "../utils/fetch-tachi";
 import { VERSION_PRETTY } from "../version";
-import { HandleClassUpdateV1 } from "../webhookHandlers/classUpdate";
-import { HandleGoalAchievedV1 } from "../webhookHandlers/goalsAchieved";
+import { HandleClassUpdateV1 } from "../webhook-handlers/class-update";
+import { HandleGoalAchievedV1 } from "../webhook-handlers/goal-achieved";
 import { ValidateWebhookRequest } from "./middleware";
 
 export const app: Express = express();
-
-const logger = CreateLayeredLogger(LoggerLayers.server);
 
 app.use(express.json());
 
@@ -33,7 +29,7 @@ app.set("query parser", "simple");
  *
  * @name GET /
  */
-app.get("/", (req, res) =>
+app.get("/", (_req, res) =>
 	res.status(200).json({
 		success: true,
 		description: "Bot is online!",
@@ -76,7 +72,7 @@ app.get("/oauth/callback", async (req, res) => {
 	);
 
 	if (!tokenRes.success) {
-		logger.error(
+		log.error(
 			`Failed to convert code ${req.query.code} to a token. ${tokenRes.description} Cannot auth.`,
 		);
 		return res.status(401).json({
@@ -91,7 +87,7 @@ app.get("/oauth/callback", async (req, res) => {
 	const whoamiRes = await TachiServerV1Get<UserDocument>("/users/me", apiToken);
 
 	if (!whoamiRes.success) {
-		logger.severe("Failed to request user with token we just got?", { discordID });
+		log.error({ discordID }, "Failed to request user with token we just got?");
 		return res
 			.status(500)
 			.send(
@@ -101,31 +97,16 @@ app.get("/oauth/callback", async (req, res) => {
 
 	const user = whoamiRes.body;
 
-	logger.info(`Saving user-discord-link for ${user.username} (id: ${user.id}).`);
+	log.info(`Saving user-discord-link for ${user.username} (id: ${user.id}).`);
 
-	const existingLink = await db.discordUserMap.findOne({ userID: user.id });
+	const { was_update } = await ACTION_Register(
+		{ ip: req.ip },
+		{ user_id: user.id, discord_id: discordID, "!api_token": apiToken },
+	);
 
-	if (existingLink) {
-		logger.info(`Updating user-discord-link for ${user.username} (id: ${user.id})`);
-
-		await db.discordUserMap.update(
-			{
-				userID: user.id,
-			},
-			{
-				$set: {
-					discordID,
-					tachiApiToken: apiToken,
-				},
-			},
-		);
-	} else {
-		await db.discordUserMap.insert({
-			discordID,
-			tachiApiToken: apiToken,
-			userID: user.id,
-		});
-	}
+	log.info(
+		`${was_update ? "Updated" : "Created"} discord link for ${user.username} (id: ${user.id}).`,
+	);
 
 	res.sendFile(path.join(__dirname, "../../pages/account-linked.html"));
 });
@@ -163,7 +144,7 @@ app.post("/webhook", ValidateWebhookRequest, async (req, res) => {
 			// to define new webhooks, and the bot might not
 			// However, tachi-(server/common) may recieve an update
 			// According to the types, this should never happen.
-			logger.warn(
+			log.warn(
 				`Received unknown webhook event ${
 					(webhookEvent as WebhookEvents).type
 				}. Have we got support for this?`,
@@ -178,12 +159,14 @@ app.post("/webhook", ValidateWebhookRequest, async (req, res) => {
 	return res.sendStatus(statusCode);
 });
 
+app.get("/.deploy/up", (_req, res) => res.sendStatus(200));
+
 /**
  * 404 Handler. If something gets to this point, they haven't matched with anything.
  *
  * @name ALL *
  */
-app.all("*", (req, res) =>
+app.all("*", (_req, res) =>
 	res.status(404).json({
 		success: false,
 		description: "Nothing found here.",
@@ -210,16 +193,17 @@ const MainExpressErrorHandler: express.ErrorRequestHandler = (err, req, res, _ne
 		const expErr: ExpressJSONErr = err as ExpressJSONErr;
 
 		if (expErr.status === 400 && "body" in expErr) {
-			logger.info(`Error in parsing JSON in request body from ${req.url}`, {
-				url: req.originalUrl,
-			});
+			log.info(
+				{ url: req.originalUrl, err: err },
+				`Error in parsing JSON in request body from ${req.url}`,
+			);
 			return res.status(400).send({ success: false, description: err.message });
 		}
 
 		// else, this isn't a JSON parsing error
 	}
 
-	logger.error(err, req.route);
+	log.error({ err, route: req.route }, "Fatal error propagated to server root?");
 
 	return res.status(500).json({
 		success: false,
@@ -229,4 +213,4 @@ const MainExpressErrorHandler: express.ErrorRequestHandler = (err, req, res, _ne
 
 app.use(MainExpressErrorHandler);
 
-logger.info(`Starting express server on port ${ProcessEnv.port}.`);
+log.info(`Starting express server on port ${Env.PORT}.`);

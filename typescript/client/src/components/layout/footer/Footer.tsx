@@ -63,11 +63,11 @@ export function Footer() {
 						>
 							GDPR
 						</Nav.Link>
-						{process.env.VITE_DISCORD && (
+						{import.meta.env.VITE_DISCORD && (
 							<Nav.Link
 								as={ExternalLink}
 								className={linkClassNames}
-								href={process.env.VITE_DISCORD}
+								href={import.meta.env.VITE_DISCORD}
 							>
 								Discord
 							</Nav.Link>

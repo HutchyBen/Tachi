@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import UpdateScore from "#lib/score-mutation/update-score";
+import db from "#services/mongo/db";
 import { UpdateAllPBs } from "#utils/calculations/recalc-scores";
 import { EfficientDBIterate } from "#utils/efficient-db-iterate";
 
@@ -8,8 +8,6 @@ import { EfficientDBIterate } from "#utils/efficient-db-iterate";
  * Effectively, rerun CalculateData and DeriveMetrics on all scores.
  */
 async function main() {
-	const logger = CreateLogCtx(__filename);
-
 	await EfficientDBIterate(
 		db.scores,
 		async (score) => {
@@ -27,8 +25,8 @@ async function main() {
 					// all scores are guaranteeably correct.
 				);
 			} catch (err) {
-				logger.warn(err);
-				logger.warn("Continuing through the error.");
+				log.warn(err);
+				log.warn("Continuing through the error.");
 			}
 		},
 		// no-op

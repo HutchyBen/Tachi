@@ -1,5 +1,5 @@
-import type { KtLogger } from "#lib/logger/logger";
-import type { integer } from "../../../../../../../common/src";
+import type { KtLogger } from "#lib/log/log.js";
+import type { integer } from "tachi-common";
 
 import { FormatPrError } from "#utils/prudence";
 import { p } from "prudence";
@@ -80,7 +80,7 @@ const PR_BEATORAJA_CHART = {
 export function ParseBeatorajaSingle(
 	body: Record<string, unknown>,
 	userID: integer,
-	_logger: KtLogger,
+	_log: KtLogger,
 ): ParserFunctionReturns<BeatorajaScore, BeatorajaContext> {
 	const err = p(
 		body.score,

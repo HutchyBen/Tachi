@@ -1,4 +1,4 @@
-import type { integer } from "../../../common/src";
+import type { integer } from "tachi-common";
 
 import "express-async-errors";
 import connectRedis from "connect-redis";
@@ -6,10 +6,10 @@ import express, { type Express } from "express";
 // THIS IMPORT **MUST** GO HERE. DO NOT MOVE IT. IT MUST OCCUR BEFORE ANYTHING HAPPENS WITH EXPRESS
 // BUT AFTER EXPRESS IS IMPORTED.
 
-import { RedisClient } from "#external/redis/redis";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import CreateLogCtx from "#lib/logger/logger";
-import { Environment, ServerConfig, TachiConfig } from "#lib/setup/config";
+import { log } from "#lib/log/log.js";
+import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
+import { RedisClient } from "#services/redis/redis";
 import { IsNonEmptyString, IsRecord } from "#utils/misc";
 import ExpressPromBundle from "express-prom-bundle";
 import expressSession from "express-session";
@@ -18,12 +18,10 @@ import helmet from "helmet";
 import { RequestLoggerMiddleware } from "./middleware/request-logger";
 import mainRouter from "./router/router";
 
-const logger = CreateLogCtx(__filename);
-
 let store;
 
-if (Environment.nodeEnv !== "test") {
-	logger.info("Connecting ExpressSession to Redis.", { bootInfo: true });
+if (Env.NODE_ENV !== "test") {
+	log.info({ bootInfo: true }, "Connecting ExpressSession to Redis.");
 	const RedisStore = connectRedis(expressSession);
 
 	store = new RedisStore({
@@ -46,24 +44,26 @@ const userSessionMiddleware = expressSession({
 		// the absence of Secure in combination with SameSite=None will cause issues on non-https
 		// instances in newer versions of chromium. there is no workaround for this.
 		secure:
-			Environment.nodeEnv === "production" ||
-			Environment.nodeEnv === "staging" ||
+			Env.NODE_ENV === "production" ||
+			Env.NODE_ENV === "staging" ||
 			ServerConfig.ENABLE_SERVER_HTTPS,
 
 		// Very important. Without this, we're vulnerable to CSRF!
-		sameSite:
-			Environment.nodeEnv === "production" || Environment.nodeEnv === "staging"
-				? "strict"
-				: "none",
+		sameSite: Env.NODE_ENV === "production" || Env.NODE_ENV === "staging" ? "strict" : "none",
 	},
 });
 
 const app: Express = express();
 
-if (Environment.nodeEnv !== "production" && IsNonEmptyString(ServerConfig.CLIENT_DEV_SERVER)) {
-	logger.warn(`Enabling CORS requests from ${ServerConfig.CLIENT_DEV_SERVER}.`, {
-		bootInfo: true,
-	});
+app.get("/.deploy/up", (_req, res) => res.sendStatus(200));
+
+if (Env.NODE_ENV !== "production" && IsNonEmptyString(ServerConfig.CLIENT_DEV_SERVER)) {
+	log.warn(
+		{
+			bootInfo: true,
+		},
+		`Enabling CORS requests from ${ServerConfig.CLIENT_DEV_SERVER}.`,
+	);
 
 	// Note: we have to assign it here to make sure it doesn't get modified!
 	// If we try and use ServerConfig.CLIENT_DEV_SERVER inside the callback, TS rightly
@@ -100,10 +100,13 @@ if (Environment.nodeEnv !== "production" && IsNonEmptyString(ServerConfig.CLIENT
 
 	app.options("*", (req, res) => res.send());
 
-	if (Environment.nodeEnv !== "test") {
-		logger.info("Enabling Helmet, as no CLIENT_DEV_SERVER was set, or we are in production.", {
-			bootInfo: true,
-		});
+	if (Env.NODE_ENV !== "test") {
+		log.info(
+			{
+				bootInfo: true,
+			},
+			"Enabling Helmet, as no CLIENT_DEV_SERVER was set, or we are in production.",
+		);
 	}
 
 	app.use(helmet());
@@ -126,9 +129,9 @@ app.set("query parser", "simple");
 // taken from https://nodejs.org/api/process.html#process_event_unhandledrejection
 // to avoid future deprecation.
 process.on("unhandledRejection", (reason, promise) => {
-	// @ts-expect-error reason is an error, and the logger can handle errors
+	// @ts-expect-error reason is an error, and thelog can handle errors
 	// it just refuses.
-	logger.error(reason, { promise });
+	log.error(reason, { promise });
 });
 
 // enable reading json bodies
@@ -159,16 +162,19 @@ if (
 	ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE === "LOCAL_FILESYSTEM" &&
 	ServerConfig.CDN_CONFIG.SAVE_LOCATION.SERVE_OWN_CDN === true
 ) {
-	if (Environment.nodeEnv === "production") {
-		logger.warn(
-			`Running LOCAL_FILESYSTEM OWN_CDN in production. Consider making a separate process handle your CDN for performance.`,
+	if (Env.NODE_ENV === "production") {
+		log.warn(
 			{ bootInfo: true },
+			`Running LOCAL_FILESYSTEM OWN_CDN in production. Consider making a separate process handle your CDN for performance.`,
 		);
 	}
 
-	logger.info(`Running own CDN at ${ServerConfig.CDN_CONFIG.SAVE_LOCATION.LOCATION}.`, {
-		bootInfo: true,
-	});
+	log.info(
+		{
+			bootInfo: true,
+		},
+		`Running own CDN at ${ServerConfig.CDN_CONFIG.SAVE_LOCATION.LOCATION}.`,
+	);
 
 	app.use("/cdn", express.static(ServerConfig.CDN_CONFIG.SAVE_LOCATION.LOCATION));
 	app.get("/cdn/*", (req, res) => res.status(404).send("No content here."));
@@ -185,18 +191,21 @@ const MAIN_ERR_HANDLER: express.ErrorRequestHandler = (err, req, res, _next) => 
 		const expErr: ExpressJSONErr = err as ExpressJSONErr;
 
 		if (expErr.status === 400 && "body" in expErr) {
-			logger.info(`JSON Parsing Error?`, {
-				url: req.originalUrl,
+			log.info(
+				{
+					url: req.originalUrl,
 
-				userID: req[SYMBOL_TACHI_API_AUTH]?.userID,
-			});
+					userID: req[SYMBOL_TACHI_API_AUTH]?.userID,
+				},
+				`JSON Parsing Error?`,
+			);
 			return res.status(400).send({ success: false, description: err.message });
 		}
 
 		// else, this isn't a JSON parsing error
 	}
 
-	logger.error(`MAIN_ERR_HANDLER hit by request.`, { url: req.originalUrl, body: req.body });
+	log.error({ url: req.originalUrl, body: req.body }, `MAIN_ERR_HANDLER hit by request.`);
 
 	const unknownErr = err as unknown;
 
@@ -207,11 +216,14 @@ const MAIN_ERR_HANDLER: express.ErrorRequestHandler = (err, req, res, _next) => 
 		});
 	}
 
-	logger.error("Fatal error propagated to server root? ", {
-		err: unknownErr,
-		url: req.originalUrl,
-		authInfo: req[SYMBOL_TACHI_API_AUTH],
-	});
+	log.error(
+		{
+			err: unknownErr,
+			url: req.originalUrl,
+			authInfo: req[SYMBOL_TACHI_API_AUTH],
+		},
+		"Fatal error propagated to server root? ",
+	);
 
 	return res.status(500).json({
 		success: false,

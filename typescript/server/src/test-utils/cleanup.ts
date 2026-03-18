@@ -1,6 +1,6 @@
-import { CloseMongoConnection } from "#external/mongo/db";
-import { CloseRedisConnection } from "#external/redis/redis";
 import { CloseScoreImportQueue } from "#lib/score-import/worker/queue";
+import { CloseMongoConnection } from "#services/mongo/db";
+import { CloseRedisConnection } from "#services/redis/redis";
 
 import { CloseServerConnection } from "./mock-api";
 import { WriteSnapshotData } from "./single-process-snapshot";

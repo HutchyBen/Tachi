@@ -1,9 +1,9 @@
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import { Testing511SPA, TestingIIDXFolderSP10, TestingIIDXSPScorePB } from "#test-utils/test-data";
 import { CreateFolderChartLookup } from "#utils/folder";
 import deepmerge from "deepmerge";
-import { IIDX_LAMPS } from "../../../../common/src";
+import { IIDX_LAMPS } from "tachi-common";
 import t from "tap";
 
 import { EvaluateUsersStatsShowcase } from "./get-stats";

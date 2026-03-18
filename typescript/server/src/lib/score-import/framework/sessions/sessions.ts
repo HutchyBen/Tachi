@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
 import { ONE_HOUR } from "#lib/constants/time";
-import CreateLogCtx, { AppendLogCtx, type KtLogger } from "#lib/logger/logger";
+import { AppendLogCtx, type KtLogger, log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 import { GetChartForIDGuaranteed } from "#utils/db";
 import { GetScoresFromSession } from "#utils/session";
 import crypto from "crypto";
@@ -16,7 +16,7 @@ import {
 	type SessionDocument,
 	type SessionInfoReturn,
 	type SessionScoreInfo,
-} from "../../../../../../common/src";
+} from "tachi-common";
 
 import type { ScorePlaytypeMap } from "../common/types";
 
@@ -30,7 +30,7 @@ export async function CreateSessions(
 	userID: integer,
 	game: GameGroup,
 	scorePtMap: ScorePlaytypeMap,
-	logger: KtLogger,
+	log: KtLogger,
 ) {
 	const allSessionInfo = [];
 
@@ -41,7 +41,7 @@ export async function CreateSessions(
 			scores,
 			game,
 			playtype as Playtype,
-			logger,
+			log,
 		);
 
 		allSessionInfo.push(...sessionInfo);
@@ -99,8 +99,6 @@ function ScoreToSessionScoreInfo(
 export async function GetSessionScoreInfo(
 	session: SessionDocument,
 ): Promise<Array<SessionScoreInfo>> {
-	const logger = CreateLogCtx(`Session ${session.sessionID} Score Info`);
-
 	const scores = await db.scores.find({
 		scoreID: { $in: session.scoreIDs },
 	});
@@ -112,8 +110,8 @@ export async function GetSessionScoreInfo(
 	for (const score of scores) {
 		promises.push(
 			GetChartForIDGuaranteed(score.game, score.chartID).then((chart) =>
-				CreatePBDoc(gptString, session.userID, chart, logger, session.timeStarted).then(
-					(pb) => ScoreToSessionScoreInfo(score, pb),
+				CreatePBDoc(gptString, session.userID, chart, log, session.timeStarted).then((pb) =>
+					ScoreToSessionScoreInfo(score, pb),
 				),
 			),
 		);
@@ -187,15 +185,15 @@ export async function LoadScoresIntoSessions(
 	importScores: Array<ScoreDocument>,
 	game: GameGroup,
 	playtype: Playtype,
-	baseLogger: KtLogger,
+	baseLog: KtLogger,
 ): Promise<Array<SessionInfoReturn>> {
-	const logger = AppendLogCtx("Session Generation", baseLogger);
+	const log = AppendLogCtx("Session Generation", baseLog);
 
 	const timestampedScores = [];
 
 	for (const score of importScores) {
 		if (score.timeAchieved === null) {
-			logger.verbose(`Ignored score ${score.scoreID}, as it had no timeAchieved.`);
+			log.debug(`Ignored score ${score.scoreID}, as it had no timeAchieved.`);
 
 			// ignore scores without timestamps. We can't use these for sessions.
 			continue;
@@ -206,7 +204,7 @@ export async function LoadScoresIntoSessions(
 
 	// If we have nothing to work with, why bother?
 	if (timestampedScores.length === 0) {
-		logger.verbose(`Skipped calculating sessions as there were no timestamped scores`);
+		log.debug(`Skipped calculating sessions as there were no timestamped scores`);
 		return [];
 	}
 
@@ -235,7 +233,7 @@ export async function LoadScoresIntoSessions(
 	// so push the group (which is guaranteed to have atleast one score)
 	sessionScoreGroups.push(curGroup);
 
-	logger.verbose(`Created ${sessionScoreGroups.length} groups from timestamped scores.`);
+	log.debug(`Created ${sessionScoreGroups.length} groups from timestamped scores.`);
 
 	const sessionInfoReturns: Array<SessionInfoReturn> = [];
 
@@ -268,7 +266,7 @@ export async function LoadScoresIntoSessions(
 		let infoReturn: SessionInfoReturn;
 
 		if (nearbySession) {
-			logger.verbose(
+			log.debug(
 				`Found nearby session for ${userID} (${game} ${playtype}) around ${startOfGroup} ${endOfGroup}.`,
 			);
 
@@ -287,7 +285,7 @@ export async function LoadScoresIntoSessions(
 				},
 			);
 		} else {
-			logger.debug(
+			log.debug(
 				`Creating new session for ${userID} (${game} ${playtype}) around ${startOfGroup} ${endOfGroup}.`,
 			);
 

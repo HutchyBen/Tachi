@@ -1,4 +1,4 @@
-import type { integer } from "../../../../../../../common/src";
+import type { integer } from "tachi-common";
 
 export interface LR2HookScore {
 	md5: string;

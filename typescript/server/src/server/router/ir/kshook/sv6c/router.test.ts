@@ -1,10 +1,10 @@
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import { InsertFakeTokenWithAllPerms } from "#test-utils/fake-auth";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import { TestingKsHookSV6CScore, TestingKsHookSV6CStaticScore } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
-import { ALL_PERMISSIONS } from "../../../../../../../common/src";
+import { ALL_PERMISSIONS } from "tachi-common";
 import t from "tap";
 
 t.test("POST /ir/kshook/sv6c/score/save", (t) => {

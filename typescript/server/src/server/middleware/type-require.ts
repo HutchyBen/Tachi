@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express-serve-static-core";
 
-import { Environment, ServerConfig, TachiConfig } from "#lib/setup/config";
+import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 
 /**
  * Middleware that makes the route only available under Bokutachi.
@@ -56,7 +56,7 @@ export const RequireInvitesEnabled: RequestHandler = (req, res, next) => {
  * at an expected checkout location.
  */
 export const RequireLocalDevelopment: RequestHandler = (req, res, next) => {
-	if (Environment.nodeEnv === "dev" || Environment.nodeEnv === "test") {
+	if (Env.NODE_ENV === "dev" || Env.NODE_ENV === "test") {
 		next();
 		return;
 	}

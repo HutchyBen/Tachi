@@ -1,10 +1,8 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { RecalcAllScores, UpdateAllPBs } from "#utils/calculations/recalc-scores";
 import { RecalcSessions } from "#utils/calculations/recalc-sessions";
 
 import { RecalcGameProfiles } from "./recalc-game-profiles";
-
-const logger = CreateLogCtx(__filename);
 
 (async () => {
 	// note: technically some of this stuff is unecessary/duplicate calculation
@@ -14,11 +12,9 @@ const logger = CreateLogCtx(__filename);
 	await RecalcGameProfiles();
 	await RecalcSessions();
 
-	logger.info(`Completely done!`, () => {
-		process.exit(0);
-	});
+	log.info(`Completely done!`);
+	process.exit(0);
 })().catch((err: unknown) => {
-	logger.error(`Failed to sync state.`, { err }, () => {
-		process.exit(1);
-	});
+	log.error({ err }, `Failed to sync state.`);
+	process.exit(1);
 });

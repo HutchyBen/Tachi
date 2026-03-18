@@ -1,4 +1,4 @@
-import type { ImportTypes } from "../../../../../common/src";
+import type { ImportTypes } from "tachi-common";
 
 import { Never } from "#utils/misc";
 

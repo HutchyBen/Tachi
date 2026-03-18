@@ -16,6 +16,7 @@ export { type cron_task_execution_id, type default as CronTaskExecutionTable, ty
 export { type notification_row_id, type default as NotificationTable, type Notification, type NewNotification, type NotificationUpdate } from './public/Notification';
 export { type default as ImportLockTable, type ImportLock, type NewImportLock, type ImportLockUpdate } from './public/ImportLock';
 export { type score_blacklist_row_id, type default as ScoreBlacklistTable, type ScoreBlacklist, type NewScoreBlacklist, type ScoreBlacklistUpdate } from './public/ScoreBlacklist';
+export { type default as PrivDiscordUserMapTable, type PrivDiscordUserMap, type NewPrivDiscordUserMap, type PrivDiscordUserMapUpdate } from './public/PrivDiscordUserMap';
 export { type default as TableFolderTable, type TableFolder, type NewTableFolder, type TableFolderUpdate } from './public/TableFolder';
 export { type game_stats_game, type default as GameStatsTable, type GameStats, type NewGameStats, type GameStatsUpdate } from './public/GameStats';
 export { type priv_oauth2_auth_token_token, type default as PrivOauth2AuthTokenTable, type PrivOauth2AuthToken, type NewPrivOauth2AuthToken, type PrivOauth2AuthTokenUpdate } from './public/PrivOauth2AuthToken';

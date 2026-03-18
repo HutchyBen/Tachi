@@ -1,14 +1,12 @@
 import type { ScoreImportJobData } from "#lib/score-import/worker/types";
-import type { ImportTypes } from "../../../../../../common/src";
+import type { ImportTypes } from "tachi-common";
 
-import db from "#external/mongo/db";
 import { CDNStoreOrOverwrite } from "#lib/cdn/cdn";
 import { GetScoreImportInputURL } from "#lib/cdn/url-format";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 
 import type ScoreImportFatalError from "../score-importing/score-import-error";
-
-const logger = CreateLogCtx(__filename);
 
 /**
  * For us to save the incoming parserArguments,
@@ -52,14 +50,13 @@ export async function StartTrackingImport(jobData: ScoreImportJobData<ImportType
 	// to store large amounts of write-only data, so lets do that.
 	CDNStoreOrOverwrite(GetScoreImportInputURL(jobData.importID), SerialiseJobData(jobData)).catch(
 		(err) => {
-			logger.error(
-				`Failed to save score-import-input for import '${
-					jobData.importID
-				}' at path '${GetScoreImportInputURL(jobData.importID)}'.`,
-
+			log.error(
 				// $response is a circular struct and we really don't like logging
 				// cicular structs. gf.
 				{ reason: { ...err.$error, $response: undefined } },
+				`Failed to save score-import-input for import '${
+					jobData.importID
+				}' at path '${GetScoreImportInputURL(jobData.importID)}'.`,
 			);
 		},
 	);

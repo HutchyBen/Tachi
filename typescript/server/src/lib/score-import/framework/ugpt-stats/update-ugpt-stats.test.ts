@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import { TestingIIDXSPScorePB } from "#test-utils/test-data";
 import crypto from "crypto";
@@ -7,8 +7,6 @@ import deepmerge from "deepmerge";
 import t from "tap";
 
 import { UpdateUsersGamePlaytypeStats } from "./update-ugpt-stats";
-
-const logger = CreateLogCtx(__filename);
 
 // more of an integration test
 t.test("#UpdateUsersGamePlaytypeStats", (t) => {
@@ -23,7 +21,7 @@ t.test("#UpdateUsersGamePlaytypeStats", (t) => {
 			await db["game-stats"].remove({});
 			await db["game-settings"].remove({});
 
-			const res = await UpdateUsersGamePlaytypeStats("iidx", "SP", 1, null, logger);
+			const res = await UpdateUsersGamePlaytypeStats("iidx", "SP", 1, null, log);
 
 			t.strictSame(res, [], "Should return an empty object");
 
@@ -79,7 +77,7 @@ t.test("#UpdateUsersGamePlaytypeStats", (t) => {
 			),
 		);
 
-		const res = await UpdateUsersGamePlaytypeStats("iidx", "SP", 1, null, logger);
+		const res = await UpdateUsersGamePlaytypeStats("iidx", "SP", 1, null, log);
 
 		t.strictSame(res, [], "Should return an empty object");
 
@@ -117,7 +115,7 @@ t.test("#UpdateUsersGamePlaytypeStats", (t) => {
 			"SP",
 			1,
 			() => ({ dan: "KAIDEN" }),
-			logger,
+			log,
 		);
 
 		t.strictSame(
@@ -171,7 +169,7 @@ t.test("#UpdateUsersGamePlaytypeStats", (t) => {
 			"SP",
 			1,
 			() => ({ dan: "KAIDEN" }),
-			logger,
+			log,
 		);
 
 		t.strictSame(

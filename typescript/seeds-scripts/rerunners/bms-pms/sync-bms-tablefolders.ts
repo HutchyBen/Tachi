@@ -1,10 +1,13 @@
-const { LoadBMSTable } = require("bms-table-loader");
-import { type BMSTableInfo, type FolderDocument, type TableDocument } from "../../../common/src";
-const { BMS_TABLES } = require("tachi-common");
+import { log } from "#log";
+import { LoadBMSTable } from "bms-table-loader";
+import {
+	BMS_TABLES,
+	type BMSTableInfo,
+	type FolderDocument,
+	type TableDocument,
+} from "tachi-common";
 
-const logger = require("../../logger");
-import { CreateFolderIDFromFolder } from "../../util";
-const { ReadCollection, MutateCollection } = require("../../util");
+import { MutateCollection, ReadCollection } from "../../util";
 
 const existsTables = ReadCollection("tables.json").map((e) => e.tableID);
 const existsFolders = ReadCollection("folders.json").map((e) => e.folderID);
@@ -16,9 +19,9 @@ async function UpdateTable(tableInfo: BMSTableInfo) {
 		return;
 	}
 
-	logger.info(`Fetching ${tableInfo.url} (${tableInfo.name})...`);
+	log.info(`Fetching ${tableInfo.url} (${tableInfo.name})...`);
 	const table = await LoadBMSTable(tableInfo.url);
-	logger.info(`Fetched.`);
+	log.info(`Fetched.`);
 
 	const levels = table.getLevelOrder();
 
@@ -55,7 +58,7 @@ async function UpdateTable(tableInfo: BMSTableInfo) {
 
 		folders.push(realFolder);
 
-		logger.info(`Inserted new folder ${tableInfo.prefix}${level}.`);
+		log.info(`Inserted new folder ${tableInfo.prefix}${level}.`);
 	}
 
 	MutateCollection("folders.json", (f) => {
@@ -77,9 +80,9 @@ async function UpdateTable(tableInfo: BMSTableInfo) {
 		return t;
 	});
 
-	logger.info(`Bumped table ${tableInfo.name}.`);
+	log.info(`Bumped table ${tableInfo.name}.`);
 
-	logger.info(`Checking meta-folder...`);
+	log.info(`Checking meta-folder...`);
 
 	const f = {
 		title: tableInfo.name,
@@ -115,7 +118,7 @@ async function UpdateTable(tableInfo: BMSTableInfo) {
 		MutateCollection("folders.json", (folders) => [...folders, realFolder]);
 	}
 
-	logger.info(`Done.`);
+	log.info(`Done.`);
 }
 
 (async () => {

@@ -1,13 +1,8 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/log/log.js";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import { GetChartForIDGuaranteed } from "#utils/db";
-import {
-	type GameGroup,
-	GetGPTString,
-	type integer,
-	type Playtype,
-} from "../../../../../../common/src";
+import { type GameGroup, GetGPTString, type integer, type Playtype } from "tachi-common";
 
 import { CreatePBDoc, type PBScoreDocumentNoRank, UpdateChartRanking } from "./create-pb-doc";
 
@@ -19,7 +14,7 @@ export async function ProcessPBs(
 	playtype: Playtype,
 	userID: integer,
 	chartIDs: Set<string>,
-	logger: KtLogger,
+	log: KtLogger,
 ): Promise<void> {
 	if (chartIDs.size === 0) {
 		return;
@@ -32,7 +27,7 @@ export async function ProcessPBs(
 	for (const chartID of chartIDs) {
 		promises.push(
 			GetChartForIDGuaranteed(game, chartID).then((chart) =>
-				CreatePBDoc(gpt, userID, chart, logger),
+				CreatePBDoc(gpt, userID, chart, log),
 			),
 		);
 	}

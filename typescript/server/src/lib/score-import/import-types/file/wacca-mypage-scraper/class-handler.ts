@@ -1,7 +1,7 @@
 import type { ClassProvider } from "#lib/score-import/framework/calculated-data/types";
 
-import { WACCA_STAGEUPS } from "../../../../../../../common/src";
-import { WaccaStageUps } from "../../../../../../../common/src/config/game-support/wacca";
+import { WACCA_STAGEUPS } from "tachi-common";
+import { WaccaStageUps } from "tachi-common/config/game-support/wacca";
 
 import type { MyPagePlayerStage } from "./types";
 
@@ -43,7 +43,7 @@ const STAGE_NAMES: Record<number, string> = {
 };
 
 export function CreateMyPageScraperClassProvider(stage: MyPagePlayerStage): ClassProvider {
-	return (gpt, userID, ratings, logger) => {
+	return (gpt, userID, ratings, log) => {
 		const stageName = STAGE_NAMES[stage.id];
 
 		if (stageName === undefined) {
@@ -51,7 +51,7 @@ export function CreateMyPageScraperClassProvider(stage: MyPagePlayerStage): Clas
 		}
 
 		if (`ステージ${stageName}` !== stage.name) {
-			logger.warn(
+			log.warn(
 				`Stage up ${stageName} with id ${stage.id} did not correspond to the CSV name ${stage.name}.`,
 			);
 		}

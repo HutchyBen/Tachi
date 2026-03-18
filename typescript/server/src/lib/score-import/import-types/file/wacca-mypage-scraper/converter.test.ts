@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import ResetDBState from "#test-utils/resets";
 import { TestingWaccaPupaExp, TestingWaccaPupaSong } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
@@ -7,8 +7,6 @@ import t from "tap";
 import type { MyPageRecordsParsedPB } from "./types";
 
 import ConvertMyPageScraperRecordsCSV from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 const parsedScore: MyPageRecordsParsedPB = {
 	// 2085,PUPA,モリモリあつし,4,"[4,8,13+,0]","[0,0,12]","[0,0,996827]","[0,0,2]"
@@ -28,7 +26,7 @@ t.test("#ConvertMyPageScraperRecordsCSV", (t) => {
 			deepmerge(parsedScore, g),
 			{},
 			"file/mypagescraper-records-csv",
-			logger,
+			log,
 		);
 	}
 

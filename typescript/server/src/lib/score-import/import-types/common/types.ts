@@ -1,7 +1,7 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/log/log.js";
 import type { ClassProvider } from "#lib/score-import/framework/calculated-data/types";
-import type { EmptyObject } from "#utils/types";
 import type { USCClientScore } from "#server/router/ir/usc/_playtype/types";
+import type { EmptyObject } from "#utils/types";
 import type {
 	BatchManualScore,
 	ChartDocument,
@@ -9,7 +9,7 @@ import type {
 	ImportTypes,
 	integer,
 	SongDocument,
-} from "../../../../../../common/src";
+} from "tachi-common";
 
 import type { ConverterFailure } from "../../framework/common/converter-failures";
 import type { DryScore } from "../../framework/common/types";
@@ -153,11 +153,11 @@ export type ConverterFunction<D, C> = (
 	data: D,
 	processContext: C,
 	importType: ImportTypes,
-	logger: KtLogger,
+	log: KtLogger,
 ) => Promise<ConverterFnSuccessReturn>;
 
 export type ImportInputParser<D, C> = (
-	logger: KtLogger,
+	log: KtLogger,
 ) => ParserFunctionReturns<D, C> | Promise<ParserFunctionReturns<D, C>>;
 
 export interface ParserFunctionReturns<D, C> {

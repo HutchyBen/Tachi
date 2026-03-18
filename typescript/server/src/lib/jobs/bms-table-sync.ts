@@ -1,20 +1,13 @@
 /* eslint-disable no-await-in-loop */
 import type { FilterQuery } from "mongodb";
 
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { DeorphanIfInQueue } from "#lib/orphan-queue/orphan-queue";
+import db from "#services/mongo/db";
 import { InitaliseFolderChartLookup } from "#utils/folder";
 import { FormatBMSTables, WrapScriptPromise } from "#utils/misc";
 import { type BMSTableEntry, LoadBMSTable } from "bms-table-loader";
-import {
-	BMS_TABLES,
-	type BMSTableInfo,
-	type ChartDocument,
-	type Playtypes,
-} from "../../../../common/src";
-
-const logger = CreateLogCtx(__filename);
+import { BMS_TABLES, type BMSTableInfo, type ChartDocument, type Playtypes } from "tachi-common";
 
 /**
  * Tables might have updates that remove charts from their table.
@@ -29,7 +22,7 @@ async function HandleTableRemovals(
 	prefix: string,
 ) {
 	if (tableEntries.length === 0) {
-		logger.info(
+		log.info(
 			`No entries in table ${prefix}, skipping removals to prevent instantly wiping the table.`,
 		);
 		return;
@@ -46,7 +39,7 @@ async function HandleTableRemovals(
 		"data.tableFolders.table": prefix,
 	})) as unknown as Array<ChartDocument<"bms:7K" | "bms:14K">>;
 
-	logger.info(
+	log.info(
 		`Found ${existingCharts.length} existing chart(s) in the database for table ${prefix}.`,
 	);
 
@@ -88,7 +81,7 @@ async function HandleTableRemovals(
 		return;
 	}
 
-	logger.info(`Removing ${toRemove.length} chart(s) from ${prefix}.`);
+	log.info(`Removing ${toRemove.length} chart(s) from ${prefix}.`);
 
 	// remove this table info from all of the charts that no longer
 	// exist in the table.
@@ -114,7 +107,7 @@ async function ImportTableLevels(
 	let success = 0;
 	const total = tableEntries.length;
 
-	logger.info(`Handling removals for ${playtype}:${prefix}...`);
+	log.info(`Handling removals for ${playtype}:${prefix}...`);
 	await HandleTableRemovals(tableEntries, playtype, prefix);
 
 	const md5s = tableEntries.filter((e) => e.checksum.type === "md5").map((e) => e.checksum.value);
@@ -182,7 +175,7 @@ async function ImportTableLevels(
 			}
 
 			if (!chart) {
-				logger.warn(
+				log.warn(
 					`No chart exists in table for (${td.checksum.type}=${td.checksum.value} Possible title: ${td.content.title} ${prefix}${td.content.level}`,
 				);
 				failures++;
@@ -227,16 +220,16 @@ async function ImportTableLevels(
 		success++;
 	}
 
-	logger.info(`Finished updating table ${prefix}.`);
-	logger.info(`${success} Success | ${failures} Failures | ${total} Total.`);
+	log.info(`Finished updating table ${prefix}.`);
+	log.info(`${success} Success | ${failures} Failures | ${total} Total.`);
 }
 
 export async function UpdateTable(tableInfo: BMSTableInfo) {
 	const table = await LoadBMSTable(tableInfo.url);
 
-	logger.info(`Bumping levels...`);
+	log.info(`Bumping levels...`);
 	await ImportTableLevels(table.body, tableInfo.prefix, tableInfo.playtype);
-	logger.info(`Levels bumped.`);
+	log.info(`Levels bumped.`);
 }
 
 export async function SyncBMSTables() {
@@ -244,15 +237,15 @@ export async function SyncBMSTables() {
 		try {
 			await UpdateTable(table);
 		} catch (err) {
-			logger.error(`Failed to update table ${table.name} (${table.url}).`, { err });
+			log.error({ err }, `Failed to update table ${table.name} (${table.url}).`);
 		}
 	}
 
-	logger.info(`Re-initialising folder-chart-lookup, since changes may have been made.`);
+	log.info(`Re-initialising folder-chart-lookup, since changes may have been made.`);
 	await InitaliseFolderChartLookup();
-	logger.info(`Done.`);
+	log.info(`Done.`);
 }
 
 if (require.main === module) {
-	WrapScriptPromise(SyncBMSTables(), logger);
+	WrapScriptPromise(SyncBMSTables(), log);
 }

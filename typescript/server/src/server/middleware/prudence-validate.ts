@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express-serve-static-core";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import {
 	type ErrorMessages,
 	type MiddlewareErrorHandler,
@@ -8,8 +8,6 @@ import {
 	type PrudenceOptions,
 	type PrudenceSchema,
 } from "prudence";
-
-const logger = CreateLogCtx(__filename);
 
 export function TruncateString(string: string, len = 30) {
 	if (string.length < len) {
@@ -27,7 +25,7 @@ export const PrudenceErrorFormatter = (
 
 const API_ERR_HANDLER =
 	(logLevel: TachiLogLevels): MiddlewareErrorHandler =>
-	(req, res, next, error) => {
+	(req, res, _next, error) => {
 		let stringVal = error.userVal;
 
 		if (error.keychain?.startsWith("!") === true && error.userVal !== undefined) {
@@ -43,12 +41,12 @@ const API_ERR_HANDLER =
 			stringVal = String(stringVal);
 		}
 
-		logger[logLevel](
-			`Prudence rejection: ${error.message}, ${stringVal} [K:${error.keychain}]`,
+		log[logLevel](
 			{
 				userVal: error.userVal,
 				fullObj: req.method === "GET" ? req.query : req.safeBody,
 			},
+			`Prudence rejection: ${error.message}, ${stringVal} [K:${error.keychain}]`,
 		);
 
 		return res.status(400).json({
@@ -64,13 +62,10 @@ const API_ERR_HANDLER =
 // Cache all of the possible API_ERROR_HANDLERS to avoid function creation
 // overhead at runtime.
 const API_ERROR_HANDLERS = Object.fromEntries(
-	(["crit", "severe", "error", "warn", "info", "verbose", "debug"] as const).map((e) => [
-		e,
-		API_ERR_HANDLER(e),
-	]),
+	(["error", "fatal", "info", "warn", "debug"] as const).map((e) => [e, API_ERR_HANDLER(e)]),
 ) as Record<TachiLogLevels, MiddlewareErrorHandler>;
 
-type TachiLogLevels = "crit" | "debug" | "error" | "info" | "severe" | "verbose" | "warn";
+type TachiLogLevels = "debug" | "error" | "fatal" | "info" | "warn";
 
 const prValidate = (
 	s: PrudenceSchema,

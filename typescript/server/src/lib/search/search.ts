@@ -1,9 +1,9 @@
 import type { FilterQuery } from "mongodb";
 import type { ICollection } from "monk";
 
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { TachiConfig } from "#lib/setup/config";
+import db from "#services/mongo/db";
 import { GetSongForIDGuaranteed } from "#utils/db";
 import { EscapeStringRegexp } from "#utils/misc";
 import { GetOnlineCutoff } from "#utils/user";
@@ -20,11 +20,9 @@ import {
 	type SongDocument,
 	SplitGPT,
 	type UserDocument,
-} from "../../../../common/src";
+} from "tachi-common";
 
 import { AsyncFzf } from "./fzf/main";
-
-const logger = CreateLogCtx(__filename);
 
 interface SearchControls {
 	keys: Array<string>;
@@ -231,7 +229,7 @@ export async function SearchGlobalGameSongsAndCharts(
 		const song = songMap.get(chart.songID);
 
 		if (!song) {
-			logger.warn(`Failed to find parent song for ${chart.songID} (${game})? Skipping.`);
+			log.warn(`Failed to find parent song for ${chart.songID} (${game})? Skipping.`);
 			continue;
 		}
 

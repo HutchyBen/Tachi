@@ -4,18 +4,16 @@ import type {
 	integer,
 	PBScoreDocument,
 	ScoreDocument,
-} from "../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
+} from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
-import db from "#external/mongo/db";
 import { USCIR_ADJACENT_SCORE_N } from "#lib/constants/usc-ir";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 import { MStoS } from "#utils/misc";
 import { GetPBOnChart, GetServerRecordOnChart } from "#utils/scores";
 
 import type { USCServerScore } from "./types";
-
-const logger = CreateLogCtx(__filename);
 
 export const TACHI_LAMP_TO_USC: Record<
 	GetEnumValue<GPTStrings["usc"], "lamp">,
@@ -53,7 +51,7 @@ export async function TachiScoreToServerScore(
 	);
 
 	if (!userDoc) {
-		logger.severe(
+		log.error(
 			`User ${tachiScore.userID} from PB on chart ${tachiScore.chartID} has no user document?`,
 		);
 		throw new Error(
@@ -68,7 +66,7 @@ export async function TachiScoreToServerScore(
 	})) as ScoreDocument<"usc:Controller" | "usc:Keyboard"> | null;
 
 	if (!scorePB) {
-		logger.severe(
+		log.error(
 			`Score ${firstScoreID} does not exist, but is referenced in ${tachiScore.userID}'s PBDoc on ${tachiScore.chartID}?`,
 		);
 
@@ -101,10 +99,13 @@ export async function CreatePOSTScoresResponseBody(
 	> | null;
 
 	if (!scorePB) {
-		logger.severe(`Score was imported for chart, but no ScorePB was available on this chart?`, {
-			chartDoc,
-			scoreID,
-		});
+		log.error(
+			{
+				chartDoc,
+				scoreID,
+			},
+			`Score was imported for chart, but no ScorePB was available on this chart?`,
+		);
 		throw new Error(
 			`Score was imported for chart, but no ScorePB was available on this chart?`,
 		);
@@ -117,12 +118,12 @@ export async function CreatePOSTScoresResponseBody(
 	// this is impossible to trigger without making a race-condition.
 	/* istanbul ignore next */
 	if (!ktServerRecord) {
-		logger.severe(
-			`Score was imported for chart, but no Server Record was available on this chart?`,
+		log.error(
 			{
 				chartDoc,
 				scoreID,
 			},
+			`Score was imported for chart, but no Server Record was available on this chart?`,
 		);
 		throw new Error(
 			`Score was imported for chart, but no Server Record was available on this chart?`,
@@ -183,7 +184,7 @@ export async function CreatePOSTScoresResponseBody(
 	})) as ScoreDocument<"usc:Controller" | "usc:Keyboard"> | null;
 
 	if (!originalScore) {
-		logger.severe(
+		log.error(
 			`Score with ID ${scoreID} is not in the database, but was claimed to be inserted?`,
 		);
 		throw new Error(

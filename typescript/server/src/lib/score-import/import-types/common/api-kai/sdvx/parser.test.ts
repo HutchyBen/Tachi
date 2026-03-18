@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { MockJSONFetch } from "#test-utils/mock-fetch";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";
@@ -11,8 +11,6 @@ const fakeAuth = {
 	service: "FLO" as const,
 	token: "bar",
 };
-
-const logger = CreateLogCtx(__filename);
 
 const NO_REAUTH = () => Promise.resolve("");
 
@@ -35,7 +33,7 @@ t.test("#ParseKaiSDVX", (t) => {
 			},
 		});
 
-		const res = await ParseKaiSDVX("FLO", fakeAuth, logger, mockFloAPI, NO_REAUTH);
+		const res = await ParseKaiSDVX("FLO", fakeAuth, log, mockFloAPI, NO_REAUTH);
 
 		t.equal(res.game, "sdvx");
 		t.strictSame(res.context, { service: "FLO" });
@@ -67,7 +65,7 @@ t.test("#ParseKaiSDVX", (t) => {
 			},
 		});
 
-		const res = await ParseKaiSDVX("EAG", fakeAuth, logger, mockEagAPI, NO_REAUTH);
+		const res = await ParseKaiSDVX("EAG", fakeAuth, log, mockEagAPI, NO_REAUTH);
 
 		t.equal(res.game, "sdvx");
 		t.strictSame(res.context, { service: "EAG" });

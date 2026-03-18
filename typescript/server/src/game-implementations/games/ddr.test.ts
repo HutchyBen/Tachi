@@ -6,7 +6,7 @@ import {
 	DDR_LAMPS,
 	type ProvidedMetrics,
 	type ScoreData,
-} from "../../../../common/src";
+} from "tachi-common";
 import t from "tap";
 
 import { TestSnapshot } from "../../test-utils/single-process-snapshot";

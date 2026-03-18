@@ -1,17 +1,14 @@
 import type { PrudenceError } from "prudence";
 
-import { type TachiAPIClientDocument, UserAuthLevels } from "../../../../common/src";
-
-/* eslint-disable no-await-in-loop */
-import db from "#external/mongo/db";
-import { DatabaseSchemas } from "#external/mongo/schemas";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
+import { type TachiAPIClientDocument, UserAuthLevels } from "tachi-common";
+/* eslint-disable no-await-in-loop */
+import db from "#services/mongo/db";
+import { DatabaseSchemas } from "#services/mongo/schemas";
 import { Random20Hex } from "#utils/misc";
 import { FormatPrError } from "#utils/prudence";
 import fjsh from "fast-json-stable-hash";
-
-const logger = CreateLogCtx(__filename);
 
 type DefaultClients = Array<Omit<TachiAPIClientDocument, "author" | "clientSecret">>;
 
@@ -315,12 +312,10 @@ async function LoadClients(clients: DefaultClients) {
 	});
 
 	if (!firstAdmin) {
-		logger.warn(
-			`There are no admins on this instance of tachi-server. We cannot create default API Clients!
+		log.warn(`There are no admins on this instance of tachi-server. We cannot create default API Clients!
 Chances are, you're seeing this message because you just bootstrapped Tachi.
 You'll need to set a user's authLevel to ${UserAuthLevels.ADMIN}.
-If you have no users, go create an account using the frontend, then run pnpm make-user-admin 1.`,
-		);
+If you have no users, go create an account using the frontend, then run pnpm make-user-admin 1.`);
 		return;
 	}
 
@@ -351,9 +346,7 @@ If you have no users, go create an account using the frontend, then run pnpm mak
 		try {
 			DatabaseSchemas["api-clients"](realClient);
 		} catch (err) {
-			logger.error(
-				`Invalid API Client ${client.name}: ${FormatPrError(err as PrudenceError)}.`,
-			);
+			log.error(`Invalid API Client ${client.name}: ${FormatPrError(err as PrudenceError)}.`);
 			continue;
 		}
 
@@ -364,6 +357,6 @@ If you have no users, go create an account using the frontend, then run pnpm mak
 
 		await db["api-clients"].insert(realClient);
 
-		logger.info(`Loaded/Modified new built-in client ${client.name}.`);
+		log.info(`Loaded/Modified new built-in client ${client.name}.`);
 	}
 }

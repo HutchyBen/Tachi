@@ -1,4 +1,4 @@
-import type { integer, PBScoreDocument } from "../../../../../../../../common/src";
+import type { integer, PBScoreDocument } from "tachi-common";
 
 const LAMP_TO_BEATORAJA = [0, 1, 3, 4, 5, 6, 7, 8] as const;
 

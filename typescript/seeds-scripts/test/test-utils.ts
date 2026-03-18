@@ -1,4 +1,4 @@
-import { allSupportedGameGroups, type GameGroup, v3AllGames } from "../../common/src";
+import { allSupportedGameGroups, type GameGroup, v3AllGames } from "tachi-common";
 
 import { ReadCollection } from "../util";
 import { type V3_SCHEMAS } from "./schemas";

@@ -6,7 +6,7 @@ import {
 	type GameGroup,
 	type GPTStrings,
 	type SongDocument,
-} from "../../common/src";
+} from "tachi-common";
 
 import { ReadCollection } from "../util";
 import { FormatFunctions } from "./test-utils";

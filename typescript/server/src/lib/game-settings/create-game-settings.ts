@@ -1,9 +1,7 @@
-import type { GameGroup, integer, Playtype } from "../../../../common/src";
+import type { GameGroup, integer, Playtype } from "tachi-common";
 
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
-
-const logger = CreateLogCtx(__filename);
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 
 /**
  * Create GameSettings for a UGPT (which contains their preferences).
@@ -16,7 +14,7 @@ export async function CreateGameSettings(userID: integer, game: GameGroup, playt
 	});
 
 	if (exists) {
-		logger.error(
+		log.error(
 			`Cannot create ${userID} ${game} ${playtype} game-settings as one already exists?`,
 		);
 
@@ -51,5 +49,5 @@ export async function CreateGameSettings(userID: integer, game: GameGroup, playt
 		rivals: [],
 	});
 
-	logger.info(`Created game settings for ${userID} (${game} ${playtype}).`);
+	log.info(`Created game settings for ${userID} (${game} ${playtype}).`);
 }

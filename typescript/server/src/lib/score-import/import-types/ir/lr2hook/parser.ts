@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/log/log.js";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { FormatPrError, optNull } from "#utils/prudence";
@@ -82,7 +82,7 @@ export const PR_LR2HOOK: PrudenceSchema = {
 
 export function ParseLR2Hook(
 	body: Record<string, unknown>,
-	_logger: KtLogger,
+	_log: KtLogger,
 ): ParserFunctionReturns<LR2HookScore, LR2HookContext> {
 	// Ignore excess keys, as lr2hook is likely to add more features in the future.
 	const err = p(

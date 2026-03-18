@@ -1,7 +1,7 @@
-import type { ImportDocument, ImportTypes, integer } from "../../../../../common/src";
+import type { ImportDocument, ImportTypes, integer } from "tachi-common";
 
 import { JOB_RETRY_COUNT } from "#lib/constants/tachi";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import { Sleep } from "#utils/misc";
 
@@ -18,8 +18,6 @@ import {
 	MarkImportAsFailed,
 	StartTrackingImport,
 } from "./status-tracking/import-status-tracking";
-
-const logger = CreateLogCtx(__filename);
 
 /**
  * Makes a score import given ScoreImportJobData.
@@ -86,7 +84,7 @@ async function MakeScoreImportInner<I extends ImportTypes>(
 
 			const backoff = ExponentialBackoff(timesAttempted - 1);
 
-			logger.info(
+			log.info(
 				`User ${jobData.userID} already had an import ongoing. (${
 					jobData.importID
 				}) Backing off for ${(backoff / 1_000).toFixed(2)} seconds.`,
@@ -101,14 +99,14 @@ async function MakeScoreImportInner<I extends ImportTypes>(
 			timesAttempted++;
 		}
 
-		logger.error(
-			`User ${jobData.userID} didn't get an import through in around 6 hours. Has their lock gotten stuck?`,
+		log.error(
 			jobData,
+			`User ${jobData.userID} didn't get an import through in around 6 hours. Has their lock gotten stuck?`,
 		);
 
 		await UnsetOngoingImportLock(jobData.userID);
 
-		logger.error(`Forcing off ${jobData.userID}'s import lock. Sketchy.`);
+		log.error(`Forcing off ${jobData.userID}'s import lock. Sketchy.`);
 
 		throw new ScoreImportFatalError(
 			409,

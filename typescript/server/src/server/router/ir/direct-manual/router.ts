@@ -4,10 +4,10 @@ import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { MakeScoreImport } from "#lib/score-import/framework/score-import";
 import { ServerConfig } from "#lib/setup/config";
-import { Random20Hex } from "#utils/misc";
-import { Router } from "express";
 import { RequirePermissions } from "#server/middleware/auth";
 import { ScoreImportRateLimiter } from "#server/middleware/rate-limiter";
+import { Random20Hex } from "#utils/misc";
+import { Router } from "express";
 
 const router: Router = Router({ mergeParams: true });
 

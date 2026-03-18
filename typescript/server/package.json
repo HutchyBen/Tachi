@@ -5,23 +5,14 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
+		"dev": "bun --watch src/main.ts",
 		"test": "tap",
 		"snap": "TAP_SNAPSHOT=1 tap",
 		"watchtest": "tap --watch",
-		"gen-proto": "grpc_tools_node_protoc --plugin=protoc-gen-ts=$(which protoc-gen-ts) --js_out=import_style=commonjs,binary:src/proto/generated --ts_out=service=grpc-node,mode=grpc-js:src/proto/generated --grpc_out=grpc_js:src/proto/generated --proto_path=src/proto/myt src/proto/myt/*/*.proto",
 		"build": "tsgo -b tsconfig.build.json -v",
 		"typecheck": "tsgo --noEmit",
 		"lint": "eslint ./src",
-		"lint-fix": "eslint ./src --fix",
-		"start": "pnpm build && pnpm start-no-build",
-		"start-no-build": "NODE_PATH=js/ node js/main.js",
-		"start-score-worker": "NODE_PATH=js/ node js/lib/score-import/worker/worker.js",
-		"load-seeds": "ts-node src/scripts/load-seeds",
-		"recalc-everything": "ts-node src/scripts/state-sync/sync-state.ts",
-		"make-user-admin": "ts-node src/scripts/make-user-admin.ts $@",
-		"validate-database": "ts-node src/scripts/validate-database",
-		"dev": "NODE_PATH=js/ nodemon",
-		"set-indexes": "ts-node src/scripts/set-indexes.ts"
+		"lint-fix": "eslint ./src --fix"
 	},
 	"author": "zk",
 	"license": "AGPL3",
@@ -75,7 +66,6 @@
 		"connect-redis": "catalog:",
 		"csv-parse": "catalog:",
 		"deepmerge": "catalog:",
-		"dotenv": "catalog:",
 		"express": "catalog:",
 		"express-async-errors": "catalog:",
 		"express-prom-bundle": "catalog:",
@@ -96,6 +86,7 @@
 		"node-html-parser": "catalog:",
 		"nodemailer": "catalog:",
 		"pg": "catalog:",
+		"bliss": "workspace:*",
 		"prudence": "catalog:",
 		"rate-limit-redis": "catalog:",
 		"redis": "catalog:",
@@ -105,12 +96,14 @@
 		"semver": "catalog:",
 		"tachi-common": "workspace:*",
 		"tachi-db": "workspace:*",
+		"tachi-db-migration-engine": "workspace:*",
 		"ts-node": "catalog:",
 		"typescript": "catalog:",
 		"uuidv7": "catalog:",
 		"winston": "catalog:",
 		"winston-loki": "catalog:",
-		"winston-transport": "catalog:"
+		"winston-transport": "catalog:",
+		"zod": "catalog:"
 	},
 	"nyc": {
 		"reporter": [

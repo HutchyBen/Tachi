@@ -1,15 +1,13 @@
-/* eslint-disable no-await-in-loop */
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { BacksyncCollection } from "#lib/seeds/repo";
+/* eslint-disable no-await-in-loop */
+import db from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";
 import fetch from "#utils/fetch";
 import { WrapScriptPromise } from "#utils/misc";
 import { FindSongOnTitle } from "#utils/queries/songs";
 import { decode } from "html-entities";
 import { parse } from "node-html-parser";
-
-const logger = CreateLogCtx(__filename);
 
 export async function UpdateDPTiers() {
 	const rawHTML = await fetch("https://zasa.sakura.ne.jp/dp/run.php").then((r) => r.text());
@@ -40,7 +38,7 @@ export async function UpdateDPTiers() {
 		});
 	}
 
-	logger.info(`Got DP tier data. Applying it.`);
+	log.info(`Got DP tier data. Applying it.`);
 
 	const updatedSongIDs = new Set();
 
@@ -49,7 +47,7 @@ export async function UpdateDPTiers() {
 			const song = await FindSongOnTitle("iidx", d.songTitle);
 
 			if (!song) {
-				logger.warn(`Couldn't find song with title ${d.songTitle}.`);
+				log.warn(`Couldn't find song with title ${d.songTitle}.`);
 				return;
 			}
 
@@ -84,9 +82,7 @@ export async function UpdateDPTiers() {
 	);
 
 	if (updatedSongIDs.size !== 0) {
-		logger.info(
-			`${updatedSongIDs.size} songs were changed. Recalcing the relevant scores now.`,
-		);
+		log.info(`${updatedSongIDs.size} songs were changed. Recalcing the relevant scores now.`);
 
 		await RecalcAllScores({
 			game: "iidx",
@@ -94,12 +90,12 @@ export async function UpdateDPTiers() {
 			songID: { $in: [...updatedSongIDs.values()] },
 		});
 
-		logger.info(`Recalced those scores.`);
+		log.info(`Recalced those scores.`);
 
 		await BacksyncCollection("charts-iidx", db.charts.iidx, "Update DP Tierlist");
 	}
 
-	logger.info("Done.");
+	log.info("Done.");
 }
 
 /**
@@ -121,5 +117,5 @@ function ParseTierStr(tierStr: string) {
 }
 
 if (require.main === module) {
-	WrapScriptPromise(UpdateDPTiers(), logger);
+	WrapScriptPromise(UpdateDPTiers(), log);
 }

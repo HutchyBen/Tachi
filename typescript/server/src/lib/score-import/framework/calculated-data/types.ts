@@ -1,9 +1,6 @@
-import type { KtLogger } from "#lib/logger/logger";
-import type { ClassConfigs, Classes, GPTString, integer } from "../../../../../../common/src";
-import type {
-	DerivedClassConfig,
-	ProvidedClassConfig,
-} from "../../../../../../common/src/types/game-config-utils";
+import type { KtLogger } from "#lib/log/log.js";
+import type { ClassConfigs, Classes, GPTString, integer } from "tachi-common";
+import type { DerivedClassConfig, ProvidedClassConfig } from "tachi-common/types/game-config-utils";
 
 // type RecordClassProvider<GPT extends GPTString> = {
 // 	[C in keyof ClassConfigs[GPT] as ClassConfigs[GPT][C] extends ProvidedClassConfig
@@ -18,5 +15,5 @@ export type ClassProvider<GPT extends GPTString = GPTString> = (
 	gptString: GPT,
 	userID: integer,
 	ratings: Record<string, number | null>,
-	logger: KtLogger,
+	log: KtLogger,
 ) => Partial<RecordClassProvider<GPT>> | Promise<Partial<RecordClassProvider<GPT>>> | undefined;

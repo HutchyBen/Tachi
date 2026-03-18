@@ -1,5 +1,5 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import {
 	InternalFailure,
@@ -16,7 +16,7 @@ export const ConverterIRKsHookSV6C: ConverterFunction<KsHookSV6CScore, KsHookSV6
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	const diff = SV6CConvertDifficulty(data.difficulty);
 
@@ -34,7 +34,7 @@ export const ConverterIRKsHookSV6C: ConverterFunction<KsHookSV6CScore, KsHookSV6
 	const song = await FindSongOnID("sdvx", chart.songID);
 
 	if (!song) {
-		logger.severe(`Song ${chart.songID} (sdvx) has no parent song?`);
+		log.error(`Song ${chart.songID} (sdvx) has no parent song?`);
 		throw new InternalFailure(`Song ${chart.songID} (sdvx) has no parent song?`);
 	}
 

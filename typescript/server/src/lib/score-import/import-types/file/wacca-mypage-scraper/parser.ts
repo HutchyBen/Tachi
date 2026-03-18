@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/log/log.js";
 import type { EmptyObject } from "#utils/types";
 
 import { CsvError as CSVError, parse } from "csv-parse/sync";
@@ -49,7 +49,7 @@ function parseCSVArray(csvString: string): Array<string> {
 export function ParseMyPageScraperRecordsCSV(
 	fileData: Express.Multer.File,
 	_body: Record<string, unknown>,
-	_logger: KtLogger,
+	_log: KtLogger,
 ): ParserFunctionReturns<MyPageRecordsParsedPB, EmptyObject> {
 	let rawCSVRecords: Array<unknown>;
 
@@ -119,7 +119,7 @@ export function ParseMyPageScraperRecordsCSV(
 export function ParseMyPageScraperPlayerCSV(
 	fileData: Express.Multer.File,
 	_body: Record<string, unknown>,
-	_logger: KtLogger,
+	_log: KtLogger,
 ): ParserFunctionReturns<never, EmptyObject> {
 	let csvRecords: Array<Record<string, string>>;
 

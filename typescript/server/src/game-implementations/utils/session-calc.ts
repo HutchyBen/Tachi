@@ -1,5 +1,5 @@
 import type { SessionCalculator } from "#game-implementations/types";
-import type { GPTString, integer, ScoreDocument } from "../../../../common/src";
+import type { GPTString, integer, ScoreDocument } from "tachi-common";
 
 export function SessionAverageBestN(vals: Array<number | null | undefined>, n = 10) {
 	const numbers = vals.filter((e) => typeof e === "number") as Array<number>;

@@ -1,5 +1,5 @@
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 import ResetDBState from "#test-utils/resets";
 import { Testing511SPA, TestingIIDXSPScore } from "#test-utils/test-data";
 import crypto from "crypto";
@@ -8,8 +8,6 @@ import t from "tap";
 
 import { ProcessPBs } from "./process-pbs";
 
-const logger = CreateLogCtx(__filename);
-
 t.test("#ProcessPBs", (t) => {
 	t.beforeEach(ResetDBState);
 
@@ -17,7 +15,7 @@ t.test("#ProcessPBs", (t) => {
 		await db["personal-bests"].remove({});
 
 		// scores on 511 SPA are pre-loaded into the database
-		await ProcessPBs("iidx", "SP", 1, new Set([Testing511SPA.chartID]), logger);
+		await ProcessPBs("iidx", "SP", 1, new Set([Testing511SPA.chartID]), log);
 
 		const pbs = await db["personal-bests"].find({});
 
@@ -72,7 +70,7 @@ t.test("#ProcessPBs", (t) => {
 			"SP",
 			1,
 			new Set(["test1", "test2", "test3", Testing511SPA.chartID]),
-			logger,
+			log,
 		);
 
 		const pbs = await db["personal-bests"].find({});

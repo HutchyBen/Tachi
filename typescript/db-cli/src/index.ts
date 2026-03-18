@@ -1,8 +1,10 @@
 #!/usr/bin/env bun
-import { existsSync, mkdirSync, writeFileSync } from "fs";
-import { join, resolve } from "path";
+
+// WARNING: This is claude-slop and not reviewed by me
 
 import { Command } from "commander";
+import { existsSync, mkdirSync, writeFileSync } from "fs";
+import { join, resolve } from "path";
 import { Client } from "pg";
 import { applyMigrations, getMigrationInfo, revertLastMigration } from "tachi-db-migration-engine";
 
@@ -10,15 +12,14 @@ import { applyMigrations, getMigrationInfo, revertLastMigration } from "tachi-db
 // Helpers
 // ---------------------------------------------------------------------------
 
-const DEFAULT_TACHI_DATABASE_URL = "postgresql://tachi:tachi@postgres/tachi_dev";
-const DEFAULT_MIGRATIONS_DIR = "db/migrations";
+const DEFAULT_MIGRATIONS_DIR = "/tachi/db/migrations";
 
 function getConnectionString(opts: { databaseUrl?: string }): string {
-	const url = opts.databaseUrl ?? process.env.DATABASE_URL ?? DEFAULT_TACHI_DATABASE_URL;
+	const url = opts.databaseUrl ?? process.env.DATABASE_URL;
 
 	if (!url) {
 		console.error(
-			"[migrate] No database URL provided. Set DATABASE_URL or POSTGRES_URL, or pass --database-url.",
+			"[migrate] No database URL provided. Set DATABASE_URL, or pass --database-url.",
 		);
 		process.exit(1);
 	}
@@ -240,12 +241,12 @@ migrateCmd
 			const typeWidth = 7;
 			const statusWidth = 10;
 
-			const header =
+			const header = `${
 				"Version".padEnd(versionWidth) +
 				"Description".padEnd(descWidth) +
 				"Type".padEnd(typeWidth) +
-				"Status".padEnd(statusWidth) +
-				"Applied At";
+				"Status".padEnd(statusWidth)
+			}Applied At`;
 
 			console.log(header);
 			console.log("-".repeat(header.length + 20));

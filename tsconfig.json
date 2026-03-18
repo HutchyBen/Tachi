@@ -1,6 +1,7 @@
 {
 	"files": [],
 	"references": [
+		{ "path": "./typescript/bliss" },
 		{ "path": "./typescript/common" },
 		{ "path": "./typescript/db" },
 		{ "path": "./typescript/db-migration-engine" },

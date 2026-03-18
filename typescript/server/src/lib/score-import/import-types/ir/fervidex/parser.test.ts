@@ -1,12 +1,10 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import t from "tap";
 
 import { SoftwareIDToVersion } from "./parser";
 
-const logger = CreateLogCtx(__filename);
-
 t.test("#SoftwareIDToVersion", (t) => {
-	const f = (sid: string) => SoftwareIDToVersion(sid, logger);
+	const f = (sid: string) => SoftwareIDToVersion(sid, log);
 
 	t.throws(() => f("a"), {}, "Should throw on invalid string.");
 	t.throws(() => f("LDJ:J:B:Q:2020092900"), {}, "Should throw on unknown HV revision.");

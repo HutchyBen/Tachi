@@ -1,5 +1,5 @@
-import type { PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
 import type { PBMergeFunction } from "#game-implementations/types";
+import type { PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
 import type { FilterQuery } from "mongodb";
 import type {
 	ConfDerivedMetrics,
@@ -7,10 +7,10 @@ import type {
 	ConfProvidedMetrics,
 	GPTString,
 	ScoreDocument,
-} from "../../../../common/src";
-import type { ExtractEnumMetricNames } from "../../../../common/src/types/metrics";
+} from "tachi-common";
+import type { ExtractEnumMetricNames } from "tachi-common/types/metrics";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 
 // insane typemagic to get mongodb-safe names for this GPT's metrics.
 type MetricKeys<GPT extends GPTString> = Exclude<

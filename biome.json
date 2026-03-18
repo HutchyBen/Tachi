@@ -1,0 +1,29 @@
+{
+	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+	"formatter": {
+		"indentStyle": "tab",
+		"lineWidth": 100,
+		"indentWidth": 4
+	},
+	"files": {
+		"includes": [
+			"**",
+			"!typescript/db/src/generated",
+			"!typescript/client/build",
+			"!typescript-vendor",
+			"!db/seeds",
+			"!typescript/server/src/test-utils/test-data"
+		]
+	},
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"linter": {
+		"enabled": false
+	},
+	"assist": {
+		"enabled": false
+	}
+}

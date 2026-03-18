@@ -1,10 +1,5 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
-import type {
-	Difficulties,
-	integer,
-	Judgements,
-	Versions,
-} from "../../../../../../../../common/src";
+import type { Difficulties, integer, Judgements, Versions } from "tachi-common";
 
 import {
 	InternalFailure,
@@ -24,7 +19,7 @@ export const ConverterAPICGJubeat: ConverterFunction<CGJubeatScore, CGContext> =
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	const difficulty = ConvertDifficulty(data.difficulty, data.hardMode);
 	const version = ConvertVersion(data.version);
@@ -52,7 +47,7 @@ export const ConverterAPICGJubeat: ConverterFunction<CGJubeatScore, CGContext> =
 	const song = await FindSongOnID("jubeat", chart.songID);
 
 	if (!song) {
-		logger.severe(`Song-Chart desync with song ID ${chart.songID} (jubeat).`);
+		log.error(`Song-Chart desync with song ID ${chart.songID} (jubeat).`);
 		throw new InternalFailure(`Song-Chart desync with song ID ${chart.songID} (jubeat).`);
 	}
 

@@ -6,7 +6,7 @@ import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
-import { type ChartDocument, type SongDocument } from "../../../common/src";
+import { type ChartDocument, type SongDocument } from "tachi-common";
 
 import { ReadCollection, WriteCollection } from "../../util";
 

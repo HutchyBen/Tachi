@@ -1,6 +1,6 @@
-import type { PBScoreDocument, ScoreDocument } from "../../../../../../../../common/src";
+import type { PBScoreDocument, ScoreDocument } from "tachi-common";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import mockApi from "#test-utils/mock-api";
 import ResetDBState from "#test-utils/resets";
 import t from "tap";

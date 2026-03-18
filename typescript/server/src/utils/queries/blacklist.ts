@@ -1,4 +1,4 @@
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 
 export async function GetBlacklist() {
 	return (await db["score-blacklist"].find({}, { projection: { scoreID: 1 } })).map(

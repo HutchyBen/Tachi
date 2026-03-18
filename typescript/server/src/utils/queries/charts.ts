@@ -8,9 +8,9 @@ import type {
 	Playtype,
 	Playtypes,
 	Versions,
-} from "../../../../common/src";
+} from "tachi-common";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 
 export function FindChartWithChartID(game: GameGroup, chartID: string) {
 	return db.anyCharts[game].findOne({ chartID });

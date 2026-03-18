@@ -1,11 +1,9 @@
 import type { RequestHandler } from "express";
-import type { integer } from "../../../../common/src";
+import type { integer } from "tachi-common";
 
 import { SIXTEEN_MEGABTYES } from "#lib/constants/filesize";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import multer, { MulterError } from "multer";
-
-const defaultLogger = CreateLogCtx(__filename);
 
 // 16MB
 export const DefaultMulterUpload = multer({ limits: { fileSize: 1024 * 1024 * 16 } });
@@ -13,7 +11,6 @@ export const DefaultMulterUpload = multer({ limits: { fileSize: 1024 * 1024 * 16
 export const CreateMulterSingleUploadMiddleware = (
 	fieldName: string,
 	fileSize: integer = SIXTEEN_MEGABTYES,
-	logger = defaultLogger,
 	throwOnNoFile = true,
 ): RequestHandler => {
 	const UploadMW = multer({ limits: { fileSize } }).single(fieldName);
@@ -21,7 +18,7 @@ export const CreateMulterSingleUploadMiddleware = (
 	return (req, res, next) => {
 		UploadMW(req, res, (err: unknown) => {
 			if (err instanceof MulterError) {
-				logger.info(`Multer Error.`, { err });
+				log.info({ err }, `Multer Error.`);
 
 				return res.status(400).json({
 					success: false,
@@ -29,7 +26,7 @@ export const CreateMulterSingleUploadMiddleware = (
 						"File provided was too large, corrupt, or provided in the wrong field.",
 				});
 			} else if (err !== undefined && err !== null) {
-				logger.error(`Unknown file import error.`, { err });
+				log.error({ err }, `Unknown file import error.`);
 
 				return res.status(500).json({
 					success: false,

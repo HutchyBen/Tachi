@@ -50,7 +50,7 @@ function fish_greeting
 		echo ""
 		echo $(rgb "Something went wrong and Tachi didn't set up correctly." ff0000 000000)
 		echo ""
-		echo $(rgb "Please run" ff0000 000000) $(cmd "just bootstrap"). $(rgb "An incorrectly setup Tachi might not launch." ff0000 000000)
+		echo $(rgb "Please run" ff0000 000000) $(cmd "just setup"). $(rgb "An incorrectly setup Tachi might not launch." ff0000 000000)
 		return
 	end
 
@@ -64,7 +64,7 @@ function fish_greeting
 		echo "    $(rgb "Use Ctrl+C to stop the server." ffff00 000000)"
 		echo ""
 		echo "Type $(cmd "seeds") to run seeds scripts."
-		echo "    $(rgb "Create new script files in seeds/scripts." ffff00 000000)"
+		echo "    $(rgb "Create new script files in typescript/seeds-scripts." ffff00 000000)"
 		echo "    Your host PC files can be found in $(rgb "/host-pc" ffff00 000000)."
 		echo ""
 		echo "Type $(cmd "just") to see everything else we have going on."
@@ -119,7 +119,9 @@ function seeds
 		set place rerunners
 	end
 
-	cd /tachi/seeds/scripts/$place
+	set scripts_dir /tachi/typescript/seeds-scripts/$place
+
+	cd $scripts_dir
 
 	set selected_file (fd -e ts -e js --strip-cwd-prefix | $fzfcmd)
 

@@ -16,7 +16,7 @@ import { SV6CConvertDifficulty, SV6CConvertLamp } from "../kshook-sv6c/converter
 export const ConverterKsHookSV6CStatic: ConverterFunction<
 	KsHookSV6CStaticScore,
 	EmptyObject
-> = async (data, context, importType, logger) => {
+> = async (data, context, importType, log) => {
 	const diff = SV6CConvertDifficulty(data.difficulty);
 
 	const chart = await FindSDVXChartOnInGameIDVersion(data.music_id, diff, "konaste");
@@ -33,7 +33,7 @@ export const ConverterKsHookSV6CStatic: ConverterFunction<
 	const song = await FindSongOnID("sdvx", chart.songID);
 
 	if (!song) {
-		logger.severe(`Song ${chart.songID} (sdvx) has no parent song?`);
+		log.error(`Song ${chart.songID} (sdvx) has no parent song?`);
 		throw new InternalFailure(`Song ${chart.songID} (sdvx) has no parent song?`);
 	}
 

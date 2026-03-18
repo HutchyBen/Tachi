@@ -2,8 +2,8 @@ import type { ClassProvider } from "#lib/score-import/framework/calculated-data/
 
 import nodeFetch from "#utils/fetch";
 import { IsRecord } from "#utils/misc";
-import { IIDX_DANS } from "../../../../../../../../common/src";
-import { IIDXDans } from "../../../../../../../../common/src/config/game-support/iidx";
+import { IIDX_DANS } from "tachi-common";
+import { IIDXDans } from "tachi-common/config/game-support/iidx";
 
 import type { KaiAPIReauthFunction } from "../traverse-api";
 
@@ -52,16 +52,19 @@ export async function CreateKaiIIDXClassProvider(
 		err = e;
 	}
 
-	return (gptString, userID, ratings, logger) => {
+	return (gptString, userID, ratings, log) => {
 		if (err !== undefined) {
-			logger.error(`An error occured while updating classes for ${baseUrl}.`, { err });
+			log.error({ err }, `An error occured while updating classes for ${baseUrl}.`);
 			return {};
 		}
 
 		if (!IsRecord(json)) {
-			logger.error(`JSON Returned from server was not an object? Not updating anything.`, {
-				json,
-			});
+			log.error(
+				{
+					json,
+				},
+				`JSON Returned from server was not an object? Not updating anything.`,
+			);
 			return {};
 		}
 
@@ -72,7 +75,7 @@ export async function CreateKaiIIDXClassProvider(
 		} else if (gptString === "iidx:DP") {
 			maybeIIDXDan = json.dp;
 		} else {
-			logger.warn(`KAIIIDXClassUpdater called with invalid gptString of ${gptString}.`);
+			log.warn(`KAIIIDXClassUpdater called with invalid gptString of ${gptString}.`);
 			return {};
 		}
 
@@ -81,26 +84,26 @@ export async function CreateKaiIIDXClassProvider(
 			maybeIIDXDan === undefined ||
 			typeof maybeIIDXDan !== "number"
 		) {
-			logger.info(`User has no ${gptString} dan. Not updating anything.`);
+			log.info(`User has no ${gptString} dan. Not updating anything.`);
 			return {};
 		}
 
 		const iidxDan: number = maybeIIDXDan;
 
 		if (!Number.isInteger(iidxDan)) {
-			logger.warn(`${baseUrl} returned a dan of ${iidxDan}, which was not a number.`);
+			log.warn(`${baseUrl} returned a dan of ${iidxDan}, which was not a number.`);
 			return {};
 		}
 
 		if (iidxDan > IIDX_DANS.KAIDEN) {
-			logger.warn(
+			log.warn(
 				`${baseUrl} returned a dan of ${iidxDan}, which was greater than KAIDEN (${IIDX_DANS.KAIDEN}.)`,
 			);
 			return {};
 		}
 
 		if (iidxDan < IIDX_DANS.KYU_7) {
-			logger.warn(
+			log.warn(
 				`${baseUrl} returned a dan of ${iidxDan}, which was less than KYU_7 (${IIDX_DANS.KYU_7}.)`,
 			);
 			return {};
@@ -109,9 +112,7 @@ export async function CreateKaiIIDXClassProvider(
 		const value = IIDXDans[iidxDan];
 
 		if (!value) {
-			logger.warn(
-				`${baseUrl} returned a dan of ${iidxDan}, which has no corresponding value.`,
-			);
+			log.warn(`${baseUrl} returned a dan of ${iidxDan}, which has no corresponding value.`);
 			return {};
 		}
 

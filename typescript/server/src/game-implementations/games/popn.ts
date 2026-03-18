@@ -1,12 +1,12 @@
 import type { GPTServerImplementation } from "#game-implementations/types";
-import type { GetEnumValue } from "../../../../common/src/types/metrics";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
-import { IsNullish } from "#utils/misc";
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileAvgBestN, ProfileSumBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
+import { IsNullish } from "#utils/misc";
 import { PopnClassPoints } from "rg-stats";
-import { FmtNum, FmtNumCompact, GetGrade, POPN_GBOUNDARIES } from "../../../../common/src";
+import { FmtNum, FmtNumCompact, GetGrade, POPN_GBOUNDARIES } from "tachi-common";
 
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 

@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/log/log.js";
 
 import { VERSION_STR } from "#lib/constants/version";
 import { TachiConfig } from "#lib/setup/config";
@@ -43,7 +43,7 @@ export async function* TraverseKaiAPI(
 	baseUrl: string,
 	subUrl: string,
 	token: string,
-	logger: KtLogger,
+	log: KtLogger,
 	reauthFunction: KaiAPIReauthFunction | null = null,
 	fetch = nodeFetch,
 ) {
@@ -60,7 +60,7 @@ export async function* TraverseKaiAPI(
 		const origin = new URL(url).origin;
 
 		if (origin !== baseUrl) {
-			logger.severe(`${baseUrl} attempted SSRF with url ${url}?`);
+			log.error(`${baseUrl} attempted SSRF with url ${url}?`);
 
 			throw new ScoreImportFatalError(500, `${baseUrl} returned invalid data.`);
 		}
@@ -81,7 +81,7 @@ export async function* TraverseKaiAPI(
 				},
 			});
 		} catch (err) {
-			logger.error(`Received invalid response from ${url}.`, { err });
+			log.error({ err }, `Received invalid response from ${url}.`);
 			throw new ScoreImportFatalError(
 				500,
 				`Received invalid response from their API. Are they down?`,
@@ -124,9 +124,9 @@ export async function* TraverseKaiAPI(
 
 			json = JSON.parse(text) as unknown;
 		} catch (err) {
-			logger.error(
-				`Received invalid (non-json) response from ${url}. Status code was ${res.status}.`,
+			log.error(
 				{ err, text },
+				`Received invalid (non-json) response from ${url}. Status code was ${res.status}.`,
 			);
 			throw new ScoreImportFatalError(
 				500,
@@ -135,7 +135,7 @@ export async function* TraverseKaiAPI(
 		}
 
 		if (!IsRecord(json)) {
-			logger.error(`Received invalid (non-object, but json) response from ${url}.`, { json });
+			log.error({ json }, `Received invalid (non-object, but json) response from ${url}.`);
 			throw new ScoreImportFatalError(
 				500,
 				`Received invalid response from their API. Are they down?`,
@@ -143,7 +143,7 @@ export async function* TraverseKaiAPI(
 		}
 
 		if (!IsRecord(json._links)) {
-			logger.error(`Received invalid JSON from ${url}. Invalid _links.`, { body: json });
+			log.error({ body: json }, `Received invalid JSON from ${url}. Invalid _links.`);
 
 			throw new ScoreImportFatalError(
 				500,
@@ -154,7 +154,7 @@ export async function* TraverseKaiAPI(
 		currentIteration++;
 
 		if (currentIteration > MAX_ITERATIONS) {
-			logger.error(
+			log.error(
 				`An infinite loop has occured - Terminating at MAX_ITERATIONS (${MAX_ITERATIONS}).`,
 			);
 			throw new ScoreImportFatalError(
@@ -169,9 +169,12 @@ export async function* TraverseKaiAPI(
 			// exit the loop after this, we're on the last page.
 			fetchMoreData = false;
 		} else {
-			logger.error(`Received invalid response from ${url}. Invalid _links._next.`, {
-				body: json,
-			});
+			log.error(
+				{
+					body: json,
+				},
+				`Received invalid response from ${url}. Invalid _links._next.`,
+			);
 
 			throw new ScoreImportFatalError(
 				500,
@@ -180,9 +183,12 @@ export async function* TraverseKaiAPI(
 		}
 
 		if (!Array.isArray(json._items)) {
-			logger.error(`Received invalid response from ${url}. Invalid _items.`, {
-				body: json,
-			});
+			log.error(
+				{
+					body: json,
+				},
+				`Received invalid response from ${url}. Invalid _items.`,
+			);
 
 			throw new ScoreImportFatalError(500, `Received invalid _items from their API.`);
 		}

@@ -1,12 +1,12 @@
 import type { GoalCriteriaFormatter } from "#game-implementations/types";
 import type { FilterQuery } from "mongodb";
 
-import db from "#external/mongo/db";
+import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
-import CreateLogCtx, { type KtLogger } from "#lib/logger/logger";
+import { type KtLogger, log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 import { GetFolderChartIDs } from "#utils/folder";
 import fjsh from "fast-json-stable-hash";
-import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import {
 	FormatGameGroup,
 	type GameGroup,
@@ -21,11 +21,9 @@ import {
 	type Playtype,
 	type QuestDocument,
 	type QuestSubscriptionDocument,
-} from "../../../../common/src";
+} from "tachi-common";
 
 import { CreateGoalTitle as CreateGoalName, ValidateGoalChartsAndCriteria } from "./goal-utils";
-
-const logger = CreateLogCtx(__filename);
 
 export interface EvaluatedGoalReturn {
 	achieved: boolean;
@@ -58,7 +56,7 @@ export function CreateGoalID(
 export async function EvaluateGoalForUser(
 	goal: GoalDocument,
 	userID: integer,
-	logger: KtLogger,
+	log: KtLogger,
 ): Promise<EvaluatedGoalReturn | null> {
 	// First, we need to resolve the set of charts this
 	// goal involves.
@@ -192,11 +190,11 @@ export async function EvaluateGoalForUser(
 		default: {
 			// note that this seemingly nonsensical type assertion is because typescript has whittled down
 			// goal.criteria (correctly) to 'never', but we want to log if something somehow ends up here (it shouldn't).
-			logger.warn(
+			log.warn(
+				{ goal },
 				`Invalid goal: ${goal.goalID}, unknown criteria.mode ${
 					(goal.criteria as GoalDocument["criteria"]).mode
 				}, ignoring.`,
-				{ goal },
 			);
 
 			return null;
@@ -344,7 +342,7 @@ export async function SubscribeToGoal(
 
 	if (!goalExists) {
 		await db.goals.insert(goalDocument);
-		logger.info(`Inserting new goal '${goalDocument.name}'.`);
+		log.info(`Inserting new goal '${goalDocument.name}'.`);
 	}
 
 	const userAlreadySubscribed = await db["goal-subs"].findOne({
@@ -383,7 +381,7 @@ export async function SubscribeToGoal(
 		return { ...userAlreadySubscribed, wasAssignedStandalone: true };
 	}
 
-	const result = await EvaluateGoalForUser(goalDocument, userID, logger);
+	const result = await EvaluateGoalForUser(goalDocument, userID, log);
 
 	if (!result) {
 		throw new Error(`Couldn't evaluate goal? See previous logs.`);
@@ -573,7 +571,7 @@ export async function UnsubscribeFromOrphanedGoalSubs(
 	const toRemove = maybeToRemove.filter((e) => e !== null) as Array<string>;
 
 	if (toRemove.length > 0) {
-		logger.info(
+		log.info(
 			`Removing ${toRemove.length} goals from user ${userID} on ${FormatGameGroup(
 				game,
 				playtype,
@@ -602,7 +600,7 @@ export async function GetRelevantGoals(
 	game: GameGroup,
 	userID: integer,
 	chartIDs: Set<string>,
-	logger: KtLogger,
+	log: KtLogger,
 	onlyUnachieved = false,
 ): Promise<{ goals: Array<GoalDocument>; goalSubsMap: Map<string, GoalSubscriptionDocument> }> {
 	const gsQuery: FilterQuery<GoalSubscriptionDocument> = {
@@ -616,7 +614,7 @@ export async function GetRelevantGoals(
 
 	const goalSubs = await db["goal-subs"].find(gsQuery);
 
-	logger.verbose(`Found user has ${goalSubs.length} goals.`);
+	log.debug(`Found user has ${goalSubs.length} goals.`);
 
 	if (!goalSubs.length) {
 		return { goals: [], goalSubsMap: new Map() };
@@ -769,6 +767,6 @@ export async function EditGoal(oldGoal: GoalDocument, newGoal: GoalDocument) {
 	try {
 		await db.goals.insert(newGoal);
 	} catch (err) {
-		logger.info(`Goal ${newGoal.name} already existed.`);
+		log.info(`Goal ${newGoal.name} already existed.`);
 	}
 }

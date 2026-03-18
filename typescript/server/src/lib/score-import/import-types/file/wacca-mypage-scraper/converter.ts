@@ -1,7 +1,7 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
 import type { EmptyObject } from "#utils/types";
-import type { Difficulties } from "../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
+import type { Difficulties } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import {
 	InvalidScoreFailure,
@@ -26,7 +26,7 @@ const LAMPS: Record<number, GetEnumValue<"wacca:Single", "lamp">> = {
 const ConvertMyPageScraperRecordsCSV: ConverterFunction<
 	MyPageRecordsParsedPB,
 	EmptyObject
-> = async (data, context, importType, logger) => {
+> = async (data, context, importType, log) => {
 	// TODO: use inGameID
 	const song = await FindSongOnTitle("wacca", data.songTitle);
 
@@ -69,7 +69,7 @@ const ConvertMyPageScraperRecordsCSV: ConverterFunction<
 	const lamp = LAMPS[data.lamp];
 
 	if (lamp === undefined) {
-		logger.info(`Invalid lamp of ${data.lamp} provided.`);
+		log.info(`Invalid lamp of ${data.lamp} provided.`);
 		throw new InvalidScoreFailure(`${humanisedChartTitle} - Invalid lamp of ${data.lamp}.`);
 	}
 

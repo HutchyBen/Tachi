@@ -1,13 +1,8 @@
 import fs from "fs";
 import path from "path";
-import {
-	GAME_GROUP_CONFIGS,
-	GAME_PT_CONFIGS,
-	GPTStringToV3,
-	V3ToGameGroup,
-} from "../../../common/src";
+import { GAME_GROUP_CONFIGS, GAME_PT_CONFIGS, GPTStringToV3, V3ToGameGroup } from "tachi-common";
 
-const { CreateSongID, CreateChartID, ReadCollection, WriteCollection } = require("../../util");
+import { CreateChartID, CreateSongID, ReadCollection, WriteCollection } from "../../util";
 
 // ── Stability map ─────────────────────────────────────────────────────────────
 // Persists legacy→new ID mappings so re-runs produce the same IDs.

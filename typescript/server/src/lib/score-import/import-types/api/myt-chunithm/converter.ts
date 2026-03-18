@@ -8,13 +8,13 @@ import {
 	SongOrChartNotFoundFailure,
 } from "#lib/score-import/framework/common/converter-failures";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
-import { FindChartOnInGameID } from "#utils/queries/charts";
-import { FindSongOnID } from "#utils/queries/songs";
 import {
 	ChunithmClearStatus,
 	ChunithmComboStatus,
 	ChunithmLevel,
 } from "#proto/generated/chunithm/common_pb";
+import { FindChartOnInGameID } from "#utils/queries/charts";
+import { FindSongOnID } from "#utils/queries/songs";
 
 import type { ConverterFunction } from "../../common/types";
 import type { MytChunithmScore } from "./types";
@@ -51,7 +51,7 @@ const ConvertAPIMytChunithm: ConverterFunction<MytChunithmScore, EmptyObject> = 
 	data,
 	_context,
 	importType,
-	logger,
+	log,
 ) => {
 	if (data.info === undefined || data.judge === undefined) {
 		throw new InvalidScoreFailure("Failed to receive score data from MYT API");
@@ -93,7 +93,7 @@ const ConvertAPIMytChunithm: ConverterFunction<MytChunithmScore, EmptyObject> = 
 	const song = await FindSongOnID("chunithm", chart.songID);
 
 	if (song === null) {
-		logger.severe(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`, { chart });
+		log.error({ chart }, `Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
 		throw new InternalFailure(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
 	}
 

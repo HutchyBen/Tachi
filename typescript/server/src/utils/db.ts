@@ -1,7 +1,7 @@
 import type { FilterQuery } from "mongodb";
 
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 import {
 	FormatChart,
 	type GameGroup,
@@ -13,9 +13,7 @@ import {
 	type QuestlineDocument,
 	type QuestSubscriptionDocument,
 	type ScoreDocument,
-} from "../../../common/src";
-
-const logger = CreateLogCtx(__filename);
+} from "tachi-common";
 
 export async function GetNextCounterValue(counterName: string): Promise<integer> {
 	const sequenceDoc = await db.counters.findOneAndUpdate(
@@ -35,7 +33,7 @@ export async function GetNextCounterValue(counterName: string): Promise<integer>
 	);
 
 	if (!sequenceDoc) {
-		logger.error(`Could not find sequence document for ${counterName}`);
+		log.error(`Could not find sequence document for ${counterName}`);
 		throw new Error(`Could not find sequence document for ${counterName}.`);
 	}
 
@@ -43,7 +41,7 @@ export async function GetNextCounterValue(counterName: string): Promise<integer>
 }
 
 export async function DecrementCounterValue(counterName: string): Promise<integer> {
-	logger.verbose(`Decrementing Counter Value ${counterName}.`);
+	log.debug(`Decrementing Counter Value ${counterName}.`);
 
 	const sequenceDoc = await db.counters.findOneAndUpdate(
 		{
@@ -60,7 +58,7 @@ export async function DecrementCounterValue(counterName: string): Promise<intege
 	);
 
 	if (!sequenceDoc) {
-		logger.error(`Could not find sequence document for ${counterName}`);
+		log.error(`Could not find sequence document for ${counterName}`);
 		throw new Error(`Could not find sequence document for ${counterName}.`);
 	}
 
@@ -93,7 +91,7 @@ export async function UpdateGameSongIDCounter(game: "bms" | "pms") {
 	);
 
 	if (!latestSong) {
-		logger.warn(
+		log.warn(
 			`No ${game} charts loaded, yet BMS sync was attempted? This was probably an initial setup, starting songIDs from 1.`,
 		);
 	}
@@ -390,9 +388,9 @@ export async function GetChildQuests(questline: QuestlineDocument) {
 	});
 
 	if (quests.length !== questline.quests.length) {
-		logger.warn(
-			`Expected to find ${questline.quests.length} quests in the database, but only found ${quests.length}.`,
+		log.warn(
 			{ questline },
+			`Expected to find ${questline.quests.length} quests in the database, but only found ${quests.length}.`,
 		);
 	}
 

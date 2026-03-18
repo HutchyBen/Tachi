@@ -1,6 +1,6 @@
-import type { integer } from "../../../../common/src";
+import type { integer } from "tachi-common";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import { GetEnumDistForFolders } from "#utils/folder";
 import { GetTimeXHoursAgo } from "#utils/misc";
 

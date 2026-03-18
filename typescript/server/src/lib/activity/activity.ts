@@ -14,9 +14,9 @@ import type {
 	SessionDocument,
 	SongDocument,
 	UserDocument,
-} from "../../../../common/src";
+} from "tachi-common";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import {
 	GetRecentlyAchievedGoals,
 	GetRecentlyAchievedQuests,

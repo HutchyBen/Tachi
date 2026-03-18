@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import fs from "fs";
 import path from "path";
-import { type GameGroup, V3ToGameGroup } from "../../common/src";
+import { type GameGroup, V3ToGameGroup } from "tachi-common";
 import { z } from "zod";
 
 import { GetChartCollectionGame, GetSongCollectionGame, ReadCollection } from "../util";

@@ -1,13 +1,11 @@
-import type { ChartDocument } from "../../../../common/src";
+import type { ChartDocument } from "tachi-common";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { PullDatabaseSeeds } from "#lib/seeds/repo";
 import { WrapScriptPromise } from "#utils/misc";
 import fetch from "node-fetch";
 
 const AI_URL = "https://bms.hexlataia.xyz/tables/json/ai.json";
-
-const logger = CreateLogCtx(__filename);
 
 interface AITableEntry {
 	level: string;
@@ -33,5 +31,5 @@ export async function UpdateAILevels() {
 }
 
 if (require.main === module) {
-	WrapScriptPromise(UpdateAILevels(), logger);
+	WrapScriptPromise(UpdateAILevels(), log);
 }

@@ -9,7 +9,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
 	&& apt-get upgrade -y \
 	&& apt-get install -y \
 		# essentials
-		git npm locales sudo unzip \
+		git npm locales sudo unzip jq \
 		# docs pythonisms
 		python-is-python3 python3-setuptools pip mkdocs mkdocs-material \
 		# postgres client tools (psql, pg_dump, pg_restore, pg_isready, etc.)

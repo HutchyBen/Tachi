@@ -1,6 +1,6 @@
 import type { EmptyObject } from "#utils/types";
-import type { Difficulties, Playtypes, Versions } from "../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
+import type { Difficulties, Playtypes, Versions } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import { FindChartWithPTDFVersion } from "#utils/queries/charts";
 import { FindSongOnTitleInsensitive } from "#utils/queries/songs";
@@ -113,7 +113,7 @@ export const ConvertFileS3: ConverterFunction<S3Score, EmptyObject> = async (
 	data,
 	context,
 	importType,
-	_logger,
+	_log,
 ) => {
 	const song = await FindSongOnTitleInsensitive("iidx", data.songname);
 

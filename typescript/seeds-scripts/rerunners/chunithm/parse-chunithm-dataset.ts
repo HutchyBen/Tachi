@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { type ChartDocument, type Difficulties, type SongDocument } from "../../../common/src";
+import { type ChartDocument, type Difficulties, type SongDocument } from "tachi-common";
 
 import { CreateChartID, MutateCollection, ReadCollection, WriteCollection } from "../../util";
 

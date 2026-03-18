@@ -1,5 +1,5 @@
 import type { Session, SessionData } from "express-session";
-import type { APITokenDocument } from "../../../../common/src";
+import type { APITokenDocument } from "tachi-common";
 
 import type { SYMBOL_TACHI_API_AUTH, SYMBOL_TACHI_DATA } from "../../lib/constants/tachi";
 import type { TachiRequestData, TachiSessionData } from "../../utils/types";

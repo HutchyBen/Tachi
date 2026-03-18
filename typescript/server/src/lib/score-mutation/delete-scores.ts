@@ -1,16 +1,14 @@
-import type { GameGroup, Playtype, ScoreDocument } from "../../../../common/src";
+import type { GameGroup, Playtype, ScoreDocument } from "tachi-common";
 
-/* eslint-disable no-await-in-loop */
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { GetAndUpdateUsersGoals } from "#lib/score-import/framework/goals/goals";
 import { UpdateChartRanking } from "#lib/score-import/framework/pb/create-pb-doc";
 import { ProcessPBs } from "#lib/score-import/framework/pb/process-pbs";
 import { UpdateUsersQuests } from "#lib/score-import/framework/quests/quests";
 import { UpdateUsersGamePlaytypeStats } from "#lib/score-import/framework/ugpt-stats/update-ugpt-stats";
+/* eslint-disable no-await-in-loop */
+import db from "#services/mongo/db";
 import { RecalcSessions } from "#utils/calculations/recalc-sessions";
-
-const logger = CreateLogCtx(__filename);
 
 /**
  * Deletes the provided score. This needs a dedicated helper method due to
@@ -87,13 +85,7 @@ export async function DeleteScore(
 	});
 
 	if (userHasOtherScores && attemptPBReprocess) {
-		await ProcessPBs(
-			score.game,
-			score.playtype,
-			score.userID,
-			new Set([score.chartID]),
-			logger,
-		);
+		await ProcessPBs(score.game, score.playtype, score.userID, new Set([score.chartID]), log);
 	} else {
 		await db["personal-bests"].remove({
 			userID: score.userID,
@@ -103,7 +95,7 @@ export async function DeleteScore(
 		await UpdateChartRanking(score.game, score.playtype, score.chartID);
 	}
 
-	await UpdateUsersGamePlaytypeStats(score.game, score.playtype, score.userID, null, logger);
+	await UpdateUsersGamePlaytypeStats(score.game, score.playtype, score.userID, null, log);
 
 	if (blacklist) {
 		const alreadyBlacklisted = await db["score-blacklist"].findOne({
@@ -112,7 +104,7 @@ export async function DeleteScore(
 		});
 
 		if (!alreadyBlacklisted) {
-			logger.info(`Blacklisted ${score.scoreID}.`);
+			log.info(`Blacklisted ${score.scoreID}.`);
 			await db["score-blacklist"].insert({
 				userID: score.userID,
 				scoreID: score.scoreID,
@@ -123,7 +115,7 @@ export async function DeleteScore(
 }
 
 export async function DeleteMultipleScores(scores: Array<ScoreDocument>, blacklist = false) {
-	logger.info(`Received request to delete ${scores.length} score(s) (Blacklist: ${blacklist}).`);
+	log.info(`Received request to delete ${scores.length} score(s) (Blacklist: ${blacklist}).`);
 
 	const scoreIDs = scores.map((e) => e.scoreID);
 	const chartIDs = scores.map((e) => e.chartID);
@@ -207,7 +199,7 @@ export async function DeleteMultipleScores(scores: Array<ScoreDocument>, blackli
 				score.playtype,
 				score.userID,
 				new Set([score.chartID]),
-				logger,
+				log,
 			);
 		} else {
 			await db["personal-bests"].remove({
@@ -225,7 +217,7 @@ export async function DeleteMultipleScores(scores: Array<ScoreDocument>, blackli
 			});
 
 			if (!alreadyBlacklisted) {
-				logger.info(`Blacklisted ${score.scoreID}.`);
+				log.info(`Blacklisted ${score.scoreID}.`);
 				await db["score-blacklist"].insert({
 					userID: score.userID,
 					scoreID: score.scoreID,
@@ -248,13 +240,13 @@ export async function DeleteMultipleScores(scores: Array<ScoreDocument>, blackli
 
 		// if this user has any scores, update their goals.
 		if (pertinentChartIDs.length > 0) {
-			const goalInfo = await GetAndUpdateUsersGoals(game, userID, new Set(chartIDs), logger);
+			const goalInfo = await GetAndUpdateUsersGoals(game, userID, new Set(chartIDs), log);
 
-			await UpdateUsersQuests(goalInfo, game, [playtype], userID, logger);
+			await UpdateUsersQuests(goalInfo, game, [playtype], userID, log);
 		}
 
-		await UpdateUsersGamePlaytypeStats(game, playtype, userID, null, logger);
+		await UpdateUsersGamePlaytypeStats(game, playtype, userID, null, log);
 	}
 
-	logger.info(`Finished deleting ${scores.length} scores.`);
+	log.info(`Finished deleting ${scores.length} scores.`);
 }

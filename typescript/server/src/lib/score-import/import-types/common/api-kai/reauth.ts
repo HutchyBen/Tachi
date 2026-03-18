@@ -1,9 +1,9 @@
-import type { KtLogger } from "#lib/logger/logger";
-import type { KaiAuthDocument } from "../../../../../../../common/src";
+import type { KtLogger } from "#lib/log/log.js";
+import type { KaiAuthDocument } from "tachi-common";
 
-import db from "#external/mongo/db";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ServerConfig } from "#lib/setup/config";
+import db from "#services/mongo/db";
 import nodeFetch from "#utils/fetch";
 import { p } from "prudence";
 
@@ -17,14 +17,14 @@ const REAUTH_SCHEMA = {
 export function CreateKaiReauthFunction(
 	kaiType: "EAG" | "FLO" | "MIN",
 	authDoc: KaiAuthDocument,
-	logger: KtLogger,
+	log: KtLogger,
 	fetch = nodeFetch,
 ) {
 	const maybeCredentials = GetKaiTypeClientCredentials(kaiType);
 
 	/* istanbul ignore next */
 	if (!maybeCredentials) {
-		logger.error(
+		log.error(
 			`No CLIENT_ID or CLIENT_SECRET was configured for ${kaiType}. Cannot create reauth function.`,
 		);
 		throw new ScoreImportFatalError(
@@ -52,7 +52,7 @@ export function CreateKaiReauthFunction(
 				headers: { "Content-Type": "application/x-www-form-urlencoded" },
 			});
 		} catch (err) {
-			logger.error(`Unexpected error while fetching reauth?`, { res, err });
+			log.error({ res, err }, `Unexpected error while fetching reauth?`);
 			throw new ScoreImportFatalError(
 				500,
 				"An error has occured while attempting reauthentication.",
@@ -73,7 +73,7 @@ export function CreateKaiReauthFunction(
 				);
 			}
 
-			logger.error(`Unexpected ${res.status} error while fetching reauth?`, { res, text });
+			log.error({ res, text }, `Unexpected ${res.status} error while fetching reauth?`);
 			throw new ScoreImportFatalError(
 				500,
 				"An error has occured while attempting reauthentication.",
@@ -86,7 +86,7 @@ export function CreateKaiReauthFunction(
 		try {
 			json = (await res.json()) as unknown;
 		} catch (err) {
-			logger.error(`Invalid JSON body in successful reauth response.`, { res, err });
+			log.error({ res, err }, `Invalid JSON body in successful reauth response.`);
 			throw new ScoreImportFatalError(
 				500,
 				"An error has occured while attempting reauthentication.",
@@ -96,7 +96,7 @@ export function CreateKaiReauthFunction(
 		const err = p(json, REAUTH_SCHEMA, {}, { allowExcessKeys: true, throwOnNonObject: false });
 
 		if (err) {
-			logger.error(`Invalid JSON body in successful reauth response.`, { err, json });
+			log.error({ err, json }, `Invalid JSON body in successful reauth response.`);
 			throw new ScoreImportFatalError(
 				500,
 				"An error has occured while attempting reauthentication.",

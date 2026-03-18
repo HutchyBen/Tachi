@@ -1,8 +1,8 @@
 import type { BulkWriteOperation, FilterQuery } from "mongodb";
 
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { TachiConfig } from "#lib/setup/config";
+import db from "#services/mongo/db";
 import deepmerge from "deepmerge";
 import fjsh from "fast-json-stable-hash";
 import {
@@ -19,11 +19,9 @@ import {
 	type Playtype,
 	type SongDocument,
 	type TableDocument,
-} from "../../../common/src";
+} from "tachi-common";
 
 import { GetFolderForIDGuaranteed } from "./db";
-
-const logger = CreateLogCtx(__filename);
 
 // overloads!
 
@@ -72,10 +70,13 @@ export async function ResolveFolderToCharts(
 		case "charts": {
 			const folderDataTransposed = TransposeFolderData(folder.data);
 
-			logger.debug(`Transposed folder data in resolve-folder-to-charts.`, {
-				folder,
-				folderDataTransposed,
-			});
+			log.debug(
+				{
+					folder,
+					folderDataTransposed,
+				},
+				`Transposed folder data in resolve-folder-to-charts.`,
+			);
 
 			const fx = deepmerge.all([filter, { playtype: folder.playtype }, folderDataTransposed]);
 
@@ -207,7 +208,7 @@ export async function CreateFolderChartLookup(folder: FolderDocument, flush = fa
 		// create a folder-chart-lookup at the same time.
 		await db["folder-chart-lookup"].bulkWrite(ops);
 	} catch (err) {
-		logger.error(`Failed to create folder chart lookup for ${folder.title}.`, { folder, err });
+		log.error({ folder, err }, `Failed to create folder chart lookup for ${folder.title}.`);
 		throw err;
 	}
 }
@@ -217,9 +218,9 @@ export async function CreateFolderChartLookup(folder: FolderDocument, flush = fa
  * common use cases, such as retrieving chartIDs from a folder.
  */
 export async function InitaliseFolderChartLookup() {
-	logger.info(`Started InitialiseFolderChartLookup`);
+	log.info(`Started InitialiseFolderChartLookup`);
 	await db["folder-chart-lookup"].remove({});
-	logger.info(`Flushed Cache.`);
+	log.info(`Flushed Cache.`);
 
 	// temporary hack -- this will still break if we introduce a new
 	// playtype on staging or something.
@@ -228,11 +229,11 @@ export async function InitaliseFolderChartLookup() {
 		game: { $in: TachiConfig.GAMES },
 	});
 
-	logger.info(`Reloading ${folders.length} folders.`);
+	log.info(`Reloading ${folders.length} folders.`);
 
 	await Promise.all(folders.map((folder) => CreateFolderChartLookup(folder)));
 
-	logger.info(`Completed InitialiseFolderChartLookup.`);
+	log.info(`Completed InitialiseFolderChartLookup.`);
 }
 
 export async function GetFoldersFromTable(table: TableDocument) {
@@ -242,7 +243,7 @@ export async function GetFoldersFromTable(table: TableDocument) {
 
 	if (folders.length !== table.folders.length) {
 		// this is an error, but we can return anyway.
-		logger.warn(
+		log.warn(
 			`Table ${table.tableID} has a mismatch of real folders to stored folders. ${table.folders.length} -> ${folders.length}`,
 		);
 	}
@@ -274,7 +275,7 @@ export async function GetFolderNamesInOrder(table: TableDocument): Promise<Array
 		const folder = folderMap.get(folderID);
 
 		if (!folder) {
-			logger.warn(
+			log.warn(
 				`Table '${table.title}' refers to folder '${folderID}', but no such folder exists? Ignoring.`,
 			);
 			continue;
@@ -448,7 +449,7 @@ export async function GetEnumDistForFolderAsOf(
 			const val = conf.values[score[metric] ?? -1];
 
 			if (!val) {
-				logger.warn(
+				log.warn(
 					`Failed to resolve ${metric} index '${score[metric]}' for ${FormatGameGroup(
 						game,
 						playtype,

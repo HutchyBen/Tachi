@@ -1,10 +1,10 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/log/log.js";
 
-import db from "#external/mongo/db";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
+import db from "#services/mongo/db";
 import fetch from "node-fetch";
 import { p, type PrudenceSchema } from "prudence";
-import { FormatPrError, type integer } from "../../../../../../../common/src";
+import { FormatPrError, type integer } from "tachi-common";
 
 import type { ParserFunctionReturns } from "../types";
 import type {
@@ -106,10 +106,7 @@ const CG_SCHEMAS: Record<CGSupportedGames, PrudenceSchema> = {
  * identical, this basically just placeholders cgGame and service.
  */
 export function CreateCGParser<T>(cgGame: CGSupportedGames, service: CGServices) {
-	return async (
-		userID: integer,
-		logger: KtLogger,
-	): Promise<ParserFunctionReturns<T, CGContext>> => {
+	return async (userID: integer, log: KtLogger): Promise<ParserFunctionReturns<T, CGContext>> => {
 		const cardInfo = await db["cg-card-info"].findOne({
 			userID,
 			service,
@@ -122,7 +119,7 @@ export function CreateCGParser<T>(cgGame: CGSupportedGames, service: CGServices)
 			);
 		}
 
-		const scores = await FetchCGScores(service, cardInfo, cgGame, logger, fetch);
+		const scores = await FetchCGScores(service, cardInfo, cgGame, log, fetch);
 
 		const SCHEMA = CG_SCHEMAS[cgGame];
 

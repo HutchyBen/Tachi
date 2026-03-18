@@ -6,6 +6,7 @@ import type {
 	ScoreValidator,
 } from "#game-implementations/types";
 
+import db from "#services/mongo/db";
 import { DDRFlare } from "rg-stats";
 import {
 	type ChartDocument,
@@ -19,16 +20,12 @@ import {
 	type Playtype,
 	type ScoreDocument,
 	type SongDocument,
-} from "../../../../common/src";
+} from "tachi-common";
 
-import db from "../../external/mongo/db";
-import CreateLogCtx from "../../lib/logger/logger";
 import { IsNullish } from "../../utils/misc";
 import { CreatePBMergeFor } from "../utils/pb-merge";
 import { SessionAvgBest10For } from "../utils/session-calc";
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
-
-const logger = CreateLogCtx(__filename);
 
 interface PBScoreDocumentWithSong extends PBScoreDocument<"ddr:DP" | "ddr:SP"> {
 	song: SongDocument<"ddr">;

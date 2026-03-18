@@ -1,4 +1,4 @@
-import type { GameGroup } from "../../../../../../../common/src";
+import type { GameGroup } from "tachi-common";
 
 import type { MytGame } from "./types";
 

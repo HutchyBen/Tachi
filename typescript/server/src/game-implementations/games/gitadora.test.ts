@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
+import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { TestingGitadoraChart } from "#test-utils/test-data";
@@ -13,12 +13,10 @@ import {
 	type ProvidedMetrics,
 	type ScoreData,
 	type ScoreDocument,
-} from "../../../../common/src";
+} from "tachi-common";
 import t from "tap";
 
 import { GITADORA_DORA_IMPL, GITADORA_GITA_IMPL } from "./gitadora";
-
-const logger = CreateLogCtx(__filename);
 
 const baseMetrics: ProvidedMetrics[GPTStrings["gitadora"]] = {
 	lamp: "CLEAR",
@@ -189,7 +187,7 @@ for (const [playtype, impl] of [
 						GetGPTString("gitadora", playtype),
 						1,
 						TestingGitadoraChart as any,
-						logger,
+						log,
 					),
 					{
 						composedFrom: [

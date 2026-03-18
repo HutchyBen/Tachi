@@ -1,14 +1,8 @@
-import type { KtLogger } from "#lib/logger/logger";
-import type {
-	ClassDelta,
-	GameGroup,
-	integer,
-	Playtype,
-	UserGameStats,
-} from "../../../../../../common/src";
+import type { KtLogger } from "#lib/log/log.js";
+import type { ClassDelta, GameGroup, integer, Playtype, UserGameStats } from "tachi-common";
 
-import db from "#external/mongo/db";
 import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
+import db from "#services/mongo/db";
 
 import type { ClassProvider } from "../calculated-data/types";
 
@@ -20,9 +14,9 @@ export async function UpdateUsersGamePlaytypeStats(
 	playtype: Playtype,
 	userID: integer,
 	classProvider: ClassProvider | null,
-	logger: KtLogger,
+	log: KtLogger,
 ): Promise<Array<ClassDelta>> {
-	logger.debug(`Calculating Ratings...`);
+	log.debug(`Calculating Ratings...`);
 
 	const ratings = await CalculateProfileRatings(game, playtype, userID);
 
@@ -34,27 +28,20 @@ export async function UpdateUsersGamePlaytypeStats(
 		userID,
 	});
 
-	logger.debug(`Calculating UGSClasses...`);
+	log.debug(`Calculating UGSClasses...`);
 
-	const classes = await CalculateUGPTClasses(
-		game,
-		playtype,
-		userID,
-		ratings,
-		classProvider,
-		logger,
-	);
+	const classes = await CalculateUGPTClasses(game, playtype, userID, ratings, classProvider, log);
 
-	logger.debug(`Finished Calculating UGSClasses`);
+	log.debug(`Finished Calculating UGSClasses`);
 
-	logger.debug(`Calculating Class Deltas...`);
+	log.debug(`Calculating Class Deltas...`);
 
-	const deltas = await ProcessClassDeltas(game, playtype, classes, userGameStats, userID, logger);
+	const deltas = await ProcessClassDeltas(game, playtype, classes, userGameStats, userID, log);
 
-	logger.debug(`Had ${deltas.length} deltas.`);
+	log.debug(`Had ${deltas.length} deltas.`);
 
 	if (userGameStats) {
-		logger.debug(`Updated player gamestats for ${game} (${playtype})`);
+		log.debug(`Updated player gamestats for ${game} (${playtype})`);
 
 		const updateClasses: Record<string, string> = {};
 
@@ -83,11 +70,14 @@ export async function UpdateUsersGamePlaytypeStats(
 		});
 
 		if (!hasAnyScores) {
-			logger.debug("Not creating new game stats for user with no scores.", {
-				userID,
-				game,
-				playtype,
-			});
+			log.debug(
+				{
+					userID,
+					game,
+					playtype,
+				},
+				"Not creating new game stats for user with no scores.",
+			);
 			return deltas;
 		}
 
@@ -99,7 +89,7 @@ export async function UpdateUsersGamePlaytypeStats(
 			classes,
 		};
 
-		logger.info(`Created new gamestats for ${game} (${playtype})`);
+		log.info(`Created new gamestats for ${game} (${playtype})`);
 		await db["game-stats"].insert(newStats);
 		await CreateGameSettings(userID, game, playtype);
 	}

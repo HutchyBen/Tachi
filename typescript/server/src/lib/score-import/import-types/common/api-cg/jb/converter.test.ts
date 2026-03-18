@@ -1,6 +1,6 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
 import { dmf } from "#test-utils/misc";
 import t from "tap";
@@ -8,8 +8,6 @@ import t from "tap";
 import type { CGContext, CGJubeatScore } from "../types";
 
 import { ConverterAPICGJubeat } from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 const BIT_FAILED = 1 << 0;
 const BIT_CLEAR = 1 << 1;
@@ -69,7 +67,7 @@ t.test("#ConverterAPICGJubeat", (t) => {
 		userID: 1,
 	};
 	const convert = (modifant: Partial<CGJubeatScore> = {}) =>
-		ConverterAPICGJubeat(mkInput(modifant), context, "api/cg-dev-jubeat", logger);
+		ConverterAPICGJubeat(mkInput(modifant), context, "api/cg-dev-jubeat", log);
 
 	t.test("Valid Input", async (t) => {
 		const res = await convert();

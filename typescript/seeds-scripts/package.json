@@ -37,7 +37,6 @@
 		"html-entities": "catalog:",
 		"iconv-lite": "catalog:",
 		"lodash.get": "catalog:",
-		"mei-logger": "catalog:",
 		"monk": "catalog:",
 		"node-fetch": "catalog:",
 		"prudence": "catalog:",

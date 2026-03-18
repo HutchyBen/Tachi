@@ -1,6 +1,6 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
-import type { ScoreDocument } from "../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
+import type { ScoreDocument } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import {
 	InternalFailure,
@@ -16,7 +16,7 @@ export const ConverterLR2Hook: ConverterFunction<LR2HookScore, LR2HookContext> =
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	const chart = await FindBMSChartOnHash(data.md5);
 
@@ -32,7 +32,7 @@ export const ConverterLR2Hook: ConverterFunction<LR2HookScore, LR2HookContext> =
 	const song = await FindSongOnID("bms", chart.songID);
 
 	if (!song) {
-		logger.severe(`Song ${chart.songID} (bms) has no parent song?`);
+		log.error(`Song ${chart.songID} (bms) has no parent song?`);
 		throw new InternalFailure(`Song ${chart.songID} (bms) has no parent song?`);
 	}
 

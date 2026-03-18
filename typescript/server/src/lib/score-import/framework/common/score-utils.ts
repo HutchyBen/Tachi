@@ -1,5 +1,5 @@
-import type { integer } from "../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../common/src/types/metrics";
+import type { integer } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import { InvalidScoreFailure } from "./converter-failures";
 

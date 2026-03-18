@@ -1,8 +1,8 @@
 import type { FindOneResult } from "monk";
 
-import db from "#external/mongo/db";
 import { ONE_DAY } from "#lib/constants/time";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 import {
 	type APITokenDocument,
 	type GameGroup,
@@ -14,9 +14,7 @@ import {
 	UserAuthLevels,
 	type UserDocument,
 	type UserGameStats,
-} from "../../../common/src";
-
-const logger = CreateLogCtx(__filename);
+} from "tachi-common";
 
 /**
  * Returns a user's username from their ID. Throws if no user with that ID exists.
@@ -85,9 +83,9 @@ export async function GetUsersWithIDs(userIDs: Array<integer>) {
 	// Note that we should dedupe this by making a set
 	// as passing [1, 1, 1] is perfectly legal to this function.
 	if (users.length !== new Set(userIDs).size) {
-		logger.severe(
-			`GetUsersWithIDs was given ${userIDs.length} userIDs, but only matched ${users.length} -- state desync likely.`,
+		log.error(
 			{ userIDs, users },
+			`GetUsersWithIDs was given ${userIDs.length} userIDs, but only matched ${users.length} -- state desync likely.`,
 		);
 		throw new Error(
 			`GetUsersWithIDs was given ${userIDs.length} userIDs, but only matched ${users.length}.`,
@@ -106,7 +104,7 @@ export async function GetUserWithIDGuaranteed(userID: integer): Promise<UserDocu
 	const userDoc = await GetUserWithID(userID);
 
 	if (!userDoc) {
-		logger.severe(
+		log.error(
 			`User ${userID} does not have an associated user document, but one was expected.`,
 		);
 		throw new Error(

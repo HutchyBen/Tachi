@@ -11,7 +11,7 @@ migrate-v3:
 mongo-to-pg POSTGRES_DB_NAME MONGO_DB_NAME:
 	just db-reset "{{ POSTGRES_DB_NAME }}"
 
-	cd typescript/server && POSTGRES_URL="{{POSTGRES_URL}}/{{POSTGRES_DB_NAME}}" MONGO_URL="mongodb://mongo/{{MONGO_DB_NAME}}" \
+	cd typescript/server && POSTGRES_URL="{{POSTGRES_URL}}/{{POSTGRES_DB_NAME}}" MONGO_URL="mongodb://tachi-mongo/{{MONGO_DB_NAME}}" \
 		bun run src/scripts/migrate-to-postgres.ts
 
 # Rollback the seeds to the state stored somewhere.

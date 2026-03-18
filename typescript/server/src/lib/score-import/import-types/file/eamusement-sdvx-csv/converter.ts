@@ -1,7 +1,7 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
 import type { EmptyObject } from "#utils/types";
-import type { Difficulties } from "../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
+import type { Difficulties } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import {
 	InvalidScoreFailure,
@@ -39,7 +39,7 @@ const ConvertEamSDVXCSV: ConverterFunction<SDVXEamusementCSVData, EmptyObject> =
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	const song = await FindSongOnTitle("sdvx", data.title);
 
@@ -55,7 +55,7 @@ const ConvertEamSDVXCSV: ConverterFunction<SDVXEamusementCSVData, EmptyObject> =
 	const difficulty = DIFFICULTY_MAP.get(data.difficulty);
 
 	if (!difficulty) {
-		logger.info(`Invalid difficulty of ${data.difficulty} provided.`);
+		log.info(`Invalid difficulty of ${data.difficulty} provided.`);
 		throw new InvalidScoreFailure(`${data.title} - Invalid difficulty of ${data.difficulty}.`);
 	}
 
@@ -104,7 +104,7 @@ const ConvertEamSDVXCSV: ConverterFunction<SDVXEamusementCSVData, EmptyObject> =
 	const lamp = LAMP_MAP.get(data.lamp);
 
 	if (!lamp) {
-		logger.info(`Invalid lamp of ${data.lamp} provided.`);
+		log.info(`Invalid lamp of ${data.lamp} provided.`);
 		throw new InvalidScoreFailure(`${humanisedChartTitle} - Invalid lamp of ${data.lamp}.`);
 	}
 
@@ -127,9 +127,7 @@ const ConvertEamSDVXCSV: ConverterFunction<SDVXEamusementCSVData, EmptyObject> =
 		},
 	};
 
-	logger.verbose(
-		`Returning dryscore with ${dryScore.scoreData.score} for ${humanisedChartTitle}`,
-	);
+	log.debug(`Returning dryscore with ${dryScore.scoreData.score} for ${humanisedChartTitle}`);
 
 	return { chart, song, dryScore };
 };

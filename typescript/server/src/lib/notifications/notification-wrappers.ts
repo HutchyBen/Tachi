@@ -1,11 +1,11 @@
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import {
 	FormatGameGroup,
 	type GameGroup,
 	type integer,
 	type Playtype,
 	type UserDocument,
-} from "../../../../common/src";
+} from "tachi-common";
 
 import { BulkSendNotification, SendNotification } from "./notifications";
 

@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/log/log.js";
 import type { EmptyObject } from "#utils/types";
 
 import { CSVParseError, NaiveCSVParse } from "#utils/naive-csv-parser";
@@ -28,13 +28,13 @@ type SDVXCSVRow = [
 export default function ParseEamusementSDVXCSV(
 	fileData: Express.Multer.File,
 	_body: Record<string, unknown>,
-	logger: KtLogger,
+	log: KtLogger,
 ): ParserFunctionReturns<SDVXEamusementCSVData, EmptyObject> {
 	let rawHeaders: Array<string>;
 	let rawRows: Array<Array<string>>;
 
 	try {
-		({ rawHeaders, rawRows } = NaiveCSVParse(fileData.buffer, logger));
+		({ rawHeaders, rawRows } = NaiveCSVParse(fileData.buffer, log));
 	} catch (e) {
 		// This is probably fine.
 		if (e instanceof CSVParseError) {
@@ -45,7 +45,7 @@ export default function ParseEamusementSDVXCSV(
 	}
 
 	if (rawHeaders.length !== HEADER_COUNT) {
-		logger.info(`Invalid CSV header count of ${rawHeaders.length} received.`);
+		log.info(`Invalid CSV header count of ${rawHeaders.length} received.`);
 		throw new ScoreImportFatalError(
 			400,
 			"Invalid CSV provided. CSV does not have the correct number of headers.",

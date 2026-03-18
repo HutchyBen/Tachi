@@ -1,9 +1,7 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { RecalcSessions } from "#utils/calculations/recalc-sessions";
 import { WrapScriptPromise } from "#utils/misc";
 
-const logger = CreateLogCtx(__filename);
-
 if (require.main === module) {
-	WrapScriptPromise(RecalcSessions(), logger);
+	WrapScriptPromise(RecalcSessions(), log);
 }

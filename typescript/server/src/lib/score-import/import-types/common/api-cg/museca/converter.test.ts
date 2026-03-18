@@ -1,6 +1,6 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
 import { dmf } from "#test-utils/misc";
 import t from "tap";
@@ -8,8 +8,6 @@ import t from "tap";
 import type { CGContext, CGMusecaScore } from "../types";
 
 import { ConverterAPICGMuseca } from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 function mkInput(modifant: Partial<CGMusecaScore> = {}) {
 	const validInput: CGMusecaScore = {
@@ -63,7 +61,7 @@ t.test("#ConverterAPICGMuseca", (t) => {
 	};
 
 	const convert = (modifant: Partial<CGMusecaScore> = {}) =>
-		ConverterAPICGMuseca(mkInput(modifant), context, "api/cg-dev-museca", logger);
+		ConverterAPICGMuseca(mkInput(modifant), context, "api/cg-dev-museca", log);
 
 	t.test("Valid Input", async (t) => {
 		const res = await convert();

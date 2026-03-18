@@ -1,7 +1,7 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
 import type { EmptyObject } from "#utils/types";
-import type { Difficulties } from "../../../../../../../common/src";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
+import type { Difficulties } from "tachi-common";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import {
 	InternalFailure,
@@ -9,13 +9,13 @@ import {
 	SongOrChartNotFoundFailure,
 } from "#lib/score-import/framework/common/converter-failures";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
-import { FindChartOnInGameID } from "#utils/queries/charts";
-import { FindSongOnID } from "#utils/queries/songs";
 import {
 	type WaccaClearStatus,
 	WaccaMusicDifficulty,
 	type WaccaMusicDifficultyMap,
 } from "#proto/generated/wacca/common_pb";
+import { FindChartOnInGameID } from "#utils/queries/charts";
+import { FindSongOnID } from "#utils/queries/songs";
 
 import type { ConverterFunction } from "../../common/types";
 import type { MytWaccaScore } from "./types";
@@ -62,7 +62,7 @@ const ConvertAPIMytWACCA: ConverterFunction<MytWaccaScore, EmptyObject> = async 
 	data,
 	_context,
 	importType,
-	logger,
+	log,
 ) => {
 	const difficulty = DIFFICULTIES[data.musicDifficulty];
 
@@ -86,7 +86,7 @@ const ConvertAPIMytWACCA: ConverterFunction<MytWaccaScore, EmptyObject> = async 
 	const song = await FindSongOnID("wacca", chart.songID);
 
 	if (song === null) {
-		logger.severe(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`, { chart });
+		log.error({ chart }, `Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
 		throw new InternalFailure(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
 	}
 

@@ -1,7 +1,7 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/log/log";
 import type { ScoreImportJob } from "#lib/score-import/worker/types";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 import { GetMillisecondsSince } from "#utils/misc";
 import { GetUserWithID } from "#utils/user";
 import {
@@ -14,7 +14,7 @@ import {
 	type integer,
 	type Playtype,
 	type UserDocument,
-} from "../../../../../../common/src";
+} from "tachi-common";
 
 import type { ConverterFunction, ImportInputParser } from "../../import-types/common/types";
 import type { ClassProvider } from "../calculated-data/types";
@@ -54,23 +54,23 @@ export default async function ScoreImportMain<D, C>(
 		);
 	}
 
-	let logger;
+	let log;
 
 	if (!providedLogger) {
 		// If they weren't given to us -
-		// we create an "import logger".
+		// we create an "import log".
 		// this holds a reference to the user's name, ID, and type
 		// of score import for any future debugging.
-		logger = CreateScoreLogger(user, importID, importType);
-		logger.debug("Received import request.");
+		log = CreateScoreLogger(user, importID, importType);
+		log.debug("Received import request.");
 	} else {
-		logger = providedLogger;
+		log = providedLogger;
 	}
 
 	const hasNoOngoingImport = await CheckAndSetOngoingImportLock(user.id);
 
 	if (hasNoOngoingImport) {
-		logger.info(`User ${userID} made an import while they had one ongoing.`);
+		log.info(`User ${userID} made an import while they had one ongoing.`);
 
 		// @danger
 		// Throwing away an import if the user already has one outgoing is *bad*, as in the case
@@ -90,11 +90,11 @@ export default async function ScoreImportMain<D, C>(
 		// We get an iterable from the provided parser function, alongside some context and a converter function.
 		// This iterable does not have to be an array - it's anything that's iterable, like a generator.
 		const parseTimeStart = process.hrtime.bigint();
-		const { iterable, context, game, classProvider: classProvider } = await InputParser(logger);
+		const { iterable, context, game, classProvider: classProvider } = await InputParser(log);
 
 		const parseTime = GetMillisecondsSince(parseTimeStart);
 
-		logger.debug(`Parsing took ${parseTime} milliseconds.`);
+		log.debug(`Parsing took ${parseTime} milliseconds.`);
 
 		void SetJobProgress(
 			job,
@@ -128,7 +128,7 @@ export default async function ScoreImportMain<D, C>(
 				ConverterFunction,
 				context,
 				game,
-				logger,
+				log,
 				job,
 			);
 		} catch (err) {
@@ -139,11 +139,11 @@ export default async function ScoreImportMain<D, C>(
 			});
 
 			if (r.deletedCount !== 0) {
-				logger.error(
-					`An error was thrown from ImportAllIterableData, which has resulted in a potential partial-score-import. Undoing scores inserted from this import.`,
+				log.error(
 					{ err },
+					`An error was thrown from ImportAllIterableData, which has resulted in a potential partial-score-import. Undoing scores inserted from this import.`,
 				);
-				logger.error(
+				log.error(
 					`Removed ${r.deletedCount} scores from the database to undo partial-import.`,
 				);
 			}
@@ -154,7 +154,7 @@ export default async function ScoreImportMain<D, C>(
 		const importTime = GetMillisecondsSince(importTimeStart);
 		const importTimeRel = importTime / importInfo.length;
 
-		logger.debug(`Importing took ${importTime} milliseconds. (${importTimeRel}ms/doc)`);
+		log.debug(`Importing took ${importTime} milliseconds. (${importTimeRel}ms/doc)`);
 
 		void SetJobProgress(job, `Imported scores, took ${importTime} milliseconds. `);
 
@@ -177,7 +177,7 @@ export default async function ScoreImportMain<D, C>(
 			importType,
 			game,
 			classProvider,
-			logger,
+			log,
 			job,
 		);
 
@@ -215,11 +215,11 @@ export default async function ScoreImportMain<D, C>(
 
 		// I only really want to log "big" imports. The others are here for debugging purposes.
 		if (scoreIDs.length > 500) {
-			logger.info(logMessage);
+			log.info(logMessage);
 		} else if (scoreIDs.length > 1) {
-			logger.verbose(logMessage);
+			log.debug(logMessage);
 		} else {
-			logger.debug(logMessage);
+			log.debug(logMessage);
 		}
 
 		await db.imports.insert(ImportDocument);
@@ -265,7 +265,7 @@ export async function HandlePostImportSteps(
 	importType: ImportTypes,
 	game: GameGroup,
 	classProvider: ClassProvider | null,
-	logger: KtLogger,
+	log: KtLogger,
 	job: ScoreImportJob | undefined,
 ) {
 	// --- 3. ParseImportInfo ---
@@ -277,9 +277,7 @@ export async function HandlePostImportSteps(
 	const importParseTime = GetMillisecondsSince(importParseTimeStart);
 	const importParseTimeRel = importParseTime / importInfo.length;
 
-	logger.debug(
-		`Import Parsing took ${importParseTime} milliseconds. (${importParseTimeRel}ms/doc)`,
-	);
+	log.debug(`Import Parsing took ${importParseTime} milliseconds. (${importParseTimeRel}ms/doc)`);
 
 	void SetJobProgress(job, "Inserting Sessions.");
 
@@ -287,12 +285,12 @@ export async function HandlePostImportSteps(
 	// We create (or update existing) sessions here. This uses the aforementioned parsed import info
 	// to determine what goes where.
 	const sessionTimeStart = process.hrtime.bigint();
-	const sessionInfo = await CreateSessions(user.id, game, scorePlaytypeMap, logger);
+	const sessionInfo = await CreateSessions(user.id, game, scorePlaytypeMap, log);
 
 	const sessionTime = GetMillisecondsSince(sessionTimeStart);
 	const sessionTimeRel = sessionTime / sessionInfo.length;
 
-	logger.debug(`Session Processing took ${sessionTime} milliseconds (${sessionTimeRel}ms/doc).`);
+	log.debug(`Session Processing took ${sessionTime} milliseconds (${sessionTimeRel}ms/doc).`);
 
 	void SetJobProgress(job, "Processing scores and updating PBs.");
 
@@ -314,47 +312,47 @@ export async function HandlePostImportSteps(
 
 	await Promise.all(
 		Object.entries(chartIDsSeparatedByPlaytype).map(([playtype, chartIDs]) =>
-			ProcessPBs(game, playtype as Playtype, user.id, chartIDs, logger),
+			ProcessPBs(game, playtype as Playtype, user.id, chartIDs, log),
 		),
 	);
 
 	const pbTime = GetMillisecondsSince(pbTimeStart);
 	const pbTimeRel = pbTime / chartIDs.size;
 
-	logger.debug(`PB Processing took ${pbTime} milliseconds (${pbTimeRel}ms/doc)`);
+	log.debug(`PB Processing took ${pbTime} milliseconds (${pbTimeRel}ms/doc)`);
 
 	void SetJobProgress(job, "Updating profile statistics.");
 
 	// --- 6. Game Stats ---
 	// This function updates the users "stats" for this game - such as their profile rating or their classes.
 	const ugsTimeStart = process.hrtime.bigint();
-	const classDeltas = await UpdateUsersGameStats(game, playtypes, user.id, classProvider, logger);
+	const classDeltas = await UpdateUsersGameStats(game, playtypes, user.id, classProvider, log);
 
 	const ugsTime = GetMillisecondsSince(ugsTimeStart);
 
-	logger.debug(`UGS Processing took ${ugsTime} milliseconds.`);
+	log.debug(`UGS Processing took ${ugsTime} milliseconds.`);
 
 	void SetJobProgress(job, "Updating Goals.");
 
 	// --- 7. Goals ---
 	// Evaluate and update the users goals. This returns information about goals that have changed.
 	const goalTimeStart = process.hrtime.bigint();
-	const goalInfo = await GetAndUpdateUsersGoals(game, user.id, chartIDs, logger);
+	const goalInfo = await GetAndUpdateUsersGoals(game, user.id, chartIDs, log);
 
 	const goalTime = GetMillisecondsSince(goalTimeStart);
 
-	logger.debug(`Goal Processing took ${goalTime} milliseconds.`);
+	log.debug(`Goal Processing took ${goalTime} milliseconds.`);
 
 	void SetJobProgress(job, "Updating Quests.");
 
 	// --- 8. Quests ---
 	// Evaluate and update the users quests. This returns...
 	const questTimeStart = process.hrtime.bigint();
-	const questInfo = await UpdateUsersQuests(goalInfo, game, playtypes, user.id, logger);
+	const questInfo = await UpdateUsersQuests(goalInfo, game, playtypes, user.id, log);
 
 	const questTime = GetMillisecondsSince(questTimeStart);
 
-	logger.debug(`Quest Processing took ${questTime} milliseconds.`);
+	log.debug(`Quest Processing took ${questTime} milliseconds.`);
 
 	return {
 		classDeltas,
@@ -389,7 +387,7 @@ async function UpdateUsersGameStats(
 	modifiedPlaytypes: Array<Playtype>,
 	userID: integer,
 	classProvider: ClassProvider | null,
-	logger: KtLogger,
+	log: KtLogger,
 ) {
 	const promises = [];
 
@@ -401,7 +399,7 @@ async function UpdateUsersGameStats(
 	const playtypes = classProvider ? allPlaytypes : modifiedPlaytypes;
 
 	for (const pt of playtypes) {
-		promises.push(UpdateUsersGamePlaytypeStats(game, pt, userID, classProvider, logger));
+		promises.push(UpdateUsersGamePlaytypeStats(game, pt, userID, classProvider, log));
 	}
 
 	const r = await Promise.all(promises);

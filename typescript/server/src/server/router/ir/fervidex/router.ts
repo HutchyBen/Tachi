@@ -1,24 +1,22 @@
-import db from "#external/mongo/db";
 import { MODEL_INFINITAS_2, REV_2DXBMS } from "#lib/constants/ea3id";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { SoftwareIDToVersion } from "#lib/score-import/import-types/ir/fervidex/parser";
+import { RequirePermissions } from "#server/middleware/auth";
+import { PrudenceErrorFormatter } from "#server/middleware/prudence-validate";
+import db from "#services/mongo/db";
 import { UpdateClassIfGreater } from "#utils/class";
 import { ParseEA3SoftID } from "#utils/ea3id";
 import { IsNullishOrEmptyStr } from "#utils/misc";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
-import { RequirePermissions } from "#server/middleware/auth";
-import { PrudenceErrorFormatter } from "#server/middleware/prudence-validate";
 import {
 	GetGamePTConfig,
 	type integer,
 	type Playtypes,
 	type SpecificGamePTConfig,
-} from "../../../../../../common/src";
-
-const logger = CreateLogCtx(__filename);
+} from "tachi-common";
 
 const router: Router = Router({ mergeParams: true });
 
@@ -26,7 +24,7 @@ const ValidateFervidexHeader: RequestHandler = (req, res, next) => {
 	const agent = req.header("User-Agent");
 
 	if (IsNullishOrEmptyStr(agent)) {
-		logger.debug(
+		log.debug(
 			`Rejected fervidex client with no agent from user ${req[SYMBOL_TACHI_API_AUTH].userID}.`,
 		);
 		return res.status(400).json({
@@ -36,7 +34,7 @@ const ValidateFervidexHeader: RequestHandler = (req, res, next) => {
 	}
 
 	if (!agent.startsWith("fervidex/")) {
-		logger.info(
+		log.info(
 			`Rejected fervidex client with invalid agent ${agent} from user ${req[SYMBOL_TACHI_API_AUTH].userID}.`,
 		);
 		return res.status(400).json({
@@ -48,7 +46,7 @@ const ValidateFervidexHeader: RequestHandler = (req, res, next) => {
 	const versions = agent.split("fervidex/")[1]!.split(".").map(Number);
 
 	if (!versions.every((e) => !Number.isNaN(e)) || versions.length < 3) {
-		logger.info(
+		log.info(
 			`Rejected fervidex client with agent ${agent} for NaN-like versions from user ${req[SYMBOL_TACHI_API_AUTH].userID}.`,
 		);
 		return res.status(400).json({
@@ -60,7 +58,7 @@ const ValidateFervidexHeader: RequestHandler = (req, res, next) => {
 	// version.minor
 	// asserted to exist based on versions.length being greater than 3.
 	if (versions[0] === 1 && versions[1]! < 3) {
-		logger.debug(
+		log.debug(
 			`Rejected outdated fervidex client from user ${req[SYMBOL_TACHI_API_AUTH].userID}.`,
 		);
 		return res.status(400).json({
@@ -76,7 +74,7 @@ const ValidateModelHeader: RequestHandler = (req, res, next) => {
 	const swModel = req.header("X-Software-Model");
 
 	if (IsNullishOrEmptyStr(swModel)) {
-		logger.debug(
+		log.debug(
 			`Rejected empty X-Software Model from user ${req[SYMBOL_TACHI_API_AUTH].userID}.`,
 		);
 		return res.status(400).json({
@@ -102,11 +100,11 @@ const ValidateModelHeader: RequestHandler = (req, res, next) => {
 		}
 
 		try {
-			SoftwareIDToVersion(swModel, logger);
+			SoftwareIDToVersion(swModel, log);
 		} catch (err) {
-			logger.info(
-				`Rejected invalid Software Model ${swModel} from user ${req[SYMBOL_TACHI_API_AUTH].userID}.`,
+			log.info(
 				{ err },
+				`Rejected invalid Software Model ${swModel} from user ${req[SYMBOL_TACHI_API_AUTH].userID}.`,
 			);
 			return res.status(400).json({
 				success: false,
@@ -114,7 +112,7 @@ const ValidateModelHeader: RequestHandler = (req, res, next) => {
 			});
 		}
 	} catch (err) {
-		logger.debug(err);
+		log.debug(err);
 		return res.status(400).json({
 			success: false,
 			error: `Invalid X-Software-Model.`,
@@ -166,7 +164,7 @@ async function ShouldImportScoresFromProfileSubmit(swModel: string, userID: inte
 	});
 
 	if (settings?.forceStaticImport === true) {
-		logger.debug(`User ${settings.userID} had forceStaticImport set, allowing request.`);
+		log.debug(`User ${settings.userID} had forceStaticImport set, allowing request.`);
 
 		// Force static import should ideally only ever be used once. If left on, a users profile
 		// will get innundated with a bunch of pb imports on every game-load. This is not what
@@ -192,9 +190,11 @@ async function ShouldImportScoresFromProfileSubmit(swModel: string, userID: inte
 
 		return model === MODEL_INFINITAS_2;
 	} catch (err) {
-		logger.warn(
+		log.warn(
+			{
+				err,
+			},
 			`Unexpected fail while parsing swModel ${swModel}, has already been validated?.`,
-			{ err },
 		);
 
 		// try some good-natured attempt to recover, since this isn't that severe of an

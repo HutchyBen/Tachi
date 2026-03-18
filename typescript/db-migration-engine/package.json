@@ -4,24 +4,20 @@
 	"private": true,
 	"type": "module",
 	"description": "A postgres migration engine for Tachi.",
-	"main": "./js/generated/index.js",
-	"types": "./js/generated/index.d.ts",
+	"main": "./src/index.ts",
 	"exports": {
 		".": {
-			"bun": "./src/index.ts",
-			"types": "./js/generated/index.d.ts",
-			"default": "./js/generated/index.js"
+			"default": "./src/index.ts"
 		},
 		"./*": {
-			"bun": "./src/*.ts",
-			"types": "./js/generated/*.d.ts",
-			"default": "./js/generated/*.js"
+			"default": "./src/*.ts"
 		}
 	},
 	"scripts": {
 		"lint": "eslint .",
 		"lint-fix": "eslint . --fix",
-		"typecheck": "tsgo --noEmit"
+		"typecheck": "tsgo --noEmit",
+		"build": "tsgo -p tsconfig.build.json"
 	},
 	"dependencies": {
 		"kysely": "catalog:",

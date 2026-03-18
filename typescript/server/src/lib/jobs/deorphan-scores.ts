@@ -1,19 +1,17 @@
 // Attempt to deoprhan lost scores.
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { DeorphanScores } from "#lib/score-import/framework/orphans/orphans";
 import { WrapScriptPromise } from "#utils/misc";
 
-const logger = CreateLogCtx(__dirname);
-
 export async function DeorphanScoresMain() {
-	const { success, failed, removed } = await DeorphanScores({}, logger);
+	const { success, failed, removed } = await DeorphanScores({}, log);
 
-	logger.info(`Finished attempting deorphaning.`);
+	log.info(`Finished attempting deorphaning.`);
 
-	logger.info(`Success: ${success} | Failed ${failed} | Removed ${removed}.`);
+	log.info(`Success: ${success} | Failed ${failed} | Removed ${removed}.`);
 }
 
 if (require.main === module) {
-	WrapScriptPromise(DeorphanScoresMain(), logger);
+	WrapScriptPromise(DeorphanScoresMain(), log);
 }

@@ -4,9 +4,9 @@ import type {
 	integer,
 	SuccessfulAPIResponse,
 	UnsuccessfulAPIResponse,
-} from "../../../../../common/src";
+} from "tachi-common";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { Random20Hex } from "#utils/misc";
 
 import type { ParserArguments } from "../worker/types";
@@ -18,8 +18,6 @@ export interface WrappedAPIResponse {
 	statusCode: number;
 	body: SuccessfulAPIResponse<ImportDocument> | UnsuccessfulAPIResponse;
 }
-
-const logger = CreateLogCtx(__filename);
 
 /**
  * A thin(ish) wrapper for ScoreImportMain which converts thrown
@@ -34,7 +32,7 @@ export async function ExpressWrappedScoreImportMain<I extends ImportTypes>(
 ): Promise<WrappedAPIResponse> {
 	const importID = Random20Hex();
 
-	logger.debug("Received import request.");
+	log.debug("Received import request.");
 
 	try {
 		const res = await MakeScoreImport({
@@ -56,7 +54,7 @@ export async function ExpressWrappedScoreImportMain<I extends ImportTypes>(
 	} catch (err) {
 		// this is definitely fine, as the errors are emitted from the same place.
 		if (err instanceof ScoreImportFatalError) {
-			logger.info(err.message);
+			log.info(err.message);
 			return {
 				statusCode: err.statusCode,
 				body: {
@@ -66,7 +64,7 @@ export async function ExpressWrappedScoreImportMain<I extends ImportTypes>(
 			};
 		}
 
-		logger.error(err);
+		log.error(err);
 		return {
 			statusCode: 500,
 			body: {

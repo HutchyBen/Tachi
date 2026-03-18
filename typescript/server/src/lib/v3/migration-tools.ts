@@ -1,13 +1,11 @@
-import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import {
 	type DerivedMetrics,
-	GAME_PT_CONFIGS,
 	GetGPTConfig,
 	type GPTString,
 	type OptionalMetrics,
 	type ProvidedMetrics,
 	type ScoreData,
-} from "../../../../common/src";
+} from "tachi-common";
 
 interface RetVal<GPT extends GPTString> {
 	derived: DerivedMetrics[GPT];

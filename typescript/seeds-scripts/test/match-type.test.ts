@@ -8,7 +8,7 @@ import {
 	V3FormatGame,
 	type V3Game,
 	V3ToGPTString,
-} from "../../common/src";
+} from "tachi-common";
 
 import { ReadCollection } from "../util";
 

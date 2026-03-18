@@ -1,5 +1,7 @@
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import type { GoalDocument, GoalSubscriptionDocument } from "tachi-common";
+
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 import { dmf } from "#test-utils/misc.js";
 import ResetDBState from "#test-utils/resets";
 import {
@@ -11,11 +13,7 @@ import {
 import deepmerge from "deepmerge";
 import t from "tap";
 
-import type { GoalDocument, GoalSubscriptionDocument } from "../../../../../../common/src";
-
 import { ProcessGoal, UpdateGoalsForUser } from "./goals";
-
-const logger = CreateLogCtx(__filename);
 
 t.test("#UpdateGoalsForUser", (t) => {
 	t.beforeEach(ResetDBState);
@@ -60,7 +58,7 @@ t.test("#UpdateGoalsForUser", (t) => {
 
 		const ugMap = new Map([["FAKE_GOAL_ID", baseGoalSubscriptionDocument]]);
 
-		const res = await UpdateGoalsForUser([baseGoalDocument], ugMap, 1, logger);
+		const res = await UpdateGoalsForUser([baseGoalDocument], ugMap, 1, log);
 
 		t.strictSame(res, [
 			{
@@ -118,7 +116,7 @@ t.test("#UpdateGoalsForUser", (t) => {
 
 		const ugMap = new Map([["FAKE_GOAL_ID", goalSub]]);
 
-		const res = await UpdateGoalsForUser([goal], ugMap, 1, logger);
+		const res = await UpdateGoalsForUser([goal], ugMap, 1, log);
 
 		t.strictSame(res, [
 			{
@@ -158,7 +156,7 @@ t.test("#UpdateGoalsForUser", (t) => {
 	});
 
 	t.test("Should return [] if no data is to be changed.", async (t) => {
-		const res = await UpdateGoalsForUser([], new Map(), 1, logger);
+		const res = await UpdateGoalsForUser([], new Map(), 1, log);
 
 		t.strictSame(res, []);
 
@@ -166,7 +164,7 @@ t.test("#UpdateGoalsForUser", (t) => {
 	});
 
 	t.test("Should handle (skip) goals if no usergoal is set.", async (t) => {
-		const res = await UpdateGoalsForUser([baseGoalDocument], new Map(), 1, logger);
+		const res = await UpdateGoalsForUser([baseGoalDocument], new Map(), 1, log);
 
 		t.strictSame(res, []);
 
@@ -178,7 +176,7 @@ t.test("#UpdateGoalsForUser", (t) => {
 			[deepmerge(baseGoalDocument, { charts: { type: "INVALID" } })],
 			new Map([["FAKE_GOAL_ID", baseGoalSubscriptionDocument]]),
 			1,
-			logger,
+			log,
 		);
 
 		t.strictSame(res, []);
@@ -207,7 +205,7 @@ t.test("#ProcessGoal", (t) => {
 		// score is EX HARD CLEAR by default.
 		await db["personal-bests"].insert(TestingIIDXSPScorePB);
 
-		const res = await ProcessGoal(HC511Goal, HC511UserGoal, 1, logger);
+		const res = await ProcessGoal(HC511Goal, HC511UserGoal, 1, log);
 
 		t.not(res, undefined, "Should NOT return undefined.");
 
@@ -255,7 +253,7 @@ t.test("#ProcessGoal", (t) => {
 
 		await db["goal-subs"].insert(achievedGoalSub);
 
-		const res = await ProcessGoal(HC511Goal, achievedGoalSub, 1, logger);
+		const res = await ProcessGoal(HC511Goal, achievedGoalSub, 1, log);
 
 		t.not(res, undefined, "Should NOT return undefined.");
 
@@ -289,7 +287,7 @@ t.test("#ProcessGoal", (t) => {
 	t.test("Should return undefined if there's no score.", async (t) => {
 		await db["goal-subs"].insert(HC511UserGoal);
 
-		const res = await ProcessGoal(HC511Goal, HC511UserGoal, 1, logger);
+		const res = await ProcessGoal(HC511Goal, HC511UserGoal, 1, log);
 
 		t.equal(res, undefined, "Should return undefined.");
 
@@ -300,7 +298,7 @@ t.test("#ProcessGoal", (t) => {
 		await db["goal-subs"].insert(HC511UserGoal);
 		await db["personal-bests"].insert(TestingIIDXSPScorePB);
 
-		const firstUpdate = await ProcessGoal(HC511Goal, HC511UserGoal, 1, logger);
+		const firstUpdate = await ProcessGoal(HC511Goal, HC511UserGoal, 1, log);
 
 		// ignore this one
 		t.not(firstUpdate, undefined, "Should NOT return undefined.");
@@ -309,7 +307,7 @@ t.test("#ProcessGoal", (t) => {
 
 		const goalSub = await db["goal-subs"].findOne({ userID: 1, goalID: HC511Goal.goalID });
 
-		const secondUpdate = await ProcessGoal(HC511Goal, goalSub!, 1, logger);
+		const secondUpdate = await ProcessGoal(HC511Goal, goalSub!, 1, log);
 
 		t.equal(secondUpdate, undefined, "Should return undefined.");
 

@@ -1,8 +1,5 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
-import { dmf } from "#test-utils/misc";
-import ResetDBState from "#test-utils/resets";
-import { TestingOngekiChartConverter, TestingOngekiSongConverter } from "#test-utils/test-data";
 import {
 	OngekiBattleScoreRank,
 	OngekiClearStatus,
@@ -10,13 +7,14 @@ import {
 	OngekiLevel,
 	OngekiTechScoreRank,
 } from "#proto/generated/ongeki/common_pb";
+import { dmf } from "#test-utils/misc";
+import ResetDBState from "#test-utils/resets";
+import { TestingOngekiChartConverter, TestingOngekiSongConverter } from "#test-utils/test-data";
 import t from "tap";
 
 import type { MytOngekiScore } from "./types";
 
 import ConvertAPIMytOngeki from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 const parsedScore: MytOngekiScore = {
 	playlogApiId: "806ca7ac-76f5-4d99-8760-770df60e1ff5",
@@ -53,7 +51,7 @@ t.test("#ConvertAPIMytOngeki", (t) => {
 	t.beforeEach(ResetDBState);
 
 	function convert(modifier: any = {}) {
-		return ConvertAPIMytOngeki(dmf(parsedScore, modifier), {}, "api/myt-ongeki", logger);
+		return ConvertAPIMytOngeki(dmf(parsedScore, modifier), {}, "api/myt-ongeki", log);
 	}
 
 	t.test("Should return a dryScore on valid input.", async (t) => {

@@ -1,9 +1,7 @@
 import type { ICollection, IObjectID } from "monk";
 
 /* eslint-disable no-await-in-loop */
-import CreateLogCtx from "#lib/logger/logger";
-
-const logger = CreateLogCtx(__filename);
+import { log } from "#lib/log/log.js";
 
 export async function EfficientDBIterate<T extends object, R>(
 	collection: ICollection<T>,
@@ -17,7 +15,7 @@ export async function EfficientDBIterate<T extends object, R>(
 	let lastID: IObjectID | null = null;
 
 	while (true) {
-		logger.info(`Running on ${i} - ${i + bucketSize} documents.`);
+		log.info(`Running on ${i} - ${i + bucketSize} documents.`);
 
 		const newFilter: any = { ...filter };
 
@@ -35,7 +33,7 @@ export async function EfficientDBIterate<T extends object, R>(
 		lastID = docs.at(-1)?._id ?? null;
 
 		if (docs.length === 0) {
-			logger.info(`Ended documents at ${i}.`);
+			log.info(`Ended documents at ${i}.`);
 			break;
 		}
 

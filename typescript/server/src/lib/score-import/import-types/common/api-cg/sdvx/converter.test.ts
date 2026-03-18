@@ -1,6 +1,6 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
 
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
 import { dmf } from "#test-utils/misc";
 import t from "tap";
@@ -8,8 +8,6 @@ import t from "tap";
 import type { CGContext, CGSDVXScore } from "../types";
 
 import { ConverterAPICGSDVX } from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 function mkInput(modifant: Partial<CGSDVXScore> = {}) {
 	const validInput: CGSDVXScore = {
@@ -64,7 +62,7 @@ t.test("#ConverterAPICGSDVX", (t) => {
 	};
 
 	const convert = (modifant: Partial<CGSDVXScore> = {}) =>
-		ConverterAPICGSDVX(mkInput(modifant), context, "api/cg-dev-sdvx", logger);
+		ConverterAPICGSDVX(mkInput(modifant), context, "api/cg-dev-sdvx", log);
 
 	t.test("Valid Input", async (t) => {
 		const res = await convert();

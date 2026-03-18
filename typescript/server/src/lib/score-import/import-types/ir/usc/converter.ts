@@ -1,7 +1,6 @@
 import type { USCClientScore } from "#server/router/ir/usc/_playtype/types";
-import type { GetEnumValue } from "../../../../../../../common/src/types/metrics";
+import type { GetEnumValue } from "tachi-common/types/metrics";
 
-import db from "#external/mongo/db";
 import {
 	USC_DEFAULT_HOLD,
 	USC_DEFAULT_MISS,
@@ -9,6 +8,7 @@ import {
 	USC_DEFAULT_PERFECT,
 	USC_DEFAULT_SLAM,
 } from "#lib/constants/usc-ir";
+import db from "#services/mongo/db";
 import { FindSongOnID } from "#utils/queries/songs";
 
 import type { DryScore } from "../../../framework/common/types";
@@ -77,7 +77,7 @@ export const ConverterIRUSC: ConverterFunction<USCClientScore, IRUSCContext> = a
 	data,
 	context,
 	importType,
-	logger,
+	log,
 ) => {
 	if (
 		data.windows.perfect !== USC_DEFAULT_PERFECT ||
@@ -86,15 +86,18 @@ export const ConverterIRUSC: ConverterFunction<USCClientScore, IRUSCContext> = a
 		data.windows.miss !== USC_DEFAULT_MISS ||
 		data.windows.slam !== USC_DEFAULT_SLAM
 	) {
-		logger.info(`Ignored score because hitWindows were modified.`, {
-			windows: data.windows,
-		});
+		log.info(
+			{
+				windows: data.windows,
+			},
+			`Ignored score because hitWindows were modified.`,
+		);
 		throw new InvalidScoreFailure(`HitWindows have been modified - Score is invalid.`);
 	}
 
 	// if any auto-like option is enabled, reject score.
 	if (data.options.autoFlags !== 0) {
-		logger.verbose(`Ignored score because autoplay was enabled.`);
+		log.debug(`Ignored score because autoplay was enabled.`);
 		throw new InvalidScoreFailure(`Autoplay was enabled - Score is invalid.`);
 	}
 
@@ -115,7 +118,7 @@ export const ConverterIRUSC: ConverterFunction<USCClientScore, IRUSCContext> = a
 	const song = await FindSongOnID("usc", chartDoc.songID);
 
 	if (!song) {
-		logger.severe(`Song-Chart desync on USCIR ${chartDoc.songID}.`);
+		log.error(`Song-Chart desync on USCIR ${chartDoc.songID}.`);
 		throw new InternalFailure(`Song-Chart desync on USCIR ${chartDoc.songID}.`);
 	}
 

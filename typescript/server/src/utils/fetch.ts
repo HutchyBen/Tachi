@@ -1,8 +1,8 @@
-import { Environment } from "#lib/setup/config";
+import { Env } from "#lib/setup/config";
 import nodeFetch, { type RequestInfo, type RequestInit, type Response } from "node-fetch";
 
 const fetch =
-	Environment.nodeEnv === "test"
+	Env.NODE_ENV === "test"
 		? () => {
 				throw new Error("Cannot use real fetch inside testing env!");
 			}

@@ -4,9 +4,9 @@ import type {
 	PBScoreDocument,
 	ScoreDocument,
 	SongDocument,
-} from "../../../common/src";
+} from "tachi-common";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 
 import { DedupeArr } from "./misc";
 

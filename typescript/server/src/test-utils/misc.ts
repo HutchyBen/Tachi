@@ -15,7 +15,7 @@ import type {
 	UGPTSettingsDocument,
 	UserDocument,
 	UserGameStats,
-} from "../../../common/src";
+} from "tachi-common";
 
 import deepmerge from "deepmerge";
 

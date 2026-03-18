@@ -5,9 +5,9 @@ import type {
 	PBScoreDocument,
 	Playtype,
 	ScoreRatingAlgorithms,
-} from "../../../../common/src";
+} from "tachi-common";
 
-import db from "#external/mongo/db";
+import db from "#services/mongo/db";
 
 /**
  * Curries a function that returns the sum of N best ratings on `key`.

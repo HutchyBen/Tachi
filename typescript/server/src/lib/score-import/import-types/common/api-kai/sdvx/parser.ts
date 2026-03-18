@@ -1,8 +1,8 @@
-import type { KtLogger } from "#lib/logger/logger";
+import type { KtLogger } from "#lib/log/log.js";
+import type { KaiAuthDocument } from "tachi-common";
 
 import nodeFetch from "#utils/fetch";
 
-import type { KaiAuthDocument } from "../../../../../../../../common/src";
 import type { ParserFunctionReturns } from "../../types";
 import type { KaiContext } from "../types";
 
@@ -14,13 +14,13 @@ import { CreateKaiSDVXClassProvider } from "./class-handler";
 export async function ParseKaiSDVX(
 	service: "EAG" | "FLO" | "MIN",
 	authDoc: KaiAuthDocument,
-	logger: KtLogger,
+	log: KtLogger,
 	fetch = nodeFetch,
 	reauthFn: KaiAPIReauthFunction | null = null,
 ): Promise<ParserFunctionReturns<unknown, KaiContext>> {
 	const baseUrl = KaiTypeToBaseURL(service);
 
-	const resolvedReauthFn = reauthFn ?? CreateKaiReauthFunction(service, authDoc, logger, fetch);
+	const resolvedReauthFn = reauthFn ?? CreateKaiReauthFunction(service, authDoc, log, fetch);
 
 	// auth *before* starting import to avoid a partial-import
 	authDoc.token = await resolvedReauthFn();
@@ -30,7 +30,7 @@ export async function ParseKaiSDVX(
 			baseUrl,
 			"/api/sdvx/v1/play_history",
 			authDoc.token,
-			logger,
+			log,
 			resolvedReauthFn,
 			fetch,
 		),

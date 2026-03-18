@@ -6,7 +6,7 @@
  *
  * Required env vars:
  *   MONGO_URL      – MongoDB connection string, e.g. mongodb://mongo/tachi
- *   POSTGRES_URL   – PostgreSQL connection string, e.g. postgresql://tachi:tachi@postgres/tachi_dev
+ *   POSTGRES_URL   – PostgreSQL connection string, e.g. postgresql://tachi:tachi@tachi-postgres/tachi_dev
  *
  * Run with:
  *   cd server && MONGO_URL=... POSTGRES_URL=... ts-node -r tsconfig-paths/register src/scripts/migrate-to-postgres.ts
@@ -92,7 +92,7 @@ import {
 	type UserGameStatsSnapshotDocument,
 	type UserNameChangeDocument,
 	type UserSettingsDocument,
-} from "../../../common/src";
+} from "tachi-common";
 
 import { buildChartIdMap, importSeeds } from "./load-seeds-pg";
 
@@ -129,7 +129,7 @@ interface InviteLockDocument {
 
 const MONGO_URL = process.env.MONGO_URL ?? "mongodb://mongo/tachi";
 const POSTGRES_URL = process.env.POSTGRES_URL;
-const SEEDS_DIR = process.env.SEEDS_DIR ?? path.resolve(__dirname, "../../../seeds/collections");
+const SEEDS_DIR = process.env.SEEDS_DIR ?? path.resolve(__dirname, "../../../../db/seeds");
 
 if (!POSTGRES_URL) {
 	console.error("[migrate] POSTGRES_URL is not set.");

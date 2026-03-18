@@ -1,10 +1,8 @@
-import type { UserDocument } from "../../../../common/src";
+import type { UserDocument } from "tachi-common";
 
 import { ONE_MONTH } from "#lib/constants/time";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { ServerConfig } from "#lib/setup/config";
-
-const logger = CreateLogCtx(__filename);
 
 /**
  * Users are only allowed to invite so many users, and their invites are
@@ -15,9 +13,7 @@ const logger = CreateLogCtx(__filename);
  */
 export function GetTotalAllowedInvites(user: UserDocument) {
 	if (!ServerConfig.INVITE_CODE_CONFIG) {
-		logger.warn(
-			`No INVITE_CODE_CONFIG set, but tried to get total allowed invites? Returning 0.`,
-		);
+		log.warn(`No INVITE_CODE_CONFIG set, but tried to get total allowed invites? Returning 0.`);
 		return 0;
 	}
 

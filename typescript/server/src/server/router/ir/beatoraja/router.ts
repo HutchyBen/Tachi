@@ -2,24 +2,22 @@ import type {
 	BeatorajaChart,
 	BeatorajaScore,
 } from "#lib/score-import/import-types/ir/beatoraja/types";
-import type { integer } from "../../../../../../common/src";
+import type { integer } from "tachi-common";
 
-import db from "#external/mongo/db";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { ServerConfig } from "#lib/setup/config";
+import { RequireNotGuest } from "#server/middleware/auth";
+import prValidate from "#server/middleware/prudence-validate";
+import db from "#services/mongo/db";
 import { UpdateClassIfGreater } from "#utils/class";
 import { IsRecord, NotNullish } from "#utils/misc";
 import { Router } from "express";
 import { p } from "prudence";
-import { RequireNotGuest } from "#server/middleware/auth";
-import prValidate from "#server/middleware/prudence-validate";
 
 import { ValidateIRClientVersion } from "./auth";
 import chartsRouter from "./charts/_chartSHA256/router";
-
-const logger = CreateLogCtx(__filename);
 
 const router: Router = Router({ mergeParams: true });
 
@@ -60,11 +58,11 @@ router.post("/submit-score", RequireNotGuest, async (req, res) => {
 			);
 
 			if (!orphanInfo) {
-				logger.warn(
-					`Chart '${chart.sha256}' got SongOrChartNotFound, but was not orphaned?`,
+				log.warn(
 					{
 						body: req.safeBody as unknown,
 					},
+					`Chart '${chart.sha256}' got SongOrChartNotFound, but was not orphaned?`,
 				);
 
 				return res.status(400).json({
@@ -104,7 +102,7 @@ router.post("/submit-score", RequireNotGuest, async (req, res) => {
 	});
 
 	if (!scoreDoc) {
-		logger.severe(
+		log.error(
 			`ScoreDocument ${importRes.body.body.scoreIDs[0]} was claimed to be inserted, but wasn't.`,
 		);
 		return res.status(500).json({
@@ -122,7 +120,7 @@ router.post("/submit-score", RequireNotGuest, async (req, res) => {
 		});
 
 		if (!chart) {
-			logger.error(
+			log.error(
 				`Expected to a find a bms chart with chartID ${scoreDoc.chartID}, but found none?`,
 			);
 
@@ -141,7 +139,7 @@ router.post("/submit-score", RequireNotGuest, async (req, res) => {
 		});
 
 		if (!chart) {
-			logger.error(
+			log.error(
 				`Expected to a find a pms chart with chartID ${scoreDoc.chartID}, but found none?`,
 			);
 

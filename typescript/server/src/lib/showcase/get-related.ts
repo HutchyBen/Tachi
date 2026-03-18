@@ -1,9 +1,7 @@
-import type { GameGroup, ShowcaseStatDetails } from "../../../../common/src";
+import type { GameGroup, ShowcaseStatDetails } from "tachi-common";
 
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
-
-const logger = CreateLogCtx(__filename);
+import { log } from "#lib/log/log.js";
+import db from "#services/mongo/db";
 
 export async function GetRelatedStatDocuments(stat: ShowcaseStatDetails, game: GameGroup) {
 	switch (stat.mode) {
@@ -11,14 +9,14 @@ export async function GetRelatedStatDocuments(stat: ShowcaseStatDetails, game: G
 			const chart = await db.anyCharts[game].findOne({ chartID: stat.chartID });
 
 			if (!chart) {
-				logger.error(`This stat refers to a chart that does not exist?`, { stat });
+				log.error({ stat }, `This stat refers to a chart that does not exist?`);
 				throw new Error(`Stat refers to a chart that does not exist? ${stat.chartID}.`);
 			}
 
 			const song = await db.anySongs[game].findOne({ id: chart.songID });
 
 			if (!song) {
-				logger.severe(`Song-Chart Mismatch - ${chart.songID}.`, { chart });
+				log.error({ chart }, `Song-Chart Mismatch - ${chart.songID}.`);
 				throw new Error(`Song-Chart Mismatch on ${chart.songID}.`);
 			}
 
@@ -27,9 +25,9 @@ export async function GetRelatedStatDocuments(stat: ShowcaseStatDetails, game: G
 
 		case "folder": {
 			if (Array.isArray(stat.folderID)) {
-				logger.warn(
-					`This stat is corrupt and attempted to use multiple folderIDs. This is no longer supported. Check that migrations have ran.`,
+				log.warn(
 					{ stat },
+					`This stat is corrupt and attempted to use multiple folderIDs. This is no longer supported. Check that migrations have ran.`,
 				);
 				throw new Error(`Legacy FolderIDs used in showcase stat.`);
 			}
@@ -39,7 +37,7 @@ export async function GetRelatedStatDocuments(stat: ShowcaseStatDetails, game: G
 			});
 
 			if (!folder) {
-				logger.error(`This stat refers to a folder that does not exist?`, { stat });
+				log.error({ stat }, `This stat refers to a folder that does not exist?`);
 				throw new Error(`Stat refers to folder that no longer exists.`);
 			}
 
@@ -47,9 +45,9 @@ export async function GetRelatedStatDocuments(stat: ShowcaseStatDetails, game: G
 		}
 
 		default: {
-			logger.error(
-				`Invalid stat - has nonsense stat.mode of ${(stat as ShowcaseStatDetails).mode}.`,
+			log.error(
 				{ stat },
+				`Invalid stat - has nonsense stat.mode of ${(stat as ShowcaseStatDetails).mode}.`,
 			);
 			throw new Error(`Invalid stat.mode in stat?`);
 		}

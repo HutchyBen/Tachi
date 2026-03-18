@@ -31,7 +31,7 @@ const DIFFICULTY_LOOKUP = {
 export const ConverterIRBarbatos: ConverterFunction<
 	BarbatosScore | BarbatosSDVX6Score,
 	BarbatosContext
-> = async (data, context, importType, logger) => {
+> = async (data, context, importType, log) => {
 	const difficulty = DIFFICULTY_LOOKUP[data.difficulty];
 
 	const chart = await FindSDVXChartOnInGameIDVersion(data.song_id, difficulty, context.version);
@@ -48,7 +48,7 @@ export const ConverterIRBarbatos: ConverterFunction<
 	const song = await FindSongOnID("sdvx", chart.songID);
 
 	if (!song) {
-		logger.severe(`Song ${chart.songID} (sdvx) has no parent song?`);
+		log.error(`Song ${chart.songID} (sdvx) has no parent song?`);
 		throw new InternalFailure(`Song ${chart.songID} (sdvx) has no parent song?`);
 	}
 

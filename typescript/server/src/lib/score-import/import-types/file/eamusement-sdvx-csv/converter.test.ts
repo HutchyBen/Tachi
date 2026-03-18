@@ -1,4 +1,4 @@
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import ResetDBState from "#test-utils/resets";
 import { GetKTDataJSON, TestingAlbidaADV, TestingSDVXAlbidaSong } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
@@ -7,8 +7,6 @@ import t from "tap";
 import type { SDVXEamusementCSVData } from "./types";
 
 import ConvertEamSDVXCSV from "./converter";
-
-const logger = CreateLogCtx(__filename);
 
 const parsedScore = {
 	title: "ALBIDA Powerless Mix",
@@ -23,7 +21,7 @@ t.test("#ConvertEamSDVXCSV", (t) => {
 	t.beforeEach(ResetDBState);
 
 	function conv(g: Partial<SDVXEamusementCSVData> = {}) {
-		return ConvertEamSDVXCSV(deepmerge(parsedScore, g), {}, "file/eamusement-sdvx-csv", logger);
+		return ConvertEamSDVXCSV(deepmerge(parsedScore, g), {}, "file/eamusement-sdvx-csv", log);
 	}
 
 	t.test("Should return a dryScore on valid input.", async (t) => {

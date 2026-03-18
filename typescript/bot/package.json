@@ -11,7 +11,8 @@
 		"start-no-build": "node -r ts-node/register -r tsconfig-paths/register js/main.js",
 		"lint": "eslint .",
 		"lint-fix": "eslint . --fix",
-		"typecheck": "tsgo --noEmit"
+		"typecheck": "tsgo --noEmit",
+		"test": "vitest"
 	},
 	"devDependencies": {
 		"@types/express": "catalog:",
@@ -19,9 +20,12 @@
 		"@types/lodash": "catalog:",
 		"@types/luxon": "catalog:",
 		"@types/node": "catalog:",
+		"@types/pg": "catalog:",
 		"@typescript/native-preview": "catalog:",
 		"@types/node-fetch": "catalog:",
-		"eslint-config-tachi": "workspace:*"
+		"@vitest/coverage-v8": "catalog:",
+		"eslint-config-tachi": "workspace:*",
+		"vitest": "catalog:"
 	},
 	"dependencies": {
 		"@discordjs/builders": "catalog:",
@@ -36,15 +40,16 @@
 		"express": "catalog:",
 		"humanize-duration": "catalog:",
 		"json5": "catalog:",
+		"kysely": "catalog:",
 		"lodash": "catalog:",
 		"luxon": "catalog:",
-		"mei-logger": "catalog:",
-		"monk": "catalog:",
 		"node-fetch": "catalog:",
+		"pg": "catalog:",
+		"bliss": "workspace:*",
 		"prudence": "catalog:",
 		"seq-logging": "catalog:",
-		"sync-fetch": "catalog:",
 		"tachi-common": "workspace:*",
+		"tachi-db": "workspace:*",
 		"ts-node": "catalog:",
 		"tsconfig-paths": "catalog:",
 		"typescript": "catalog:",

@@ -1,8 +1,8 @@
-import type { KtLogger } from "#lib/logger/logger";
-import type { integer } from "../../../../common/src";
+import type { KtLogger } from "#lib/log/log.js";
+import type { integer } from "tachi-common";
 
-import db from "#external/mongo/db";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
+import db from "#services/mongo/db";
 
 export function GetKaiAuth(userID: integer, service: "EAG" | "FLO" | "MIN") {
 	return db["kai-auth-tokens"].findOne({
@@ -21,12 +21,12 @@ export function RevokeKaiAuth(userID: integer, service: "EAG" | "FLO" | "MIN") {
 export async function GetKaiAuthGuaranteed(
 	userID: integer,
 	service: "EAG" | "FLO" | "MIN",
-	logger: KtLogger,
+	log: KtLogger,
 ) {
 	const authDoc = await GetKaiAuth(userID, service);
 
 	if (!authDoc) {
-		logger.error(`No authentication was stored for ${service}.`);
+		log.error(`No authentication was stored for ${service}.`);
 		throw new ScoreImportFatalError(401, `No authentication was stored for ${service}.`);
 	}
 

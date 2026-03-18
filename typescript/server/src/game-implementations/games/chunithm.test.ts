@@ -1,6 +1,6 @@
-import db from "#external/mongo/db";
-import CreateLogCtx from "#lib/logger/logger";
+import { log } from "#lib/log/log.js";
 import { CreatePBDoc } from "#lib/score-import/framework/pb/create-pb-doc";
+import db from "#services/mongo/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import ResetDBState from "#test-utils/resets";
 import { CHUNITHMBBKKChart, TestingChunithmScorePB } from "#test-utils/test-data";
@@ -10,7 +10,7 @@ import {
 	CHUNITHM_NOTE_LAMPS,
 	type ProvidedMetrics,
 	type ScoreData,
-} from "../../../../common/src";
+} from "tachi-common";
 import t from "tap";
 
 import { CHUNITHM_IMPL } from "./chunithm";
@@ -37,8 +37,6 @@ const scoreData: ScoreData<"chunithm:Single"> = {
 
 const mockScore = mkMockScore("chunithm", "Single", CHUNITHMBBKKChart, scoreData);
 const mockPB = mkMockPB("chunithm", "Single", CHUNITHMBBKKChart, scoreData);
-
-const logger = CreateLogCtx(__filename);
 
 t.test("CHUNITHM Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {
@@ -216,7 +214,7 @@ t.test("CHUNITHM Implementation", (t) => {
 				}),
 			);
 
-			t.hasStrict(await CreatePBDoc("chunithm:Single", 1, CHUNITHMBBKKChart, logger), {
+			t.hasStrict(await CreatePBDoc("chunithm:Single", 1, CHUNITHMBBKKChart, log), {
 				composedFrom: [
 					{ name: "Best Score" },
 					{ name: "Best Note Lamp", scoreID: "bestNoteLamp" },
