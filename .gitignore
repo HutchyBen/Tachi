@@ -20,6 +20,10 @@ your-pc
 js
 build
 
+# Coverage
+coverage
+test-results
+
 *.tsbuildinfo
 
 # legacy bootstrap flag

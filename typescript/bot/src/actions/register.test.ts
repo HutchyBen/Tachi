@@ -1,7 +1,7 @@
+import pgDb from "#services/pg/db";
+import { createTestAccount } from "#test-utils/db";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { createTestAccount } from "#test-utils/db";
-import pgDb from "#services/pg/db";
 import { ACTION_Register } from "./register";
 
 describe("ACTION_Register", () => {
@@ -31,8 +31,9 @@ describe("ACTION_Register", () => {
 			.where("user_id", "=", userId)
 			.executeTakeFirst();
 
+		// node-pg returns BIGINT columns as strings
 		expect(row).toMatchObject({
-			user_id: BigInt(userId),
+			user_id: String(userId),
 			discord_id: discordId,
 			api_token: apiToken,
 		});

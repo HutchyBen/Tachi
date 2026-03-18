@@ -12,6 +12,6 @@
 			"discord-api-types/v9": ["../../node_modules/discord-api-types/v9"]
 		}
 	},
-	"include": ["src"],
+	"include": ["src", "vitest.config.ts", "vitest.globalSetup.ts", "vitest.setup.ts"],
 	"exclude": ["node_modules"]
 }

@@ -1,8 +1,6 @@
-/// <reference types="vitest/config" />
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -12,8 +10,8 @@ export default defineConfig({
 		// This mirrors the "imports" field in package.json and the "paths" in tsconfig.json.
 		alias: [
 			{
-				find: /^#(.+)/,
-				replacement: path.resolve(__dirname, "src") + "/$1",
+				find: /^#(.+)/u,
+				replacement: `${path.resolve(__dirname, "src")}/$1`,
 			},
 		],
 	},

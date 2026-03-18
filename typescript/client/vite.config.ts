@@ -16,11 +16,10 @@ export default defineConfig({
 	css: {
 		preprocessorOptions: {
 			scss: {
-				additionalData: [
-					process.env.VITE_TCHIC_MODE === "boku"
-						? "$primary: #527acc;"
-						: "$primary: #e61c6e;",
-				],
+			additionalData:
+				process.env.VITE_TCHIC_MODE === "boku"
+					? "$primary: #527acc;"
+					: "$primary: #e61c6e;",
 			},
 		},
 	},
@@ -67,7 +66,7 @@ root.setAttribute("data-bs-theme", theme);
 		host: true,
 		port: 3000,
 		watch: {
-			usePolling: process.env.FORCE_FS_POLLING,
+			usePolling: process.env.FORCE_FS_POLLING === "true",
 		},
 	},
 });

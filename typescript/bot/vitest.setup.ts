@@ -15,8 +15,7 @@ import crypto from "node:crypto";
 const WORKER_ID = crypto.randomUUID().slice(0, 8);
 const WORKER_DB_NAME = `tachi_bot_test_${WORKER_ID}`;
 
-// In CI, Docker service names are used; otherwise assume the dev compose stack.
-const POSTGRES_HOST = process.env.CI ? "tachi-ci-postgres" : "tachi-postgres";
+const POSTGRES_HOST = "tachi-postgres";
 const POSTGRES_USER = "tachi";
 const POSTGRES_PASS = "tachi";
 
@@ -28,20 +27,21 @@ process.env.POSTGRES_URL = `postgresql://${POSTGRES_USER}:${POSTGRES_PASS}@${POS
 // a top-level await (GetServerConfig). We intercept it and return a minimal fake response
 // so no real Tachi server is required for tests.
 const _realFetch = globalThis.fetch;
-globalThis.fetch = async (url: string | URL | Request, init?: RequestInit): Promise<Response> => {
+globalThis.fetch = (url: string | Request | URL): Promise<Response> => {
 	if (url.toString().endsWith("/api/v1/config")) {
-		return {
-			json: async () => ({
-				success: true,
-				body: {
-					NAME: "Test Tachi",
-					GAMES: [],
-					VERSIONS: {},
-					SUPPORTS_OAUTH2: false,
-					OAUTH_CLIENT_ID: null,
-				},
-			}),
-		} as unknown as Response;
+		return Promise.resolve({
+			json: () =>
+				Promise.resolve({
+					success: true,
+					body: {
+						NAME: "Test Tachi",
+						GAMES: [],
+						VERSIONS: {},
+						SUPPORTS_OAUTH2: false,
+						OAUTH_CLIENT_ID: null,
+					},
+				}),
+		} as unknown as Response);
 	}
 
 	// Blow up loudly if any unexpected fetch slips through — this keeps tests hermetic.
@@ -69,9 +69,7 @@ async function createWorkerDatabase() {
 	await client.connect();
 
 	try {
-		await client.query(
-			`CREATE DATABASE "${WORKER_DB_NAME}" TEMPLATE tachi_bot_test_template`,
-		);
+		await client.query(`CREATE DATABASE "${WORKER_DB_NAME}" TEMPLATE tachi_bot_test_template`);
 	} finally {
 		await client.end();
 	}
@@ -98,7 +96,7 @@ async function dropWorkerDatabase() {
 
 async function resetDatabase() {
 	// Lazily import so env vars are definitely set before the pool is created.
-	const { default: pgDb } = await import("#services/pg/db");
+	const { default: db } = await import("#services/pg/db");
 	const { sql } = await import("kysely");
 
 	await sql`
@@ -113,7 +111,7 @@ async function resetDatabase() {
 				EXECUTE 'TRUNCATE TABLE ' || quote_ident(row.table_name) || ' RESTART IDENTITY CASCADE';
 			END LOOP;
 		END $$;
-	`.execute(pgDb);
+	`.execute(db);
 }
 
 beforeAll(async () => {
