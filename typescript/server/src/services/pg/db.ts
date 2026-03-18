@@ -6,12 +6,12 @@ import { Pool } from "pg";
 
 const pool = new Pool({ connectionString: Env.POSTGRES_URL });
 
-const pgDb = new Kysely<Database>({
+const db = new Kysely<Database>({
 	dialect: new PostgresDialect({ pool }),
 });
 
 export async function ClosePgConnection() {
-	await pgDb.destroy();
+	await db.destroy();
 }
 
-export default pgDb;
+export default db;

@@ -5,7 +5,7 @@
  *   account → priv_api_token → priv_discord_user_map
  */
 
-import pgDb from "#services/pg/db";
+import db from "#services/pg/db";
 
 export interface TestAccount {
 	id: number;
@@ -21,13 +21,13 @@ export async function createTestAccount(
 	username = "testuser",
 	token = "test-token-aaaa",
 ): Promise<TestAccount> {
-	const { id } = await pgDb
+	const { id } = await db
 		.insertInto("account")
 		.values({ username })
 		.returning("id")
 		.executeTakeFirstOrThrow();
 
-	await pgDb
+	await db
 		.insertInto("priv_api_token")
 		.values({ token, user_id: id, identifier: "test" })
 		.execute();

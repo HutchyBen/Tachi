@@ -1,4 +1,4 @@
-import pgDb from "#services/pg/db";
+import db from "#services/pg/db";
 import { createTestAccount } from "#test-utils/db";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -25,7 +25,7 @@ describe("ACTION_Register", () => {
 
 		expect(result).toEqual({ was_update: false });
 
-		const row = await pgDb
+		const row = await db
 			.selectFrom("priv_discord_user_map")
 			.selectAll()
 			.where("user_id", "=", userId)
@@ -57,7 +57,7 @@ describe("ACTION_Register", () => {
 
 		expect(result).toEqual({ was_update: true });
 
-		const row = await pgDb
+		const row = await db
 			.selectFrom("priv_discord_user_map")
 			.selectAll()
 			.where("user_id", "=", userId)
@@ -73,7 +73,7 @@ describe("ACTION_Register", () => {
 			"!api_token": apiToken,
 		});
 
-		const action = await pgDb
+		const action = await db
 			.selectFrom("action")
 			.selectAll()
 			.where("kind", "=", "REGISTER")
