@@ -1,19 +1,16 @@
 import type { GuildMember } from "discord.js";
 
-import pgDb from "#services/pg/db";
-import { createTestAccount } from "#test-utils/db";
+import db from "#services/pg/db";
+import { type AnonActionTaker } from "bliss";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-import type { ActionTaker } from "../actions";
 
 import { ACTION_Letmein } from "./letmein";
 
 describe("ACTION_Letmein", () => {
-	let taker: ActionTaker;
+	let taker: AnonActionTaker;
 
-	beforeEach(async () => {
-		const acct = await createTestAccount("letmeinuser", "letmein-token-cccc");
-		taker = { acct: { id: acct.id, username: acct.username }, ip: "127.0.0.1" };
+	beforeEach(() => {
+		taker = { ip: "127.0.0.1" };
 	});
 
 	it("calls member.roles.add with the provided role_id", async () => {
@@ -58,7 +55,7 @@ describe("ACTION_Letmein", () => {
 			"!member": member,
 		});
 
-		const action = await pgDb
+		const action = await db
 			.selectFrom("action")
 			.selectAll()
 			.where("kind", "=", "LETMEIN")
@@ -69,7 +66,7 @@ describe("ACTION_Letmein", () => {
 			app: "BOT",
 			kind: "LETMEIN",
 			result: "GOOD",
-			user_id: String(taker.acct.id),
+			user_id: null,
 		});
 
 		// The GuildMember object must not appear in the audit log input
@@ -92,7 +89,7 @@ describe("ACTION_Letmein", () => {
 			}),
 		).rejects.toThrow("Discord API down");
 
-		const action = await pgDb
+		const action = await db
 			.selectFrom("action")
 			.selectAll()
 			.where("kind", "=", "LETMEIN")

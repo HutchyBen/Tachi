@@ -1,46 +1,23 @@
 import db from "#services/pg/db";
 import { type ActionTaker, type AnonActionTaker, MakeActionGuts } from "bliss";
 import { type ActionSignature } from "bliss/actions";
-import { type GuildMember } from "discord.js";
 import { z } from "zod";
 
-const APP_NAME = "TACHI_BOT";
+const APP_NAME = "TACHI_SERVER";
 
 export type ActionName = keyof typeof ActionSignatures;
 export type AnonActionName = keyof typeof AnonActionSignatures;
 
 export const ActionSignatures = {
-	SYNC: {
-		input: z.object({
-			import_type: z.string(),
-			"!api_token": z.string(),
-		}),
-		output: z.object({
-			import_id: z.string(),
-			score_count: z.number().int(),
-			session_count: z.number().int(),
-			error_count: z.number().int(),
-			user_id: z.number().int(),
-			game: z.string(),
-		}),
+	NO_OP: {
+		input: z.object({}),
+		output: z.object({}),
 	},
 } satisfies Record<string, ActionSignature>;
 
 export const AnonActionSignatures = {
-	REGISTER: {
-		input: z.object({
-			user_id: z.number().int(),
-			discord_id: z.string(),
-			"!api_token": z.string(),
-		}),
-		output: z.object({ was_update: z.boolean() }),
-	},
-	LETMEIN: {
-		input: z.object({
-			discord_user_id: z.string(),
-			role_id: z.string(),
-			"!member": z.custom<GuildMember>(),
-		}),
+	NO_OP: {
+		input: z.object({}),
 		output: z.object({}),
 	},
 } satisfies Record<string, ActionSignature>;

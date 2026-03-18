@@ -45,7 +45,7 @@
 		"luxon": "catalog:",
 		"node-fetch": "catalog:",
 		"pg": "catalog:",
-		"pino": "catalog:",
+		"bliss": "workspace:*",
 		"prudence": "catalog:",
 		"seq-logging": "catalog:",
 		"tachi-common": "workspace:*",

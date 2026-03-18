@@ -42,5 +42,6 @@
 	},
 	"files.associations": {
 		"Justfile-*": "makefile"
-	}
+	},
+	"typescript.tsdk": "node_modules/typescript/lib"
 }

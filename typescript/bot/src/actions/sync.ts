@@ -1,4 +1,6 @@
-import { ExpectedErr, MakeAction } from "../actions";
+import { ExpectedErr } from "bliss";
+
+import { MakeAction } from "../actions";
 import { PerformScoreImport } from "../utils/api-requests";
 
 export const ACTION_Sync = MakeAction(

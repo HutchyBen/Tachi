@@ -1,10 +1,10 @@
 import { BotConfig } from "#config";
 import { SlashCommandBuilder } from "@discordjs/builders";
+import { ExpectedErr } from "bliss";
 import { GuildMember } from "discord.js";
 
 import type { SlashCommand } from "../types";
 
-import { ExpectedErr } from "../../actions";
 import { ACTION_Letmein } from "../../actions/letmein";
 
 const command: SlashCommand = {

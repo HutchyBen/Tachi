@@ -1,10 +1,10 @@
 import type { ImportDocument } from "tachi-common";
 
-import pgDb from "#services/pg/db";
+import db from "#services/pg/db";
 import { createTestAccount } from "#test-utils/db";
+import { type ActionTaker, ExpectedErr } from "bliss";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { type ActionTaker, ExpectedErr } from "../actions";
 import { ACTION_Sync } from "./sync";
 
 // Auto-mock the api-requests module so no real HTTP calls are made.
@@ -68,7 +68,7 @@ describe("ACTION_Sync", () => {
 
 		await ACTION_Sync(taker, syncInput);
 
-		const action = await pgDb
+		const action = await db
 			.selectFrom("action")
 			.selectAll()
 			.where("kind", "=", "SYNC")
@@ -103,7 +103,7 @@ describe("ACTION_Sync", () => {
 
 		await ACTION_Sync(taker, syncInput);
 
-		const action = await pgDb
+		const action = await db
 			.selectFrom("action")
 			.selectAll()
 			.where("kind", "=", "SYNC")
@@ -119,13 +119,11 @@ describe("ACTION_Sync", () => {
 	});
 
 	it("writes a BAD action row when PerformScoreImport returns an error string", async () => {
-		vi.mocked(PerformScoreImport).mockResolvedValue(
-			"Bad import." as unknown as ImportDocument,
-		);
+		vi.mocked(PerformScoreImport).mockResolvedValue("Bad import." as unknown as ImportDocument);
 
 		await expect(ACTION_Sync(taker, syncInput)).rejects.toBeInstanceOf(ExpectedErr);
 
-		const action = await pgDb
+		const action = await db
 			.selectFrom("action")
 			.selectAll()
 			.where("kind", "=", "SYNC")
@@ -139,7 +137,7 @@ describe("ACTION_Sync", () => {
 
 		await expect(ACTION_Sync(taker, syncInput)).rejects.toThrow("Network error");
 
-		const action = await pgDb
+		const action = await db
 			.selectFrom("action")
 			.selectAll()
 			.where("kind", "=", "SYNC")

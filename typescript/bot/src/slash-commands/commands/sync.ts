@@ -1,9 +1,9 @@
 import { BotConfig, ServerConfig } from "#config";
 import { SlashCommandBuilder } from "@discordjs/builders";
+import { ExpectedErr } from "bliss";
 
 import type { SlashCommand } from "../types";
 
-import { ExpectedErr } from "../../actions";
 import { ACTION_Sync } from "../../actions/sync";
 import { CreateEmbed } from "../../utils/embeds";
 import { Pluralise } from "../../utils/misc";
