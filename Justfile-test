@@ -65,3 +65,7 @@ test-typescript:
 	set -euo pipefail
 
 	bun run --filter '*' test -- --coverage.reporter=lcov --reporter=default --reporter=junit --outputFile.junit=test-results/junit.xml
+
+# Run all parity suites, or a single one if a name is given.
+test-parity suite="":
+	TACHI_SERVER=https://127.0.0.1:8080 bun vitest run {{ if suite != "" { "tests/" + suite + ".test.ts" } else { "" } }}

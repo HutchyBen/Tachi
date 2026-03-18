@@ -4,7 +4,7 @@ import { Router } from "express";
 
 import { RejectIfBanned, SetRequestPermissions } from "../middleware/auth";
 import { NormalRateLimitMiddleware } from "../middleware/rate-limiter";
-import apiRouterV1 from "./api/v1/router";
+import apiRouterV1Mongo from "./api/v1/router";
 import irRouter from "./ir/router";
 
 const router: Router = Router({ mergeParams: true });
@@ -18,14 +18,14 @@ router.use("/ir", NormalRateLimitMiddleware, irRouter);
 router.use(SetRequestPermissions);
 router.use(UpdateLastSeen);
 
-router.use("/api/v1", apiRouterV1);
+router.use("/api/v1mongo", apiRouterV1Mongo);
 
 // if in localdev, add a debug endpoint to tell users when they got a successful fetch
 // on the root endpoint.
 // That is to say, if a user is hitting 127.0.0.1:8080/
 // instead of "cannot GET /", they should get a nice message.
 if (Env.NODE_ENV === "dev") {
-	router.get("/", (req, res) =>
+	router.get("/", (_req, res) =>
 		res.send(
 			`Server is live and running. All is good!<br />
 			This is a DEBUG endpoint and only exists in local dev.<br />

@@ -5,7 +5,7 @@ import { VERSION_PRETTY } from "#lib/constants/version";
 import { HandleSIGTERMGracefully } from "#lib/handlers/sigterm";
 import { log } from "#lib/log/log.js";
 import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
-import { AddNewUser } from "#server/router/api/v1/auth/auth";
+import { AddNewUser } from "#server/router/api/v1/auth/auth.js";
 import server from "#server/server";
 import db, { monkDB } from "#services/mongo/db";
 import { UpdateIndexes } from "#services/mongo/indexes";
