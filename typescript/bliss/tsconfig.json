@@ -3,9 +3,6 @@
 	"compilerOptions": {
 		"module": "Preserve",
 		"moduleResolution": "bundler",
-		"paths": {
-			"#*": ["./src/*"]
-		}
 	},
 	"include": ["src"],
 	"exclude": ["node_modules"]

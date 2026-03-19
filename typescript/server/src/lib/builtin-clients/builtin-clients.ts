@@ -2,7 +2,7 @@ import { ACTION_InstallBuiltinClient } from "#actions/install-builtin-client.js"
 import { log } from "#lib/log/log.js";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import _ from "lodash";
-import { type TachiAPIClientDocument } from "tachi-common";
+import { type APIPermissions, type TachiAPIClientDocument } from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import { GetClientByID } from "#utils/queries/api-clients.js";
 import { GetFirstAdmin } from "#utils/user.js";
@@ -319,6 +319,11 @@ async function LoadClients(clients: DefaultClients) {
 			}
 		}
 
+		const permissionsObject: Partial<Record<APIPermissions, boolean>> = {};
+		for (const permission of client.requestedPermissions) {
+			permissionsObject[permission] = true;
+		}
+
 		await ACTION_InstallBuiltinClient(
 			{
 				ip: null,
@@ -330,16 +335,7 @@ async function LoadClients(clients: DefaultClients) {
 			{
 				clientID: client.clientID,
 				name: client.name,
-				permissions: {
-					customise_profile: false,
-					customise_score: false,
-					customise_session: false,
-					delete_score: false,
-					manage_rivals: false,
-					manage_targets: false,
-					submit_score: false,
-					manage_challenges: false,
-				},
+				permissions: permissionsObject,
 				apiKeyFilename: client.apiKeyFilename,
 				apiKeyTemplate: client.apiKeyTemplate,
 				redirectUri: client.redirectUri,

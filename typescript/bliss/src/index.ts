@@ -1,9 +1,3 @@
-export {
-	AcctInfo,
-	ActionResult,
-	ActionTaker,
-	AnonActionTaker,
-	ExpectedErr,
-	MakeActionGuts,
-} from "./actions";
+export type { AcctInfo, ActionResult, ActionTaker, AnonActionTaker } from "./actions";
+export { ExpectedErr, MakeActionGuts } from "./actions";
 export * from "./log";

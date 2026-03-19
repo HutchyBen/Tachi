@@ -40,8 +40,8 @@ export const ACTION_InstallBuiltinClient = MakeAction(
 				redirect_uri: redirectUri,
 				is_builtin: true,
 			})
-			.onConflict((oc) =>
-				oc.doUpdateSet({
+		.onConflict((oc) =>
+			oc.column("client_id").doUpdateSet({
 					client_secret: clientSecret,
 					name: name,
 					author: taker.acct.id,

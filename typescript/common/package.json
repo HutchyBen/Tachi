@@ -60,11 +60,4 @@
 			"src/external/mongo/schemas.ts"
 		]
 	},
-	"imports": {
-		"#*": [
-			"./src/*",
-			"./src/*.ts",
-			"./src/*/index.ts"
-		]
-	}
 }

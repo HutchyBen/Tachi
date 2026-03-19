@@ -43,11 +43,4 @@
 		"eslint-config-tachi": "workspace:*",
 		"typescript": "catalog:"
 	},
-	"imports": {
-		"#*": [
-			"./src/*",
-			"./src/*.ts",
-			"./src/*/index.ts"
-		]
-	}
 }
