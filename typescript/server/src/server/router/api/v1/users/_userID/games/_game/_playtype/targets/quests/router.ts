@@ -8,7 +8,7 @@ import {
 	UnsubscribeFromQuest,
 } from "#lib/targets/quests";
 import { RequirePermissions } from "#server/middleware/auth";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { AssignToReqTachiData, GetGPT, GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import { FormatUserDoc } from "#utils/user";
 import { type RequestHandler, Router } from "express";
@@ -25,13 +25,13 @@ const router: Router = Router({ mergeParams: true });
 router.get("/", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const questSubs = await db["quest-subs"].find({
+	const questSubs = await MONGODB_KILL["quest-subs"].find({
 		userID: user.id,
 		game,
 		playtype,
 	});
 
-	const quests = await db.quests.find({
+	const quests = await MONGODB_KILL.quests.find({
 		questID: { $in: questSubs.map((e) => e.questID) },
 	});
 
@@ -58,7 +58,7 @@ router.get("/", async (req, res) => {
 const GetQuestSubscription: RequestHandler = async (req, res, next) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const questSub = await db["quest-subs"].findOne({
+	const questSub = await MONGODB_KILL["quest-subs"].findOne({
 		userID: user.id,
 		game,
 		playtype,
@@ -80,7 +80,7 @@ const GetQuestSubscription: RequestHandler = async (req, res, next) => {
 const GetQuest: RequestHandler = async (req, res, next) => {
 	const { game, playtype } = GetGPT(req);
 
-	const quest = await db.quests.findOne({
+	const quest = await MONGODB_KILL.quests.findOne({
 		game,
 		playtype,
 		questID: req.params.questID,
@@ -142,7 +142,7 @@ router.put(
 	async (req, res) => {
 		const { user, game, playtype } = GetUGPT(req);
 
-		const existingQuestsCount = await db["quest-subs"].count({
+		const existingQuestsCount = await MONGODB_KILL["quest-subs"].count({
 			userID: user.id,
 			game,
 			playtype,
@@ -157,7 +157,7 @@ router.put(
 
 		const quest = GetTachiData(req, "questDoc");
 
-		const alreadySubscibed = await db["quest-subs"].findOne({
+		const alreadySubscibed = await MONGODB_KILL["quest-subs"].findOne({
 			userID: user.id,
 			questID: quest.questID,
 		});
@@ -218,7 +218,7 @@ router.delete(
 			`User ${FormatUserDoc(user)} is unsubscribing from quest '${quest.name}'.`,
 		);
 
-		const questSub = await db["quest-subs"].findOne({
+		const questSub = await MONGODB_KILL["quest-subs"].findOne({
 			userID: user.id,
 			questID: quest.questID,
 		});

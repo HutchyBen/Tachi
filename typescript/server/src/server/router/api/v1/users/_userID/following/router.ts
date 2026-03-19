@@ -3,7 +3,7 @@ import type { integer } from "tachi-common";
 import { log } from "#lib/log/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetUser } from "#utils/req-tachi-data";
 import { FormatUserDoc, GetUsersWithIDs, GetUserWithID } from "#utils/user";
 import { Router } from "express";
@@ -23,7 +23,7 @@ const router: Router = Router({ mergeParams: true });
 router.get("/", async (req, res) => {
 	const user = GetUser(req);
 
-	const settings = await db["user-settings"].findOne({ userID: user.id });
+	const settings = await MONGODB_KILL["user-settings"].findOne({ userID: user.id });
 
 	if (!settings) {
 		log.error({ user }, `User ${FormatUserDoc(user)} has no settings?`);
@@ -68,7 +68,7 @@ router.post(
 			});
 		}
 
-		const settings = await db["user-settings"].findOne({ userID: user.id });
+		const settings = await MONGODB_KILL["user-settings"].findOne({ userID: user.id });
 
 		if (!settings) {
 			log.error({ user }, `User ${FormatUserDoc(user)} has no settings?`);
@@ -107,7 +107,7 @@ router.post(
 		// in a race condition.
 		const following = [...settings.following, toFollow];
 
-		await db["user-settings"].update(
+		await MONGODB_KILL["user-settings"].update(
 			{
 				userID: user.id,
 			},
@@ -142,7 +142,7 @@ router.post(
 
 		const { userID: toFollow } = req.safeBody as { userID: integer };
 
-		const settings = await db["user-settings"].findOne({ userID: user.id });
+		const settings = await MONGODB_KILL["user-settings"].findOne({ userID: user.id });
 
 		if (!settings) {
 			log.error({ user }, `User ${FormatUserDoc(user)} has no settings?`);
@@ -174,7 +174,7 @@ router.post(
 		// in a race condition.
 		const following = settings.following.filter((e) => e !== toFollow);
 
-		await db["user-settings"].update(
+		await MONGODB_KILL["user-settings"].update(
 			{
 				userID: user.id,
 			},

@@ -1,7 +1,7 @@
 import { log } from "#lib/log/log.js";
 import { ServerConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { DedupeArr, DeleteUndefinedProps, IsValidURL, Random20Hex } from "#utils/misc";
 import { optNull } from "#utils/prudence";
 import { GetTachiData } from "#utils/req-tachi-data";
@@ -36,7 +36,7 @@ router.get("/", async (req, res) => {
 		});
 	}
 
-	const clients = await db["api-clients"].find({
+	const clients = await MONGODB_KILL["api-clients"].find({
 		author: user.id,
 	});
 
@@ -101,7 +101,7 @@ router.post(
 			webhookUri: string | null;
 		};
 
-		const existingClients = await db["api-clients"].find({
+		const existingClients = await MONGODB_KILL["api-clients"].find({
 			author: req.session.tachi.user.id,
 		});
 
@@ -154,7 +154,7 @@ router.post(
 			apiKeyTemplate: body.apiKeyTemplate ?? null,
 		};
 
-		await db["api-clients"].insert(clientDoc);
+		await MONGODB_KILL["api-clients"].insert(clientDoc);
 
 		log.info(
 			`User ${FormatUserDoc(req.session.tachi.user)} created a new API Client ${
@@ -263,7 +263,7 @@ router.patch(
 			});
 		}
 
-		const newClient = await db["api-clients"].findOneAndUpdate(
+		const newClient = await MONGODB_KILL["api-clients"].findOneAndUpdate(
 			{
 				clientID: client.clientID,
 			},
@@ -302,7 +302,7 @@ router.post(
 
 		const newSecret = Random20Hex();
 
-		const newClient = await db["api-clients"].findOneAndUpdate(
+		const newClient = await MONGODB_KILL["api-clients"].findOneAndUpdate(
 			{
 				clientID: client.clientID,
 			},
@@ -334,13 +334,13 @@ router.delete("/:clientID", GetClientFromID, RequireOwnershipOfClient, async (re
 	log.info(`received request to destroy API Client ${client.name} (${client.clientID})`);
 
 	log.debug(`Removing API Client ${clientName}.`);
-	await db["api-clients"].remove({
+	await MONGODB_KILL["api-clients"].remove({
 		clientID: client.clientID,
 	});
 	log.info(`Removed API Client ${clientName}.`);
 
 	log.debug(`Removing all associated api tokens.`);
-	const result = await db["api-tokens"].remove({
+	const result = await MONGODB_KILL["api-tokens"].remove({
 		fromOAuth2Client: client.clientID,
 	});
 

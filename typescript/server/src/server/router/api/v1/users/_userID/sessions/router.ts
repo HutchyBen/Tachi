@@ -1,4 +1,4 @@
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetUser } from "#utils/req-tachi-data";
 import { Router } from "express";
 
@@ -14,7 +14,7 @@ const router: Router = Router({ mergeParams: true });
 router.get("/calendar", async (req, res) => {
 	const user = GetUser(req);
 
-	const sessions = await db.sessions.find(
+	const sessions = await MONGODB_KILL.sessions.find(
 		{ userID: user.id },
 		{
 			projection: {

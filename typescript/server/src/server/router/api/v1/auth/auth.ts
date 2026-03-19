@@ -1,20 +1,21 @@
-import type { PrivateUserInfoDocument } from "#utils/types";
-
 import { log } from "#lib/log/log.js";
-import { Env, ServerConfig } from "#lib/setup/config";
-import db from "#services/mongo/db";
+import { ServerConfig } from "#lib/setup/config";
+import DB from "#services/pg/db.js";
 import nodeFetch from "#utils/fetch";
 import { Random20Hex } from "#utils/misc";
 import { CreateURLWithParams } from "#utils/url";
 import { FormatUserDoc } from "#utils/user";
 import bcrypt from "bcryptjs";
+import { type Transaction } from "kysely";
 import { p } from "prudence";
 import {
 	type integer,
+	type InviteCodeDocument,
 	UserAuthLevels,
 	type UserDocument,
 	type UserSettingsDocument,
 } from "tachi-common";
+import { type Database } from "tachi-db";
 
 const BCRYPT_SALT_ROUNDS = 12;
 
@@ -36,35 +37,41 @@ export function PasswordCompare(plaintext: string, password: string) {
 
 export function ReinstateInvite(code: string) {
 	log.info(`Reinstated Invite ${code}`);
-	return db.invites.update(
-		{
-			code,
-		},
-		{
-			$set: {
-				consumed: false,
-				consumedAt: null,
-				consumedBy: null,
-			},
-		},
-	);
+
+	return DB.updateTable("priv_invite")
+		.set({
+			consumed: false,
+			consumed_at: null,
+			consumed_by: null,
+		})
+		.where("code", "=", code)
+		.execute();
 }
 
-export async function AddNewInvite(user: UserDocument) {
+export async function AddNewInvite(user: UserDocument): Promise<InviteCodeDocument> {
 	const code = Random20Hex();
 
-	const result = await db.invites.insert({
-		code,
-		consumed: false,
-		createdBy: user.id,
-		createdAt: Date.now(),
-		consumedAt: null,
-		consumedBy: null,
-	});
+	await DB.insertInto("priv_invite")
+		.values({
+			code,
+			consumed: false,
+			created_by: user.id,
+			created_at: new Date().toISOString(),
+			consumed_at: null,
+			consumed_by: null,
+		})
+		.execute();
 
 	log.info(`User ${FormatUserDoc(user)} created an invite.`);
 
-	return result;
+	return {
+		code,
+		createdBy: user.id,
+		createdAt: Date.now(),
+		consumed: false,
+		consumedAt: null,
+		consumedBy: null,
+	};
 }
 
 export const DEFAULT_USER_SETTINGS: UserSettingsDocument["preferences"] = {
@@ -80,14 +87,36 @@ export function HashPassword(plaintext: string) {
 }
 
 export async function AddNewUser(
+	txn: Transaction<Database>,
+
 	username: string,
 	plaintext: string,
 	email: string,
-	userID: integer,
-) {
+): Promise<{ newSettings: UserSettingsDocument; newUser: UserDocument }> {
 	const hashedPassword = await HashPassword(plaintext);
 
 	log.debug(`Hashed password for ${username}.`);
+
+	// no - this is bad
+	// // all created users on a dev instance should be admins, for convenience.
+	// if (Env.NODE_ENV === "dev") {
+	// 	userDoc.authLevel = UserAuthLevels.ADMIN;
+	// }
+
+	const userID = await txn
+		.insertInto("account")
+		.values({
+			about: "I'm a fairly nondescript person.",
+			username,
+			joined: new Date().toISOString(),
+			last_seen: new Date().toISOString(),
+			auth_level: "user",
+			custom_pfp_location: null,
+			custom_banner_location: null,
+		})
+		.returning("id")
+		.executeTakeFirstOrThrow()
+		.then((res) => res.id);
 
 	const userDoc: UserDocument = {
 		id: userID,
@@ -104,39 +133,52 @@ export async function AddNewUser(
 		badges: [],
 	};
 
-	// all created users on a dev instance should be admins, for convenience.
-	if (Env.NODE_ENV === "dev") {
-		userDoc.authLevel = UserAuthLevels.ADMIN;
-	}
+	const settingsRes = await InsertDefaultUserSettings(txn, userID);
 
-	const res = await db.users.insert(userDoc);
+	await InsertPrivateUserInfo(txn, userID, hashedPassword, email);
 
-	const settingsRes = await InsertDefaultUserSettings(userID);
-
-	await InsertPrivateUserInfo(userID, hashedPassword, email);
-
-	return { newUser: res, newSettings: settingsRes };
+	return { newUser: userDoc, newSettings: settingsRes };
 }
 
-export function InsertPrivateUserInfo(userID: integer, hashedPassword: string, email: string) {
-	const privateInfo: PrivateUserInfoDocument = {
-		userID,
-		email,
-		password: hashedPassword,
-	};
-
-	return db["user-private-information"].insert(privateInfo);
+export function InsertPrivateUserInfo(
+	txn: Transaction<Database>,
+	userID: integer,
+	hashedPassword: string,
+	email: string,
+) {
+	return txn
+		.insertInto("priv_account_credential")
+		.values({
+			user_id: userID,
+			email,
+			password: hashedPassword,
+		})
+		.execute();
 }
 
-export function InsertDefaultUserSettings(userID: integer) {
+export async function InsertDefaultUserSettings(
+	txn: Transaction<Database>,
+	userID: integer,
+): Promise<UserSettingsDocument> {
 	log.debug(`Inserting default settings for ${userID}.`);
-	const UserSettingsDocument: UserSettingsDocument = {
+
+	await txn
+		.insertInto("account_settings")
+		.values({
+			user_id: userID,
+			pf_invisible: DEFAULT_USER_SETTINGS.invisible,
+			pf_developer_mode: DEFAULT_USER_SETTINGS.developerMode,
+			pf_advanced_mode: DEFAULT_USER_SETTINGS.advancedMode,
+			pf_contentious_content: DEFAULT_USER_SETTINGS.contentiousContent,
+			pf_deletable_scores: DEFAULT_USER_SETTINGS.deletableScores,
+		})
+		.execute();
+
+	return {
 		userID,
 		following: [],
 		preferences: DEFAULT_USER_SETTINGS,
 	};
-
-	return db["user-settings"].insert(UserSettingsDocument);
 }
 
 export async function ValidateCaptcha(

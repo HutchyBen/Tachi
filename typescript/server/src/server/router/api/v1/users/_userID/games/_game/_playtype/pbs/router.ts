@@ -4,7 +4,7 @@ import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch
 import { SearchSpecificGameSongsAndCharts } from "#lib/search/search";
 import prValidate from "#server/middleware/prudence-validate";
 import { AggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { IsValidScoreAlg } from "#utils/misc";
 import { GetAdjacentAbove, GetAdjacentBelow } from "#utils/queries/pbs";
@@ -40,7 +40,7 @@ router.get("/", async (req, res) => {
 		playtype,
 	);
 
-	const pbs = await db["personal-bests"].find(
+	const pbs = await MONGODB_KILL["personal-bests"].find(
 		{
 			chartID: { $in: allCharts.map((e) => e.chartID) },
 			userID: user.id,
@@ -77,7 +77,7 @@ router.get("/", async (req, res) => {
 router.get("/all", AggressiveRateLimitMiddleware, async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const pbs = await db["personal-bests"].find({
+	const pbs = await MONGODB_KILL["personal-bests"].find({
 		userID: user.id,
 		game,
 		playtype,
@@ -117,7 +117,7 @@ router.get("/best", prValidate({ alg: "*string" }), async (req, res) => {
 
 	const alg = (req.query.alg as string | undefined) ?? gptConfig.defaultScoreRatingAlg;
 
-	const pbs = await db["personal-bests"].find(
+	const pbs = await MONGODB_KILL["personal-bests"].find(
 		{
 			userID: user.id,
 			game,
@@ -156,7 +156,7 @@ router.get("/best", prValidate({ alg: "*string" }), async (req, res) => {
 router.get("/:chartID", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const chart = await db.anyCharts[game].findOne({
+	const chart = await MONGODB_KILL.anyCharts[game].findOne({
 		chartID: req.params.chartID,
 		playtype,
 	});
@@ -168,7 +168,7 @@ router.get("/:chartID", async (req, res) => {
 		});
 	}
 
-	const pb = await db["personal-bests"].findOne({
+	const pb = await MONGODB_KILL["personal-bests"].findOne({
 		chartID: req.params.chartID,
 		userID: user.id,
 	});
@@ -183,7 +183,7 @@ router.get("/:chartID", async (req, res) => {
 	if (req.query.getComposition !== undefined) {
 		const scoreIDs = GetScoreIDsFromComposed(pb);
 
-		const scores = await db.scores.find({
+		const scores = await MONGODB_KILL.scores.find({
 			scoreID: { $in: scoreIDs },
 		});
 
@@ -218,7 +218,7 @@ router.get("/:chartID/rivals", async (req, res) => {
 
 	const rivals = await GetRivalUsers(user.id, game, playtype);
 
-	const pbs = await db["personal-bests"].find({
+	const pbs = await MONGODB_KILL["personal-bests"].find({
 		userID: { $in: rivals.map((e) => e.id) },
 		chartID: req.params.chartID,
 	});
@@ -248,7 +248,7 @@ router.get("/:chartID/rivals", async (req, res) => {
 router.get("/:chartID/leaderboard-adjacent", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const chart = await db.anyCharts[game].findOne({
+	const chart = await MONGODB_KILL.anyCharts[game].findOne({
 		chartID: req.params.chartID,
 		playtype,
 	});
@@ -260,7 +260,7 @@ router.get("/:chartID/leaderboard-adjacent", async (req, res) => {
 		});
 	}
 
-	const pb = await db["personal-bests"].findOne({
+	const pb = await MONGODB_KILL["personal-bests"].findOne({
 		chartID: req.params.chartID,
 		userID: user.id,
 	});

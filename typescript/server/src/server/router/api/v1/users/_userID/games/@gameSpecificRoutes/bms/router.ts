@@ -5,7 +5,7 @@ import {
 	HandleBMSTableHTMLRequest,
 } from "#lib/game-specific/custom-bms-tables";
 import { ValidatePlaytypeFromParamFor } from "#server/router/api/v1/games/_game/_playtype/middleware.js";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { AssignToReqTachiData, GetTachiData, GetUGPT, GetUser } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
 
@@ -142,7 +142,7 @@ router.get(
 			});
 		}
 
-		const chart = await db.charts.bms.findOne({
+		const chart = await MONGODB_KILL.charts.bms.findOne({
 			...query,
 		});
 
@@ -152,7 +152,7 @@ router.get(
 				.json({ success: false, description: "No chart found with the given checksum." });
 		}
 
-		const pb = await db["personal-bests"].findOne({
+		const pb = await MONGODB_KILL["personal-bests"].findOne({
 			game: "bms",
 			playtype: chart.playtype,
 			userID: user.id,

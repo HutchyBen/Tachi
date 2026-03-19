@@ -15,11 +15,11 @@ import { applyMigrations, getMigrationInfo, revertLastMigration } from "tachi-db
 const DEFAULT_MIGRATIONS_DIR = "/tachi/db/migrations";
 
 function getConnectionString(opts: { databaseUrl?: string }): string {
-	const url = opts.databaseUrl ?? process.env.DATABASE_URL;
+	const url = opts.databaseUrl ?? process.env.POSTGRES_URL;
 
 	if (!url) {
 		console.error(
-			"[migrate] No database URL provided. Set DATABASE_URL, or pass --database-url.",
+			"[migrate] No database URL provided. Set POSTGRES_URL, or pass --database-url.",
 		);
 		process.exit(1);
 	}
@@ -88,7 +88,7 @@ const program = new Command();
 program
 	.name("tachi-migrate")
 	.description("Database migration CLI, modelled after sqlx migrate.")
-	.option("--database-url <url>", "Postgres connection string (overrides DATABASE_URL env var)");
+	.option("--database-url <url>", "Postgres connection string (overrides POSTGRES_URL env var)");
 
 // ---------------------------------------------------------------------------
 // database subcommands
@@ -98,7 +98,7 @@ const databaseCmd = program.command("database").description("Create or drop the 
 
 databaseCmd
 	.command("create")
-	.description("Create the database specified by DATABASE_URL.")
+	.description("Create the database specified by POSTGRES_URL.")
 	.action(async () => {
 		const parentOpts = program.opts<{ databaseUrl?: string }>();
 		const connectionString = getConnectionString(parentOpts);
@@ -122,7 +122,7 @@ databaseCmd
 
 databaseCmd
 	.command("drop")
-	.description("Drop the database specified by DATABASE_URL.")
+	.description("Drop the database specified by POSTGRES_URL.")
 	.action(async () => {
 		const parentOpts = program.opts<{ databaseUrl?: string }>();
 		const connectionString = getConnectionString(parentOpts);

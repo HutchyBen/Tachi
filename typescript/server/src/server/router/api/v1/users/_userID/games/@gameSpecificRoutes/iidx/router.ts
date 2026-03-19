@@ -15,7 +15,7 @@ import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch
 import { EAM_VERSION_NAMES } from "#lib/score-import/import-types/common/eamusement-iidx-csv/parser";
 import { AggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
 import { ValidatePlaytypeFromParamFor } from "#server/router/api/v1/games/_game/_playtype/middleware.js";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetUser } from "#utils/req-tachi-data";
 import { Router } from "express";
 
@@ -59,7 +59,7 @@ router.get(
 			_id: integer;
 			pbs: Array<PBScoreDocument<"iidx:DP" | "iidx:SP">>;
 			song: SongDocument<"iidx">;
-		}> = await db["personal-bests"].aggregate([
+		}> = await MONGODB_KILL["personal-bests"].aggregate([
 			{
 				$match: {
 					userID: user.id,
@@ -91,7 +91,7 @@ router.get(
 		const rows = [EAMUSEMENT_CSV_HEADER];
 
 		// get all relevant charts
-		const charts = await db.charts.iidx.find({
+		const charts = await MONGODB_KILL.charts.iidx.find({
 			songID: { $in: pbData.map((e) => e.song.id) },
 			difficulty: { $in: ["NORMAL", "HYPER", "ANOTHER", "LEGGENDARIA"] },
 		});

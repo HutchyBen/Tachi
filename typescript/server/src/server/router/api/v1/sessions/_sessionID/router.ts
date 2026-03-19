@@ -1,7 +1,7 @@
 import { GetSessionScoreInfo } from "#lib/score-import/framework/sessions/sessions";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetEnumDistForFolderAsOf } from "#utils/folder";
 import { AddToSetInRecord } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";
@@ -32,15 +32,15 @@ router.use(GetSessionFromParam);
 router.get("/", async (req, res) => {
 	const session = GetTachiData(req, "sessionDoc");
 
-	const scores = await db.scores.find({
+	const scores = await MONGODB_KILL.scores.find({
 		scoreID: { $in: session.scoreIDs },
 	});
 
 	const [songs, charts, user, scoreInfo] = await Promise.all([
-		db.anySongs[session.game].find({
+		MONGODB_KILL.anySongs[session.game].find({
 			id: { $in: scores.map((e) => e.songID) },
 		}),
-		db.anyCharts[session.game].find({
+		MONGODB_KILL.anyCharts[session.game].find({
 			chartID: { $in: scores.map((e) => e.chartID) },
 		}),
 		GetUserWithID(session.userID),
@@ -105,7 +105,7 @@ router.get("/folder-raises", async (req, res) => {
 
 	const enumScoreMetrics = GetScoreEnumConfs(gptConfig);
 
-	const relevantScores = await db.scores.find({
+	const relevantScores = await MONGODB_KILL.scores.find({
 		scoreID: { $in: session.scoreIDs },
 	});
 
@@ -113,7 +113,7 @@ router.get("/folder-raises", async (req, res) => {
 
 	// what folderIDs were involved in this session?
 	const affectedFolderIDs = (
-		await db["folder-chart-lookup"].find(
+		await MONGODB_KILL["folder-chart-lookup"].find(
 			{
 				chartID: { $in: chartIDs },
 			},
@@ -124,7 +124,7 @@ router.get("/folder-raises", async (req, res) => {
 	).map((e) => e.folderID);
 
 	// find all the active folder documents raised in this session.
-	const folders = await db.folders.find({
+	const folders = await MONGODB_KILL.folders.find({
 		folderID: { $in: affectedFolderIDs },
 		inactive: false,
 	});
@@ -349,7 +349,7 @@ router.patch(
 			});
 		}
 
-		const newSession = await db.sessions.findOneAndUpdate(
+		const newSession = await MONGODB_KILL.sessions.findOneAndUpdate(
 			{ sessionID: session.sessionID },
 			{ $set: updateExp },
 		);

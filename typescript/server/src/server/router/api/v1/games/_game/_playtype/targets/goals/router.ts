@@ -4,7 +4,7 @@ import { log } from "#lib/log/log.js";
 import { CreateGoalTitle, ValidateGoalChartsAndCriteria } from "#lib/targets/goal-utils";
 import { GetQuestsThatContainGoal } from "#lib/targets/goals";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetMostSubscribedGoals } from "#utils/db";
 import { AssignToReqTachiData, GetGPT, GetTachiData } from "#utils/req-tachi-data";
 import { GetUsersWithIDs } from "#utils/user";
@@ -131,7 +131,7 @@ const ResolveGoalID: RequestHandler = async (req, res, next) => {
 	const { game, playtype } = GetGPT(req);
 	const goalID = req.params.goalID;
 
-	const goal = await db.goals.findOne({
+	const goal = await MONGODB_KILL.goals.findOne({
 		goalID,
 		game,
 		playtype,
@@ -157,7 +157,7 @@ const ResolveGoalID: RequestHandler = async (req, res, next) => {
 router.get("/:goalID", ResolveGoalID, async (req, res) => {
 	const goal = GetTachiData(req, "goalDoc");
 
-	const goalSubs = await db["goal-subs"].find({
+	const goalSubs = await MONGODB_KILL["goal-subs"].find({
 		goalID: goal.goalID,
 	});
 

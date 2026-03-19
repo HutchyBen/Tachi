@@ -6,7 +6,7 @@ import type {
 	ScoreValidator,
 } from "#game-implementations/types";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { DDRFlare } from "rg-stats";
 import {
 	type ChartDocument,
@@ -157,7 +157,7 @@ const DDR_CALCULATE_FLARE_SKILL: GPTNewProfileCalcs<"ddr:DP" | "ddr:SP"> = async
 	playtype,
 	userID,
 ) => {
-	const sc: Array<PBScoreDocumentWithSong> = await db["personal-bests"].aggregate([
+	const sc: Array<PBScoreDocumentWithSong> = await MONGODB_KILL["personal-bests"].aggregate([
 		{
 			$match: {
 				userID,

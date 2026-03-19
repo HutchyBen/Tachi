@@ -1,7 +1,7 @@
 import { log } from "#lib/log/log.js";
 import { PullDatabaseSeeds } from "#lib/seeds/repo";
 /* eslint-disable no-await-in-loop */
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { WrapScriptPromise } from "#utils/misc";
 
 /**
@@ -15,7 +15,7 @@ export async function BacksyncBMSPMSSongsAndCharts() {
 		log.info(`Fetching ${game} songs from DB.`);
 
 		// did you know, this code is liable to blow up in my face and OOM one day?
-		let songs = await db.anySongs[game].find({});
+		let songs = await MONGODB_KILL.anySongs[game].find({});
 
 		log.info(`Found ${songs.length} ${game} songs.`);
 
@@ -27,7 +27,7 @@ export async function BacksyncBMSPMSSongsAndCharts() {
 		songs = null;
 
 		log.info(`Fetching ${game} charts from DB.`);
-		let charts = await db.anyCharts[game].find({});
+		let charts = await MONGODB_KILL.anyCharts[game].find({});
 
 		log.info(`Found ${charts.length} ${game} charts.`);
 

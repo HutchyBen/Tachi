@@ -10,7 +10,7 @@ import type {
 } from "tachi-common";
 import type { ExtractEnumMetricNames } from "tachi-common/types/metrics";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 // insane typemagic to get mongodb-safe names for this GPT's metrics.
 type MetricKeys<GPT extends GPTString> = Exclude<
@@ -55,7 +55,7 @@ export function CreatePBMergeFor<GPT extends GPTString>(
 	applicator: (base: PBScoreDocumentNoRank<GPT>, score: ScoreDocument<GPT>) => void,
 ): PBMergeFunction<GPT> {
 	return async (userID, chartID, asOfTimestamp, base) => {
-		const bestScoreFor = (await db.scores.findOne(
+		const bestScoreFor = (await MONGODB_KILL.scores.findOne(
 			HandleAsOf(
 				{
 					userID,

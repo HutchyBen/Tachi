@@ -3,7 +3,7 @@ import { GetRelatedStatDocuments } from "#lib/showcase/get-related";
 import { EvaluateUsersStatsShowcase } from "#lib/showcase/get-stats";
 import { RequirePermissions } from "#server/middleware/auth";
 import { RequireAuthedAsUser } from "#server/router/api/v1/users/_userID/middleware.js";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { IsRecord } from "#utils/misc";
 import { FormatPrError } from "#utils/prudence";
 import { GetUGPT } from "#utils/req-tachi-data";
@@ -99,7 +99,7 @@ router.get("/custom", async (req, res) => {
 
 		const folderID = req.query.folderID as string;
 
-		const folder = await db.folders.findOne({ folderID });
+		const folder = await MONGODB_KILL.folders.findOne({ folderID });
 
 		if (!folder || folder.game !== game || folder.playtype !== playtype) {
 			return res.status(400).json({
@@ -136,7 +136,9 @@ router.get("/custom", async (req, res) => {
 			});
 		}
 
-		const chart = await db.anyCharts[game].findOne({ chartID: req.query.chartID as string });
+		const chart = await MONGODB_KILL.anyCharts[game].findOne({
+			chartID: req.query.chartID as string,
+		});
 
 		if (!chart || chart.playtype !== playtype) {
 			return res.status(400).json({
@@ -280,7 +282,7 @@ router.put("/", RequireAuthedAsUser, RequirePermissions("customise_profile"), as
 
 		if (stat.mode === "chart") {
 			// eslint-disable-next-line no-await-in-loop
-			const chart = await db.anyCharts[game].findOne({ chartID: stat.chartID });
+			const chart = await MONGODB_KILL.anyCharts[game].findOne({ chartID: stat.chartID });
 
 			if (!chart || chart.playtype !== playtype) {
 				return res.status(400).json({
@@ -294,7 +296,7 @@ router.put("/", RequireAuthedAsUser, RequirePermissions("customise_profile"), as
 				: [unvalidatedStat.folderID];
 
 			// eslint-disable-next-line no-await-in-loop
-			const folders = await db.folders.find({ folderID: { $in: folderIDs } });
+			const folders = await MONGODB_KILL.folders.find({ folderID: { $in: folderIDs } });
 
 			if (
 				folders.length !== folderIDs.length ||
@@ -310,7 +312,7 @@ router.put("/", RequireAuthedAsUser, RequirePermissions("customise_profile"), as
 		}
 	}
 
-	await db["game-settings"].update(
+	await MONGODB_KILL["game-settings"].update(
 		{
 			userID: user.id,
 			game,
@@ -323,7 +325,7 @@ router.put("/", RequireAuthedAsUser, RequirePermissions("customise_profile"), as
 		},
 	);
 
-	const newSettings = await db["game-settings"].findOne({
+	const newSettings = await MONGODB_KILL["game-settings"].findOne({
 		userID: user.id,
 		game,
 		playtype,

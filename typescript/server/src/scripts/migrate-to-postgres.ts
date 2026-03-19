@@ -14,13 +14,11 @@
 
 import type { PrivateUserInfoDocument } from "#utils/types";
 import type {
-	AccountBadgeKind,
 	AuthLevel,
 	Database,
 	GameGroup,
 	ImportType,
 	NewAccount,
-	NewAccountBadge,
 	NewAccountFollowing,
 	NewAccountSettings,
 	NewAccountUsernameChange,
@@ -305,6 +303,7 @@ async function streamCollection<T>(
 		const docs = (await col.find(query, {
 			sort: { _id: 1 },
 			limit: batchSize,
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		} as any)) as unknown as Array<{ _id: unknown } & T>;
 
 		if (docs.length === 0) {
@@ -354,7 +353,6 @@ async function main(): Promise<void> {
 	// ── account + account_badge ───────────────────────────────────────────────
 	{
 		console.log("\n[account / account_badge]");
-		const VALID_BADGES = new Set<AccountBadgeKind>(["alpha", "beta", "dev-team"]);
 		const users = await mongoDB.get<UserDocument>("users").find({});
 
 		const accountRows: Array<NewAccount> = users.map((u) => ({
@@ -373,6 +371,9 @@ async function main(): Promise<void> {
 			custom_banner_location: u.customBannerLocation,
 			last_seen: tsReq(u.lastSeen),
 			auth_level: toAuthLevel(u.authLevel),
+			bd_alpha: u.badges.includes("alpha"),
+			bd_beta: u.badges.includes("beta"),
+			bd_dev_team: u.badges.includes("dev-team"),
 		}));
 
 		await batchInsert("account", accountRows);
@@ -382,18 +383,7 @@ async function main(): Promise<void> {
 			pg,
 		);
 
-		const badgeRows: Array<NewAccountBadge> = [];
-
-		for (const u of users) {
-			for (const badge of u.badges) {
-				if (VALID_BADGES.has(badge as AccountBadgeKind)) {
-					badgeRows.push({ user_id: u.id, badge: badge as AccountBadgeKind });
-				}
-			}
-		}
-
-		await batchInsert("account_badge", badgeRows);
-		console.log(`  ${users.length} accounts, ${badgeRows.length} badges.`);
+		console.log(`  ${users.length} accounts.`);
 	}
 
 	// ── orphan_chart + orphan_chart_user ──────────────────────────────────────

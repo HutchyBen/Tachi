@@ -1,7 +1,7 @@
 import { AppendLogCtx, log as baseLogger } from "#log.js";
-import z, { ZodObject } from "zod";
+import { type ZodObject } from "zod";
 
-export type ActionResult = "GOOD" | "BAD" | "THROW";
+export type ActionResult = "BAD" | "GOOD" | "THROW";
 
 /**
  * Secret input and output fields (keys starting with "!") are stripped before logging.
@@ -67,10 +67,10 @@ export function MakeActionGuts({
 	kind,
 	fn: actionBodyFn,
 }: {
-	db: any;
 	appName: string;
-	kind: string;
+	db: any;
 	fn: (taker: ActionTaker | AnonActionTaker, input: object) => Promise<object>;
+	kind: string;
 }): unknown {
 	return async (taker: ActionTaker | AnonActionTaker, input: Record<string, unknown>) => {
 		const ts_start = new Date();

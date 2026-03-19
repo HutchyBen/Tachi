@@ -9,7 +9,7 @@ import type {
 
 import { log } from "#lib/log/log.js";
 import { BacksyncCollection, PullDatabaseSeeds } from "#lib/seeds/repo";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";
 import fetch from "#utils/fetch";
 import { WrapScriptPromise } from "#utils/misc";
@@ -173,7 +173,7 @@ export async function UpdatePoyashiData() {
 
 	await repo.Destroy();
 
-	await BacksyncCollection("charts-iidx", db.charts.iidx, "Update BPI Data");
+	await BacksyncCollection("charts-iidx", MONGODB_KILL.charts.iidx, "Update BPI Data");
 }
 
 if (require.main === module) {

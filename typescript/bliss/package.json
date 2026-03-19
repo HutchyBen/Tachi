@@ -36,7 +36,7 @@
 	"dependencies": {
 		"pino": "catalog:",
 		"pino-pretty": "catalog:",
-		"zod": "^4.3.6"
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@typescript/native-preview": "catalog:",

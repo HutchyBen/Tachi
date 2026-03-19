@@ -2,7 +2,7 @@ import { log } from "#utils/log.js";
 import { GetLimboChannel } from "#utils/misc";
 import { Client, type CommandInteraction, Intents, type SelectMenuInteraction } from "discord.js";
 
-import { BotConfig, Env, ServerConfig } from "./config";
+import { Env, ServerConfig } from "./config";
 import { handleIsCommand } from "./interaction-handlers/handle-is-command";
 import { GetUserAndTokenForDiscordID } from "./query/user-map";
 import { app } from "./server/server";
@@ -25,7 +25,7 @@ export const client = new Client({
 });
 
 client.on("guildMemberAdd", async (_member) => {
-	if (BotConfig.DISCORD.APPROVED_ROLE && BotConfig.DISCORD.LIMBO_CHANNEL) {
+	if (Env.DISCORD_APPROVED_ROLE && Env.DISCORD_LIMBO_CHANNEL) {
 		const channel = GetLimboChannel(client);
 
 		await channel.send(
@@ -62,7 +62,7 @@ client.on("interactionCreate", async (interaction) => {
  * If a user tries to do anything without auth, Tell them to authenticate.
  */
 async function RequireUserAuth(interaction: CommandInteraction | SelectMenuInteraction) {
-	const oAuthLink = `${BotConfig.TACHI_SERVER_LOCATION}/oauth/request-auth?clientID=${BotConfig.OAUTH.CLIENT_ID}&context=${interaction.user.id}`;
+	const oAuthLink = `${Env.TACHI_SERVER_LOCATION}/oauth/request-auth?clientID=${Env.OAUTH_CLIENT_ID}&context=${interaction.user.id}`;
 
 	const dmChannel = await interaction.user.createDM();
 
@@ -79,7 +79,7 @@ void (async () => {
 		log.info(`Booting Tachi Bot ${VERSION_PRETTY}.`);
 
 		// Login to discord.
-		await client.login(BotConfig.DISCORD.TOKEN);
+		await client.login(Env.DISCORD_TOKEN);
 
 		log.info(`Logged in successfully to ${client.guilds.cache.size} guilds.`);
 

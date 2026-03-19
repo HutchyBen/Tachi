@@ -1,7 +1,7 @@
 import type { KtLogger } from "#lib/log/log.js";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import fetch from "node-fetch";
 import { p, type PrudenceSchema } from "prudence";
 import { FormatPrError, type integer } from "tachi-common";
@@ -107,7 +107,7 @@ const CG_SCHEMAS: Record<CGSupportedGames, PrudenceSchema> = {
  */
 export function CreateCGParser<T>(cgGame: CGSupportedGames, service: CGServices) {
 	return async (userID: integer, log: KtLogger): Promise<ParserFunctionReturns<T, CGContext>> => {
-		const cardInfo = await db["cg-card-info"].findOne({
+		const cardInfo = await MONGODB_KILL["cg-card-info"].findOne({
 			userID,
 			service,
 		});

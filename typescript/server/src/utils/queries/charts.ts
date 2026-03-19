@@ -10,10 +10,10 @@ import type {
 	Versions,
 } from "tachi-common";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 export function FindChartWithChartID(game: GameGroup, chartID: string) {
-	return db.anyCharts[game].findOne({ chartID });
+	return MONGODB_KILL.anyCharts[game].findOne({ chartID });
 }
 
 /**
@@ -26,7 +26,7 @@ export function FindChartWithPTDF<
 	P extends Playtypes[G] = Playtypes[G],
 	GPT extends GPTString = GPTString,
 >(game: G, songID: integer, playtype: P, difficulty: Difficulties[GPT]) {
-	return db.anyCharts[game].findOne({
+	return MONGODB_KILL.anyCharts[game].findOne({
 		songID,
 		playtype,
 		difficulty,
@@ -43,7 +43,7 @@ export function FindChartWithPTDFVersion<
 	P extends Playtypes[G] = Playtypes[G],
 	GPT extends GPTString = GPTString,
 >(game: G, songID: integer, playtype: P, difficulty: Difficulties[GPT], version: Versions[GPT]) {
-	return db.anyCharts[game].findOne({
+	return MONGODB_KILL.anyCharts[game].findOne({
 		songID,
 		playtype,
 		difficulty,
@@ -52,7 +52,7 @@ export function FindChartWithPTDFVersion<
 }
 
 export function FindITGChartOnHash(hash: string) {
-	return db.charts.itg.findOne({
+	return MONGODB_KILL.charts.itg.findOne({
 		"data.hashGSv3": hash,
 	});
 }
@@ -62,7 +62,7 @@ export function FindITGChartOnHash(hash: string) {
  * @param hash The md5 or sha256 hash to look for.
  */
 export function FindBMSChartOnHash(hash: string) {
-	return db.charts.bms.findOne({
+	return MONGODB_KILL.charts.bms.findOne({
 		$or: [{ "data.hashMD5": hash }, { "data.hashSHA256": hash }],
 	}) as Promise<ChartDocument<"bms:7K" | "bms:14K"> | null>;
 }
@@ -80,7 +80,7 @@ export function FindChartOnInGameID(
 		throw new Error(`Cannot call FindChartOnInGameID for game ${game}.`);
 	}
 
-	return db.anyCharts[game].findOne({
+	return MONGODB_KILL.anyCharts[game].findOne({
 		"data.inGameID": inGameID,
 		playtype,
 		difficulty,
@@ -96,7 +96,7 @@ export function FindIIDXChartOnInGameID(
 	playtype: Playtypes["iidx"],
 	difficulty: Difficulties["iidx:DP" | "iidx:SP"],
 ) {
-	return db.charts.iidx.findOne({
+	return MONGODB_KILL.charts.iidx.findOne({
 		"data.inGameID": inGameID,
 		"data.2dxtraSet": null,
 		isPrimary: true,
@@ -115,7 +115,7 @@ export function FindIIDXChartOnInGameIDVersion(
 	difficulty: Difficulties["iidx:DP" | "iidx:SP"],
 	version: Versions["iidx:DP" | "iidx:SP"],
 ) {
-	return db.charts.iidx.findOne({
+	return MONGODB_KILL.charts.iidx.findOne({
 		"data.inGameID": inGameID,
 		"data.2dxtraSet": null,
 		playtype,
@@ -134,7 +134,7 @@ export function FindChartOnInGameIDVersion<GPT extends GPTString = GPTString>(
 	difficulty: Difficulties[GPT],
 	version: Versions[GPT],
 ) {
-	return db.anyCharts[game].findOne({
+	return MONGODB_KILL.anyCharts[game].findOne({
 		"data.inGameID": inGameID,
 		versions: version,
 		playtype,
@@ -146,7 +146,7 @@ export function FindChartOnInGameIDVersion<GPT extends GPTString = GPTString>(
  * Finds an IIDX chart on its 2dxtra hash, which is the sha256 of the .1 buffer.
  */
 export function FindIIDXChartWith2DXtraHash(hash: string) {
-	return db.charts.iidx.findOne({
+	return MONGODB_KILL.charts.iidx.findOne({
 		"data.hashSHA256": hash,
 	});
 }
@@ -166,7 +166,7 @@ export function FindSDVXChartOnInGameID(
 			? { $in: ["INF", "GRV", "HVN", "VVD", "XCD"] as Array<Difficulties["sdvx:Single"]> }
 			: difficulty;
 
-	return db.charts.sdvx.findOne({
+	return MONGODB_KILL.charts.sdvx.findOne({
 		"data.inGameID": inGameID,
 		difficulty: diffQuery,
 		isPrimary: true,
@@ -183,7 +183,7 @@ export function FindSDVXChartOnInGameIDVersion(
 			? { $in: ["INF", "GRV", "HVN", "VVD", "XCD"] as Array<Difficulties["sdvx:Single"]> }
 			: difficulty;
 
-	return db.charts.sdvx.findOne({
+	return MONGODB_KILL.charts.sdvx.findOne({
 		"data.inGameID": inGameID,
 		difficulty: diffQuery,
 		versions: version,
@@ -200,7 +200,7 @@ export function FindSDVXChartOnDFVersion(
 			? { $in: ["INF", "GRV", "HVN", "VVD", "XCD"] as Array<Difficulties["sdvx:Single"]> }
 			: difficulty;
 
-	return db.charts.sdvx.findOne({
+	return MONGODB_KILL.charts.sdvx.findOne({
 		songID,
 		difficulty: diffQuery,
 		versions: version,
@@ -212,7 +212,7 @@ export function FindChartOnSHA256(game: GameGroup, hash: string) {
 		throw new Error(`Cannot call FindChartOnSHA256 for game ${game}.`);
 	}
 
-	return db.anyCharts[game].findOne({
+	return MONGODB_KILL.anyCharts[game].findOne({
 		"data.hashSHA256": hash,
 	});
 }
@@ -222,7 +222,7 @@ export function FindChartOnSHA256Playtype(game: GameGroup, hash: string, playtyp
 		throw new Error(`Cannot call FindChartOnSHA256 for game ${game}.`);
 	}
 
-	return db.anyCharts[game].findOne({
+	return MONGODB_KILL.anyCharts[game].findOne({
 		"data.hashSHA256": hash,
 		playtype,
 	});
@@ -257,36 +257,36 @@ export async function FindChartsOnPopularity(
 	// magnitude faster.
 	// Not entirely sure why, but $lookup is incredibly inefficient,
 	// and you should just avoid it.
-	const charts = (await db.anyCharts[game].find(matchQuery)) as unknown as Array<
+	const charts = (await MONGODB_KILL.anyCharts[game].find(matchQuery)) as unknown as Array<
 		{
 			__playcount: integer;
 		} & ChartDocument
 	>;
 
-	const scoreCounts: Array<{ _id: string; count: integer }> = await db[scoreCollection].aggregate(
-		[
-			{
-				$match: { chartID: { $in: charts.map((e) => e.chartID) } },
+	const scoreCounts: Array<{ _id: string; count: integer }> = await MONGODB_KILL[
+		scoreCollection
+	].aggregate([
+		{
+			$match: { chartID: { $in: charts.map((e) => e.chartID) } },
+		},
+		{
+			$group: {
+				_id: "$chartID",
+				count: { $sum: 1 },
 			},
-			{
-				$group: {
-					_id: "$chartID",
-					count: { $sum: 1 },
-				},
+		},
+		{
+			$sort: {
+				count: -1,
 			},
-			{
-				$sort: {
-					count: -1,
-				},
-			},
-			{
-				$skip: skip,
-			},
-			{
-				$limit: limit,
-			},
-		],
-	);
+		},
+		{
+			$skip: skip,
+		},
+		{
+			$limit: limit,
+		},
+	]);
 
 	const scoreCountMap = new Map<string, integer>();
 

@@ -1,5 +1,5 @@
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { Random20Hex } from "#utils/misc";
 import { Router } from "express";
 import { p } from "prudence";
@@ -39,7 +39,7 @@ router.post(
 			redirect_uri: string;
 		};
 
-		const client = await db["api-clients"].findOne({
+		const client = await MONGODB_KILL["api-clients"].findOne({
 			clientID: body.client_id,
 		});
 
@@ -66,7 +66,7 @@ router.post(
 			});
 		}
 
-		const codeDoc = await db["oauth2-auth-codes"].findOne({ code: body.code });
+		const codeDoc = await MONGODB_KILL["oauth2-auth-codes"].findOne({ code: body.code });
 
 		if (!codeDoc) {
 			return res.status(404).json({
@@ -76,7 +76,7 @@ router.post(
 		}
 
 		// don't let people auth with the same code multiple times.
-		await db["oauth2-auth-codes"].remove({ code: body.code });
+		await MONGODB_KILL["oauth2-auth-codes"].remove({ code: body.code });
 
 		const apiDoc = {
 			userID: codeDoc.userID,
@@ -89,7 +89,7 @@ router.post(
 		};
 
 		// Now we can actually register the api key (lol)
-		await db["api-tokens"].insert(apiDoc);
+		await MONGODB_KILL["api-tokens"].insert(apiDoc);
 
 		return res.status(200).json({
 			success: true,
@@ -116,7 +116,7 @@ router.post("/create-code", async (req, res) => {
 
 	const doc = { code, userID: req.session.tachi.user.id, createdOn: Date.now() };
 
-	await db["oauth2-auth-codes"].insert(doc);
+	await MONGODB_KILL["oauth2-auth-codes"].insert(doc);
 
 	return res.status(200).json({
 		success: true,

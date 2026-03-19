@@ -1,6 +1,6 @@
 import { log } from "#lib/log/log.js";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { Random20Hex } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { FormatUserDoc } from "#utils/user";
@@ -23,7 +23,7 @@ router.use(RequireSelfRequestFromUser);
 router.get("/", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	const keys = await db["api-tokens"].find({
+	const keys = await MONGODB_KILL["api-tokens"].find({
 		userID: user.id,
 	});
 
@@ -73,7 +73,7 @@ router.post(
 		let fromAPIClient = null;
 
 		if (body.clientID !== undefined) {
-			const client = await db["api-clients"].findOne(
+			const client = await MONGODB_KILL["api-clients"].findOne(
 				{
 					clientID: body.clientID,
 				},
@@ -91,7 +91,7 @@ router.post(
 				});
 			}
 
-			const exists = await db["api-tokens"].findOne({
+			const exists = await MONGODB_KILL["api-tokens"].findOne({
 				userID: user.id,
 				fromAPIClient: client.clientID,
 			});
@@ -133,7 +133,7 @@ router.post(
 			fromAPIClient,
 		};
 
-		await db["api-tokens"].insert(apiTokenDocument);
+		await MONGODB_KILL["api-tokens"].insert(apiTokenDocument);
 
 		log.info(`Inserted new API Key for ${FormatUserDoc(user)}.`);
 
@@ -155,7 +155,7 @@ router.delete("/:token", async (req, res) => {
 
 	log.info(`received request from ${FormatUserDoc(user)} to delete token ${req.params.token}.`);
 
-	const token = await db["api-tokens"].findOne({
+	const token = await MONGODB_KILL["api-tokens"].findOne({
 		token: req.params.token,
 		userID: user.id,
 	});
@@ -167,7 +167,7 @@ router.delete("/:token", async (req, res) => {
 		});
 	}
 
-	await db["api-tokens"].remove({ token: req.params.token });
+	await MONGODB_KILL["api-tokens"].remove({ token: req.params.token });
 
 	log.info(`Deleted ${req.params.token}, which belonged to ${FormatUserDoc(user)}.`);
 

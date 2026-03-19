@@ -1,5 +1,5 @@
 import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { Random20Hex } from "#utils/misc";
 import { Command } from "commander";
 
@@ -16,7 +16,7 @@ if (options.code === undefined) {
 
 const code = options.code as string;
 
-db.invites
+MONGODB_KILL.invites
 	.insert({
 		code,
 		createdBy: 1,

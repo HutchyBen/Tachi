@@ -2,7 +2,7 @@ import { log } from "#lib/log/log.js";
 import { DeleteScore } from "#lib/score-mutation/delete-scores";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { GetUserWithID } from "#utils/user";
 import { Router } from "express";
@@ -27,8 +27,8 @@ router.get("/", async (req, res) => {
 	if (req.query.getRelated !== undefined) {
 		const [user, chart, song] = await Promise.all([
 			GetUserWithID(score.userID),
-			db.anyCharts[score.game].findOne({ chartID: score.chartID }),
-			db.anySongs[score.game].findOne({ id: score.songID }),
+			MONGODB_KILL.anyCharts[score.game].findOne({ chartID: score.chartID }),
+			MONGODB_KILL.anySongs[score.game].findOne({ id: score.songID }),
 		]);
 
 		if (!user || !chart || !song) {
@@ -110,13 +110,13 @@ router.patch(
 			});
 		}
 
-		const newScore = await db.scores.findOneAndUpdate(
+		const newScore = await MONGODB_KILL.scores.findOneAndUpdate(
 			{ scoreID: score.scoreID },
 			{ $set: modifyOption },
 		);
 
 		if (modifyOption.highlight === true || modifyOption.highlight === false) {
-			await db["personal-bests"].findOneAndUpdate(
+			await MONGODB_KILL["personal-bests"].findOneAndUpdate(
 				{
 					chartID: score.chartID,
 					userID: score.userID,

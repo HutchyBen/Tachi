@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { IsValidGame, IsValidPlaytype } from "#utils/misc";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 
@@ -36,7 +36,7 @@ export const CheckUserPlayedGamePlaytype: RequestHandler = async (req, res, next
 		});
 	}
 
-	const stats = await db["game-stats"].findOne({
+	const stats = await MONGODB_KILL["game-stats"].findOne({
 		userID: user.id,
 		game,
 		playtype,

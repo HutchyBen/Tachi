@@ -4,7 +4,7 @@ import type { Session, SessionData } from "express-session";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log.js";
 import { TachiConfig } from "#lib/setup/config";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { IsNullishOrEmptyStr, SplitAuthorizationHeader } from "#utils/misc";
 import {
 	ALL_PERMISSIONS,
@@ -29,7 +29,7 @@ export const RejectIfBanned: RequestHandler = async (req, res, next) => {
 	// we need to ignore this if auth doesn't exist and if auth is null.
 
 	if (auth && auth.userID !== null) {
-		const isBanned = await db.users.findOne({
+		const isBanned = await MONGODB_KILL.users.findOne({
 			id: req[SYMBOL_TACHI_API_AUTH].userID!,
 			authLevel: UserAuthLevels.BANNED,
 		});
@@ -108,7 +108,7 @@ function CreateSetRequestPermissions(errorKeyName: string): Array<RequestHandler
 				});
 			}
 
-			const apiTokenData = await db["api-tokens"].findOne({
+			const apiTokenData = await MONGODB_KILL["api-tokens"].findOne({
 				token,
 			});
 

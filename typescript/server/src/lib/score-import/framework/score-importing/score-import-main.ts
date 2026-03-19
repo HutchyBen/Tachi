@@ -1,7 +1,7 @@
 import type { KtLogger } from "#lib/log/log";
 import type { ScoreImportJob } from "#lib/score-import/worker/types";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetMillisecondsSince } from "#utils/misc";
 import { GetUserWithID } from "#utils/user";
 import {
@@ -133,7 +133,7 @@ export default async function ScoreImportMain<D, C>(
 			);
 		} catch (err) {
 			// Remove all scores from the database for this user which were imported after our timer started.
-			const r = await db.scores.remove({
+			const r = await MONGODB_KILL.scores.remove({
 				userID: user.id,
 				timeAdded: { $gte: startOfImportingScores },
 			});
@@ -222,11 +222,11 @@ export default async function ScoreImportMain<D, C>(
 			log.debug(logMessage);
 		}
 
-		await db.imports.insert(ImportDocument);
+		await MONGODB_KILL.imports.insert(ImportDocument);
 
 		// we don't await this because we don't
 		// particularly care about waiting for it.
-		void db["import-timings"].insert({
+		void MONGODB_KILL["import-timings"].insert({
 			importID,
 			timestamp: Date.now(),
 			total: ImportDocument.timeFinished - timeStarted,

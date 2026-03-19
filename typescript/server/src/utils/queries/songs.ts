@@ -6,7 +6,7 @@ import {
 	AmbiguousTitleFailure,
 	InternalFailure,
 } from "#lib/score-import/framework/common/converter-failures";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 import { EscapeStringRegexp } from "../misc";
 
@@ -23,7 +23,7 @@ export async function FindSongOnTitle(
 	title: string,
 ): Promise<SongDocument | null> {
 	// @optimisable: Performance should be tested here by having a utility field for all-titles.
-	const res = await db.anySongs[game].find(
+	const res = await MONGODB_KILL.anySongs[game].find(
 		{
 			$or: [
 				{
@@ -63,7 +63,7 @@ export async function FindSongOnTitleInsensitive(
 	const regexTitle = new RegExp(`^${EscapeStringRegexp(title)}$`, "iu");
 	const regexArtist = new RegExp(`^${EscapeStringRegexp(artist ?? "")}$`, "iu");
 
-	const res = await db.anySongs[game].find(
+	const res = await MONGODB_KILL.anySongs[game].find(
 		{
 			$and: [
 				{
@@ -111,7 +111,7 @@ export function FindSongOnID(
 	game: GameGroup,
 	songID: integer,
 ): Promise<FindOneResult<SongDocument>> {
-	return db.anySongs[game].findOne({
+	return MONGODB_KILL.anySongs[game].findOne({
 		id: songID,
 	});
 }

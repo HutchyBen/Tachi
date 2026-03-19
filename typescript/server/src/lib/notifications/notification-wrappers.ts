@@ -1,4 +1,4 @@
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import {
 	FormatGameGroup,
 	type GameGroup,
@@ -23,7 +23,7 @@ export async function SendSetRivalNotification(
 	game: GameGroup,
 	playtype: Playtype,
 ) {
-	const alreadyBeenPinged = await db.notifications.findOne({
+	const alreadyBeenPinged = await MONGODB_KILL.notifications.findOne({
 		sentTo: toUserID,
 		"body.type": "RIVALED_BY",
 		"body.content": {
@@ -60,13 +60,13 @@ export async function SendSiteAnnouncementNotification(
 
 	if (maybeGame && maybePlaytype) {
 		toUserIDs = (
-			await db["game-stats"].find(
+			await MONGODB_KILL["game-stats"].find(
 				{ game: maybeGame, playtype: maybePlaytype },
 				{ projection: { userID: 1 } },
 			)
 		).map((e) => e.userID);
 	} else {
-		toUserIDs = (await db.users.find({}, { projection: { id: 1 } })).map((e) => e.id);
+		toUserIDs = (await MONGODB_KILL.users.find({}, { projection: { id: 1 } })).map((e) => e.id);
 	}
 
 	return BulkSendNotification(title, toUserIDs, {

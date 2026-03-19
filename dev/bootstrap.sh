@@ -31,14 +31,8 @@ function mvExampleFiles {
 
 	cp --update=none typescript/client/example/.env typescript/client/.env
 
-	cp --update=none typescript/server/example/conf.json5 typescript/server/conf.json5
-	cp --update=none typescript/server/example/.env typescript/server/.env
-
 	mkdir -p typescript/server/local-cdn
 	cp -r --update=none typescript/server/example/default-cdn-contents/* typescript/server/local-cdn
-
-	cp --update=none typescript/bot/example/conf.json5 typescript/bot/conf.json5
-	cp --update=none typescript/bot/example/example.env typescript/bot/.env
 
 	echo "Moved!"
 }

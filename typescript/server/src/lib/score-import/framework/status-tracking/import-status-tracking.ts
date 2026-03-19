@@ -4,7 +4,7 @@ import type { ImportTypes } from "tachi-common";
 import { CDNStoreOrOverwrite } from "#lib/cdn/cdn";
 import { GetScoreImportInputURL } from "#lib/cdn/url-format";
 import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 import type ScoreImportFatalError from "../score-importing/score-import-error";
 
@@ -37,7 +37,7 @@ function SerialiseJobData(jobData: ScoreImportJobData<ImportTypes>): string {
  * awaited when you await this function, it happens in the background.
  */
 export async function StartTrackingImport(jobData: ScoreImportJobData<ImportTypes>) {
-	await db["import-trackers"].insert({
+	await MONGODB_KILL["import-trackers"].insert({
 		type: "ONGOING",
 		importID: jobData.importID,
 		importType: jobData.importType,
@@ -63,7 +63,7 @@ export async function StartTrackingImport(jobData: ScoreImportJobData<ImportType
 }
 
 export async function MarkImportAsFailed(importID: string, error: Error | ScoreImportFatalError) {
-	await db["import-trackers"].update(
+	await MONGODB_KILL["import-trackers"].update(
 		{
 			importID,
 		},
@@ -84,5 +84,5 @@ export async function MarkImportAsFailed(importID: string, error: Error | ScoreI
  * in the tracker.
  */
 export async function EndTrackingImport(importID: string) {
-	await db["import-trackers"].remove({ importID });
+	await MONGODB_KILL["import-trackers"].remove({ importID });
 }

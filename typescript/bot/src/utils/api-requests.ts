@@ -12,7 +12,7 @@ import type {
 	UserDocument,
 } from "tachi-common";
 
-import { BotConfig } from "#config";
+import { Env } from "#config";
 import { log } from "#utils/log";
 
 import type { ImportDeferred, ImportPollStatus, UGPTStats } from "./return-types";
@@ -161,7 +161,7 @@ export async function PerformScoreImport(
 					throw new Error(`Failed to import scores.
 Your authentication with this service has expired, and a bug on their end prevents us from automatically renewing it.
 
-Please go to ${BotConfig.TACHI_SERVER_LOCATION}/u/me/integrations/services to un-link and re-link.`);
+Please go to ${Env.TACHI_SERVER_LOCATION}/u/me/integrations/services to un-link and re-link.`);
 				}
 
 				throw new Error(`Failed to import scores. ${pollRes.description}.`);

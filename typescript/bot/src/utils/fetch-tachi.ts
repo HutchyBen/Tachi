@@ -4,7 +4,7 @@ import { log } from "#utils/log";
 import fetch from "node-fetch";
 import { URLSearchParams } from "url";
 
-import { BotConfig } from "../config";
+import { Env } from "../config";
 import { VERSION_STR } from "../version";
 
 type ApiResponseBase = {
@@ -129,7 +129,7 @@ export function PrependTachiUrl(url: string, version: "1" = "1"): string {
 		url = `/${url}`;
 	}
 
-	return `${BotConfig.TACHI_SERVER_LOCATION}/api/v${version}${url}`;
+	return `${Env.TACHI_SERVER_LOCATION}/api/v${version}${url}`;
 }
 
 /**

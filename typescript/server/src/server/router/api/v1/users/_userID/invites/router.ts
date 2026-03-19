@@ -1,6 +1,6 @@
 import { GetTotalAllowedInvites } from "#lib/invites/invites";
 import { RequireInvitesEnabled } from "#server/middleware/type-require";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { Random20Hex } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { GetUsersWithIDs } from "#utils/user";
@@ -22,7 +22,7 @@ router.use(RequireSelfRequestFromUser);
 router.get("/", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	const invites = await db.invites.find(
+	const invites = await MONGODB_KILL.invites.find(
 		{
 			createdBy: user.id,
 		},
@@ -53,7 +53,7 @@ router.get("/", async (req, res) => {
 router.get("/limit", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	const invites = await db.invites.count({ createdBy: user.id });
+	const invites = await MONGODB_KILL.invites.count({ createdBy: user.id });
 	const limit = GetTotalAllowedInvites(user);
 
 	return res.status(200).json({
@@ -76,18 +76,18 @@ router.post("/create", async (req, res) => {
 	const userID = user.id;
 
 	try {
-		const lockExists = await db["invite-locks"].findOne({
+		const lockExists = await MONGODB_KILL["invite-locks"].findOne({
 			userID,
 		});
 
 		if (!lockExists) {
-			await db["invite-locks"].insert({
+			await MONGODB_KILL["invite-locks"].insert({
 				userID,
 				locked: false,
 			});
 		}
 
-		const isNotLocked = await db["invite-locks"].findOneAndUpdate(
+		const isNotLocked = await MONGODB_KILL["invite-locks"].findOneAndUpdate(
 			{
 				userID,
 				locked: false,
@@ -106,7 +106,7 @@ router.post("/create", async (req, res) => {
 			});
 		}
 
-		const existingInvites = await db.invites.count({ createdBy: user.id });
+		const existingInvites = await MONGODB_KILL.invites.count({ createdBy: user.id });
 
 		if (
 			existingInvites >= GetTotalAllowedInvites(user) &&
@@ -127,7 +127,7 @@ router.post("/create", async (req, res) => {
 			createdBy: user.id,
 		};
 
-		await db.invites.insert(inviteDoc);
+		await MONGODB_KILL.invites.insert(inviteDoc);
 
 		return res.status(200).json({
 			success: true,
@@ -135,7 +135,7 @@ router.post("/create", async (req, res) => {
 			body: inviteDoc,
 		});
 	} finally {
-		await db["invite-locks"].findOneAndUpdate(
+		await MONGODB_KILL["invite-locks"].findOneAndUpdate(
 			{
 				userID,
 			},

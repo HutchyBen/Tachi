@@ -3,7 +3,7 @@ import type { RequestHandler } from "express-serve-static-core";
 import type { CGCardInfo } from "tachi-common";
 
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
 import { p } from "prudence";
@@ -33,7 +33,7 @@ router.get("/", ValidateCGType, RequireSelfRequestFromUser, async (req, res) => 
 	const user = GetTachiData(req, "requestedUser");
 	const cgType = req.params.cgType as CGServices;
 
-	const cardInfo = await db["cg-card-info"].findOne({
+	const cardInfo = await MONGODB_KILL["cg-card-info"].findOne({
 		userID: user.id,
 		service: cgType,
 	});
@@ -88,7 +88,7 @@ router.put(
 			userID: user.id,
 		};
 
-		await db["cg-card-info"].update(
+		await MONGODB_KILL["cg-card-info"].update(
 			{
 				userID: user.id,
 				service: cgType,
@@ -117,7 +117,7 @@ router.delete("/", ValidateCGType, RequireSelfRequestFromUser, async (req, res) 
 	const user = GetTachiData(req, "requestedUser");
 	const cgType = req.params.cgType as CGServices;
 
-	await db["cg-card-info"].remove({
+	await MONGODB_KILL["cg-card-info"].remove({
 		userID: user.id,
 		service: cgType,
 	});

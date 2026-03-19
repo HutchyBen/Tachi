@@ -7,7 +7,7 @@ import type {
 	ScoreRatingAlgorithms,
 } from "tachi-common";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 /**
  * Curries a function that returns the sum of N best ratings on `key`.
@@ -29,7 +29,7 @@ function CalcN<GPT extends GPTString>(
 	multiplier = 1,
 ) {
 	return async (game: GameGroup, playtype: Playtype, userID: integer) => {
-		const sc = await db["personal-bests"].find(
+		const sc = await MONGODB_KILL["personal-bests"].find(
 			{
 				game,
 				playtype,
@@ -100,7 +100,7 @@ export async function GetBestRatingOnSongs(
 	ratingProp: "skill",
 	limit: integer,
 ): Promise<Array<PBScoreDocument>> {
-	const r: Array<{ doc: PBScoreDocument }> = await db["personal-bests"].aggregate([
+	const r: Array<{ doc: PBScoreDocument }> = await MONGODB_KILL["personal-bests"].aggregate([
 		{
 			$match: {
 				game,

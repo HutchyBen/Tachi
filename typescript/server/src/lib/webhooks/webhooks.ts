@@ -1,12 +1,12 @@
 import type { WebhookEvents } from "tachi-common";
 
 import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import fetch from "#utils/fetch";
 
 // @todo make use of aggressive caching here?
 export async function GetWebhookUrlInfo() {
-	const urls = await db["api-clients"].find(
+	const urls = await MONGODB_KILL["api-clients"].find(
 		{ webhookUri: { $ne: null } },
 		{ projection: { webhookUri: 1, clientSecret: 1 } },
 	);

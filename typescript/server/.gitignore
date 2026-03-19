@@ -1,5 +1,4 @@
 # Test stuffs
-.env
 .setup_env
 failed-tests.txt
 

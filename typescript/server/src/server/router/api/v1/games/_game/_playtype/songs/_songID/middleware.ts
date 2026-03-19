@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { ParseStrPositiveInt } from "#utils/string-checks";
 
@@ -16,7 +16,7 @@ export const ValidateAndGetSong: RequestHandler = async (req, res, next) => {
 
 	const game = GetTachiData(req, "game");
 
-	const song = await db.anySongs[game].findOne({ id: songID });
+	const song = await MONGODB_KILL.anySongs[game].findOne({ id: songID });
 
 	if (!song) {
 		return res.status(404).json({

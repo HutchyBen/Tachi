@@ -1,9 +1,9 @@
 import type { PBScoreDocument } from "tachi-common";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 export async function GetAdjacentAbove(userPB: PBScoreDocument, size = 5) {
-	const adjAbove = (await db["personal-bests"].find(
+	const adjAbove = (await MONGODB_KILL["personal-bests"].find(
 		{
 			chartID: userPB.chartID,
 			"rankingData.rank": { $lt: userPB.rankingData.rank },
@@ -18,7 +18,7 @@ export async function GetAdjacentAbove(userPB: PBScoreDocument, size = 5) {
 }
 
 export async function GetAdjacentBelow(userPB: PBScoreDocument, size = 5) {
-	const adjAbove = (await db["personal-bests"].find(
+	const adjAbove = (await MONGODB_KILL["personal-bests"].find(
 		{
 			chartID: userPB.chartID,
 			"rankingData.rank": { $gt: userPB.rankingData.rank },

@@ -2,13 +2,19 @@ import type { FilterQuery } from "mongodb";
 
 import { log } from "#lib/log/log.js";
 import { SearchUsersRegExp } from "#lib/search/search";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { IsString } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";
+import { apiSuccess } from "#utils/response.js";
 import { ParseStrPositiveNonZeroInt } from "#utils/string-checks";
 import { GetUsersWithIDs } from "#utils/user";
 import { Router } from "express";
-import { type FolderDocument, FormatChart } from "tachi-common";
+import {
+	type FolderDocument,
+	FormatChart,
+	type PBScoreDocument,
+	type UserDocument,
+} from "tachi-common";
 
 import { ValidateAndGetChart } from "./middleware";
 
@@ -25,7 +31,7 @@ router.get("/", async (req, res) => {
 	const chart = GetTachiData(req, "chartDoc");
 	const game = GetTachiData(req, "game");
 
-	const song = await db.anySongs[game].findOne({
+	const song = await MONGODB_KILL.anySongs[game].findOne({
 		id: chart.songID,
 	});
 
@@ -60,7 +66,7 @@ router.get("/", async (req, res) => {
 router.get("/folders", async (req, res) => {
 	const chart = GetTachiData(req, "chartDoc");
 
-	const folderIDs = await db["folder-chart-lookup"].find(
+	const folderIDs = await MONGODB_KILL["folder-chart-lookup"].find(
 		{
 			chartID: chart.chartID,
 		},
@@ -79,7 +85,7 @@ router.get("/folders", async (req, res) => {
 		query.inactive = false;
 	}
 
-	const folders = await db.folders.find(query);
+	const folders = await MONGODB_KILL.folders.find(query);
 
 	return res.status(200).json({
 		success: true,
@@ -96,7 +102,7 @@ router.get("/folders", async (req, res) => {
 router.get("/playcount", async (req, res) => {
 	const chart = GetTachiData(req, "chartDoc");
 
-	const count = await db["personal-bests"].count({ chartID: chart.chartID });
+	const count = await MONGODB_KILL["personal-bests"].count({ chartID: chart.chartID });
 
 	return res.status(200).json({
 		success: true,
@@ -120,7 +126,7 @@ router.get("/pbs", async (req, res) => {
 
 	const startRanking = ParseStrPositiveNonZeroInt(req.query.startRanking) ?? 1;
 
-	const pbs = await db["personal-bests"].find(
+	const pbs = await MONGODB_KILL["personal-bests"].find(
 		{
 			chartID: chart.chartID,
 			"rankingData.rank": { $gte: startRanking },
@@ -164,19 +170,20 @@ router.get("/pbs/search", async (req, res) => {
 
 	const users = await SearchUsersRegExp(req.query.search);
 
-	const pbs = await db["personal-bests"].find({
+	const pbs = await MONGODB_KILL["personal-bests"].find({
 		chartID: chart.chartID,
 		userID: { $in: users.map((e) => e.id) },
 	});
 
-	return res.status(200).json({
-		success: true,
-		description: `Returned ${pbs.length} scores.`,
-		body: {
-			pbs,
-			users,
-		},
-	});
+	return res.status(200).json(
+		apiSuccess<{ pbs: Array<PBScoreDocument>; users: Array<UserDocument> }>(
+			`Returned ${pbs.length} scores.`,
+			{
+				pbs,
+				users,
+			},
+		),
+	);
 });
 
 export default router;

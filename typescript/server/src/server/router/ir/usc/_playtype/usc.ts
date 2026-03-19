@@ -9,7 +9,7 @@ import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import { USCIR_ADJACENT_SCORE_N } from "#lib/constants/usc-ir";
 import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { MStoS } from "#utils/misc";
 import { GetPBOnChart, GetServerRecordOnChart } from "#utils/scores";
 
@@ -39,7 +39,7 @@ export async function TachiScoreToServerScore(
 	// @optimisable
 	// Repeated calls to this may pre-emptively provide usernames
 	// and score PBs.
-	const userDoc = await db.users.findOne(
+	const userDoc = await MONGODB_KILL.users.findOne(
 		{
 			id: tachiScore.userID,
 		},
@@ -61,7 +61,7 @@ export async function TachiScoreToServerScore(
 
 	const firstScoreID = tachiScore.composedFrom[0].scoreID;
 
-	const scorePB = (await db.scores.findOne({
+	const scorePB = (await MONGODB_KILL.scores.findOne({
 		scoreID: firstScoreID,
 	})) as ScoreDocument<"usc:Controller" | "usc:Keyboard"> | null;
 
@@ -135,7 +135,7 @@ export async function CreatePOSTScoresResponseBody(
 	// This returns immediately ranked higher
 	// than the current user.
 
-	const adjAbove = (await db["personal-bests"].find(
+	const adjAbove = (await MONGODB_KILL["personal-bests"].find(
 		{
 			chartID: chartDoc.chartID,
 			"rankingData.rank": { $lt: usersRanking },
@@ -161,7 +161,7 @@ export async function CreatePOSTScoresResponseBody(
 
 	// Similar to above, this returns the N most immediate
 	// scores below the given user.
-	const adjBelow = (await db["personal-bests"].find(
+	const adjBelow = (await MONGODB_KILL["personal-bests"].find(
 		{
 			chartID: chartDoc.chartID,
 			"rankingData.rank": { $gt: usersRanking },
@@ -179,7 +179,7 @@ export async function CreatePOSTScoresResponseBody(
 		Promise.all(adjBelow.map(TachiScoreToServerScore)),
 	]);
 
-	const originalScore = (await db.scores.findOne({
+	const originalScore = (await MONGODB_KILL.scores.findOne({
 		scoreID,
 	})) as ScoreDocument<"usc:Controller" | "usc:Keyboard"> | null;
 

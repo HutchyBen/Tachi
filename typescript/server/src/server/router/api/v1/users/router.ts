@@ -1,8 +1,12 @@
+import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user.js";
 import { SearchUsersRegExp } from "#lib/search/search";
-import db from "#services/mongo/db";
+import DB from "#services/pg/db.js";
 import { IsString } from "#utils/misc";
+import { apiSuccess } from "#utils/response.js";
+import { UnixMillisecondsToISO8601 } from "#utils/time.js";
 import { GetOnlineCutoff } from "#utils/user";
 import { Router } from "express";
+import { type UserDocument } from "tachi-common";
 
 import userIDRouter from "./_userID/router";
 
@@ -34,19 +38,26 @@ router.get("/", async (req, res) => {
 
 		users = await SearchUsersRegExp(search, onlyOnline);
 	} else {
-		const query = onlyOnline ? { lastSeen: { $gt: GetOnlineCutoff() } } : {};
+		let query = DB.selectFrom("account").select(SELECT_USER);
 
-		users = await db.users.find(query, {
-			sort: { lastSeen: -1 },
-			limit: 100,
-		});
+		if (onlyOnline) {
+			const onlineCutoff = GetOnlineCutoff();
+			query = query
+				.where("last_seen", ">", UnixMillisecondsToISO8601(onlineCutoff))
+				.orderBy("last_seen", "desc")
+				.limit(100);
+		}
+
+		users = await query
+			.orderBy("last_seen", "desc")
+			.limit(100)
+			.execute()
+			.then((res) => res.map(ToUserDocument));
 	}
 
-	return res.status(200).json({
-		success: true,
-		description: `Returned ${users.length} users.`,
-		body: users,
-	});
+	return res
+		.status(200)
+		.json(apiSuccess<Array<UserDocument>>(`Returned ${users.length} users.`, users));
 });
 
 router.use("/:userID", userIDRouter);

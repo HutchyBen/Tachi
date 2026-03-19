@@ -2,7 +2,7 @@ import type { RequestHandler } from "express";
 
 import { log } from "#utils/log";
 
-import { BotConfig } from "../config";
+import { Env } from "../config";
 
 /**
  * Middleware that checks that a webhook request has Authorization set to
@@ -32,7 +32,7 @@ export const ValidateWebhookRequest: RequestHandler = (req, res, next) => {
 		});
 	}
 
-	if (value !== BotConfig.OAUTH.CLIENT_SECRET) {
+	if (value !== Env.OAUTH_CLIENT_SECRET) {
 		log.warn(`Recieved invalid auth value from ${req.ip}. Has the client secret been changed?`);
 		return res.status(403).json({
 			success: false,

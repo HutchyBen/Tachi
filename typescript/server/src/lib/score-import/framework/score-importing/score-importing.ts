@@ -1,7 +1,7 @@
 import type { ScoreImportJob } from "#lib/score-import/worker/types";
 
 import { AppendLogCtx, type KtLogger } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { ClassToObject } from "#utils/misc";
 import {
 	type ChartDocument,
@@ -52,7 +52,7 @@ export async function ImportAllIterableData<D, C>(
 	// @optimisable: could filter harder with score.game and score.playtype
 	// stuff.
 	const blacklist = (
-		await db["score-blacklist"].find({
+		await MONGODB_KILL["score-blacklist"].find({
 			userID,
 		})
 	).map((e) => e.scoreID);
@@ -345,7 +345,7 @@ async function HydrateCheckAndInsertScore(
 		return null;
 	}
 
-	const existingScore = await db.scores.findOne(
+	const existingScore = await MONGODB_KILL.scores.findOne(
 		{
 			scoreID,
 		},
@@ -377,7 +377,7 @@ async function HydrateCheckAndInsertScore(
 	let res;
 
 	if (force) {
-		res = await db.scores.insert(score);
+		res = await MONGODB_KILL.scores.insert(score);
 	} else {
 		res = await QueueScoreInsert(score);
 	}

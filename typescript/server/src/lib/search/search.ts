@@ -1,11 +1,14 @@
 import type { FilterQuery } from "mongodb";
 import type { ICollection } from "monk";
 
+import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user.js";
 import { log } from "#lib/log/log.js";
 import { TachiConfig } from "#lib/setup/config";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db.js";
 import { GetSongForIDGuaranteed } from "#utils/db";
-import { EscapeStringRegexp } from "#utils/misc";
+import { EscapeForILIKE } from "#utils/misc";
+import { UnixMillisecondsToISO8601 } from "#utils/time.js";
 import { GetOnlineCutoff } from "#utils/user";
 import {
 	type ChartDocument,
@@ -39,7 +42,7 @@ const SEARCH_CONTROLS = {
 	quests: { keys: ["name"], primary: "questID" },
 	users: { keys: ["username"], primary: "id" },
 	folders: { keys: ["title", "searchTerms"], primary: "folderID" },
-} satisfies Partial<Record<keyof typeof db, SearchControls>>;
+} satisfies Partial<Record<keyof typeof MONGODB_KILL, SearchControls>>;
 
 interface SearchData {
 	primaryKey: number | string;
@@ -159,7 +162,7 @@ export function SearchSpecificGameSongs(
 	search: string,
 	limit = 100,
 ): Promise<Array<SongSearchReturn>> {
-	return SearchCollection(db.anySongs[game], search, "songs", {}, limit);
+	return SearchCollection(MONGODB_KILL.anySongs[game], search, "songs", {}, limit);
 }
 
 export async function SearchSpecificGameSongsAndCharts(
@@ -178,7 +181,7 @@ export async function SearchSpecificGameSongsAndCharts(
 		chartQuery.playtype = playtype;
 	}
 
-	const charts = (await db.anyCharts[game].find(chartQuery)) as Array<ChartDocument>;
+	const charts = (await MONGODB_KILL.anyCharts[game].find(chartQuery)) as Array<ChartDocument>;
 
 	return { songs, charts };
 }
@@ -202,23 +205,24 @@ export async function SearchGlobalGameSongsAndCharts(
 		chartQuery.playtype = playtype;
 	}
 
-	const charts = (await db.anyCharts[game].find(chartQuery)) as unknown as Array<
+	const charts = (await MONGODB_KILL.anyCharts[game].find(chartQuery)) as unknown as Array<
 		{ __playcount: integer } & ChartDocument
 	>;
 
-	const playcounts: Array<{ _id: string; playcount: integer }> = await db.scores.aggregate([
-		{
-			$match: {
-				chartID: { $in: charts.map((e) => e.chartID) },
+	const playcounts: Array<{ _id: string; playcount: integer }> =
+		await MONGODB_KILL.scores.aggregate([
+			{
+				$match: {
+					chartID: { $in: charts.map((e) => e.chartID) },
+				},
 			},
-		},
-		{
-			$group: {
-				_id: "$chartID",
-				playcount: { $sum: 1 },
+			{
+				$group: {
+					_id: "$chartID",
+					playcount: { $sum: 1 },
+				},
 			},
-		},
-	]);
+		]);
 
 	const playcountLookup = Object.fromEntries(playcounts.map((e) => [e._id, e.playcount]));
 	const songMap = CreateSongMap(songs);
@@ -264,7 +268,7 @@ export function SearchSessions(
 		baseMatch.userID = userID;
 	}
 
-	return SearchCollection(db.sessions, search, "sessions", baseMatch, limit);
+	return SearchCollection(MONGODB_KILL.sessions, search, "sessions", baseMatch, limit);
 }
 
 /**
@@ -275,20 +279,26 @@ export function SearchSessions(
  * aren't allowed spaces in their name. In short, $text is very
  * poor at actually matching usernames.
  */
-export function SearchUsersRegExp(search: string, matchOnline = false) {
-	const regexEsc = EscapeStringRegexp(search.toLowerCase());
+export function SearchUsersRegExp(
+	search: string,
+	matchOnline = false,
+): Promise<Array<UserDocument>> {
+	const likeEsc = EscapeForILIKE(search.toLowerCase());
 
-	const matchQuery: FilterQuery<UserDocument> = {
-		usernameLowercase: { $regex: new RegExp(regexEsc, "u") },
-	};
+	const onlineCutoff = UnixMillisecondsToISO8601(GetOnlineCutoff());
+
+	let q = DB.selectFrom("account")
+		.select(SELECT_USER)
+		.where("normalized_username", "like", `%${likeEsc}%`);
 
 	if (matchOnline) {
-		matchQuery.lastSeen = { $gt: GetOnlineCutoff() };
+		q = q.where("last_seen", ">", onlineCutoff);
 	}
 
-	return db.users.find(matchQuery, {
-		limit: 25,
-	});
+	return q
+		.limit(25)
+		.execute()
+		.then((res) => res.map(ToUserDocument));
 }
 
 /**
@@ -352,10 +362,14 @@ export async function SearchGamesSongsCharts(search: string, gpts: Array<GPTStri
 
 export async function SearchForChartHash(search: string) {
 	const results = await Promise.all([
-		db.charts.bms.find({ $or: [{ "data.hashMD5": search }, { "data.hashSHA256": search }] }),
-		db.charts.pms.find({ $or: [{ "data.hashMD5": search }, { "data.hashSHA256": search }] }),
-		db.charts.usc.find({ "data.hashSHA1": search }),
-		db.charts.itg.find({ "data.hashGSv3": search }),
+		MONGODB_KILL.charts.bms.find({
+			$or: [{ "data.hashMD5": search }, { "data.hashSHA256": search }],
+		}),
+		MONGODB_KILL.charts.pms.find({
+			$or: [{ "data.hashMD5": search }, { "data.hashSHA256": search }],
+		}),
+		MONGODB_KILL.charts.usc.find({ "data.hashSHA1": search }),
+		MONGODB_KILL.charts.itg.find({ "data.hashGSv3": search }),
 	]);
 
 	const [bmsCharts, pmsCharts, uscCharts, itgCharts] = results;
@@ -405,15 +419,5 @@ export function SearchFolders(
 	existingMatch?: FilterQuery<FolderDocument>,
 	limit?: integer,
 ) {
-	return SearchCollection(db.folders, search, "folders", existingMatch, limit);
-}
-
-function AddGamePropToSong(
-	songDocument: SongDocument,
-	game: GameGroup,
-): { game: GameGroup } & SongDocument {
-	// @ts-expect-error Yep, that's intentional.
-	songDocument.game = game;
-
-	return songDocument as { game: GameGroup } & SongDocument;
+	return SearchCollection(MONGODB_KILL.folders, search, "folders", existingMatch, limit);
 }

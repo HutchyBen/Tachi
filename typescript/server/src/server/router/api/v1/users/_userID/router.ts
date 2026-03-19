@@ -14,7 +14,7 @@ import { log } from "#lib/log/log.js";
 import { GetRivalIDs } from "#lib/rivals/rivals";
 import { ServerConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { DeleteUndefinedProps, IsNonEmptyString, Random20Hex, StripUrl } from "#utils/misc";
 import { optNullFluffStrField } from "#utils/prudence";
 import {
@@ -187,7 +187,7 @@ router.patch(
 
 		DeleteUndefinedProps(modifyObject);
 
-		await db.users.update(
+		await MONGODB_KILL.users.update(
 			{
 				id: user.id,
 			},
@@ -238,7 +238,7 @@ router.get("/game-stats", async (req, res) => {
 		{
 			__rankingData?: Record<AnyProfileRatingAlg, { outOf: number; ranking: number }>;
 		} & UserGameStats
-	> = await db["game-stats"].find({ userID: user.id });
+	> = await MONGODB_KILL["game-stats"].find({ userID: user.id });
 
 	await Promise.all(
 		stats.map(async (s) => {
@@ -301,7 +301,7 @@ router.get("/recent-summary", async (req, res) => {
 router.get("/is-email-verified", RequireSelfRequestFromUser, async (req, res) => {
 	const user = GetUser(req);
 
-	const verifyInfo = await db["verify-email-codes"].findOne({
+	const verifyInfo = await MONGODB_KILL["verify-email-codes"].findOne({
 		userID: user.id,
 	});
 
@@ -328,7 +328,7 @@ router.get("/is-email-verified", RequireSelfRequestFromUser, async (req, res) =>
 router.get("/email", RequireSelfRequestFromUser, async (req, res) => {
 	const user = GetUser(req);
 
-	const email = await db["user-private-information"].findOne({
+	const email = await MONGODB_KILL["user-private-information"].findOne({
 		userID: user.id,
 	});
 
@@ -368,7 +368,7 @@ router.post(
 			email: string;
 		};
 
-		const privateInfo = await db["user-private-information"].findOne({
+		const privateInfo = await MONGODB_KILL["user-private-information"].findOne({
 			userID: user.id,
 		});
 
@@ -401,7 +401,7 @@ router.post(
 
 		log.info(`User ${user.id} changed email from ${privateInfo.email} to ${body.email}`);
 
-		await db["user-private-information"].update(
+		await MONGODB_KILL["user-private-information"].update(
 			{
 				userID: user.id,
 			},
@@ -416,11 +416,11 @@ router.post(
 			const resetEmailCode = Random20Hex();
 
 			// clear out the previous email code!
-			await db["verify-email-codes"].remove({
+			await MONGODB_KILL["verify-email-codes"].remove({
 				userID: user.id,
 			});
 
-			await db["verify-email-codes"].insert({
+			await MONGODB_KILL["verify-email-codes"].insert({
 				code: resetEmailCode,
 				userID: user.id,
 				email: body.email,
@@ -476,7 +476,7 @@ router.post(
 			});
 		}
 
-		const privateInfo = await db["user-private-information"].findOne({
+		const privateInfo = await MONGODB_KILL["user-private-information"].findOne({
 			userID: user.id,
 		});
 
@@ -503,7 +503,7 @@ router.post(
 
 		const newPasswordHash = await HashPassword(body["!password"]);
 
-		await db["user-private-information"].update(
+		await MONGODB_KILL["user-private-information"].update(
 			{
 				userID: user.id,
 			},
@@ -566,7 +566,7 @@ router.post(
 			});
 		}
 
-		const privateInfo = await db["user-private-information"].findOne({
+		const privateInfo = await MONGODB_KILL["user-private-information"].findOne({
 			userID: user.id,
 		});
 
@@ -607,7 +607,7 @@ router.post(
 			});
 		}
 
-		await db.users.update(
+		await MONGODB_KILL.users.update(
 			{
 				id: user.id,
 			},
@@ -619,7 +619,7 @@ router.post(
 			},
 		);
 
-		await db["user-name-changes"].insert({
+		await MONGODB_KILL["user-name-changes"].insert({
 			userID: user.id,
 			username: body.newUsername,
 			timestamp: Date.now(),
@@ -682,24 +682,25 @@ router.get("/last-username-change", async (req, res) => {
 router.get("/recent-imports", async (req, res) => {
 	const user = GetUser(req);
 
-	const recentImports: Array<{ _id: ImportTypes; count: integer }> = await db.imports.aggregate([
-		{
-			$match: {
-				userID: user.id,
-				timeFinished: { $gt: Date.now() - ONE_MONTH },
-				userIntent: true,
-				importType: {
-					$nin: ["file/mypagescraper-records-csv", "file/mypagescraper-player-csv"],
+	const recentImports: Array<{ _id: ImportTypes; count: integer }> =
+		await MONGODB_KILL.imports.aggregate([
+			{
+				$match: {
+					userID: user.id,
+					timeFinished: { $gt: Date.now() - ONE_MONTH },
+					userIntent: true,
+					importType: {
+						$nin: ["file/mypagescraper-records-csv", "file/mypagescraper-player-csv"],
+					},
 				},
 			},
-		},
-		{
-			$group: {
-				_id: "$importType",
-				count: { $sum: 1 },
+			{
+				$group: {
+					_id: "$importType",
+					count: { $sum: 1 },
+				},
 			},
-		},
-	]);
+		]);
 
 	// rename _id to importType.
 	const imports = recentImports.map((e) => ({ importType: e._id, count: e.count }));
@@ -719,8 +720,8 @@ router.get("/recent-imports", async (req, res) => {
 router.get("/stats", async (req, res) => {
 	const user = GetUser(req);
 
-	const scoreCount = await db.scores.count({ userID: user.id });
-	const sessionCount = await db.sessions.count({ userID: user.id });
+	const scoreCount = await MONGODB_KILL.scores.count({ userID: user.id });
+	const sessionCount = await MONGODB_KILL.sessions.count({ userID: user.id });
 
 	return res.status(200).json({
 		success: true,
@@ -761,13 +762,13 @@ router.get(
 
 		const user = GetUser(req);
 
-		const gpts = await db["game-stats"].find({
+		const gpts = await MONGODB_KILL["game-stats"].find({
 			userID: user.id,
 		});
 
 		const data: Partial<Record<GPTString, unknown>> = {};
 
-		const settings = await db["user-settings"].findOne({ userID: user.id });
+		const settings = await MONGODB_KILL["user-settings"].findOne({ userID: user.id });
 
 		if (!settings) {
 			log.error(`User ${FormatUserDoc(user)} doesn't have any settings?`);

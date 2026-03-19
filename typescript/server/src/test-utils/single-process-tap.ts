@@ -5,7 +5,7 @@ import t from "tap";
 
 import { CleanUpAfterTests } from "./cleanup";
 
-const files = glob.sync(path.join(__dirname, "../", "**/*.test.ts"));
+const files = glob.sync(path.join(__dirname, "../", "**/*.oldtest.ts"));
 
 process.env.NODE_PATH = path.join(__dirname, "../");
 

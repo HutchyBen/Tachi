@@ -1,11 +1,12 @@
 {
 	"files": [],
 	"references": [
+		{ "path": "./typescript/api-parity" },
 		{ "path": "./typescript/bliss" },
 		{ "path": "./typescript/common" },
 		{ "path": "./typescript/db" },
 		{ "path": "./typescript/db-migration-engine" },
-		{ "path": "./typescript/db-migration-engine-cli" },
+		{ "path": "./typescript/db-cli" },
 		{ "path": "./typescript/server" },
 		{ "path": "./typescript/bot" },
 		{ "path": "./typescript/client" },

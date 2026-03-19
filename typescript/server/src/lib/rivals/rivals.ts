@@ -4,7 +4,7 @@ import { SetRivalsFailReasons } from "#lib/constants/err-codes";
 import { log } from "#lib/log/log.js";
 import { SendSetRivalNotification } from "#lib/notifications/notification-wrappers";
 import { ServerConfig } from "#lib/setup/config";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { ArrayDiff } from "#utils/misc";
 import { GetUsersWithIDs, GetUserWithIDGuaranteed } from "#utils/user";
 import {
@@ -21,7 +21,7 @@ import {
  * Throws if the user hasn't played the GPT in question.
  */
 export async function GetRivalIDs(userID: integer, game: GameGroup, playtype: Playtype) {
-	const gameSettings = await db["game-settings"].findOne(
+	const gameSettings = await MONGODB_KILL["game-settings"].findOne(
 		{
 			userID,
 			game,
@@ -63,7 +63,7 @@ export async function GetEveryonesRivalIDs(
 	game: GameGroup,
 	playtype: Playtype,
 ): Promise<Record<number, Array<number>>> {
-	const allGameSettings = await db["game-settings"].find(
+	const allGameSettings = await MONGODB_KILL["game-settings"].find(
 		{
 			game,
 			playtype,
@@ -104,7 +104,7 @@ export async function SetRivals(
 		return SetRivalsFailReasons.RIVALED_SELF;
 	}
 
-	const playedGPTCount = await db["game-settings"].count({
+	const playedGPTCount = await MONGODB_KILL["game-settings"].count({
 		userID: { $in: newRivals },
 		game,
 		playtype,
@@ -115,7 +115,7 @@ export async function SetRivals(
 		return SetRivalsFailReasons.RIVALS_HAVENT_PLAYED_GPT;
 	}
 
-	const currentGameSettings = await db["game-settings"].findOne({
+	const currentGameSettings = await MONGODB_KILL["game-settings"].findOne({
 		userID,
 		game,
 		playtype,
@@ -145,7 +145,7 @@ export async function SetRivals(
 		newSubs.map((toUserID) => SendSetRivalNotification(toUserID, user, game, playtype)),
 	);
 
-	await db["game-settings"].update(
+	await MONGODB_KILL["game-settings"].update(
 		{
 			userID,
 			game,
@@ -206,7 +206,7 @@ export async function RemoveRival(
  * Get all of the userIDs of people who rival the userID for this GPT.
  */
 export async function GetChallengerIDs(userID: integer, game: GameGroup, playtype: Playtype) {
-	const result = await db["game-settings"].find(
+	const result = await MONGODB_KILL["game-settings"].find(
 		{
 			game,
 			playtype,
@@ -252,7 +252,7 @@ export async function UpdatePlayersRivalRankings(
 	const rivalIDs = await GetRivalIDs(userID, game, playtype);
 
 	// get all of this user's chartIDs so we know what to update
-	const userPBs = (await db["personal-bests"].find(
+	const userPBs = (await MONGODB_KILL["personal-bests"].find(
 		{ userID, game, playtype },
 		{ projection: { chartID: 1, [`scoreData.${gptConfig.defaultMetric}`]: 1 } },
 	)) as Array<{ chartID: string; scoreData: { percent: number } }>;
@@ -262,7 +262,7 @@ export async function UpdatePlayersRivalRankings(
 	await Promise.all(
 		userPBs.map(async (pb) => {
 			const rivalRank =
-				(await db["personal-bests"].count({
+				(await MONGODB_KILL["personal-bests"].count({
 					chartID: pb.chartID,
 					userID: { $in: rivalIDs },
 					[`scoreData.${gptConfig.defaultMetric}`]: { $gt: pb.scoreData.percent },
@@ -285,5 +285,5 @@ export async function UpdatePlayersRivalRankings(
 		return;
 	}
 
-	await db["personal-bests"].bulkWrite(bwrite, { ordered: false });
+	await MONGODB_KILL["personal-bests"].bulkWrite(bwrite, { ordered: false });
 }

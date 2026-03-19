@@ -1,6 +1,6 @@
 import { GetSessionScoreInfo } from "#lib/score-import/framework/sessions/sessions";
 import { SearchSessions } from "#lib/search/search";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetUGPT } from "#utils/req-tachi-data";
 import { CheckStrSessionAlg } from "#utils/string-checks";
 import { Router } from "express";
@@ -68,7 +68,7 @@ router.get("/best", async (req, res) => {
 		alg = userAlg;
 	}
 
-	const sessions = await db.sessions.find(
+	const sessions = await MONGODB_KILL.sessions.find(
 		{
 			userID: user.id,
 			game,
@@ -115,7 +115,7 @@ router.get("/best", async (req, res) => {
 router.get("/highlighted", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const sessions = await db.sessions.find(
+	const sessions = await MONGODB_KILL.sessions.find(
 		{ userID: user.id, game, playtype, highlight: true },
 		{ sort: { timeEnded: -1 }, limit: 100 },
 	);
@@ -149,7 +149,7 @@ router.get("/highlighted", async (req, res) => {
 router.get("/recent", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const sessions = await db.sessions.find(
+	const sessions = await MONGODB_KILL.sessions.find(
 		{ userID: user.id, game, playtype },
 		{ sort: { timeEnded: -1 }, limit: 100 },
 	);
@@ -185,7 +185,7 @@ router.get("/recent", async (req, res) => {
 router.get("/last", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const session = await db.sessions.findOne(
+	const session = await MONGODB_KILL.sessions.findOne(
 		{ userID: user.id, game, playtype },
 		{ sort: { timeEnded: -1 } },
 	);
@@ -218,7 +218,7 @@ router.get("/last", async (req, res) => {
 router.get("/calendar", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const sessions = await db.sessions.find(
+	const sessions = await MONGODB_KILL.sessions.find(
 		{
 			userID: user.id,
 			game,

@@ -1,4 +1,4 @@
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetGPT, GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
 
@@ -17,7 +17,7 @@ router.get("/", async (req, res) => {
 	const song = GetTachiData(req, "songDoc");
 	const { game, playtype } = GetGPT(req);
 
-	const charts = await db.anyCharts[game].find({
+	const charts = await MONGODB_KILL.anyCharts[game].find({
 		songID: song.id,
 		playtype,
 	});

@@ -12,7 +12,7 @@ import type {
 
 import { EvaluateQuestProgress } from "#lib/targets/quests";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 export async function UpdateUsersQuests(
 	importGoalInfo: Array<GoalImportInfo>,
@@ -114,7 +114,7 @@ export async function UpdateQuestsForUser(
 	);
 
 	if (bwrite.length !== 0) {
-		await db["quest-subs"].bulkWrite(bwrite, { ordered: false });
+		await MONGODB_KILL["quest-subs"].bulkWrite(bwrite, { ordered: false });
 	}
 
 	return importQuestInfo;
@@ -127,7 +127,7 @@ async function GetRelevantQuests(
 	userID: integer,
 	log: KtLogger,
 ) {
-	const questSubs = await db["quest-subs"].find({
+	const questSubs = await MONGODB_KILL["quest-subs"].find({
 		game,
 		playtype: { $in: playtypes },
 		userID,
@@ -135,7 +135,7 @@ async function GetRelevantQuests(
 
 	log.debug(`Found ${questSubs.length} quest-subs.`);
 
-	const quests = await db.quests.find({
+	const quests = await MONGODB_KILL.quests.find({
 		questID: { $in: questSubs.map((e) => e.questID) },
 		"questData.goals.goalID": { $in: goalIDs },
 	});

@@ -1,7 +1,7 @@
 import type { KtLogger } from "#lib/log/log.js";
 
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { ReturnClassIfGreater } from "#utils/class";
 import deepmerge from "deepmerge";
 import {
@@ -163,7 +163,7 @@ export async function ProcessClassDeltas(
 		}
 	}
 
-	await db["class-achievements"].insert(achievementOps);
+	await MONGODB_KILL["class-achievements"].insert(achievementOps);
 
 	return deltas;
 }

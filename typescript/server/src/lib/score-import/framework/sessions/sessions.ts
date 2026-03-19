@@ -1,6 +1,6 @@
 import { ONE_HOUR } from "#lib/constants/time";
 import { AppendLogCtx, type KtLogger, log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetChartForIDGuaranteed } from "#utils/db";
 import { GetScoresFromSession } from "#utils/session";
 import crypto from "crypto";
@@ -99,7 +99,7 @@ function ScoreToSessionScoreInfo(
 export async function GetSessionScoreInfo(
 	session: SessionDocument,
 ): Promise<Array<SessionScoreInfo>> {
-	const scores = await db.scores.find({
+	const scores = await MONGODB_KILL.scores.find({
 		scoreID: { $in: session.scoreIDs },
 	});
 
@@ -253,7 +253,7 @@ export async function LoadScoresIntoSessions(
 		// Find any sessions with +/-2hrs of this group. This is rather exhaustive, and could result in some issues
 		// if this query returns more than one session. We could account for that by smushing sessions together.
 		// This is not possible however, so this is now just a known tachi oddity.
-		const nearbySession = await db.sessions.findOne({
+		const nearbySession = await MONGODB_KILL.sessions.findOne({
 			userID,
 			game,
 			playtype,
@@ -276,7 +276,7 @@ export async function LoadScoresIntoSessions(
 
 			infoReturn = { sessionID: session.sessionID, type: "Appended" };
 
-			await db.sessions.update(
+			await MONGODB_KILL.sessions.update(
 				{
 					sessionID: session.sessionID,
 				},
@@ -292,7 +292,7 @@ export async function LoadScoresIntoSessions(
 			const session = CreateSession(userID, scoreIDs, groupScores, game, playtype);
 
 			infoReturn = { sessionID: session.sessionID, type: "Created" };
-			await db.sessions.insert(session);
+			await MONGODB_KILL.sessions.insert(session);
 		}
 
 		sessionInfoReturns.push(infoReturn);

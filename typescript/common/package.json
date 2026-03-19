@@ -12,7 +12,7 @@
 		}
 	},
 	"scripts": {
-		"test": "tap",
+		"test": "vitest",
 		"build": "tsgo -p tsconfig.build.json",
 		"prepublishOnly": "tsgo -p tsconfig.build.json",
 		"lint": "eslint .",
@@ -43,9 +43,7 @@
 	},
 	"devDependencies": {
 		"@typescript/native-preview": "catalog:",
-		"@types/tap": "catalog:",
 		"eslint-config-tachi": "workspace:*",
-		"tap": "workspace:*",
 		"typescript": "catalog:"
 	},
 	"nyc": {

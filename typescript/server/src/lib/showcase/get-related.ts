@@ -1,19 +1,19 @@
 import type { GameGroup, ShowcaseStatDetails } from "tachi-common";
 
 import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 export async function GetRelatedStatDocuments(stat: ShowcaseStatDetails, game: GameGroup) {
 	switch (stat.mode) {
 		case "chart": {
-			const chart = await db.anyCharts[game].findOne({ chartID: stat.chartID });
+			const chart = await MONGODB_KILL.anyCharts[game].findOne({ chartID: stat.chartID });
 
 			if (!chart) {
 				log.error({ stat }, `This stat refers to a chart that does not exist?`);
 				throw new Error(`Stat refers to a chart that does not exist? ${stat.chartID}.`);
 			}
 
-			const song = await db.anySongs[game].findOne({ id: chart.songID });
+			const song = await MONGODB_KILL.anySongs[game].findOne({ id: chart.songID });
 
 			if (!song) {
 				log.error({ chart }, `Song-Chart Mismatch - ${chart.songID}.`);
@@ -32,7 +32,7 @@ export async function GetRelatedStatDocuments(stat: ShowcaseStatDetails, game: G
 				throw new Error(`Legacy FolderIDs used in showcase stat.`);
 			}
 
-			const folder = await db.folders.findOne({
+			const folder = await MONGODB_KILL.folders.findOne({
 				folderID: stat.folderID,
 			});
 

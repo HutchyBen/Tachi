@@ -1,7 +1,7 @@
 import type { FilterQuery } from "mongodb";
 
 import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetFoldersFromTable } from "#utils/folder";
 import { GetGPT, GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
@@ -27,7 +27,7 @@ router.get("/", async (req, res) => {
 		query.inactive = false;
 	}
 
-	const tables = await db.tables.find(query);
+	const tables = await MONGODB_KILL.tables.find(query);
 
 	if (tables.length === 0) {
 		log.error(

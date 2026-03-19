@@ -2,7 +2,7 @@ import type { KtLogger } from "#lib/log/log.js";
 import type { FilterQuery } from "mongodb";
 import type { GameGroup, ImportTypes, integer } from "tachi-common";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetBlacklist } from "#utils/queries/blacklist";
 import { GetUserWithID } from "#utils/user";
 import fjsh from "fast-json-stable-hash";
@@ -53,7 +53,7 @@ export async function OrphanScore<T extends ImportTypes = ImportTypes>(
 		throw new Error(`Failed to orphan score. ${(err as Error).message}`);
 	}
 
-	const exists = await db["orphan-scores"].findOne({ orphanID });
+	const exists = await MONGODB_KILL["orphan-scores"].findOne({ orphanID });
 
 	if (exists) {
 		log.debug(`Skipped orphaning score ${orphanID} because it already exists.`);
@@ -70,7 +70,7 @@ export async function OrphanScore<T extends ImportTypes = ImportTypes>(
 
 	log.debug(orphanScoreDoc, `Inserting orphanScoreDoc...`);
 
-	await db["orphan-scores"].insert(orphanScoreDoc);
+	await MONGODB_KILL["orphan-scores"].insert(orphanScoreDoc);
 
 	return { success: true, orphanID };
 }
@@ -136,7 +136,7 @@ export async function ReprocessOrphan(
 
 		// @danger - This could go terribly, if there's a mistake in the converterFN we might accidentally
 		// remove a users score.
-		await db["orphan-scores"].remove({ orphanID: orphan.orphanID });
+		await MONGODB_KILL["orphan-scores"].remove({ orphanID: orphan.orphanID });
 
 		return null;
 	}
@@ -155,7 +155,7 @@ export async function ReprocessOrphan(
 		);
 	} catch (err) {
 		if (IsConverterFailure(err) && err.failureType === "InvalidScore") {
-			await db["orphan-scores"].remove({ orphanID: orphan.orphanID });
+			await MONGODB_KILL["orphan-scores"].remove({ orphanID: orphan.orphanID });
 			return null;
 		}
 
@@ -165,7 +165,7 @@ export async function ReprocessOrphan(
 	}
 
 	if (converterReturns === null || !converterReturns.success) {
-		await db["orphan-scores"].remove({ orphanID: orphan.orphanID });
+		await MONGODB_KILL["orphan-scores"].remove({ orphanID: orphan.orphanID });
 		return null;
 	}
 
@@ -175,7 +175,7 @@ export async function ReprocessOrphan(
 		log.error(
 			`Orphan ${orphan.orphanID} belongs to ${orphan.userID}, but that user no longer exists in the database. Going to skip this and remove the orphan.`,
 		);
-		await db["orphan-scores"].remove({ orphanID: orphan.orphanID });
+		await MONGODB_KILL["orphan-scores"].remove({ orphanID: orphan.orphanID });
 		return null;
 	}
 
@@ -189,12 +189,12 @@ export async function ReprocessOrphan(
 		undefined,
 	);
 
-	await db["orphan-scores"].remove({ orphanID: orphan.orphanID });
+	await MONGODB_KILL["orphan-scores"].remove({ orphanID: orphan.orphanID });
 	return converterReturns;
 }
 
 export async function DeorphanScores(query: FilterQuery<OrphanScoreDocument>, log: KtLogger) {
-	const orphans = await db["orphan-scores"].find(query);
+	const orphans = await MONGODB_KILL["orphan-scores"].find(query);
 
 	// ScoreIDs are essentially userID dependent, so this is fine.
 	const blacklist = await GetBlacklist();

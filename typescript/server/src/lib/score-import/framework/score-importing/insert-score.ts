@@ -1,7 +1,7 @@
 import type { integer, ScoreDocument } from "tachi-common";
 
 import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 const MAX_PIPELINE_LENGTH = 500;
 
@@ -64,7 +64,7 @@ export async function InsertQueue(userID: integer) {
 		delete ScoreQueues[userID];
 
 		try {
-			await db.scores.insert(queuedScores);
+			await MONGODB_KILL.scores.insert(queuedScores);
 		} catch (err) {
 			log.warn(
 				{ err },

@@ -2,16 +2,16 @@
 
 import { log } from "#lib/log/log.js";
 import { CreateSessionCalcData } from "#lib/score-import/framework/calculated-data/session";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetGPTString } from "tachi-common";
 
 export async function RecalcSessions(filter = {}) {
-	const allSessions = await db.sessions.find(filter);
+	const allSessions = await MONGODB_KILL.sessions.find(filter);
 
 	log.info(`Recalcing ${allSessions.length} sessions.`);
 
 	for (const session of allSessions) {
-		const scores = await db.scores.find(
+		const scores = await MONGODB_KILL.scores.find(
 			{ scoreID: { $in: session.scoreIDs } },
 			{
 				projection: { calculatedData: 1 },
@@ -19,7 +19,7 @@ export async function RecalcSessions(filter = {}) {
 		);
 
 		if (scores.length === 0) {
-			await db.sessions.remove({ sessionID: session.sessionID });
+			await MONGODB_KILL.sessions.remove({ sessionID: session.sessionID });
 			continue;
 		}
 
@@ -30,11 +30,14 @@ export async function RecalcSessions(filter = {}) {
 		} catch (err) {
 			log.error({ err }, `Recalcing ${session.game} (${session.playtype}) failed.`);
 			log.warn(`Destroying session!`);
-			await db.sessions.remove({ sessionID: session.sessionID });
+			await MONGODB_KILL.sessions.remove({ sessionID: session.sessionID });
 			continue;
 		}
 
-		await db.sessions.update({ sessionID: session.sessionID }, { $set: { calculatedData: c } });
+		await MONGODB_KILL.sessions.update(
+			{ sessionID: session.sessionID },
+			{ $set: { calculatedData: c } },
+		);
 	}
 
 	log.info(`Done!`);

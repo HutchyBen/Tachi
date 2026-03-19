@@ -10,7 +10,7 @@ import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/expre
 import { ServerConfig } from "#lib/setup/config";
 import { RequireNotGuest } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { UpdateClassIfGreater } from "#utils/class";
 import { IsRecord, NotNullish } from "#utils/misc";
 import { Router } from "express";
@@ -48,7 +48,7 @@ router.post("/submit-score", RequireNotGuest, async (req, res) => {
 		if (type === "SongOrChartNotFound") {
 			const { chart } = req.safeBody as { chart: BeatorajaChart };
 
-			const orphanInfo: { userIDs: Array<integer> } | null = await db[
+			const orphanInfo: { userIDs: Array<integer> } | null = await MONGODB_KILL[
 				"orphan-chart-queue"
 			].findOne(
 				{
@@ -97,7 +97,7 @@ router.post("/submit-score", RequireNotGuest, async (req, res) => {
 		});
 	}
 
-	const scoreDoc = await db.scores.findOne({
+	const scoreDoc = await MONGODB_KILL.scores.findOne({
 		scoreID: importRes.body.body.scoreIDs[0],
 	});
 
@@ -115,7 +115,7 @@ router.post("/submit-score", RequireNotGuest, async (req, res) => {
 	let chart;
 
 	if (importRes.body.body.game === "bms") {
-		chart = await db.charts.bms.findOne({
+		chart = await MONGODB_KILL.charts.bms.findOne({
 			chartID: scoreDoc.chartID,
 		});
 
@@ -130,11 +130,11 @@ router.post("/submit-score", RequireNotGuest, async (req, res) => {
 			});
 		}
 
-		song = await db.songs.bms.findOne({
+		song = await MONGODB_KILL.songs.bms.findOne({
 			id: chart.songID,
 		});
 	} else {
-		chart = await db.charts.pms.findOne({
+		chart = await MONGODB_KILL.charts.pms.findOne({
 			chartID: scoreDoc.chartID,
 		});
 
@@ -149,7 +149,7 @@ router.post("/submit-score", RequireNotGuest, async (req, res) => {
 			});
 		}
 
-		song = await db.songs.pms.findOne({
+		song = await MONGODB_KILL.songs.pms.findOne({
 			id: chart.songID,
 		});
 	}
@@ -279,7 +279,7 @@ router.post(
 		// Combine the md5s into one string in their order.
 		const combinedMD5s = charts.map((e) => e.md5).join("");
 
-		const course = await db["bms-course-lookup"].findOne({
+		const course = await MONGODB_KILL["bms-course-lookup"].findOne({
 			md5sums: combinedMD5s,
 		});
 

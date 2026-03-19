@@ -1,4 +1,4 @@
-import { BotConfig } from "#config";
+import { Env } from "#config";
 import { PrependTachiUrl } from "#utils/fetch-tachi.js";
 import { log } from "#utils/log";
 import {
@@ -53,7 +53,7 @@ export async function HandleGoalAchievedV1(
 			)}!`,
 		)
 		.setThumbnail(PrependTachiUrl(`/users/${userDoc.id}/pfp`))
-		.setURL(`${BotConfig.TACHI_SERVER_LOCATION}/u/${userDoc.username}`)
+		.setURL(`${Env.TACHI_SERVER_LOCATION}/u/${userDoc.username}`)
 		.addFields(
 			event.goals.map((e) => {
 				const goal = goalMap.get(e.goalID)!;

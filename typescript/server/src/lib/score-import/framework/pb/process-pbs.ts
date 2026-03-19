@@ -1,6 +1,6 @@
 import type { KtLogger } from "#lib/log/log.js";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetChartForIDGuaranteed } from "#utils/db";
 import { type GameGroup, GetGPTString, type integer, type Playtype } from "tachi-common";
 
@@ -53,7 +53,7 @@ export async function ProcessPBs(
 	// this *is* bad behaviour, but I don't have a nice way to fix it.
 	// This should be fixed in the future to avoid crashes between these two
 	// calls - but that is unlikely.
-	await db["personal-bests"].bulkWrite(
+	await MONGODB_KILL["personal-bests"].bulkWrite(
 		pbDocs.map((e) => ({
 			updateOne: {
 				filter: { chartID: e.chartID, userID: e.userID },

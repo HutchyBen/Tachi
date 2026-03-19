@@ -2,7 +2,7 @@ import type { KtLogger } from "#lib/log/log.js";
 import type { ClassDelta, GameGroup, integer, Playtype, UserGameStats } from "tachi-common";
 
 import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 import type { ClassProvider } from "../calculated-data/types";
 
@@ -22,7 +22,7 @@ export async function UpdateUsersGamePlaytypeStats(
 
 	// Attempt to find a users game stats if one already exists. If one doesn't exist,
 	// this is this players first import for this game!
-	const userGameStats = await db["game-stats"].findOne({
+	const userGameStats = await MONGODB_KILL["game-stats"].findOne({
 		game,
 		playtype,
 		userID,
@@ -49,7 +49,7 @@ export async function UpdateUsersGamePlaytypeStats(
 			updateClasses[`classes.${delta.set}`] = delta.new;
 		}
 
-		await db["game-stats"].update(
+		await MONGODB_KILL["game-stats"].update(
 			{
 				game,
 				playtype,
@@ -63,7 +63,7 @@ export async function UpdateUsersGamePlaytypeStats(
 			},
 		);
 	} else {
-		const hasAnyScores = await db.scores.findOne({
+		const hasAnyScores = await MONGODB_KILL.scores.findOne({
 			game,
 			playtype,
 			userID,
@@ -90,7 +90,7 @@ export async function UpdateUsersGamePlaytypeStats(
 		};
 
 		log.info(`Created new gamestats for ${game} (${playtype})`);
-		await db["game-stats"].insert(newStats);
+		await MONGODB_KILL["game-stats"].insert(newStats);
 		await CreateGameSettings(userID, game, playtype);
 	}
 

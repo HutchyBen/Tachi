@@ -1,13 +1,13 @@
 import type { GameGroup, integer, Playtype } from "tachi-common";
 
 import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 /**
  * Create GameSettings for a UGPT (which contains their preferences).
  */
 export async function CreateGameSettings(userID: integer, game: GameGroup, playtype: Playtype) {
-	const exists = await db["game-settings"].findOne({
+	const exists = await MONGODB_KILL["game-settings"].findOne({
 		userID,
 		game,
 		playtype,
@@ -32,7 +32,7 @@ export async function CreateGameSettings(userID: integer, game: GameGroup, playt
 		};
 	}
 
-	await db["game-settings"].insert({
+	await MONGODB_KILL["game-settings"].insert({
 		userID,
 		game,
 		playtype,

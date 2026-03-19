@@ -1,7 +1,7 @@
 import type { GoalCriteriaFormatter } from "#game-implementations/types";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetFolderForIDGuaranteed, HumaniseChartID } from "#utils/db";
 import { GetFolderChartIDs } from "#utils/folder";
 import { HumanisedJoinArray, OnlyFloatToDP } from "#utils/misc";
@@ -186,7 +186,7 @@ export async function ValidateGoalChartsAndCriteria(
 
 	switch (charts.type) {
 		case "single": {
-			const chart = await db.anyCharts[game].findOne({
+			const chart = await MONGODB_KILL.anyCharts[game].findOne({
 				playtype,
 				chartID: charts.data,
 			});
@@ -202,7 +202,7 @@ export async function ValidateGoalChartsAndCriteria(
 		}
 
 		case "folder": {
-			const folder = await db.folders.findOne({
+			const folder = await MONGODB_KILL.folders.findOne({
 				game,
 				playtype,
 				folderID: charts.data,
@@ -225,7 +225,7 @@ export async function ValidateGoalChartsAndCriteria(
 				);
 			}
 
-			const multiCharts = await db.anyCharts[game].find({
+			const multiCharts = await MONGODB_KILL.anyCharts[game].find({
 				playtype,
 				chartID: { $in: charts.data },
 			});
@@ -297,7 +297,7 @@ export async function ValidateGoalChartsAndCriteria(
 			let err;
 
 			if (config.chartDependentMax) {
-				const chart = await db.anyCharts[game].findOne({
+				const chart = await MONGODB_KILL.anyCharts[game].findOne({
 					playtype,
 					// guaranteed by previous if statement
 					chartID: charts.data as string,

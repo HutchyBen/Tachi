@@ -1,5 +1,3 @@
-import type { integer } from "tachi-common";
-
 import { SendEmail } from "#lib/email/client";
 import { EmailFormatResetPassword, EmailFormatVerifyEmail } from "#lib/email/formats";
 import { log } from "#lib/log/log.js";
@@ -9,9 +7,9 @@ import {
 	AggressiveRateLimitMiddleware,
 	HyperAggressiveRateLimitMiddleware,
 } from "#server/middleware/rate-limiter";
-import db from "#services/mongo/db";
-import { DecrementCounterValue, GetNextCounterValue } from "#utils/db";
+import DB from "#services/pg/db.js";
 import { Random20Hex } from "#utils/misc";
+import { apiSuccess } from "#utils/response.js";
 import {
 	CheckIfEmailInUse,
 	FormatUserDoc,
@@ -23,14 +21,13 @@ import {
 } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
+import { type UserDocument } from "tachi-common";
 
 import {
 	AddNewUser,
 	HashPassword,
-	InsertDefaultUserSettings,
 	MountAuthCookie,
 	PasswordCompare,
-	ReinstateInvite,
 	ValidateCaptcha,
 	ValidateEmail,
 	ValidatePassword,
@@ -137,12 +134,7 @@ router.post(
 			});
 		}
 
-		let settings = await GetSettingsForUser(requestedUser.id);
-
-		if (!settings) {
-			log.warn(`User ${FormatUserDoc(user)} has no settings. Inserting default settings.`);
-			settings = await InsertDefaultUserSettings(user.id);
-		}
+		const settings = await GetSettingsForUser(requestedUser.id);
 
 		MountAuthCookie(req, user, settings);
 
@@ -249,93 +241,83 @@ router.post(
 			});
 		}
 
-		let hasInsertedUserID: integer | null = null;
-
 		try {
-			const userID = await GetNextCounterValue("users");
+			const newUser = await DB.transaction().execute(async (txn): Promise<UserDocument> => {
+				// if we get to this point, We're good to create the user.
 
-			if (ServerConfig.INVITE_CODE_CONFIG) {
-				const inviteCodeDoc = await db.invites.findOneAndUpdate(
-					{
-						code: body.inviteCode,
-						consumed: false,
-					},
-					{
-						$set: {
-							consumed: true,
-							consumedAt: Date.now(),
-							consumedBy: userID,
-						},
-					},
+				const { newUser, newSettings } = await AddNewUser(
+					txn,
+					body.username,
+					body["!password"],
+					body.email,
 				);
 
-				if (!inviteCodeDoc) {
-					log.info(`Invalid invite code given: ${body.inviteCode}.`);
-					return res.status(401).json({
-						success: false,
-						description: `This invite code is not valid.`,
-					});
+				if (ServerConfig.INVITE_CODE_CONFIG) {
+					if (!body.inviteCode) {
+						throw new Error("No invite code given, yet the server uses invites.");
+					}
+
+					const inviteCodeDoc = await txn
+						.selectFrom("priv_invite")
+						.select("code")
+						.where("code", "=", body.inviteCode)
+						.where("consumed", "=", false)
+						.executeTakeFirst();
+
+					if (!inviteCodeDoc) {
+						log.info(`Invalid invite code given: ${body.inviteCode}.`);
+						throw new Error(`Invalid invite code given: ${body.inviteCode}.`);
+					}
+
+					log.info(`Consumed invite ${inviteCodeDoc.code}.`);
+
+					await txn
+						.updateTable("priv_invite")
+						.set({
+							consumed: true,
+							consumed_at: new Date().toISOString(),
+							consumed_by: newUser.id,
+						})
+						.where("code", "=", body.inviteCode)
+						.execute();
 				}
 
-				log.info(`Consumed invite ${inviteCodeDoc.code}.`);
-			}
+				MountAuthCookie(req, newUser, newSettings);
 
-			// if we get to this point, We're good to create the user.
+				// If we have an EMAIL_CONFIG set, send out
+				// authentication emails.
+				// Otherwise, don't bother; this is equivalent to
+				// automatically verifying all users' emails.
+				if (ServerConfig.EMAIL_CONFIG) {
+					const resetEmailCode = Random20Hex();
 
-			const { newUser, newSettings } = await AddNewUser(
-				body.username,
-				body["!password"],
-				body.email,
-				userID,
-			);
+					await DB.insertInto("priv_verify_email_token")
+						.values({
+							token: resetEmailCode,
+							user_id: newUser.id,
+							email: body.email,
+						})
+						.execute();
 
-			hasInsertedUserID = newUser.id;
+					// TODO: Put this on job queue
+					const { text, html } = EmailFormatVerifyEmail(newUser.username, resetEmailCode);
 
-			// re-fetch the user like this so we guaranteeably omit the private fields.
-			const user = await GetUserWithIDGuaranteed(newUser.id);
+					void SendEmail(body.email, "Email Verification", html, text);
+				}
 
-			MountAuthCookie(req, user, newSettings);
-
-			// If we have an EMAIL_CONFIG set, send out
-			// authentication emails.
-			// Otherwise, don't bother; this is equivalent to
-			// automatically verifying all users' emails.
-			if (ServerConfig.EMAIL_CONFIG) {
-				const resetEmailCode = Random20Hex();
-
-				await db["verify-email-codes"].insert({
-					code: resetEmailCode,
-					userID,
-					email: body.email,
-				});
-
-				const { text, html } = EmailFormatVerifyEmail(user.username, resetEmailCode);
-
-				void SendEmail(body.email, "Email Verification", html, text);
-			}
-
-			return res.status(200).json({
-				success: true,
-				description: `Successfully created account ${body.username}!`,
-				body: user,
+				return newUser;
 			});
+
+			return res
+				.status(200)
+				.json(
+					apiSuccess<UserDocument>(
+						`Successfully created account ${body.username}!`,
+						newUser,
+					),
+				);
 		} catch (err) {
 			log.error({ err }, `Bailed on user creation ${body.username}.`);
-
-			if (ServerConfig.INVITE_CODE_CONFIG && body.inviteCode !== undefined) {
-				await ReinstateInvite(body.inviteCode);
-			}
-
-			if (hasInsertedUserID !== null) {
-				log.warn(
-					`Removing user ${body.username} (#${hasInsertedUserID}), as their document was created, but creation still failed.`,
-				);
-				await db.users.remove({ username: body.username });
-				await db["user-settings"].remove({ userID: hasInsertedUserID });
-				await db["user-private-information"].remove({ userID: hasInsertedUserID });
-			}
-
-			await DecrementCounterValue("users");
 
 			return res.status(500).json({
 				success: false,
@@ -363,9 +345,10 @@ router.post(
 			code: string;
 		};
 
-		const code = await db["verify-email-codes"].findOne({
-			code: body.code,
-		});
+		const code = await DB.selectFrom("priv_verify_email_token")
+			.select("user_id")
+			.where("token", "=", body.code)
+			.executeTakeFirstOrThrow();
 
 		if (!code) {
 			return res.status(400).json({
@@ -374,9 +357,7 @@ router.post(
 			});
 		}
 
-		await db["verify-email-codes"].remove({
-			code: body.code,
-		});
+		await DB.deleteFrom("priv_verify_email_token").where("token", "=", body.code).execute();
 
 		return res.status(200).json({
 			success: true,
@@ -411,7 +392,10 @@ router.post("/resend-verify-email", HyperAggressiveRateLimitMiddleware, async (r
 
 	const userID = user.id;
 
-	const verifyInfo = await db["verify-email-codes"].findOne({ userID });
+	const verifyInfo = await DB.selectFrom("priv_verify_email_token")
+		.select(["email", "token"])
+		.where("user_id", "=", userID)
+		.executeTakeFirstOrThrow();
 
 	if (!verifyInfo) {
 		log.warn(`Attempted to send reset email to ${userID}, but no verifyInfo was set for them.`);
@@ -420,7 +404,7 @@ router.post("/resend-verify-email", HyperAggressiveRateLimitMiddleware, async (r
 
 	// Send the email again.
 
-	const { text, html } = EmailFormatVerifyEmail(user.username, verifyInfo.code);
+	const { text, html } = EmailFormatVerifyEmail(user.username, verifyInfo.token);
 
 	void SendEmail(verifyInfo.email, "Email Verification", html, text);
 });
@@ -481,16 +465,17 @@ router.post(
 			body: {},
 		});
 
-		const userPrivateInfo = await db["user-private-information"].findOne({
-			email: body.email,
-		});
+		const userPrivateInfo = await DB.selectFrom("priv_account_credential")
+			.select(["user_id", "email"])
+			.where("email", "=", body.email)
+			.executeTakeFirstOrThrow();
 
 		if (userPrivateInfo) {
-			const user = await db.users.findOne({ id: userPrivateInfo.userID });
+			const user = await GetUserWithIDGuaranteed(userPrivateInfo.user_id);
 
 			if (!user) {
 				log.error(
-					`User ${userPrivateInfo.userID} has private information but no real account.`,
+					`User ${userPrivateInfo.user_id} has private information but no real account.`,
 				);
 				return;
 			}
@@ -499,11 +484,13 @@ router.post(
 
 			log.debug(`Created password reset code for ${FormatUserDoc(user)}.`);
 
-			await db["password-reset-codes"].insert({
-				code,
-				userID: user.id,
-				createdOn: Date.now(),
-			});
+			await DB.insertInto("priv_password_reset_token")
+				.values({
+					token: code,
+					user_id: user.id,
+					created_on: new Date().toISOString(),
+				})
+				.execute();
 
 			const { html, text } = EmailFormatResetPassword(user.username, code, req.ip);
 
@@ -538,31 +525,28 @@ router.post(
 			code: string;
 		};
 
-		const code = await db["password-reset-codes"].findOneAndDelete({
-			code: body.code,
-		});
+		const code = await DB.selectFrom("priv_password_reset_token")
+			.select("user_id")
+			.where("token", "=", body.code)
+			.executeTakeFirstOrThrow();
 
 		if (!code) {
 			return res.status(404).json({
 				success: false,
-				description: `Invalid Reset Code.`,
+				description: `Invalid reset code.`,
 			});
 		}
 
-		const encryptedPassword = await HashPassword(body["!password"]);
+		const hashedPassword = await HashPassword(body["!password"]);
 
-		await db["user-private-information"].update(
-			{
-				userID: code.userID,
-			},
-			{
-				$set: {
-					password: encryptedPassword,
-				},
-			},
-		);
+		await DB.updateTable("priv_account_credential")
+			.set({
+				password: hashedPassword,
+			})
+			.where("user_id", "=", code.user_id)
+			.execute();
 
-		log.info(`User ${code.userID} reset their password.`);
+		log.info(`User ${code.user_id} reset their password.`);
 
 		return res.status(200).json({
 			success: true,

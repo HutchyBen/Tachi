@@ -21,4 +21,4 @@ server:
 		bun --watch src/main.ts
 
 client:
-	cd typescript/client && vite --open
+	cd typescript/client && vite

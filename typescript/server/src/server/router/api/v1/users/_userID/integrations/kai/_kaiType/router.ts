@@ -5,7 +5,7 @@ import {
 } from "#lib/score-import/import-types/common/api-kai/utils";
 import prValidate from "#server/middleware/prudence-validate";
 import { RequireKamaitachi } from "#server/middleware/type-require";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import fetch from "#utils/fetch";
 import { NotNullish } from "#utils/misc";
 import { GetKaiAuth, RevokeKaiAuth } from "#utils/queries/auth";
@@ -189,7 +189,7 @@ router.post(
 
 		const j = json as { access_token: string; refresh_token: string };
 
-		await db["kai-auth-tokens"].update(
+		await MONGODB_KILL["kai-auth-tokens"].update(
 			{
 				userID: user.id,
 				service: kaiType,

@@ -3,16 +3,16 @@ import type { GameGroup, Playtype, ScoreDocument } from "tachi-common";
 import { log } from "#lib/log/log.js";
 import { UpdateUsersGamePlaytypeStats } from "#lib/score-import/framework/ugpt-stats/update-ugpt-stats";
 /* eslint-disable no-await-in-loop */
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { WrapScriptPromise } from "#utils/misc";
 import { FormatUserDoc } from "#utils/user";
 
 export async function RecalcGameProfiles() {
-	const users = await db.users.find({});
+	const users = await MONGODB_KILL.users.find({});
 
 	for (const user of users) {
 		const gpts: Array<{ _id: { game: GameGroup; playtype: Playtype } } & ScoreDocument> =
-			await db.scores.aggregate([
+			await MONGODB_KILL.scores.aggregate([
 				{
 					$match: {
 						userID: user.id,

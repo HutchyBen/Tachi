@@ -143,7 +143,7 @@ const charts = Object.fromEntries(
 	[G in GameGroup]: ICollection<ChartDocument<GPTStrings[G]>>;
 };
 
-const db = {
+const MONGODB_KILL = {
 	// i have to handwrite this out for TS... :(
 	// dont worry, it was all macro'd.
 	songs,
@@ -215,10 +215,10 @@ const db = {
 };
 
 export type StaticDatabases = Exclude<
-	keyof typeof db,
+	keyof typeof MONGODB_KILL,
 	"anyCharts" | "anySongs" | "charts" | "songs"
 >;
 
 export type Databases = `charts-${GameGroup}` | `songs-${GameGroup}` | StaticDatabases;
 
-export default db;
+export default MONGODB_KILL;

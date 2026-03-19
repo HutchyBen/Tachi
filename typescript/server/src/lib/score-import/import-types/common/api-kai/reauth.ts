@@ -3,7 +3,7 @@ import type { KaiAuthDocument } from "tachi-common";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ServerConfig } from "#lib/setup/config";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import nodeFetch from "#utils/fetch";
 import { p } from "prudence";
 
@@ -109,7 +109,7 @@ export function CreateKaiReauthFunction(
 			refresh_token: string;
 		};
 
-		await db["kai-auth-tokens"].update(
+		await MONGODB_KILL["kai-auth-tokens"].update(
 			{
 				userID: authDoc.userID,
 				service: authDoc.service,

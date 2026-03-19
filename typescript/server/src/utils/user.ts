@@ -1,8 +1,9 @@
-import type { FindOneResult } from "monk";
-
 import { ONE_DAY } from "#lib/constants/time";
+import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user.js";
+import { SELECT_USER_SETTINGS, ToUserSettingsDocument } from "#lib/db-formats/user-settings.js";
 import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db.js";
 import {
 	type APITokenDocument,
 	type GameGroup,
@@ -14,69 +15,80 @@ import {
 	UserAuthLevels,
 	type UserDocument,
 	type UserGameStats,
+	type UserSettingsDocument,
 } from "tachi-common";
+
+import { GetFollowingForUser } from "./queries/settings";
 
 /**
  * Returns a user's username from their ID. Throws if no user with that ID exists.
  */
 export async function GetUsernameFromUserID(userID: integer): Promise<string> {
-	const partialDoc = await db.users.findOne(
-		{
-			id: userID,
-		},
-		{
-			projection: {
-				username: 1,
-			},
-		},
-	);
+	const username = await DB.selectFrom("account")
+		.select("username")
+		.where("id", "=", userID)
+		.executeTakeFirst()
+		.then((res) => res?.username);
 
-	if (!partialDoc) {
+	if (!username) {
 		throw new Error(`Could not find username for userID ${userID}.`);
 	}
-
-	return partialDoc.username;
+	return username;
 }
 
 /**
  * Gets a user based on their username case-insensitively.
  */
-export function GetUserCaseInsensitive(username: string): Promise<FindOneResult<UserDocument>> {
-	return db.users.findOne({
-		usernameLowercase: username.toLowerCase(),
-	});
+export function GetUserCaseInsensitive(username: string): Promise<UserDocument | null> {
+	return DB.selectFrom("account")
+		.select(SELECT_USER)
+		.where("normalized_username", "=", username.toLowerCase())
+		.executeTakeFirst()
+		.then((res) => (res ? ToUserDocument(res) : null));
 }
 
 export async function CheckIfEmailInUse(email: string) {
-	const doc = await db["user-private-information"].findOne({ email });
+	const exists = await DB.selectFrom("priv_account_credential")
+		.where("email", "=", email)
+		.executeTakeFirst()
+		.then((res) => !!res);
 
-	return !!doc;
+	return exists;
 }
 
 export function GetUserPrivateInfo(userID: integer) {
-	return db["user-private-information"].findOne({ userID });
+	return DB.selectFrom("priv_account_credential")
+		.selectAll()
+		.where("user_id", "=", userID)
+		.executeTakeFirst();
 }
 
 /**
  * Gets a user from their userID.
  */
-export function GetUserWithID(userID: integer): Promise<FindOneResult<UserDocument>> {
-	return db.users.findOne({
-		id: userID,
-	});
+export function GetUserWithID(userID: integer): Promise<UserDocument | null> {
+	return DB.selectFrom("account")
+		.select(SELECT_USER)
+		.where("id", "=", userID)
+		.executeTakeFirst()
+		.then((res) => (res ? ToUserDocument(res) : null));
 }
 
-export function GetSettingsForUser(userID: integer) {
-	return db["user-settings"].findOne({
-		userID,
-	});
+export async function GetSettingsForUser(userID: integer): Promise<UserSettingsDocument> {
+	const following = await GetFollowingForUser(userID);
+
+	return DB.selectFrom("account_settings")
+		.select(SELECT_USER_SETTINGS)
+		.where("user_id", "=", userID)
+		.executeTakeFirstOrThrow()
+		.then((res) => ToUserSettingsDocument(following, res));
 }
 
 /**
  * Gets the users for these user IDs.
  */
 export async function GetUsersWithIDs(userIDs: Array<integer>) {
-	const users = await db.users.find({
+	const users = await MONGODB_KILL.users.find({
 		id: { $in: userIDs },
 	});
 
@@ -140,7 +152,7 @@ export function FormatUserDoc(userdoc: UserDocument) {
 export async function GetUsersRanking(stats: UserGameStats) {
 	const gptConfig = GetGamePTConfig(stats.game, stats.playtype);
 
-	const aggRes: [{ _id: null; ranking: integer }] = await db["game-stats"].aggregate([
+	const aggRes: [{ _id: null; ranking: integer }] = await MONGODB_KILL["game-stats"].aggregate([
 		{
 			$match: {
 				game: stats.game,
@@ -172,7 +184,7 @@ export async function GetUsersRanking(stats: UserGameStats) {
 }
 
 export function GetUGPTPlaycount(userID: integer, game: GameGroup, playtype: Playtype) {
-	return db.scores.count({ userID, game, playtype });
+	return MONGODB_KILL.scores.count({ userID, game, playtype });
 }
 
 export async function GetAllRankings(stats: UserGameStats) {
@@ -207,7 +219,7 @@ export async function GetUsersRankingAndOutOf(
 			outOf: integer;
 			ranking: integer;
 		},
-	] = await db["game-stats"].aggregate([
+	] = await MONGODB_KILL["game-stats"].aggregate([
 		{
 			$match: {
 				game: stats.game,
@@ -267,11 +279,22 @@ export async function IsRequesterAdmin(request: APITokenDocument) {
 	return user.authLevel === UserAuthLevels.ADMIN;
 }
 
+export async function IsUserAdmin(userID: integer) {
+	const exists = await DB.selectFrom("account")
+		.select("auth_level")
+		.where("id", "=", userID)
+		.where("auth_level", "=", "admin")
+		.executeTakeFirst()
+		.then((res) => !!res);
+
+	return exists;
+}
+
 /**
  * Return all the GPTs this userID has played.
  */
 export async function GetUserPlayedGPTs(userID: integer) {
-	const gpts = (await db["game-stats"].find(
+	const gpts = (await MONGODB_KILL["game-stats"].find(
 		{ userID },
 		{ projection: { game: 1, playtype: 1 } },
 	)) as Array<Pick<UserGameStats, "game" | "playtype">>;
@@ -280,7 +303,9 @@ export async function GetUserPlayedGPTs(userID: integer) {
 }
 
 export async function GetAllUserRivals(userID: integer) {
-	const rivals = (await db["game-settings"].find({ userID }, { projection: { rivals: 1 } }))
+	const rivals = (
+		await MONGODB_KILL["game-settings"].find({ userID }, { projection: { rivals: 1 } })
+	)
 		.map((e) => e.rivals)
 		.flat();
 
@@ -296,7 +321,7 @@ export async function CanChangeUsername(userID: integer) {
 }
 
 export async function GetNextAvailableUsernameChange(userID: integer): Promise<integer | null> {
-	const lastChange = await db["user-name-changes"].findOne(
+	const lastChange = await MONGODB_KILL["user-name-changes"].findOne(
 		{ userID },
 		{ sort: { timestamp: -1 } },
 	);
@@ -306,4 +331,28 @@ export async function GetNextAvailableUsernameChange(userID: integer): Promise<i
 	}
 
 	return lastChange.timestamp + USERNAME_CHANGE_COOLDOWN;
+}
+
+/**
+ * Get the admin for the instance.
+ *
+ * This is used for things like builtin clients
+ * and "default" admin actions. It would honestly be
+ * clearer if there was a sort of "god" user on tachi
+ * that was an admin but also just unique.
+ *
+ * In practice, that's how these things work anyway.
+ */
+export async function GetFirstAdmin(): Promise<UserDocument> {
+	const admin = await DB.selectFrom("account")
+		.select(SELECT_USER)
+		.where("auth_level", "=", "admin")
+		.orderBy("id", "asc")
+		.executeTakeFirst();
+
+	if (!admin) {
+		throw new Error("There is no admin on this instance of Tachi.");
+	}
+
+	return ToUserDocument(admin);
 }

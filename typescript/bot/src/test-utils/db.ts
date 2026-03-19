@@ -23,7 +23,7 @@ export async function createTestAccount(
 ): Promise<TestAccount> {
 	const { id } = await db
 		.insertInto("account")
-		.values({ username })
+		.values({ username, about: "Test user for tests." })
 		.returning("id")
 		.executeTakeFirstOrThrow();
 

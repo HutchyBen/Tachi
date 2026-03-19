@@ -20,31 +20,31 @@ import type { ConverterFunction } from "../../common/types";
 import type { MytChunithmScore } from "./types";
 
 const DIFFICULTIES = {
-	[ChunithmLevel.CHUNITHM_LEVEL_UNSPECIFIED]: undefined,
-	[ChunithmLevel.CHUNITHM_LEVEL_BASIC]: "BASIC",
-	[ChunithmLevel.CHUNITHM_LEVEL_ADVANCED]: "ADVANCED",
-	[ChunithmLevel.CHUNITHM_LEVEL_EXPERT]: "EXPERT",
-	[ChunithmLevel.CHUNITHM_LEVEL_MASTER]: "MASTER",
-	[ChunithmLevel.CHUNITHM_LEVEL_ULTIMA]: "ULTIMA",
-	[ChunithmLevel.CHUNITHM_LEVEL_WORLDS_END]: "WORLD'S END",
+	[ChunithmLevel.UNSPECIFIED]: undefined,
+	[ChunithmLevel.BASIC]: "BASIC",
+	[ChunithmLevel.ADVANCED]: "ADVANCED",
+	[ChunithmLevel.EXPERT]: "EXPERT",
+	[ChunithmLevel.MASTER]: "MASTER",
+	[ChunithmLevel.ULTIMA]: "ULTIMA",
+	[ChunithmLevel.WORLDS_END]: "WORLD'S END",
 };
 
 const CLEAR_LAMPS = {
-	[ChunithmClearStatus.CHUNITHM_CLEAR_STATUS_UNSPECIFIED]: undefined,
-	[ChunithmClearStatus.CHUNITHM_CLEAR_STATUS_FAILED]: "FAILED",
-	[ChunithmClearStatus.CHUNITHM_CLEAR_STATUS_CLEAR]: "CLEAR",
-	[ChunithmClearStatus.CHUNITHM_CLEAR_STATUS_HARD]: "HARD",
-	[ChunithmClearStatus.CHUNITHM_CLEAR_STATUS_ABSOLUTE]: "BRAVE",
-	[ChunithmClearStatus.CHUNITHM_CLEAR_STATUS_ABSOLUTE_PLUS]: "ABSOLUTE",
-	[ChunithmClearStatus.CHUNITHM_CLEAR_STATUS_CATASTROPHY]: "CATASTROPHY",
+	[ChunithmClearStatus.UNSPECIFIED]: undefined,
+	[ChunithmClearStatus.FAILED]: "FAILED",
+	[ChunithmClearStatus.CLEAR]: "CLEAR",
+	[ChunithmClearStatus.HARD]: "HARD",
+	[ChunithmClearStatus.ABSOLUTE]: "BRAVE",
+	[ChunithmClearStatus.ABSOLUTE_PLUS]: "ABSOLUTE",
+	[ChunithmClearStatus.CATASTROPHY]: "CATASTROPHY",
 } as const;
 
 const NOTE_LAMPS = {
-	[ChunithmComboStatus.CHUNITHM_COMBO_STATUS_UNSPECIFIED]: undefined,
-	[ChunithmComboStatus.CHUNITHM_COMBO_STATUS_NONE]: "NONE",
-	[ChunithmComboStatus.CHUNITHM_COMBO_STATUS_FULL_COMBO]: "FULL COMBO",
-	[ChunithmComboStatus.CHUNITHM_COMBO_STATUS_ALL_JUSTICE]: "ALL JUSTICE",
-	[ChunithmComboStatus.CHUNITHM_COMBO_STATUS_ALL_JUSTICE_CRITICAL]: "ALL JUSTICE CRITICAL",
+	[ChunithmComboStatus.UNSPECIFIED]: undefined,
+	[ChunithmComboStatus.NONE]: "NONE",
+	[ChunithmComboStatus.FULL_COMBO]: "FULL COMBO",
+	[ChunithmComboStatus.ALL_JUSTICE]: "ALL JUSTICE",
+	[ChunithmComboStatus.ALL_JUSTICE_CRITICAL]: "ALL JUSTICE CRITICAL",
 } as const;
 
 const ConvertAPIMytChunithm: ConverterFunction<MytChunithmScore, EmptyObject> = async (

@@ -1,6 +1,6 @@
 import type { APIPermissions } from "tachi-common";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import t from "tap";
 
 import mockApi from "./mock-api";
@@ -23,7 +23,7 @@ export function RequireAuthPerms(
 			// 401 if no auth given
 			t.equal(res.statusCode, 401);
 
-			await db["api-tokens"].insert({
+			await MONGODB_KILL["api-tokens"].insert({
 				identifier: "temp_auth_perms",
 				permissions: {},
 				token: "temp_auth",
@@ -37,7 +37,7 @@ export function RequireAuthPerms(
 
 			const prm = Array.isArray(perms) ? perms : [perms];
 
-			await db["api-tokens"].insert({
+			await MONGODB_KILL["api-tokens"].insert({
 				identifier: "temp_auth_perms2",
 				permissions: Object.fromEntries(prm.map((e) => [e, true])),
 				token: "temp_auth2",

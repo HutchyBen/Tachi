@@ -3,7 +3,7 @@ import { log } from "#lib/log/log.js";
 import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch-manual/converter";
 import { SearchSpecificGameSongs } from "#lib/search/search";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { IsString } from "#utils/misc";
 import { FindChartsOnPopularity } from "#utils/queries/charts";
 import { GetGPT } from "#utils/req-tachi-data";
@@ -55,7 +55,7 @@ router.get("/", async (req, res) => {
 		}
 
 		const playedSongs = (
-			await db["personal-bests"].find(
+			await MONGODB_KILL["personal-bests"].find(
 				{ userID, game, playtype },
 				{ projection: { songID: 1 } },
 			)
@@ -85,7 +85,7 @@ router.get("/", async (req, res) => {
 	// @optimisable
 	// could use songIDs from above instead of refetching
 	// but this is not very expensive.
-	const songs = await db.anySongs[game].find({
+	const songs = await MONGODB_KILL.anySongs[game].find({
 		id: { $in: charts.map((e) => e.songID) },
 	});
 
@@ -102,7 +102,7 @@ router.get("/", async (req, res) => {
 				(e) => (e as ChartDocument<"iidx:DP" | "iidx:SP">).data["2dxtraSet"] === null,
 			);
 		} else {
-			const iidxSettings = (await db["game-settings"].findOne({
+			const iidxSettings = (await MONGODB_KILL["game-settings"].findOne({
 				userID: req[SYMBOL_TACHI_API_AUTH].userID,
 				game,
 				playtype,

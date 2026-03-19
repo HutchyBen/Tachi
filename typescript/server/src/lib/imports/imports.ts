@@ -6,7 +6,7 @@ import {
 	UnsetOngoingImportLock,
 } from "#lib/score-import/framework/import-locks/lock";
 import { DeleteMultipleScores } from "#lib/score-mutation/delete-scores";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 interface OngoingImportError {
 	tag: "ONGOING_IMPORT";
@@ -43,7 +43,7 @@ export async function RevertImport(importDoc: ImportDocument): Promise<OngoingIm
 		);
 
 		try {
-			await db.imports.remove({ importID: importDoc.importID });
+			await MONGODB_KILL.imports.remove({ importID: importDoc.importID });
 
 			log.info(`Reverted and deleted import '${importDoc.importID}'.`);
 		} catch (err) {
@@ -63,5 +63,5 @@ export async function RevertImport(importDoc: ImportDocument): Promise<OngoingIm
  * Retrieve the scores inside this import.
  */
 export function GetImportScores(importDoc: ImportDocument) {
-	return db.scores.find({ scoreID: { $in: importDoc.scoreIDs } });
+	return MONGODB_KILL.scores.find({ scoreID: { $in: importDoc.scoreIDs } });
 }

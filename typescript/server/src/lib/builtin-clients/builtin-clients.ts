@@ -1,13 +1,11 @@
-import type { PrudenceError } from "prudence";
-
+import { ACTION_InstallBuiltinClient } from "#actions/install-builtin-client.js";
 import { log } from "#lib/log/log.js";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
-import { type TachiAPIClientDocument, UserAuthLevels } from "tachi-common";
+import _ from "lodash";
+import { type TachiAPIClientDocument } from "tachi-common";
 /* eslint-disable no-await-in-loop */
-import db from "#services/mongo/db";
-import { DatabaseSchemas } from "#services/mongo/schemas";
-import { Random20Hex } from "#utils/misc";
-import { FormatPrError } from "#utils/prudence";
+import { GetClientByID } from "#utils/queries/api-clients.js";
+import { GetFirstAdmin } from "#utils/user.js";
 import fjsh from "fast-json-stable-hash";
 
 type DefaultClients = Array<Omit<TachiAPIClientDocument, "author" | "clientSecret">>;
@@ -307,55 +305,47 @@ export async function LoadDefaultClients() {
 }
 
 async function LoadClients(clients: DefaultClients) {
-	const firstAdmin = await db.users.findOne({
-		authLevel: UserAuthLevels.ADMIN,
-	});
-
-	if (!firstAdmin) {
-		log.warn(`There are no admins on this instance of tachi-server. We cannot create default API Clients!
-Chances are, you're seeing this message because you just bootstrapped Tachi.
-You'll need to set a user's authLevel to ${UserAuthLevels.ADMIN}.
-If you have no users, go create an account using the frontend, then run pnpm make-user-admin 1.`);
-		return;
-	}
+	const firstAdmin = await GetFirstAdmin();
 
 	for (const client of clients) {
-		const exists = await db["api-clients"].findOne(
+		const exists = await GetClientByID(client.clientID);
+
+		if (exists) {
+			const existsOmitted = _.omit(exists, "author", "clientSecret");
+
+			// Skip if nothing has changed.
+			if (fjsh.hash(existsOmitted, "sha256") === fjsh.hash(client, "sha256")) {
+				continue;
+			}
+		}
+
+		await ACTION_InstallBuiltinClient(
 			{
-				clientID: client.clientID,
-			},
-			{
-				projection: {
-					clientSecret: 0,
-					author: 0,
+				ip: null,
+				acct: {
+					id: firstAdmin.id,
+					username: firstAdmin.username,
 				},
 			},
+			{
+				clientID: client.clientID,
+				name: client.name,
+				permissions: {
+					customise_profile: false,
+					customise_score: false,
+					customise_session: false,
+					delete_score: false,
+					manage_rivals: false,
+					manage_targets: false,
+					submit_score: false,
+					manage_challenges: false,
+				},
+				apiKeyFilename: client.apiKeyFilename,
+				apiKeyTemplate: client.apiKeyTemplate,
+				redirectUri: client.redirectUri,
+				webhookUri: client.webhookUri,
+			},
 		);
-
-		// Skip if nothing has changed.
-		if (fjsh.hash(exists, "sha256") === fjsh.hash(client, "sha256")) {
-			continue;
-		}
-
-		const realClient: TachiAPIClientDocument = {
-			...client,
-			clientSecret: `CS${Random20Hex()}`,
-			author: 1,
-		};
-
-		try {
-			DatabaseSchemas["api-clients"](realClient);
-		} catch (err) {
-			log.error(`Invalid API Client ${client.name}: ${FormatPrError(err as PrudenceError)}.`);
-			continue;
-		}
-
-		// No replaceOne support in monk -- have to do this.
-		await db["api-clients"].remove({
-			clientID: client.clientID,
-		});
-
-		await db["api-clients"].insert(realClient);
 
 		log.info(`Loaded/Modified new built-in client ${client.name}.`);
 	}

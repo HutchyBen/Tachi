@@ -4,12 +4,12 @@ import { log } from "#utils/log";
 import { REST } from "@discordjs/rest";
 import { Routes } from "discord-api-types/v9";
 
-import { BotConfig, Env } from "../config";
+import { Env } from "../config";
 import { SLASH_COMMANDS } from "./commands";
 
 const rest = new REST({
 	version: "9",
-}).setToken(BotConfig.DISCORD.TOKEN);
+}).setToken(Env.DISCORD_TOKEN);
 
 /**
  * Register our slash commands. If in prod, these
@@ -34,10 +34,7 @@ export async function RegisterSlashCommands(client: Client): Promise<void> {
 			log.info("Registering guild slash commands.");
 
 			await rest.put(
-				Routes.applicationGuildCommands(
-					client.application!.id,
-					BotConfig.DISCORD.SERVER_ID,
-				),
+				Routes.applicationGuildCommands(client.application!.id, Env.DISCORD_SERVER_ID),
 				{
 					body: commandsArray.map((command) => command.info),
 				},

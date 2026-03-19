@@ -6,7 +6,7 @@ import { UpdateQuestsForUser } from "#lib/score-import/framework/quests/quests";
 import { DeleteMultipleScores, DeleteScore } from "#lib/score-mutation/delete-scores";
 import { TachiConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { RecalcAllScores, UpdateAllPBs } from "#utils/calculations/recalc-scores";
 import { RecalcSessions } from "#utils/calculations/recalc-sessions";
 import { IsValidPlaytype } from "#utils/misc";
@@ -98,7 +98,7 @@ router.post(
 router.post("/delete-score", prValidate({ scoreID: "string" }), async (req, res) => {
 	const body = req.safeBody as { scoreID: string };
 
-	const score = await db.scores.findOne({ scoreID: body.scoreID });
+	const score = await MONGODB_KILL.scores.findOne({ scoreID: body.scoreID });
 
 	if (!score) {
 		return res.status(404).json({
@@ -126,7 +126,7 @@ router.post("/delete-score", prValidate({ scoreID: "string" }), async (req, res)
 router.post("/delete-session", prValidate({ sessionID: "string" }), async (req, res) => {
 	const body = req.safeBody as { sessionID: string };
 
-	const session = await db.sessions.findOne({ scoreID: body.sessionID });
+	const session = await MONGODB_KILL.sessions.findOne({ scoreID: body.sessionID });
 
 	if (!session) {
 		return res.status(404).json({
@@ -179,7 +179,7 @@ router.post(
 			userID: integer;
 		};
 
-		const ugpt = await db["game-stats"].findOne({
+		const ugpt = await MONGODB_KILL["game-stats"].findOne({
 			userID,
 			game,
 			playtype,
@@ -221,17 +221,17 @@ router.post(
 
 		const { game, chartID } = body;
 
-		const scores = await db.scores.find({
+		const scores = await MONGODB_KILL.scores.find({
 			chartID,
 		});
 
 		await DeleteMultipleScores(scores);
 
-		await db.anyCharts[game].remove({
+		await MONGODB_KILL.anyCharts[game].remove({
 			chartID,
 		});
 
-		await db["personal-bests"].remove({
+		await MONGODB_KILL["personal-bests"].remove({
 			chartID,
 		});
 
@@ -254,7 +254,7 @@ router.post("/recalc", async (req, res) => {
 	await RecalcAllScores(filter);
 
 	const scoreIDs = (
-		await db.scores.find(filter, {
+		await MONGODB_KILL.scores.find(filter, {
 			projection: {
 				scoreID: 1,
 			},
@@ -331,7 +331,7 @@ router.post("/supporter/:userID", async (req, res) => {
 		});
 	}
 
-	await db.users.update({ id: user.id }, { $set: { isSupporter: true } });
+	await MONGODB_KILL.users.update({ id: user.id }, { $set: { isSupporter: true } });
 
 	return res.status(200).json({
 		success: true,
@@ -355,7 +355,7 @@ router.delete("/supporter/:userID", async (req, res) => {
 		});
 	}
 
-	await db.users.update({ id: user.id }, { $set: { isSupporter: false } });
+	await MONGODB_KILL.users.update({ id: user.id }, { $set: { isSupporter: false } });
 
 	return res.status(200).json({
 		success: true,
@@ -372,13 +372,13 @@ router.delete("/supporter/:userID", async (req, res) => {
  * @name POST /api/v1/admin/reprocess-all-goals
  */
 router.post("/reprocess-all-goals", async (req, res) => {
-	const ugpts = await db["game-stats"].find({});
+	const ugpts = await MONGODB_KILL["game-stats"].find({});
 
 	const promises = [];
 
 	for (const ugpt of ugpts) {
 		promises.push(async () => {
-			const goalSubs = await db["goal-subs"].find({
+			const goalSubs = await MONGODB_KILL["goal-subs"].find({
 				game: ugpt.game,
 				playtype: ugpt.playtype,
 				userID: ugpt.userID,
@@ -390,19 +390,19 @@ router.post("/reprocess-all-goals", async (req, res) => {
 				goalSubsMap.set(gSub.goalID, gSub);
 			}
 
-			const goals = await db.goals.find({
+			const goals = await MONGODB_KILL.goals.find({
 				goalID: { $in: goalSubs.map((e) => e.goalID) },
 			});
 
 			await UpdateGoalsForUser(goals, goalSubsMap, ugpt.userID, log);
 
-			const allQuestSubs = await db["quest-subs"].find({
+			const allQuestSubs = await MONGODB_KILL["quest-subs"].find({
 				game: ugpt.game,
 				playtype: ugpt.playtype,
 				userID: ugpt.userID,
 			});
 
-			const quests = await db.quests.find({
+			const quests = await MONGODB_KILL.quests.find({
 				questID: { $in: allQuestSubs.map((e) => e.questID) },
 			});
 

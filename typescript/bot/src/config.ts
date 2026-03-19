@@ -1,5 +1,6 @@
 import type { GameGroup, integer, TachiServerCoreConfig } from "tachi-common";
 
+import { log } from "bliss/log";
 import { config } from "dotenv";
 import { p } from "prudence";
 
@@ -8,29 +9,6 @@ import { FormatPrError } from "./utils/prudence";
 
 // Initialise .env.
 config();
-
-// the real log tries to bind to discord, and is dependent on the options
-// below.
-const log = console;
-
-export interface BotConfig {
-	TACHI_SERVER_LOCATION: string;
-	HTTP_SERVER: {
-		URL: string;
-	};
-	OAUTH: {
-		CLIENT_ID: string;
-		CLIENT_SECRET: string;
-	};
-	DISCORD: {
-		ADMIN_USERS: Array<string>;
-		APPROVED_ROLE?: string;
-		GAME_CHANNELS: Partial<Record<GameGroup, string>>;
-		LIMBO_CHANNEL?: string;
-		SERVER_ID: string;
-		TOKEN: string;
-	};
-}
 
 function ParseGameChannels(raw: string | undefined): Partial<Record<GameGroup, string>> {
 	if (!raw) {
@@ -62,57 +40,17 @@ function ParseGameChannels(raw: string | undefined): Partial<Record<GameGroup, s
 	return parsed as Partial<Record<GameGroup, string>>;
 }
 
-function ParseBotConfig(): BotConfig {
-	const err = p(
-		process.env,
-		{
-			TACHI_SERVER_LOCATION: "string",
-			HTTP_SERVER_URL: "string",
-			OAUTH_CLIENT_ID: "string",
-			OAUTH_CLIENT_SECRET: "string",
-			DISCORD_TOKEN: "string",
-			DISCORD_SERVER_ID: "string",
-			DISCORD_GAME_CHANNELS: "*string",
-			DISCORD_ADMIN_USERS: "*string",
-			DISCORD_APPROVED_ROLE: "*string",
-			DISCORD_LIMBO_CHANNEL: "*string",
-		},
-		{},
-		{ allowExcessKeys: true },
-	);
-
-	if (err) {
-		log.error(FormatPrError(err, "Invalid environment. Cannot safely boot."));
-		throw err;
-	}
-
-	const gameChannels = ParseGameChannels(process.env.DISCORD_GAME_CHANNELS);
-
-	const adminUsers = process.env.DISCORD_ADMIN_USERS
-		? process.env.DISCORD_ADMIN_USERS.split(",").filter(Boolean)
-		: [];
-
-	return {
-		TACHI_SERVER_LOCATION: process.env.TACHI_SERVER_LOCATION!,
-		HTTP_SERVER: {
-			URL: process.env.HTTP_SERVER_URL!,
-		},
-		OAUTH: {
-			CLIENT_ID: process.env.OAUTH_CLIENT_ID!,
-			CLIENT_SECRET: process.env.OAUTH_CLIENT_SECRET!,
-		},
-		DISCORD: {
-			TOKEN: process.env.DISCORD_TOKEN!,
-			SERVER_ID: process.env.DISCORD_SERVER_ID!,
-			GAME_CHANNELS: gameChannels,
-			ADMIN_USERS: adminUsers,
-			APPROVED_ROLE: process.env.DISCORD_APPROVED_ROLE,
-			LIMBO_CHANNEL: process.env.DISCORD_LIMBO_CHANNEL,
-		},
-	};
-}
-
 export interface ProcessEnvironment {
+	TACHI_SERVER_LOCATION: string;
+	HTTP_SERVER_URL: string;
+	OAUTH_CLIENT_ID: string;
+	OAUTH_CLIENT_SECRET: string;
+	DISCORD_TOKEN: string;
+	DISCORD_SERVER_ID: string;
+	DISCORD_GAME_CHANNELS: Partial<Record<GameGroup, string>>;
+	DISCORD_ADMIN_USERS: string[];
+	DISCORD_APPROVED_ROLE: string | undefined;
+	DISCORD_LIMBO_CHANNEL: string | undefined;
 	NODE_ENV: "dev" | "production" | "staging" | "test";
 	POSTGRES_URL: string;
 	PORT: integer;
@@ -132,6 +70,17 @@ function ParseEnvVars() {
 			PORT: (self) =>
 				p.isPositiveInteger(Number(self)) === true ||
 				"Should be a string representing a whole integer port.",
+
+			TACHI_SERVER_LOCATION: "string",
+			HTTP_SERVER_URL: "string",
+			OAUTH_CLIENT_ID: "string",
+			OAUTH_CLIENT_SECRET: "string",
+			DISCORD_TOKEN: "string",
+			DISCORD_SERVER_ID: "string",
+			DISCORD_GAME_CHANNELS: "*string",
+			DISCORD_ADMIN_USERS: "*string",
+			DISCORD_APPROVED_ROLE: "*string",
+			DISCORD_LIMBO_CHANNEL: "*string",
 		},
 		{},
 		{ allowExcessKeys: true },
@@ -143,14 +92,24 @@ function ParseEnvVars() {
 		throw err;
 	}
 
-	return {
-		NODE_ENV: process.env.NODE_ENV,
-		POSTGRES_URL: process.env.POSTGRES_URL,
+	const Env: ProcessEnvironment = {
+		NODE_ENV: process.env.NODE_ENV as "dev" | "production" | "staging" | "test",
+		POSTGRES_URL: process.env.POSTGRES_URL!,
 		PORT: Number(process.env.PORT),
-	} as ProcessEnvironment;
-}
+		TACHI_SERVER_LOCATION: process.env.TACHI_SERVER_LOCATION!,
+		HTTP_SERVER_URL: process.env.HTTP_SERVER_URL!,
+		OAUTH_CLIENT_ID: process.env.OAUTH_CLIENT_ID!,
+		OAUTH_CLIENT_SECRET: process.env.OAUTH_CLIENT_SECRET!,
+		DISCORD_TOKEN: process.env.DISCORD_TOKEN!,
+		DISCORD_SERVER_ID: process.env.DISCORD_SERVER_ID!,
+		DISCORD_GAME_CHANNELS: ParseGameChannels(process.env.DISCORD_GAME_CHANNELS),
+		DISCORD_ADMIN_USERS: process.env.DISCORD_ADMIN_USERS?.split(",") ?? [],
+		DISCORD_APPROVED_ROLE: process.env.DISCORD_APPROVED_ROLE,
+		DISCORD_LIMBO_CHANNEL: process.env.DISCORD_LIMBO_CHANNEL,
+	};
 
-export const BotConfig: BotConfig = ParseBotConfig();
+	return Env;
+}
 
 // The Tachi Server exports all of the information about it. This saves us having to
 // sync more metadata across instances.
@@ -160,14 +119,10 @@ async function GetServerConfig() {
 	// This *should* be solved with top-level-await, but good luck actually getting
 	// typescript to output the right stuff here.
 
-	const res = await fetch(`${BotConfig.TACHI_SERVER_LOCATION}/api/v1/config`).then((res) =>
-		res.json(),
-	);
+	const res = await fetch(`${Env.TACHI_SERVER_LOCATION}/api/v1/config`).then((res) => res.json());
 
 	if (!res.success) {
-		log.error(
-			`Failed to fetch server info from ${BotConfig.TACHI_SERVER_LOCATION}. Can't run.`,
-		);
+		log.error(`Failed to fetch server info from ${Env.TACHI_SERVER_LOCATION}. Can't run.`);
 		process.exit(1);
 	}
 
@@ -181,7 +136,7 @@ export const Env = ParseEnvVars();
 // General warnings for config misuse.
 // This warns people if their parent server supports games that they aren't acknowledging.
 for (const game of ServerConfig.GAMES) {
-	if (!Object.prototype.hasOwnProperty.call(BotConfig.DISCORD.GAME_CHANNELS, game)) {
+	if (!Object.prototype.hasOwnProperty.call(Env.DISCORD_GAME_CHANNELS, game)) {
 		log.warn(
 			`${ServerConfig.NAME} declares support for ${game}, but no channel is mapped to it. Set DISCORD_GAME_CHANNELS to include it.`,
 		);

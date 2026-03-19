@@ -1,7 +1,7 @@
 import type { FilterQuery } from "mongodb";
 
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetEnumDistForFolder, GetFolderCharts, GetPBsOnFolder } from "#utils/folder";
 import { GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import { ParseStrPositiveInt } from "#utils/string-checks";
@@ -78,7 +78,7 @@ router.post("/viewed", RequireSelfRequestFromUser, async (req, res) => {
 
 	const folder = GetTachiData(req, "folderDoc");
 
-	await db["recent-folder-views"].update(
+	await MONGODB_KILL["recent-folder-views"].update(
 		{
 			userID: user.id,
 			game: folder.game,
@@ -166,7 +166,7 @@ router.get(
 
 		// Returns a unique score per-chart that was the first score to achieve
 		// this criteria on that chart.
-		const scoresAgg: Array<{ doc: ScoreDocument }> = await db.scores.aggregate([
+		const scoresAgg: Array<{ doc: ScoreDocument }> = await MONGODB_KILL.scores.aggregate([
 			{
 				$match: matchCriteria,
 			},

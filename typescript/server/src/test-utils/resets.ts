@@ -4,7 +4,7 @@ import type { GameGroup } from "tachi-common";
 import { log } from "#lib/log/log.js";
 import { Env, ServerConfig } from "#lib/setup/config";
 import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
-import db, { type StaticDatabases } from "#services/mongo/db";
+import MONGODB_KILL, { type StaticDatabases } from "#services/mongo/db";
 import { SetIndexes } from "#services/mongo/indexes";
 import fs from "fs";
 import path from "path";
@@ -37,11 +37,11 @@ function GetAndCache(
 	let collection: ICollection;
 
 	if (filename.startsWith("songs-")) {
-		collection = db.anySongs[filename.split("-")[1] as GameGroup];
+		collection = MONGODB_KILL.anySongs[filename.split("-")[1] as GameGroup];
 	} else if (filename.startsWith("charts-")) {
-		collection = db.anyCharts[filename.split("-")[1] as GameGroup];
-	} else if (filename in db) {
-		collection = db[filename as StaticDatabases];
+		collection = MONGODB_KILL.anyCharts[filename.split("-")[1] as GameGroup];
+	} else if (filename in MONGODB_KILL) {
+		collection = MONGODB_KILL[filename as StaticDatabases];
 	} else {
 		throw new Error(
 			`Panicked when trying to get collection for ${filename}. Does this collection exist?`,

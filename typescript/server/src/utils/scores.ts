@@ -6,19 +6,19 @@ import type {
 	SongDocument,
 } from "tachi-common";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 import { DedupeArr } from "./misc";
 
 export function GetPBOnChart(userID: integer, chartID: string) {
-	return db["personal-bests"].findOne({
+	return MONGODB_KILL["personal-bests"].findOne({
 		userID,
 		chartID,
 	});
 }
 
 export function GetServerRecordOnChart(chartID: string) {
-	return db["personal-bests"].findOne({
+	return MONGODB_KILL["personal-bests"].findOne({
 		chartID,
 		"rankingData.rank": 1,
 	});

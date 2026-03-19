@@ -3,7 +3,7 @@ import type { FilterQuery } from "mongodb";
 
 import { log } from "#lib/log/log.js";
 import { DeorphanIfInQueue } from "#lib/orphan-queue/orphan-queue";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { InitaliseFolderChartLookup } from "#utils/folder";
 import { FormatBMSTables, WrapScriptPromise } from "#utils/misc";
 import { type BMSTableEntry, LoadBMSTable } from "bms-table-loader";
@@ -34,7 +34,7 @@ async function HandleTableRemovals(
 
 	// *unless this script crashes, in which case it's
 	// no longer temporary
-	const existingCharts = (await db.charts.bms.find({
+	const existingCharts = (await MONGODB_KILL.charts.bms.find({
 		playtype,
 		"data.tableFolders.table": prefix,
 	})) as unknown as Array<ChartDocument<"bms:7K" | "bms:14K">>;
@@ -85,7 +85,7 @@ async function HandleTableRemovals(
 
 	// remove this table info from all of the charts that no longer
 	// exist in the table.
-	await db.charts.bms.update(
+	await MONGODB_KILL.charts.bms.update(
 		{
 			chartID: { $in: toRemove },
 		},
@@ -115,7 +115,7 @@ async function ImportTableLevels(
 		.filter((e) => e.checksum.type === "md5")
 		.map((e) => e.checksum.value);
 
-	await db.charts.bms.update(
+	await MONGODB_KILL.charts.bms.update(
 		{
 			"data.hashMD5": { $in: md5s },
 		},
@@ -127,7 +127,7 @@ async function ImportTableLevels(
 		{ multi: true },
 	);
 
-	await db.charts.bms.update(
+	await MONGODB_KILL.charts.bms.update(
 		{
 			"data.hashSHA256": { $in: sha256s },
 		},
@@ -154,7 +154,8 @@ async function ImportTableLevels(
 			}
 		}
 
-		let chart: ChartDocument<"bms:7K" | "bms:14K"> | null = await db.charts.bms.findOne(query);
+		let chart: ChartDocument<"bms:7K" | "bms:14K"> | null =
+			await MONGODB_KILL.charts.bms.findOne(query);
 
 		if (!chart) {
 			// didn't find it in the DB?
@@ -195,7 +196,7 @@ async function ImportTableLevels(
 			return a.level.localeCompare(b.level);
 		});
 
-		await db.charts.bms.update(
+		await MONGODB_KILL.charts.bms.update(
 			{
 				chartID: chart.chartID,
 			},
@@ -206,7 +207,7 @@ async function ImportTableLevels(
 			},
 		);
 
-		await db.songs.bms.update(
+		await MONGODB_KILL.songs.bms.update(
 			{
 				id: chart.songID,
 			},

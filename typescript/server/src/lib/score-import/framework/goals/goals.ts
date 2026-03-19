@@ -3,7 +3,7 @@ import type { GameGroup, GoalDocument, GoalSubscriptionDocument, integer } from 
 
 import { EvaluateGoalForUser, GetRelevantGoals } from "#lib/targets/goals";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 /**
  * Update a user's progress on all of their set goals.
@@ -90,7 +90,7 @@ export async function UpdateGoalsForUser(
 		});
 	}
 
-	await db["goal-subs"].bulkWrite(bulkWrite, { ordered: false });
+	await MONGODB_KILL["goal-subs"].bulkWrite(bulkWrite, { ordered: false });
 
 	return importInfo;
 }
@@ -209,14 +209,14 @@ export async function ProcessGoal(
 }
 
 export async function UpdateGoalsInFolder(folderID: string, log: KtLogger) {
-	const goals = await db.goals.find({
+	const goals = await MONGODB_KILL.goals.find({
 		"charts.type": "folder",
 		"charts.data": folderID,
 	});
 
 	log.info(`Updating ${goals.length} goals for ${folderID}`);
 
-	const goalSubs = await db["goal-subs"].find({
+	const goalSubs = await MONGODB_KILL["goal-subs"].find({
 		goalID: { $in: goals.map((e) => e.goalID) },
 	});
 

@@ -17,20 +17,20 @@ import type { ConverterFunction } from "../../common/types";
 import type { MytMaimaiDxScore } from "./types";
 
 const DIFFICULTIES = {
-	[MaimaiLevel.MAIMAI_LEVEL_UNSPECIFIED]: undefined,
-	[MaimaiLevel.MAIMAI_LEVEL_BASIC]: "Basic",
-	[MaimaiLevel.MAIMAI_LEVEL_ADVANCED]: "Advanced",
-	[MaimaiLevel.MAIMAI_LEVEL_EXPERT]: "Expert",
-	[MaimaiLevel.MAIMAI_LEVEL_MASTER]: "Master",
-	[MaimaiLevel.MAIMAI_LEVEL_REMASTER]: "Re:Master",
-	[MaimaiLevel.MAIMAI_LEVEL_UTAGE]: "Utage",
+	[MaimaiLevel.UNSPECIFIED]: undefined,
+	[MaimaiLevel.BASIC]: "Basic",
+	[MaimaiLevel.ADVANCED]: "Advanced",
+	[MaimaiLevel.EXPERT]: "Expert",
+	[MaimaiLevel.MASTER]: "Master",
+	[MaimaiLevel.REMASTER]: "Re:Master",
+	[MaimaiLevel.UTAGE]: "Utage",
 };
 
 function getLamp(
 	comboStatus: number,
 	isClear: boolean,
 ): ScoreData<"maimaidx:Single">["lamp"] | undefined {
-	if (comboStatus === MaimaiComboStatus.MAIMAI_COMBO_STATUS_UNSPECIFIED) {
+	if (comboStatus === MaimaiComboStatus.UNSPECIFIED) {
 		return undefined;
 	}
 
@@ -38,23 +38,23 @@ function getLamp(
 		return "FAILED";
 	}
 
-	if (comboStatus === MaimaiComboStatus.MAIMAI_COMBO_STATUS_NONE) {
+	if (comboStatus === MaimaiComboStatus.NONE) {
 		return "CLEAR";
 	}
 
-	if (comboStatus === MaimaiComboStatus.MAIMAI_COMBO_STATUS_FULL_COMBO) {
+	if (comboStatus === MaimaiComboStatus.FULL_COMBO) {
 		return "FULL COMBO";
 	}
 
-	if (comboStatus === MaimaiComboStatus.MAIMAI_COMBO_STATUS_FULL_COMBO_PLUS) {
+	if (comboStatus === MaimaiComboStatus.FULL_COMBO_PLUS) {
 		return "FULL COMBO+";
 	}
 
-	if (comboStatus === MaimaiComboStatus.MAIMAI_COMBO_STATUS_ALL_PERFECT) {
+	if (comboStatus === MaimaiComboStatus.ALL_PERFECT) {
 		return "ALL PERFECT";
 	}
 
-	if (comboStatus === MaimaiComboStatus.MAIMAI_COMBO_STATUS_ALL_PERFECT_PLUS) {
+	if (comboStatus === MaimaiComboStatus.ALL_PERFECT_PLUS) {
 		return "ALL PERFECT+";
 	}
 

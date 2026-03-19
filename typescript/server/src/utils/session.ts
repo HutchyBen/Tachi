@@ -1,13 +1,13 @@
 import type { ScoreDocument, SessionDocument } from "tachi-common";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 /**
  * Returns all the score documents inside a session.
  * @param session The session to retrieve the score documents of.
  */
 export function GetScoresFromSession(session: SessionDocument) {
-	return db.scores.find({
+	return MONGODB_KILL.scores.find({
 		scoreID: { $in: session.scoreIDs },
 	});
 }
@@ -17,7 +17,7 @@ export function GetScoresFromSession(session: SessionDocument) {
  * @param score The score to return the associated session of.
  */
 export function GetSessionFromScore(score: ScoreDocument) {
-	return db.sessions.findOne({
+	return MONGODB_KILL.sessions.findOne({
 		scoreIDs: score.scoreID,
 	});
 }

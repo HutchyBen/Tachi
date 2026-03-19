@@ -14,6 +14,9 @@ const base = tseslint.config(
 	...tseslint.configs.recommended,
 	pluginPerfectionist.configs["recommended-natural"],
 	{
+		ignores: ["**/*.oldtest.ts"],
+	},
+	{
 		name: "zenith/base",
 		files: ["**/*.{ts,tsx}"],
 		plugins: {

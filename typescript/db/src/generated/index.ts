@@ -35,7 +35,6 @@ export { type priv_password_reset_token_token, type default as PrivPasswordReset
 export { type song_id, type default as SongTable, type Song, type NewSong, type SongUpdate } from './public/Song';
 export { type account_username_change_row_id, type default as AccountUsernameChangeTable, type AccountUsernameChange, type NewAccountUsernameChange, type AccountUsernameChangeUpdate } from './public/AccountUsernameChange';
 export { type default as MigrationTable, type Migration, type NewMigration, type MigrationUpdate } from './public/Migration';
-export { type account_badge_badge, type default as AccountBadgeTable, type AccountBadge, type NewAccountBadge, type AccountBadgeUpdate } from './public/AccountBadge';
 export { type action_row_id, type default as ActionTable, type Action, type NewAction, type ActionUpdate } from './public/Action';
 export { type priv_svc_kai_auth_token_service, type default as PrivSvcKaiAuthTokenTable, type PrivSvcKaiAuthToken, type NewPrivSvcKaiAuthToken, type PrivSvcKaiAuthTokenUpdate } from './public/PrivSvcKaiAuthToken';
 export { type chart_id, type default as ChartTable, type Chart, type NewChart, type ChartUpdate } from './public/Chart';

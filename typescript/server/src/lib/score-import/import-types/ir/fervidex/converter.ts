@@ -1,5 +1,5 @@
 import { CreateScoreID } from "#lib/score-import/framework/score-importing/score-id";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { DeleteUndefinedProps, IsNullishOrEmptyStr } from "#utils/misc";
 import { FindIIDXChartOnInGameIDVersion, FindIIDXChartWith2DXtraHash } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
@@ -269,7 +269,7 @@ export const ConverterIRFervidex: ConverterFunction<FervidexScore, FervidexConte
 			chart.chartID,
 		);
 
-		await db.scores.update({ scoreID }, { $set: { highlight: true } });
+		await MONGODB_KILL.scores.update({ scoreID }, { $set: { highlight: true } });
 
 		// now, just continue on with the regular import process. We already handle
 		// discarding duplicates, so this shouldn't matter.

@@ -35,7 +35,6 @@ import type { default as PrivPasswordResetTokenTable } from './PrivPasswordReset
 import type { default as SongTable } from './Song';
 import type { default as AccountUsernameChangeTable } from './AccountUsernameChange';
 import type { default as MigrationTable } from './Migration';
-import type { default as AccountBadgeTable } from './AccountBadge';
 import type { default as ActionTable } from './Action';
 import type { default as PrivSvcKaiAuthTokenTable } from './PrivSvcKaiAuthToken';
 import type { default as ChartTable } from './Chart';
@@ -138,8 +137,6 @@ export default interface PublicSchema {
   account_username_change: AccountUsernameChangeTable;
 
   _migration: MigrationTable;
-
-  account_badge: AccountBadgeTable;
 
   action: ActionTable;
 

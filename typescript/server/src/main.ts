@@ -7,16 +7,17 @@ import { log } from "#lib/log/log.js";
 import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 import { AddNewUser } from "#server/router/api/v1/auth/auth.js";
 import server from "#server/server";
-import db, { monkDB } from "#services/mongo/db";
+import MONGODB_KILL, { monkDB } from "#services/mongo/db";
 import { UpdateIndexes } from "#services/mongo/indexes";
 import { InitSequenceDocs } from "#services/mongo/sequence-docs";
+import DB from "#services/pg/db.js";
 import fetch from "#utils/fetch";
 import { InitaliseFolderChartLookup } from "#utils/folder";
+import { GetUserWithID } from "#utils/user.js";
 import { spawn } from "child_process";
 import fs from "fs";
 import https from "https";
 import path from "path";
-import { UserAuthLevels } from "tachi-common";
 import { applyMigrations } from "tachi-db-migration-engine";
 
 log.info(
@@ -35,7 +36,7 @@ async function RunOnInit() {
 
 	await applyMigrations(Env.POSTGRES_URL, Env.MIGRATIONS_DIR);
 
-	await db["folder-chart-lookup"].findOne().then((r) => {
+	await MONGODB_KILL["folder-chart-lookup"].findOne().then((r) => {
 		// If there are no folder chart lookups, initialise them.
 		if (!r) {
 			InitaliseFolderChartLookup().catch((err: unknown) => {
@@ -45,12 +46,21 @@ async function RunOnInit() {
 	});
 
 	if (Env.NODE_ENV === "dev") {
-		const exists = await db.users.findOne({ id: 1 });
+		const exists = await GetUserWithID(1);
 
 		if (!exists) {
 			log.info("First time setup in LOCAL DEV: Creating an admin user for you.");
-			await AddNewUser("admin", "password", "admin@example.com", 1);
-			await db.users.update({ id: 1 }, { $set: { authLevel: UserAuthLevels.ADMIN } });
+
+			await DB.transaction().execute(async (txn) => {
+				await AddNewUser(txn, "admin", "password", "admin@example.com");
+
+				await txn
+					.updateTable("account")
+					.set({ auth_level: "admin" })
+					.where("id", "=", 1)
+					.execute();
+			});
+
 			log.info("Done! You have an admin user with password 'password'");
 		}
 	}

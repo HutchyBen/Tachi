@@ -1,6 +1,6 @@
 import { log } from "#lib/log/log.js";
 import UpdateScore from "#lib/score-mutation/update-score";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { UpdateAllPBs } from "#utils/calculations/recalc-scores";
 import { EfficientDBIterate } from "#utils/efficient-db-iterate";
 
@@ -9,7 +9,7 @@ import { EfficientDBIterate } from "#utils/efficient-db-iterate";
  */
 async function main() {
 	await EfficientDBIterate(
-		db.scores,
+		MONGODB_KILL.scores,
 		async (score) => {
 			// @ts-expect-error just incase
 			delete score._id;

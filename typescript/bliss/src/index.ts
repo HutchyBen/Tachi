@@ -1,4 +1,3 @@
-export * from "./log";
 export {
 	AcctInfo,
 	ActionResult,
@@ -7,3 +6,4 @@ export {
 	ExpectedErr,
 	MakeActionGuts,
 } from "./actions";
+export * from "./log";

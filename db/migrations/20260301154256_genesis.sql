@@ -179,8 +179,12 @@ CREATE TABLE "account" (
 	sm_youtube TEXT,
 	sm_twitch TEXT,
 
+	bd_alpha BOOLEAN NOT NULL DEFAULT FALSE,
+	bd_beta BOOLEAN NOT NULL DEFAULT FALSE,
+	bd_dev_team BOOLEAN NOT NULL DEFAULT FALSE,
+
 	joined TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-	about TEXT CHECK (LENGTH(about) <= 2000),
+	about TEXT CHECK (LENGTH(about) <= 2000) NOT NULL,
 	status TEXT CHECK (LENGTH(status) <= 140),
 
 	custom_pfp_location TEXT,
@@ -188,7 +192,8 @@ CREATE TABLE "account" (
 
 	last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
-	auth_level AUTH_LEVEL NOT NULL DEFAULT 'user'
+	auth_level AUTH_LEVEL NOT NULL DEFAULT 'user',
+	is_supporter BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- ==> Another Zenith Essential
@@ -234,13 +239,6 @@ CREATE TABLE "account_following" (
 	CHECK (user_id != followee)
 );
 
-CREATE TABLE "account_badge" (
-	user_id BIGINT REFERENCES account(id) NOT NULL,
-	badge ACCOUNT_BADGE_KIND NOT NULL,
-
-	PRIMARY KEY (user_id, badge)
-);
-
 CREATE TABLE "account_username_change" (
 	row_id UUID PRIMARY KEY NOT NULL DEFAULT uuidv7(),
 
@@ -274,7 +272,10 @@ CREATE TABLE "priv_api_client" (
 	pm_manage_challenges BOOLEAN,
 
 	api_key_template TEXT CHECK (api_key_template ~ '%%TACHI_KEY%%'),
-	api_key_filename TEXT
+	api_key_filename TEXT,
+	webhook_uri TEXT,
+	redirect_uri TEXT,
+	is_builtin BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE "priv_api_token" (

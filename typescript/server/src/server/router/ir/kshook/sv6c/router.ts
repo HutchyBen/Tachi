@@ -2,7 +2,7 @@ import { MODEL_SDVX3_KONASTE } from "#lib/constants/ea3id";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log.js";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { ParseEA3SoftID } from "#utils/ea3id";
 import { IsNullishOrEmptyStr } from "#utils/misc";
 import { type RequestHandler, Router } from "express";
@@ -105,7 +105,7 @@ router.post("/score/save", async (req, res) => {
 router.post("/score/export", async (req, res) => {
 	const userID = req[SYMBOL_TACHI_API_AUTH].userID!;
 
-	const settings = await db["kshook-sv6c-settings"].findOne({ userID });
+	const settings = await MONGODB_KILL["kshook-sv6c-settings"].findOne({ userID });
 
 	if (!settings?.forceStaticImport) {
 		return res.status(200).json({
@@ -115,7 +115,7 @@ router.post("/score/export", async (req, res) => {
 		});
 	}
 
-	await db["kshook-sv6c-settings"].update(
+	await MONGODB_KILL["kshook-sv6c-settings"].update(
 		{ userID },
 		{
 			$set: { forceStaticImport: false },

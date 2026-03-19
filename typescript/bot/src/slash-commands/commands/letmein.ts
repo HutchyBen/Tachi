@@ -1,4 +1,4 @@
-import { BotConfig } from "#config";
+import { Env } from "#config";
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { ExpectedErr } from "bliss";
 import { GuildMember } from "discord.js";
@@ -13,7 +13,7 @@ const command: SlashCommand = {
 		.setDescription("Let yourself into the server.")
 		.toJSON(),
 	exec: async (interaction) => {
-		if (!BotConfig.DISCORD.APPROVED_ROLE) {
+		if (!Env.DISCORD_APPROVED_ROLE) {
 			return null; // no-op
 		}
 
@@ -26,7 +26,7 @@ const command: SlashCommand = {
 				{ ip: null },
 				{
 					discord_user_id: interaction.user.id,
-					role_id: BotConfig.DISCORD.APPROVED_ROLE,
+					role_id: Env.DISCORD_APPROVED_ROLE,
 					"!member": interaction.member,
 				},
 			);

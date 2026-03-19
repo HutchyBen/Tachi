@@ -2,7 +2,7 @@ import type supertest from "supertest";
 
 import { log } from "#lib/log/log.js";
 import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { ALL_PERMISSIONS } from "tachi-common";
 
 import ResetDBState from "./resets";
@@ -36,7 +36,7 @@ export async function CreateFakeAuthCookie(mockApi: supertest.SuperTest<supertes
 
 export function InsertFakeTokenWithAllPerms(token: string): () => Promise<any> {
 	return () =>
-		db["api-tokens"].insert({
+		MONGODB_KILL["api-tokens"].insert({
 			userID: 1,
 			identifier: "Mock API Token",
 			permissions: ALL_PERMISSIONS,

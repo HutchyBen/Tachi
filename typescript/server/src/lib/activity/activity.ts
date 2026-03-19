@@ -16,7 +16,7 @@ import type {
 	UserDocument,
 } from "tachi-common";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import {
 	GetRecentlyAchievedGoals,
 	GetRecentlyAchievedQuests,
@@ -79,7 +79,7 @@ export async function GetRecentActivity(
 		timeStarted: { $lt: startFrom === null ? Infinity : startFrom },
 	};
 
-	const recentSessions = await db.sessions.find(initialSessionQuery, {
+	const recentSessions = await MONGODB_KILL.sessions.find(initialSessionQuery, {
 		sort: {
 			timeStarted: -1,
 		},
@@ -108,7 +108,7 @@ export async function GetRecentActivity(
 		{ goals, goalSubs },
 		{ quests, questSubs },
 	] = await Promise.all([
-		db["class-achievements"].find(
+		MONGODB_KILL["class-achievements"].find(
 			{
 				...baseQuery,
 				timeAchieved: timeConstraint,
@@ -119,7 +119,7 @@ export async function GetRecentActivity(
 				},
 			},
 		),
-		db.scores.find(
+		MONGODB_KILL.scores.find(
 			{
 				...baseQuery,
 				highlight: true,

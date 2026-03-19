@@ -3,7 +3,7 @@ import type { GPTServerImplementation } from "#game-implementations/types";
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileSumBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { IsNullish } from "#utils/misc";
 import { p } from "prudence";
 import { Jubility } from "rg-stats";
@@ -27,7 +27,7 @@ async function GetBestJubilityOnSongs(
 	playtype: Playtype,
 	limit: integer,
 ): Promise<Array<PBScoreDocument>> {
-	const r: Array<{ doc: PBScoreDocument }> = await db["personal-bests"].aggregate([
+	const r: Array<{ doc: PBScoreDocument }> = await MONGODB_KILL["personal-bests"].aggregate([
 		{
 			$match: {
 				game,
@@ -107,14 +107,14 @@ async function GetBestJubilityOnSongs(
 const CURRENT_JUBEAT_HOT_VERSION: Versions["jubeat:Single"] = "ave";
 
 export async function GetPBsForJubility(userID: integer) {
-	const hotSongs = await db.songs.jubeat.find(
+	const hotSongs = await MONGODB_KILL.songs.jubeat.find(
 		{ "data.displayVersion": CURRENT_JUBEAT_HOT_VERSION },
 		{ projection: { id: 1 } },
 	);
 
 	const hotSongIDs = hotSongs.map((e) => e.id);
 
-	const coldSongs = await db.songs.jubeat.find(
+	const coldSongs = await MONGODB_KILL.songs.jubeat.find(
 		{ "data.displayVersion": { $ne: CURRENT_JUBEAT_HOT_VERSION } },
 		{ projection: { id: 1 } },
 	);

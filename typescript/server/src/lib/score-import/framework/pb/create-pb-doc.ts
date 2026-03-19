@@ -3,7 +3,7 @@ import type { BulkWriteUpdateOneOperation, FilterQuery, SortOptionObject } from 
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import { GetEveryonesRivalIDs } from "#lib/rivals/rivals";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { DeleteUndefinedProps } from "#utils/misc";
 import {
 	type ChartDocument,
@@ -49,7 +49,7 @@ export async function CreatePBDoc(
 
 	const gptConfig = GetGPTConfig(gpt);
 
-	const defaultMetricPB = await db.scores.findOne(query, {
+	const defaultMetricPB = await MONGODB_KILL.scores.findOne(query, {
 		sort: {
 			[`scoreData.${gptConfig.defaultMetric}`]: -1,
 		},
@@ -177,7 +177,7 @@ export async function UpdateChartRanking(game: GameGroup, playtype: Playtype, ch
 		return;
 	}
 
-	await db["personal-bests"].bulkWrite(bwrite, { ordered: false });
+	await MONGODB_KILL["personal-bests"].bulkWrite(bwrite, { ordered: false });
 }
 
 async function GetSortedPBs(game: GameGroup, playtype: Playtype, chartID: string) {
@@ -199,7 +199,7 @@ async function GetSortedPBs(game: GameGroup, playtype: Playtype, chartID: string
 		};
 	}
 
-	return db["personal-bests"].aggregate([
+	return MONGODB_KILL["personal-bests"].aggregate([
 		{
 			$match: {
 				chartID,

@@ -9,7 +9,7 @@ import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/expre
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RejectIfBanned, RequirePermissions } from "#server/middleware/auth";
 import { CreateMulterSingleUploadMiddleware } from "#server/middleware/multer-upload";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { FormatPrError } from "#utils/prudence";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
@@ -59,7 +59,7 @@ const ValidateUSCRequest: RequestHandler = async (req, res, next) => {
 		});
 	}
 
-	const uscAuthDoc = await db["api-tokens"].findOne({
+	const uscAuthDoc = await MONGODB_KILL["api-tokens"].findOne({
 		token: splitToken[1],
 	});
 
@@ -114,7 +114,7 @@ router.get("/", (req, res) =>
 );
 
 const RetrieveChart: RequestHandler = async (req, res, next) => {
-	const chart = await db.charts.usc.findOne({
+	const chart = await MONGODB_KILL.charts.usc.findOne({
 		"data.hashSHA1": req.params.chartHash,
 		playtype: req.params.playtype as Playtypes["usc"],
 	});
@@ -158,7 +158,7 @@ router.get("/charts/:chartHash", RetrieveChart, (req, res) =>
 router.get("/charts/:chartHash/record", RetrieveChart, async (req, res) => {
 	const chart = GetTachiData(req, "uscChartDoc");
 
-	const serverRecord = (await db["personal-bests"].findOne({
+	const serverRecord = (await MONGODB_KILL["personal-bests"].findOne({
 		chartID: chart.chartID,
 		"rankingData.rank": 1,
 	})) as PBScoreDocument<"usc:Controller" | "usc:Keyboard"> | null;
@@ -227,7 +227,7 @@ router.get("/charts/:chartHash/leaderboard", RetrieveChart, async (req, res) => 
 
 	const gptConfig = GetGamePTConfig("usc", chart.playtype);
 
-	const bestScores = (await db["personal-bests"].find(
+	const bestScores = (await MONGODB_KILL["personal-bests"].find(
 		{
 			chartID: chart.chartID,
 		},
@@ -286,7 +286,7 @@ router.post("/scores", RequirePermissions("submit_score"), async (req, res) => {
 
 	const uscChart = req.safeBody.chart as USCClientChart;
 
-	const chartDoc = (await db.charts.usc.findOne({
+	const chartDoc = (await MONGODB_KILL.charts.usc.findOne({
 		"data.hashSHA1": uscChart.chartHash,
 		playtype,
 	})) as ChartDocument<"usc:Controller" | "usc:Keyboard"> | null;
@@ -408,7 +408,7 @@ router.post(
 		// MUST also be for USC.
 		// Otherwise, anyone could overwrite anyone elses
 		// score replays!
-		const correspondingScore = await db.scores.findOne({
+		const correspondingScore = await MONGODB_KILL.scores.findOne({
 			userID: req[SYMBOL_TACHI_API_AUTH].userID!,
 			scoreID: req.safeBody.identifier,
 			game: "usc",

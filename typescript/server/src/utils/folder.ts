@@ -2,7 +2,7 @@ import type { BulkWriteOperation, FilterQuery } from "mongodb";
 
 import { log } from "#lib/log/log.js";
 import { TachiConfig } from "#lib/setup/config";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import deepmerge from "deepmerge";
 import fjsh from "fast-json-stable-hash";
 import {
@@ -45,7 +45,7 @@ export async function ResolveFolderToCharts(
 
 	switch (folder.type) {
 		case "static": {
-			charts = await db.anyCharts[folder.game].find(
+			charts = await MONGODB_KILL.anyCharts[folder.game].find(
 				deepmerge(filter, {
 					// Specifying playtype is mandatory, don't want to catch other charts.
 					playtype: folder.playtype,
@@ -56,9 +56,9 @@ export async function ResolveFolderToCharts(
 		}
 
 		case "songs": {
-			songs = await db.anySongs[folder.game].find(folder.data);
+			songs = await MONGODB_KILL.anySongs[folder.game].find(folder.data);
 
-			charts = await db.anyCharts[folder.game].find(
+			charts = await MONGODB_KILL.anyCharts[folder.game].find(
 				deepmerge(filter, {
 					playtype: folder.playtype,
 					songID: { $in: songs.map((e) => e.id) },
@@ -80,7 +80,7 @@ export async function ResolveFolderToCharts(
 
 			const fx = deepmerge.all([filter, { playtype: folder.playtype }, folderDataTransposed]);
 
-			charts = await db.anyCharts[folder.game].find(fx);
+			charts = await MONGODB_KILL.anyCharts[folder.game].find(fx);
 			break;
 		}
 	}
@@ -90,7 +90,7 @@ export async function ResolveFolderToCharts(
 			return { songs, charts };
 		}
 
-		songs = await db.anySongs[folder.game].find({
+		songs = await MONGODB_KILL.anySongs[folder.game].find({
 			id: { $in: charts.map((e) => e.songID) },
 		});
 
@@ -142,12 +142,12 @@ export async function GetFolderCharts(
 ): Promise<{ charts: Array<ChartDocument>; songs?: Array<SongDocument> }> {
 	const chartIDs = await GetFolderChartIDs(folder.folderID);
 
-	const charts = await db.anyCharts[folder.game].find(
+	const charts = await MONGODB_KILL.anyCharts[folder.game].find(
 		deepmerge.all([{ playtype: folder.playtype }, { chartID: { $in: chartIDs } }, filter]),
 	);
 
 	if (getSongs) {
-		const songs = await db.anySongs[folder.game].find({
+		const songs = await MONGODB_KILL.anySongs[folder.game].find({
 			id: { $in: charts.map((e) => e.songID) },
 		});
 
@@ -158,7 +158,7 @@ export async function GetFolderCharts(
 }
 
 export async function GetFolderChartIDs(folderID: string) {
-	const chartIDs = await db["folder-chart-lookup"].find(
+	const chartIDs = await MONGODB_KILL["folder-chart-lookup"].find(
 		{
 			folderID,
 		},
@@ -177,7 +177,7 @@ export async function CreateFolderChartLookup(folder: FolderDocument, flush = fa
 		const { charts } = await ResolveFolderToCharts(folder, {}, false);
 
 		if (flush) {
-			await db["folder-chart-lookup"].remove({
+			await MONGODB_KILL["folder-chart-lookup"].remove({
 				folderID: folder.folderID,
 			});
 		}
@@ -206,7 +206,7 @@ export async function CreateFolderChartLookup(folder: FolderDocument, flush = fa
 
 		// we do a bulk-upsert here to avoid race conditions if multiple things try to
 		// create a folder-chart-lookup at the same time.
-		await db["folder-chart-lookup"].bulkWrite(ops);
+		await MONGODB_KILL["folder-chart-lookup"].bulkWrite(ops);
 	} catch (err) {
 		log.error({ folder, err }, `Failed to create folder chart lookup for ${folder.title}.`);
 		throw err;
@@ -219,13 +219,13 @@ export async function CreateFolderChartLookup(folder: FolderDocument, flush = fa
  */
 export async function InitaliseFolderChartLookup() {
 	log.info(`Started InitialiseFolderChartLookup`);
-	await db["folder-chart-lookup"].remove({});
+	await MONGODB_KILL["folder-chart-lookup"].remove({});
 	log.info(`Flushed Cache.`);
 
 	// temporary hack -- this will still break if we introduce a new
 	// playtype on staging or something.
 	// We need to have separate seeds for staging and prod! todo #609.
-	const folders = await db.folders.find({
+	const folders = await MONGODB_KILL.folders.find({
 		game: { $in: TachiConfig.GAMES },
 	});
 
@@ -237,7 +237,7 @@ export async function InitaliseFolderChartLookup() {
 }
 
 export async function GetFoldersFromTable(table: TableDocument) {
-	const folders = await db.folders.find({
+	const folders = await MONGODB_KILL.folders.find({
 		folderID: { $in: table.folders },
 	});
 
@@ -290,7 +290,7 @@ export async function GetFolderNamesInOrder(table: TableDocument): Promise<Array
 export async function GetPBsOnFolder(userID: integer, folder: FolderDocument) {
 	const { charts, songs } = await GetFolderCharts(folder, {}, true);
 
-	const pbs = await db["personal-bests"].find({
+	const pbs = await MONGODB_KILL["personal-bests"].find({
 		userID,
 		chartID: { $in: charts.map((e) => e.chartID) },
 	});
@@ -356,7 +356,7 @@ export async function GetRecentlyViewedFolders(
 	game: GameGroup,
 	playtype: Playtype,
 ) {
-	const views = await db["recent-folder-views"].find(
+	const views = await MONGODB_KILL["recent-folder-views"].find(
 		{
 			userID,
 			game,
@@ -374,7 +374,7 @@ export async function GetRecentlyViewedFolders(
 		return { views, folders: [] };
 	}
 
-	const folders = await db.folders.find({
+	const folders = await MONGODB_KILL.folders.find({
 		folderID: { $in: views.map((e) => e.folderID) },
 	});
 
@@ -382,7 +382,7 @@ export async function GetRecentlyViewedFolders(
 }
 
 export async function GetTableForIDGuaranteed(tableID: string): Promise<TableDocument> {
-	const table = await db.tables.findOne({ tableID });
+	const table = await MONGODB_KILL.tables.findOne({ tableID });
 
 	if (!table) {
 		throw new Error(`Couldn't find table with ID '${tableID}'.`);
@@ -420,7 +420,7 @@ export async function GetEnumDistForFolderAsOf(
 	}
 
 	const bestEnumIndexes: Array<{ _id: string } & Record<string, integer>> =
-		await db.scores.aggregate([
+		await MONGODB_KILL.scores.aggregate([
 			{
 				$match: {
 					chartID: { $in: chartIDs },

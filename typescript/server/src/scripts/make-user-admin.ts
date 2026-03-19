@@ -1,5 +1,5 @@
 import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { WrapScriptPromise } from "#utils/misc";
 import { FormatUserDoc, ResolveUser } from "#utils/user";
 import { UserAuthLevels } from "tachi-common";
@@ -14,7 +14,7 @@ async function MakeUserAdmin(userID: string) {
 		throw new Error(`No such user '${userID}' exists.`);
 	}
 
-	await db.users.update(
+	await MONGODB_KILL.users.update(
 		{
 			id: user.id,
 		},

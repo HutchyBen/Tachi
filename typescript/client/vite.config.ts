@@ -16,10 +16,11 @@ export default defineConfig({
 	css: {
 		preprocessorOptions: {
 			scss: {
-			additionalData:
-				process.env.VITE_TCHIC_MODE === "boku"
-					? "$primary: #527acc;"
-					: "$primary: #e61c6e;",
+				additionalData:
+					process.env.VITE_TCHIC_MODE === "boku"
+						? "$primary: #527acc;"
+						: "$primary: #e61c6e;",
+				silenceDeprecations: ["import", "global-builtin", "color-functions", "if-function"],
 			},
 		},
 	},

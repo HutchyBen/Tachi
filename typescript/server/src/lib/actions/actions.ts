@@ -1,6 +1,7 @@
-import db from "#services/pg/db";
+import DB from "#services/pg/db";
 import { type ActionTaker, type AnonActionTaker, MakeActionGuts } from "bliss";
 import { type ActionSignature } from "bliss/actions";
+import { zodPermission } from "tachi-common";
 import { z } from "zod";
 
 const APP_NAME = "TACHI_SERVER";
@@ -11,6 +12,29 @@ export type AnonActionName = keyof typeof AnonActionSignatures;
 export const ActionSignatures = {
 	NO_OP: {
 		input: z.object({}),
+		output: z.object({}),
+	},
+	INSTALL_BUILTIN_CLIENT: {
+		input: z.object({
+			clientID: z.string(),
+			name: z.string(),
+			webhookUri: z.url().nullable(),
+			redirectUri: z.url().nullable(),
+			permissions: z
+				.object({
+					customise_profile: z.boolean(),
+					customise_score: z.boolean(),
+					customise_session: z.boolean(),
+					delete_score: z.boolean(),
+					manage_rivals: z.boolean(),
+					manage_targets: z.boolean(),
+					submit_score: z.boolean(),
+					manage_challenges: z.boolean(),
+				})
+				.partial(),
+			apiKeyTemplate: z.string().nullable(),
+			apiKeyFilename: z.string().nullable(),
+		}),
 		output: z.object({}),
 	},
 } satisfies Record<string, ActionSignature>;
@@ -30,7 +54,7 @@ export function MakeAnonAction<A extends AnonActionName>(
 	fn: AnonActionFn<A>,
 ): AnonActionFn<A> {
 	return MakeActionGuts({
-		db,
+		db: DB,
 		appName: APP_NAME,
 		kind,
 		// @ts-expect-error we're being creative with the types here
@@ -44,7 +68,7 @@ export function MakeAnonAction<A extends AnonActionName>(
  */
 export function MakeAction<A extends ActionName>(kind: A, fn: ActionFn<A>): ActionFn<A> {
 	return MakeActionGuts({
-		db,
+		db: DB,
 		appName: APP_NAME,
 		kind,
 		// @ts-expect-error we're being creative with the types here

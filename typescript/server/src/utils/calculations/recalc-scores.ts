@@ -5,7 +5,7 @@ import { ProcessPBs } from "#lib/score-import/framework/pb/process-pbs";
 import { UpdateUsersQuests } from "#lib/score-import/framework/quests/quests";
 import { UpdateUsersGamePlaytypeStats } from "#lib/score-import/framework/ugpt-stats/update-ugpt-stats";
 import { TachiConfig } from "#lib/setup/config";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { EfficientDBIterate } from "#utils/efficient-db-iterate";
 import { FormatUserDoc } from "#utils/user";
 import {
@@ -26,9 +26,9 @@ export async function RecalcAllScores(filter = {}) {
 	const chartIDs = new Set<string>();
 
 	await EfficientDBIterate(
-		db.scores,
+		MONGODB_KILL.scores,
 		async (c) => {
-			const chart = await db.anyCharts[c.game].findOne({ chartID: c.chartID });
+			const chart = await MONGODB_KILL.anyCharts[c.game].findOne({ chartID: c.chartID });
 
 			if (!chart) {
 				log.error(
@@ -51,7 +51,7 @@ export async function RecalcAllScores(filter = {}) {
 			return { scoreID: c.scoreID, calculatedData };
 		},
 		async (updates) => {
-			await db.scores.bulkWrite(
+			await MONGODB_KILL.scores.bulkWrite(
 				updates.map((e) => ({
 					updateOne: {
 						filter: {
@@ -93,9 +93,9 @@ export async function UpdateAllPBs(userIDs?: Array<integer>, filter = {}) {
 	let allUsers: Array<UserDocument>;
 
 	if (!userIDs) {
-		allUsers = await db.users.find({});
+		allUsers = await MONGODB_KILL.users.find({});
 	} else {
-		allUsers = await db.users.find({
+		allUsers = await MONGODB_KILL.users.find({
 			id: { $in: userIDs },
 		});
 	}
@@ -107,7 +107,7 @@ export async function UpdateAllPBs(userIDs?: Array<integer>, filter = {}) {
 			const gameConfig = GetGameGroupConfig(game);
 
 			for (const playtype of gameConfig.playtypes) {
-				const scores = await db.scores.find(
+				const scores = await MONGODB_KILL.scores.find(
 					deepmerge(filter, { userID: user.id, game, playtype }),
 					{
 						projection: { chartID: 1 },

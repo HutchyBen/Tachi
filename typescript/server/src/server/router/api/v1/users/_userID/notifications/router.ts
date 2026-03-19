@@ -1,5 +1,5 @@
 import { ONE_SECOND } from "#lib/constants/time";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
 
@@ -19,7 +19,7 @@ router.use(RequireSelfRequestFromUser);
 router.get("/", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	const notifs = await db.notifications.find(
+	const notifs = await MONGODB_KILL.notifications.find(
 		{
 			sentTo: user.id,
 		},
@@ -45,7 +45,7 @@ router.get("/", async (req, res) => {
 router.post("/mark-all-read", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	const updateRes = await db.notifications.update(
+	const updateRes = await MONGODB_KILL.notifications.update(
 		{
 			sentTo: user.id,
 
@@ -80,7 +80,7 @@ router.post("/mark-all-read", async (req, res) => {
 router.post("/delete-all", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	const deleted = await db.notifications.remove({
+	const deleted = await MONGODB_KILL.notifications.remove({
 		sentTo: user.id,
 
 		// See mark-all-read for an explanation of this behaviour.

@@ -2,7 +2,7 @@ import type { ChartDocument, integer, PBScoreDocument, UserDocument } from "tach
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
 
@@ -12,14 +12,14 @@ const router: Router = Router({ mergeParams: true });
 
 const GetChartDocument: RequestHandler = async (req, res, next) => {
 	let chart: ChartDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"> | null =
-		(await db.charts.bms.findOne({
+		(await MONGODB_KILL.charts.bms.findOne({
 			"data.hashSHA256": req.params.chartSHA256,
 		})) as ChartDocument<"bms:7K" | "bms:14K"> | null;
 
 	// if we dont find the chart in bms,
 	// it's probably a pms chart.
 	if (!chart) {
-		chart = (await db.charts.pms.findOne({
+		chart = (await MONGODB_KILL.charts.pms.findOne({
 			"data.hashSHA256": req.params.chartSHA256,
 		})) as ChartDocument<"pms:Controller" | "pms:Keyboard"> | null;
 	}
@@ -48,11 +48,11 @@ router.get("/scores", async (req, res) => {
 	const chart = GetTachiData(req, "beatorajaChartDoc");
 	const requestingUserID = req[SYMBOL_TACHI_API_AUTH].userID;
 
-	const scores = (await db["personal-bests"].find({
+	const scores = (await MONGODB_KILL["personal-bests"].find({
 		chartID: chart.chartID,
 	})) as Array<PBScoreDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard">>;
 
-	const userDocs = await db.users.find(
+	const userDocs = await MONGODB_KILL.users.find(
 		{
 			id: { $in: scores.map((e) => e.userID) },
 		},

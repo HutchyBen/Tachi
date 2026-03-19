@@ -27,9 +27,15 @@ export default interface AccountTable {
 
   sm_twitch: ColumnType<string | null, string | null, string | null>;
 
+  bd_alpha: ColumnType<boolean, boolean | undefined, boolean>;
+
+  bd_beta: ColumnType<boolean, boolean | undefined, boolean>;
+
+  bd_dev_team: ColumnType<boolean, boolean | undefined, boolean>;
+
   joined: ColumnType<string, string | undefined, string>;
 
-  about: ColumnType<string | null, string | null, string | null>;
+  about: ColumnType<string, string, string>;
 
   status: ColumnType<string | null, string | null, string | null>;
 
@@ -40,6 +46,8 @@ export default interface AccountTable {
   last_seen: ColumnType<string, string | undefined, string>;
 
   auth_level: ColumnType<AuthLevel, AuthLevel | undefined, AuthLevel>;
+
+  is_supporter: ColumnType<boolean, boolean | undefined, boolean>;
 }
 
 export type Account = Selectable<AccountTable>;

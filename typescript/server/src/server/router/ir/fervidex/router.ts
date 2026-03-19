@@ -5,7 +5,7 @@ import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/expre
 import { SoftwareIDToVersion } from "#lib/score-import/import-types/ir/fervidex/parser";
 import { RequirePermissions } from "#server/middleware/auth";
 import { PrudenceErrorFormatter } from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { UpdateClassIfGreater } from "#utils/class";
 import { ParseEA3SoftID } from "#utils/ea3id";
 import { IsNullishOrEmptyStr } from "#utils/misc";
@@ -125,7 +125,7 @@ const ValidateModelHeader: RequestHandler = (req, res, next) => {
 const ValidateCards: RequestHandler = async (req, res, next) => {
 	const userID = req[SYMBOL_TACHI_API_AUTH].userID!;
 
-	const cardFilters = await db["fer-settings"].findOne({ userID });
+	const cardFilters = await MONGODB_KILL["fer-settings"].findOne({ userID });
 
 	if (!cardFilters?.cards) {
 		next();
@@ -159,7 +159,7 @@ router.use(
 );
 
 async function ShouldImportScoresFromProfileSubmit(swModel: string, userID: integer) {
-	const settings = await db["fer-settings"].findOne({
+	const settings = await MONGODB_KILL["fer-settings"].findOne({
 		userID,
 	});
 
@@ -171,7 +171,7 @@ async function ShouldImportScoresFromProfileSubmit(swModel: string, userID: inte
 		// people want.
 		// FSI should ideally just be used once to get unreachable scores onto Kamaitachi. Otherwise
 		// they're doing something wrong.
-		await db["fer-settings"].update(
+		await MONGODB_KILL["fer-settings"].update(
 			{
 				userID: settings.userID,
 			},

@@ -6,7 +6,7 @@ import express, { type Express } from "express";
 import path from "path";
 
 import { ACTION_Register } from "../actions/register";
-import { BotConfig, Env } from "../config";
+import { Env } from "../config";
 import { RequestTypes, TachiServerV1Get, TachiServerV1Request } from "../utils/fetch-tachi";
 import { VERSION_PRETTY } from "../version";
 import { HandleClassUpdateV1 } from "../webhook-handlers/class-update";
@@ -64,10 +64,10 @@ app.get("/oauth/callback", async (req, res) => {
 		null,
 		{
 			code: req.query.code,
-			client_id: BotConfig.OAUTH.CLIENT_ID,
-			client_secret: BotConfig.OAUTH.CLIENT_SECRET,
+			client_id: Env.OAUTH_CLIENT_ID,
+			client_secret: Env.OAUTH_CLIENT_SECRET,
 			grant_type: "authorization_code",
-			redirect_uri: `${BotConfig.HTTP_SERVER.URL}/oauth/callback`,
+			redirect_uri: `${Env.HTTP_SERVER_URL}/oauth/callback`,
 		},
 	);
 

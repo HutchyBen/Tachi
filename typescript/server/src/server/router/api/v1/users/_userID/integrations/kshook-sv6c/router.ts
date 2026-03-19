@@ -1,6 +1,6 @@
 import prValidate from "#server/middleware/prudence-validate";
 import { RequireKamaitachi } from "#server/middleware/type-require";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
 
@@ -19,7 +19,7 @@ router.use(RequireSelfRequestFromUser);
 router.get("/settings", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	const settingsDoc = await db["kshook-sv6c-settings"].findOne({
+	const settingsDoc = await MONGODB_KILL["kshook-sv6c-settings"].findOne({
 		userID: user.id,
 	});
 
@@ -44,7 +44,7 @@ router.patch("/settings", prValidate({ forceStaticImport: "boolean" }), async (r
 
 	const user = GetTachiData(req, "requestedUser");
 
-	await db["kshook-sv6c-settings"].update(
+	await MONGODB_KILL["kshook-sv6c-settings"].update(
 		{ userID: user.id },
 		{
 			$set: {
@@ -56,7 +56,7 @@ router.patch("/settings", prValidate({ forceStaticImport: "boolean" }), async (r
 		},
 	);
 
-	const settings = await db["kshook-sv6c-settings"].findOne({ userID: user.id });
+	const settings = await MONGODB_KILL["kshook-sv6c-settings"].findOne({ userID: user.id });
 
 	return res.status(200).json({
 		success: true,

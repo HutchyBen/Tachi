@@ -4,7 +4,7 @@ import { ONE_MEGABYTE } from "#lib/constants/filesize";
 import { log } from "#lib/log/log.js";
 import { RequirePermissions } from "#server/middleware/auth";
 import { CreateMulterSingleUploadMiddleware } from "#server/middleware/multer-upload";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { HashSHA256 } from "#utils/crypto";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { FormatUserDoc } from "#utils/user";
@@ -70,7 +70,10 @@ router.put(
 			req.session.tachi.user.customBannerLocation = contentHash;
 		}
 
-		await db.users.update({ id: user.id }, { $set: { customBannerLocation: contentHash } });
+		await MONGODB_KILL.users.update(
+			{ id: user.id },
+			{ $set: { customBannerLocation: contentHash } },
+		);
 
 		return res.status(200).json({
 			success: true,
@@ -121,7 +124,7 @@ router.delete(
 		}
 
 		await CDNDelete(GetProfileBannerURL(user.id, user.customBannerLocation));
-		await db.users.update({ id: user.id }, { $set: { customBannerLocation: null } });
+		await MONGODB_KILL.users.update({ id: user.id }, { $set: { customBannerLocation: null } });
 
 		return res.status(200).json({
 			success: true,

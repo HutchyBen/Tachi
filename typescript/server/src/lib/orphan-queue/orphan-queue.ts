@@ -9,7 +9,7 @@ import type {
 } from "tachi-common";
 
 import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetNextCounterValue } from "#utils/db";
 import { DedupeArr } from "#utils/misc";
 
@@ -37,7 +37,7 @@ export async function HandleOrphanQueue<GPT extends GPTString>(
 ) {
 	log.debug(`Received orphanqueue request for ${chartName}.`);
 
-	const orphanChart = await db["orphan-chart-queue"].findOne(
+	const orphanChart = await MONGODB_KILL["orphan-chart-queue"].findOne(
 		{ gptString, ...orphanMatchCriteria },
 		{
 			projectID: true,
@@ -47,7 +47,7 @@ export async function HandleOrphanQueue<GPT extends GPTString>(
 	if (!orphanChart) {
 		log.debug(`Received unknown chart ${chartName}, orphaning.`);
 
-		await db["orphan-chart-queue"].insert({
+		await MONGODB_KILL["orphan-chart-queue"].insert({
 			gptString,
 			chartDoc,
 			songDoc,
@@ -77,10 +77,10 @@ export async function HandleOrphanQueue<GPT extends GPTString>(
 		songDoc.id = songID;
 		chartDoc.songID = songID;
 
-		await db.anySongs[game].insert(songDoc);
-		await db.anyCharts[game].insert(chartDoc);
+		await MONGODB_KILL.anySongs[game].insert(songDoc);
+		await MONGODB_KILL.anyCharts[game].insert(chartDoc);
 
-		await db["orphan-chart-queue"].remove({
+		await MONGODB_KILL["orphan-chart-queue"].remove({
 			_id: orphanChart._id,
 		});
 
@@ -90,7 +90,7 @@ export async function HandleOrphanQueue<GPT extends GPTString>(
 	// otherwise, update the state of this orphan.
 
 	log.debug(`UserID ${userID} played ${chartName}, which is now at ${playcount} plays.`);
-	await db["orphan-chart-queue"].update(
+	await MONGODB_KILL["orphan-chart-queue"].update(
 		{
 			_id: orphanChart._id,
 		},
@@ -115,7 +115,7 @@ export async function DeorphanIfInQueue<GPT extends GPTString>(
 	game: GPTStringToGame[GPT],
 	orphanMatchCriteria: FilterQuery<OrphanChartDocument<GPT>>,
 ): Promise<ChartDocument<GPT> | null> {
-	const orphanChart = await db["orphan-chart-queue"].findOne(
+	const orphanChart = await MONGODB_KILL["orphan-chart-queue"].findOne(
 		{ gptString, ...orphanMatchCriteria },
 		{
 			projectID: true,
@@ -136,9 +136,9 @@ export async function DeorphanIfInQueue<GPT extends GPTString>(
 	songDoc.id = songID;
 	chartDoc.songID = songID;
 
-	await db.anySongs[game].insert(songDoc);
-	await db.anyCharts[game].insert(chartDoc);
-	await db["orphan-chart-queue"].remove({
+	await MONGODB_KILL.anySongs[game].insert(songDoc);
+	await MONGODB_KILL.anyCharts[game].insert(chartDoc);
+	await MONGODB_KILL["orphan-chart-queue"].remove({
 		_id: orphanChart._id,
 	});
 

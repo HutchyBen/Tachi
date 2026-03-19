@@ -15,7 +15,7 @@ import {
 	type Playtype,
 } from "tachi-common";
 
-import { BotConfig } from "../config";
+import { Env } from "../config";
 
 export function Sleep(ms: number) {
 	return new Promise<void>((resolve) => {
@@ -99,7 +99,7 @@ export function FormatClass(
  * Given a game, return the discord channel it's associated with.
  */
 export function GetGameChannel(client: Client, game: GameGroup) {
-	const gameChannelID = BotConfig.DISCORD.GAME_CHANNELS[game];
+	const gameChannelID = Env.DISCORD_GAME_CHANNELS[game];
 
 	if (!gameChannelID) {
 		throw new Error(
@@ -123,7 +123,7 @@ export function GetGameChannel(client: Client, game: GameGroup) {
 }
 
 export function GetLimboChannel(client: Client) {
-	const limboCID = BotConfig.DISCORD.LIMBO_CHANNEL;
+	const limboCID = Env.DISCORD_LIMBO_CHANNEL;
 
 	if (!limboCID) {
 		throw new Error(`Attempted to get channel for #limbo, but none was registered.`);
@@ -147,12 +147,12 @@ export function GetLimboChannel(client: Client) {
  */
 export function CreateChartLink(chart: ChartDocument, game: GameGroup) {
 	if (chart.isPrimary) {
-		return `${BotConfig.TACHI_SERVER_LOCATION}/games/${game}/${chart.playtype}/songs/${
+		return `${Env.TACHI_SERVER_LOCATION}/games/${game}/${chart.playtype}/songs/${
 			chart.songID
 		}/${encodeURIComponent(chart.difficulty)}`;
 	}
 
-	return `${BotConfig.TACHI_SERVER_LOCATION}/games/${game}/${chart.playtype}/songs/${chart.songID}/${chart.chartID}`;
+	return `${Env.TACHI_SERVER_LOCATION}/games/${game}/${chart.playtype}/songs/${chart.songID}/${chart.chartID}`;
 }
 
 export function ConvertInputIntoGenerousRegex(input: string) {

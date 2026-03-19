@@ -11,7 +11,7 @@ import type {
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
 import { log } from "#lib/log/log.js";
 import { BulkSendNotification } from "#lib/notifications/notifications";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 import {
 	type EvaluatedGoalReturn,
@@ -37,7 +37,7 @@ export function GetGoalIDsFromQuest(quest: QuestDocument) {
 export async function GetGoalsInQuest(quest: QuestDocument) {
 	const goalIDs = GetGoalIDsFromQuest(quest);
 
-	const goals = await db.goals.find({
+	const goals = await MONGODB_KILL.goals.find({
 		goalID: { $in: goalIDs },
 	});
 
@@ -68,7 +68,7 @@ export async function GetGoalsInQuest(quest: QuestDocument) {
 export async function GetGoalsInQuests(quests: Array<QuestDocument>) {
 	const goalIDs = quests.flatMap((quest) => GetGoalIDsFromQuest(quest));
 
-	const goals = await db.goals.find({
+	const goals = await MONGODB_KILL.goals.find({
 		goalID: { $in: goalIDs },
 	});
 
@@ -98,7 +98,7 @@ type EvaluatedGoalResult = { goalID: string } & EvaluatedGoalReturn;
 export async function EvaluateQuestProgress(userID: integer, quest: QuestDocument) {
 	const goals = await GetGoalsInQuest(quest);
 
-	const isSubscribedToQuest = await db["quest-subs"].findOne({
+	const isSubscribedToQuest = await MONGODB_KILL["quest-subs"].findOne({
 		questID: quest.questID,
 		userID,
 	});
@@ -108,7 +108,7 @@ export async function EvaluateQuestProgress(userID: integer, quest: QuestDocumen
 	const goalSubMap = new Map<string, GoalSubscriptionDocument>();
 
 	if (isSubscribedToQuest) {
-		const goalSubs = await db["goal-subs"].find({
+		const goalSubs = await MONGODB_KILL["goal-subs"].find({
 			goalID: { $in: goals.map((e) => e.goalID) },
 			userID,
 		});
@@ -228,7 +228,7 @@ export async function SubscribeToQuest(
 	| SubscribeFailReasons.ALREADY_ACHIEVED
 	| SubscribeFailReasons.ALREADY_SUBSCRIBED
 > {
-	const isSubscribedToQuest = await db["quest-subs"].findOne({
+	const isSubscribedToQuest = await MONGODB_KILL["quest-subs"].findOne({
 		userID,
 		questID: quest.questID,
 	});
@@ -263,7 +263,7 @@ export async function SubscribeToQuest(
 	// evaluating goals is fairly cheap though.
 	await Promise.all(result.goals.map((goal) => SubscribeToGoal(userID, goal, false)));
 
-	await db["quest-subs"].insert(questSub);
+	await MONGODB_KILL["quest-subs"].insert(questSub);
 
 	log.info(`User ${userID} subscribed to '${quest.name}'.`);
 
@@ -282,14 +282,14 @@ export async function SubscribeToQuest(
 export async function UpdateQuestSubscriptions(questID: string) {
 	log.info(`Received update-subscribe call to quest ${questID}.`);
 
-	const subscriptions = await db["quest-subs"].find({ questID });
+	const subscriptions = await MONGODB_KILL["quest-subs"].find({ questID });
 
-	const maybeQuest = await db.quests.findOne({ questID });
+	const maybeQuest = await MONGODB_KILL.quests.findOne({ questID });
 
 	// if the quest was deleted, we have to take a more manual approach.
 	if (!maybeQuest) {
 		// first, remove all subs to this quest
-		await db["quest-subs"].remove({
+		await MONGODB_KILL["quest-subs"].remove({
 			questID,
 		});
 
@@ -342,12 +342,12 @@ export async function UnsubscribeFromQuest(
 
 	// remove the quest sub
 	// (preventing HAS_QUEST_DEPENDENCIES when this is the quest we're removing anyway)
-	await db["quest-subs"].remove({
+	await MONGODB_KILL["quest-subs"].remove({
 		questID: questSub.questID,
 		userID: questSub.userID,
 	});
 
-	const goalSubs = await db["goal-subs"].find({
+	const goalSubs = await MONGODB_KILL["goal-subs"].find({
 		userID: questSub.userID,
 		goalID: { $in: goalIDs },
 	});
@@ -367,7 +367,7 @@ export async function GetParentQuests(
 	playtype: Playtype,
 	goalSubs: Array<GoalSubscriptionDocument>,
 ) {
-	const questSubs: Array<{ questID: string }> = await db["quest-subs"].find(
+	const questSubs: Array<{ questID: string }> = await MONGODB_KILL["quest-subs"].find(
 		{
 			game,
 			playtype,
@@ -382,7 +382,7 @@ export async function GetParentQuests(
 
 	const questSubIDs = questSubs.map((e) => e.questID);
 
-	const quests = await db.quests.find({
+	const quests = await MONGODB_KILL.quests.find({
 		questID: { $in: questSubIDs },
 		"questData.goals.goalID": { $in: goalSubs.map((e) => e.goalID) },
 	});
@@ -394,7 +394,7 @@ export async function GetParentQuests(
  * Find all quests not in any questlines.
  */
 export async function FindStandaloneQuests(game: GameGroup, playtype: Playtype) {
-	const res: Array<QuestDocument> = await db.quests.aggregate([
+	const res: Array<QuestDocument> = await MONGODB_KILL.quests.aggregate([
 		{
 			$match: {
 				game,

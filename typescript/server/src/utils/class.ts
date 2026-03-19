@@ -1,7 +1,7 @@
 import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
 import { log } from "#lib/log/log.js";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import {
 	type Classes,
 	type GameGroup,
@@ -101,7 +101,7 @@ export async function UpdateClassIfGreater(
 ) {
 	const gptString = GetGPTString(game, playtype);
 
-	const userGameStats = await db["game-stats"].findOne({ userID, game, playtype });
+	const userGameStats = await MONGODB_KILL["game-stats"].findOne({ userID, game, playtype });
 	const isGreater = ReturnClassIfGreater(gptString, classSet, classVal, userGameStats);
 
 	if (isGreater === false) {
@@ -109,14 +109,14 @@ export async function UpdateClassIfGreater(
 	}
 
 	if (userGameStats) {
-		await db["game-stats"].update(
+		await MONGODB_KILL["game-stats"].update(
 			{ userID, game, playtype },
 			{ $set: { [`classes.${classSet}`]: classVal } },
 		);
 	} else {
 		// insert new game stats for this user - this is an awkward place
 		// to call this - maybe we should call it elsewhere.
-		await db["game-stats"].insert({
+		await MONGODB_KILL["game-stats"].insert({
 			userID,
 			game,
 			playtype,
@@ -131,7 +131,7 @@ export async function UpdateClassIfGreater(
 		await CreateGameSettings(userID, game, playtype);
 	}
 
-	await db["class-achievements"].insert({
+	await MONGODB_KILL["class-achievements"].insert({
 		game,
 		playtype,
 		userID,

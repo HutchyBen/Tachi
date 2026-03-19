@@ -20,7 +20,7 @@ import { TachiConfig } from "#lib/setup/config";
 import { RemoveStaleFolderShowcaseStats } from "#lib/showcase/showcase";
 import { UpdateQuestSubscriptions } from "#lib/targets/quests";
 /* eslint-disable no-await-in-loop */
-import db, { monkDB } from "#services/mongo/db";
+import MONGODB_KILL, { monkDB } from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";
 import { UpdateGameSongIDCounter } from "#utils/db";
 import { InitaliseFolderChartLookup } from "#utils/folder";
@@ -276,7 +276,7 @@ const syncInstructions: Array<SyncInstructions> = [
 
 				const allModifiedFolderIDs = r.changedFields as Array<string>;
 
-				const keptFolderIDs = await db.folders.find(
+				const keptFolderIDs = await MONGODB_KILL.folders.find(
 					{
 						folderID: { $in: allModifiedFolderIDs },
 					},

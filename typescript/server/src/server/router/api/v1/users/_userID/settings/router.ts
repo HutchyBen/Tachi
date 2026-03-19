@@ -1,6 +1,6 @@
 import { log } from "#lib/log/log.js";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { FormatUserDoc, GetSettingsForUser } from "#utils/user";
 import { Router } from "express";
@@ -17,7 +17,7 @@ const router: Router = Router({ mergeParams: true });
 router.get("/", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	const settings = await db["user-settings"].findOne({
+	const settings = await MONGODB_KILL["user-settings"].findOne({
 		userID: user.id,
 	});
 
@@ -80,7 +80,7 @@ router.patch(
 			modifyObject[`preferences.${k}`] = v;
 		}
 
-		await db["user-settings"].update(
+		await MONGODB_KILL["user-settings"].update(
 			{
 				userID: user.id,
 			},

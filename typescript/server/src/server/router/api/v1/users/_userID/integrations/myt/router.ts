@@ -2,7 +2,7 @@ import type { MytCardInfo } from "tachi-common";
 
 import prValidate from "#server/middleware/prudence-validate";
 import { RequireKamaitachi } from "#server/middleware/type-require";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
 import { p } from "prudence";
@@ -22,7 +22,7 @@ router.use(RequireSelfRequestFromUser);
 router.get("/", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	const cardInfo = await db["myt-card-info"].findOne({
+	const cardInfo = await MONGODB_KILL["myt-card-info"].findOne({
 		userID: user.id,
 	});
 
@@ -62,7 +62,7 @@ router.put(
 			cardAccessCode,
 		};
 
-		await db["myt-card-info"].update(
+		await MONGODB_KILL["myt-card-info"].update(
 			{ userID: user.id },
 			{ $set: newCardInfo },
 			{
@@ -87,7 +87,7 @@ router.put(
 router.delete("/", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	await db["cg-card-info"].remove({ userID: user.id });
+	await MONGODB_KILL["cg-card-info"].remove({ userID: user.id });
 
 	return res.status(200).json({
 		success: true,

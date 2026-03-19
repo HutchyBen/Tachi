@@ -1,6 +1,6 @@
 import prValidate from "#server/middleware/prudence-validate";
 import { RequireKamaitachi } from "#server/middleware/type-require";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { DeleteUndefinedProps } from "#utils/misc";
 import { optNull } from "#utils/prudence";
 import { GetTachiData } from "#utils/req-tachi-data";
@@ -21,7 +21,7 @@ router.use(RequireSelfRequestFromUser);
 router.get("/settings", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	const settingsDoc = await db["fer-settings"].findOne({
+	const settingsDoc = await MONGODB_KILL["fer-settings"].findOne({
 		userID: user.id,
 	});
 
@@ -69,7 +69,7 @@ router.patch(
 			});
 		}
 
-		await db["fer-settings"].update(
+		await MONGODB_KILL["fer-settings"].update(
 			{ userID: user.id },
 			{
 				$set: modifyDocument,
@@ -79,7 +79,7 @@ router.patch(
 			},
 		);
 
-		const settings = await db["fer-settings"].findOne({ userID: user.id });
+		const settings = await MONGODB_KILL["fer-settings"].findOne({ userID: user.id });
 
 		return res.status(200).json({
 			success: true,

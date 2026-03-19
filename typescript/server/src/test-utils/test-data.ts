@@ -17,7 +17,7 @@ import {
 	USC_DEFAULT_PERFECT,
 	USC_DEFAULT_SLAM,
 } from "#lib/constants/usc-ir";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { ApplyNTimes, RFA } from "#utils/misc";
 import fs from "fs";
 import path from "path";
@@ -924,10 +924,10 @@ export async function LoadTachiIIDXData() {
 		KTDATA_CACHE = { songs, charts };
 	}
 
-	await db.songs.iidx.remove({});
-	await db.songs.iidx.insert(songs);
-	await db.charts.iidx.remove({});
-	await db.charts.iidx.insert(charts);
+	await MONGODB_KILL.songs.iidx.remove({});
+	await MONGODB_KILL.songs.iidx.insert(songs);
+	await MONGODB_KILL.charts.iidx.remove({});
+	await MONGODB_KILL.charts.iidx.insert(charts);
 }
 
 export const MockBarbatosScore: BarbatosScore = {
