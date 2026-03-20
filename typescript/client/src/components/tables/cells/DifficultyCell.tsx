@@ -58,7 +58,7 @@ export default function DifficultyCell({
 		// IIDX stuff should always be in the form SPA/SPL to save space.
 		// For the same reason, maimai DX stuff should be using (DX) EXP/MAS/Re:MAS.
 		// All players know what this means.
-		// eslint-disable-next-line no-param-reassign
+
 		alwaysShort = true;
 	}
 

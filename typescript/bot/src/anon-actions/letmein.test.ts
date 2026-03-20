@@ -4,7 +4,7 @@ import db from "#services/pg/db";
 import { type AnonActionTaker } from "bliss";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ACTION_Letmein } from "./letmein";
+import { ANON_ACTION_Letmein } from "./letmein";
 
 describe("ACTION_Letmein", () => {
 	let taker: AnonActionTaker;
@@ -18,7 +18,7 @@ describe("ACTION_Letmein", () => {
 		const member = { roles: { add: addRole } } as unknown as GuildMember;
 		const roleId = "987654321098765432";
 
-		await ACTION_Letmein(taker, {
+		await ANON_ACTION_Letmein(taker, {
 			discord_user_id: "111222333",
 			role_id: roleId,
 			"!member": member,
@@ -33,7 +33,7 @@ describe("ACTION_Letmein", () => {
 			roles: { add: vi.fn().mockResolvedValue(undefined) },
 		} as unknown as GuildMember;
 
-		const result = await ACTION_Letmein(taker, {
+		const result = await ANON_ACTION_Letmein(taker, {
 			discord_user_id: "111222333",
 			role_id: "any-role",
 			"!member": member,
@@ -49,7 +49,7 @@ describe("ACTION_Letmein", () => {
 		const discordUserId = "555666777888999000";
 		const roleId = "123456789012345678";
 
-		await ACTION_Letmein(taker, {
+		await ANON_ACTION_Letmein(taker, {
 			discord_user_id: discordUserId,
 			role_id: roleId,
 			"!member": member,
@@ -82,7 +82,7 @@ describe("ACTION_Letmein", () => {
 		} as unknown as GuildMember;
 
 		await expect(
-			ACTION_Letmein(taker, {
+			ANON_ACTION_Letmein(taker, {
 				discord_user_id: "111",
 				role_id: "222",
 				"!member": member,

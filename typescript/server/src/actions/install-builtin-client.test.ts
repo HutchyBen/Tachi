@@ -110,7 +110,7 @@ describe("ACTION_InstallBuiltinClient", () => {
 		expect(client).toMatchObject({
 			client_id: "CXTestClient",
 			name: "Test Client",
-			author: String(adminId),
+			author: adminId,
 			pm_submit_score: true,
 			pm_customise_profile: false,
 			pm_customise_score: false,
@@ -210,7 +210,7 @@ describe("ACTION_InstallBuiltinClient", () => {
 			.where("client_id", "=", BASE_INPUT.clientID)
 			.executeTakeFirstOrThrow();
 
-		expect(client.author).toBe(String(second.id));
+		expect(client.author).toBe(second.id);
 	});
 
 	// ── Audit log ──────────────────────────────────────────────────────────────
@@ -229,7 +229,7 @@ describe("ACTION_InstallBuiltinClient", () => {
 			app: "TACHI_SERVER",
 			kind: "INSTALL_BUILTIN_CLIENT",
 			result: "GOOD",
-			user_id: String(adminId),
+			user_id: adminId,
 			ip: "10.0.0.1",
 		});
 	});

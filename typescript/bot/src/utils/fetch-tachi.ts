@@ -125,7 +125,6 @@ export async function TachiServerV1Get<T = unknown>(
  */
 export function PrependTachiUrl(url: string, version: "1" = "1"): string {
 	if (!url.startsWith("/")) {
-		// eslint-disable-next-line no-param-reassign
 		url = `/${url}`;
 	}
 

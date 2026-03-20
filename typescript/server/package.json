@@ -76,7 +76,7 @@
 		"html-entities": "catalog:",
 		"json5": "catalog:",
 		"kysely": "catalog:",
-		"lodash": "^4.17.23",
+		"lodash": "catalog:",
 		"mkdirp": "catalog:",
 		"mongodb": "catalog:",
 		"monk": "catalog:",

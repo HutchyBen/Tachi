@@ -107,7 +107,7 @@ export async function* TraverseKaiAPI(
 			}
 
 			// reassigning this param is fine.
-			// eslint-disable-next-line no-param-reassign, no-await-in-loop
+			// eslint-disable-next-line no-await-in-loop
 			token = await reauthFunction();
 
 			// then go to the start of the while loop.

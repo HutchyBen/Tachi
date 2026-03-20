@@ -5,7 +5,7 @@ import { HandleQuestAchievedV1 } from "#webhook-handlers/quest-achieved.js";
 import express, { type Express } from "express";
 import path from "path";
 
-import { ACTION_Register } from "../actions/register";
+import { ANON_ACTION_Register } from "../anon-actions/register";
 import { Env } from "../config";
 import { RequestTypes, TachiServerV1Get, TachiServerV1Request } from "../utils/fetch-tachi";
 import { VERSION_PRETTY } from "../version";
@@ -99,7 +99,7 @@ app.get("/oauth/callback", async (req, res) => {
 
 	log.info(`Saving user-discord-link for ${user.username} (id: ${user.id}).`);
 
-	const { was_update } = await ACTION_Register(
+	const { was_update } = await ANON_ACTION_Register(
 		{ ip: req.ip },
 		{ user_id: user.id, discord_id: discordID, "!api_token": apiToken },
 	);

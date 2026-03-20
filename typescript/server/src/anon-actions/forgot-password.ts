@@ -1,0 +1,64 @@
+import { MakeAnonAction } from "#lib/actions/actions.js";
+import { SendEmail } from "#lib/email/client.js";
+import { EmailFormatResetPassword } from "#lib/email/formats.js";
+import { Env, ServerConfig } from "#lib/setup/config.js";
+import DB from "#services/pg/db.js";
+import { Random20Hex } from "#utils/misc.js";
+import { GetUserWithIDGuaranteed } from "#utils/user.js";
+import { ExpectedErr, log } from "bliss";
+
+export const ANON_ACTION_ForgotPassword = MakeAnonAction(
+	"FORGOT_PASSWORD",
+	async (taker, { email }) => {
+		if (!ServerConfig.EMAIL_CONFIG && Env.NODE_ENV !== "test") {
+			throw new ExpectedErr(501, "This server does not support password resets.");
+		}
+
+		if (taker.ip === null) {
+			throw new ExpectedErr(400, "IP address is required to send a password reset email.");
+		}
+
+		email = email.toLowerCase();
+
+		const userPrivateInfo = await DB.selectFrom("priv_account_credential")
+			.select(["user_id", "email"])
+			.where("email", "=", email)
+			.executeTakeFirstOrThrow();
+
+		if (userPrivateInfo) {
+			const user = await GetUserWithIDGuaranteed(userPrivateInfo.user_id);
+
+			if (!user) {
+				throw new Error(
+					`User ${userPrivateInfo.user_id} has private information but no real account.`,
+				);
+			}
+
+			const code = `M${Random20Hex()}`;
+
+			await DB.insertInto("priv_password_reset_token")
+				.values({
+					token: code,
+					user_id: user.id,
+					created_on: new Date().toISOString(),
+				})
+				.execute();
+
+			const { html, text } = EmailFormatResetPassword(user.username, code, taker.ip);
+
+			void SendEmail(userPrivateInfo.email, "Reset Password", html, text);
+		} else {
+			log.info(
+				`Silently rejected password reset request for ${email}, as no user has this email.`,
+			);
+
+			return {
+				silentlyRejected: true,
+			};
+		}
+
+		return {
+			silentlyRejected: false,
+		};
+	},
+);

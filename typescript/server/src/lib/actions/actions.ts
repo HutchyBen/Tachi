@@ -1,7 +1,6 @@
 import DB from "#services/pg/db";
 import { type ActionTaker, type AnonActionTaker, MakeActionGuts } from "bliss";
 import { type ActionSignature } from "bliss/actions";
-import { zodPermission } from "tachi-common";
 import { z } from "zod";
 
 const APP_NAME = "TACHI_SERVER";
@@ -10,10 +9,6 @@ export type ActionName = keyof typeof ActionSignatures;
 export type AnonActionName = keyof typeof AnonActionSignatures;
 
 export const ActionSignatures = {
-	NO_OP: {
-		input: z.object({}),
-		output: z.object({}),
-	},
 	INSTALL_BUILTIN_CLIENT: {
 		input: z.object({
 			clientID: z.string(),
@@ -37,12 +32,47 @@ export const ActionSignatures = {
 		}),
 		output: z.object({}),
 	},
+	RESEND_VERIFY_EMAIL: {
+		input: z.object({}),
+		output: z.object({}),
+	},
 } satisfies Record<string, ActionSignature>;
 
 export const AnonActionSignatures = {
-	NO_OP: {
-		input: z.object({}),
+	REGISTER: {
+		input: z.object({
+			email: z.email(),
+			"!password": z.string().min(8),
+			captcha: z.string(),
+			inviteCode: z.string().nullable(),
+			username: z.string().min(3).max(20),
+		}),
+		output: z.object({
+			userID: z.number().int(),
+		}),
+	},
+	VERIFY_EMAIL: {
+		input: z.object({
+			code: z.string(),
+		}),
 		output: z.object({}),
+	},
+	FORGOT_PASSWORD: {
+		input: z.object({
+			email: z.email(),
+		}),
+		output: z.object({
+			silentlyRejected: z.boolean(),
+		}),
+	},
+	RESET_PASSWORD: {
+		input: z.object({
+			code: z.string(),
+			"!password": z.string().min(8),
+		}),
+		output: z.object({
+			userID: z.number().int(),
+		}),
 	},
 } satisfies Record<string, ActionSignature>;
 

@@ -158,7 +158,7 @@ function DirectiveMatch(
 ) {
 	if (dataValue === undefined) {
 		console.warn(`Unexpected undefined for dataValue ${directive}. Casting to null.`);
-		// eslint-disable-next-line no-param-reassign
+
 		dataValue = null;
 	}
 

@@ -13,7 +13,7 @@ export default interface PrivPasswordResetTokenTable {
 
   created_on: ColumnType<string, string, string>;
 
-  user_id: ColumnType<account_id | null, account_id | null, account_id | null>;
+  user_id: ColumnType<account_id, account_id, account_id>;
 }
 
 export type PrivPasswordResetToken = Selectable<PrivPasswordResetTokenTable>;

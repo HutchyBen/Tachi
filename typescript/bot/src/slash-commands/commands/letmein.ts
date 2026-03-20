@@ -5,7 +5,7 @@ import { GuildMember } from "discord.js";
 
 import type { SlashCommand } from "../types";
 
-import { ACTION_Letmein } from "../../actions/letmein";
+import { ANON_ACTION_Letmein } from "../../anon-actions/letmein";
 
 const command: SlashCommand = {
 	info: new SlashCommandBuilder()
@@ -22,7 +22,7 @@ const command: SlashCommand = {
 		}
 
 		try {
-			await ACTION_Letmein(
+			await ANON_ACTION_Letmein(
 				{ ip: null },
 				{
 					discord_user_id: interaction.user.id,

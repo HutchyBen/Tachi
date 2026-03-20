@@ -2,7 +2,7 @@
 	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
 		"module": "Preserve",
-		"moduleResolution": "bundler",
+		"moduleResolution": "bundler"
 	},
 	"include": ["src"],
 	"exclude": ["node_modules"]

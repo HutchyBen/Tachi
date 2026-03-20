@@ -308,19 +308,19 @@ CREATE TABLE "priv_invite" (
 CREATE TABLE "priv_verify_email_token" (
 	token TEXT PRIMARY KEY NOT NULL,
 	email TEXT NOT NULL,
-	user_id BIGINT REFERENCES account(id)
+	user_id BIGINT REFERENCES account(id) NOT NULL
 );
 
 CREATE TABLE "priv_password_reset_token" (
 	token TEXT PRIMARY KEY NOT NULL,
 	created_on TIMESTAMPTZ NOT NULL,
-	user_id BIGINT REFERENCES account(id)
+	user_id BIGINT REFERENCES account(id) NOT NULL
 );
 
 CREATE TABLE "priv_oauth2_auth_token" (
 	token TEXT PRIMARY KEY NOT NULL,
 	created_on TIMESTAMPTZ NOT NULL,
-	user_id BIGINT REFERENCES account(id)
+	user_id BIGINT REFERENCES account(id) NOT NULL
 );
 
 CREATE TABLE "priv_svc_myt_card_info" (
@@ -331,7 +331,7 @@ CREATE TABLE "priv_svc_myt_card_info" (
 	--
 	-- n.g.
 	card_access_code TEXT PRIMARY KEY,
-	user_id BIGINT REFERENCES account(id)
+	user_id BIGINT REFERENCES account(id) NOT NULL
 );
 
 CREATE TABLE "priv_svc_cg_card_info" (

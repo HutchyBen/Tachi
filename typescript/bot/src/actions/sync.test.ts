@@ -114,7 +114,7 @@ describe("ACTION_Sync", () => {
 			app: "BOT",
 			kind: "SYNC",
 			result: "GOOD",
-			user_id: String(taker.acct.id),
+			user_id: taker.acct.id,
 		});
 	});
 

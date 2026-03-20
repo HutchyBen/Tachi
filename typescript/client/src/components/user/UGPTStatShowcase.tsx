@@ -274,12 +274,11 @@ function StatDelta({
 }) {
 	if (!v2) {
 		// @warn: This means things like BPI goals can go negative and spit nonsense
-		// eslint-disable-next-line no-param-reassign
+
 		v2 = 0;
 	}
 
 	if (v1 === null) {
-		// eslint-disable-next-line no-param-reassign
 		v1 = 0;
 	}
 

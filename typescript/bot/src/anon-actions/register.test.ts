@@ -2,7 +2,7 @@ import db from "#services/pg/db";
 import { createTestAccount } from "#test-utils/db";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { ACTION_Register } from "./register";
+import { ANON_ACTION_Register } from "./register";
 
 describe("ACTION_Register", () => {
 	let userId: number;
@@ -17,7 +17,7 @@ describe("ACTION_Register", () => {
 	});
 
 	it("inserts a new mapping and returns was_update: false", async () => {
-		const result = await ACTION_Register(taker, {
+		const result = await ANON_ACTION_Register(taker, {
 			user_id: userId,
 			discord_id: discordId,
 			"!api_token": apiToken,
@@ -41,7 +41,7 @@ describe("ACTION_Register", () => {
 
 	it("updates an existing mapping and returns was_update: true", async () => {
 		// First registration
-		await ACTION_Register(taker, {
+		await ANON_ACTION_Register(taker, {
 			user_id: userId,
 			discord_id: discordId,
 			"!api_token": apiToken,
@@ -49,7 +49,7 @@ describe("ACTION_Register", () => {
 
 		const newDiscordId = "999888777666555444";
 
-		const result = await ACTION_Register(taker, {
+		const result = await ANON_ACTION_Register(taker, {
 			user_id: userId,
 			discord_id: newDiscordId,
 			"!api_token": apiToken,
@@ -67,7 +67,7 @@ describe("ACTION_Register", () => {
 	});
 
 	it("writes a GOOD action row to the audit log", async () => {
-		await ACTION_Register(taker, {
+		await ANON_ACTION_Register(taker, {
 			user_id: userId,
 			discord_id: discordId,
 			"!api_token": apiToken,

@@ -1,5 +1,6 @@
-import { AppendLogCtx, log as baseLogger } from "./log.js";
 import { type ZodObject } from "zod";
+
+import { AppendLogCtx, log as baseLogger } from "./log.js";
 
 export type ActionResult = "BAD" | "GOOD" | "THROW";
 
@@ -106,6 +107,7 @@ export function MakeActionGuts({
 				result = "BAD";
 			} else {
 				log.error({ err: e, input: OmitPrivate(input) }, `Action ${kind} threw`);
+
 				outputJSON = JSON.stringify({ reason: String(e) });
 				result = "THROW";
 			}
