@@ -1,26 +1,8 @@
 import DB from "#services/pg/db.js";
+import { seedUser, seedVerifyEmailToken } from "#test-utils/pg-fixtures.js";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { ACTION_ResendVerifyEmail } from "./resend-verify-email.js";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-async function seedUser(username = "test_user") {
-	const { id } = await DB.insertInto("account")
-		.values({ username, about: "Test user.", auth_level: "user" })
-		.returning("id")
-		.executeTakeFirstOrThrow();
-
-	return { id: Number(id), username };
-}
-
-async function seedVerifyEmailToken(userId: number, token = "INITIAL_TOKEN_ABCDEF1234") {
-	await DB.insertInto("priv_verify_email_token")
-		.values({ token, user_id: userId, email: "test@example.com" })
-		.execute();
-
-	return token;
-}
 
 // ─── ACTION_ResendVerifyEmail ──────────────────────────────────────────────────
 
@@ -86,8 +68,8 @@ describe("ACTION_ResendVerifyEmail", () => {
 	});
 
 	it("does not affect tokens belonging to other users", async () => {
-		const other = await seedUser("other_user");
-		const otherToken = await seedVerifyEmailToken(other.id, "OTHER_TOKEN_XYZ");
+		const other = await seedUser({ username: "other_user" });
+		const otherToken = await seedVerifyEmailToken(other.id, undefined, "OTHER_TOKEN_XYZ");
 		await seedVerifyEmailToken(userId);
 
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };

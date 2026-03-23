@@ -1,33 +1,8 @@
 import DB from "#services/pg/db.js";
+import { seedUser } from "#test-utils/pg-fixtures.js";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { ANON_ACTION_ForgotPassword } from "./forgot-password.js";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-async function seedUser(opts?: { email?: string; username?: string }) {
-	const username = opts?.username ?? "test_user";
-	const email = opts?.email ?? "test@example.com";
-
-	const { id } = await DB.insertInto("account")
-		.values({
-			username,
-			about: "Seed user for tests.",
-			joined: new Date().toISOString(),
-			last_seen: new Date().toISOString(),
-			auth_level: "user",
-			custom_pfp_location: null,
-			custom_banner_location: null,
-		})
-		.returning("id")
-		.executeTakeFirstOrThrow();
-
-	await DB.insertInto("priv_account_credential")
-		.values({ user_id: id, email, password: "hashed_password_placeholder" })
-		.execute();
-
-	return { id: Number(id), username, email };
-}
 
 // ─── ANON_ACTION_ForgotPassword ───────────────────────────────────────────────
 
@@ -37,7 +12,7 @@ describe("ANON_ACTION_ForgotPassword", () => {
 	let user: Awaited<ReturnType<typeof seedUser>>;
 
 	beforeEach(async () => {
-		user = await seedUser();
+		user = await seedUser({ withCredential: true });
 	});
 
 	// ── Happy path ─────────────────────────────────────────────────────────────
@@ -186,7 +161,7 @@ describe("ANON_ACTION_ForgotPassword", () => {
 	// ── Token isolation ────────────────────────────────────────────────────────
 
 	it("only inserts a token for the matching user, not for others", async () => {
-		const other = await seedUser({ username: "other_user", email: "other@example.com" });
+		const other = await seedUser({ username: "other_user", email: "other@example.com", withCredential: true });
 
 		await ANON_ACTION_ForgotPassword(taker, { email: user.email });
 

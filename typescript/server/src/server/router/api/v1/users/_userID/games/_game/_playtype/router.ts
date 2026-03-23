@@ -2,7 +2,7 @@ import { CreateActivityRouteHandler } from "#lib/activity/activity";
 import { ONE_MONTH, ONE_WEEK, ONE_YEAR } from "#lib/constants/time";
 import { log } from "#lib/log/log.js";
 import prValidate from "#server/middleware/prudence-validate";
-import { PasswordCompare, ValidatePassword } from "#server/router/api/v1/auth/auth.js";
+import { PasswordCompare, ValidatePassword } from "#lib/auth/auth.js";
 import MONGODB_KILL from "#services/mongo/db";
 import { IsString } from "#utils/misc";
 import { GetTachiData, GetUGPT } from "#utils/req-tachi-data";

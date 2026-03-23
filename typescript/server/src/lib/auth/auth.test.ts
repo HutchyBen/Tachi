@@ -1,66 +1,12 @@
 import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
 import DB from "#services/pg/db.js";
 import mockApi, { CloseServerConnection } from "#test-utils/mock-api";
+import { seedInvite, seedResetToken, seedUser } from "#test-utils/pg-fixtures.js";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
-import { HashPassword, PasswordCompare } from "./auth";
+import { PasswordCompare } from "./auth";
 
 afterAll(() => CloseServerConnection());
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-async function seedUser(opts?: { email?: string; password?: string; username?: string }) {
-	const username = opts?.username ?? "seed_user";
-	const email = opts?.email ?? "seed@example.com";
-	const password = opts?.password ?? "password123";
-
-	const hashedPassword = await HashPassword(password);
-
-	const { id } = await DB.insertInto("account")
-		.values({
-			username,
-			about: "Seed user for tests.",
-			joined: new Date().toISOString(),
-			last_seen: new Date().toISOString(),
-			auth_level: "user",
-			custom_pfp_location: null,
-			custom_banner_location: null,
-		})
-		.returning("id")
-		.executeTakeFirstOrThrow();
-
-	await DB.insertInto("account_settings")
-		.values({
-			user_id: id,
-			pf_invisible: false,
-			pf_developer_mode: false,
-			pf_advanced_mode: false,
-			pf_contentious_content: false,
-			pf_deletable_scores: false,
-		})
-		.execute();
-
-	await DB.insertInto("priv_account_credential")
-		.values({ user_id: id, email, password: hashedPassword })
-		.execute();
-
-	return { id, username, email, password };
-}
-
-async function seedInvite(createdBy: number, code = "INVITE_CODE") {
-	await DB.insertInto("priv_invite")
-		.values({
-			code,
-			created_by: createdBy,
-			created_at: new Date().toISOString(),
-			consumed: false,
-			consumed_by: null,
-			consumed_at: null,
-		})
-		.execute();
-
-	return code;
-}
 
 // ─── POST /api/v1/auth/register ──────────────────────────────────────────────
 
@@ -69,7 +15,7 @@ describe("POST /api/v1/auth/register", () => {
 
 	beforeEach(async () => {
 		ClearTestingRateLimitCache();
-		const { id } = await seedUser();
+		const { id } = await seedUser({ withCredential: true, withSettings: true });
 		inviteCode = await seedInvite(id);
 	});
 
@@ -97,7 +43,7 @@ describe("POST /api/v1/auth/register", () => {
 
 	it("rejects a duplicate username (case-insensitive) with 409", async () => {
 		const res = await mockApi.post("/api/v1/auth/register").send({
-			username: "Seed_User",
+			username: "Test_User",
 			"!password": "securepassword",
 			email: "other@example.com",
 			captcha: "test",
@@ -112,7 +58,7 @@ describe("POST /api/v1/auth/register", () => {
 		const res = await mockApi.post("/api/v1/auth/register").send({
 			username: "brandnewuser",
 			"!password": "securepassword",
-			email: "seed@example.com",
+			email: "test@example.com",
 			captcha: "test",
 			inviteCode,
 		});
@@ -177,7 +123,7 @@ describe("POST /api/v1/auth/register", () => {
 
 	it("does not consume the invite code on a failed registration", async () => {
 		await mockApi.post("/api/v1/auth/register").send({
-			username: "seed_user",
+			username: "test_user",
 			"!password": "securepassword",
 			email: "other@example.com",
 			captcha: "test",
@@ -215,12 +161,12 @@ describe("POST /api/v1/auth/register", () => {
 describe("POST /api/v1/auth/login", () => {
 	beforeEach(async () => {
 		ClearTestingRateLimitCache();
-		await seedUser();
+		await seedUser({ withCredential: true, withSettings: true });
 	});
 
 	it("returns 200 and a session cookie with correct credentials", async () => {
 		const res = await mockApi.post("/api/v1/auth/login").send({
-			username: "seed_user",
+			username: "test_user",
 			"!password": "password123",
 			captcha: "test",
 		});
@@ -233,7 +179,7 @@ describe("POST /api/v1/auth/login", () => {
 
 	it("session cookie grants authenticated access", async () => {
 		const loginRes = await mockApi.post("/api/v1/auth/login").send({
-			username: "seed_user",
+			username: "test_user",
 			"!password": "password123",
 			captcha: "test",
 		});
@@ -249,7 +195,7 @@ describe("POST /api/v1/auth/login", () => {
 
 	it("allows re-login when already logged in", async () => {
 		const first = await mockApi.post("/api/v1/auth/login").send({
-			username: "seed_user",
+			username: "test_user",
 			"!password": "password123",
 			captcha: "test",
 		});
@@ -258,7 +204,7 @@ describe("POST /api/v1/auth/login", () => {
 			.post("/api/v1/auth/login")
 			.set("Cookie", first.headers["set-cookie"] as unknown as string[])
 			.send({
-				username: "seed_user",
+				username: "test_user",
 				"!password": "password123",
 				captcha: "test",
 			});
@@ -268,7 +214,7 @@ describe("POST /api/v1/auth/login", () => {
 
 	it("returns 403 with incorrect password", async () => {
 		const res = await mockApi.post("/api/v1/auth/login").send({
-			username: "seed_user",
+			username: "test_user",
 			"!password": "wrongpassword",
 			captcha: "test",
 		});
@@ -290,7 +236,7 @@ describe("POST /api/v1/auth/login", () => {
 
 	it("returns 400 when password is missing", async () => {
 		const res = await mockApi.post("/api/v1/auth/login").send({
-			username: "seed_user",
+			username: "test_user",
 			captcha: "test",
 		});
 
@@ -308,7 +254,7 @@ describe("POST /api/v1/auth/login", () => {
 
 	it("returns 400 when captcha is missing", async () => {
 		const res = await mockApi.post("/api/v1/auth/login").send({
-			username: "seed_user",
+			username: "test_user",
 			"!password": "password123",
 		});
 
@@ -321,7 +267,7 @@ describe("POST /api/v1/auth/login", () => {
 describe("POST /api/v1/auth/logout", () => {
 	beforeEach(async () => {
 		ClearTestingRateLimitCache();
-		await seedUser();
+		await seedUser({ withCredential: true, withSettings: true });
 	});
 
 	it("returns 409 when not logged in", async () => {
@@ -333,7 +279,7 @@ describe("POST /api/v1/auth/logout", () => {
 
 	it("returns 200 and destroys the session when logged in", async () => {
 		const loginRes = await mockApi.post("/api/v1/auth/login").send({
-			username: "seed_user",
+			username: "test_user",
 			"!password": "password123",
 			captcha: "test",
 		});
@@ -350,24 +296,15 @@ describe("POST /api/v1/auth/logout", () => {
 // ─── POST /api/v1/auth/reset-password ────────────────────────────────────────
 
 describe("POST /api/v1/auth/reset-password", () => {
+	let userId: number;
+
 	beforeEach(async () => {
 		ClearTestingRateLimitCache();
-		await seedUser();
+		({ id: userId } = await seedUser({ withCredential: true, withSettings: true }));
 	});
 
 	it("updates the password when a valid reset code is supplied", async () => {
-		const { id } = await DB.selectFrom("account")
-			.select("id")
-			.where("username", "=", "seed_user")
-			.executeTakeFirstOrThrow();
-
-		await DB.insertInto("priv_password_reset_token")
-			.values({
-				token: "RESET_TOKEN",
-				user_id: id,
-				created_on: new Date().toISOString(),
-			})
-			.execute();
+		await seedResetToken(userId, "RESET_TOKEN");
 
 		const res = await mockApi.post("/api/v1/auth/reset-password").send({
 			code: "RESET_TOKEN",
@@ -379,13 +316,13 @@ describe("POST /api/v1/auth/reset-password", () => {
 
 		const cred = await DB.selectFrom("priv_account_credential")
 			.select("password")
-			.where("user_id", "=", id)
+			.where("user_id", "=", userId)
 			.executeTakeFirstOrThrow();
 
 		expect(await PasswordCompare("brand_new_password", cred.password)).toBe(true);
 
 		const canLoginWithNewPassword = await mockApi.post("/api/v1/auth/login").send({
-			username: "seed_user",
+			username: "test_user",
 			"!password": "brand_new_password",
 			captcha: "test",
 		});

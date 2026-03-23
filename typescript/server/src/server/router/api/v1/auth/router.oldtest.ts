@@ -5,7 +5,7 @@ import ResetDBState from "#test-utils/resets";
 import { Sleep } from "#utils/misc";
 import t from "tap";
 
-import { PasswordCompare } from "./auth";
+import { PasswordCompare } from "../../../../../lib/auth/auth";
 
 t.test("POST /api/v1/auth/login", (t) => {
 	t.beforeEach(ResetDBState);

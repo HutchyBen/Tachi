@@ -1,50 +1,9 @@
-import { HashPassword, PasswordCompare } from "#server/router/api/v1/auth/auth.js";
+import { PasswordCompare } from "#lib/auth/auth.js";
 import DB from "#services/pg/db.js";
+import { seedResetToken, seedUser } from "#test-utils/pg-fixtures.js";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { ANON_ACTION_ResetPassword } from "./reset-password.js";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-async function seedUser(opts?: { email?: string; password?: string; username?: string }) {
-	const username = opts?.username ?? "test_user";
-	const email = opts?.email ?? "test@example.com";
-	const password = opts?.password ?? "original_password_123";
-
-	const hashedPassword = await HashPassword(password);
-
-	const { id } = await DB.insertInto("account")
-		.values({
-			username,
-			about: "Seed user for tests.",
-			joined: new Date().toISOString(),
-			last_seen: new Date().toISOString(),
-			auth_level: "user",
-			custom_pfp_location: null,
-			custom_banner_location: null,
-		})
-		.returning("id")
-		.executeTakeFirstOrThrow();
-
-	await DB.insertInto("priv_account_credential")
-		.values({ user_id: id, email, password: hashedPassword })
-		.execute();
-
-	return { id: Number(id), username, email, password };
-}
-
-async function seedResetToken(userId: number, token = "VALID_RESET_TOKEN", ageHours = 0) {
-	const createdOn =
-		ageHours > 0
-			? new Date(Date.now() - ageHours * 60 * 60 * 1000).toISOString()
-			: new Date().toISOString();
-
-	await DB.insertInto("priv_password_reset_token")
-		.values({ token, user_id: userId, created_on: createdOn })
-		.execute();
-
-	return token;
-}
 
 // ─── ANON_ACTION_ResetPassword ────────────────────────────────────────────────
 
@@ -54,7 +13,7 @@ describe("ANON_ACTION_ResetPassword", () => {
 	let user: Awaited<ReturnType<typeof seedUser>>;
 
 	beforeEach(async () => {
-		user = await seedUser();
+		user = await seedUser({ withCredential: true });
 	});
 
 	// ── Happy path ─────────────────────────────────────────────────────────────
@@ -239,6 +198,7 @@ describe("ANON_ACTION_ResetPassword", () => {
 			username: "other_user",
 			email: "other@example.com",
 			password: "other_original_pw",
+			withCredential: true,
 		});
 
 		await seedResetToken(user.id);
@@ -261,6 +221,7 @@ describe("ANON_ACTION_ResetPassword", () => {
 			username: "other_user",
 			email: "other@example.com",
 			password: "other_original_pw",
+			withCredential: true,
 		});
 
 		await seedResetToken(other.id, "OTHER_USER_TOKEN");

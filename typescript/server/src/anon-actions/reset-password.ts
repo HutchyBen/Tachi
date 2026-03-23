@@ -1,5 +1,5 @@
 import { MakeAnonAction } from "#lib/actions/actions.js";
-import { HashPassword } from "#server/router/api/v1/auth/auth.js";
+import { HashPassword } from "#lib/auth/auth.js";
 import DB from "#services/pg/db.js";
 import { GetTimeXHoursAgo } from "#utils/misc.js";
 import { ISO8601ToUnixMilliseconds } from "#utils/time.js";

@@ -1,18 +1,8 @@
 import DB from "#services/pg/db.js";
+import { seedUser } from "#test-utils/pg-fixtures.js";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { ACTION_InstallBuiltinClient } from "./install-builtin-client.js";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-async function seedUser(username: string, authLevel: "admin" | "user" = "user") {
-	const { id } = await DB.insertInto("account")
-		.values({ username, about: "Test user.", auth_level: authLevel })
-		.returning("id")
-		.executeTakeFirstOrThrow();
-
-	return { id: Number(id), username };
-}
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -44,10 +34,10 @@ describe("ACTION_InstallBuiltinClient", () => {
 	let userId: number;
 
 	beforeEach(async () => {
-		const admin = await seedUser("admin_user", "admin");
+		const admin = await seedUser({ username: "admin_user", authLevel: "admin" });
 		adminId = admin.id;
 
-		const user = await seedUser("regular_user", "user");
+		const user = await seedUser({ username: "regular_user" });
 		userId = user.id;
 	});
 
@@ -192,8 +182,8 @@ describe("ACTION_InstallBuiltinClient", () => {
 	});
 
 	it("uses the new author on upsert", async () => {
-		const first = await seedUser("first_admin", "admin");
-		const second = await seedUser("second_admin", "admin");
+		const first = await seedUser({ username: "first_admin", authLevel: "admin" });
+		const second = await seedUser({ username: "second_admin", authLevel: "admin" });
 
 		await ACTION_InstallBuiltinClient(
 			{ ip: null, acct: { id: first.id, username: first.username } },

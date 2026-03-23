@@ -28,7 +28,7 @@ import {
 	ValidateCaptcha,
 	ValidateEmail,
 	ValidatePassword,
-} from "./auth";
+} from "../../../../../lib/auth/auth";
 
 const router: Router = Router({ mergeParams: true });
 

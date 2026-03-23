@@ -1,38 +1,8 @@
 import DB from "#services/pg/db.js";
+import { seedUser, seedVerifyEmailToken } from "#test-utils/pg-fixtures.js";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { ANON_ACTION_VerifyEmail } from "./verify-email.js";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-async function seedUser(username = "test_user") {
-	const { id } = await DB.insertInto("account")
-		.values({
-			username,
-			about: "Seed user for tests.",
-			joined: new Date().toISOString(),
-			last_seen: new Date().toISOString(),
-			auth_level: "user",
-			custom_pfp_location: null,
-			custom_banner_location: null,
-		})
-		.returning("id")
-		.executeTakeFirstOrThrow();
-
-	return { id: Number(id), username };
-}
-
-async function seedVerifyEmailToken(userId: number, token = "VALID_TOKEN_ABCDEF1234") {
-	await DB.insertInto("priv_verify_email_token")
-		.values({
-			token,
-			user_id: userId,
-			email: "test@example.com",
-		})
-		.execute();
-
-	return token;
-}
 
 // ─── ANON_ACTION_VerifyEmail ───────────────────────────────────────────────────
 
@@ -136,8 +106,8 @@ describe("ANON_ACTION_VerifyEmail", () => {
 	// ── Multiple tokens ────────────────────────────────────────────────────────
 
 	it("only deletes the matching token, leaving other tokens intact", async () => {
-		const otherUser = await seedUser("other_user");
-		const otherToken = await seedVerifyEmailToken(otherUser.id, "OTHER_TOKEN_XYZ");
+		const otherUser = await seedUser({ username: "other_user" });
+		const otherToken = await seedVerifyEmailToken(otherUser.id, undefined, "OTHER_TOKEN_XYZ");
 
 		await ANON_ACTION_VerifyEmail(taker, { code: token });
 

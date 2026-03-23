@@ -36,7 +36,12 @@ import {
 import { Router } from "express";
 import { p } from "prudence";
 
-import { HashPassword, PasswordCompare, ValidateEmail, ValidatePassword } from "../../auth/auth";
+import {
+	HashPassword,
+	PasswordCompare,
+	ValidateEmail,
+	ValidatePassword,
+} from "../../../../../../lib/auth/auth";
 import apiTokensRouter from "./api-tokens/router";
 import bannerRouter from "./banner/router";
 import followingRouter from "./following/router";

@@ -1,62 +1,8 @@
-import { HashPassword } from "#server/router/api/v1/auth/auth.js";
 import DB from "#services/pg/db.js";
+import { seedInvite, seedUser } from "#test-utils/pg-fixtures.js";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { ANON_ACTION_Register } from "./register.js";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-async function seedUser(opts?: { email?: string; username?: string }) {
-	const username = opts?.username ?? "seed_user";
-	const email = opts?.email ?? "seed@example.com";
-
-	const { id } = await DB.insertInto("account")
-		.values({
-			username,
-			about: "Seed user for tests.",
-			joined: new Date().toISOString(),
-			last_seen: new Date().toISOString(),
-			auth_level: "user",
-			custom_pfp_location: null,
-			custom_banner_location: null,
-		})
-		.returning("id")
-		.executeTakeFirstOrThrow();
-
-	await DB.insertInto("account_settings")
-		.values({
-			user_id: id,
-			pf_invisible: false,
-			pf_developer_mode: false,
-			pf_advanced_mode: false,
-			pf_contentious_content: false,
-			pf_deletable_scores: false,
-		})
-		.execute();
-
-	const hashedPassword = await HashPassword("password123");
-
-	await DB.insertInto("priv_account_credential")
-		.values({ user_id: id, email, password: hashedPassword })
-		.execute();
-
-	return { id, username, email };
-}
-
-async function seedInvite(createdBy: number, code = "INVITE_CODE") {
-	await DB.insertInto("priv_invite")
-		.values({
-			code,
-			created_by: createdBy,
-			created_at: new Date().toISOString(),
-			consumed: false,
-			consumed_by: null,
-			consumed_at: null,
-		})
-		.execute();
-
-	return code;
-}
 
 // ─── ANON_ACTION_Register ─────────────────────────────────────────────────────
 
@@ -66,7 +12,7 @@ describe("ANON_ACTION_Register", () => {
 	let inviteCode: string;
 
 	beforeEach(async () => {
-		const { id } = await seedUser();
+		const { id } = await seedUser({ withCredential: true, withSettings: true });
 		inviteCode = await seedInvite(id);
 	});
 
@@ -162,7 +108,7 @@ describe("ANON_ACTION_Register", () => {
 	it("throws 409 when username is already taken", async () => {
 		await expect(
 			ANON_ACTION_Register(taker, {
-				username: "seed_user",
+				username: "test_user",
 				"!password": "securepassword",
 				email: "other@example.com",
 				captcha: "test",
@@ -174,7 +120,7 @@ describe("ANON_ACTION_Register", () => {
 	it("throws 409 when username is already taken (case-insensitive)", async () => {
 		await expect(
 			ANON_ACTION_Register(taker, {
-				username: "SEED_USER",
+				username: "TEST_USER",
 				"!password": "securepassword",
 				email: "other@example.com",
 				captcha: "test",
@@ -188,7 +134,7 @@ describe("ANON_ACTION_Register", () => {
 			ANON_ACTION_Register(taker, {
 				username: "brandnewuser",
 				"!password": "securepassword",
-				email: "seed@example.com",
+				email: "test@example.com",
 				captcha: "test",
 				inviteCode,
 			}),
@@ -200,7 +146,7 @@ describe("ANON_ACTION_Register", () => {
 			ANON_ACTION_Register(taker, {
 				username: "brandnewuser",
 				"!password": "securepassword",
-				email: "SEED@EXAMPLE.COM",
+				email: "TEST@EXAMPLE.COM",
 				captcha: "test",
 				inviteCode,
 			}),
@@ -237,7 +183,7 @@ describe("ANON_ACTION_Register", () => {
 	it("does not consume the invite code on a failed registration", async () => {
 		await expect(
 			ANON_ACTION_Register(taker, {
-				username: "seed_user",
+				username: "test_user",
 				"!password": "securepassword",
 				email: "other@example.com",
 				captcha: "test",
@@ -277,7 +223,7 @@ describe("ANON_ACTION_Register", () => {
 	it("writes a BAD action row when the username is already taken", async () => {
 		await expect(
 			ANON_ACTION_Register(taker, {
-				username: "seed_user",
+				username: "test_user",
 				"!password": "securepassword",
 				email: "other@example.com",
 				captcha: "test",
@@ -298,7 +244,7 @@ describe("ANON_ACTION_Register", () => {
 			ANON_ACTION_Register(taker, {
 				username: "brandnewuser",
 				"!password": "securepassword",
-				email: "seed@example.com",
+				email: "test@example.com",
 				captcha: "test",
 				inviteCode,
 			}),

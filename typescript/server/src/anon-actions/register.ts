@@ -2,7 +2,7 @@ import { MakeAnonAction } from "#lib/actions/actions.js";
 import { SendEmail } from "#lib/email/client.js";
 import { EmailFormatVerifyEmail } from "#lib/email/formats.js";
 import { Env, ServerConfig } from "#lib/setup/config.js";
-import { AddNewUser, ValidateCaptcha } from "#server/router/api/v1/auth/auth.js";
+import { AddNewUser, ValidateCaptcha } from "#lib/auth/auth.js";
 import DB from "#services/pg/db.js";
 import { Random20Hex } from "#utils/misc.js";
 import { CheckIfEmailInUse, GetUserCaseInsensitive } from "#utils/user.js";
