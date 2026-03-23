@@ -1,4 +1,4 @@
-import { log } from "#utils/log.js";
+import { log } from "#utils/log";
 import { GetLimboChannel } from "#utils/misc";
 import { Client, type CommandInteraction, Intents, type SelectMenuInteraction } from "discord.js";
 

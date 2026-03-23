@@ -1,7 +1,7 @@
 import type { APITokenDocument, UserDocument, WebhookEvents } from "tachi-common";
 
-import { log } from "#utils/log.js";
-import { HandleQuestAchievedV1 } from "#webhook-handlers/quest-achieved.js";
+import { log } from "#utils/log";
+import { HandleQuestAchievedV1 } from "#webhook-handlers/quest-achieved";
 import express, { type Express } from "express";
 import path from "path";
 

@@ -5,7 +5,7 @@ import type {
 import type { integer } from "tachi-common";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { ServerConfig } from "#lib/setup/config";
 import { RequireNotGuest } from "#server/middleware/auth";

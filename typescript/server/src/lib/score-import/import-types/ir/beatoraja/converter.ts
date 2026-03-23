@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 import type { Mutable } from "#utils/types";
 import type { ChartDocument, Playtypes, SongDocument } from "tachi-common";
 

@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 import type { ClassDelta, GameGroup, integer, Playtype, UserGameStats } from "tachi-common";
 
 import { CreateGameSettings } from "#lib/game-settings/create-game-settings";

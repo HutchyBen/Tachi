@@ -14,7 +14,7 @@ import {
 import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch-manual/converter";
 import { EAM_VERSION_NAMES } from "#lib/score-import/import-types/common/eamusement-iidx-csv/parser";
 import { AggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
-import { ValidatePlaytypeFromParamFor } from "#server/router/api/v1/games/_game/_playtype/middleware.js";
+import { ValidatePlaytypeFromParamFor } from "#server/router/api/v1/games/_game/_playtype/middleware";
 import MONGODB_KILL from "#services/mongo/db";
 import { GetUser } from "#utils/req-tachi-data";
 import { Router } from "express";

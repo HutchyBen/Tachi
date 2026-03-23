@@ -1,4 +1,4 @@
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { Env, ServerConfig } from "#lib/setup/config";
 import bunyan from "bunyan";
 import nodemailer, { type SentMessageInfo, type Transporter } from "nodemailer";

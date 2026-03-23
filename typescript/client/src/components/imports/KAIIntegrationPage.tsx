@@ -7,7 +7,7 @@ import useImport from "#components/util/import/useImport";
 import Loading from "#components/util/Loading";
 import useApiQuery from "#components/util/query/useApiQuery";
 import { UserContext } from "#context/UserContext";
-import hashjs from "hash.js";
+import hashjs from "hash";
 import React, { useContext, useMemo, useState } from "react";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { type APIImportTypes, GetGameGroupConfig } from "tachi-common";

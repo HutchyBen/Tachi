@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 
 import { StringIsGameVersion } from "#utils/misc";
 import { CSVParseError, NaiveCSVParse } from "#utils/naive-csv-parser";

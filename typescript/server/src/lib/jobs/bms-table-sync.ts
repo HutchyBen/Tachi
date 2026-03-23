@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import type { FilterQuery } from "mongodb";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { DeorphanIfInQueue } from "#lib/orphan-queue/orphan-queue";
 import MONGODB_KILL from "#services/mongo/db";
 import { InitaliseFolderChartLookup } from "#utils/folder";

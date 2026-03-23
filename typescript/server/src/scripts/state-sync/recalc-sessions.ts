@@ -1,4 +1,4 @@
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { RecalcSessions } from "#utils/calculations/recalc-sessions";
 import { WrapScriptPromise } from "#utils/misc";
 

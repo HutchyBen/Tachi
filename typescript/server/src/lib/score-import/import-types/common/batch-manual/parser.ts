@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 
 import { TachiConfig } from "#lib/setup/config";
 import { IsRecord, IsValidGame, IsValidPlaytype } from "#utils/misc";

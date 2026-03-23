@@ -1,5 +1,5 @@
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { FormatUserDoc, GetUserWithID } from "#utils/user";
 import { Router } from "express";
 

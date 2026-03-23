@@ -1,8 +1,8 @@
-import DB from "#services/pg/db.js";
-import { seedUser } from "#test-utils/pg-fixtures.js";
+import DB from "#services/pg/db";
+import { seedUser } from "#test-utils/pg-fixtures";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { ANON_ACTION_ForgotPassword } from "./forgot-password.js";
+import { ANON_ACTION_ForgotPassword } from "./forgot-password";
 
 // ─── ANON_ACTION_ForgotPassword ───────────────────────────────────────────────
 
@@ -161,7 +161,11 @@ describe("ANON_ACTION_ForgotPassword", () => {
 	// ── Token isolation ────────────────────────────────────────────────────────
 
 	it("only inserts a token for the matching user, not for others", async () => {
-		const other = await seedUser({ username: "other_user", email: "other@example.com", withCredential: true });
+		const other = await seedUser({
+			username: "other_user",
+			email: "other@example.com",
+			withCredential: true,
+		});
 
 		await ANON_ACTION_ForgotPassword(taker, { email: user.email });
 

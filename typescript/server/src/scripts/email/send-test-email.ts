@@ -1,6 +1,6 @@
 import { SendEmail } from "#lib/email/client";
 import { MainHTMLWrapper } from "#lib/email/formats";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { Command } from "commander";
 
 const program = new Command();

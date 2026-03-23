@@ -1,12 +1,15 @@
 import { ONE_DAY } from "#lib/constants/time";
-import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user.js";
-import { SELECT_USER_SETTINGS, ToUserSettingsDocument } from "#lib/db-formats/user-settings.js";
-import { log } from "#lib/log/log.js";
+import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user";
+import { SELECT_USER_SETTINGS, ToUserSettingsDocument } from "#lib/db-formats/user-settings";
+import { log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
-import DB from "#services/pg/db.js";
+import DB from "#services/pg/db";
+import { ISO8601ToUnixMilliseconds } from "#utils/time";
+import { type Kysely, sql, type Transaction } from "kysely";
 import {
 	type APITokenDocument,
 	type GameGroup,
+	GamePTToV3,
 	GetGamePTConfig,
 	type GPTString,
 	type integer,
@@ -17,6 +20,7 @@ import {
 	type UserGameStats,
 	type UserSettingsDocument,
 } from "tachi-common";
+import { type Database } from "tachi-db";
 
 import { GetFollowingForUser } from "./queries/settings";
 
@@ -88,9 +92,15 @@ export async function GetSettingsForUser(userID: integer): Promise<UserSettingsD
  * Gets the users for these user IDs.
  */
 export async function GetUsersWithIDs(userIDs: Array<integer>) {
-	const users = await MONGODB_KILL.users.find({
-		id: { $in: userIDs },
-	});
+	if (userIDs.length === 0) {
+		return [];
+	}
+
+	const users = await DB.selectFrom("account")
+		.select(SELECT_USER)
+		.where("id", "in", userIDs)
+		.execute()
+		.then((rows) => rows.map(ToUserDocument));
 
 	// Note that we should dedupe this by making a set
 	// as passing [1, 1, 1] is perfectly legal to this function.
@@ -184,7 +194,14 @@ export async function GetUsersRanking(stats: UserGameStats) {
 }
 
 export function GetUGPTPlaycount(userID: integer, game: GameGroup, playtype: Playtype) {
-	return MONGODB_KILL.scores.count({ userID, game, playtype });
+	const v3Game = GamePTToV3(game, playtype);
+
+	return DB.selectFrom("score")
+		.select((eb) => eb.fn.countAll().as("playcount"))
+		.where("user_id", "=", userID)
+		.where("game", "=", v3Game)
+		.executeTakeFirst()
+		.then((res) => res?.playcount ?? 0);
 }
 
 export async function GetAllRankings(stats: UserGameStats) {
@@ -210,44 +227,23 @@ export async function GetUsersRankingAndOutOf(
 	alg?: ProfileRatingAlgorithms[GPTString],
 ) {
 	const gptConfig = GetGamePTConfig(stats.game, stats.playtype);
-
 	const ratingAlg = alg ?? gptConfig.defaultProfileRatingAlg;
+	const v3Game = GamePTToV3(stats.game, stats.playtype);
+	const userRating = stats.ratings[ratingAlg] ?? null;
 
-	const aggRes: [
-		{
-			_id: null;
-			outOf: integer;
-			ranking: integer;
-		},
-	] = await MONGODB_KILL["game-stats"].aggregate([
-		{
-			$match: {
-				game: stats.game,
-				playtype: stats.playtype,
-			},
-		},
-		{
-			$group: {
-				_id: null,
-				outOf: { $sum: 1 },
-				ranking: {
-					$sum: {
-						$cond: {
-							if: {
-								$gt: [`$ratings.${ratingAlg}`, stats.ratings[ratingAlg]],
-							},
-							then: 1,
-							else: 0,
-						},
-					},
-				},
-			},
-		},
-	]);
+	const result = await DB.selectFrom("game_stats")
+		.select([
+			(eb) => eb.fn.countAll().as("out_of"),
+			sql<number>`COUNT(*) FILTER (WHERE (ratings->>${ratingAlg})::numeric > ${userRating})`.as(
+				"ranking_count",
+			),
+		])
+		.where("game", "=", v3Game)
+		.executeTakeFirstOrThrow();
 
 	return {
-		ranking: aggRes[0].ranking + 1,
-		outOf: aggRes[0].outOf,
+		ranking: Number(result.ranking_count) + 1,
+		outOf: Number(result.out_of),
 	};
 }
 
@@ -314,23 +310,31 @@ export async function GetAllUserRivals(userID: integer) {
 
 const USERNAME_CHANGE_COOLDOWN = ONE_DAY * 180; // 6 months
 
-export async function CanChangeUsername(userID: integer) {
-	const nextAvailableChange = await GetNextAvailableUsernameChange(userID);
+export async function CanChangeUsername(
+	txn: Kysely<Database> | Transaction<Database>,
+	userID: integer,
+) {
+	const nextAvailableChange = await GetNextAvailableUsernameChange(txn, userID);
 
 	return nextAvailableChange === null || nextAvailableChange < Date.now();
 }
 
-export async function GetNextAvailableUsernameChange(userID: integer): Promise<integer | null> {
-	const lastChange = await MONGODB_KILL["user-name-changes"].findOne(
-		{ userID },
-		{ sort: { timestamp: -1 } },
-	);
+export async function GetNextAvailableUsernameChange(
+	txn: Kysely<Database> | Transaction<Database>,
+	userID: integer,
+): Promise<integer | null> {
+	const lastChange = await txn
+		.selectFrom("account_username_change")
+		.select("timestamp")
+		.where("user_id", "=", userID)
+		.orderBy("timestamp", "desc")
+		.executeTakeFirst();
 
 	if (!lastChange) {
 		return null;
 	}
 
-	return lastChange.timestamp + USERNAME_CHANGE_COOLDOWN;
+	return ISO8601ToUnixMilliseconds(lastChange.timestamp) + USERNAME_CHANGE_COOLDOWN;
 }
 
 /**

@@ -8,7 +8,7 @@ import type {
 	SongDocument,
 } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
 import { GetNextCounterValue } from "#utils/db";
 import { DedupeArr } from "#utils/misc";

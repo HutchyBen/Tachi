@@ -1,11 +1,11 @@
 import type { FilterQuery } from "mongodb";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { SearchUsersRegExp } from "#lib/search/search";
 import MONGODB_KILL from "#services/mongo/db";
 import { IsString } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";
-import { apiSuccess } from "#utils/response.js";
+import { apiSuccess } from "#utils/response";
 import { ParseStrPositiveNonZeroInt } from "#utils/string-checks";
 import { GetUsersWithIDs } from "#utils/user";
 import { Router } from "express";

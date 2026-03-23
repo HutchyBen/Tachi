@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 import type { GameGroup, GoalDocument, GoalSubscriptionDocument, integer } from "tachi-common";
 
 import { EvaluateGoalForUser, GetRelevantGoals } from "#lib/targets/goals";

@@ -56,7 +56,7 @@ test FILTER="*":
 
 	source .scripts/multi_evaluator.sh
 
-	evaluate "just test-typescript {{FILTER}}"
+	evaluate "just test-typescript '{{FILTER}}'"
 
 	post_evaluate
 

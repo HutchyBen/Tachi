@@ -1,16 +1,23 @@
-import { ACTION_ResendVerifyEmail } from "#actions/resend-verify-email.js";
-import { ANON_ACTION_ForgotPassword } from "#anon-actions/forgot-password.js";
-import { ANON_ACTION_Register } from "#anon-actions/register.js";
-import { ANON_ACTION_ResetPassword } from "#anon-actions/reset-password.js";
-import { ANON_ACTION_VerifyEmail } from "#anon-actions/verify-email.js";
-import { log } from "#lib/log/log.js";
+import { ACTION_ResendVerifyEmail } from "#actions/resend-verify-email";
+import { ANON_ACTION_ForgotPassword } from "#anon-actions/forgot-password";
+import { ANON_ACTION_Register } from "#anon-actions/register";
+import { ANON_ACTION_ResetPassword } from "#anon-actions/reset-password";
+import { ANON_ACTION_VerifyEmail } from "#anon-actions/verify-email";
+import {
+	MountAuthCookie,
+	PasswordCompare,
+	ValidateCaptcha,
+	ValidateEmail,
+	ValidatePassword,
+} from "#lib/auth/auth";
+import { log } from "#lib/log/log";
 import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
 import {
 	AggressiveRateLimitMiddleware,
 	HyperAggressiveRateLimitMiddleware,
 } from "#server/middleware/rate-limiter";
-import { actionErrorToResponse, apiSuccess } from "#utils/response.js";
+import { actionErrorToResponse, apiSuccess } from "#utils/response";
 import {
 	FormatUserDoc,
 	GetSettingsForUser,
@@ -21,14 +28,6 @@ import {
 import { Router } from "express";
 import { p } from "prudence";
 import { type UserDocument } from "tachi-common";
-
-import {
-	MountAuthCookie,
-	PasswordCompare,
-	ValidateCaptcha,
-	ValidateEmail,
-	ValidatePassword,
-} from "../../../../../lib/auth/auth";
 
 const router: Router = Router({ mergeParams: true });
 

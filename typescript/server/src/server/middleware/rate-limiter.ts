@@ -2,7 +2,7 @@ import type { Request } from "express";
 import type { integer } from "tachi-common";
 
 import { ONE_MINUTE } from "#lib/constants/time";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RedisClient } from "#services/redis/redis";
 import { OmitUndefinedKeys } from "#utils/misc";

@@ -1,6 +1,6 @@
 import type { DryScoreData } from "#lib/score-import/framework/common/types";
 
-import { log as globalLog, type KtLogger } from "#lib/log/log.js";
+import { log as globalLog, type KtLogger } from "#lib/log/log";
 import { CreateScoreCalcData } from "#lib/score-import/framework/calculated-data/score";
 import { CreateSessionCalcData } from "#lib/score-import/framework/calculated-data/session";
 import { UpdateChartRanking } from "#lib/score-import/framework/pb/create-pb-doc";

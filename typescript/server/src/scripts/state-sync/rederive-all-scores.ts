@@ -1,4 +1,4 @@
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import UpdateScore from "#lib/score-mutation/update-score";
 import MONGODB_KILL from "#services/mongo/db";
 import { UpdateAllPBs } from "#utils/calculations/recalc-scores";

@@ -1,5 +1,5 @@
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { ServerConfig } from "#lib/setup/config";
 import {
 	ConstructGoal,

@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 import type { FilterQuery } from "mongodb";
 import type { GameGroup, ImportTypes, integer } from "tachi-common";
 

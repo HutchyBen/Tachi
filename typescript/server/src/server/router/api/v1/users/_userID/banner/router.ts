@@ -1,18 +1,14 @@
-import { CDNDelete, CDNRedirect, CDNStoreOrOverwrite } from "#lib/cdn/cdn";
+import { ACTION_ChangeBanner } from "#actions/change-banner.js";
+import { ACTION_DeleteBanner } from "#actions/delete-banner.js";
+import { CDNRedirect } from "#lib/cdn/cdn";
 import { GetProfileBannerURL } from "#lib/cdn/url-format";
 import { ONE_MEGABYTE } from "#lib/constants/filesize";
-import { log } from "#lib/log/log.js";
 import { RequirePermissions } from "#server/middleware/auth";
 import { CreateMulterSingleUploadMiddleware } from "#server/middleware/multer-upload";
-import MONGODB_KILL from "#services/mongo/db";
-import { HashSHA256 } from "#utils/crypto";
 import { GetTachiData } from "#utils/req-tachi-data";
-import { FormatUserDoc } from "#utils/user";
 import { Router } from "express";
 
 import { RequireAuthedAsUser } from "../middleware";
-
-// note: this is just the ../pfp/router.ts code copied and altered.
 
 const router: Router = Router({ mergeParams: true });
 
@@ -33,47 +29,30 @@ router.put(
 	async (req, res) => {
 		const user = GetTachiData(req, "requestedUser");
 
-		if (!user.customBannerLocation) {
-			log.debug(`User ${FormatUserDoc(user)} set a custom profile banner.`);
-		} else {
-			log.debug(`User ${FormatUserDoc(user)} updated their profile banner.`);
-		}
-
 		if (!req.file) {
-			log.error(
-				`Conflicting state - no req.file has been populated but passed middleware? (${FormatUserDoc(
-					user,
-				)})`,
-			);
-			return res.status(500).json({
-				success: false,
-				description: `An internal error has occured.`,
-			});
-		}
-
-		const contentHash = HashSHA256(req.file.buffer);
-
-		if (
-			req.file.mimetype === "image/jpeg" ||
-			req.file.mimetype === "image/png" ||
-			req.file.mimetype === "image/gif"
-		) {
-			await CDNStoreOrOverwrite(GetProfileBannerURL(user.id, contentHash), req.file.buffer);
-		} else {
 			return res.status(400).json({
 				success: false,
-				description: `Invalid file - only JPG and PNG files are supported.`,
+				description: `No file provided.`,
 			});
 		}
+
+		const { contentHash } = await ACTION_ChangeBanner(
+			{
+				acct: {
+					id: user.id,
+					username: user.username,
+				},
+				ip: req.ip,
+			},
+			{
+				"!fileBuffer": req.file.buffer,
+				fileMimetype: req.file.mimetype,
+			},
+		);
 
 		if (req.session.tachi?.user) {
 			req.session.tachi.user.customBannerLocation = contentHash;
 		}
-
-		await MONGODB_KILL.users.update(
-			{ id: user.id },
-			{ $set: { customBannerLocation: contentHash } },
-		);
 
 		return res.status(200).json({
 			success: true,
@@ -116,15 +95,20 @@ router.delete(
 	async (req, res) => {
 		const user = GetTachiData(req, "requestedUser");
 
-		if (!user.customBannerLocation) {
-			return res.status(404).json({
-				success: false,
-				description: `You do not have a custom profile banner to delete.`,
-			});
-		}
+		await ACTION_DeleteBanner(
+			{
+				acct: {
+					id: user.id,
+					username: user.username,
+				},
+				ip: req.ip,
+			},
+			{},
+		);
 
-		await CDNDelete(GetProfileBannerURL(user.id, user.customBannerLocation));
-		await MONGODB_KILL.users.update({ id: user.id }, { $set: { customBannerLocation: null } });
+		if (req.session.tachi?.user) {
+			req.session.tachi.user.customBannerLocation = null;
+		}
 
 		return res.status(200).json({
 			success: true,

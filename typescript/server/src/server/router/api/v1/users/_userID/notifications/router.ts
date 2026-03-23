@@ -1,5 +1,6 @@
-import { ONE_SECOND } from "#lib/constants/time";
-import MONGODB_KILL from "#services/mongo/db";
+import { ACTION_DeleteAllNotifications } from "#actions/delete-all-notifications.js";
+import { ACTION_MarkAllNotificationsRead } from "#actions/mark-all-notifications-read.js";
+import DB from "#services/pg/db";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
 
@@ -19,16 +20,11 @@ router.use(RequireSelfRequestFromUser);
 router.get("/", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	const notifs = await MONGODB_KILL.notifications.find(
-		{
-			sentTo: user.id,
-		},
-		{
-			sort: {
-				sentAt: -1,
-			},
-		},
-	);
+	const notifs = await DB.selectFrom("notification")
+		.selectAll()
+		.where("sent_to", "=", user.id)
+		.orderBy("sent_at", "desc")
+		.execute();
 
 	return res.status(200).json({
 		success: true,
@@ -45,29 +41,20 @@ router.get("/", async (req, res) => {
 router.post("/mark-all-read", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	const updateRes = await MONGODB_KILL.notifications.update(
+	const { markedCount } = await ACTION_MarkAllNotificationsRead(
 		{
-			sentTo: user.id,
-
-			// insanely rare edge case, but if someone submits an empty-my-inbox
-			// request, and then gets a notif at the same time, they run the risk of
-			// emptying something so immediately they don't actually ever see it.
-			// This hack mitigates that, slightly.
-			sentAt: {
-				$lt: Date.now() - ONE_SECOND * 2,
+			acct: {
+				id: user.id,
+				username: user.username,
 			},
+			ip: req.ip,
 		},
-		{
-			$set: { read: true },
-		},
-		{
-			multi: true,
-		},
+		{},
 	);
 
 	return res.status(200).json({
 		success: true,
-		description: `Marked ${updateRes.n} notifications as read.`,
+		description: `Marked ${markedCount} notifications as read.`,
 		body: {},
 	});
 });
@@ -80,18 +67,20 @@ router.post("/mark-all-read", async (req, res) => {
 router.post("/delete-all", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	const deleted = await MONGODB_KILL.notifications.remove({
-		sentTo: user.id,
-
-		// See mark-all-read for an explanation of this behaviour.
-		sentAt: {
-			$lt: Date.now() - ONE_SECOND * 2,
+	const { deletedCount } = await ACTION_DeleteAllNotifications(
+		{
+			acct: {
+				id: user.id,
+				username: user.username,
+			},
+			ip: req.ip,
 		},
-	});
+		{},
+	);
 
 	return res.status(200).json({
 		success: true,
-		description: `Deleted ${deleted.deletedCount ?? 0} notification(s).`,
+		description: `Deleted ${deletedCount} notification(s).`,
 		body: {},
 	});
 });

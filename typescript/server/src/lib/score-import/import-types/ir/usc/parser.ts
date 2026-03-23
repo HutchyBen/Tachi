@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 import type { USCClientScore } from "#server/router/ir/usc/_playtype/types";
 import type { Playtypes } from "tachi-common";
 

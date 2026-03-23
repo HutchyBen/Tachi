@@ -48,7 +48,7 @@ import {
 // ^ These rules are disabled for good reason. We have to deal with some very nonsensical types here
 // so we just disable these rules. I know, it sucks, but we'll live.
 import { ONE_MINUTE, ONE_SECOND } from "#lib/constants/time";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { Env, ServerConfig } from "#lib/setup/config";
 import { GetMillisecondsSince } from "#utils/misc";
 

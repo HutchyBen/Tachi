@@ -1,5 +1,5 @@
 import { Env } from "#config";
-import { PrependTachiUrl } from "#utils/fetch-tachi.js";
+import { PrependTachiUrl } from "#utils/fetch-tachi";
 import { log } from "#utils/log";
 import {
 	GetGameGroupConfig,

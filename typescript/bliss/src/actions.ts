@@ -1,6 +1,6 @@
 import { type ZodObject } from "zod";
 
-import { AppendLogCtx, log as baseLogger } from "./log.js";
+import { AppendLogCtx, log as baseLogger } from "./log";
 
 export type ActionResult = "BAD" | "GOOD" | "THROW";
 

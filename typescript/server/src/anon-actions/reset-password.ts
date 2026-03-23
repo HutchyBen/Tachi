@@ -1,8 +1,8 @@
-import { MakeAnonAction } from "#lib/actions/actions.js";
-import { HashPassword } from "#lib/auth/auth.js";
-import DB from "#services/pg/db.js";
-import { GetTimeXHoursAgo } from "#utils/misc.js";
-import { ISO8601ToUnixMilliseconds } from "#utils/time.js";
+import { MakeAnonAction } from "#lib/actions/actions";
+import { HashPassword } from "#lib/auth/auth";
+import DB from "#services/pg/db";
+import { GetTimeXHoursAgo } from "#utils/misc";
+import { ISO8601ToUnixMilliseconds } from "#utils/time";
 import { ExpectedErr, log } from "bliss";
 
 export const ANON_ACTION_ResetPassword = MakeAnonAction(

@@ -1,7 +1,7 @@
 import type { ICollection, IObjectID } from "monk";
 
 /* eslint-disable no-await-in-loop */
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 
 export async function EfficientDBIterate<T extends object, R>(
 	collection: ICollection<T>,

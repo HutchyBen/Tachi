@@ -1,4 +1,4 @@
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { RequirePermissions } from "#server/middleware/auth";
 import MONGODB_KILL from "#services/mongo/db";
 import { FormatPrError, optNull } from "#utils/prudence";

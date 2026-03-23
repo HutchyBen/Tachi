@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 
 import { IsRecord } from "#utils/misc";
 import { FormatPrError } from "#utils/prudence";

@@ -1,6 +1,6 @@
 import type { FilterQuery } from "mongodb";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
 import {
 	FormatChart,

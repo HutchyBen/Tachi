@@ -1,6 +1,6 @@
 import type { ImportTypes, UserDocument } from "tachi-common";
 
-import { type KtLogger, log } from "#lib/log/log.js";
+import { type KtLogger, log } from "#lib/log/log";
 import { FormatUserDoc } from "#utils/user";
 
 export function CreateScoreLogger(

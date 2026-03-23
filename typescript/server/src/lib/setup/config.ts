@@ -1,4 +1,4 @@
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import JSON5 from "json5";
 import { allSupportedGameGroups, type GameGroup, type ImportTypes } from "tachi-common";
 import { allImportTypes } from "tachi-common/constants/import-types";

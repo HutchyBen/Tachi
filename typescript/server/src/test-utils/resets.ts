@@ -1,7 +1,7 @@
 import type { ICollection } from "monk";
 import type { GameGroup } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { Env, ServerConfig } from "#lib/setup/config";
 import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
 import MONGODB_KILL, { type StaticDatabases } from "#services/mongo/db";

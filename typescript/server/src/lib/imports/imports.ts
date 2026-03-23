@@ -1,6 +1,6 @@
 import type { ImportDocument } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import {
 	CheckAndSetOngoingImportLock,
 	UnsetOngoingImportLock,

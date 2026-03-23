@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 import type { FindOneResult } from "monk";
 import type { GameGroup, integer, SongDocument } from "tachi-common";
 

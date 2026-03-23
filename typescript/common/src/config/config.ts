@@ -134,6 +134,10 @@ const v3GameMappings: Record<GPTString, V3Game> = {
 	"ddr:DP": "ddr-dp",
 };
 
+export function GamePTToV3(game: GameGroup, playtype: Playtype): V3Game {
+	return GPTStringToV3(GetGPTString(game, playtype));
+}
+
 export function GPTStringToV3(gptString: GPTString): V3Game {
 	return v3GameMappings[gptString];
 }
@@ -198,6 +202,12 @@ export function V3ToGameGroup(v3Game: V3Game): GameGroup {
 	};
 
 	return mapping[v3Game];
+}
+
+export function V3ToGamePT(v3Game: V3Game): { game: GameGroup; playtype: Playtype } {
+	const gptString = V3ToGPTString(v3Game);
+	const [game, playtype] = SplitGPT(gptString);
+	return { game, playtype };
 }
 
 /**

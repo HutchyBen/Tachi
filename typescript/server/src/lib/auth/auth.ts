@@ -1,6 +1,6 @@
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { ServerConfig } from "#lib/setup/config";
-import DB from "#services/pg/db.js";
+import DB from "#services/pg/db";
 import nodeFetch from "#utils/fetch";
 import { Random20Hex } from "#utils/misc";
 import { CreateURLWithParams } from "#utils/url";

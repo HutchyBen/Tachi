@@ -1,4 +1,4 @@
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
 import { Random20Hex } from "#utils/misc";
 import { Command } from "commander";

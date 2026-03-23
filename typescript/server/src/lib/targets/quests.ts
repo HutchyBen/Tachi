@@ -9,7 +9,7 @@ import type {
 } from "tachi-common";
 
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { BulkSendNotification } from "#lib/notifications/notifications";
 import MONGODB_KILL from "#services/mongo/db";
 

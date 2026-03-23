@@ -1,4 +1,4 @@
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { PullDatabaseSeeds } from "#lib/seeds/repo";
 import { Env } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";

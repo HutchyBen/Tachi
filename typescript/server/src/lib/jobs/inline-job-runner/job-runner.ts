@@ -1,4 +1,4 @@
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { TachiConfig } from "#lib/setup/config";
 import { DedupeArr } from "#utils/misc";
 import { Queue, Worker } from "bullmq";

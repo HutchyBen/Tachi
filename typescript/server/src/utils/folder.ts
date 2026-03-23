@@ -1,13 +1,11 @@
-import type { BulkWriteOperation, FilterQuery } from "mongodb";
+import type { FilterQuery } from "mongodb";
 
-import { log } from "#lib/log/log.js";
-import { TachiConfig } from "#lib/setup/config";
+import { log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
 import deepmerge from "deepmerge";
 import fjsh from "fast-json-stable-hash";
 import {
 	type ChartDocument,
-	type FolderChartLookup,
 	type FolderDocument,
 	FormatGameGroup,
 	type GameGroup,
@@ -170,70 +168,6 @@ export async function GetFolderChartIDs(folderID: string) {
 	);
 
 	return chartIDs.map((e) => e.chartID);
-}
-
-export async function CreateFolderChartLookup(folder: FolderDocument, flush = false) {
-	try {
-		const { charts } = await ResolveFolderToCharts(folder, {}, false);
-
-		if (flush) {
-			await MONGODB_KILL["folder-chart-lookup"].remove({
-				folderID: folder.folderID,
-			});
-		}
-
-		const ops: Array<BulkWriteOperation<FolderChartLookup>> = charts.map((c) => ({
-			updateOne: {
-				filter: {
-					chartID: c.chartID,
-					folderID: folder.folderID,
-				},
-
-				// amusing no-op
-				update: {
-					$set: {
-						chartID: c.chartID,
-						folderID: folder.folderID,
-					},
-				},
-				upsert: true,
-			},
-		}));
-
-		if (ops.length === 0) {
-			return;
-		}
-
-		// we do a bulk-upsert here to avoid race conditions if multiple things try to
-		// create a folder-chart-lookup at the same time.
-		await MONGODB_KILL["folder-chart-lookup"].bulkWrite(ops);
-	} catch (err) {
-		log.error({ folder, err }, `Failed to create folder chart lookup for ${folder.title}.`);
-		throw err;
-	}
-}
-
-/**
- * Creates the "folder-chart-lookup" cache. This is used to optimise
- * common use cases, such as retrieving chartIDs from a folder.
- */
-export async function InitaliseFolderChartLookup() {
-	log.info(`Started InitialiseFolderChartLookup`);
-	await MONGODB_KILL["folder-chart-lookup"].remove({});
-	log.info(`Flushed Cache.`);
-
-	// temporary hack -- this will still break if we introduce a new
-	// playtype on staging or something.
-	// We need to have separate seeds for staging and prod! todo #609.
-	const folders = await MONGODB_KILL.folders.find({
-		game: { $in: TachiConfig.GAMES },
-	});
-
-	log.info(`Reloading ${folders.length} folders.`);
-
-	await Promise.all(folders.map((folder) => CreateFolderChartLookup(folder)));
-
-	log.info(`Completed InitialiseFolderChartLookup.`);
 }
 
 export async function GetFoldersFromTable(table: TableDocument) {

@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 
 import { VERSION_STR } from "#lib/constants/version";
 import { TachiConfig } from "#lib/setup/config";

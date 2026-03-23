@@ -1,6 +1,6 @@
 import type { GameGroup, Playtype, ScoreDocument } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { GetAndUpdateUsersGoals } from "#lib/score-import/framework/goals/goals";
 import { UpdateChartRanking } from "#lib/score-import/framework/pb/create-pb-doc";
 import { ProcessPBs } from "#lib/score-import/framework/pb/process-pbs";

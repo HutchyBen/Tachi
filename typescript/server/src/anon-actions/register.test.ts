@@ -1,8 +1,8 @@
-import DB from "#services/pg/db.js";
-import { seedInvite, seedUser } from "#test-utils/pg-fixtures.js";
+import DB from "#services/pg/db";
+import { seedInvite, seedUser } from "#test-utils/pg-fixtures";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { ANON_ACTION_Register } from "./register.js";
+import { ANON_ACTION_Register } from "./register";
 
 // ─── ANON_ACTION_Register ─────────────────────────────────────────────────────
 

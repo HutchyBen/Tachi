@@ -2,7 +2,7 @@ import type { RequestHandler, Response } from "express-serve-static-core";
 import type { APITokenDocument } from "tachi-common";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { TachiConfig } from "#lib/setup/config";
 
 // https://stackoverflow.com/a/64546368/11885828

@@ -10,7 +10,7 @@ import {
 	type SongDocument,
 } from "tachi-common";
 
-import { log } from "../../log.js";
+import { log } from "../../log";
 import { CreateChartID, ReadCollection, WriteCollection } from "../../util";
 
 const OMNIMIX_OPTION_NAMES = ["AOMN", "AOLD", "AKON"];

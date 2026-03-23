@@ -1,8 +1,8 @@
-import DB from "#services/pg/db.js";
-import { seedUser, seedVerifyEmailToken } from "#test-utils/pg-fixtures.js";
+import DB from "#services/pg/db";
+import { seedUser, seedVerifyEmailToken } from "#test-utils/pg-fixtures";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { ACTION_ResendVerifyEmail } from "./resend-verify-email.js";
+import { ACTION_ResendVerifyEmail } from "./resend-verify-email";
 
 // ─── ACTION_ResendVerifyEmail ──────────────────────────────────────────────────
 

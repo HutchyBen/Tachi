@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 
 import { ONE_MEGABYTE } from "#lib/constants/filesize";
 import { ONE_HOUR, ONE_SECOND } from "#lib/constants/time";

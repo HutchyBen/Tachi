@@ -1,5 +1,5 @@
-import { AuthLevelToInt } from "#utils/conversion.js";
-import { ISO8601ToUnixMilliseconds } from "#utils/time.js";
+import { AuthLevelToInt } from "#utils/conversion";
+import { ISO8601ToUnixMilliseconds } from "#utils/time";
 import { type Selection } from "kysely";
 import { type UserBadges, type UserDocument } from "tachi-common";
 import { type Database } from "tachi-db";

@@ -1,7 +1,7 @@
 import type { BMSTableHead, RawBMSTableEntry } from "bms-table-loader";
 import type { Request, Response } from "express-serve-static-core";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { GetRivalUsers } from "#lib/rivals/rivals";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import { GetRelevantSongsAndCharts } from "#utils/db";

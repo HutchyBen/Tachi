@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { DataRequest, DataResponse, PlaylogRequest, PlaylogStreamItem } from "./user_pb.js";
+import { DataRequest, DataResponse, PlaylogRequest, PlaylogStreamItem } from "./user_pb";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**

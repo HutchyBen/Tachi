@@ -1,5 +1,5 @@
-import { MakeAnonAction } from "#lib/actions/actions.js";
-import DB from "#services/pg/db.js";
+import { MakeAnonAction } from "#lib/actions/actions";
+import DB from "#services/pg/db";
 import { ExpectedErr } from "bliss";
 
 export const ANON_ACTION_VerifyEmail = MakeAnonAction("VERIFY_EMAIL", async (_taker, { code }) => {

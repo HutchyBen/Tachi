@@ -8,7 +8,7 @@ import type {
 import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import { USCIR_ADJACENT_SCORE_N } from "#lib/constants/usc-ir";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
 import { MStoS } from "#utils/misc";
 import { GetPBOnChart, GetServerRecordOnChart } from "#utils/scores";

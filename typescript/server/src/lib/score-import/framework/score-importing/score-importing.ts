@@ -1,6 +1,6 @@
 import type { ScoreImportJob } from "#lib/score-import/worker/types";
 
-import { AppendLogCtx, type KtLogger } from "#lib/log/log.js";
+import { AppendLogCtx, type KtLogger } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
 import { ClassToObject } from "#utils/misc";
 import {

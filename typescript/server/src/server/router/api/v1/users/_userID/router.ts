@@ -1,21 +1,17 @@
-import type {
-	AnyProfileRatingAlg,
-	GPTString,
-	ImportTypes,
-	integer,
-	UserGameStats,
-} from "tachi-common";
+import type { AnyProfileRatingAlg, GPTString, integer, UserGameStats } from "tachi-common";
 
+import { ACTION_ChangeEmail } from "#actions/change-email.js";
+import { ACTION_ChangePassword } from "#actions/change-password.js";
+import { ACTION_ChangeUsername } from "#actions/change-username.js";
+import { ACTION_UpdateUser } from "#actions/update-user.js";
 import { GetRecentActivity } from "#lib/activity/activity";
 import { ONE_MONTH } from "#lib/constants/time";
-import { SendEmail } from "#lib/email/client";
-import { EmailFormatVerifyEmail } from "#lib/email/formats";
-import { log } from "#lib/log/log.js";
+import { SELECT_GAME_STATS, ToGameStatsDocument } from "#lib/db-formats/game-stats.js";
+import { log } from "#lib/log/log";
 import { GetRivalIDs } from "#lib/rivals/rivals";
-import { ServerConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
 import MONGODB_KILL from "#services/mongo/db";
-import { DeleteUndefinedProps, IsNonEmptyString, Random20Hex, StripUrl } from "#utils/misc";
+import DB from "#services/pg/db.js";
 import { optNullFluffStrField } from "#utils/prudence";
 import {
 	GetGoalSummary,
@@ -26,22 +22,15 @@ import {
 import { GetUser } from "#utils/req-tachi-data";
 import {
 	CanChangeUsername,
-	CheckIfEmailInUse,
 	FormatUserDoc,
 	GetAllRankings,
 	GetNextAvailableUsernameChange,
-	GetUserCaseInsensitive,
-	GetUserWithID,
+	GetUserWithIDGuaranteed,
 } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
 
-import {
-	HashPassword,
-	PasswordCompare,
-	ValidateEmail,
-	ValidatePassword,
-} from "../../../../../../lib/auth/auth";
+import { ValidateEmail, ValidatePassword } from "../../../../../../lib/auth/auth";
 import apiTokensRouter from "./api-tokens/router";
 import bannerRouter from "./banner/router";
 import followingRouter from "./following/router";
@@ -75,7 +64,7 @@ router.get("/", (req, res) => {
 });
 
 interface UserPatchBody {
-	about?: string | null;
+	about?: string;
 	status?: string | null;
 	discord?: string | null;
 	twitter?: string | null;
@@ -122,101 +111,22 @@ router.patch(
 
 		const body = req.safeBody as UserPatchBody;
 
-		if (Object.keys(body).length === 0) {
-			return res.status(400).json({
-				success: false,
-				description: `Nothing was provided to modify.`,
-			});
-		}
-
-		// Hack stuff for user experience.
-		// In kt1, users would repeatedly mess up these fields.
-		if (IsNonEmptyString(body.twitter)) {
-			body.twitter = StripUrl("twitter.com/", body.twitter);
-		}
-
-		if (IsNonEmptyString(body.github)) {
-			body.github = StripUrl("github.com/", body.github);
-		}
-
-		if (IsNonEmptyString(body.youtube)) {
-			// youtube has THREE user urls lol
-			body.youtube = StripUrl("youtube.com/user/", body.youtube);
-			body.youtube = StripUrl("youtube.com/channel/", body.youtube);
-			body.youtube = StripUrl("youtube.com/@", body.youtube);
-		}
-
-		if (IsNonEmptyString(body.twitch)) {
-			body.twitch = StripUrl("twitch.tv/", body.twitch);
-		}
-
-		if (IsNonEmptyString(body.steam)) {
-			body.steam = StripUrl("steamcommunity.com/id/", body.steam);
-		}
-
-		if (body.about === null) {
-			return res.status(400).json({
-				success: false,
-				description: `Cannot set about me to null.`,
-			});
-		}
-
-		// :(
-		const modifyObject: Partial<
-			{ about: string } & Record<
-				| "status"
-				| `socialMedia.${
-						| "discord"
-						| "github"
-						| "steam"
-						| "twitch"
-						| "twitter"
-						| "youtube"}`,
-				string | null
-			>
-		> = {
-			about: body.about,
-			status: body.status,
-		};
-
-		for (const socMed of [
-			"twitch",
-			"github",
-			"youtube",
-			"steam",
-			"twitter",
-			"discord",
-		] as const) {
-			modifyObject[`socialMedia.${socMed}` as const] = body[socMed];
-		}
-
-		DeleteUndefinedProps(modifyObject);
-
-		await MONGODB_KILL.users.update(
+		await ACTION_UpdateUser(
 			{
-				id: user.id,
+				acct: {
+					id: user.id,
+					username: user.username,
+				},
+				ip: req.ip,
 			},
-			{
-				$set: modifyObject,
-			},
+			body,
 		);
 
-		const newUser = await GetUserWithID(user.id);
-
-		if (!newUser) {
-			log.error(
-				{ user },
-				`User ${FormatUserDoc(user)} updated profile but user doc no longer exists?`,
-			);
-
-			return res.status(500).json({
-				success: false,
-				description: `An internal error has occured.`,
-			});
-		}
+		const newUser = await GetUserWithIDGuaranteed(user.id);
 
 		if (req.session.tachi?.user) {
 			req.session.tachi.user = newUser;
+			req.session.save();
 		}
 
 		return res.status(200).json({
@@ -243,7 +153,11 @@ router.get("/game-stats", async (req, res) => {
 		{
 			__rankingData?: Record<AnyProfileRatingAlg, { outOf: number; ranking: number }>;
 		} & UserGameStats
-	> = await MONGODB_KILL["game-stats"].find({ userID: user.id });
+	> = await DB.selectFrom("game_stats")
+		.select(SELECT_GAME_STATS)
+		.where("user_id", "=", user.id)
+		.execute()
+		.then((res) => res.map(ToGameStatsDocument));
 
 	await Promise.all(
 		stats.map(async (s) => {
@@ -306,9 +220,9 @@ router.get("/recent-summary", async (req, res) => {
 router.get("/is-email-verified", RequireSelfRequestFromUser, async (req, res) => {
 	const user = GetUser(req);
 
-	const verifyInfo = await MONGODB_KILL["verify-email-codes"].findOne({
-		userID: user.id,
-	});
+	const verifyInfo = await DB.selectFrom("priv_verify_email_token")
+		.where("user_id", "=", user.id)
+		.executeTakeFirst();
 
 	if (verifyInfo) {
 		return res.status(200).json({
@@ -333,9 +247,10 @@ router.get("/is-email-verified", RequireSelfRequestFromUser, async (req, res) =>
 router.get("/email", RequireSelfRequestFromUser, async (req, res) => {
 	const user = GetUser(req);
 
-	const email = await MONGODB_KILL["user-private-information"].findOne({
-		userID: user.id,
-	});
+	const email = await DB.selectFrom("priv_account_credential")
+		.select("email")
+		.where("user_id", "=", user.id)
+		.executeTakeFirstOrThrow();
 
 	if (email) {
 		return res.status(200).json({
@@ -373,68 +288,19 @@ router.post(
 			email: string;
 		};
 
-		const privateInfo = await MONGODB_KILL["user-private-information"].findOne({
-			userID: user.id,
-		});
-
-		if (!privateInfo) {
-			log.error(`User ${user.id} has no associated private info?`);
-			return res.status(500).json({
-				success: false,
-				description: `Internal server error.`,
-			});
-		}
-
-		const isPasswordValid = await PasswordCompare(body["!password"], privateInfo.password);
-
-		if (!isPasswordValid) {
-			return res.status(403).json({
-				success: false,
-				description: `Invalid password.`,
-			});
-		}
-
-		const existingEmail = await CheckIfEmailInUse(body.email);
-
-		if (existingEmail) {
-			log.info(`User attempted to change to email that was already in use.`);
-			return res.status(409).json({
-				success: false,
-				description: `This email is already in use.`,
-			});
-		}
-
-		log.info(`User ${user.id} changed email from ${privateInfo.email} to ${body.email}`);
-
-		await MONGODB_KILL["user-private-information"].update(
+		await ACTION_ChangeEmail(
 			{
-				userID: user.id,
+				acct: {
+					id: user.id,
+					username: user.username,
+				},
+				ip: req.ip,
 			},
 			{
-				$set: {
-					email: body.email,
-				},
+				email: body.email,
+				"!password": body["!password"],
 			},
 		);
-
-		if (ServerConfig.EMAIL_CONFIG) {
-			const resetEmailCode = Random20Hex();
-
-			// clear out the previous email code!
-			await MONGODB_KILL["verify-email-codes"].remove({
-				userID: user.id,
-			});
-
-			await MONGODB_KILL["verify-email-codes"].insert({
-				code: resetEmailCode,
-				userID: user.id,
-				email: body.email,
-			});
-
-			const { text, html } = EmailFormatVerifyEmail(user.username, resetEmailCode);
-
-			void SendEmail(body.email, "Email Verification", html, text);
-		}
 
 		return res.status(200).json({
 			success: true,
@@ -481,41 +347,17 @@ router.post(
 			});
 		}
 
-		const privateInfo = await MONGODB_KILL["user-private-information"].findOne({
-			userID: user.id,
-		});
-
-		/* istanbul ignore next */
-		if (!privateInfo) {
-			log.error({ user }, `User ${FormatUserDoc(user)} has no private information?`);
-			return res.status(500).json({
-				success: false,
-				description: `An internal server error has occured.`,
-			});
-		}
-
-		const isLastPasswordValid = await PasswordCompare(
-			body["!oldPassword"],
-			privateInfo.password,
-		);
-
-		if (!isLastPasswordValid) {
-			return res.status(401).json({
-				success: false,
-				description: `Old Password doesn't match what we have in our records.`,
-			});
-		}
-
-		const newPasswordHash = await HashPassword(body["!password"]);
-
-		await MONGODB_KILL["user-private-information"].update(
+		await ACTION_ChangePassword(
 			{
-				userID: user.id,
+				acct: {
+					id: user.id,
+					username: user.username,
+				},
+				ip: req.ip,
 			},
 			{
-				$set: {
-					password: newPasswordHash,
-				},
+				"!oldPassword": body["!oldPassword"],
+				"!password": body["!password"],
 			},
 		);
 
@@ -571,65 +413,19 @@ router.post(
 			});
 		}
 
-		const privateInfo = await MONGODB_KILL["user-private-information"].findOne({
-			userID: user.id,
-		});
-
-		/* istanbul ignore next */
-		if (!privateInfo) {
-			log.error({ user }, `User ${FormatUserDoc(user)} has no private information?`);
-			return res.status(500).json({
-				success: false,
-				description: `An internal server error has occured.`,
-			});
-		}
-
-		const isPasswordValid = await PasswordCompare(body["!password"], privateInfo.password);
-
-		if (!isPasswordValid) {
-			return res.status(401).json({
-				success: false,
-				description: `Invalid password.`,
-			});
-		}
-
-		const existingUser = await GetUserCaseInsensitive(body.newUsername);
-
-		if (existingUser) {
-			log.debug(`Invalid username ${body.newUsername}, already in use.`);
-			return res.status(409).json({
-				success: false,
-				description: "This username is already in use.",
-			});
-		}
-
-		const canChangeUsername = await CanChangeUsername(user.id);
-
-		if (!canChangeUsername) {
-			return res.status(403).json({
-				success: false,
-				description: "You can only change your username every 6 months.",
-			});
-		}
-
-		await MONGODB_KILL.users.update(
+		await ACTION_ChangeUsername(
 			{
-				id: user.id,
+				acct: {
+					id: user.id,
+					username: user.username,
+				},
+				ip: req.ip,
 			},
 			{
-				$set: {
-					username: body.newUsername,
-					usernameLowercase: body.newUsername.toLowerCase(),
-				},
+				newUsername: body.newUsername,
+				"!password": body["!password"],
 			},
 		);
-
-		await MONGODB_KILL["user-name-changes"].insert({
-			userID: user.id,
-			username: body.newUsername,
-			timestamp: Date.now(),
-			previousUsername: user.username,
-		});
 
 		if (req.session.tachi?.user) {
 			req.session.tachi.user = {
@@ -653,12 +449,12 @@ router.post(
  *
  * @name GET /api/v1/users/:userID/last-username-change
  */
-router.get("/last-username-change", async (req, res) => {
+router.get("/last-username-change", RequireSelfRequestFromUser, async (req, res) => {
 	const user = GetUser(req);
 
-	const nextAvailableChange = await GetNextAvailableUsernameChange(user.id);
+	const nextAvailableChange = await GetNextAvailableUsernameChange(DB, user.id);
 
-	const canChange = await CanChangeUsername(user.id);
+	const canChange = await CanChangeUsername(DB, user.id);
 
 	let body;
 
@@ -675,7 +471,7 @@ router.get("/last-username-change", async (req, res) => {
 
 	return res.status(200).json({
 		success: true,
-		description: `Next available username change.`,
+		description: `User can ${canChange ? "change" : "not change"} their username.`,
 		body,
 	});
 });
@@ -687,32 +483,26 @@ router.get("/last-username-change", async (req, res) => {
 router.get("/recent-imports", async (req, res) => {
 	const user = GetUser(req);
 
-	const recentImports: Array<{ _id: ImportTypes; count: integer }> =
-		await MONGODB_KILL.imports.aggregate([
-			{
-				$match: {
-					userID: user.id,
-					timeFinished: { $gt: Date.now() - ONE_MONTH },
-					userIntent: true,
-					importType: {
-						$nin: ["file/mypagescraper-records-csv", "file/mypagescraper-player-csv"],
-					},
-				},
-			},
-			{
-				$group: {
-					_id: "$importType",
-					count: { $sum: 1 },
-				},
-			},
-		]);
+	const rows = await DB.selectFrom("import")
+		.select(["import_type", (eb) => eb.fn.countAll<number>().as("count")])
+		.where("user_id", "=", user.id)
+		.where("time_finished", ">", new Date(Date.now() - ONE_MONTH).toISOString())
+		.where("user_intent", "=", true)
+		.where("import_type", "not in", [
+			"file/mypagescraper-records-csv",
+			"file/mypagescraper-player-csv",
+		])
+		.groupBy("import_type")
+		.execute();
 
-	// rename _id to importType.
-	const imports = recentImports.map((e) => ({ importType: e._id, count: e.count }));
+	const imports = rows.map((row) => ({
+		importType: row.import_type,
+		count: Number(row.count),
+	}));
 
 	return res.status(200).json({
 		success: true,
-		description: `Found ${recentImports.length} imports.`,
+		description: `Found ${imports.length} imports.`,
 		body: imports.sort((a, b) => b.count - a.count),
 	});
 });
@@ -725,8 +515,18 @@ router.get("/recent-imports", async (req, res) => {
 router.get("/stats", async (req, res) => {
 	const user = GetUser(req);
 
-	const scoreCount = await MONGODB_KILL.scores.count({ userID: user.id });
-	const sessionCount = await MONGODB_KILL.sessions.count({ userID: user.id });
+	const [scoreCount, sessionCount] = await Promise.all([
+		DB.selectFrom("score")
+			.select((eb) => eb.fn.countAll<number>().as("count"))
+			.where("user_id", "=", user.id)
+			.executeTakeFirstOrThrow()
+			.then((r) => Number(r.count)),
+		DB.selectFrom("session")
+			.select((eb) => eb.fn.countAll<number>().as("count"))
+			.where("user_id", "=", user.id)
+			.executeTakeFirstOrThrow()
+			.then((r) => Number(r.count)),
+	]);
 
 	return res.status(200).json({
 		success: true,
@@ -838,10 +638,10 @@ router.use("/sessions", sessionsRouter);
 
 // Shims for discord functionality; discord checks that a url ends with ".png"
 // to use as an image
-router.get("/pfp.png", (req, res) => {
+router.get("/pfp.png", (_req, res) => {
 	res.redirect("./pfp");
 });
-router.get("/banner.png", (req, res) => {
+router.get("/banner.png", (_req, res) => {
 	res.redirect("./banner");
 });
 

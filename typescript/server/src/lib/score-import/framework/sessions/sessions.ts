@@ -1,5 +1,5 @@
 import { ONE_HOUR } from "#lib/constants/time";
-import { AppendLogCtx, type KtLogger, log } from "#lib/log/log.js";
+import { AppendLogCtx, type KtLogger, log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
 import { GetChartForIDGuaranteed } from "#utils/db";
 import { GetScoresFromSession } from "#utils/session";

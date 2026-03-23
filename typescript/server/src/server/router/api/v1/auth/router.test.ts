@@ -1,10 +1,9 @@
+import { PasswordCompare } from "#lib/auth/auth";
 import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
-import DB from "#services/pg/db.js";
+import DB from "#services/pg/db";
 import mockApi, { CloseServerConnection } from "#test-utils/mock-api";
-import { seedInvite, seedResetToken, seedUser } from "#test-utils/pg-fixtures.js";
+import { seedInvite, seedResetToken, seedUser } from "#test-utils/pg-fixtures";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
-
-import { PasswordCompare } from "./auth";
 
 afterAll(() => CloseServerConnection());
 

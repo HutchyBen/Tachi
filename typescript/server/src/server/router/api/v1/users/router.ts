@@ -1,9 +1,9 @@
-import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user.js";
+import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user";
 import { SearchUsersRegExp } from "#lib/search/search";
-import DB from "#services/pg/db.js";
+import DB from "#services/pg/db";
 import { IsString } from "#utils/misc";
-import { apiSuccess } from "#utils/response.js";
-import { UnixMillisecondsToISO8601 } from "#utils/time.js";
+import { apiSuccess } from "#utils/response";
+import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { GetOnlineCutoff } from "#utils/user";
 import { Router } from "express";
 import { type UserDocument } from "tachi-common";

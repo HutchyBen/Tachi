@@ -2,7 +2,7 @@ import type { RequestHandler } from "express";
 import type { Session, SessionData } from "express-session";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { TachiConfig } from "#lib/setup/config";
 import MONGODB_KILL from "#services/mongo/db";
 import { IsNullishOrEmptyStr, SplitAuthorizationHeader } from "#utils/misc";

@@ -1,6 +1,6 @@
 import type supertest from "supertest";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
 import MONGODB_KILL from "#services/mongo/db";
 import { ALL_PERMISSIONS } from "tachi-common";

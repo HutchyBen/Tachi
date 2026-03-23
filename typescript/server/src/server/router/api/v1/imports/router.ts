@@ -4,7 +4,7 @@ import type { ImportTrackerDocument, ImportTypes } from "tachi-common";
 
 import { JOB_RETRY_COUNT } from "#lib/constants/tachi";
 import { RevertImport } from "#lib/imports/imports";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import ScoreImportQueue, { ScoreImportQueueEvents } from "#lib/score-import/worker/queue";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RequirePermissions } from "#server/middleware/auth";

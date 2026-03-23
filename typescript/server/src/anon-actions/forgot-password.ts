@@ -1,10 +1,10 @@
-import { MakeAnonAction } from "#lib/actions/actions.js";
-import { SendEmail } from "#lib/email/client.js";
-import { EmailFormatResetPassword } from "#lib/email/formats.js";
-import { Env, ServerConfig } from "#lib/setup/config.js";
-import DB from "#services/pg/db.js";
-import { Random20Hex } from "#utils/misc.js";
-import { GetUserWithIDGuaranteed } from "#utils/user.js";
+import { MakeAnonAction } from "#lib/actions/actions";
+import { SendEmail } from "#lib/email/client";
+import { EmailFormatResetPassword } from "#lib/email/formats";
+import { Env, ServerConfig } from "#lib/setup/config";
+import DB from "#services/pg/db";
+import { Random20Hex } from "#utils/misc";
+import { GetUserWithIDGuaranteed } from "#utils/user";
 import { ExpectedErr, log } from "bliss";
 
 export const ANON_ACTION_ForgotPassword = MakeAnonAction(

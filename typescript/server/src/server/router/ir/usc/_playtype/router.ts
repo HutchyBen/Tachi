@@ -3,7 +3,7 @@ import { GetUSCIRReplayURL } from "#lib/cdn/url-format";
 import { ONE_MEGABYTE } from "#lib/constants/filesize";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { USCIR_MAX_LEADERBOARD_N } from "#lib/constants/usc-ir";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { AssertStrAsPositiveNonZeroInt } from "#lib/score-import/framework/common/string-asserts";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";

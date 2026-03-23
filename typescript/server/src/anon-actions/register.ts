@@ -1,11 +1,11 @@
-import { MakeAnonAction } from "#lib/actions/actions.js";
-import { SendEmail } from "#lib/email/client.js";
-import { EmailFormatVerifyEmail } from "#lib/email/formats.js";
-import { Env, ServerConfig } from "#lib/setup/config.js";
-import { AddNewUser, ValidateCaptcha } from "#lib/auth/auth.js";
-import DB from "#services/pg/db.js";
-import { Random20Hex } from "#utils/misc.js";
-import { CheckIfEmailInUse, GetUserCaseInsensitive } from "#utils/user.js";
+import { MakeAnonAction } from "#lib/actions/actions";
+import { SendEmail } from "#lib/email/client";
+import { EmailFormatVerifyEmail } from "#lib/email/formats";
+import { Env, ServerConfig } from "#lib/setup/config";
+import { AddNewUser, ValidateCaptcha } from "#lib/auth/auth";
+import DB from "#services/pg/db";
+import { Random20Hex } from "#utils/misc";
+import { CheckIfEmailInUse, GetUserCaseInsensitive } from "#utils/user";
 import { ExpectedErr, log } from "bliss";
 import { type UserDocument } from "tachi-common";
 

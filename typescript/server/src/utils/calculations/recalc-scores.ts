@@ -1,4 +1,4 @@
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { CreateScoreCalcData } from "#lib/score-import/framework/calculated-data/score";
 import { GetAndUpdateUsersGoals } from "#lib/score-import/framework/goals/goals";
 import { ProcessPBs } from "#lib/score-import/framework/pb/process-pbs";

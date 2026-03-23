@@ -3,7 +3,7 @@ import type { FilterQuery } from "mongodb";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
-import { type KtLogger, log } from "#lib/log/log.js";
+import { type KtLogger, log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
 import { GetFolderChartIDs } from "#utils/folder";
 import fjsh from "fast-json-stable-hash";

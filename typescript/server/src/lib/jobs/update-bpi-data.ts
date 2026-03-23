@@ -7,7 +7,7 @@ import type {
 	Versions,
 } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { BacksyncCollection, PullDatabaseSeeds } from "#lib/seeds/repo";
 import MONGODB_KILL from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";

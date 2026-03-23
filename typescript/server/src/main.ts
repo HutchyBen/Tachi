@@ -1,19 +1,18 @@
 import type http from "http";
 
+import { AddNewUser } from "#lib/auth/auth";
 import { LoadDefaultClients } from "#lib/builtin-clients/builtin-clients";
 import { VERSION_PRETTY } from "#lib/constants/version";
 import { HandleSIGTERMGracefully } from "#lib/handlers/sigterm";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
-import { AddNewUser } from "#lib/auth/auth.js";
 import server from "#server/server";
-import MONGODB_KILL, { monkDB } from "#services/mongo/db";
+import { monkDB } from "#services/mongo/db";
 import { UpdateIndexes } from "#services/mongo/indexes";
 import { InitSequenceDocs } from "#services/mongo/sequence-docs";
-import DB from "#services/pg/db.js";
+import DB from "#services/pg/db";
 import fetch from "#utils/fetch";
-import { InitaliseFolderChartLookup } from "#utils/folder";
-import { GetUserWithID } from "#utils/user.js";
+import { GetUserWithID } from "#utils/user";
 import { spawn } from "child_process";
 import fs from "fs";
 import https from "https";
@@ -35,15 +34,6 @@ async function RunOnInit() {
 	await UpdateIndexes(monkDB, false);
 
 	await applyMigrations(Env.POSTGRES_URL, Env.MIGRATIONS_DIR);
-
-	await MONGODB_KILL["folder-chart-lookup"].findOne().then((r) => {
-		// If there are no folder chart lookups, initialise them.
-		if (!r) {
-			InitaliseFolderChartLookup().catch((err: unknown) => {
-				log.error({ err }, `Failed to init folder-chart-lookup on first boot?`);
-			});
-		}
-	});
 
 	if (Env.NODE_ENV === "dev") {
 		const exists = await GetUserWithID(1);

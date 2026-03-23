@@ -1,14 +1,14 @@
 import type { FilterQuery } from "mongodb";
 import type { ICollection } from "monk";
 
-import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user.js";
-import { log } from "#lib/log/log.js";
+import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user";
+import { log } from "#lib/log/log";
 import { TachiConfig } from "#lib/setup/config";
 import MONGODB_KILL from "#services/mongo/db";
-import DB from "#services/pg/db.js";
+import DB from "#services/pg/db";
 import { GetSongForIDGuaranteed } from "#utils/db";
 import { EscapeForILIKE } from "#utils/misc";
-import { UnixMillisecondsToISO8601 } from "#utils/time.js";
+import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { GetOnlineCutoff } from "#utils/user";
 import {
 	type ChartDocument,

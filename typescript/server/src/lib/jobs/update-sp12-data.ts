@@ -2,7 +2,7 @@ import type { ChartDocument, Difficulties, integer } from "tachi-common";
 
 /* eslint-disable no-await-in-loop */
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { BacksyncCollection } from "#lib/seeds/repo";
 import MONGODB_KILL from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";

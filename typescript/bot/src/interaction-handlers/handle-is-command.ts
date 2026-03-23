@@ -1,4 +1,4 @@
-import { type RequestingUser } from "#slash-commands/types.js";
+import { type RequestingUser } from "#slash-commands/types";
 import { log } from "#utils/log";
 import { type CommandInteraction, MessageEmbed } from "discord.js";
 

@@ -1,4 +1,4 @@
-import DB from "#services/pg/db.js";
+import DB from "#services/pg/db";
 import { type integer } from "tachi-common";
 
 export async function GetFollowingForUser(userID: integer): Promise<Array<integer>> {

@@ -1,7 +1,7 @@
 import type { integer } from "tachi-common";
 
 import { ONE_DAY, ONE_HOUR } from "#lib/constants/time";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
 
 /**

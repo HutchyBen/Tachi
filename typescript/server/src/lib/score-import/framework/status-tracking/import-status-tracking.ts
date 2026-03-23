@@ -3,7 +3,7 @@ import type { ImportTypes } from "tachi-common";
 
 import { CDNStoreOrOverwrite } from "#lib/cdn/cdn";
 import { GetScoreImportInputURL } from "#lib/cdn/url-format";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
 
 import type ScoreImportFatalError from "../score-importing/score-import-error";

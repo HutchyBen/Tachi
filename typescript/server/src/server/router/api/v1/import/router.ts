@@ -3,7 +3,7 @@ import type { APIImportTypes, FileUploadImportTypes } from "tachi-common";
 
 import { SIXTEEN_MEGABTYES } from "#lib/constants/filesize";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { DeorphanScores } from "#lib/score-import/framework/orphans/orphans";
 import { MakeScoreImport } from "#lib/score-import/framework/score-import";

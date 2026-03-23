@@ -1,5 +1,5 @@
 import type { GPTDerivers } from "#game-implementations/types";
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 import type { MetricValue } from "tachi-common/types/metrics";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";

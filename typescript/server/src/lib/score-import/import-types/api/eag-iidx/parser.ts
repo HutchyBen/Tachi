@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 import type { integer } from "tachi-common";
 
 import { GetKaiAuthGuaranteed } from "#utils/queries/auth";

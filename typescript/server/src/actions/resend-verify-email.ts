@@ -1,8 +1,8 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import { SendEmail } from "#lib/email/client.js";
-import { EmailFormatVerifyEmail } from "#lib/email/formats.js";
-import DB from "#services/pg/db.js";
-import { Random20Hex } from "#utils/misc.js";
+import { MakeAction } from "#lib/actions/actions";
+import { SendEmail } from "#lib/email/client";
+import { EmailFormatVerifyEmail } from "#lib/email/formats";
+import DB from "#services/pg/db";
+import { Random20Hex } from "#utils/misc";
 import { log } from "bliss";
 
 export const ACTION_ResendVerifyEmail = MakeAction("RESEND_VERIFY_EMAIL", async (taker, {}) => {

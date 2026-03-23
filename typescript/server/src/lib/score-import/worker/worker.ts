@@ -1,7 +1,7 @@
 import type { ImportTypes } from "tachi-common";
 
 import { HandleSIGTERMGracefully } from "#lib/handlers/sigterm";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { Env, ServerConfig } from "#lib/setup/config";
 import { GetUserWithID } from "#utils/user";
 import { Worker } from "bullmq";

@@ -1,6 +1,6 @@
 import type { ChartDocument } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { PullDatabaseSeeds } from "#lib/seeds/repo";
 import { WrapScriptPromise } from "#utils/misc";
 import fetch from "node-fetch";

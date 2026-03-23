@@ -1,5 +1,5 @@
 import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
 import MONGODB_KILL from "#services/mongo/db";
 import {

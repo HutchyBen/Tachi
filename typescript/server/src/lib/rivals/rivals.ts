@@ -1,7 +1,7 @@
 import type { BulkWriteUpdateOneOperation } from "mongodb";
 
 import { SetRivalsFailReasons } from "#lib/constants/err-codes";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { SendSetRivalNotification } from "#lib/notifications/notification-wrappers";
 import { ServerConfig } from "#lib/setup/config";
 import MONGODB_KILL from "#services/mongo/db";

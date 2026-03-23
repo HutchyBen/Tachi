@@ -1,6 +1,6 @@
 import type { GameGroup, ShowcaseStatDetails } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
 
 export async function GetRelatedStatDocuments(stat: ShowcaseStatDetails, game: GameGroup) {

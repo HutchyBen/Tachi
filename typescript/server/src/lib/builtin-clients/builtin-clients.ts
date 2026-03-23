@@ -1,11 +1,11 @@
-import { ACTION_InstallBuiltinClient } from "#actions/install-builtin-client.js";
-import { log } from "#lib/log/log.js";
+import { ACTION_InstallBuiltinClient } from "#actions/install-builtin-client";
+import { log } from "#lib/log/log";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import _ from "lodash";
 import { type APIPermissions, type TachiAPIClientDocument } from "tachi-common";
 /* eslint-disable no-await-in-loop */
-import { GetClientByID } from "#utils/queries/api-clients.js";
-import { GetFirstAdmin } from "#utils/user.js";
+import { GetClientByID } from "#utils/queries/api-clients";
+import { GetFirstAdmin } from "#utils/user";
 import fjsh from "fast-json-stable-hash";
 
 type DefaultClients = Array<Omit<TachiAPIClientDocument, "author" | "clientSecret">>;

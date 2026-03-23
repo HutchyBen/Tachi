@@ -3,7 +3,7 @@ import type { IndexOptions } from "mongodb";
 import monk, { type IMonkManager } from "monk";
 
 /* eslint-disable no-await-in-loop */
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { TachiConfig } from "#lib/setup/config";
 import { DedupeArr, Random20Hex } from "#utils/misc";
 import { GAME_PT_CONFIGS } from "tachi-common";

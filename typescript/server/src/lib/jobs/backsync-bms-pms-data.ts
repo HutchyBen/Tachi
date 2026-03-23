@@ -1,4 +1,4 @@
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { PullDatabaseSeeds } from "#lib/seeds/repo";
 /* eslint-disable no-await-in-loop */
 import MONGODB_KILL from "#services/mongo/db";

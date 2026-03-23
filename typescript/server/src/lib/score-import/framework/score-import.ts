@@ -1,7 +1,7 @@
 import type { ImportDocument, ImportTypes, integer } from "tachi-common";
 
 import { JOB_RETRY_COUNT } from "#lib/constants/tachi";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { ServerConfig } from "#lib/setup/config";
 import { Sleep } from "#utils/misc";
 

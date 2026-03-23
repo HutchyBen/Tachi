@@ -1,7 +1,7 @@
 import type { UserDocument } from "tachi-common";
 
 import { ONE_MONTH } from "#lib/constants/time";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { ServerConfig } from "#lib/setup/config";
 
 /**

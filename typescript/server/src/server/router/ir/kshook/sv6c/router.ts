@@ -1,6 +1,6 @@
 import { MODEL_SDVX3_KONASTE } from "#lib/constants/ea3id";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import MONGODB_KILL from "#services/mongo/db";
 import { ParseEA3SoftID } from "#utils/ea3id";

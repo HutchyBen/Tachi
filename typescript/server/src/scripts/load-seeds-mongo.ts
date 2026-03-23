@@ -12,7 +12,7 @@ import type {
 	TableDocument,
 } from "tachi-common";
 
-import { type KtLogger, log } from "#lib/log/log.js";
+import { type KtLogger, log } from "#lib/log/log";
 import { UpdateGoalsInFolder } from "#lib/score-import/framework/goals/goals";
 import UpdateIsPrimaryStatus from "#lib/score-mutation/update-isprimary";
 import { PullDatabaseSeeds } from "#lib/seeds/repo";

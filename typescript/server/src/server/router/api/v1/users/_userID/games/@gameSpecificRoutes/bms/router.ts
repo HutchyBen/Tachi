@@ -4,7 +4,7 @@ import {
 	HandleBMSTableHeaderRequest,
 	HandleBMSTableHTMLRequest,
 } from "#lib/game-specific/custom-bms-tables";
-import { ValidatePlaytypeFromParamFor } from "#server/router/api/v1/games/_game/_playtype/middleware.js";
+import { ValidatePlaytypeFromParamFor } from "#server/router/api/v1/games/_game/_playtype/middleware";
 import MONGODB_KILL from "#services/mongo/db";
 import { AssignToReqTachiData, GetTachiData, GetUGPT, GetUser } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";

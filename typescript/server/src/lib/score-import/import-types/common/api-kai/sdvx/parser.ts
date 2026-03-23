@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 import type { KaiAuthDocument } from "tachi-common";
 
 import nodeFetch from "#utils/fetch";

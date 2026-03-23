@@ -1,6 +1,6 @@
 import type { Response } from "express";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { ServerConfig } from "#lib/setup/config";
 import fs from "fs";
 import mkdirp from "mkdirp";

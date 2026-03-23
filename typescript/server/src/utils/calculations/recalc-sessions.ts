@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { CreateSessionCalcData } from "#lib/score-import/framework/calculated-data/session";
 import MONGODB_KILL from "#services/mongo/db";
 import { GetGPTString } from "tachi-common";

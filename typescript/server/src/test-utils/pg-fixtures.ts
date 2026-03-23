@@ -1,5 +1,5 @@
-import { HashPassword } from "#lib/auth/auth.js";
-import DB from "#services/pg/db.js";
+import { HashPassword } from "#lib/auth/auth";
+import DB from "#services/pg/db";
 
 // ─── seedUser ─────────────────────────────────────────────────────────────────
 

@@ -1,6 +1,6 @@
 import type { GoalDocument } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { CreateGoalTitle, ValidateGoalChartsAndCriteria } from "#lib/targets/goal-utils";
 import { GetQuestsThatContainGoal } from "#lib/targets/goals";
 import prValidate from "#server/middleware/prudence-validate";

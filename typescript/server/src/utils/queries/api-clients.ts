@@ -1,5 +1,5 @@
-import { SELECT_API_CLIENT, ToAPIClientDocument } from "#lib/db-formats/api-client.js";
-import DB from "#services/pg/db.js";
+import { SELECT_API_CLIENT, ToAPIClientDocument } from "#lib/db-formats/api-client";
+import DB from "#services/pg/db";
 import { type TachiAPIClientDocument } from "tachi-common";
 
 export function GetClientByID(clientID: string): Promise<TachiAPIClientDocument | null> {

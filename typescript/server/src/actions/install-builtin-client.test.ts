@@ -1,8 +1,8 @@
-import DB from "#services/pg/db.js";
-import { seedUser } from "#test-utils/pg-fixtures.js";
+import DB from "#services/pg/db";
+import { seedUser } from "#test-utils/pg-fixtures";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { ACTION_InstallBuiltinClient } from "./install-builtin-client.js";
+import { ACTION_InstallBuiltinClient } from "./install-builtin-client";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 

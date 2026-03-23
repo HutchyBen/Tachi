@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { UpdateUsersGamePlaytypeStats } from "#lib/score-import/framework/ugpt-stats/update-ugpt-stats";
 import MONGODB_KILL from "#services/mongo/db";
 import { FormatUserDoc } from "#utils/user";

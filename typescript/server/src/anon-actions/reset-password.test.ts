@@ -1,9 +1,9 @@
-import { PasswordCompare } from "#lib/auth/auth.js";
-import DB from "#services/pg/db.js";
-import { seedResetToken, seedUser } from "#test-utils/pg-fixtures.js";
+import { PasswordCompare } from "#lib/auth/auth";
+import DB from "#services/pg/db";
+import { seedResetToken, seedUser } from "#test-utils/pg-fixtures";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { ANON_ACTION_ResetPassword } from "./reset-password.js";
+import { ANON_ACTION_ResetPassword } from "./reset-password";
 
 // ─── ANON_ACTION_ResetPassword ────────────────────────────────────────────────
 

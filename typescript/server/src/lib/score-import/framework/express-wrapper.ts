@@ -6,7 +6,7 @@ import type {
 	UnsuccessfulAPIResponse,
 } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { Random20Hex } from "#utils/misc";
 
 import type { ParserArguments } from "../worker/types";

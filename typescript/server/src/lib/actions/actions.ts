@@ -36,6 +36,81 @@ export const ActionSignatures = {
 		input: z.object({}),
 		output: z.object({}),
 	},
+	CHANGE_USERNAME: {
+		input: z.object({
+			newUsername: z.string().regex(/^[a-zA-Z_-][a-zA-Z0-9_-]{2,20}$/u),
+			"!password": z.string().min(8),
+		}),
+		output: z.object({
+			prevUsername: z.string(),
+			newUsername: z.string(),
+		}),
+	},
+	CHANGE_PASSWORD: {
+		input: z.object({
+			"!oldPassword": z.string().min(8),
+			"!password": z.string().min(8),
+		}),
+		output: z.object({}),
+	},
+	CHANGE_EMAIL: {
+		input: z.object({
+			email: z.email(),
+			"!password": z.string().min(8),
+		}),
+		output: z.object({}),
+	},
+	CHANGE_PFP: {
+		input: z.object({
+			"!fileBuffer": z.instanceof(Buffer),
+			fileMimetype: z.string(),
+		}),
+		output: z.object({
+			contentHash: z.string(),
+		}),
+	},
+	CHANGE_BANNER: {
+		input: z.object({
+			"!fileBuffer": z.instanceof(Buffer),
+			fileMimetype: z.string(),
+		}),
+		output: z.object({
+			contentHash: z.string(),
+		}),
+	},
+	DELETE_PFP: {
+		input: z.object({}),
+		output: z.object({}),
+	},
+	DELETE_BANNER: {
+		input: z.object({}),
+		output: z.object({}),
+	},
+	UPDATE_USER: {
+		input: z.object({
+			about: z.string().optional(),
+			status: z.string().nullable().optional(),
+			discord: z.string().nullable().optional(),
+			twitter: z.string().nullable().optional(),
+			github: z.string().nullable().optional(),
+			steam: z.string().nullable().optional(),
+			youtube: z.string().nullable().optional(),
+			twitch: z.string().nullable().optional(),
+		}),
+		output: z.object({}),
+	},
+	MARK_ALL_NOTIFICATIONS_READ: {
+		input: z.object({}),
+		output: z.object({
+			markedCount: z.number(),
+		}),
+	},
+	DELETE_ALL_NOTIFICATIONS: {
+		input: z.object({}),
+		output: z.object({
+			deletedCount: z.number(),
+		}),
+	},
 } satisfies Record<string, ActionSignature>;
 
 export const AnonActionSignatures = {
