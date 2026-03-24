@@ -111,6 +111,23 @@ export const ActionSignatures = {
 			deletedCount: z.number(),
 		}),
 	},
+	CREATE_API_TOKEN: {
+		input: z.object({
+			clientID: z.string().optional(),
+			permissions: z.array(z.string()).optional(),
+			identifier: z.string().optional(),
+		}),
+		output: z.object({
+			token: z.string(),
+			wasExisting: z.boolean(),
+		}),
+	},
+	DELETE_API_TOKEN: {
+		input: z.object({
+			token: z.string(),
+		}),
+		output: z.object({}),
+	},
 } satisfies Record<string, ActionSignature>;
 
 export const AnonActionSignatures = {
