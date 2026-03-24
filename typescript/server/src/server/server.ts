@@ -9,6 +9,7 @@ import express, { type Express } from "express";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log";
 import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
+import { ExpectedErr } from "bliss";
 import { RedisClient } from "#services/redis/redis";
 import { IsNonEmptyString, IsRecord } from "#utils/misc";
 import ExpressPromBundle from "express-prom-bundle";
@@ -203,6 +204,16 @@ const MAIN_ERR_HANDLER: express.ErrorRequestHandler = (err, req, res, _next) => 
 		}
 
 		// else, this isn't a JSON parsing error
+	}
+
+	// Action errors (ExpectedErr) carry an HTTP status code and a user-facing
+	// reason. They are intentional control-flow throws and should not be logged
+	// as fatal errors.
+	if (ExpectedErr.is(err)) {
+		return res.status(err.code).json({
+			success: false,
+			description: err.reason,
+		});
 	}
 
 	log.error({ url: req.originalUrl, body: req.body }, `MAIN_ERR_HANDLER hit by request.`);

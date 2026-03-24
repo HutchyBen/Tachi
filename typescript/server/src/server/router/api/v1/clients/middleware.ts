@@ -1,21 +1,10 @@
 import type { RequestHandler } from "express";
-import type { TachiAPIClientDocument } from "tachi-common";
 
-import { Env } from "#lib/setup/config";
-import MONGODB_KILL from "#services/mongo/db";
-import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
+import { GetClientByID } from "#utils/queries/api-clients";
+import { AssignToReqTachiData } from "#utils/req-tachi-data";
 
 export const GetClientFromID: RequestHandler = async (req, res, next) => {
-	const client = await MONGODB_KILL["api-clients"].findOne(
-		{
-			clientID: req.params.clientID,
-		},
-		{
-			projection: {
-				clientSecret: 0,
-			},
-		},
-	);
+	const client = await GetClientByID(req.params.clientID);
 
 	if (!client) {
 		return res.status(404).json({
@@ -24,45 +13,10 @@ export const GetClientFromID: RequestHandler = async (req, res, next) => {
 		});
 	}
 
-	AssignToReqTachiData(req, { apiClientDoc: client });
+	// Strip the client secret — this middleware is used for public lookups.
+	const { clientSecret: _secret, ...publicClient } = client;
 
-	next();
-};
-
-export const RequireOwnershipOfClient: RequestHandler = (req, res, next) => {
-	let client: Omit<TachiAPIClientDocument, "clientSecret">;
-
-	// @hack
-	// Sadly, expMiddlewareMock doesn't support mounting symbol props on
-	// request. To hack around this for testing, we perform this hack.
-	// There's an open issue for this here: https://github.com/i-like-robots/express-request-mock/issues/19
-	/* istanbul ignore next */
-	if (
-		Env.NODE_ENV === "test" &&
-		(req.safeBody.__terribleHackOauth2ClientDoc as TachiAPIClientDocument | undefined)
-	) {
-		// obviously a glaring hack and security flaw - this only applies
-		// in testing.
-		client = req.safeBody.__terribleHackOauth2ClientDoc as TachiAPIClientDocument;
-	} else {
-		client = GetTachiData(req, "apiClientDoc");
-	}
-
-	const user = req.session.tachi?.user;
-
-	if (!user) {
-		return res.status(401).json({
-			success: false,
-			description: `You are not authenticated (for a session-level request, atleast).`,
-		});
-	}
-
-	if (user.id !== client.author) {
-		return res.status(403).json({
-			success: false,
-			description: `You are not authorized to perform this action.`,
-		});
-	}
+	AssignToReqTachiData(req, { apiClientDoc: publicClient });
 
 	next();
 };

@@ -1,21 +1,16 @@
-import { log } from "#lib/log/log";
-import { ServerConfig } from "#lib/setup/config";
+import { ACTION_CreateApiClient } from "#actions/create-api-client";
+import { ACTION_DeleteApiClient } from "#actions/delete-api-client";
+import { ACTION_ResetApiClientSecret } from "#actions/reset-api-client-secret";
+import { ACTION_UpdateApiClient } from "#actions/update-api-client";
+import { SELECT_API_CLIENT, ToAPIClientDocument } from "#lib/db-formats/api-client";
 import prValidate from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
-import { DedupeArr, DeleteUndefinedProps, IsValidURL, Random20Hex } from "#utils/misc";
-import { optNull } from "#utils/prudence";
+import DB from "#services/pg/db";
 import { GetTachiData } from "#utils/req-tachi-data";
-import { FormatUserDoc } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-import {
-	ALL_PERMISSIONS,
-	type APIPermissions,
-	type TachiAPIClientDocument,
-	UserAuthLevels,
-} from "tachi-common";
+import { ALL_PERMISSIONS, type APIPermissions } from "tachi-common";
 
-import { GetClientFromID, RequireOwnershipOfClient } from "./middleware";
+import { GetClientFromID } from "./middleware";
 
 const router: Router = Router({ mergeParams: true });
 
@@ -36,9 +31,12 @@ router.get("/", async (req, res) => {
 		});
 	}
 
-	const clients = await MONGODB_KILL["api-clients"].find({
-		author: user.id,
-	});
+	const rows = await DB.selectFrom("priv_api_client")
+		.select(SELECT_API_CLIENT)
+		.where("author", "=", user.id)
+		.execute();
+
+	const clients = rows.map(ToAPIClientDocument);
 
 	return res.status(200).json({
 		success: true,
@@ -66,26 +64,14 @@ router.post(
 		name: p.isBoundedString(3, 80),
 		redirectUri: "?string",
 		webhookUri: "?string",
-		apiKeyTemplate: (self) => {
-			if (self === null) {
-				return true;
-			}
-
-			if (typeof self !== "string") {
-				return "Expected a string.";
-			}
-
-			if (!self.includes("%%TACHI_KEY%%")) {
-				return "Must contain %%TACHI_KEY%% as part of the template.";
-			}
-
-			return true;
-		},
+		apiKeyTemplate: "?string",
 		apiKeyFilename: "?string",
 		permissions: [p.isIn(Object.keys(ALL_PERMISSIONS))],
 	}),
 	async (req, res) => {
-		if (!req.session.tachi?.user) {
+		const user = req.session.tachi?.user;
+
+		if (!user) {
 			return res.status(401).json({
 				success: false,
 				description: `You are not authenticated.`,
@@ -101,66 +87,16 @@ router.post(
 			webhookUri: string | null;
 		};
 
-		const existingClients = await MONGODB_KILL["api-clients"].find({
-			author: req.session.tachi.user.id,
-		});
+		const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
 
-		// Note: Admins are excluded from the API client cap.
-		if (
-			req.session.tachi.user.authLevel !== UserAuthLevels.ADMIN &&
-			existingClients.length >= ServerConfig.OAUTH_CLIENT_CAP
-		) {
-			return res.status(400).json({
-				success: false,
-				description: `You have created too many API clients. The current cap is ${ServerConfig.OAUTH_CLIENT_CAP}.`,
-			});
-		}
-
-		const permissions = DedupeArr<APIPermissions>(body.permissions);
-
-		if (permissions.length === 0) {
-			return res.status(400).json({
-				success: false,
-				description: `Invalid permissions -- Need to require atleast one.`,
-			});
-		}
-
-		if (body.redirectUri !== null && !IsValidURL(body.redirectUri)) {
-			return res.status(400).json({
-				success: false,
-				description: `Invalid Redirect URL.`,
-			});
-		}
-
-		if (body.webhookUri !== null && !IsValidURL(body.webhookUri)) {
-			return res.status(400).json({
-				success: false,
-				description: `Invalid Webhook URL.`,
-			});
-		}
-
-		const clientID = `CI${Random20Hex()}`;
-		const clientSecret = `CS${Random20Hex()}`;
-
-		const clientDoc: TachiAPIClientDocument = {
-			clientID,
-			clientSecret,
-			requestedPermissions: permissions,
+		const clientDoc = await ACTION_CreateApiClient(taker, {
 			name: body.name,
-			author: req.session.tachi.user.id,
 			redirectUri: body.redirectUri,
-			webhookUri: body.webhookUri ?? null,
-			apiKeyFilename: body.apiKeyFilename ?? null,
-			apiKeyTemplate: body.apiKeyTemplate ?? null,
-		};
-
-		await MONGODB_KILL["api-clients"].insert(clientDoc);
-
-		log.info(
-			`User ${FormatUserDoc(req.session.tachi.user)} created a new API Client ${
-				body.name
-			} (${clientID}).`,
-		);
+			webhookUri: body.webhookUri,
+			apiKeyTemplate: body.apiKeyTemplate,
+			apiKeyFilename: body.apiKeyFilename,
+			permissions: body.permissions,
+		});
 
 		return res.status(200).json({
 			success: true,
@@ -192,94 +128,49 @@ router.get("/:clientID", GetClientFromID, (req, res) => {
  * @param name - Change the name of this client.
  * @param webhookUri - Change a bound webhookUri for this client.
  * @param redirectUri - Change a bound redirectUri for this client.
- * @param apiKeyFormat - Change the APIKeyFormat for this client.
+ * @param apiKeyTemplate - Change the APIKeyTemplate for this client.
  * @param apiKeyFilename - Change the APIKeyFilename for this client.
  *
  * @name PATCH /api/v1/clients/:clientID
  */
 router.patch(
 	"/:clientID",
-	GetClientFromID,
-	RequireOwnershipOfClient,
 	prValidate({
 		name: p.optional(p.isBoundedString(3, 80)),
-		apiKeyTemplate: optNull((self) => {
-			if (typeof self !== "string") {
-				return "Expected a string.";
-			}
-
-			if (!self.includes("%%TACHI_KEY%%")) {
-				return "Must contain a %%TACHI_KEY%% placeholder.";
-			}
-
-			return true;
-		}),
-		apiKeyFilename: optNull(p.isBoundedString(3, 80)),
-		webhookUri: optNull((self) => {
-			if (typeof self !== "string") {
-				return "Expected a string.";
-			}
-
-			const res = IsValidURL(self);
-
-			if (!res) {
-				return "Invalid URL.";
-			}
-
-			return true;
-		}),
-		redirectUri: optNull((self) => {
-			if (typeof self !== "string") {
-				return "Expected a string.";
-			}
-
-			const res = IsValidURL(self);
-
-			if (!res) {
-				return "Invalid URL.";
-			}
-
-			return true;
-		}),
+		apiKeyTemplate: "?string",
+		apiKeyFilename: p.optional(p.isBoundedString(3, 80)),
+		webhookUri: "?string",
+		redirectUri: "?string",
 	}),
 	async (req, res) => {
+		const user = req.session.tachi?.user;
+
+		if (!user) {
+			return res.status(401).json({
+				success: false,
+				description: `You are not authenticated.`,
+			});
+		}
+
 		const body = req.safeBody as {
 			apiKeyFilename?: string | null;
 			apiKeyTemplate?: string | null;
 			name?: string;
-			permissions?: Array<APIPermissions>;
 			redirectUri?: string | null;
 			webhookUri?: string | null;
 		};
 
-		const client = GetTachiData(req, "apiClientDoc");
+		const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
 
-		DeleteUndefinedProps(req.safeBody);
-
-		if (Object.keys(req.safeBody).length === 0) {
-			return res.status(400).json({
-				success: false,
-				description: `No changes to make.`,
-			});
-		}
-
-		const newClient = await MONGODB_KILL["api-clients"].findOneAndUpdate(
-			{
-				clientID: client.clientID,
-			},
-			{
-				$set: req.safeBody,
-			},
-		);
-
-		log.info(
-			`API Client ${client.name} (${client.clientID}) has been renamed to ${body.name}.`,
-		);
+		const updatedClient = await ACTION_UpdateApiClient(taker, {
+			clientID: req.params.clientID,
+			...body,
+		});
 
 		return res.status(200).json({
 			success: true,
 			description: `Updated client.`,
-			body: newClient,
+			body: updatedClient,
 		});
 	},
 );
@@ -290,65 +181,51 @@ router.patch(
  *
  * @name POST /api/v1/clients/:clientID/reset-secret
  */
-router.post(
-	"/:clientID/reset-secret",
-	GetClientFromID,
-	RequireOwnershipOfClient,
-	async (req, res) => {
-		const client = GetTachiData(req, "apiClientDoc");
-		const clientName = `${client.name} (${client.clientID})`;
+router.post("/:clientID/reset-secret", async (req, res) => {
+	const user = req.session.tachi?.user;
 
-		log.info(`received request to reset client secret for ${clientName}`);
-
-		const newSecret = Random20Hex();
-
-		const newClient = await MONGODB_KILL["api-clients"].findOneAndUpdate(
-			{
-				clientID: client.clientID,
-			},
-			{
-				$set: { clientSecret: newSecret },
-			},
-		);
-
-		log.info(`Reset secret for ${clientName}.`);
-
-		return res.status(200).json({
-			success: true,
-			description: `Reset secret.`,
-			body: newClient,
+	if (!user) {
+		return res.status(401).json({
+			success: false,
+			description: `You are not authenticated.`,
 		});
-	},
-);
+	}
+
+	const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
+
+	const updatedClient = await ACTION_ResetApiClientSecret(taker, {
+		clientID: req.params.clientID,
+	});
+
+	return res.status(200).json({
+		success: true,
+		description: `Reset secret.`,
+		body: updatedClient,
+	});
+});
 
 /**
  * Delete this client. Must be authorized at a session-request level.
  *
  * @name DELETE /api/v1/clients/:clientID
  */
-router.delete("/:clientID", GetClientFromID, RequireOwnershipOfClient, async (req, res) => {
-	const client = GetTachiData(req, "apiClientDoc");
+router.delete("/:clientID", async (req, res) => {
+	const user = req.session.tachi?.user;
 
-	const clientName = `${client.name} (${client.clientID})`;
+	if (!user) {
+		return res.status(401).json({
+			success: false,
+			description: `You are not authenticated.`,
+		});
+	}
 
-	log.info(`received request to destroy API Client ${client.name} (${client.clientID})`);
+	const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
 
-	log.debug(`Removing API Client ${clientName}.`);
-	await MONGODB_KILL["api-clients"].remove({
-		clientID: client.clientID,
-	});
-	log.info(`Removed API Client ${clientName}.`);
-
-	log.debug(`Removing all associated api tokens.`);
-	const result = await MONGODB_KILL["api-tokens"].remove({
-		fromOAuth2Client: client.clientID,
-	});
-
-	log.info(`Removed ${result.deletedCount} api tokens from ${clientName}.`);
+	await ACTION_DeleteApiClient(taker, { clientID: req.params.clientID });
 
 	return res.status(200).json({
 		success: true,
-		description: `Deleted ${clientName}.`,
+		description: `Deleted client ${req.params.clientID}.`,
 		body: {},
 	});
 });

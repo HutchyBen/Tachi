@@ -128,6 +128,70 @@ export const ActionSignatures = {
 		}),
 		output: z.object({}),
 	},
+	CREATE_API_CLIENT: {
+		input: z.object({
+			name: z.string().min(3).max(80),
+			redirectUri: z.url().nullable(),
+			webhookUri: z.url().nullable(),
+			apiKeyTemplate: z.string().nullable(),
+			apiKeyFilename: z.string().nullable(),
+			permissions: z.array(z.string()),
+		}),
+		output: z.object({
+			clientID: z.string(),
+			clientSecret: z.string(),
+			name: z.string(),
+			author: z.number().int(),
+			requestedPermissions: z.array(z.string()),
+			redirectUri: z.string().nullable(),
+			webhookUri: z.string().nullable(),
+			apiKeyTemplate: z.string().nullable(),
+			apiKeyFilename: z.string().nullable(),
+		}),
+	},
+	UPDATE_API_CLIENT: {
+		input: z.object({
+			clientID: z.string(),
+			name: z.string().min(3).max(80).optional(),
+			redirectUri: z.url().nullable().optional(),
+			webhookUri: z.url().nullable().optional(),
+			apiKeyTemplate: z.string().nullable().optional(),
+			apiKeyFilename: z.string().min(3).max(80).nullable().optional(),
+		}),
+		output: z.object({
+			clientID: z.string(),
+			clientSecret: z.string(),
+			name: z.string(),
+			author: z.number().int(),
+			requestedPermissions: z.array(z.string()),
+			redirectUri: z.string().nullable(),
+			webhookUri: z.string().nullable(),
+			apiKeyTemplate: z.string().nullable(),
+			apiKeyFilename: z.string().nullable(),
+		}),
+	},
+	RESET_API_CLIENT_SECRET: {
+		input: z.object({
+			clientID: z.string(),
+		}),
+		output: z.object({
+			clientID: z.string(),
+			clientSecret: z.string(),
+			name: z.string(),
+			author: z.number().int(),
+			requestedPermissions: z.array(z.string()),
+			redirectUri: z.string().nullable(),
+			webhookUri: z.string().nullable(),
+			apiKeyTemplate: z.string().nullable(),
+			apiKeyFilename: z.string().nullable(),
+		}),
+	},
+	DELETE_API_CLIENT: {
+		input: z.object({
+			clientID: z.string(),
+		}),
+		output: z.object({}),
+	},
 } satisfies Record<string, ActionSignature>;
 
 export const AnonActionSignatures = {

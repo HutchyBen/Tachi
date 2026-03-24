@@ -17,7 +17,7 @@ import {
 	AggressiveRateLimitMiddleware,
 	HyperAggressiveRateLimitMiddleware,
 } from "#server/middleware/rate-limiter";
-import { actionErrorToResponse, apiSuccess } from "#utils/response";
+import { apiSuccess } from "#utils/response";
 import {
 	FormatUserDoc,
 	GetSettingsForUser,
@@ -187,23 +187,18 @@ router.post(
 			username: string;
 		};
 
-		let newUser: { userID: number };
-		try {
-			newUser = await ANON_ACTION_Register(
-				{
-					ip: req.ip,
-				},
-				{
-					email: body.email,
-					"!password": body["!password"],
-					inviteCode: body.inviteCode ?? null,
-					captcha: body.captcha,
-					username: body.username,
-				},
-			);
-		} catch (err) {
-			return actionErrorToResponse(res, err);
-		}
+		const newUser = await ANON_ACTION_Register(
+			{
+				ip: req.ip,
+			},
+			{
+				email: body.email,
+				"!password": body["!password"],
+				inviteCode: body.inviteCode ?? null,
+				captcha: body.captcha,
+				username: body.username,
+			},
+		);
 
 		const user = await GetUserWithID(newUser.userID);
 
@@ -245,11 +240,7 @@ router.post(
 			code: string;
 		};
 
-		try {
-			await ANON_ACTION_VerifyEmail({ ip: req.ip }, { code: body.code });
-		} catch (err) {
-			return actionErrorToResponse(res, err);
-		}
+		await ANON_ACTION_VerifyEmail({ ip: req.ip }, { code: body.code });
 
 		return res.status(200).json({
 			success: true,
