@@ -4,14 +4,11 @@ import type { Session, SessionData } from "express-session";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log";
 import { TachiConfig } from "#lib/setup/config";
-import MONGODB_KILL from "#services/mongo/db";
 import { IsNullishOrEmptyStr, SplitAuthorizationHeader } from "#utils/misc";
-import {
-	ALL_PERMISSIONS,
-	type APIPermissions,
-	type APITokenDocument,
-	UserAuthLevels,
-} from "tachi-common";
+import { IsUserBanned } from "#utils/user.js";
+import { ALL_PERMISSIONS, type APIPermissions, type APITokenDocument } from "tachi-common";
+import { SELECT_API_TOKEN, ToAPITokenDocument } from "#lib/db-formats/api-token.js";
+import DB from "#services/pg/db.js";
 
 const GuestToken: APITokenDocument = {
 	token: null,
@@ -29,10 +26,7 @@ export const RejectIfBanned: RequestHandler = async (req, res, next) => {
 	// we need to ignore this if auth doesn't exist and if auth is null.
 
 	if (auth && auth.userID !== null) {
-		const isBanned = await MONGODB_KILL.users.findOne({
-			id: req[SYMBOL_TACHI_API_AUTH].userID!,
-			authLevel: UserAuthLevels.BANNED,
-		});
+		const isBanned = await IsUserBanned(auth.userID);
 
 		if (isBanned) {
 			return res.status(403).json({
@@ -108,9 +102,11 @@ function CreateSetRequestPermissions(errorKeyName: string): Array<RequestHandler
 				});
 			}
 
-			const apiTokenData = await MONGODB_KILL["api-tokens"].findOne({
-				token,
-			});
+			const apiTokenData = await DB.selectFrom("priv_api_token")
+				.select(SELECT_API_TOKEN)
+				.where("token", "=", token)
+				.executeTakeFirst()
+				.then((r) => (r ? ToAPITokenDocument(r) : null));
 
 			if (!apiTokenData) {
 				return res.status(401).json({

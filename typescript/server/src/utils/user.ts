@@ -286,6 +286,15 @@ export async function IsUserAdmin(userID: integer) {
 	return exists;
 }
 
+export async function IsUserBanned(userID: integer) {
+	return DB.selectFrom("account")
+		.select("auth_level")
+		.where("id", "=", userID)
+		.where("auth_level", "=", "banned")
+		.executeTakeFirst()
+		.then((res) => !!res);
+}
+
 /**
  * Return all the GPTs this userID has played.
  */

@@ -196,6 +196,14 @@ export const ActionSignatures = {
 		input: z.object({ forceStaticImport: z.boolean() }),
 		output: z.object({ forceStaticImport: z.boolean() }),
 	},
+	FOLLOW_USER: {
+		input: z.object({ userID: z.number().int().positive() }),
+		output: z.object({ username: z.string() }),
+	},
+	UNFOLLOW_USER: {
+		input: z.object({ userID: z.number().int().positive() }),
+		output: z.object({ username: z.string() }),
+	},
 } satisfies Record<string, ActionSignature>;
 
 export const AnonActionSignatures = {

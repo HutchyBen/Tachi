@@ -1,13 +1,9 @@
-import type { integer } from "tachi-common";
-
-import { log } from "#lib/log/log";
-import { ServerConfig } from "#lib/setup/config";
-import prValidate from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
+import { ACTION_FollowUser } from "#actions/follow-user";
+import { ACTION_UnfollowUser } from "#actions/unfollow-user";
+import { GetFollowingForUser } from "#utils/queries/settings";
 import { GetUser } from "#utils/req-tachi-data";
-import { FormatUserDoc, GetUsersWithIDs, GetUserWithID } from "#utils/user";
+import { GetUsersWithIDs } from "#utils/user";
 import { Router } from "express";
-import { p } from "prudence";
 
 import { RequireSelfRequestFromUser } from "../middleware";
 
@@ -23,25 +19,13 @@ const router: Router = Router({ mergeParams: true });
 router.get("/", async (req, res) => {
 	const user = GetUser(req);
 
-	const settings = await MONGODB_KILL["user-settings"].findOne({ userID: user.id });
-
-	if (!settings) {
-		log.error({ user }, `User ${FormatUserDoc(user)} has no settings?`);
-
-		return res.status(500).json({
-			success: false,
-			description: `This user has no settings.`,
-		});
-	}
-
-	const friends = await GetUsersWithIDs(settings.following);
+	const followingIDs = await GetFollowingForUser(user.id);
+	const friends = await GetUsersWithIDs(followingIDs);
 
 	return res.status(200).json({
 		success: true,
 		description: `Found ${friends.length} friend${friends.length !== 1 ? "s" : ""}.`,
-		body: {
-			friends,
-		},
+		body: { friends },
 	});
 });
 
@@ -52,79 +36,18 @@ router.get("/", async (req, res) => {
  *
  * @name POST /api/v1/users/:userID/following/add
  */
-router.post(
-	"/add",
-	RequireSelfRequestFromUser,
-	prValidate({ userID: p.isPositiveInteger }),
-	async (req, res) => {
-		const user = GetUser(req);
+router.post("/add", RequireSelfRequestFromUser, async (req, res) => {
+	const user = req.session.tachi!.user;
+	const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
 
-		const { userID: toFollow } = req.safeBody as { userID: integer };
+	const result = await ACTION_FollowUser(taker, { userID: req.body.userID });
 
-		if (user.id === toFollow) {
-			return res.status(400).json({
-				success: false,
-				description: `Can't follow yourself. Bit self-indulgent!`,
-			});
-		}
-
-		const settings = await MONGODB_KILL["user-settings"].findOne({ userID: user.id });
-
-		if (!settings) {
-			log.error({ user }, `User ${FormatUserDoc(user)} has no settings?`);
-
-			return res.status(500).json({
-				success: false,
-				description: `This user has no settings.`,
-			});
-		}
-
-		if (settings.following.includes(toFollow)) {
-			return res.status(409).json({
-				success: false,
-				description: `You are already following this user.`,
-			});
-		}
-
-		if (settings.following.length >= ServerConfig.MAX_FOLLOWING_AMOUNT) {
-			return res.status(400).json({
-				success: false,
-				description: `You are following too many people. The max is ${ServerConfig.MAX_FOLLOWING_AMOUNT}.`,
-			});
-		}
-
-		const userToFollow = await GetUserWithID(toFollow);
-
-		if (!userToFollow) {
-			return res.status(400).json({
-				success: false,
-				description: `No user with the id '${toFollow}' exists.`,
-			});
-		}
-
-		// Instead of using $push in mongodb, we create a new array and set that.
-		// due to the above guard, it's not possible for this to ever result
-		// in a race condition.
-		const following = [...settings.following, toFollow];
-
-		await MONGODB_KILL["user-settings"].update(
-			{
-				userID: user.id,
-			},
-			{
-				$set: {
-					following,
-				},
-			},
-		);
-
-		return res.status(200).json({
-			success: true,
-			description: `Added ${userToFollow.username}.`,
-			body: {},
-		});
-	},
-);
+	return res.status(200).json({
+		success: true,
+		description: `Added ${result.username}.`,
+		body: {},
+	});
+});
 
 /**
  * Unfollow a user.
@@ -133,64 +56,17 @@ router.post(
  *
  * @name POST /api/v1/users/:userID/following/remove
  */
-router.post(
-	"/remove",
-	RequireSelfRequestFromUser,
-	prValidate({ userID: p.isPositiveInteger }),
-	async (req, res) => {
-		const user = GetUser(req);
+router.post("/remove", RequireSelfRequestFromUser, async (req, res) => {
+	const user = req.session.tachi!.user;
+	const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
 
-		const { userID: toFollow } = req.safeBody as { userID: integer };
+	const result = await ACTION_UnfollowUser(taker, { userID: req.body.userID });
 
-		const settings = await MONGODB_KILL["user-settings"].findOne({ userID: user.id });
-
-		if (!settings) {
-			log.error({ user }, `User ${FormatUserDoc(user)} has no settings?`);
-
-			return res.status(500).json({
-				success: false,
-				description: `This user has no settings.`,
-			});
-		}
-
-		if (!settings.following.includes(toFollow)) {
-			return res.status(409).json({
-				success: false,
-				description: `You are not following this user.`,
-			});
-		}
-
-		const userToFollow = await GetUserWithID(toFollow);
-
-		if (!userToFollow) {
-			return res.status(400).json({
-				success: false,
-				description: `No user with the id '${toFollow}' exists.`,
-			});
-		}
-
-		// Instead of using $pull in mongodb, we create a new array and set that.
-		// due to the above guard, it's not possible for this to ever result
-		// in a race condition.
-		const following = settings.following.filter((e) => e !== toFollow);
-
-		await MONGODB_KILL["user-settings"].update(
-			{
-				userID: user.id,
-			},
-			{
-				$set: {
-					following,
-				},
-			},
-		);
-
-		return res.status(200).json({
-			success: true,
-			description: `Unfollowed ${userToFollow.username}.`,
-			body: {},
-		});
-	},
-);
+	return res.status(200).json({
+		success: true,
+		description: `Unfollowed ${result.username}.`,
+		body: {},
+	});
+});
 
 export default router;
