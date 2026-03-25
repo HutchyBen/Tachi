@@ -12,6 +12,7 @@ const command: SlashCommand = {
 		.setName("letmein")
 		.setDescription("Let yourself into the server.")
 		.toJSON(),
+	limboOnly: true,
 	exec: async (interaction) => {
 		if (!Env.DISCORD_APPROVED_ROLE) {
 			return null; // no-op
