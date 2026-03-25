@@ -1,10 +1,8 @@
 import { ONE_MONTH } from "#lib/constants/time";
 import DB from "#services/pg/db";
-import mockApi, { CloseServerConnection } from "#test-utils/mock-api";
+import mockApi from "#test-utils/mock-api";
 import { seedUser } from "#test-utils/pg-fixtures";
-import { afterAll, describe, expect, it } from "vitest";
-
-afterAll(() => CloseServerConnection());
+import { describe, expect, it } from "vitest";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 

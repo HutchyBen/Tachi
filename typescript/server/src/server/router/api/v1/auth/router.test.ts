@@ -1,11 +1,9 @@
 import { PasswordCompare } from "#lib/auth/auth";
 import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
 import DB from "#services/pg/db";
-import mockApi, { CloseServerConnection } from "#test-utils/mock-api";
+import mockApi from "#test-utils/mock-api";
 import { seedInvite, seedResetToken, seedUser } from "#test-utils/pg-fixtures";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
-
-afterAll(() => CloseServerConnection());
+import { beforeEach, describe, expect, it } from "vitest";
 
 // ─── POST /api/v1/auth/register ──────────────────────────────────────────────
 

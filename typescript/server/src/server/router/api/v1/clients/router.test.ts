@@ -1,10 +1,8 @@
 import { seedApiClient, seedApiToken } from "#actions/test-utils/api-tokens";
 import DB from "#services/pg/db";
-import mockApi, { CloseServerConnection } from "#test-utils/mock-api";
+import mockApi from "#test-utils/mock-api";
 import { seedUser } from "#test-utils/pg-fixtures";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
-
-afterAll(() => CloseServerConnection());
+import { beforeEach, describe, expect, it } from "vitest";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -246,6 +244,13 @@ describe("GET /api/v1/clients/:clientID", () => {
 // ─── PATCH /api/v1/clients/:clientID ─────────────────────────────────────────
 
 describe("PATCH /api/v1/clients/:clientID", () => {
+	/** Prudence `?string` fields — omit vs null is not optional; send null when not updating. */
+	const nullTemplateAndUris = {
+		apiKeyTemplate: null,
+		redirectUri: null,
+		webhookUri: null,
+	} as const;
+
 	let cookie: string[];
 	let userId: number;
 	let clientId: string;
@@ -265,7 +270,9 @@ describe("PATCH /api/v1/clients/:clientID", () => {
 	});
 
 	it("returns 401 when not authenticated", async () => {
-		const res = await mockApi.patch(`/api/v1/clients/${clientId}`).send({ name: "New Name" });
+		const res = await mockApi
+			.patch(`/api/v1/clients/${clientId}`)
+			.send({ name: "New Name", ...nullTemplateAndUris });
 
 		expect(res.status).toBe(401);
 		expect(res.body.success).toBe(false);
@@ -275,7 +282,7 @@ describe("PATCH /api/v1/clients/:clientID", () => {
 		const res = await mockApi
 			.patch("/api/v1/clients/CINonExistent")
 			.set("Cookie", cookie)
-			.send({ name: "New Name" });
+			.send({ name: "New Name", ...nullTemplateAndUris });
 
 		expect(res.status).toBe(404);
 		expect(res.body.success).toBe(false);
@@ -284,6 +291,7 @@ describe("PATCH /api/v1/clients/:clientID", () => {
 	it("returns 403 when authenticated user does not own the client", async () => {
 		const { id: otherId } = await seedUser({
 			username: "other_user",
+			email: "other_user@example.com",
 			withCredential: true,
 			withSettings: true,
 		});
@@ -293,7 +301,7 @@ describe("PATCH /api/v1/clients/:clientID", () => {
 		const res = await mockApi
 			.patch(`/api/v1/clients/${clientId}`)
 			.set("Cookie", otherCookie)
-			.send({ name: "Hijacked" });
+			.send({ name: "Hijacked", ...nullTemplateAndUris });
 
 		expect(res.status).toBe(403);
 		expect(res.body.success).toBe(false);
@@ -313,7 +321,7 @@ describe("PATCH /api/v1/clients/:clientID", () => {
 		const res = await mockApi
 			.patch(`/api/v1/clients/${clientId}`)
 			.set("Cookie", cookie)
-			.send({ name: "New Name" });
+			.send({ name: "New Name", ...nullTemplateAndUris });
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
@@ -324,7 +332,7 @@ describe("PATCH /api/v1/clients/:clientID", () => {
 		await mockApi
 			.patch(`/api/v1/clients/${clientId}`)
 			.set("Cookie", cookie)
-			.send({ name: "Persisted Name" });
+			.send({ name: "Persisted Name", ...nullTemplateAndUris });
 
 		const row = await DB.selectFrom("priv_api_client")
 			.select("name")
@@ -338,7 +346,11 @@ describe("PATCH /api/v1/clients/:clientID", () => {
 		const res = await mockApi
 			.patch(`/api/v1/clients/${clientId}`)
 			.set("Cookie", cookie)
-			.send({ apiKeyTemplate: "no-placeholder" });
+			.send({
+				apiKeyTemplate: "no-placeholder",
+				redirectUri: null,
+				webhookUri: null,
+			});
 
 		expect(res.status).toBe(400);
 		expect(res.body.success).toBe(false);
@@ -381,6 +393,7 @@ describe("POST /api/v1/clients/:clientID/reset-secret", () => {
 	it("returns 403 when authenticated user does not own the client", async () => {
 		const { id: otherId } = await seedUser({
 			username: "other_user",
+			email: "other_user@example.com",
 			withCredential: true,
 			withSettings: true,
 		});
@@ -474,6 +487,7 @@ describe("DELETE /api/v1/clients/:clientID", () => {
 	it("returns 403 when authenticated user does not own the client", async () => {
 		const { id: otherId } = await seedUser({
 			username: "other_user",
+			email: "other_user@example.com",
 			withCredential: true,
 			withSettings: true,
 		});

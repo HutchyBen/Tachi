@@ -95,10 +95,21 @@ beforeAll(async () => {
 
 beforeEach(async () => {
 	await resetDatabase();
+	// Login-heavy router tests share the in-memory login rate limiter; reset each
+	// test so AggressiveRateLimit (15 / 10 min) does not 429 and omit Set-Cookie.
+	const { ClearTestingRateLimitCache } = await import("#server/middleware/rate-limiter");
+	ClearTestingRateLimitCache();
 });
 
 afterAll(
 	async () => {
+		try {
+			const { CloseServerConnection } = await import("#test-utils/mock-api");
+			await CloseServerConnection();
+		} catch {
+			// No mock HTTP server in this worker, or close failed.
+		}
+
 		try {
 			const { ClosePgConnection } = await import("#services/pg/db");
 			await ClosePgConnection();

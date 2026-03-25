@@ -196,6 +196,17 @@ export const ActionSignatures = {
 		input: z.object({ forceStaticImport: z.boolean() }),
 		output: z.object({ forceStaticImport: z.boolean() }),
 	},
+	UPDATE_FERVIDEX_SETTINGS: {
+		input: z.object({
+			cards: z.array(z.string()).nullable().optional(),
+			forceStaticImport: z.boolean().optional(),
+		}),
+		output: z.object({
+			userID: z.number().int(),
+			cards: z.array(z.string()).nullable(),
+			forceStaticImport: z.boolean(),
+		}),
+	},
 	FOLLOW_USER: {
 		input: z.object({ userID: z.number().int().positive() }),
 		output: z.object({ username: z.string() }),
@@ -203,6 +214,17 @@ export const ActionSignatures = {
 	UNFOLLOW_USER: {
 		input: z.object({ userID: z.number().int().positive() }),
 		output: z.object({ username: z.string() }),
+	},
+	CREATE_INVITE: {
+		input: z.object({}),
+		output: z.object({
+			code: z.string(),
+			createdBy: z.number().int(),
+			createdAt: z.number().int(),
+			consumed: z.literal(false),
+			consumedAt: z.null(),
+			consumedBy: z.null(),
+		}),
 	},
 } satisfies Record<string, ActionSignature>;
 

@@ -1,4 +1,5 @@
-import MONGODB_KILL from "#services/mongo/db";
+import { SELECT_SESSION_CALENDAR, ToSessionCalendarDocument } from "#lib/db-formats/session";
+import DB from "#services/pg/db";
 import { GetUser } from "#utils/req-tachi-data";
 import { Router } from "express";
 
@@ -14,21 +15,12 @@ const router: Router = Router({ mergeParams: true });
 router.get("/calendar", async (req, res) => {
 	const user = GetUser(req);
 
-	const sessions = await MONGODB_KILL.sessions.find(
-		{ userID: user.id },
-		{
-			projection: {
-				sessionID: 1,
-				name: 1,
-				desc: 1,
-				highlight: 1,
-				timeStarted: 1,
-				timeEnded: 1,
-				game: 1,
-				playtype: 1,
-			},
-		},
-	);
+	const rows = await DB.selectFrom("session")
+		.select(SELECT_SESSION_CALENDAR)
+		.where("user_id", "=", user.id)
+		.execute();
+
+	const sessions = rows.map(ToSessionCalendarDocument);
 
 	return res.status(200).json({
 		success: true,

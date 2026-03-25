@@ -17,11 +17,15 @@ function CreateStore(name: string) {
 		: undefined;
 }
 
+/** Express / supertest may use any of these as `req.ip` for loopback. */
+const LOOPBACK_RATE_LIMIT_KEYS = ["127.0.0.1", "::ffff:127.0.0.1", "::1"] as const;
+
 export function ClearTestingRateLimitCache() {
-	// ???
-	NormalRateLimitMiddleware.resetKey(`::ffff:127.0.0.1`);
-	AggressiveRateLimitMiddleware.resetKey(`::ffff:127.0.0.1`);
-	HyperAggressiveRateLimitMiddleware.resetKey(`::ffff:127.0.0.1`);
+	for (const ip of LOOPBACK_RATE_LIMIT_KEYS) {
+		NormalRateLimitMiddleware.resetKey(ip);
+		AggressiveRateLimitMiddleware.resetKey(ip);
+		HyperAggressiveRateLimitMiddleware.resetKey(ip);
+	}
 }
 
 const CreateRateLimitOptions = (max: integer, name: string, windowMs?: number): Partial<Options> =>

@@ -1,9 +1,7 @@
 import DB from "#services/pg/db";
-import mockApi, { CloseServerConnection } from "#test-utils/mock-api";
+import mockApi from "#test-utils/mock-api";
 import { seedUser } from "#test-utils/pg-fixtures";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
-
-afterAll(() => CloseServerConnection());
+import { beforeEach, describe, expect, it } from "vitest";
 
 async function loginAs(username: string, password = "password123") {
 	const res = await mockApi.post("/api/v1/auth/login").send({

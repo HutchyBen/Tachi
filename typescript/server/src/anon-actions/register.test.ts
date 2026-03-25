@@ -162,8 +162,7 @@ describe("ANON_ACTION_Register", () => {
 				"!password": "securepassword",
 				email: "brandnewuser@example.com",
 				captcha: "test",
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				inviteCode: undefined as any,
+				inviteCode: null,
 			}),
 		).rejects.toMatchObject({ code: 400 });
 	});
