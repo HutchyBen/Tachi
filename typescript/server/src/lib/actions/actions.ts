@@ -192,6 +192,10 @@ export const ActionSignatures = {
 		}),
 		output: z.object({}),
 	},
+	UPDATE_KSHOOK_SV6C_SETTINGS: {
+		input: z.object({ forceStaticImport: z.boolean() }),
+		output: z.object({ forceStaticImport: z.boolean() }),
+	},
 } satisfies Record<string, ActionSignature>;
 
 export const AnonActionSignatures = {
@@ -243,6 +247,8 @@ export function MakeAnonAction<A extends AnonActionName>(
 		db: DB,
 		appName: APP_NAME,
 		kind,
+		inputSchema: AnonActionSignatures[kind].input,
+		outputSchema: AnonActionSignatures[kind].output,
 		// @ts-expect-error we're being creative with the types here
 		fn,
 	}) as AnonActionFn<A>;
@@ -257,6 +263,8 @@ export function MakeAction<A extends ActionName>(kind: A, fn: ActionFn<A>): Acti
 		db: DB,
 		appName: APP_NAME,
 		kind,
+		inputSchema: ActionSignatures[kind].input,
+		outputSchema: ActionSignatures[kind].output,
 		// @ts-expect-error we're being creative with the types here
 		fn,
 	}) as ActionFn<A>;

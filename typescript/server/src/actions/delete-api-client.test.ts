@@ -2,8 +2,8 @@ import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { seedApiClient, seedApiToken } from "./test-utils/api-tokens";
 import { ACTION_DeleteApiClient } from "./delete-api-client";
+import { seedApiClient, seedApiToken } from "./test-utils/api-tokens";
 
 // ─── ACTION_DeleteApiClient ───────────────────────────────────────────────────
 
@@ -31,9 +31,9 @@ describe("ACTION_DeleteApiClient", () => {
 		const { id: otherId, username: otherUsername } = await seedUser({ username: "other_user" });
 		const taker = { ip: "127.0.0.1", acct: { id: otherId, username: otherUsername } };
 
-		await expect(
-			ACTION_DeleteApiClient(taker, { clientID: clientId }),
-		).rejects.toMatchObject({ code: 403 });
+		await expect(ACTION_DeleteApiClient(taker, { clientID: clientId })).rejects.toMatchObject({
+			code: 403,
+		});
 	});
 
 	// ── Happy path ────────────────────────────────────────────────────────────
@@ -70,7 +70,11 @@ describe("ACTION_DeleteApiClient", () => {
 	it("does not remove tokens belonging to other clients", async () => {
 		const { id: otherId } = await seedUser({ username: "other_user" });
 		await seedApiClient({ clientId: "CIOtherClient", authorId: otherId });
-		await seedApiToken({ token: "T_other_token", userId: otherId, fromClient: "CIOtherClient" });
+		await seedApiToken({
+			token: "T_other_token",
+			userId: otherId,
+			fromClient: "CIOtherClient",
+		});
 
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 

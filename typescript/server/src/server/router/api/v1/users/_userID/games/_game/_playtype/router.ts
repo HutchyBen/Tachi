@@ -1,8 +1,8 @@
 import { CreateActivityRouteHandler } from "#lib/activity/activity";
+import { PasswordCompare, ValidatePassword } from "#lib/auth/auth";
 import { ONE_MONTH, ONE_WEEK, ONE_YEAR } from "#lib/constants/time";
 import { log } from "#lib/log/log";
 import prValidate from "#server/middleware/prudence-validate";
-import { PasswordCompare, ValidatePassword } from "#lib/auth/auth";
 import MONGODB_KILL from "#services/mongo/db";
 import { IsString } from "#utils/misc";
 import { GetTachiData, GetUGPT } from "#utils/req-tachi-data";

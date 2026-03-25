@@ -23,10 +23,7 @@ export const ACTION_CreateApiToken = MakeAction(
 	"CREATE_API_TOKEN",
 	async (taker, { clientID, permissions, identifier }) => {
 		if (clientID !== undefined && permissions !== undefined) {
-			throw new ExpectedErr(
-				400,
-				"Cannot use clientID and permissions at the same time.",
-			);
+			throw new ExpectedErr(400, "Cannot use clientID and permissions at the same time.");
 		}
 
 		let tokenIdentifier: string;

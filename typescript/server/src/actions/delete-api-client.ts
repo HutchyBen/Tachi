@@ -18,9 +18,7 @@ export const ACTION_DeleteApiClient = MakeAction(
 			throw new ExpectedErr(403, "You are not authorized to perform this action.");
 		}
 
-		await DB.deleteFrom("priv_api_token")
-			.where("from_oauth2_client", "=", clientID)
-			.execute();
+		await DB.deleteFrom("priv_api_token").where("from_oauth2_client", "=", clientID).execute();
 
 		await DB.deleteFrom("priv_api_client").where("client_id", "=", clientID).execute();
 

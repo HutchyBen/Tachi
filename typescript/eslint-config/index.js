@@ -1,4 +1,4 @@
-import eslint from "@eslint";
+import eslint from "@eslint/js";
 import configPrettier from "eslint-config-prettier";
 import pluginImport from "eslint-plugin-import";
 import pluginJsxA11y from "eslint-plugin-jsx-a11y";

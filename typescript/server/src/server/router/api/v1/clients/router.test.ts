@@ -1,9 +1,8 @@
+import { seedApiClient, seedApiToken } from "#actions/test-utils/api-tokens";
 import DB from "#services/pg/db";
 import mockApi, { CloseServerConnection } from "#test-utils/mock-api";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
-
-import { seedApiClient, seedApiToken } from "#actions/test-utils/api-tokens";
 
 afterAll(() => CloseServerConnection());
 
@@ -113,17 +112,14 @@ describe("POST /api/v1/clients/create", () => {
 	});
 
 	it("returns 400 when permissions array is empty", async () => {
-		const res = await mockApi
-			.post("/api/v1/clients/create")
-			.set("Cookie", cookie)
-			.send({
-				name: "My App",
-				redirectUri: null,
-				webhookUri: null,
-				apiKeyTemplate: null,
-				apiKeyFilename: null,
-				permissions: [],
-			});
+		const res = await mockApi.post("/api/v1/clients/create").set("Cookie", cookie).send({
+			name: "My App",
+			redirectUri: null,
+			webhookUri: null,
+			apiKeyTemplate: null,
+			apiKeyFilename: null,
+			permissions: [],
+		});
 
 		expect(res.status).toBe(400);
 		expect(res.body.success).toBe(false);
@@ -216,7 +212,11 @@ describe("GET /api/v1/clients/:clientID", () => {
 
 	beforeEach(async () => {
 		({ id: userId } = await seedUser({ username: "test_user" }));
-		clientId = await seedApiClient({ clientId: "CITestClient", authorId: userId, name: "Test Client" });
+		clientId = await seedApiClient({
+			clientId: "CITestClient",
+			authorId: userId,
+			name: "Test Client",
+		});
 	});
 
 	it("returns 404 for a non-existent client", async () => {
@@ -257,13 +257,15 @@ describe("PATCH /api/v1/clients/:clientID", () => {
 			withSettings: true,
 		}));
 		cookie = await loginAs("test_user");
-		clientId = await seedApiClient({ clientId: "CITestClient", authorId: userId, name: "Old Name" });
+		clientId = await seedApiClient({
+			clientId: "CITestClient",
+			authorId: userId,
+			name: "Old Name",
+		});
 	});
 
 	it("returns 401 when not authenticated", async () => {
-		const res = await mockApi
-			.patch(`/api/v1/clients/${clientId}`)
-			.send({ name: "New Name" });
+		const res = await mockApi.patch(`/api/v1/clients/${clientId}`).send({ name: "New Name" });
 
 		expect(res.status).toBe(401);
 		expect(res.body.success).toBe(false);
@@ -427,9 +429,7 @@ describe("POST /api/v1/clients/:clientID/reset-secret", () => {
 	it("does not remove existing tokens for the client", async () => {
 		await seedApiToken({ token: "T_should_survive", userId, fromClient: clientId });
 
-		await mockApi
-			.post(`/api/v1/clients/${clientId}/reset-secret`)
-			.set("Cookie", cookie);
+		await mockApi.post(`/api/v1/clients/${clientId}/reset-secret`).set("Cookie", cookie);
 
 		const token = await DB.selectFrom("priv_api_token")
 			.select("token")
@@ -465,9 +465,7 @@ describe("DELETE /api/v1/clients/:clientID", () => {
 	});
 
 	it("returns 404 for a non-existent client", async () => {
-		const res = await mockApi
-			.delete("/api/v1/clients/CINonExistent")
-			.set("Cookie", cookie);
+		const res = await mockApi.delete("/api/v1/clients/CINonExistent").set("Cookie", cookie);
 
 		expect(res.status).toBe(404);
 		expect(res.body.success).toBe(false);
@@ -482,18 +480,14 @@ describe("DELETE /api/v1/clients/:clientID", () => {
 		await seedApiClient({ clientId: "CIOther", authorId: otherId });
 		const otherCookie = await loginAs("other_user");
 
-		const res = await mockApi
-			.delete(`/api/v1/clients/${clientId}`)
-			.set("Cookie", otherCookie);
+		const res = await mockApi.delete(`/api/v1/clients/${clientId}`).set("Cookie", otherCookie);
 
 		expect(res.status).toBe(403);
 		expect(res.body.success).toBe(false);
 	});
 
 	it("returns 200 and removes the client", async () => {
-		const res = await mockApi
-			.delete(`/api/v1/clients/${clientId}`)
-			.set("Cookie", cookie);
+		const res = await mockApi.delete(`/api/v1/clients/${clientId}`).set("Cookie", cookie);
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);

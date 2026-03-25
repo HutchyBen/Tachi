@@ -2,8 +2,8 @@ import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { seedApiClient } from "./test-utils/api-tokens";
 import { ACTION_ResetApiClientSecret } from "./reset-api-client-secret";
+import { seedApiClient } from "./test-utils/api-tokens";
 
 // ─── ACTION_ResetApiClientSecret ──────────────────────────────────────────────
 

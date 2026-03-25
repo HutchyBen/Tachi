@@ -14,7 +14,11 @@ describe("ACTION_UpdateApiClient", () => {
 
 	beforeEach(async () => {
 		({ id: userId, username } = await seedUser({ username: "test_user" }));
-		clientId = await seedApiClient({ clientId: "CITestClient", authorId: userId, name: "Old Name" });
+		clientId = await seedApiClient({
+			clientId: "CITestClient",
+			authorId: userId,
+			name: "Old Name",
+		});
 	});
 
 	// ── Existence / ownership ─────────────────────────────────────────────────
@@ -41,9 +45,9 @@ describe("ACTION_UpdateApiClient", () => {
 	it("throws 400 when no fields are provided", async () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		await expect(
-			ACTION_UpdateApiClient(taker, { clientID: clientId }),
-		).rejects.toMatchObject({ code: 400 });
+		await expect(ACTION_UpdateApiClient(taker, { clientID: clientId })).rejects.toMatchObject({
+			code: 400,
+		});
 	});
 
 	it("throws 400 when apiKeyTemplate does not contain %%TACHI_KEY%%", async () => {

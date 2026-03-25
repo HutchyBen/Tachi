@@ -23,7 +23,10 @@ function permissionsToColumns(perms: Array<APIPermissions>) {
 
 export const ACTION_CreateApiClient = MakeAction(
 	"CREATE_API_CLIENT",
-	async (taker, { name, redirectUri, webhookUri, apiKeyTemplate, apiKeyFilename, permissions }) => {
+	async (
+		taker,
+		{ name, redirectUri, webhookUri, apiKeyTemplate, apiKeyFilename, permissions },
+	) => {
 		const permissions_deduped = DedupeArr(permissions) as Array<APIPermissions>;
 
 		const invalid = permissions_deduped.filter((p) => !VALID_PERMISSIONS.has(p));

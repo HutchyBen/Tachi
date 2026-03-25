@@ -12,7 +12,7 @@ import { ACTION_ChangeUsername } from "./change-username";
  */
 async function seedUsernameChange(
 	userId: number,
-	opts: { ageDays?: number; username?: string; previousUsername?: string } = {},
+	opts: { ageDays?: number; previousUsername?: string; username?: string } = {},
 ) {
 	const ageDays = opts.ageDays ?? 0;
 	const timestamp = new Date(Date.now() - ageDays * 24 * 60 * 60 * 1000).toISOString();
@@ -73,7 +73,10 @@ describe("ACTION_ChangeUsername", () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
 		await expect(
-			ACTION_ChangeUsername(taker, { newUsername: "new_username", "!password": "wrongpassword" }),
+			ACTION_ChangeUsername(taker, {
+				newUsername: "new_username",
+				"!password": "wrongpassword",
+			}),
 		).rejects.toMatchObject({ code: 401 });
 	});
 
@@ -81,7 +84,10 @@ describe("ACTION_ChangeUsername", () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
 		await expect(
-			ACTION_ChangeUsername(taker, { newUsername: "new_username", "!password": "wrongpassword" }),
+			ACTION_ChangeUsername(taker, {
+				newUsername: "new_username",
+				"!password": "wrongpassword",
+			}),
 		).rejects.toThrow();
 
 		const action = await DB.selectFrom("action")
@@ -96,7 +102,10 @@ describe("ACTION_ChangeUsername", () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
 		await expect(
-			ACTION_ChangeUsername(taker, { newUsername: "new_username", "!password": "wrongpassword" }),
+			ACTION_ChangeUsername(taker, {
+				newUsername: "new_username",
+				"!password": "wrongpassword",
+			}),
 		).rejects.toThrow();
 
 		const row = await DB.selectFrom("account")

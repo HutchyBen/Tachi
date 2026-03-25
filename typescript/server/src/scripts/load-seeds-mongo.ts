@@ -23,7 +23,6 @@ import { UpdateQuestSubscriptions } from "#lib/targets/quests";
 import MONGODB_KILL, { monkDB } from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";
 import { UpdateGameSongIDCounter } from "#utils/db";
-import { InitaliseFolderChartLookup } from "#utils/folder";
 import { ArrayDiff, IsSupported, WrapScriptPromise } from "#utils/misc";
 import fjsh from "fast-json-stable-hash";
 
@@ -187,7 +186,7 @@ const syncInstructions: Array<SyncInstructions> = [
 			const r = await GenericUpsert(charts, collection, "chartID", log, false);
 
 			if (r.thingsChanged) {
-				await InitaliseFolderChartLookup();
+				// await InitaliseFolderChartLookup();
 				await UpdateIsPrimaryStatus();
 
 				await UpdateGameSongIDCounter(collectionName.includes("bms") ? "bms" : "pms");
@@ -210,7 +209,7 @@ const syncInstructions: Array<SyncInstructions> = [
 			const r = await GenericUpsert(charts, collection, "chartID", log, true);
 
 			if (r.thingsChanged) {
-				await InitaliseFolderChartLookup();
+				// await InitaliseFolderChartLookup();
 				await UpdateIsPrimaryStatus();
 
 				await RecalcAllScores({
@@ -272,7 +271,7 @@ const syncInstructions: Array<SyncInstructions> = [
 			);
 
 			if (r.thingsChanged) {
-				await InitaliseFolderChartLookup();
+				// await InitaliseFolderChartLookup();
 
 				const allModifiedFolderIDs = r.changedFields as Array<string>;
 

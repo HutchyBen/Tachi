@@ -1,8 +1,8 @@
 import { MakeAnonAction } from "#lib/actions/actions";
+import { AddNewUser, ValidateCaptcha } from "#lib/auth/auth";
 import { SendEmail } from "#lib/email/client";
 import { EmailFormatVerifyEmail } from "#lib/email/formats";
 import { Env, ServerConfig } from "#lib/setup/config";
-import { AddNewUser, ValidateCaptcha } from "#lib/auth/auth";
 import DB from "#services/pg/db";
 import { Random20Hex } from "#utils/misc";
 import { CheckIfEmailInUse, GetUserCaseInsensitive } from "#utils/user";

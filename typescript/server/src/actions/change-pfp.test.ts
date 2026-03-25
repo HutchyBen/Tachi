@@ -164,7 +164,12 @@ describe("ACTION_ChangePfp", () => {
 			.where("kind", "=", "CHANGE_PFP")
 			.executeTakeFirstOrThrow();
 
-		expect(action).toMatchObject({ kind: "CHANGE_PFP", result: "GOOD", ip: "10.0.0.1", user_id: userId });
+		expect(action).toMatchObject({
+			kind: "CHANGE_PFP",
+			result: "GOOD",
+			ip: "10.0.0.1",
+			user_id: userId,
+		});
 	});
 
 	it("writes a BAD action row on invalid mimetype", async () => {
@@ -285,7 +290,12 @@ describe("ACTION_DeletePfp", () => {
 			.where("kind", "=", "DELETE_PFP")
 			.executeTakeFirstOrThrow();
 
-		expect(action).toMatchObject({ kind: "DELETE_PFP", result: "GOOD", ip: "10.0.0.1", user_id: userId });
+		expect(action).toMatchObject({
+			kind: "DELETE_PFP",
+			result: "GOOD",
+			ip: "10.0.0.1",
+			user_id: userId,
+		});
 	});
 });
 
@@ -348,7 +358,10 @@ describe("ACTION_ChangeBanner", () => {
 	it("persists the content hash to custom_banner_location", async () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		await ACTION_ChangeBanner(taker, { "!fileBuffer": JPEG_BUFFER, fileMimetype: "image/jpeg" });
+		await ACTION_ChangeBanner(taker, {
+			"!fileBuffer": JPEG_BUFFER,
+			fileMimetype: "image/jpeg",
+		});
 
 		expect(await getBannerLocation(userId)).toBe(HashSHA256(JPEG_BUFFER));
 	});
@@ -357,7 +370,10 @@ describe("ACTION_ChangeBanner", () => {
 		const other = await seedUser({ username: "other_user" });
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		await ACTION_ChangeBanner(taker, { "!fileBuffer": JPEG_BUFFER, fileMimetype: "image/jpeg" });
+		await ACTION_ChangeBanner(taker, {
+			"!fileBuffer": JPEG_BUFFER,
+			fileMimetype: "image/jpeg",
+		});
 
 		expect(await getBannerLocation(other.id)).toBeNull();
 	});
@@ -377,7 +393,10 @@ describe("ACTION_ChangeBanner", () => {
 	it("calls CDNStoreOrOverwrite with the correct URL and buffer", async () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		await ACTION_ChangeBanner(taker, { "!fileBuffer": JPEG_BUFFER, fileMimetype: "image/jpeg" });
+		await ACTION_ChangeBanner(taker, {
+			"!fileBuffer": JPEG_BUFFER,
+			fileMimetype: "image/jpeg",
+		});
 
 		expect(CDNStoreOrOverwrite).toHaveBeenCalledOnce();
 		expect(CDNStoreOrOverwrite).toHaveBeenCalledWith(
@@ -391,14 +410,22 @@ describe("ACTION_ChangeBanner", () => {
 	it("writes a GOOD action row on success", async () => {
 		const taker = { ip: "10.0.0.1", acct: { id: userId, username } };
 
-		await ACTION_ChangeBanner(taker, { "!fileBuffer": JPEG_BUFFER, fileMimetype: "image/jpeg" });
+		await ACTION_ChangeBanner(taker, {
+			"!fileBuffer": JPEG_BUFFER,
+			fileMimetype: "image/jpeg",
+		});
 
 		const action = await DB.selectFrom("action")
 			.selectAll()
 			.where("kind", "=", "CHANGE_BANNER")
 			.executeTakeFirstOrThrow();
 
-		expect(action).toMatchObject({ kind: "CHANGE_BANNER", result: "GOOD", ip: "10.0.0.1", user_id: userId });
+		expect(action).toMatchObject({
+			kind: "CHANGE_BANNER",
+			result: "GOOD",
+			ip: "10.0.0.1",
+			user_id: userId,
+		});
 	});
 
 	it("writes a BAD action row on invalid mimetype", async () => {
@@ -419,7 +446,10 @@ describe("ACTION_ChangeBanner", () => {
 	it("does not store the file buffer content in the audit log input", async () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		await ACTION_ChangeBanner(taker, { "!fileBuffer": JPEG_BUFFER, fileMimetype: "image/jpeg" });
+		await ACTION_ChangeBanner(taker, {
+			"!fileBuffer": JPEG_BUFFER,
+			fileMimetype: "image/jpeg",
+		});
 
 		const action = await DB.selectFrom("action")
 			.select("input")
@@ -519,6 +549,11 @@ describe("ACTION_DeleteBanner", () => {
 			.where("kind", "=", "DELETE_BANNER")
 			.executeTakeFirstOrThrow();
 
-		expect(action).toMatchObject({ kind: "DELETE_BANNER", result: "GOOD", ip: "10.0.0.1", user_id: userId });
+		expect(action).toMatchObject({
+			kind: "DELETE_BANNER",
+			result: "GOOD",
+			ip: "10.0.0.1",
+			user_id: userId,
+		});
 	});
 });

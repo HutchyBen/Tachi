@@ -4,7 +4,6 @@ import type { FilterQuery } from "mongodb";
 import { log } from "#lib/log/log";
 import { DeorphanIfInQueue } from "#lib/orphan-queue/orphan-queue";
 import MONGODB_KILL from "#services/mongo/db";
-import { InitaliseFolderChartLookup } from "#utils/folder";
 import { FormatBMSTables, WrapScriptPromise } from "#utils/misc";
 import { type BMSTableEntry, LoadBMSTable } from "bms-table-loader";
 import { BMS_TABLES, type BMSTableInfo, type ChartDocument, type Playtypes } from "tachi-common";
@@ -243,7 +242,7 @@ export async function SyncBMSTables() {
 	}
 
 	log.info(`Re-initialising folder-chart-lookup, since changes may have been made.`);
-	await InitaliseFolderChartLookup();
+	// await InitaliseFolderChartLookup();
 	log.info(`Done.`);
 }
 

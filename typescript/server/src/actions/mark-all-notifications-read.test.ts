@@ -3,8 +3,8 @@ import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { getNotification, seedNotification } from "./test-utils/notifications";
 import { ACTION_MarkAllNotificationsRead } from "./mark-all-notifications-read";
+import { getNotification, seedNotification } from "./test-utils/notifications";
 
 // ─── ACTION_MarkAllNotificationsRead ─────────────────────────────────────────
 

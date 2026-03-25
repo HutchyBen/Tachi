@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { GetPlaylogRequest, GetPlaylogStreamItem } from "./user_pb";
+import { GetPlaylogRequest, GetPlaylogStreamItem } from "./user_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**

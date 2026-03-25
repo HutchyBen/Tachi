@@ -2,8 +2,8 @@ import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { getApiToken, seedApiToken } from "./test-utils/api-tokens";
 import { ACTION_DeleteApiToken } from "./delete-api-token";
+import { getApiToken, seedApiToken } from "./test-utils/api-tokens";
 
 // ─── ACTION_DeleteApiToken ────────────────────────────────────────────────────
 
@@ -30,9 +30,9 @@ describe("ACTION_DeleteApiToken", () => {
 		await seedApiToken({ token: "OTHER_TOKEN", userId: other.id });
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		await expect(
-			ACTION_DeleteApiToken(taker, { token: "OTHER_TOKEN" }),
-		).rejects.toMatchObject({ code: 404 });
+		await expect(ACTION_DeleteApiToken(taker, { token: "OTHER_TOKEN" })).rejects.toMatchObject({
+			code: 404,
+		});
 	});
 
 	it("writes a BAD action row when the token does not exist", async () => {

@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { LookupRequest, LookupResponse } from "./cards_pb";
+import { LookupRequest, LookupResponse } from "./cards_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**

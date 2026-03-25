@@ -201,7 +201,7 @@ export function GetUGPTPlaycount(userID: integer, game: GameGroup, playtype: Pla
 		.where("user_id", "=", userID)
 		.where("game", "=", v3Game)
 		.executeTakeFirst()
-		.then((res) => res?.playcount ?? 0);
+		.then((res) => Number(res?.playcount ?? 0));
 }
 
 export async function GetAllRankings(stats: UserGameStats) {

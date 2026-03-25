@@ -2,8 +2,8 @@ import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { getApiToken, seedApiClient, seedApiToken } from "./test-utils/api-tokens";
 import { ACTION_CreateApiToken } from "./create-api-token";
+import { getApiToken, seedApiClient, seedApiToken } from "./test-utils/api-tokens";
 
 // ─── ACTION_CreateApiToken ────────────────────────────────────────────────────
 
@@ -68,9 +68,7 @@ describe("ACTION_CreateApiToken", () => {
 	it("writes a BAD action row when the clientID does not exist", async () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		await expect(
-			ACTION_CreateApiToken(taker, { clientID: "CXNonExistent" }),
-		).rejects.toThrow();
+		await expect(ACTION_CreateApiToken(taker, { clientID: "CXNonExistent" })).rejects.toThrow();
 
 		const action = await DB.selectFrom("action")
 			.select("result")

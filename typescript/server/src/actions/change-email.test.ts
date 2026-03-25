@@ -193,7 +193,9 @@ describe("ACTION_ChangeEmail", () => {
 		});
 
 		beforeEach(() => {
-			(ServerConfig as Record<string, unknown>).EMAIL_CONFIG = { FROM: "noreply@example.com" };
+			(ServerConfig as Record<string, unknown>).EMAIL_CONFIG = {
+				FROM: "noreply@example.com",
+			};
 		});
 
 		it("inserts a verify-email token for the new address", async () => {

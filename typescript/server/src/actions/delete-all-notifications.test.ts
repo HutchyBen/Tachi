@@ -3,12 +3,12 @@ import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { ACTION_DeleteAllNotifications } from "./delete-all-notifications";
 import {
 	countNotificationsForUser,
 	getNotification,
 	seedNotification,
 } from "./test-utils/notifications";
-import { ACTION_DeleteAllNotifications } from "./delete-all-notifications";
 
 // ─── ACTION_DeleteAllNotifications ───────────────────────────────────────────
 
