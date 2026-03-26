@@ -1,8 +1,9 @@
 import { MODEL_SDVX3_KONASTE } from "#lib/constants/ea3id";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
+import { SELECT_KSHOOK_SV6C_SETTINGS } from "#lib/db-formats/kshook-sv6c-settings";
 import { log } from "#lib/log/log";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { ParseEA3SoftID } from "#utils/ea3id";
 import { IsNullishOrEmptyStr } from "#utils/misc";
 import { type RequestHandler, Router } from "express";
@@ -105,9 +106,12 @@ router.post("/score/save", async (req, res) => {
 router.post("/score/export", async (req, res) => {
 	const userID = req[SYMBOL_TACHI_API_AUTH].userID!;
 
-	const settings = await MONGODB_KILL["kshook-sv6c-settings"].findOne({ userID });
+	const row = await DB.selectFrom("svc_kshook_sv6c_settings")
+		.select(SELECT_KSHOOK_SV6C_SETTINGS)
+		.where("user_id", "=", userID)
+		.executeTakeFirst();
 
-	if (!settings?.forceStaticImport) {
+	if (!row?.force_static_import) {
 		return res.status(200).json({
 			success: true,
 			description: "Static importing is disabled. Ignoring static import request.",
@@ -115,12 +119,10 @@ router.post("/score/export", async (req, res) => {
 		});
 	}
 
-	await MONGODB_KILL["kshook-sv6c-settings"].update(
-		{ userID },
-		{
-			$set: { forceStaticImport: false },
-		},
-	);
+	await DB.insertInto("svc_kshook_sv6c_settings")
+		.values({ user_id: userID, force_static_import: false })
+		.onConflict((oc) => oc.column("user_id").doUpdateSet({ force_static_import: false }))
+		.execute();
 
 	const responseData = await ExpressWrappedScoreImportMain(
 		userID,

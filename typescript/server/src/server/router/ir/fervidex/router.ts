@@ -5,7 +5,7 @@ import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/expre
 import { SoftwareIDToVersion } from "#lib/score-import/import-types/ir/fervidex/parser";
 import { RequirePermissions } from "#server/middleware/auth";
 import { PrudenceErrorFormatter } from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { UpdateClassIfGreater } from "#utils/class";
 import { ParseEA3SoftID } from "#utils/ea3id";
 import { IsNullishOrEmptyStr } from "#utils/misc";
@@ -125,13 +125,17 @@ const ValidateModelHeader: RequestHandler = (req, res, next) => {
 const ValidateCards: RequestHandler = async (req, res, next) => {
 	const userID = req[SYMBOL_TACHI_API_AUTH].userID!;
 
-	const cardFilters = await MONGODB_KILL["fer-settings"].findOne({ userID });
+	const cardRows = await DB.selectFrom("priv_svc_fer_card")
+		.select("priv_svc_fer_card.card_id")
+		.where("user_id", "=", userID)
+		.execute();
 
-	if (!cardFilters?.cards) {
+	if (cardRows.length === 0) {
 		next();
 		return;
 	}
 
+	const allowedCards = cardRows.map((r) => r.card_id);
 	const cardID = req.header("X-Account-Id");
 
 	if (IsNullishOrEmptyStr(cardID)) {
@@ -141,7 +145,7 @@ const ValidateCards: RequestHandler = async (req, res, next) => {
 		});
 	}
 
-	if (!cardFilters.cards.includes(cardID)) {
+	if (!allowedCards.includes(cardID)) {
 		return res.status(400).json({
 			success: false,
 			error: `The card ID ${cardID} is not in your list of filters. Ignoring.`,
@@ -159,28 +163,23 @@ router.use(
 );
 
 async function ShouldImportScoresFromProfileSubmit(swModel: string, userID: integer) {
-	const settings = await MONGODB_KILL["fer-settings"].findOne({
-		userID,
-	});
+	const row = await DB.selectFrom("svc_fer_settings")
+		.select(["svc_fer_settings.force_static_import"])
+		.where("user_id", "=", userID)
+		.executeTakeFirst();
 
-	if (settings?.forceStaticImport === true) {
-		log.debug(`User ${settings.userID} had forceStaticImport set, allowing request.`);
+	if (row?.force_static_import === true) {
+		log.debug(`User ${userID} had forceStaticImport set, allowing request.`);
 
 		// Force static import should ideally only ever be used once. If left on, a users profile
 		// will get innundated with a bunch of pb imports on every game-load. This is not what
 		// people want.
 		// FSI should ideally just be used once to get unreachable scores onto Kamaitachi. Otherwise
 		// they're doing something wrong.
-		await MONGODB_KILL["fer-settings"].update(
-			{
-				userID: settings.userID,
-			},
-			{
-				$set: {
-					forceStaticImport: false,
-				},
-			},
-		);
+		await DB.insertInto("svc_fer_settings")
+			.values({ user_id: userID, force_static_import: false })
+			.onConflict((oc) => oc.column("user_id").doUpdateSet({ force_static_import: false }))
+			.execute();
 
 		return true;
 	}

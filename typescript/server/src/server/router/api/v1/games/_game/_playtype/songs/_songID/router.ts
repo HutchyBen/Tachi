@@ -1,6 +1,7 @@
-import MONGODB_KILL from "#services/mongo/db";
+import { GetChartsBySongPgId } from "#lib/db-formats/chart";
 import { GetGPT, GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
+import { GamePTToV3 } from "tachi-common";
 
 import { ValidateAndGetSong } from "./middleware";
 
@@ -15,12 +16,10 @@ router.use(ValidateAndGetSong);
  */
 router.get("/", async (req, res) => {
 	const song = GetTachiData(req, "songDoc");
+	const songPgId = GetTachiData(req, "songPgId");
 	const { game, playtype } = GetGPT(req);
 
-	const charts = await MONGODB_KILL.anyCharts[game].find({
-		songID: song.id,
-		playtype,
-	});
+	const charts = await GetChartsBySongPgId(GamePTToV3(game, playtype), songPgId, song.id);
 
 	return res.status(200).json({
 		success: true,

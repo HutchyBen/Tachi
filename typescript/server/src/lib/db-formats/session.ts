@@ -21,7 +21,7 @@ export type SessionCalendarDocument = Pick<
 export function ToSessionCalendarDocument(
 	row: Selection<Database, "session", (typeof SELECT_SESSION_CALENDAR)[number]>,
 ): SessionCalendarDocument {
-	const { game, playtype } = V3ToGamePT(row.game as GPTString);
+	const { game, playtype } = V3ToGamePT(row.game);
 
 	return {
 		sessionID: row.id,

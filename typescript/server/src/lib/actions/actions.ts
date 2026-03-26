@@ -204,6 +204,20 @@ export const ActionSignatures = {
 		input: z.object({}),
 		output: z.object({}),
 	},
+	UPDATE_CG_CARD_INFO: {
+		input: z.object({
+			service: z.enum(["dev", "gan", "nag"]),
+			cardID: z.string().regex(/^[a-zA-Z0-9]{16}$/u),
+			pin: z.string().regex(/^[0-9]{4}$/u),
+		}),
+		output: z.object({}),
+	},
+	DELETE_CG_CARD_INFO: {
+		input: z.object({
+			service: z.enum(["dev", "gan", "nag"]),
+		}),
+		output: z.object({}),
+	},
 	UPDATE_FERVIDEX_SETTINGS: {
 		input: z.object({
 			cards: z.array(z.string()).nullable().optional(),

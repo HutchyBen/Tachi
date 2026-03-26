@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 
-import MONGODB_KILL from "#services/mongo/db";
+import { GetSongByLegacyID } from "#lib/db-formats/song";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { ParseStrPositiveInt } from "#utils/string-checks";
 
@@ -16,16 +16,16 @@ export const ValidateAndGetSong: RequestHandler = async (req, res, next) => {
 
 	const game = GetTachiData(req, "game");
 
-	const song = await MONGODB_KILL.anySongs[game].findOne({ id: songID });
+	const result = await GetSongByLegacyID(game, songID);
 
-	if (!song) {
+	if (!result) {
 		return res.status(404).json({
 			success: false,
 			description: `No song exists with the songID ${songID}.`,
 		});
 	}
 
-	AssignToReqTachiData(req, { songDoc: song });
+	AssignToReqTachiData(req, { songDoc: result.doc, songPgId: result.pgId });
 
 	next();
 };

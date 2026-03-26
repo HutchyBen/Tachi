@@ -1,5 +1,6 @@
 import type { ChartDocument, GPTStrings, SongDocument } from "tachi-common";
 
+import DB from "#services/pg/db";
 import MONGODB_KILL from "#services/mongo/db";
 import { InsertFakeTokenWithAllPerms } from "#test-utils/fake-auth";
 import mockApi from "#test-utils/mock-api";
@@ -17,12 +18,9 @@ import t from "tap";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function TestHeaders(url: string, data: any) {
 	t.test("Should validate against card filters", async (t) => {
-		await MONGODB_KILL["fer-settings"].remove({});
-		await MONGODB_KILL["fer-settings"].insert({
-			userID: 1,
-			cards: ["foo"],
-			forceStaticImport: false,
-		});
+		await DB.deleteFrom("priv_svc_fer_card").where("user_id", "=", 1).execute();
+		await DB.deleteFrom("svc_fer_settings").where("user_id", "=", 1).execute();
+		await DB.insertInto("priv_svc_fer_card").values({ user_id: 1, card_id: "foo" }).execute();
 
 		const res = await mockApi
 			.post(url)
@@ -51,12 +49,8 @@ function TestHeaders(url: string, data: any) {
 	});
 
 	t.test("Should allow certain models", async (t) => {
-		await MONGODB_KILL["fer-settings"].remove({});
-		await MONGODB_KILL["fer-settings"].insert({
-			userID: 1,
-			cards: null,
-			forceStaticImport: false,
-		});
+		await DB.deleteFrom("priv_svc_fer_card").where("user_id", "=", 1).execute();
+		await DB.deleteFrom("svc_fer_settings").where("user_id", "=", 1).execute();
 
 		for (const [ext, name] of [
 			["2022082400", "CastHour"],
@@ -89,13 +83,9 @@ function TestHeaders(url: string, data: any) {
 		t.end();
 	});
 
-	t.only("Should allow 30-omni", async (t) => {
-		await MONGODB_KILL["fer-settings"].remove({});
-		await MONGODB_KILL["fer-settings"].insert({
-			userID: 1,
-			cards: null,
-			forceStaticImport: false,
-		});
+	t.test("Should allow 30-omni", async (t) => {
+		await DB.deleteFrom("priv_svc_fer_card").where("user_id", "=", 1).execute();
+		await DB.deleteFrom("svc_fer_settings").where("user_id", "=", 1).execute();
 
 		const token = `mock_token_${Random20Hex()}`;
 
@@ -589,12 +579,10 @@ t.test("POST /ir/fervidex/profile/submit", (t) => {
 			>,
 		);
 
-		await MONGODB_KILL["fer-settings"].update(
-			{ userID: 1 },
-			{
-				$set: { forceStaticImport: true },
-			},
-		);
+		await DB.insertInto("svc_fer_settings")
+			.values({ user_id: 1, force_static_import: true })
+			.onConflict((oc) => oc.column("user_id").doUpdateSet({ force_static_import: true }))
+			.execute();
 
 		const res = await mockApi
 			.post("/ir/fervidex/profile/submit")
@@ -622,10 +610,13 @@ t.test("POST /ir/fervidex/profile/submit", (t) => {
 
 		t.equal(ugs!.classes.dan, "DAN_9", "Should successfully update dan to 9th.");
 
-		const dbRes = await MONGODB_KILL["fer-settings"].findOne({ userID: 1 });
+		const dbRes = await DB.selectFrom("svc_fer_settings")
+			.selectAll()
+			.where("user_id", "=", 1)
+			.executeTakeFirst();
 
 		t.equal(
-			dbRes?.forceStaticImport,
+			dbRes?.force_static_import,
 			false,
 			"forceStaticImport should be set to false after the request.",
 		);
@@ -634,10 +625,10 @@ t.test("POST /ir/fervidex/profile/submit", (t) => {
 	});
 
 	t.test("Should allow requests from non INF2 if forceStaticImport is false.", async (t) => {
-		await MONGODB_KILL["fer-settings"].update(
-			{ userID: 1 },
-			{ $set: { forceStaticImport: false } },
-		);
+		await DB.insertInto("svc_fer_settings")
+			.values({ user_id: 1, force_static_import: false })
+			.onConflict((oc) => oc.column("user_id").doUpdateSet({ force_static_import: false }))
+			.execute();
 
 		const res = await mockApi
 			.post("/ir/fervidex/profile/submit")

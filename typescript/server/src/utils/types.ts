@@ -78,6 +78,7 @@ export interface TachiRequestData {
 
 	chartDoc?: ChartDocument;
 	songDoc?: SongDocument;
+	songPgId?: string;
 	scoreDoc?: ScoreDocument;
 	sessionDoc?: SessionDocument;
 	tableDoc?: TableDocument;
