@@ -43,3 +43,7 @@ server-db-test-template-reset:
 db-load-seeds POSTGRES_DB=DEFAULT_DB:
 	cd typescript/server && POSTGRES_URL="{{POSTGRES_URL}}/{{POSTGRES_DB}}" \
 		bun run src/scripts/load-seeds-pg.ts
+
+# Reset templatedb from migrations, then dump schema and indexes for local debugging.
+db-schema: (db-reset "templatedb")
+	pg_dump "{{POSTGRES_URL}}/templatedb" --schema-only --no-owner --no-acl -f db/schema.sql
