@@ -196,6 +196,14 @@ export const ActionSignatures = {
 		input: z.object({ forceStaticImport: z.boolean() }),
 		output: z.object({ forceStaticImport: z.boolean() }),
 	},
+	UPDATE_MYT_CARD_INFO: {
+		input: z.object({ cardAccessCode: z.string().regex(/^[0-9]{20}$/u) }),
+		output: z.object({}),
+	},
+	DELETE_MYT_CARD_INFO: {
+		input: z.object({}),
+		output: z.object({}),
+	},
 	UPDATE_FERVIDEX_SETTINGS: {
 		input: z.object({
 			cards: z.array(z.string()).nullable().optional(),

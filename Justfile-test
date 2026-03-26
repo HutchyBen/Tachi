@@ -13,17 +13,18 @@ check:
 typecheck:
 	bun run --filter '!tachi-seeds-scripts' typecheck
 
-fix: fmt
+fix:
 	#!/bin/bash
 	set -euo pipefail
 
 	just gen
 	bun run --filter '*' lint-fix
 	.scripts/ts_autoinherit.js
+	just fmt
 
 # Automatically fix any issues we can in the codebase and then
 # make a commit for them
-autofix: fmt
+autofix:
 	#!/bin/bash
 	set -euo pipefail
 
