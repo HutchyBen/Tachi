@@ -13,8 +13,10 @@ const CREATE_INVITE_ADVISORY_KEY1 = 0x54_61_63_68; // "Tach"
 export const ACTION_CreateInvite = MakeAction("CREATE_INVITE", async (taker) => {
 	const userId = taker.acct.id;
 
-	return await DB.transaction().execute(async (trx) => {
-		await sql`select pg_advisory_xact_lock(${CREATE_INVITE_ADVISORY_KEY1}, ${userId})`.execute(trx);
+	return DB.transaction().execute(async (trx) => {
+		await sql`select pg_advisory_xact_lock(${CREATE_INVITE_ADVISORY_KEY1}, ${userId})`.execute(
+			trx,
+		);
 
 		const isAdmin = await trx
 			.selectFrom("account")

@@ -14,7 +14,9 @@ async function loginAs(username: string, password = "password123") {
 }
 
 async function seedFollowing(userId: number, followeeId: number) {
-	await DB.insertInto("account_following").values({ user_id: userId, followee: followeeId }).execute();
+	await DB.insertInto("account_following")
+		.values({ user_id: userId, followee: followeeId })
+		.execute();
 }
 
 // ─── GET /api/v1/users/:userID/following ─────────────────────────────────────
@@ -23,7 +25,11 @@ describe("GET /api/v1/users/:userID/following", () => {
 	let userId: number;
 
 	beforeEach(async () => {
-		({ id: userId } = await seedUser({ username: "test_user", withCredential: true, withSettings: true }));
+		({ id: userId } = await seedUser({
+			username: "test_user",
+			withCredential: true,
+			withSettings: true,
+		}));
 	});
 
 	it("returns 200 with empty friends list when user follows nobody", async () => {
@@ -53,7 +59,11 @@ describe("POST /api/v1/users/:userID/following/add", () => {
 	let userId: number;
 
 	beforeEach(async () => {
-		({ id: userId } = await seedUser({ username: "test_user", withCredential: true, withSettings: true }));
+		({ id: userId } = await seedUser({
+			username: "test_user",
+			withCredential: true,
+			withSettings: true,
+		}));
 		cookie = await loginAs("test_user");
 	});
 
@@ -147,7 +157,11 @@ describe("POST /api/v1/users/:userID/following/remove", () => {
 	let userId: number;
 
 	beforeEach(async () => {
-		({ id: userId } = await seedUser({ username: "test_user", withCredential: true, withSettings: true }));
+		({ id: userId } = await seedUser({
+			username: "test_user",
+			withCredential: true,
+			withSettings: true,
+		}));
 		cookie = await loginAs("test_user");
 	});
 

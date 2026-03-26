@@ -27,7 +27,9 @@ async function seedFerSettings(userId: number, forceStaticImport: boolean) {
 }
 
 async function seedFerCards(userId: number, cards: Array<string>) {
-	if (cards.length === 0) return;
+	if (cards.length === 0) {
+		return;
+	}
 	await DB.insertInto("priv_svc_fer_card")
 		.values(cards.map((card_id) => ({ user_id: userId, card_id })))
 		.execute();
@@ -202,7 +204,10 @@ describe("ACTION_UpdateFervidexSettings", () => {
 		await seedFerCards(other.id, ["OTHER_CARD"]);
 
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
-		await ACTION_UpdateFervidexSettings(taker, { forceStaticImport: false, cards: ["MY_CARD"] });
+		await ACTION_UpdateFervidexSettings(taker, {
+			forceStaticImport: false,
+			cards: ["MY_CARD"],
+		});
 
 		const otherRow = await getFerSettings(other.id);
 		expect(otherRow!.force_static_import).toBe(true);

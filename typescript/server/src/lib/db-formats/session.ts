@@ -15,7 +15,7 @@ export const SELECT_SESSION_CALENDAR = [
 
 export type SessionCalendarDocument = Pick<
 	SessionDocument,
-	"sessionID" | "name" | "desc" | "highlight" | "timeStarted" | "timeEnded" | "game" | "playtype"
+	"desc" | "game" | "highlight" | "name" | "playtype" | "sessionID" | "timeEnded" | "timeStarted"
 >;
 
 export function ToSessionCalendarDocument(

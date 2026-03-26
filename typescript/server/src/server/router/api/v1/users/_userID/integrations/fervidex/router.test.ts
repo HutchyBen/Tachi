@@ -1,5 +1,5 @@
-import DB from "#services/pg/db";
 import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
+import DB from "#services/pg/db";
 import mockApi from "#test-utils/mock-api";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -21,7 +21,9 @@ async function seedFerSettings(userId: number, forceStaticImport: boolean) {
 }
 
 async function seedFerCards(userId: number, cards: Array<string>) {
-	if (cards.length === 0) return;
+	if (cards.length === 0) {
+		return;
+	}
 	await DB.insertInto("priv_svc_fer_card")
 		.values(cards.map((card_id) => ({ user_id: userId, card_id })))
 		.execute();

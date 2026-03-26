@@ -207,6 +207,16 @@ export const ActionSignatures = {
 			forceStaticImport: z.boolean(),
 		}),
 	},
+	UPDATE_USER_SETTINGS: {
+		input: z.object({
+			invisible: z.boolean().optional(),
+			developerMode: z.boolean().optional(),
+			contentiousContent: z.boolean().optional(),
+			advancedMode: z.boolean().optional(),
+			deletableScores: z.boolean().optional(),
+		}),
+		output: z.object({}),
+	},
 	FOLLOW_USER: {
 		input: z.object({ userID: z.number().int().positive() }),
 		output: z.object({ username: z.string() }),

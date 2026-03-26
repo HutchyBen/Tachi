@@ -2,13 +2,13 @@ import type { RequestHandler } from "express";
 import type { Session, SessionData } from "express-session";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
+import { SELECT_API_TOKEN, ToAPITokenDocument } from "#lib/db-formats/api-token.js";
 import { log } from "#lib/log/log";
 import { TachiConfig } from "#lib/setup/config";
+import DB from "#services/pg/db.js";
 import { IsNullishOrEmptyStr, SplitAuthorizationHeader } from "#utils/misc";
 import { IsUserBanned } from "#utils/user.js";
 import { ALL_PERMISSIONS, type APIPermissions, type APITokenDocument } from "tachi-common";
-import { SELECT_API_TOKEN, ToAPITokenDocument } from "#lib/db-formats/api-token.js";
-import DB from "#services/pg/db.js";
 
 const GuestToken: APITokenDocument = {
 	token: null,

@@ -24,9 +24,7 @@ export const ACTION_UpdateFervidexSettings = MakeAction(
 		let newCards: Array<string> | null;
 
 		if (cards !== undefined) {
-			await DB.deleteFrom("priv_svc_fer_card")
-				.where("user_id", "=", taker.acct.id)
-				.execute();
+			await DB.deleteFrom("priv_svc_fer_card").where("user_id", "=", taker.acct.id).execute();
 
 			if (cards !== null && cards.length > 0) {
 				await DB.insertInto("priv_svc_fer_card")

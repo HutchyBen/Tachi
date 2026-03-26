@@ -1,8 +1,5 @@
 import { ACTION_UpdateFervidexSettings } from "#actions/update-fervidex-settings.js";
-import {
-	SELECT_FER_SETTINGS,
-	ToFervidexSettingsDocument,
-} from "#lib/db-formats/fervidex-settings";
+import { SELECT_FER_SETTINGS, ToFervidexSettingsDocument } from "#lib/db-formats/fervidex-settings";
 import prValidate from "#server/middleware/prudence-validate";
 import { RequireKamaitachi } from "#server/middleware/type-require";
 import DB from "#services/pg/db";
@@ -91,7 +88,9 @@ router.patch(
 
 		const result = await ACTION_UpdateFervidexSettings(taker, {
 			cards: body.cards,
-			forceStaticImport: hasForceStaticImport ? (body.forceStaticImport as boolean) : undefined,
+			forceStaticImport: hasForceStaticImport
+				? (body.forceStaticImport as boolean)
+				: undefined,
 		});
 
 		return res.status(200).json({

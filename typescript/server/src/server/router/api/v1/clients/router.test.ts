@@ -343,14 +343,11 @@ describe("PATCH /api/v1/clients/:clientID", () => {
 	});
 
 	it("returns 400 when apiKeyTemplate is missing %%TACHI_KEY%%", async () => {
-		const res = await mockApi
-			.patch(`/api/v1/clients/${clientId}`)
-			.set("Cookie", cookie)
-			.send({
-				apiKeyTemplate: "no-placeholder",
-				redirectUri: null,
-				webhookUri: null,
-			});
+		const res = await mockApi.patch(`/api/v1/clients/${clientId}`).set("Cookie", cookie).send({
+			apiKeyTemplate: "no-placeholder",
+			redirectUri: null,
+			webhookUri: null,
+		});
 
 		expect(res.status).toBe(400);
 		expect(res.body.success).toBe(false);
