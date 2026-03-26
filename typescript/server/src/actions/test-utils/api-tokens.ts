@@ -6,15 +6,17 @@ interface SeedApiClientOpts {
 	clientId: string;
 	authorId: number;
 	name?: string;
+	clientSecret?: string;
 	submitScore?: boolean;
 	customiseProfile?: boolean;
+	redirectUri?: string | null;
 }
 
 export async function seedApiClient(opts: SeedApiClientOpts) {
 	await DB.insertInto("priv_api_client")
 		.values({
 			client_id: opts.clientId,
-			client_secret: "CS_test_secret",
+			client_secret: opts.clientSecret ?? "CS_test_secret",
 			name: opts.name ?? "Test Client",
 			author: opts.authorId,
 			pm_submit_score: opts.submitScore ?? null,
@@ -28,7 +30,7 @@ export async function seedApiClient(opts: SeedApiClientOpts) {
 			api_key_template: null,
 			api_key_filename: null,
 			webhook_uri: null,
-			redirect_uri: null,
+			redirect_uri: opts.redirectUri ?? null,
 			is_builtin: false,
 		})
 		.execute();

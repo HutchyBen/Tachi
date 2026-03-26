@@ -1,9 +1,10 @@
 import type { KtLogger } from "#lib/log/log";
 import type { KaiAuthDocument } from "tachi-common";
 
+import { updateKaiAuthTokensInDb } from "#lib/kai-auth-token/persist";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ServerConfig } from "#lib/setup/config";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import nodeFetch from "#utils/fetch";
 import { p } from "prudence";
 
@@ -109,17 +110,12 @@ export function CreateKaiReauthFunction(
 			refresh_token: string;
 		};
 
-		await MONGODB_KILL["kai-auth-tokens"].update(
-			{
-				userID: authDoc.userID,
-				service: authDoc.service,
-			},
-			{
-				$set: {
-					token: validatedContent.access_token,
-					refreshToken: validatedContent.refresh_token,
-				},
-			},
+		await updateKaiAuthTokensInDb(
+			DB,
+			authDoc.userID,
+			authDoc.service,
+			validatedContent.access_token,
+			validatedContent.refresh_token,
 		);
 
 		return validatedContent.access_token;

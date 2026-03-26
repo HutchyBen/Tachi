@@ -1,3 +1,5 @@
+import { ACTION_RevokeKaiAuthToken } from "#actions/revoke-kai-auth-token";
+import { ACTION_UpsertKaiAuthToken } from "#actions/upsert-kai-auth-token";
 import { log } from "#lib/log/log";
 import {
 	GetKaiTypeClientCredentials,
@@ -5,10 +7,9 @@ import {
 } from "#lib/score-import/import-types/common/api-kai/utils";
 import prValidate from "#server/middleware/prudence-validate";
 import { RequireKamaitachi } from "#server/middleware/type-require";
-import MONGODB_KILL from "#services/mongo/db";
 import fetch from "#utils/fetch";
 import { NotNullish } from "#utils/misc";
-import { GetKaiAuth, RevokeKaiAuth } from "#utils/queries/auth";
+import { GetKaiAuth } from "#utils/queries/auth";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { FormatUserDoc } from "#utils/user";
 import { Router } from "express";
@@ -65,7 +66,9 @@ router.delete<any>("/", async (req, res) => {
 		});
 	}
 
-	await RevokeKaiAuth(user.id, kaiType);
+	const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
+
+	await ACTION_RevokeKaiAuthToken(taker, { service: kaiType });
 
 	return res.status(200).json({
 		success: true,
@@ -189,23 +192,13 @@ router.post(
 
 		const j = json as { access_token: string; refresh_token: string };
 
-		await MONGODB_KILL["kai-auth-tokens"].update(
-			{
-				userID: user.id,
-				service: kaiType,
-			},
-			{
-				$set: {
-					userID: user.id,
-					service: kaiType,
-					refreshToken: j.refresh_token,
-					token: j.access_token,
-				},
-			},
-			{
-				upsert: true,
-			},
-		);
+		const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
+
+		await ACTION_UpsertKaiAuthToken(taker, {
+			service: kaiType,
+			token: j.access_token,
+			refreshToken: j.refresh_token,
+		});
 
 		log.info(`Updated Auth for ${kaiType} for user ${FormatUserDoc(user)}.`);
 

@@ -1,6 +1,6 @@
+import { ACTION_CreateOAuth2AuthCode } from "#actions/create-oauth2-auth-code";
+import { ANON_ACTION_OAuthTokenExchange } from "#anon-actions/oauth-token-exchange";
 import prValidate from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
-import { Random20Hex } from "#utils/misc";
 import { Router } from "express";
 import { p } from "prudence";
 
@@ -39,57 +39,16 @@ router.post(
 			redirect_uri: string;
 		};
 
-		const client = await MONGODB_KILL["api-clients"].findOne({
-			clientID: body.client_id,
-		});
-
-		if (!client) {
-			return res.status(404).json({
-				success: false,
-				description: `This client does not exist.`,
-			});
-		}
-
-		if (client.clientSecret !== body.client_secret) {
-			return res.status(403).json({
-				success: false,
-				description: `Invalid secret.`,
-			});
-		}
-
-		// I honest to god have no idea what the point of this check is
-		// but it's part of the oauth spec.
-		if (client.redirectUri !== body.redirect_uri) {
-			return res.status(400).json({
-				success: false,
-				description: `This redirect_uri does not match with your registered client redirect_uri ${client.redirectUri}.`,
-			});
-		}
-
-		const codeDoc = await MONGODB_KILL["oauth2-auth-codes"].findOne({ code: body.code });
-
-		if (!codeDoc) {
-			return res.status(404).json({
-				success: false,
-				description: `This code does not exist.`,
-			});
-		}
-
-		// don't let people auth with the same code multiple times.
-		await MONGODB_KILL["oauth2-auth-codes"].remove({ code: body.code });
-
-		const apiDoc = {
-			userID: codeDoc.userID,
-			token: Random20Hex(),
-			identifier: `${client.name} Token`,
-
-			// converts ["a","b"] to {a: true, b: true}.
-			permissions: Object.fromEntries(client.requestedPermissions.map((e) => [e, true])),
-			fromAPIClient: client.clientID,
-		};
-
-		// Now we can actually register the api key (lol)
-		await MONGODB_KILL["api-tokens"].insert(apiDoc);
+		const apiDoc = await ANON_ACTION_OAuthTokenExchange(
+			{ ip: req.ip },
+			{
+				client_id: body.client_id,
+				client_secret: body.client_secret,
+				grant_type: body.grant_type,
+				redirect_uri: body.redirect_uri,
+				code: body.code,
+			},
+		);
 
 		return res.status(200).json({
 			success: true,
@@ -112,11 +71,10 @@ router.post("/create-code", async (req, res) => {
 		});
 	}
 
-	const code = Random20Hex();
+	const user = req.session.tachi.user;
+	const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
 
-	const doc = { code, userID: req.session.tachi.user.id, createdOn: Date.now() };
-
-	await MONGODB_KILL["oauth2-auth-codes"].insert(doc);
+	const doc = await ACTION_CreateOAuth2AuthCode(taker, {});
 
 	return res.status(200).json({
 		success: true,

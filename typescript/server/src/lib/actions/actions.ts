@@ -258,6 +258,28 @@ export const ActionSignatures = {
 			consumedBy: z.null(),
 		}),
 	},
+	UPSERT_KAI_AUTH_TOKEN: {
+		input: z.object({
+			service: z.enum(["EAG", "FLO", "MIN"]),
+			token: z.string(),
+			refreshToken: z.string(),
+		}),
+		output: z.object({}),
+	},
+	REVOKE_KAI_AUTH_TOKEN: {
+		input: z.object({
+			service: z.enum(["EAG", "FLO", "MIN"]),
+		}),
+		output: z.object({}),
+	},
+	CREATE_OAUTH2_AUTH_CODE: {
+		input: z.object({}),
+		output: z.object({
+			code: z.string(),
+			userID: z.number().int(),
+			createdOn: z.number().int(),
+		}),
+	},
 } satisfies Record<string, ActionSignature>;
 
 export const AnonActionSignatures = {
@@ -294,6 +316,22 @@ export const AnonActionSignatures = {
 		}),
 		output: z.object({
 			userID: z.number().int(),
+		}),
+	},
+	OAUTH_TOKEN_EXCHANGE: {
+		input: z.object({
+			client_id: z.string(),
+			client_secret: z.string(),
+			grant_type: z.literal("authorization_code"),
+			redirect_uri: z.string(),
+			code: z.string(),
+		}),
+		output: z.object({
+			userID: z.number().int(),
+			token: z.string(),
+			identifier: z.string(),
+			permissions: z.record(z.string(), z.boolean()),
+			fromAPIClient: z.string().nullable(),
 		}),
 	},
 } satisfies Record<string, ActionSignature>;
