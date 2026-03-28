@@ -156,31 +156,6 @@ app.use(RequestLoggerMiddleware);
 
 app.use("/", mainRouter);
 
-// The SERVE_OWN_CDN option means that our /cdn path has to be hosted by us. In production,
-// this is not the case (we have a dedicated nginx box for it running in a separate process).
-// In dev, this is a pain to setup, so we can just run it locally.
-if (
-	ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE === "LOCAL_FILESYSTEM" &&
-	ServerConfig.CDN_CONFIG.SAVE_LOCATION.SERVE_OWN_CDN === true
-) {
-	if (Env.NODE_ENV === "production") {
-		log.warn(
-			{ bootInfo: true },
-			`Running LOCAL_FILESYSTEM OWN_CDN in production. Consider making a separate process handle your CDN for performance.`,
-		);
-	}
-
-	log.info(
-		{
-			bootInfo: true,
-		},
-		`Running own CDN at ${ServerConfig.CDN_CONFIG.SAVE_LOCATION.LOCATION}.`,
-	);
-
-	app.use("/cdn", express.static(ServerConfig.CDN_CONFIG.SAVE_LOCATION.LOCATION));
-	app.get("/cdn/*", (req, res) => res.status(404).send("No content here."));
-}
-
 // completely stolen from ktapi error handler
 interface ExpressJSONErr extends SyntaxError {
 	status: integer;

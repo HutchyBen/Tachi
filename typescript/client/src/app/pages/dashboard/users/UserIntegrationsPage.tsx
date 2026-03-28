@@ -240,6 +240,7 @@ function CreateNewOAuthClient({
 							fieldName="File Template"
 							placeholder={JSON.stringify({ token: "%%TACHI_KEY%%" }, null, "\t")}
 							setValue={setApiKeyTemplate}
+							style={{ minHeight: 200 }}
 							value={apiKeyTemplate}
 						/>
 						<Muted>
@@ -352,6 +353,7 @@ function OAuthClientRow({ client, clients, setClients }: OAuthClientProps) {
 					<textarea
 						className="w-100 mt-2 font-monospace"
 						readOnly
+						style={{ minHeight: 200 }}
 						value={client.apiKeyTemplate ?? "%%TACHI_KEY%%"}
 					/>
 				</h5>
@@ -574,6 +576,7 @@ function EditClientModal({
 						fieldName="File Template"
 						placeholder={JSON.stringify({ token: "%%TACHI_KEY%%" }, null, "\t")}
 						setValue={setApiKeyTemplate}
+						style={{ minHeight: 200 }}
 						value={apiKeyTemplate}
 					/>
 					<Muted>

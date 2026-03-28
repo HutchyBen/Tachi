@@ -2,48 +2,16 @@ import type { Response } from "express";
 
 import { log } from "#lib/log/log";
 import { ServerConfig } from "#lib/setup/config";
-import fs from "fs";
-import mkdirp from "mkdirp";
-import path from "path";
-import { promisify } from "util";
 
-import { DeleteFromS3, PushToS3 } from "./s3";
-
-const readFilePromise = promisify(fs.readFile);
-const writeFilePromise = promisify(fs.writeFile);
-const rmFilePromise = promisify(fs.rm);
+import { DeleteFromS3, GetObjectFromS3, PushToS3 } from "./s3";
 
 /**
- * Joins a file location against the location of the CDN static store.
- *
- * @danger - This function should **NEVER** be called with unsanitised user input!
- * Path directory traversal *is* possible, and *will* ruin your day.
- */
-export function CDNFileSystemRoot(fileLoc: string) {
-	if (ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE !== "LOCAL_FILESYSTEM") {
-		log.error(
-			{ fileLoc, conf: ServerConfig.CDN_CONFIG },
-			`Attempted to run CDNFileSystemRoot, but was not using LOCAL_FILESYSTEM as a CDN.`,
-		);
-
-		throw new Error(
-			`Attempted to run CDNFileSystemRoot, but was not using LOCAL_FILESYSTEM as a CDN.`,
-		);
-	}
-
-	return path.join(ServerConfig.CDN_CONFIG.SAVE_LOCATION.LOCATION, fileLoc);
-}
-
-/**
- * Retrieves the data of the file at the given CDN location.
- *
- * This is used for quick development setups, where a cdn server isn't available.
- * As in, this ruins the purpose of a CDN! make sure you have one running.
+ * Retrieves the bytes at the given CDN location from S3.
  */
 export function CDNRetrieve(fileLoc: string) {
-	log.debug(`Retrieving path ${fileLoc} locally.`);
+	log.debug(`Retrieving path ${fileLoc} from S3.`);
 
-	return readFilePromise(CDNFileSystemRoot(fileLoc));
+	return GetObjectFromS3(fileLoc);
 }
 
 /**
@@ -65,15 +33,6 @@ export function CDNRedirect(res: Response, fileLoc: string) {
 export async function CDNStoreOrOverwrite(fileLoc: string, data: string | Buffer): Promise<void> {
 	log.debug(`Storing or overwriting path ${fileLoc}.`);
 
-	if (ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE === "LOCAL_FILESYSTEM") {
-		const loc = CDNFileSystemRoot(fileLoc);
-
-		// make the parent folders if they dont exist. else, mkdirp is a no-op.
-		await mkdirp(path.dirname(loc));
-
-		return writeFilePromise(loc, data);
-	}
-
 	await PushToS3(fileLoc, data);
 }
 
@@ -82,12 +41,6 @@ export async function CDNStoreOrOverwrite(fileLoc: string, data: string | Buffer
  */
 export async function CDNDelete(fileLoc: string) {
 	log.debug(`Deleting path ${fileLoc}.`);
-
-	if (ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE === "LOCAL_FILESYSTEM") {
-		const loc = CDNFileSystemRoot(fileLoc);
-
-		return rmFilePromise(loc, { force: true });
-	}
 
 	await DeleteFromS3(fileLoc);
 }

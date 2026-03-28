@@ -93,22 +93,15 @@ const configSchema = z.object({
 	}),
 	CDN_CONFIG: z.object({
 		WEB_LOCATION: z.string(),
-		SAVE_LOCATION: z.union([
-			z.object({
-				TYPE: z.literal("LOCAL_FILESYSTEM"),
-				SERVE_OWN_CDN: z.boolean().optional(),
-				LOCATION: z.string(),
-			}),
-			z.object({
-				TYPE: z.literal("S3_BUCKET"),
-				ENDPOINT: z.string(),
-				ACCESS_KEY_ID: z.string(),
-				SECRET_ACCESS_KEY: z.string(),
-				BUCKET: z.string(),
-				KEY_PREFIX: z.string().optional(),
-				REGION: z.string().optional(),
-			}),
-		]),
+		SAVE_LOCATION: z.object({
+			TYPE: z.literal("S3_BUCKET"),
+			ENDPOINT: z.string(),
+			ACCESS_KEY_ID: z.string(),
+			SECRET_ACCESS_KEY: z.string(),
+			BUCKET: z.string(),
+			KEY_PREFIX: z.string().optional(),
+			REGION: z.string().optional(),
+		}),
 	}),
 	SEEDS_CONFIG: z
 		.union([

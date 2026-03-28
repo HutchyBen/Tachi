@@ -1,4 +1,12 @@
 import { ACTION_RebuildFolderChartLookup } from "#actions/rebuild-folder-chart-lookup.js";
+import { ACTION_SetUserSupporterStatus } from "#actions/set-user-supporter-status.js";
+import {
+	GetActions,
+	GetActiveJobs,
+	GetCronTaskExecutions,
+	GetCronTasks,
+	GetJobQueue,
+} from "#lib/admin/admin-queries.js";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log";
 import { SendSiteAnnouncementNotification } from "#lib/notifications/notification-wrappers";
@@ -58,6 +66,72 @@ const RequireAdminLevel: RequestHandler = async (req, res, next) => {
 };
 
 router.use(RequireAdminLevel);
+
+/**
+ * @name GET /api/v1/admin/job-queue
+ */
+router.get("/job-queue", async (req, res) => {
+	const page = Math.max(0, Number(req.query.page ?? 0));
+	const statusRaw = req.query.status;
+	let status: number | undefined;
+	if (typeof statusRaw === "string" && statusRaw !== "") {
+		const n = Number.parseInt(statusRaw, 10);
+		if (!Number.isNaN(n)) {
+			status = n;
+		}
+	}
+	const job_kind =
+		typeof req.query.job_kind === "string" && req.query.job_kind !== ""
+			? req.query.job_kind
+			: undefined;
+	const scope =
+		typeof req.query.scope === "string" && req.query.scope !== "" ? req.query.scope : undefined;
+
+	const [activeJobs, jobQueue] = await Promise.all([
+		GetActiveJobs(),
+		GetJobQueue({ page, status, job_kind, scope }),
+	]);
+
+	return res.status(200).json({
+		success: true,
+		description: "Done.",
+		body: { activeJobs, jobQueue, filters: { status, job_kind, scope } },
+	});
+});
+
+/**
+ * @name GET /api/v1/admin/actions
+ */
+router.get("/actions", async (req, res) => {
+	const page = Math.max(0, Number(req.query.page ?? 0));
+	const kind =
+		typeof req.query.kind === "string" && req.query.kind !== "" ? req.query.kind : undefined;
+	const username =
+		typeof req.query.username === "string" && req.query.username !== ""
+			? req.query.username
+			: undefined;
+
+	const actions = await GetActions({ page, kind, username });
+
+	return res.status(200).json({
+		success: true,
+		description: "Done.",
+		body: { actions, filters: { kind, username } },
+	});
+});
+
+/**
+ * @name GET /api/v1/admin/cron-tasks
+ */
+router.get("/cron-tasks", async (_req, res) => {
+	const [tasks, executions] = await Promise.all([GetCronTasks(), GetCronTaskExecutions(100)]);
+
+	return res.status(200).json({
+		success: true,
+		description: "Done.",
+		body: { tasks, executions },
+	});
+});
 
 /**
  * Resynchronises all PBs that match the given query or users.
@@ -323,16 +397,28 @@ router.post(
  * @name POST /api/v1/admin/supporter/:userID
  */
 router.post("/supporter/:userID", async (req, res) => {
-	const user = await ResolveUser(req.params.userID);
+	const target = await ResolveUser(req.params.userID);
 
-	if (!user) {
+	if (!target) {
 		return res.status(404).json({
 			success: false,
 			description: `This user does not exist.`,
 		});
 	}
 
-	await MONGODB_KILL.users.update({ id: user.id }, { $set: { isSupporter: true } });
+	const adminUserID = req[SYMBOL_TACHI_API_AUTH].userID;
+
+	if (adminUserID === null) {
+		return res.status(401).json({
+			success: false,
+			description: `You are not authenticated.`,
+		});
+	}
+
+	const adminUser = await GetUserWithIDGuaranteed(adminUserID);
+	const taker = { ip: req.ip, acct: { id: adminUser.id, username: adminUser.username } };
+
+	await ACTION_SetUserSupporterStatus(taker, { userID: target.id, isSupporter: true });
 
 	return res.status(200).json({
 		success: true,
@@ -344,19 +430,31 @@ router.post("/supporter/:userID", async (req, res) => {
 /**
  * Un-Make this user a Tachi supporter.
  *
- * @name POST /api/v1/admin/supporter/:userID
+ * @name DELETE /api/v1/admin/supporter/:userID
  */
 router.delete("/supporter/:userID", async (req, res) => {
-	const user = await ResolveUser(req.params.userID);
+	const target = await ResolveUser(req.params.userID);
 
-	if (!user) {
+	if (!target) {
 		return res.status(404).json({
 			success: false,
 			description: `This user does not exist.`,
 		});
 	}
 
-	await MONGODB_KILL.users.update({ id: user.id }, { $set: { isSupporter: false } });
+	const adminUserID = req[SYMBOL_TACHI_API_AUTH].userID;
+
+	if (adminUserID === null) {
+		return res.status(401).json({
+			success: false,
+			description: `You are not authenticated.`,
+		});
+	}
+
+	const adminUser = await GetUserWithIDGuaranteed(adminUserID);
+	const taker = { ip: req.ip, acct: { id: adminUser.id, username: adminUser.username } };
+
+	await ACTION_SetUserSupporterStatus(taker, { userID: target.id, isSupporter: false });
 
 	return res.status(200).json({
 		success: true,

@@ -2,12 +2,12 @@
 import type { Kysely } from "kysely";
 import type { Database, NewFolderChartLookup } from "tachi-db";
 
-import { GetFolderChartIDs } from "./folder-query.js";
+import { computeFolderChartIdsFromFolderSql } from "./folder-query.js";
 
 const INSERT_CHUNK = 500;
 
 /**
- * Recomputes `folder_chart_lookup` from `BuildFolderQuery` / {@link GetFolderChartIDs}.
+ * Recomputes `folder_chart_lookup` from `BuildFolderQuery` / {@link computeFolderChartIdsFromFolderSql}.
  * Uses one transaction; on failure the lookup table is rolled back.
  */
 export function rebuildFolderChartLookup(
@@ -23,7 +23,7 @@ export function rebuildFolderChartLookup(
 				.where("folder_id", "=", singleFolderId)
 				.execute();
 
-			const chartIds = await GetFolderChartIDs(singleFolderId, txn);
+			const chartIds = await computeFolderChartIdsFromFolderSql(singleFolderId, txn);
 			let rowCount = 0;
 
 			for (let i = 0; i < chartIds.length; i = i + INSERT_CHUNK) {
@@ -48,7 +48,7 @@ export function rebuildFolderChartLookup(
 		let rowCount = 0;
 
 		for (const fid of folderIds) {
-			const chartIds = await GetFolderChartIDs(fid, txn);
+			const chartIds = await computeFolderChartIdsFromFolderSql(fid, txn);
 
 			for (let i = 0; i < chartIds.length; i = i + INSERT_CHUNK) {
 				const chunk = chartIds.slice(i, i + INSERT_CHUNK);

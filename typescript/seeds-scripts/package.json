@@ -11,8 +11,7 @@
 		"typecheck": "tsgo --noEmit",
 		"sort": "node sort-seeds.js",
 		"test": "./run-tests.sh",
-		"bench": "node -e \"process.exit(0)\"",
-		"seeds-v3-migrate": "bun ./rerunners/v3/1-split-charts-by-playtype.ts && bun ./rerunners/v3/2-migrate-to-pg-style.ts && bun ./rerunners/v3/3-migrate-folders-tables.ts && bun ./rerunners/v3/4-folders-to-sql-queries.ts"
+		"bench": "node -e \"process.exit(0)\""
 	},
 	"author": "zk",
 	"license": "MIT",

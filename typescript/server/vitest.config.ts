@@ -8,6 +8,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Read the test server config as a raw string — config.ts will JSON5-parse it at load time.
 const tachiConfig = fs.readFileSync(path.join(__dirname, "test.conf.json5"), "utf-8");
 
+/** When set (e.g. `test:coverage:set-user-supporter`), enforce 100% coverage on that file only. */
+const coverageSupporterActionOnly = process.env.VITEST_COVERAGE_SUPPORTER_ACTION === "1";
+
 export default defineConfig({
 	resolve: {
 		// Map #* path aliases to src/* so vite-node resolves them correctly.
@@ -47,13 +50,25 @@ export default defineConfig({
 
 		coverage: {
 			provider: "v8",
-			include: ["src/**/*.ts"],
+			include: coverageSupporterActionOnly
+				? ["src/actions/set-user-supporter-status.ts"]
+				: ["src/**/*.ts"],
 			exclude: [
 				"src/**/*.test.ts",
 				"src/**/*.bench.ts",
 				"src/**/*.oldtest.ts",
 				"src/test-utils/**",
 			],
+			...(coverageSupporterActionOnly
+				? {
+						thresholds: {
+							lines: 100,
+							branches: 100,
+							functions: 100,
+							statements: 100,
+						},
+					}
+				: {}),
 		},
 	},
 });

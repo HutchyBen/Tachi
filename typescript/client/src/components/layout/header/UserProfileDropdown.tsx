@@ -9,7 +9,7 @@ import { type TextColour } from "#types/bootstrap";
 import { RFA } from "#util/misc";
 import { heySplashes } from "#util/splashes";
 import React, { useState } from "react";
-import { type MONGO_UserDocument } from "tachi-common";
+import { type MONGO_UserDocument, UserAuthLevels } from "tachi-common";
 
 function UserProfileDropdownToggle({ user }: { user: MONGO_UserDocument }) {
 	const [heySplash] = useState(RFA(heySplashes));
@@ -108,6 +108,18 @@ export function UserProfileDropdown({
 						Manage your API Keys and integrations with other services.
 					</div>
 				</UserProfileMenuItem>
+
+				{user.authLevel === UserAuthLevels.ADMIN && (
+					<UserProfileMenuItem
+						iconColour="warning"
+						iconType="user-shield"
+						id="admin-panel"
+						to="/admin"
+					>
+						<div className="fw-semibold text-body">Admin Panel</div>
+						<div className="text-body-secondary">Site administration tools.</div>
+					</UserProfileMenuItem>
+				)}
 
 				<Divider className="my-2" />
 				<SignOut className="align-self-end mb-2 mt-2" />

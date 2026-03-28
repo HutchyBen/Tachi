@@ -397,7 +397,9 @@ t.test("GET /charts/:chartHash/leaderboard", (t) => {
 
 t.test("POST /replays", (t) => {
 	t.beforeEach(ResetDBState);
-	t.beforeEach(ResetCDN);
+	t.beforeEach(async () => {
+		await ResetCDN();
+	});
 	t.beforeEach(InsertFakeUSCAuth);
 
 	t.test("Should successfully upload a file where an identifier matches", async (t) => {

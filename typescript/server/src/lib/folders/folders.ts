@@ -3,6 +3,7 @@ import type { FilterQuery } from "mongodb";
 import type { Database } from "tachi-db";
 
 import { SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart";
+import { GetSongsByLegacyIDs } from "#lib/db-formats/song";
 import { log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
 import DB from "#services/pg/db.js";
@@ -27,6 +28,7 @@ import {
 	BuildFolderQuery as BuildFolderQueryImpl,
 	GetFolderChartIDs as GetFolderChartIDsImpl,
 } from "./folder-query.js";
+/** Loads charts for a folder using `folder_chart_lookup` + `chart` / `song` joins. */
 export async function GetFolderCharts(
 	folder: MONGO_FolderDocument,
 	_filter: FilterQuery<MONGO_ChartDocument> = {},
@@ -54,18 +56,17 @@ export async function GetFolderChartsAndSongs(
 ): Promise<{ charts: Array<MONGO_ChartDocument>; songs: Array<MONGO_SongDocument> }> {
 	const { charts } = await GetFolderCharts(folder, filter);
 
-	const songs = await MONGODB_KILL.anySongs[folder.game].find({
-		id: { $in: charts.map((e) => e.songID) },
-	});
+	const legacyIds = [...new Set(charts.map((e) => e.songID))];
+	const songs = await GetSongsByLegacyIDs(folder.game, legacyIds);
 
 	return { songs, charts };
 }
 
-export async function BuildFolderQuery(folderID: string, db: Kysely<Database> = DB) {
+export function BuildFolderQuery(folderID: string, db: Kysely<Database> = DB) {
 	return BuildFolderQueryImpl(folderID, db);
 }
 
-export async function GetFolderChartIDs(folderID: string, db: Kysely<Database> = DB) {
+export function GetFolderChartIDs(folderID: string, db: Kysely<Database> = DB) {
 	return GetFolderChartIDsImpl(folderID, db);
 }
 

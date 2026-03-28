@@ -24,6 +24,14 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NODE_ENV: "test"
+    services:
+      tachi-s3:
+        image: quay.io/minio/minio:RELEASE.2024-10-29T16-01-48Z
+        ports:
+          - 9000:9000
+        env:
+          MINIO_ROOT_USER: minio
+          MINIO_ROOT_PASSWORD: password
     steps:
       - uses: actions/checkout@v3
 

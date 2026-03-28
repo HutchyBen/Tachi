@@ -20,11 +20,7 @@ export async function BuildFolderQuery(folderID: string, db: Kysely<Database>) {
 
 	const interpolateWhereRaw = sql.raw(folder.where);
 
-	// Folder rows are per-game, but `folder.where` often omits `chart.game` (e.g. only
-	// `chart.level = '11'`). Restrict to this folder's game so scans use chart(game, level*).
-	const gameScope = sql`AND chart.game = ${folder.game}`;
-
-	// JOIN song so predicates can use `s.` (song-type folders from `4-folders-to-sql-queries.ts`).
+	// JOIN song so predicates can use `song.` (song-type folders from `5-folders-to-sql-queries.ts`).
 	if (folder.version_filter) {
 		const vf = folder.version_filter;
 
@@ -39,7 +35,7 @@ export async function BuildFolderQuery(folderID: string, db: Kysely<Database>) {
 						ON song.id = chart.song_id
 				WHERE
 					${interpolateWhereRaw}
-					${gameScope}
+					AND chart.game = ${folder.game}
 
 				AND chart.versions && ARRAY[${sql.join(vf.map((v) => sql`${v}`))}]::text[]
 			`,
@@ -57,12 +53,31 @@ export async function BuildFolderQuery(folderID: string, db: Kysely<Database>) {
 					ON song.id = chart.song_id
 			WHERE
 				${interpolateWhereRaw}
-				${gameScope}
+				AND chart.game = ${folder.game}
 		`,
 	};
 }
 
+/**
+ * Chart IDs for a folder from the denormalized `folder_chart_lookup` table.
+ * Run {@link rebuildFolderChartLookup} (or nightly job) to keep rows in sync with `folder.where`.
+ */
 export async function GetFolderChartIDs(folderID: string, db: Kysely<Database>) {
+	const rows = await db
+		.selectFrom("folder_chart_lookup")
+		.select("folder_chart_lookup.chart_id")
+		.where("folder_chart_lookup.folder_id", "=", folderID)
+		.orderBy("folder_chart_lookup.chart_id asc")
+		.execute();
+
+	return rows.map((r) => r.chart_id);
+}
+
+/**
+ * Evaluates `folder.where` SQL (same as a full rebuild). Used by
+ * {@link rebuildFolderChartLookup}; do not call for normal reads — use {@link GetFolderChartIDs}.
+ */
+export async function computeFolderChartIdsFromFolderSql(folderID: string, db: Kysely<Database>) {
 	const { folderQuery } = await BuildFolderQuery(folderID, db);
 
 	try {
@@ -80,13 +95,13 @@ export async function GetFolderChartIDs(folderID: string, db: Kysely<Database>) 
 		} catch (compileErr) {
 			log.error(
 				{ err, compileErr, folderId: folderID },
-				"GetFolderChartIDs: failed while compiling query for error logging",
+				"computeFolderChartIdsFromFolderSql: failed while compiling query for error logging",
 			);
 		}
 
 		log.error(
 			{ err, folderId: folderID, sql: compiledSql, parameters: compiledParameters },
-			"GetFolderChartIDs: folder chart query failed (e.g. during folder_chart_lookup rebuild)",
+			"computeFolderChartIdsFromFolderSql: folder chart SQL failed (e.g. during folder_chart_lookup rebuild)",
 		);
 
 		throw err;

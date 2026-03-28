@@ -299,6 +299,13 @@ export const ActionSignatures = {
 			rowCount: z.number().int(),
 		}),
 	},
+	SET_USER_SUPPORTER_STATUS: {
+		input: z.object({
+			userID: z.number().int().positive(),
+			isSupporter: z.boolean(),
+		}),
+		output: z.object({}),
+	},
 } satisfies Record<string, ActionSignature>;
 
 export const AnonActionSignatures = {

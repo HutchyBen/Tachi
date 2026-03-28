@@ -28,11 +28,14 @@
 		BETA_USER_BONUS: 5,
 	},
 	CDN_CONFIG: {
-		WEB_LOCATION: "/cdn",
+		WEB_LOCATION: "http://tachi-s3:9000/tachi-public",
 		SAVE_LOCATION: {
-			TYPE: "LOCAL_FILESYSTEM",
-			LOCATION: "./test-cdn",
-			SERVE_OWN_CDN: true,
+			TYPE: "S3_BUCKET",
+			ENDPOINT: "http://tachi-s3:9000",
+			ACCESS_KEY_ID: "minio",
+			SECRET_ACCESS_KEY: "password",
+			BUCKET: "tachi-public",
+			REGION: "us-east-1",
 		},
 	},
 	TACHI_CONFIG: {

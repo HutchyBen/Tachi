@@ -73,7 +73,7 @@ function QueryGamesInfo({ reqUser }: { reqUser: MONGO_UserDocument }) {
 function GamesInfo({ ugsList, reqUser }: GamesInfoProps) {
 	if (ugsList.length === 0) {
 		return (
-			<div className="col-12 text-center">
+			<div className="col-12 w-100 text-center">
 				<Muted>
 					<ReferToUser reqUser={reqUser} /> not played anything.
 				</Muted>

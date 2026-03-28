@@ -25,11 +25,16 @@
 	ENABLE_SERVER_HTTPS: true,
 	OPTIONS_ALWAYS_SUCCEEDS: true,
 	CDN_CONFIG: {
-		WEB_LOCATION: "https://127.0.0.1:8080/cdn",
+		// Public base URL for redirects (browser must reach this host; use localhost when MinIO is port-mapped).
+		WEB_LOCATION: "http://127.0.0.1:9000/tachi-public",
 		SAVE_LOCATION: {
-			TYPE: "LOCAL_FILESYSTEM",
-			LOCATION: "./local-cdn",
-			SERVE_OWN_CDN: true,
+			TYPE: "S3_BUCKET",
+			// From tachi-dev container, use http://tachi-s3:9000 — override on the host with http://127.0.0.1:9000
+			ENDPOINT: "http://tachi-s3:9000",
+			ACCESS_KEY_ID: "minio",
+			SECRET_ACCESS_KEY: "password",
+			BUCKET: "tachi-public",
+			REGION: "us-east-1",
 		},
 	},
 	TACHI_CONFIG: {

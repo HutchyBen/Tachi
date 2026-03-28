@@ -40,14 +40,14 @@ type SeedChart = {
 	songID: string;
 } & Omit<MONGO_ChartDocument, "songID">;
 // After 3-migrate-folders-tables.ts: folderID → legacyFolderID + id, game+playtype → game.
-// After 4-folders-to-sql-queries.ts: `where` is the SQL predicate (no leading WHERE).
+// After 5-folders-to-sql-queries.ts: `where` is the SQL predicate (no leading WHERE).
 type SeedFolder = {
 	game: string;
 	id: string;
 	legacyFolderID?: string;
 	/** Chart version filter; becomes `folder.version_filter`. */
 	versionFilter?: Array<string>;
-	/** SQL WHERE body from `4-folders-to-sql-queries.ts`; becomes `folder.where`. */
+	/** SQL WHERE body from `5-folders-to-sql-queries.ts`; becomes `folder.where`. */
 	where: string;
 } & Omit<MONGO_FolderDocument, "data" | "folderID" | "game" | "playtype" | "type">;
 // After 3-migrate-folders-tables.ts: tableID → legacyTableID + id, game+playtype → game,
@@ -389,7 +389,7 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 			if (typeof f.where !== "string" || f.where.trim() === "") {
 				throw new Error(
 					`Folder "${f.title}" (${f.id}) has no non-empty "where" SQL string. ` +
-						`Run seeds-scripts/rerunners/v3/4-folders-to-sql-queries.ts on folders.json.`,
+						`Run seeds-scripts/rerunners/v3/5-folders-to-sql-queries.ts on folders.json.`,
 				);
 			}
 

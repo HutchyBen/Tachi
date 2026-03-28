@@ -21,7 +21,9 @@ seeds-rollback ROLLBACK_DIR="/host-pc/Documents/Repos/Tachi/seeds/collections":
 seeds-v3-migrate: seeds-rollback
 	#!/usr/bin/env bash
 	set -euo pipefail
-	cd "{{justfile_directory()}}/typescript/seeds-scripts"
-	bun run seeds-v3-migrate
-	cd "{{justfile_directory()}}"
+	cd "typescript/seeds-scripts"
+
+	for script in $(ls -1 rerunners/v3/*.ts); do
+		bun run "./$script"
+	done
 	just fmt

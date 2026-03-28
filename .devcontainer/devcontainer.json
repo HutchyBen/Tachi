@@ -3,6 +3,9 @@
 	"dockerComposeFile": ["../docker-compose-dev.yml"],
 	"service": "tachi-dev",
 	"workspaceFolder": "/tachi",
+	"containerEnv": {
+		"MINIO_ENDPOINT": "http://tachi-s3:9000"
+	},
 	"postAttachCommand": "./dev/bootstrap.sh",
 	"updateRemoteUserUID": true,
 	"containerUser": "tachi",

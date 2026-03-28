@@ -1,22 +1,34 @@
+import type { Readable } from "node:stream";
+
 import { log } from "#lib/log/log";
 import { ServerConfig } from "#lib/setup/config";
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+	DeleteObjectCommand,
+	DeleteObjectsCommand,
+	GetObjectCommand,
+	ListObjectsV2Command,
+	PutObjectCommand,
+	S3Client,
+} from "@aws-sdk/client-s3";
+import { buffer as streamToBuffer } from "node:stream/consumers";
 
-let s3: S3Client | null = null;
+const saveLoc = ServerConfig.CDN_CONFIG.SAVE_LOCATION;
 
-if (ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE === "S3_BUCKET") {
-	const data = ServerConfig.CDN_CONFIG.SAVE_LOCATION;
+log.info({ bootInfo: true }, `Using S3 bucket as CDN location: ${saveLoc.BUCKET}.`);
 
-	log.info({ bootInfo: true }, `Using S3_BUCKET as CDN location.`);
-	s3 = new S3Client({
-		endpoint: data.ENDPOINT,
-		region:
-			data.REGION ?? "NO_REGION_BUT_YOU_HAVE_TO_SPECIFY_ONE_OTHERWISE_THIS_LIBRARY_ERRORS",
-		credentials: {
-			accessKeyId: data.ACCESS_KEY_ID,
-			secretAccessKey: data.SECRET_ACCESS_KEY,
-		},
-	});
+const s3 = new S3Client({
+	endpoint: saveLoc.ENDPOINT,
+	region: saveLoc.REGION ?? "us-east-1",
+	credentials: {
+		accessKeyId: saveLoc.ACCESS_KEY_ID,
+		secretAccessKey: saveLoc.SECRET_ACCESS_KEY,
+	},
+	forcePathStyle: true,
+});
+
+/** Object key as stored in the bucket (includes optional KEY_PREFIX). */
+export function cdnObjectKey(fileLoc: string): string {
+	return (saveLoc.KEY_PREFIX ?? "") + fileLoc;
 }
 
 /**
@@ -25,43 +37,81 @@ if (ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE === "S3_BUCKET") {
 export function PushToS3(path: string, content: string | Buffer) {
 	log.debug(`Saving content on S3 at ${path}.`);
 
-	if (!s3 || ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE !== "S3_BUCKET") {
-		log.error(
-			ServerConfig.CDN_CONFIG,
-			`Attempted to push to S3, but CDN_CONFIG.SAVE_LOCATION.TYPE was not S3_BUCKET?`,
-		);
-		throw new Error(
-			`Attempted to push to S3, but CDN_CONFIG.SAVE_LOCATION.TYPE was not S3_BUCKET?`,
-		);
-	}
-
 	return s3.send(
 		new PutObjectCommand({
-			Bucket: ServerConfig.CDN_CONFIG.SAVE_LOCATION.BUCKET,
-			Key: (ServerConfig.CDN_CONFIG.SAVE_LOCATION.KEY_PREFIX ?? "") + path,
+			Bucket: saveLoc.BUCKET,
+			Key: cdnObjectKey(path),
 			Body: content,
 		}),
 	);
 }
 
 /**
+ * Reads a file from the configured S3 bucket.
+ */
+export async function GetObjectFromS3(path: string): Promise<Buffer> {
+	const response = await s3.send(
+		new GetObjectCommand({
+			Bucket: saveLoc.BUCKET,
+			Key: cdnObjectKey(path),
+		}),
+	);
+
+	if (!response.Body) {
+		throw new Error(`S3 GetObject returned no body for ${path}.`);
+	}
+
+	return streamToBuffer(response.Body as Readable);
+}
+
+/**
  * Deletes the provided file from the configured S3 bucket.
  */
 export function DeleteFromS3(path: string) {
-	if (!s3 || ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE !== "S3_BUCKET") {
-		log.error(
-			ServerConfig.CDN_CONFIG,
-			`Attempted to delete from S3, but CDN_CONFIG.SAVE_LOCATION.TYPE was not S3_BUCKET?`,
-		);
-		throw new Error(
-			`Attempted to delete from S3, but CDN_CONFIG.SAVE_LOCATION.TYPE was not S3_BUCKET?`,
-		);
-	}
-
 	return s3.send(
 		new DeleteObjectCommand({
-			Bucket: ServerConfig.CDN_CONFIG.SAVE_LOCATION.BUCKET,
-			Key: path,
+			Bucket: saveLoc.BUCKET,
+			Key: cdnObjectKey(path),
 		}),
 	);
+}
+
+/**
+ * Deletes every object under SAVE_LOCATION.KEY_PREFIX (or the whole bucket if unset).
+ * Used by tests to reset CDN state.
+ */
+export async function DeleteAllCdnObjects() {
+	const prefix = saveLoc.KEY_PREFIX ?? "";
+
+	/* eslint-disable no-await-in-loop -- list/delete in batches until the prefix is empty */
+	try {
+		while (true) {
+			const list = await s3.send(
+				new ListObjectsV2Command({
+					Bucket: saveLoc.BUCKET,
+					Prefix: prefix,
+					MaxKeys: 1000,
+				}),
+			);
+
+			const keys = (list.Contents ?? [])
+				.map((o) => o.Key)
+				.filter((k): k is string => k !== undefined);
+
+			if (keys.length === 0) {
+				return;
+			}
+
+			await s3.send(
+				new DeleteObjectsCommand({
+					Bucket: saveLoc.BUCKET,
+					Delete: {
+						Objects: keys.map((Key) => ({ Key })),
+					},
+				}),
+			);
+		}
+	} finally {
+		/* eslint-enable no-await-in-loop */
+	}
 }
