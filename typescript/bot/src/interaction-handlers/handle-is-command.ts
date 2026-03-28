@@ -1,7 +1,8 @@
-import { type RequestingUser } from "#slash-commands/types.js";
+import { type RequestingUser } from "#slash-commands/types";
 import { log } from "#utils/log";
 import { type CommandInteraction, MessageEmbed } from "discord.js";
 
+import { Env } from "../config";
 import { SLASH_COMMANDS } from "../slash-commands/commands";
 
 /**
@@ -21,6 +22,26 @@ export async function handleIsCommand(
 
 		if (!command) {
 			throw new Error(`A command was requested that does not exist.`);
+		}
+
+		if (Env.DISCORD_LIMBO_CHANNEL) {
+			const inLimbo = interaction.channelId === Env.DISCORD_LIMBO_CHANNEL;
+
+			if (command.limboOnly && !inLimbo) {
+				await interaction.reply({
+					content: `\`/${command.info.name}\` can only be used in <#${Env.DISCORD_LIMBO_CHANNEL}>.`,
+					ephemeral: true,
+				});
+				return;
+			}
+
+			if (!command.limboOnly && inLimbo) {
+				await interaction.reply({
+					content: `This command cannot be used in <#${Env.DISCORD_LIMBO_CHANNEL}>. Please use it in the appropriate channel.`,
+					ephemeral: true,
+				});
+				return;
+			}
 		}
 
 		await interaction.deferReply();

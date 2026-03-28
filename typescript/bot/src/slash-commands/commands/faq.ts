@@ -3,7 +3,7 @@ import deepmerge from "deepmerge";
 
 import type { SlashCommand } from "../types";
 
-import { BotConfig, ServerConfig } from "../../config";
+import { Env, ServerConfig } from "../../config";
 import { CreateEmbed } from "../../utils/embeds";
 
 const NEUTRAL_FAQ_ENTRIES: Record<string, string> = {
@@ -117,12 +117,12 @@ const KAMAI_FAQ_ENTRIES: Record<string, string> = {
 	})`,
 	sdvx_1259: `Automation Paradise is song ID 1259. It is not a real song, and it is not supported by ${ServerConfig.NAME}. Related autopara-only songs are not supported, either.`,
 	invites: `To invite your friends, go to your profile and select 'Invites'. From there, you can create an invite code.
-Your friend can then go to ${BotConfig.TACHI_SERVER_LOCATION} and sign up with the code! You can also invite them to the discord.`,
+Your friend can then go to ${Env.TACHI_SERVER_LOCATION} and sign up with the code! You can also invite them to the discord.`,
 };
 
 const BOKU_FAQ_ENTRIES: Record<string, string> = {
 	usc_hard_mode: `Hard Mode windows are not supported on ${ServerConfig.NAME}. Your scores **will be ignored** if they are played on non-standard windows.`,
-	ir_login: `You **must** put your API Key in the password field for the Bokutachi IR, **NOT your real password!**. See instructions here: ${BotConfig.TACHI_SERVER_LOCATION}/import/beatoraja-ir.
+	ir_login: `You **must** put your API Key in the password field for the Bokutachi IR, **NOT your real password!**. See instructions here: ${Env.TACHI_SERVER_LOCATION}/import/beatoraja-ir.
 (This is because putting your real password in there is a security nightmare.)`,
 	lr2: `Support for LR2 (the LR2Hook) are **not officially maintained** and therefore **not managed by bokutachi developers**.
 We urge you to use a more modern BMS client like lr2oraja, unless you have very good reason to stay on LR2.

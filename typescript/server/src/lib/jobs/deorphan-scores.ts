@@ -1,6 +1,6 @@
 // Attempt to deoprhan lost scores.
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { DeorphanScores } from "#lib/score-import/framework/orphans/orphans";
 import { WrapScriptPromise } from "#utils/misc";
 

@@ -4,7 +4,7 @@ const path = require("path");
 
 const { ReadCollection, WriteCollection } = require("../util");
 
-const COLLECTIONS_DIR = path.join(__dirname, "../../collections");
+const COLLECTIONS_DIR = path.join(__dirname, "../../../db/seeds");
 
 const NOW = Date.now();
 

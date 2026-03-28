@@ -8,6 +8,7 @@ export * from "./constants/grade-boundaries";
 export * as StaticConfig from "./constants/import-types";
 export * from "./constants/permissions";
 export * as Schemas from "./lib/schemas";
+export * from "./lib/zod-schemas";
 export * from "./seeds/types";
 export * from "./types";
 export * from "./utils/util";

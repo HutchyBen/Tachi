@@ -5,7 +5,7 @@ import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/expre
 import { PR_LR2HOOK as PR_LR2_HOOK } from "#lib/score-import/import-types/ir/lr2hook/parser";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { UpdateClassIfGreater } from "#utils/class";
 import { Router } from "express";
 
@@ -56,7 +56,7 @@ router.post(
 			});
 		}
 
-		const course = await db["bms-course-lookup"].findOne({
+		const course = await MONGODB_KILL["bms-course-lookup"].findOne({
 			md5sums: score.md5,
 		});
 

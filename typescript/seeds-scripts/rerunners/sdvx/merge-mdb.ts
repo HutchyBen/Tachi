@@ -3,10 +3,10 @@ import { XMLParser } from "fast-xml-parser";
 import fs from "fs";
 import { decode } from "iconv-lite";
 import {
-	type ChartDocument,
 	type Difficulties,
 	type integer,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
 } from "tachi-common";
 
 import {
@@ -66,7 +66,7 @@ interface MDBEntry {
 const existingChartDocs = ReadCollection("charts-sdvx.json");
 
 const inGameIDToSongIDMap = new Map<number, number>();
-const existingCharts = new Map<string, ChartDocument<"sdvx:Single">>();
+const existingCharts = new Map<string, MONGO_ChartDocument<"sdvx:Single">>();
 
 for (const chart of existingChartDocs) {
 	inGameIDToSongIDMap.set(chart.data.inGameID, chart.songID);
@@ -130,8 +130,8 @@ function convertDiff(
 	}
 }
 
-const newSongs: Array<SongDocument<"sdvx">> = [];
-const newCharts: Array<ChartDocument<"sdvx:Single">> = [];
+const newSongs: Array<MONGO_SongDocument<"sdvx">> = [];
+const newCharts: Array<MONGO_ChartDocument<"sdvx:Single">> = [];
 
 // anything we don't want to include?
 const blacklist = [1259, 1491, 1438, 1490];
@@ -217,7 +217,7 @@ for (const entry of data.mdb.music as Array<MDBEntry>) {
 		}
 
 		// new song, add to seeds.
-		const songDoc: SongDocument<"sdvx"> = {
+		const songDoc: MONGO_SongDocument<"sdvx"> = {
 			title: fixedTitle,
 			artist: fixString(entry.info.artist_name),
 			searchTerms: [entry.info.ascii],
@@ -277,7 +277,7 @@ for (const entry of data.mdb.music as Array<MDBEntry>) {
 			continue;
 		}
 
-		const chartDoc: ChartDocument<"sdvx:Single"> = {
+		const chartDoc: MONGO_ChartDocument<"sdvx:Single"> = {
 			chartID: CreateChartID(),
 			songID,
 			difficulty,

@@ -1,6 +1,6 @@
 import { SearchCollection } from "#lib/search/search";
 import { GetGoalsInQuest, GetGoalsInQuests } from "#lib/targets/quests";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { IsString } from "#utils/misc";
 import { AssignToReqTachiData, GetGPT, GetTachiData } from "#utils/req-tachi-data";
 import { GetUsersWithIDs } from "#utils/user";
@@ -12,7 +12,7 @@ const ResolveQuestID: RequestHandler = async (req, res, next) => {
 	const { game, playtype } = GetGPT(req);
 	const questID = req.params.questID;
 
-	const quest = await db.quests.findOne({
+	const quest = await MONGODB_KILL.quests.findOne({
 		questID,
 		game,
 		playtype,
@@ -48,7 +48,7 @@ router.get("/", async (req, res) => {
 	}
 
 	const quests = await SearchCollection(
-		db.quests,
+		MONGODB_KILL.quests,
 		req.query.search,
 		"quests",
 		{ game, playtype },
@@ -71,7 +71,7 @@ router.get("/", async (req, res) => {
 router.get("/:questID", ResolveQuestID, async (req, res) => {
 	const quest = GetTachiData(req, "questDoc");
 
-	const questSubs = await db["quest-subs"].find({
+	const questSubs = await MONGODB_KILL["quest-subs"].find({
 		questID: quest.questID,
 	});
 
@@ -79,7 +79,7 @@ router.get("/:questID", ResolveQuestID, async (req, res) => {
 
 	const goals = await GetGoalsInQuest(quest);
 
-	const parentQuestlines = await db.questlines.find({
+	const parentQuestlines = await MONGODB_KILL.questlines.find({
 		quests: quest.questID,
 	});
 

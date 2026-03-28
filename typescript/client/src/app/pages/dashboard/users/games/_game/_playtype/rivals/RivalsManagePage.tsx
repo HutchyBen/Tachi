@@ -20,8 +20,8 @@ import {
 	type GameGroup,
 	GetGameGroupConfig,
 	type integer,
+	type MONGO_UserDocument,
 	type Playtype,
-	type UserDocument,
 } from "tachi-common";
 
 export default function RivalsManagePage({
@@ -31,7 +31,7 @@ export default function RivalsManagePage({
 }: {
 	game: GameGroup;
 	playtype: Playtype;
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 }) {
 	const gameConfig = GetGameGroupConfig(game);
 
@@ -43,7 +43,7 @@ export default function RivalsManagePage({
 
 	const { settings } = useLUGPTSettings();
 
-	const { data, error } = useApiQuery<UserDocument[]>(
+	const { data, error } = useApiQuery<MONGO_UserDocument[]>(
 		`/users/${reqUser.id}/games/${game}/${playtype}/rivals`,
 		{},
 		[`fetch-rivals-${settings?.rivals.join(",")}`],
@@ -53,7 +53,7 @@ export default function RivalsManagePage({
 		data: challengers,
 		isLoading: cIsLoading,
 		error: cError,
-	} = useApiQuery<UserDocument[]>(
+	} = useApiQuery<MONGO_UserDocument[]>(
 		`/users/${reqUser.id}/games/${game}/${playtype}/rivals/challengers`,
 	);
 
@@ -91,11 +91,11 @@ function RivalsOverviewPage({
 	initialRivals,
 	challengers,
 }: {
-	challengers: Array<UserDocument>;
+	challengers: Array<MONGO_UserDocument>;
 	game: GameGroup;
-	initialRivals: Array<UserDocument>;
+	initialRivals: Array<MONGO_UserDocument>;
 	playtype: Playtype;
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 }) {
 	const { user } = useContext(UserContext);
 

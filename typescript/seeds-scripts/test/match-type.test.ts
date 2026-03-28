@@ -1,9 +1,9 @@
 import chalk from "chalk";
 import {
-	type ChartDocument,
 	GetGPTConfig,
 	type MatchTypes,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
 	v3AllGames,
 	V3FormatGame,
 	type V3Game,
@@ -43,7 +43,7 @@ const MATCH_TYPE_CHECKS: Record<
 	},
 	bmsChartHash: {
 		type: "CHARTS",
-		fn: (c: ChartDocument<"bms:7K" | "bms:14K">) => [c.data.hashMD5, c.data.hashSHA256],
+		fn: (c: MONGO_ChartDocument<"bms:7K" | "bms:14K">) => [c.data.hashMD5, c.data.hashSHA256],
 	},
 	inGameID: { type: "CHARTS", fn: (c) => `${c.data.inGameID}-${c.difficulty}` },
 	inGameStrID: { type: "CHARTS", fn: (c) => `${c.data.inGameStrID}-${c.difficulty}` },
@@ -64,7 +64,7 @@ const MATCH_TYPE_CHECKS: Record<
 	uscChartHash: { type: "CHARTS", fn: (c) => c.data.hashSHA1 },
 	ddrSongHash: {
 		type: "SONGS",
-		fn: (s: SongDocument<"ddr">) => {
+		fn: (s: MONGO_SongDocument<"ddr">) => {
 			// if there's no ddrSongHash then it's a konaste song / we're missing seed data
 			// so just use the inGameID
 			if (s.data.ddrSongHash === undefined) {

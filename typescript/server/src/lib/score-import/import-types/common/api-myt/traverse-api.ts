@@ -1,26 +1,23 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ServerConfig } from "#lib/setup/config";
-import { CardsClient } from "#proto/generated/cards/cards_grpc_pb";
-import { LookupRequest, type LookupResponse } from "#proto/generated/cards/cards_pb";
-import db from "#services/mongo/db";
+import { Cards, LookupRequestSchema } from "#proto/generated/cards/cards_pb";
+import MONGODB_KILL from "#services/mongo/db";
+import { create } from "@bufbuild/protobuf";
 import {
-	type CallOptions,
-	type ClientReadableStream,
-	credentials,
-	Metadata,
-	type requestCallback,
-	type ServiceError,
-} from "@grpc/grpc-js";
-import { Status } from "@grpc/grpc-js/build/src/constants";
+	Code as ConnectCode,
+	ConnectError,
+	createClient,
+	type Interceptor,
+} from "@connectrpc/connect";
+import { createGrpcTransport } from "@connectrpc/connect-node";
 import { type GameGroup, GetGameGroupConfig, type integer } from "tachi-common";
 
 import { GameToMytGame } from "./util";
 
-// Hardcode all requests to time out after 10m.
-// 6000 scores seems to take more than 30 seconds. 5mins seems like a safe upper bound.
-const GRPC_TIMEOUT_SECS = 10 * 60;
+// Hardcode all requests to time out after 10 minutes.
+const GRPC_TIMEOUT_MS = 10 * 60 * 1000;
 
 export function GetMytHostname(): string {
 	const hostname = ServerConfig.MYT_API_HOST;
@@ -35,95 +32,25 @@ export function GetMytHostname(): string {
 	return hostname;
 }
 
-function CreateAuthenticatedMetadata() {
-	const auth = new Metadata();
+function createBearerInterceptor(): Interceptor {
 	const authToken = ServerConfig.MYT_AUTH_TOKEN;
 
 	if (authToken === undefined) {
 		throw new ScoreImportFatalError(500, `Tried to get MYT auth token, yet was not defined?`);
 	}
 
-	auth.add("Authorization", `Bearer ${authToken}`);
-	return auth;
+	return (next) => async (req) => {
+		req.header.set("Authorization", `Bearer ${authToken}`);
+		return next(req);
+	};
 }
 
-function CreateDeadlineOptions() {
-	const deadline = new Date().setSeconds(new Date().getSeconds() + GRPC_TIMEOUT_SECS);
-
-	return { deadline };
-}
-
-export function UnaryRPCAsAsync<TIn, TOut>(
-	unaryCall: (
-		argument: TIn,
-		metadata: Metadata,
-		options: CallOptions,
-		callback: requestCallback<TOut>,
-	) => void,
-	argument: TIn,
-): Promise<TOut> {
-	return new Promise((resolve, reject) => {
-		unaryCall(
-			argument,
-			CreateAuthenticatedMetadata(),
-			CreateDeadlineOptions(),
-			(error, value) => {
-				if (error) {
-					reject(error);
-				}
-
-				resolve(value!);
-			},
-		);
+export function CreateMytTransport() {
+	return createGrpcTransport({
+		baseUrl: `https://${GetMytHostname()}`,
+		interceptors: [createBearerInterceptor()],
+		defaultTimeoutMs: GRPC_TIMEOUT_MS,
 	});
-}
-
-export async function* StreamRPCAsAsync<TIn, TOut>(
-	streamingCall: (
-		argument: TIn,
-		metadata: Metadata,
-		options: CallOptions,
-	) => ClientReadableStream<TOut>,
-	argument: TIn,
-	log: KtLogger,
-): AsyncIterable<TOut> {
-	try {
-		const stream = streamingCall(
-			argument,
-			CreateAuthenticatedMetadata(),
-			CreateDeadlineOptions(),
-		);
-		let err: Error | null = null;
-
-		// If we don't have stream.on("error"), or if we throw the error within
-		// this callback, it's not caught properly and will crash the whole node
-		// process. Note: if there are multiple errors within one stream, some may
-		// be dropped... so be it.
-		stream.on("error", (e) => (err = e));
-		// ClientReadableStream already implements AsyncIterable<any> vs Readable,
-		// but we know that it will really be AsyncIterable<TOut>.
-		for await (const streamItem of stream) {
-			yield streamItem as TOut;
-		}
-
-		// TS doesn't realize that err can be set to an Error by stream.on, so it
-		// thinks the type of err is always null. Fix by casting.
-		const fixedErr = err as Error | null;
-
-		if (fixedErr !== null) {
-			throw fixedErr;
-		}
-	} catch (err) {
-		log.error(`Error while streaming score data from MYT: ${err}`);
-
-		// Avoid rethrowing the error as it may reveal things like the upstream
-		// server IP address.
-		throw new ScoreImportFatalError(500, `Error while streaming score data from MYT`);
-	}
-}
-
-function errIsServiceError(err: Error): err is ServiceError {
-	return "code" in err && "details" in err && "metadata" in err;
 }
 
 /**
@@ -144,51 +71,38 @@ export async function FetchMytTitleAPIID(
 		throw new ScoreImportFatalError(500, `Unsupported game ${game}`);
 	}
 
-	const cardInfo = await db["myt-card-info"].findOne({ userID });
+	const cardInfo = await MONGODB_KILL["myt-card-info"].findOne({ userID });
 
 	if (!cardInfo) {
 		throw new ScoreImportFatalError(401, `This user has no card info set up for this service.`);
 	}
 
 	const { cardAccessCode } = cardInfo;
-	const hostname = GetMytHostname();
-
-	const client = new CardsClient(hostname, credentials.createSsl());
-	const req = new LookupRequest();
-
-	req.setAccessCode(cardAccessCode);
-	req.addTitles(mytGame);
+	const client = createClient(Cards, CreateMytTransport());
+	const req = create(LookupRequestSchema, {
+		accessCode: cardAccessCode,
+		titles: [mytGame],
+	});
 
 	try {
-		const response: LookupResponse = await UnaryRPCAsAsync(client.lookup.bind(client), req);
+		const response = await client.lookup(req);
 
-		for (const title of response.getTitlesList()) {
-			if (title.getTitleKind() === mytGame) {
-				return title.getTitleApiId();
+		for (const title of response.titles) {
+			if (title.titleKind === mytGame) {
+				return title.titleApiId;
 			}
 		}
 	} catch (e) {
-		const err = e as Error | ServiceError;
-
-		if (errIsServiceError(err)) {
-			if (err.code === Status.NOT_FOUND) {
-				throw new ScoreImportFatalError(401, `Card not found on MYT: ${err.details}`);
+		if (e instanceof ConnectError) {
+			if (e.code === ConnectCode.NotFound) {
+				throw new ScoreImportFatalError(401, `Card not found on MYT: ${e.message}`);
 			}
 
-			log.error(
-				{
-					err,
-					code: err.code,
-					details: err.details,
-					req: req.toObject(),
-				},
-				`Received unexpected status from ${hostname}`,
-			);
-			throw new ScoreImportFatalError(500, `Unexpected response from MYT - ${err.code}`);
+			log.error({ err: e, code: e.code }, `Received unexpected status from MYT`);
+			throw new ScoreImportFatalError(500, `Unexpected response from MYT - ${e.code}`);
 		}
 
-		log.error({ err }, `Received invalid response`);
-
+		log.error({ err: e }, `Received invalid response`);
 		throw new ScoreImportFatalError(500, `Failed to look up card at MYT. Are they down?`);
 	}
 

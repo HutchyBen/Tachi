@@ -1,8 +1,9 @@
-import type { MytCardInfo } from "tachi-common";
-
+import { ACTION_DeleteMytCardInfo } from "#actions/delete-myt-card-info.js";
+import { ACTION_UpdateMytCardInfo } from "#actions/update-myt-card-info.js";
+import { SELECT_MYT_CARD_INFO, ToMytCardInfo } from "#lib/db-formats/myt-card-info";
 import prValidate from "#server/middleware/prudence-validate";
 import { RequireKamaitachi } from "#server/middleware/type-require";
-import db from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
 import { p } from "prudence";
@@ -22,22 +23,15 @@ router.use(RequireSelfRequestFromUser);
 router.get("/", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	const cardInfo = await db["myt-card-info"].findOne({
-		userID: user.id,
-	});
-
-	if (!cardInfo) {
-		return res.status(200).json({
-			success: true,
-			description: `User has no card info set.`,
-			body: null,
-		});
-	}
+	const row = await DB.selectFrom("priv_svc_myt_card_info")
+		.select(SELECT_MYT_CARD_INFO)
+		.where("user_id", "=", user.id)
+		.executeTakeFirst();
 
 	return res.status(200).json({
 		success: true,
-		description: `Found card info.`,
-		body: cardInfo,
+		description: row ? `Found card info.` : `User has no card info set.`,
+		body: row ? ToMytCardInfo(row) : null,
 	});
 });
 
@@ -54,22 +48,11 @@ router.put(
 	),
 	async (req, res) => {
 		const user = GetTachiData(req, "requestedUser");
+		const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
 
 		const { cardAccessCode } = req.safeBody as { cardAccessCode: string };
 
-		const newCardInfo: MytCardInfo = {
-			userID: user.id,
-			cardAccessCode,
-		};
-
-		await db["myt-card-info"].update(
-			{ userID: user.id },
-			{ $set: newCardInfo },
-			{
-				// insert new card info if the user doesn't have it yet.
-				upsert: true,
-			},
-		);
+		await ACTION_UpdateMytCardInfo(taker, { cardAccessCode });
 
 		return res.status(200).json({
 			success: true,
@@ -86,8 +69,9 @@ router.put(
  */
 router.delete("/", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
+	const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
 
-	await db["cg-card-info"].remove({ userID: user.id });
+	await ACTION_DeleteMytCardInfo(taker, {});
 
 	return res.status(200).json({
 		success: true,

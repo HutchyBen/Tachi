@@ -5,12 +5,12 @@ import { GPT_CLIENT_IMPLEMENTATIONS } from "#lib/game-implementations";
 import { ChangeOpacity } from "#util/color-opacity";
 import React from "react";
 import {
-	type ChartDocument,
 	FormatDifficulty,
 	FormatDifficultyShort,
 	type GameGroup,
 	GetGamePTConfig,
 	GetGPTString,
+	type MONGO_ChartDocument,
 } from "tachi-common";
 
 import BMSOrPMSDifficultyCell from "./BMSOrPMSDifficultyCell";
@@ -25,7 +25,7 @@ export default function DifficultyCell({
 	noTierlist,
 }: {
 	alwaysShort?: boolean;
-	chart: ChartDocument;
+	chart: MONGO_ChartDocument;
 	game: GameGroup;
 	noTierlist?: boolean;
 }) {
@@ -39,17 +39,21 @@ export default function DifficultyCell({
 		return (
 			<BMSOrPMSDifficultyCell
 				chart={
-					chart as ChartDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard">
+					chart as MONGO_ChartDocument<
+						"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"
+					>
 				}
 				game={game}
 			/>
 		);
 	} else if (game === "usc") {
 		return (
-			<USCDifficultyCell chart={chart as ChartDocument<"usc:Controller" | "usc:Keyboard">} />
+			<USCDifficultyCell
+				chart={chart as MONGO_ChartDocument<"usc:Controller" | "usc:Keyboard">}
+			/>
 		);
 	} else if (game === "itg") {
-		return <ITGDifficultyCell chart={chart as ChartDocument<"itg:Stamina">} />;
+		return <ITGDifficultyCell chart={chart as MONGO_ChartDocument<"itg:Stamina">} />;
 	}
 
 	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, chart.playtype)];
@@ -58,7 +62,7 @@ export default function DifficultyCell({
 		// IIDX stuff should always be in the form SPA/SPL to save space.
 		// For the same reason, maimai DX stuff should be using (DX) EXP/MAS/Re:MAS.
 		// All players know what this means.
-		// eslint-disable-next-line no-param-reassign
+
 		alwaysShort = true;
 	}
 

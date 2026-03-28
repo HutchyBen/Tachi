@@ -6,11 +6,11 @@ import { HumaniseError } from "#util/humanise-error";
 import { HistorySafeGoBack } from "#util/misc";
 import { useFormik } from "formik";
 import React, { useContext, useRef, useState } from "react";
-import { Button, Form } from "react-bootstrap";
+import { Alert, Button, Form } from "react-bootstrap";
 import ReCAPTCHA from "react-google-recaptcha";
 import toast from "react-hot-toast";
 import { Link, useHistory } from "react-router-dom";
-import { type UserDocument } from "tachi-common";
+import { type MONGO_UserDocument } from "tachi-common";
 
 export default function LoginPage() {
 	useSetSubheader("Login");
@@ -21,68 +21,99 @@ export default function LoginPage() {
 
 	const recaptchaRef = useRef<any>(null);
 
+	const performLogin = async (values: {
+		"!password": string;
+		captcha: string;
+		username: string;
+	}) => {
+		setErr("");
+
+		const rj = await APIFetchV1(
+			"/auth/login",
+			{
+				method: "POST",
+				body: JSON.stringify({
+					username: values.username.trim(),
+					"!password": values["!password"],
+					captcha: values.captcha,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			},
+			false,
+			false,
+		);
+
+		if (recaptchaRef.current) {
+			recaptchaRef.current.reset();
+		}
+
+		if (!rj.success) {
+			setErr(HumaniseError(rj.description));
+			return;
+		}
+
+		const userRJ = await APIFetchV1<MONGO_UserDocument>("/users/me");
+
+		if (userRJ.statusCode === 403) {
+			setErr("You are banned.");
+			return;
+		}
+
+		if (!userRJ.success) {
+			console.error("Error retrieving own user?");
+			setErr("An internal server error has occurred.");
+			return;
+		}
+
+		toast.success("Logged in!");
+
+		setTimeout(() => {
+			setUser(userRJ.body);
+			localStorage.setItem("isLoggedIn", "true");
+
+			HistorySafeGoBack(history);
+		}, 500);
+	};
+
 	const formik = useFormik({
 		initialValues: {
 			username: "",
 			"!password": "",
 			captcha: "",
 		},
-		onSubmit: async (values) => {
-			setErr("");
-
-			const rj = await APIFetchV1(
-				"/auth/login",
-				{
-					method: "POST",
-					body: JSON.stringify({
-						username: values.username.trim(),
-						"!password": values["!password"],
-						captcha: values.captcha,
-					}),
-					headers: {
-						"Content-Type": "application/json",
-					},
-				},
-				false,
-				false,
-			);
-
-			if (recaptchaRef.current) {
-				recaptchaRef.current.reset();
-			}
-
-			if (!rj.success) {
-				setErr(HumaniseError(rj.description));
-				return;
-			}
-
-			const userRJ = await APIFetchV1<UserDocument>("/users/me");
-
-			if (userRJ.statusCode === 403) {
-				setErr("You are banned.");
-				return;
-			}
-
-			if (!userRJ.success) {
-				console.error("Error retrieving own user?");
-				setErr("An internal server error has occurred.");
-				return;
-			}
-
-			toast.success("Logged in!");
-
-			setTimeout(() => {
-				setUser(userRJ.body);
-				localStorage.setItem("isLoggedIn", "true");
-
-				HistorySafeGoBack(history);
-			}, 500);
-		},
+		onSubmit: performLogin,
 	});
 
 	return (
 		<LoginPageLayout description={<Description />} heading="Log In">
 			<Form className="d-flex flex-column gap-4 w-100" onSubmit={formik.handleSubmit}>
+				{import.meta.env.VITE_IS_LOCAL_DEV && (
+					<Alert className="mb-0" variant="info">
+						<div className="d-flex flex-column gap-2">
+							<span>
+								You are in local development mode. You can login as the admin
+								account.
+							</span>
+							<Button
+								className="align-self-start"
+								onClick={() =>
+									void performLogin({
+										username: "admin",
+										"!password": "password",
+										captcha: formik.values.captcha,
+									})
+								}
+								size="sm"
+								type="button"
+								variant="outline-primary"
+							>
+								Log in as admin
+							</Button>
+						</div>
+					</Alert>
+				)}
 				<Form.Group>
 					<Form.Label>Username</Form.Label>
 					<Form.Control

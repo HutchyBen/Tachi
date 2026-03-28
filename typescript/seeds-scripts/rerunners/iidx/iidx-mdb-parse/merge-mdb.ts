@@ -3,11 +3,11 @@ import { Command } from "commander";
 import fs from "fs";
 import path from "path";
 import {
-	type ChartDocument,
 	type Difficulties,
 	GetGamePTConfig,
 	type integer,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
 	type Versions,
 } from "tachi-common";
 
@@ -63,9 +63,10 @@ if (options.index !== "0" && options.index !== "1") {
 	throw new Error(`Expected an --index of 0 or 1. Got ${options.index}.`);
 }
 
-const existingCharts: ChartDocument<"iidx:DP" | "iidx:SP">[] = ReadCollection("charts-iidx.json");
+const existingCharts: MONGO_ChartDocument<"iidx:DP" | "iidx:SP">[] =
+	ReadCollection("charts-iidx.json");
 
-const existingSongs: SongDocument<"iidx">[] = ReadCollection("songs-iidx.json");
+const existingSongs: MONGO_SongDocument<"iidx">[] = ReadCollection("songs-iidx.json");
 
 const blacklist = fs
 	.readFileSync(path.join(__dirname, "blacklist.txt"), "utf-8")
@@ -100,10 +101,10 @@ async function ParseIIDXMDB() {
 		options.alwaysExtract,
 	);
 
-	const chartMap = new Map<integer, ChartDocument<"iidx:DP" | "iidx:SP">>();
-	const songMap = new Map<integer, SongDocument<"iidx">>();
-	const songTitleMap = new Map<string, SongDocument<"iidx">>();
-	const chartDiffMap = new Map<string, ChartDocument<"iidx:DP" | "iidx:SP">>();
+	const chartMap = new Map<integer, MONGO_ChartDocument<"iidx:DP" | "iidx:SP">>();
+	const songMap = new Map<integer, MONGO_SongDocument<"iidx">>();
+	const songTitleMap = new Map<string, MONGO_SongDocument<"iidx">>();
+	const chartDiffMap = new Map<string, MONGO_ChartDocument<"iidx:DP" | "iidx:SP">>();
 
 	for (const song of existingSongs) {
 		songMap.set(song.id, song);
@@ -142,7 +143,7 @@ async function ParseIIDXMDB() {
 		}
 
 		const anySongIDMatch = chartMap.get(inp.songID);
-		let song: SongDocument<"iidx">;
+		let song: MONGO_SongDocument<"iidx">;
 
 		if (!anySongIDMatch) {
 			// new song?
@@ -169,7 +170,7 @@ async function ParseIIDXMDB() {
 				searchTerms.push(inp.marquee);
 			}
 
-			const tachiSong: SongDocument<"iidx"> = {
+			const tachiSong: MONGO_SongDocument<"iidx"> = {
 				id: getFreeSongID(),
 				artist: inp.artist,
 				title: inp.title,
@@ -241,7 +242,7 @@ async function ParseIIDXMDB() {
 				}
 
 				// otherwise, make new chart?
-				const tachiChart: ChartDocument<"iidx:DP" | "iidx:SP"> = {
+				const tachiChart: MONGO_ChartDocument<"iidx:DP" | "iidx:SP"> = {
 					chartID: CreateChartID(),
 					difficulty: diffName.split("-")[1] as Difficulties["iidx:DP" | "iidx:SP"],
 					level: level.toString(),

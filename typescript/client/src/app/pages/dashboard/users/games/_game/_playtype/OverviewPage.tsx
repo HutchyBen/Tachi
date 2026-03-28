@@ -25,8 +25,8 @@ import {
 	type GameGroup,
 	GetGameGroupConfig,
 	GetGamePTConfig,
+	type MONGO_UserGameStats,
 	type Playtype,
-	type UserGameStats,
 } from "tachi-common";
 
 export default function OverviewPage({ reqUser, game, playtype }: UGPT) {
@@ -102,7 +102,7 @@ function UserHistory({
 
 	const preferredRating = useProfileRatingAlg(game, playtype);
 
-	const [rating, setRating] = useState<keyof UserGameStats["ratings"]>(preferredRating);
+	const [rating, setRating] = useState<keyof MONGO_UserGameStats["ratings"]>(preferredRating);
 
 	const propName = useMemo(() => {
 		if (mode === "rating" && rating) {
@@ -174,7 +174,9 @@ function UserHistory({
 						<div className="col-12 offset-md-4 col-md-4 mt-4">
 							<FormSelect
 								onChange={(e) =>
-									setRating(e.target.value as keyof UserGameStats["ratings"])
+									setRating(
+										e.target.value as keyof MONGO_UserGameStats["ratings"],
+									)
 								}
 								value={rating}
 							>
@@ -227,7 +229,9 @@ function UserHistory({
 						<div className="col-12 offset-md-4 col-md-4 mt-4">
 							<FormSelect
 								onChange={(e) =>
-									setRating(e.target.value as keyof UserGameStats["ratings"])
+									setRating(
+										e.target.value as keyof MONGO_UserGameStats["ratings"],
+									)
 								}
 								value={rating}
 							>
@@ -256,7 +260,7 @@ function RatingTimeline({
 	data: UGPTHistory;
 	game: GameGroup;
 	playtype: Playtype;
-	rating: keyof UserGameStats["ratings"];
+	rating: keyof MONGO_UserGameStats["ratings"];
 }) {
 	const ratingDataset = [
 		{ id: rating, data: data.map((e) => ({ x: e.timestamp, y: e.ratings[rating] })) },
@@ -304,7 +308,7 @@ function RankingTimeline({
 	rating,
 }: {
 	data: UGPTHistory;
-	rating: keyof UserGameStats["ratings"];
+	rating: keyof MONGO_UserGameStats["ratings"];
 }) {
 	return (
 		<TimelineChart

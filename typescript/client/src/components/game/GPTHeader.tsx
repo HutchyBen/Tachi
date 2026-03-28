@@ -9,8 +9,8 @@ export function GPTBottomNav({ baseUrl }: { baseUrl: string }) {
 		<Navbar.Item key="activity" to={`${baseUrl}/`}>
 			Activity
 		</Navbar.Item>,
-		<Navbar.Item key="songs" to={`${baseUrl}/songs`}>
-			Songs
+		<Navbar.Item key="charts" to={`${baseUrl}/charts`}>
+			Charts
 		</Navbar.Item>,
 		<Navbar.Item key="leaderboards" to={`${baseUrl}/leaderboards`}>
 			Leaderboards

@@ -1,25 +1,27 @@
-import type { ImportDocument } from "tachi-common";
+import type { MONGO_ImportDocument } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import {
 	CheckAndSetOngoingImportLock,
 	UnsetOngoingImportLock,
 } from "#lib/score-import/framework/import-locks/lock";
 import { DeleteMultipleScores } from "#lib/score-mutation/delete-scores";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 interface OngoingImportError {
 	tag: "ONGOING_IMPORT";
 }
 
 /**
- * Given an importDocument, undo it. This will remove all of the scores inside the import.
+ * Given an MONGO_ImportDocument, undo it. This will remove all of the scores inside the import.
  *
  * It will *not* undo things like classes that were set, but it will invoke a profile recalculation.
  *
  * If this results in sessions being deleted, it will delete them.
  */
-export async function RevertImport(importDoc: ImportDocument): Promise<OngoingImportError | null> {
+export async function RevertImport(
+	importDoc: MONGO_ImportDocument,
+): Promise<OngoingImportError | null> {
 	log.info({ importDoc }, `Received revert-import request for import '${importDoc.importID}'`);
 
 	const scores = await GetImportScores(importDoc);
@@ -43,7 +45,7 @@ export async function RevertImport(importDoc: ImportDocument): Promise<OngoingIm
 		);
 
 		try {
-			await db.imports.remove({ importID: importDoc.importID });
+			await MONGODB_KILL.imports.remove({ importID: importDoc.importID });
 
 			log.info(`Reverted and deleted import '${importDoc.importID}'.`);
 		} catch (err) {
@@ -62,6 +64,6 @@ export async function RevertImport(importDoc: ImportDocument): Promise<OngoingIm
 /**
  * Retrieve the scores inside this import.
  */
-export function GetImportScores(importDoc: ImportDocument) {
-	return db.scores.find({ scoreID: { $in: importDoc.scoreIDs } });
+export function GetImportScores(importDoc: MONGO_ImportDocument) {
+	return MONGODB_KILL.scores.find({ scoreID: { $in: importDoc.scoreIDs } });
 }

@@ -3,11 +3,11 @@ import { FlattenValue, StringifyKeyChain } from "#util/misc";
 import { StrSOV } from "#util/sorts";
 import { type SearchFunctions } from "#util/ztable/search";
 import React from "react";
-import { FormatGameGroup, type GoalDocument } from "tachi-common";
+import { FormatGameGroup, type MONGO_GoalDocument } from "tachi-common";
 
 import { type Header } from "../components/TachiTable";
 
-export const SeedsGoalsHeaders: Header<GoalDocument>[] = [
+export const SeedsGoalsHeaders: Header<MONGO_GoalDocument>[] = [
 	["ID", "ID", StrSOV((x) => x.goalID)],
 	["Name", "Name", StrSOV((x) => x.name)],
 	["GPT", "GPT", StrSOV((x) => `${x.game} ${x.playtype}`)],
@@ -15,7 +15,7 @@ export const SeedsGoalsHeaders: Header<GoalDocument>[] = [
 	["Criteria", "Criteria"],
 ];
 
-export const SeedsGoalSearchFns: SearchFunctions<GoalDocument> = {
+export const SeedsGoalSearchFns: SearchFunctions<MONGO_GoalDocument> = {
 	name: (x) => x.name,
 	goalID: (x) => x.goalID,
 	game: (x) => x.game,
@@ -32,7 +32,11 @@ export const SeedsGoalSearchFns: SearchFunctions<GoalDocument> = {
 			.join("\n"),
 };
 
-export const SeedsGoalCells: CellsRenderFN<GoalDocument> = ({ data }: { data: GoalDocument }) => (
+export const SeedsGoalCells: CellsRenderFN<MONGO_GoalDocument> = ({
+	data,
+}: {
+	data: MONGO_GoalDocument;
+}) => (
 	<>
 		<td>
 			<code>{data.goalID}</code>

@@ -7,10 +7,11 @@ import express, { type Express } from "express";
 // BUT AFTER EXPRESS IS IMPORTED.
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RedisClient } from "#services/redis/redis";
 import { IsNonEmptyString, IsRecord } from "#utils/misc";
+import { ExpectedErr } from "bliss";
 import ExpressPromBundle from "express-prom-bundle";
 import expressSession from "express-session";
 import helmet from "helmet";
@@ -155,31 +156,6 @@ app.use(RequestLoggerMiddleware);
 
 app.use("/", mainRouter);
 
-// The SERVE_OWN_CDN option means that our /cdn path has to be hosted by us. In production,
-// this is not the case (we have a dedicated nginx box for it running in a separate process).
-// In dev, this is a pain to setup, so we can just run it locally.
-if (
-	ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE === "LOCAL_FILESYSTEM" &&
-	ServerConfig.CDN_CONFIG.SAVE_LOCATION.SERVE_OWN_CDN === true
-) {
-	if (Env.NODE_ENV === "production") {
-		log.warn(
-			{ bootInfo: true },
-			`Running LOCAL_FILESYSTEM OWN_CDN in production. Consider making a separate process handle your CDN for performance.`,
-		);
-	}
-
-	log.info(
-		{
-			bootInfo: true,
-		},
-		`Running own CDN at ${ServerConfig.CDN_CONFIG.SAVE_LOCATION.LOCATION}.`,
-	);
-
-	app.use("/cdn", express.static(ServerConfig.CDN_CONFIG.SAVE_LOCATION.LOCATION));
-	app.get("/cdn/*", (req, res) => res.status(404).send("No content here."));
-}
-
 // completely stolen from ktapi error handler
 interface ExpressJSONErr extends SyntaxError {
 	status: integer;
@@ -203,6 +179,16 @@ const MAIN_ERR_HANDLER: express.ErrorRequestHandler = (err, req, res, _next) => 
 		}
 
 		// else, this isn't a JSON parsing error
+	}
+
+	// Action errors (ExpectedErr) carry an HTTP status code and a user-facing
+	// reason. They are intentional control-flow throws and should not be logged
+	// as fatal errors.
+	if (ExpectedErr.is(err)) {
+		return res.status(err.code).json({
+			success: false,
+			description: err.reason,
+		});
 	}
 
 	log.error({ url: req.originalUrl, body: req.body }, `MAIN_ERR_HANDLER hit by request.`);

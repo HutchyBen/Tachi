@@ -1,19 +1,13 @@
 import type { RequestHandler } from "express";
 
-import db from "#services/mongo/db";
+import { GetChartByPgIdOrLegacyId } from "#lib/db-formats/chart";
 import { AssignToReqTachiData, GetGPT } from "#utils/req-tachi-data";
+import { GamePTToV3 } from "tachi-common";
 
 export const ValidateAndGetChart: RequestHandler = async (req, res, next) => {
 	const { game, playtype } = GetGPT(req);
 
-	const chart = await db.anyCharts[game].findOne({
-		chartID: req.params.chartID,
-
-		// technically redundant, but we're under playtypes here URL wise.
-		// this means we cant match an SP chart when we're under IIDX SP, for
-		// example.
-		playtype,
-	});
+	const chart = await GetChartByPgIdOrLegacyId(GamePTToV3(game, playtype), req.params.chartID);
 
 	if (!chart) {
 		return res.status(404).json({

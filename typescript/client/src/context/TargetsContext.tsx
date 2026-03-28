@@ -3,11 +3,14 @@ import { type UGPTTargetSubs } from "#types/api-returns";
 import { type JustChildren } from "#types/react";
 import { APIFetchV1 } from "#util/api";
 import React, { createContext, useEffect, useState } from "react";
-import { type GoalSubscriptionDocument, type QuestSubscriptionDocument } from "tachi-common";
+import {
+	type MONGO_GoalSubscriptionDocument,
+	type MONGO_QuestSubscriptionDocument,
+} from "tachi-common";
 
 export const TargetsContext = createContext<{
-	goalSubs: Map<string, GoalSubscriptionDocument>;
-	questSubs: Map<string, QuestSubscriptionDocument>;
+	goalSubs: Map<string, MONGO_GoalSubscriptionDocument>;
+	questSubs: Map<string, MONGO_QuestSubscriptionDocument>;
 	reloadTargets: () => Promise<void>;
 }>({
 	questSubs: new Map(),
@@ -19,8 +22,12 @@ export const TargetsContext = createContext<{
 export function TargetsContextProvider({ children }: JustChildren) {
 	const { settings } = useLUGPTSettings();
 
-	const [questSubs, setQuestSubs] = useState<Map<string, QuestSubscriptionDocument>>(new Map());
-	const [goalSubs, setGoalSubs] = useState<Map<string, GoalSubscriptionDocument>>(new Map());
+	const [questSubs, setQuestSubs] = useState<Map<string, MONGO_QuestSubscriptionDocument>>(
+		new Map(),
+	);
+	const [goalSubs, setGoalSubs] = useState<Map<string, MONGO_GoalSubscriptionDocument>>(
+		new Map(),
+	);
 
 	const reloadTargets = async () => {
 		if (!settings) {
@@ -38,8 +45,8 @@ export function TargetsContextProvider({ children }: JustChildren) {
 				return;
 			}
 
-			const questSubMap = new Map<string, QuestSubscriptionDocument>();
-			const goalSubMap = new Map<string, GoalSubscriptionDocument>();
+			const questSubMap = new Map<string, MONGO_QuestSubscriptionDocument>();
+			const goalSubMap = new Map<string, MONGO_GoalSubscriptionDocument>();
 
 			for (const qSub of r.body.questSubs) {
 				questSubMap.set(qSub.questID, qSub);

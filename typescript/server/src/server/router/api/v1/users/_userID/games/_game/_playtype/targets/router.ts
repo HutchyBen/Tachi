@@ -1,7 +1,8 @@
-import { log } from "#lib/log/log.js";
+import { GetChartByPgIdOrLegacyId } from "#lib/db-formats/chart";
+import { log } from "#lib/log/log";
 import { GetRelevantGoals } from "#lib/targets/goals";
 import { GetParentQuests } from "#lib/targets/quests";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import {
 	GetRecentlyAchievedGoals,
 	GetRecentlyAchievedQuests,
@@ -11,6 +12,7 @@ import {
 import { GetFolderChartIDs } from "#utils/folder";
 import { GetUGPT } from "#utils/req-tachi-data";
 import { Router } from "express";
+import { GamePTToV3, MongoChartLegacyId } from "tachi-common";
 
 import goalsRouter from "./goals/router";
 import questsRouter from "./quests/router";
@@ -82,21 +84,21 @@ router.get("/recently-raised", async (req, res) => {
 router.get("/on-chart/:chartID", async (req, res) => {
 	const { game, playtype, user } = GetUGPT(req);
 
-	const chartID = req.params.chartID;
+	const chartIDParam = req.params.chartID;
 
-	const chart = await db.anyCharts[game].findOne({ chartID, playtype });
+	const chart = await GetChartByPgIdOrLegacyId(GamePTToV3(game, playtype), chartIDParam);
 
 	if (!chart) {
 		return res.status(404).json({
 			success: false,
-			description: `Failed to find a chart with chartID '${chartID}'.`,
+			description: `Failed to find a chart with chartID '${chartIDParam}'.`,
 		});
 	}
 
 	const { goals, goalSubsMap } = await GetRelevantGoals(
 		game,
 		user.id,
-		new Set([chartID]),
+		new Set([MongoChartLegacyId(chart)]),
 		log,
 		false,
 	);
@@ -105,7 +107,7 @@ router.get("/on-chart/:chartID", async (req, res) => {
 
 	const quests = await GetParentQuests(user.id, game, playtype, goalSubs);
 
-	const questSubs = await db["quest-subs"].find({
+	const questSubs = await MONGODB_KILL["quest-subs"].find({
 		questID: { $in: quests.map((e) => e.questID) },
 	});
 
@@ -131,7 +133,7 @@ router.get("/on-folder/:folderID", async (req, res) => {
 
 	const folderID = req.params.folderID;
 
-	const folder = await db.folders.findOne({ folderID, playtype });
+	const folder = await MONGODB_KILL.folders.findOne({ folderID, playtype });
 
 	if (!folder) {
 		return res.status(404).json({
@@ -142,7 +144,7 @@ router.get("/on-folder/:folderID", async (req, res) => {
 
 	const folderChartIDs = await GetFolderChartIDs(folderID);
 
-	const allGoalSubs = await db["goal-subs"].find({
+	const allGoalSubs = await MONGODB_KILL["goal-subs"].find({
 		userID: user.id,
 		game,
 		playtype,
@@ -154,19 +156,19 @@ router.get("/on-folder/:folderID", async (req, res) => {
 	// or if it's on any of the charts in the folder.
 	// this is convenient for the UI, atleast.
 	const goals = await Promise.all([
-		db.goals.find({
+		MONGODB_KILL.goals.find({
 			"charts.type": { $in: ["single", "multi"] },
 			"charts.data": { $in: folderChartIDs },
 			goalID: { $in: goalIDs },
 		}),
-		db.goals.find({
+		MONGODB_KILL.goals.find({
 			"charts.type": "folder",
 			"charts.data": folderID,
 			goalID: { $in: goalIDs },
 		}),
 	]).then((r) => r.flat());
 
-	const goalSubs = await db["goal-subs"].find({
+	const goalSubs = await MONGODB_KILL["goal-subs"].find({
 		goalID: { $in: goals.map((e) => e.goalID) },
 		userID: user.id,
 		game,
@@ -175,7 +177,7 @@ router.get("/on-folder/:folderID", async (req, res) => {
 
 	const quests = await GetParentQuests(user.id, game, playtype, goalSubs);
 
-	const questSubs = await db["quest-subs"].find({
+	const questSubs = await MONGODB_KILL["quest-subs"].find({
 		questID: { $in: quests.map((e) => e.questID) },
 	});
 
@@ -200,8 +202,8 @@ router.get("/all-subs", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
 	const [goalSubs, questSubs] = await Promise.all([
-		db["goal-subs"].find({ userID: user.id, game, playtype }),
-		db["quest-subs"].find({ userID: user.id, game, playtype }),
+		MONGODB_KILL["goal-subs"].find({ userID: user.id, game, playtype }),
+		MONGODB_KILL["quest-subs"].find({ userID: user.id, game, playtype }),
 	]);
 
 	return res.status(200).json({

@@ -2,18 +2,15 @@ import type { RequestHandler } from "express";
 import type { Session, SessionData } from "express-session";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/log/log.js";
+import { SELECT_API_TOKEN, ToAPITokenDocument } from "#lib/db-formats/api-token.js";
+import { log } from "#lib/log/log";
 import { TachiConfig } from "#lib/setup/config";
-import db from "#services/mongo/db";
+import DB from "#services/pg/db.js";
 import { IsNullishOrEmptyStr, SplitAuthorizationHeader } from "#utils/misc";
-import {
-	ALL_PERMISSIONS,
-	type APIPermissions,
-	type APITokenDocument,
-	UserAuthLevels,
-} from "tachi-common";
+import { IsUserBanned } from "#utils/user.js";
+import { ALL_PERMISSIONS, type APIPermissions, type MONGO_APITokenDocument } from "tachi-common";
 
-const GuestToken: APITokenDocument = {
+const GuestToken: MONGO_APITokenDocument = {
 	token: null,
 	userID: null,
 	identifier: "Guest Token",
@@ -23,16 +20,13 @@ const GuestToken: APITokenDocument = {
 
 export const RejectIfBanned: RequestHandler = async (req, res, next) => {
 	// auth might not be defined.
-	const auth = req[SYMBOL_TACHI_API_AUTH] as APITokenDocument | undefined;
+	const auth = req[SYMBOL_TACHI_API_AUTH] as MONGO_APITokenDocument | undefined;
 
 	// this is deliberately not auth?.userID !== null, as that isn't correct.
 	// we need to ignore this if auth doesn't exist and if auth is null.
 
 	if (auth && auth.userID !== null) {
-		const isBanned = await db.users.findOne({
-			id: req[SYMBOL_TACHI_API_AUTH].userID!,
-			authLevel: UserAuthLevels.BANNED,
-		});
+		const isBanned = await IsUserBanned(auth.userID);
 
 		if (isBanned) {
 			return res.status(403).json({
@@ -108,9 +102,11 @@ function CreateSetRequestPermissions(errorKeyName: string): Array<RequestHandler
 				});
 			}
 
-			const apiTokenData = await db["api-tokens"].findOne({
-				token,
-			});
+			const apiTokenData = await DB.selectFrom("priv_api_token")
+				.select(SELECT_API_TOKEN)
+				.where("token", "=", token)
+				.executeTakeFirst()
+				.then((r) => (r ? ToAPITokenDocument(r) : null));
 
 			if (!apiTokenData) {
 				return res.status(401).json({

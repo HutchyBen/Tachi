@@ -17,10 +17,10 @@ import { useQuery } from "react-query";
 import {
 	FormatGameGroup,
 	GetGameGroupConfig,
-	type SessionDocument,
+	type MONGO_SessionDocument,
+	type MONGO_UserDocument,
 	type SessionScoreInfo,
 	type UnsuccessfulAPIResponse,
-	type UserDocument,
 } from "tachi-common";
 
 export default function SessionsPage({ reqUser, game, playtype }: UGPT) {
@@ -43,7 +43,7 @@ export default function SessionsPage({ reqUser, game, playtype }: UGPT) {
 		`${baseUrl}/${sessionSet}`,
 		async () => {
 			const res = await APIFetchV1<
-				({ __scoreInfo: Array<SessionScoreInfo> } & SessionDocument)[]
+				({ __scoreInfo: Array<SessionScoreInfo> } & MONGO_SessionDocument)[]
 			>(`${baseUrl}/${sessionSet}`);
 
 			if (!res.success) {
@@ -131,11 +131,11 @@ function SearchSessionsTable({
 	playtype,
 	reqUser,
 	baseUrl,
-}: { baseUrl: string; reqUser: UserDocument; search: string } & GamePT) {
+}: { baseUrl: string; reqUser: MONGO_UserDocument; search: string } & GamePT) {
 	const { data, error } = useQuery<SessionDataset, UnsuccessfulAPIResponse>(
 		`${baseUrl}?search=${search}`,
 		async () => {
-			const res = await APIFetchV1<SessionDocument[]>(`${baseUrl}?search=${search}`);
+			const res = await APIFetchV1<MONGO_SessionDocument[]>(`${baseUrl}?search=${search}`);
 
 			if (!res.success) {
 				throw res;

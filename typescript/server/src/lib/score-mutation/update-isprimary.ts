@@ -1,23 +1,23 @@
 import { TachiConfig } from "#lib/setup/config";
 /* eslint-disable no-await-in-loop */
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 export default async function UpdateIsPrimaryStatus() {
 	for (const game of TachiConfig.GAMES) {
 		const chartIDs = (
-			await db.anyCharts[game].find({
+			await MONGODB_KILL.anyCharts[game].find({
 				isPrimary: false,
 			})
 		).map((e) => e.chartID);
 
-		await db.scores.update(
+		await MONGODB_KILL.scores.update(
 			{
 				chartID: { $in: chartIDs },
 			},
 			{ $set: { isPrimary: false } },
 		);
 
-		await db["personal-bests"].update(
+		await MONGODB_KILL["personal-bests"].update(
 			{
 				chartID: { $in: chartIDs },
 			},

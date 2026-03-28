@@ -17,11 +17,11 @@ import { APIFetchV1 } from "#util/api";
 import { Reverse, UppercaseFirst } from "#util/misc";
 import React, { useContext, useMemo, useState } from "react";
 import {
-	type FolderDocument,
 	GetGamePTConfig,
 	GetGPTString,
 	GetScoreMetricConf,
 	GetScoreMetrics,
+	type MONGO_FolderDocument,
 } from "tachi-common";
 import { type ConfEnumScoreMetric } from "tachi-common/types/metrics";
 
@@ -84,7 +84,7 @@ export function FolderInfoComponent({
 	playtype,
 	folderStats,
 	folder,
-}: { folder: FolderDocument; folderStats: FolderStatsInfo } & UGPT) {
+}: { folder: MONGO_FolderDocument; folderStats: FolderStatsInfo } & UGPT) {
 	const gptConfig = GetGamePTConfig(game, playtype);
 	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, playtype)];
 

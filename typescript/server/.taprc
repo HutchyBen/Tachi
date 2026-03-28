@@ -2,7 +2,6 @@ files: "src/test-utils/single-process-tap.ts"
 test-env:
   - NODE_ENV=test
   - PORT=8080
-  - TCHIS_CONF_LOCATION=test.conf.json5
   - LOG_LEVEL=info
 # On a local machine, these tests run in under 2-3 minutes.
 # On github actions, these tests can take an inordinate amount of time.

@@ -1,6 +1,6 @@
 import { type ImportStates } from "#types/import";
 import { type SetState } from "#types/react";
-import { type FileUploadImportTypes, type ImportDocument } from "tachi-common";
+import { type FileUploadImportTypes, type MONGO_ImportDocument } from "tachi-common";
 
 import { APIFetchV1 } from "./api";
 
@@ -20,7 +20,7 @@ export default async function SubmitFile(
 
 	setState({ state: "waiting_init" });
 
-	const res = await APIFetchV1<ImportDocument>(
+	const res = await APIFetchV1<MONGO_ImportDocument>(
 		"/import/file",
 		{
 			method: "POST",

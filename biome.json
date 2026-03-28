@@ -11,9 +11,9 @@
 			"!typescript/db/src/generated",
 			"!typescript/client/build",
 			"!typescript-vendor",
-			"!db/seeds",
 			"!typescript/server/src/test-utils/test-data"
-		]
+		],
+		"maxSize": 67108864
 	},
 	"vcs": {
 		"enabled": true,

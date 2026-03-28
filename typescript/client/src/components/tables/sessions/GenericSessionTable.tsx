@@ -10,11 +10,11 @@ import {
 	GetGamePTConfig,
 	type GPTString,
 	type integer,
+	type MONGO_SessionDocument,
+	type MONGO_UserDocument,
 	type Playtype,
-	type SessionDocument,
 	type SessionRatingAlgorithms,
 	type SessionScoreInfo,
-	type UserDocument,
 } from "tachi-common";
 
 import IndexCell from "../cells/IndexCell";
@@ -23,7 +23,7 @@ import TachiTable, { type Header, type ZTableTHProps } from "../components/Tachi
 
 export type SessionDataset = ({
 	__related: { index: integer; scoreInfo: Array<SessionScoreInfo> };
-} & SessionDocument)[];
+} & MONGO_SessionDocument)[];
 
 export default function GenericSessionTable({
 	dataset,
@@ -36,7 +36,7 @@ export default function GenericSessionTable({
 	game: GameGroup;
 	indexCol?: boolean;
 	playtype: Playtype;
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 }) {
 	const gptConfig = GetGamePTConfig(game, playtype);
 
@@ -111,7 +111,7 @@ function Row({
 	indexCol?: boolean;
 	// reqUser: PublicUserDocument;
 	ratingAlg: SessionRatingAlgorithms[GPTString];
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 }) {
 	return (
 		<tr className={data.highlight ? "highlighted-row" : ""}>

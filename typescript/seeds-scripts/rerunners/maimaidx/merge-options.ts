@@ -5,10 +5,10 @@ import { XMLParser } from "fast-xml-parser";
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import path from "path";
 import {
-	type ChartDocument,
 	type Difficulties,
 	GetGamePTConfig,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
 } from "tachi-common";
 
 import { CreateChartID, ReadCollection, WriteCollection } from "../../util";
@@ -133,11 +133,11 @@ if (versions.indexOf(options.version) === -1) {
 
 const isLatestVersion =
 	versions.indexOf(options.version.replace(/(-intl|-omni)$/u, "")) === versions.length - 1;
-const existingSongs: Array<SongDocument<"maimaidx">> = ReadCollection("songs-maimaidx.json");
-const existingCharts: Array<ChartDocument<"maimaidx:Single">> =
+const existingSongs: Array<MONGO_SongDocument<"maimaidx">> = ReadCollection("songs-maimaidx.json");
+const existingCharts: Array<MONGO_ChartDocument<"maimaidx:Single">> =
 	ReadCollection("charts-maimaidx.json");
 const songMap = new Map(existingSongs.map((s) => [s.id, s]));
-const chartMap = new Map<string, ChartDocument<"maimaidx:Single">>();
+const chartMap = new Map<string, MONGO_ChartDocument<"maimaidx:Single">>();
 const songTitleArtistMap = new Map<string, number>();
 const durationMap = new Map<string, number>();
 
@@ -227,8 +227,8 @@ const parser = new XMLParser({
 	},
 });
 
-const newSongs: Array<SongDocument<"maimaidx">> = [];
-const newCharts: Array<ChartDocument<"maimaidx:Single">> = [];
+const newSongs: Array<MONGO_SongDocument<"maimaidx">> = [];
+const newCharts: Array<MONGO_ChartDocument<"maimaidx:Single">> = [];
 
 const songIDGenerator = GetFreshSongIDGenerator("maimaidx");
 
@@ -335,7 +335,7 @@ for (const optionsDir of options.input) {
 			if (tachiSongID === undefined) {
 				tachiSongID = songIDGenerator();
 
-				const songDoc: SongDocument<"maimaidx"> = {
+				const songDoc: MONGO_SongDocument<"maimaidx"> = {
 					title: musicData.name.str,
 					altTitles: [],
 					searchTerms: [],
@@ -389,7 +389,7 @@ for (const optionsDir of options.input) {
 					difficultyName = `DX ${difficultyName}`;
 				}
 
-				let exists: ChartDocument<"maimaidx:Single"> | undefined;
+				let exists: MONGO_ChartDocument<"maimaidx:Single"> | undefined;
 
 				if (inGameID === 11422) {
 					exists = chartMap.get(`-x0o0x_-${difficultyName}`);
@@ -450,7 +450,7 @@ for (const optionsDir of options.input) {
 					continue;
 				}
 
-				const chartDoc: ChartDocument<"maimaidx:Single"> = {
+				const chartDoc: MONGO_ChartDocument<"maimaidx:Single"> = {
 					chartID: CreateChartID(),
 					songID: tachiSongID,
 					difficulty: difficultyName as Difficulties["maimaidx:Single"],

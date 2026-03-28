@@ -1,0 +1,235 @@
+import { log } from "#lib/log/log";
+import { ServerConfig } from "#lib/setup/config";
+import DB from "#services/pg/db";
+import nodeFetch from "#utils/fetch";
+import { Random20Hex } from "#utils/misc";
+import { CreateURLWithParams } from "#utils/url";
+import { FormatUserDoc } from "#utils/user";
+import bcrypt from "bcryptjs";
+import { type Transaction } from "kysely";
+import { p } from "prudence";
+import {
+	type integer,
+	type MONGO_InviteCodeDocument,
+	type MONGO_UserDocument,
+	type MONGO_UserSettingsDocument,
+	UserAuthLevels,
+} from "tachi-common";
+import { type Database } from "tachi-db";
+
+const BCRYPT_SALT_ROUNDS = 12;
+
+export const ValidatePassword = (self: unknown) =>
+	(typeof self === "string" && self.length >= 8) || "Passwords must be 8 characters or more.";
+
+const LAZY_EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/u;
+
+export const ValidateEmail = p.regex(LAZY_EMAIL_REGEX);
+
+/**
+ * Compares a plaintext string of a users password to a hash.
+ * @param plaintext The provided user input.
+ * @param password The hash to compare against.
+ */
+export function PasswordCompare(plaintext: string, password: string) {
+	return bcrypt.compare(plaintext, password);
+}
+
+export function ReinstateInvite(code: string) {
+	log.info(`Reinstated Invite ${code}`);
+
+	return DB.updateTable("priv_invite")
+		.set({
+			consumed: false,
+			consumed_at: null,
+			consumed_by: null,
+		})
+		.where("code", "=", code)
+		.execute();
+}
+
+export async function AddNewInvite(user: MONGO_UserDocument): Promise<MONGO_InviteCodeDocument> {
+	const code = Random20Hex();
+
+	await DB.insertInto("priv_invite")
+		.values({
+			code,
+			consumed: false,
+			created_by: user.id,
+			created_at: new Date().toISOString(),
+			consumed_at: null,
+			consumed_by: null,
+		})
+		.execute();
+
+	log.info(`User ${FormatUserDoc(user)} created an invite.`);
+
+	return {
+		code,
+		createdBy: user.id,
+		createdAt: Date.now(),
+		consumed: false,
+		consumedAt: null,
+		consumedBy: null,
+	};
+}
+
+export const DEFAULT_USER_SETTINGS: MONGO_UserSettingsDocument["preferences"] = {
+	developerMode: false,
+	advancedMode: false,
+	invisible: false,
+	contentiousContent: false,
+	deletableScores: false,
+};
+
+export function HashPassword(plaintext: string) {
+	return bcrypt.hash(plaintext, BCRYPT_SALT_ROUNDS);
+}
+
+export async function AddNewUser(
+	txn: Transaction<Database>,
+
+	username: string,
+	plaintext: string,
+	email: string,
+): Promise<{ newSettings: MONGO_UserSettingsDocument; newUser: MONGO_UserDocument }> {
+	const hashedPassword = await HashPassword(plaintext);
+
+	log.debug(`Hashed password for ${username}.`);
+
+	// no - this is bad
+	// // all created users on a dev instance should be admins, for convenience.
+	// if (Env.NODE_ENV === "dev") {
+	// 	userDoc.authLevel = UserAuthLevels.ADMIN;
+	// }
+
+	const userID = await txn
+		.insertInto("account")
+		.values({
+			about: "I'm a fairly nondescript person.",
+			username,
+			joined: new Date().toISOString(),
+			last_seen: new Date().toISOString(),
+			auth_level: "user",
+			custom_pfp_location: null,
+			custom_banner_location: null,
+		})
+		.returning("id")
+		.executeTakeFirstOrThrow()
+		.then((res) => res.id);
+
+	const userDoc: MONGO_UserDocument = {
+		id: userID,
+		username,
+		usernameLowercase: username.toLowerCase(),
+		about: "I'm a fairly nondescript person.",
+		socialMedia: {},
+		status: null,
+		customBannerLocation: null,
+		customPfpLocation: null,
+		joinDate: Date.now(),
+		lastSeen: Date.now(),
+		authLevel: UserAuthLevels.USER,
+		badges: [],
+	};
+
+	const settingsRes = await InsertDefaultUserSettings(txn, userID);
+
+	await InsertPrivateUserInfo(txn, userID, hashedPassword, email);
+
+	return { newUser: userDoc, newSettings: settingsRes };
+}
+
+export function InsertPrivateUserInfo(
+	txn: Transaction<Database>,
+	userID: integer,
+	hashedPassword: string,
+	email: string,
+) {
+	return txn
+		.insertInto("priv_account_credential")
+		.values({
+			user_id: userID,
+			email,
+			password: hashedPassword,
+		})
+		.execute();
+}
+
+export async function InsertDefaultUserSettings(
+	txn: Transaction<Database>,
+	userID: integer,
+): Promise<MONGO_UserSettingsDocument> {
+	log.debug(`Inserting default settings for ${userID}.`);
+
+	await txn
+		.insertInto("account_settings")
+		.values({
+			user_id: userID,
+			pf_invisible: DEFAULT_USER_SETTINGS.invisible,
+			pf_developer_mode: DEFAULT_USER_SETTINGS.developerMode,
+			pf_advanced_mode: DEFAULT_USER_SETTINGS.advancedMode,
+			pf_contentious_content: DEFAULT_USER_SETTINGS.contentiousContent,
+			pf_deletable_scores: DEFAULT_USER_SETTINGS.deletableScores,
+		})
+		.execute();
+
+	return {
+		userID,
+		following: [],
+		preferences: DEFAULT_USER_SETTINGS,
+	};
+}
+
+export async function ValidateCaptcha(
+	recaptcha: string,
+	remoteAddr: string | undefined,
+	fetch = nodeFetch,
+) {
+	const url = CreateURLWithParams(`https://www.google.com/recaptcha/api/siteverify`, {
+		secret: ServerConfig.CAPTCHA_SECRET_KEY,
+		response: recaptcha,
+		remoteip: remoteAddr ?? "",
+	});
+
+	const googleCaptchaRes: unknown = await fetch(url.href).then((r) => r.json());
+
+	const err = p(
+		googleCaptchaRes,
+		{
+			success: "boolean",
+		},
+		{},
+		{ allowExcessKeys: true },
+	);
+
+	if (err) {
+		log.warn(
+			{ googleCaptchaRes, err },
+			`Google ReCaptcha returned something without a success property? Assuming this captcha check failed.`,
+		);
+		return false;
+	}
+
+	// asserted above
+	const gcr = googleCaptchaRes as { success: boolean };
+
+	if (!gcr.success) {
+		log.debug({ gcr }, `Failed GCaptcha response`);
+	}
+
+	return gcr.success;
+}
+
+export function MountAuthCookie(
+	req: Express.Request,
+	user: MONGO_UserDocument,
+	settings: MONGO_UserSettingsDocument,
+) {
+	req.session.tachi = {
+		user,
+		settings,
+	};
+
+	req.session.cookie.maxAge = 3.154e10;
+}

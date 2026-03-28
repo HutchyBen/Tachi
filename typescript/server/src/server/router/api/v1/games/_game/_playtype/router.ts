@@ -4,7 +4,7 @@ import { CreateActivityRouteHandler } from "#lib/activity/activity";
 import { ONE_HOUR } from "#lib/constants/time";
 import { SearchUsersRegExp } from "#lib/search/search";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { IsString } from "#utils/misc";
 import { GetGPT } from "#utils/req-tachi-data";
@@ -21,8 +21,8 @@ import {
 	type GameGroup,
 	GetGamePTConfig,
 	type integer,
+	type MONGO_UserGameStats,
 	type Playtype,
-	type UserGameStats,
 } from "tachi-common";
 
 import chartsRouter from "./charts/router";
@@ -46,15 +46,15 @@ async function GetGameStats(
 
 	if (cacheRes === undefined) {
 		const [scoreCount, playerCount, chartCount] = await Promise.all([
-			db.scores.count({
+			MONGODB_KILL.scores.count({
 				game,
 				playtype,
 			}),
-			db["game-stats"].count({
+			MONGODB_KILL["game-stats"].count({
 				game,
 				playtype,
 			}),
-			db.anyCharts[game].count({ playtype }),
+			MONGODB_KILL.anyCharts[game].count({ playtype }),
 		]);
 
 		gptStatCache.set(`${game}:${playtype}`, { scoreCount, playerCount, chartCount }, ONE_HOUR);
@@ -126,14 +126,14 @@ router.get("/leaderboard", async (req, res) => {
 		alg = temp;
 	}
 
-	const options: FindOptions<UserGameStats> = {
+	const options: FindOptions<MONGO_UserGameStats> = {
 		sort: {
 			[`ratings.${alg}`]: -1,
 		},
 		limit,
 	};
 
-	const gameStats = await db["game-stats"].find(
+	const gameStats = await MONGODB_KILL["game-stats"].find(
 		{
 			game,
 			playtype,
@@ -191,7 +191,7 @@ router.get("/pb-leaderboard", async (req, res) => {
 		alg = temp;
 	}
 
-	const pbs = await db["personal-bests"].find(
+	const pbs = await MONGODB_KILL["personal-bests"].find(
 		{
 			game,
 			playtype,
@@ -241,7 +241,7 @@ router.get(
 
 		const users = await SearchUsersRegExp(search);
 
-		const gameStats = await db["game-stats"].find({
+		const gameStats = await MONGODB_KILL["game-stats"].find({
 			userID: { $in: users.map((e) => e.id) },
 			game,
 			playtype,

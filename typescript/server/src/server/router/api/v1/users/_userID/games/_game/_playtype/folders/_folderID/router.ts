@@ -1,15 +1,15 @@
 import type { FilterQuery } from "mongodb";
 
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
-import { GetEnumDistForFolder, GetFolderCharts, GetPBsOnFolder } from "#utils/folder";
+import MONGODB_KILL from "#services/mongo/db";
+import { GetEnumDistForFolder, GetFolderChartsAndSongs, GetPBsOnFolder } from "#utils/folder";
 import { GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import { ParseStrPositiveInt } from "#utils/string-checks";
 import { Router } from "express";
 import {
 	GetGamePTConfig,
 	GetScoreMetricConf,
-	type ScoreDocument,
+	type MONGO_ScoreDocument,
 	ValidateMetric,
 } from "tachi-common";
 
@@ -78,7 +78,7 @@ router.post("/viewed", RequireSelfRequestFromUser, async (req, res) => {
 
 	const folder = GetTachiData(req, "folderDoc");
 
-	await db["recent-folder-views"].update(
+	await MONGODB_KILL["recent-folder-views"].update(
 		{
 			userID: user.id,
 			game: folder.game,
@@ -144,7 +144,7 @@ router.get(
 			});
 		}
 
-		const { songs, charts } = await GetFolderCharts(folder, {}, true);
+		const { songs, charts } = await GetFolderChartsAndSongs(folder, {});
 
 		const err = ValidateMetric(gptConfig, metric, criteriaValue);
 
@@ -155,7 +155,7 @@ router.get(
 			});
 		}
 
-		const matchCriteria: FilterQuery<ScoreDocument> = {
+		const matchCriteria: FilterQuery<MONGO_ScoreDocument> = {
 			userID: user.id,
 			game,
 			playtype,
@@ -166,7 +166,7 @@ router.get(
 
 		// Returns a unique score per-chart that was the first score to achieve
 		// this criteria on that chart.
-		const scoresAgg: Array<{ doc: ScoreDocument }> = await db.scores.aggregate([
+		const scoresAgg: Array<{ doc: MONGO_ScoreDocument }> = await MONGODB_KILL.scores.aggregate([
 			{
 				$match: matchCriteria,
 			},

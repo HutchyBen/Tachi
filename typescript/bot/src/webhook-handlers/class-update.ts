@@ -10,7 +10,7 @@ import {
 	type WebhookEventClassUpdateV1,
 } from "tachi-common";
 
-import { BotConfig } from "../config";
+import { Env } from "../config";
 import { client } from "../main";
 import { GetUGPTStats, GetUserInfo } from "../utils/api-requests";
 import { CreateEmbed } from "../utils/embeds";
@@ -62,9 +62,7 @@ export async function HandleClassUpdateV1(
 		.setTitle(
 			`${userDoc.username} just achieved ${newClass} in ${FormatGameGroup(game, playtype)}!`,
 		)
-		.setURL(
-			`${BotConfig.TACHI_SERVER_LOCATION}/users/${userDoc.username}/games/${game}/${playtype}`,
-		)
+		.setURL(`${Env.TACHI_SERVER_LOCATION}/users/${userDoc.username}/games/${game}/${playtype}`)
 		.setThumbnail(PrependTachiUrl(`/users/${userDoc.id}/pfp`));
 
 	if (event.old !== null) {

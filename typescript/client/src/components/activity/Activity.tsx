@@ -41,7 +41,7 @@ import {
 	FormatGameGroup,
 	GetGamePTConfig,
 	GetScoreEnumConfs,
-	type UserDocument,
+	type MONGO_UserDocument,
 } from "tachi-common";
 
 // Records activity for a group of users on a GPT. Also used for single users.
@@ -57,7 +57,7 @@ export default function Activity({
 	url: string;
 }) {
 	const [clumped, setClumped] = useState<ClumpedActivity>([]);
-	const [users, setUsers] = useState<Array<UserDocument>>([]);
+	const [users, setUsers] = useState<Array<MONGO_UserDocument>>([]);
 	const [shouldShowGame, setShouldShowGame] = useState(false);
 	const [exhausted, setExhausted] = useState(false);
 
@@ -132,7 +132,7 @@ function ActivityInner({
 	exhausted: boolean;
 	fetchMoreFrom: (start: number) => void;
 	shouldShowGame: boolean;
-	users: Array<UserDocument>;
+	users: Array<MONGO_UserDocument>;
 }) {
 	const userMap = CreateUserMap(users);
 
@@ -250,7 +250,7 @@ function ScoresActivity({
 }: {
 	data: ClumpedActivityScores;
 	shouldShowGame: boolean;
-	user: UserDocument;
+	user: MONGO_UserDocument;
 }) {
 	const { game, playtype } = data.scores[0];
 
@@ -353,7 +353,7 @@ function GoalActivity({
 }: {
 	data: ClumpedActivityGoalAchievement;
 	shouldShowGame: boolean;
-	user: UserDocument;
+	user: MONGO_UserDocument;
 }) {
 	const { game, playtype } = data.goals[0];
 
@@ -438,7 +438,7 @@ function QuestActivity({
 }: {
 	data: ClumpedActivityQuestAchievement;
 	shouldShowGame: boolean;
-	user: UserDocument;
+	user: MONGO_UserDocument;
 }) {
 	const { game, playtype } = data.quest;
 
@@ -486,7 +486,7 @@ function SessionActivity({
 }: {
 	data: ClumpedActivitySession;
 	shouldShowGame: boolean;
-	user: UserDocument;
+	user: MONGO_UserDocument;
 }) {
 	const [show, setShow] = useState(false);
 	const { user: loggedInUser } = useContext(UserContext);
@@ -637,7 +637,7 @@ function ClassAchievementActivity({
 }: {
 	data: ClumpedActivityClassAchievement;
 	shouldShowGame: boolean;
-	user: UserDocument;
+	user: MONGO_UserDocument;
 }) {
 	return (
 		<div className="timeline-item timeline-hover">

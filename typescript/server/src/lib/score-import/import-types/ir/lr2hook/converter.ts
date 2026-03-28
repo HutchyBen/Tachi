@@ -1,5 +1,5 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
-import type { ScoreDocument } from "tachi-common";
+import type { MONGO_ScoreDocument } from "tachi-common";
 import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import {
@@ -110,7 +110,7 @@ export const ConverterLR2Hook: ConverterFunction<LR2HookScore, LR2HookContext> =
 
 function ConvertGauge(
 	gauge: LR2HookScore["playerData"]["gauge"],
-): ScoreDocument<"bms:7K" | "bms:14K">["scoreMeta"]["gauge"] {
+): MONGO_ScoreDocument<"bms:7K" | "bms:14K">["scoreMeta"]["gauge"] {
 	switch (gauge) {
 		case "EASY":
 			return "EASY";
@@ -127,7 +127,7 @@ function ConvertGauge(
 
 function ConvertRandom(
 	random: LR2HookScore["playerData"]["random"],
-): ScoreDocument<"bms:7K">["scoreMeta"]["random"] {
+): MONGO_ScoreDocument<"bms:7K">["scoreMeta"]["random"] {
 	switch (random) {
 		case "NORAN":
 			return "NONRAN";

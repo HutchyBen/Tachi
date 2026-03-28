@@ -1,15 +1,15 @@
 import type { ScoreImportWorkerReturns } from "#lib/score-import/worker/types";
 import type { FilterQuery } from "mongodb";
-import type { ImportTrackerDocument, ImportTypes } from "tachi-common";
+import type { ImportTypes, MONGO_ImportTrackerDocument } from "tachi-common";
 
 import { JOB_RETRY_COUNT } from "#lib/constants/tachi";
 import { RevertImport } from "#lib/imports/imports";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import ScoreImportQueue, { ScoreImportQueueEvents } from "#lib/score-import/worker/queue";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { DeleteUndefinedProps } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";
@@ -50,7 +50,7 @@ router.get(
 
 		DeleteUndefinedProps(query);
 
-		const imports = await db.imports.find(query, {
+		const imports = await MONGODB_KILL.imports.find(query, {
 			sort: { timeFinished: -1 },
 			limit: 500,
 		});
@@ -95,7 +95,7 @@ router.get(
 		const userIntent =
 			req.query.userIntent === undefined ? undefined : req.query.userIntent === "true";
 
-		const query: FilterQuery<ImportTrackerDocument> = {
+		const query: FilterQuery<MONGO_ImportTrackerDocument> = {
 			userIntent,
 			importType,
 			type: "FAILED",
@@ -103,7 +103,7 @@ router.get(
 
 		DeleteUndefinedProps(query);
 
-		const trackers = await db["import-trackers"].find(query, {
+		const trackers = await MONGODB_KILL["import-trackers"].find(query, {
 			sort: { timeStarted: -1 },
 			limit: 500,
 		});
@@ -130,13 +130,13 @@ router.get(
 router.get("/:importID", GetImportFromParam, async (req, res) => {
 	const importDoc = GetTachiData(req, "importDoc");
 
-	const scores = await db.scores.find({
+	const scores = await MONGODB_KILL.scores.find({
 		scoreID: { $in: importDoc.scoreIDs },
 	});
 
 	const { songs, charts } = await GetRelevantSongsAndCharts(scores, importDoc.game);
 
-	const sessions = await db.sessions.find({
+	const sessions = await MONGODB_KILL.sessions.find({
 		sessionID: { $in: importDoc.createdSessions.map((e) => e.sessionID) },
 	});
 
@@ -243,7 +243,7 @@ router.get("/:importID/poll-status", async (req, res) => {
 		});
 	}
 
-	const importDoc = await db.imports.findOne({ importID: req.params.importID });
+	const importDoc = await MONGODB_KILL.imports.findOne({ importID: req.params.importID });
 
 	if (importDoc) {
 		return res.status(200).json({
@@ -259,7 +259,7 @@ router.get("/:importID/poll-status", async (req, res) => {
 	const job = await FindImportJob(req.params.importID);
 
 	if (!job) {
-		const tracker = await db["import-trackers"].findOne({
+		const tracker = await MONGODB_KILL["import-trackers"].findOne({
 			importID: req.params.importID,
 		});
 
@@ -342,7 +342,7 @@ router.get("/:importID/poll-status", async (req, res) => {
 				description: `Import was completed!`,
 				body: {
 					importStatus: "completed",
-					import: content.importDocument,
+					import: content.MONGO_ImportDocument,
 				},
 			});
 		}

@@ -1,22 +1,22 @@
 import type { Request, Response } from "express-serve-static-core";
 import type { FilterQuery } from "mongodb";
 import type {
-	ChartDocument,
-	ClassAchievementDocument,
 	GameGroup,
-	GoalDocument,
-	GoalSubscriptionDocument,
 	GPTString,
+	MONGO_ChartDocument,
+	MONGO_ClassAchievementDocument,
+	MONGO_GoalDocument,
+	MONGO_GoalSubscriptionDocument,
+	MONGO_QuestDocument,
+	MONGO_QuestSubscriptionDocument,
+	MONGO_ScoreDocument,
+	MONGO_SessionDocument,
+	MONGO_SongDocument,
+	MONGO_UserDocument,
 	Playtype,
-	QuestDocument,
-	QuestSubscriptionDocument,
-	ScoreDocument,
-	SessionDocument,
-	SongDocument,
-	UserDocument,
 } from "tachi-common";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import {
 	GetRecentlyAchievedGoals,
 	GetRecentlyAchievedQuests,
@@ -27,7 +27,7 @@ import { GetGPT } from "#utils/req-tachi-data";
 import { GetUsersWithIDs } from "#utils/user";
 
 export type ActivityConstraint = FilterQuery<
-	ClassAchievementDocument & ScoreDocument & SessionDocument
+	MONGO_ClassAchievementDocument & MONGO_ScoreDocument & MONGO_SessionDocument
 >;
 
 /**
@@ -59,16 +59,16 @@ export async function GetRecentActivity(
 	sessions = 30,
 	startFrom: number | null = null,
 ): Promise<{
-	achievedClasses: Array<ClassAchievementDocument>;
-	charts: Array<ChartDocument>;
-	goals: Array<GoalDocument>;
-	goalSubs: Array<GoalSubscriptionDocument>;
-	quests: Array<QuestDocument>;
-	questSubs: Array<QuestSubscriptionDocument>;
-	recentlyHighlightedScores: Array<ScoreDocument>;
-	recentSessions: Array<SessionDocument>;
-	songs: Array<SongDocument>;
-	users: Array<UserDocument>;
+	achievedClasses: Array<MONGO_ClassAchievementDocument>;
+	charts: Array<MONGO_ChartDocument>;
+	goals: Array<MONGO_GoalDocument>;
+	goalSubs: Array<MONGO_GoalSubscriptionDocument>;
+	quests: Array<MONGO_QuestDocument>;
+	questSubs: Array<MONGO_QuestSubscriptionDocument>;
+	recentlyHighlightedScores: Array<MONGO_ScoreDocument>;
+	recentSessions: Array<MONGO_SessionDocument>;
+	songs: Array<MONGO_SongDocument>;
+	users: Array<MONGO_UserDocument>;
 }> {
 	const baseQuery = query;
 
@@ -79,7 +79,7 @@ export async function GetRecentActivity(
 		timeStarted: { $lt: startFrom === null ? Infinity : startFrom },
 	};
 
-	const recentSessions = await db.sessions.find(initialSessionQuery, {
+	const recentSessions = await MONGODB_KILL.sessions.find(initialSessionQuery, {
 		sort: {
 			timeStarted: -1,
 		},
@@ -108,7 +108,7 @@ export async function GetRecentActivity(
 		{ goals, goalSubs },
 		{ quests, questSubs },
 	] = await Promise.all([
-		db["class-achievements"].find(
+		MONGODB_KILL["class-achievements"].find(
 			{
 				...baseQuery,
 				timeAchieved: timeConstraint,
@@ -119,7 +119,7 @@ export async function GetRecentActivity(
 				},
 			},
 		),
-		db.scores.find(
+		MONGODB_KILL.scores.find(
 			{
 				...baseQuery,
 				highlight: true,
@@ -196,7 +196,7 @@ export async function GetRecentActivityForMultipleGames(
 	// very far back, resulting in us skipping over data.
 
 	const flatPointer = Object.entries(data) as Array<
-		[GPTString, { recentSessions: Array<SessionDocument> }]
+		[GPTString, { recentSessions: Array<MONGO_SessionDocument> }]
 	>;
 
 	// sort all games data to find the Nth session (where we should set our cutoff).

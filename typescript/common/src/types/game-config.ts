@@ -10,7 +10,11 @@ import type {
 	RatingAlgorithmConfig,
 } from "./game-config-utils";
 import type { INTERNAL_GAME_PT_CONFIG } from "./internals";
-import type { ExtractEnumMetricNames, ExtractMetrics } from "./metrics";
+import type {
+	ExtractEnumMetricNames,
+	MongoExtractMetrics as MongoExtractMetrics,
+	PgExtractMetrics,
+} from "./metrics";
 import type { AllFieldsNullableOptional, ExtractArrayElementType } from "./utils";
 
 /**
@@ -42,7 +46,7 @@ export type Playtypes = {
  */
 export type Playtype = Playtypes[GameGroup];
 
-export type SongDocumentData = {
+export type MONGO_SongDocumentData = {
 	[G in GameGroup]: z.infer<(typeof GAME_GROUP_CONFIGS)[G]["songData"]>;
 };
 
@@ -98,6 +102,58 @@ export type V3Game =
 	| "usc-controller"
 	| "usc-keyboard"
 	| "wacca";
+
+export type V3GameToGPTString = {
+	arcaea: "arcaea:Touch";
+	"bms-7k": "bms:7K";
+	"bms-14k": "bms:14K";
+	chunithm: "chunithm:Single";
+	"ddr-dp": "ddr:DP";
+	"ddr-sp": "ddr:SP";
+	"gitadora-dora": "gitadora:Dora";
+	"gitadora-gita": "gitadora:Gita";
+	"iidx-dp": "iidx:DP";
+	"iidx-sp": "iidx:SP";
+	"itg-stamina": "itg:Stamina";
+	jubeat: "jubeat:Single";
+	maimai: "maimai:Single";
+	maimaidx: "maimaidx:Single";
+	museca: "museca:Single";
+	ongeki: "ongeki:Single";
+	"pms-controller": "pms:Controller";
+	"pms-keyboard": "pms:Keyboard";
+	popn: "popn:9B";
+	sdvx: "sdvx:Single";
+	"usc-controller": "usc:Controller";
+	"usc-keyboard": "usc:Keyboard";
+	wacca: "wacca:Single";
+};
+
+export type GPTStringToV3Game = {
+	"arcaea:Touch": "arcaea";
+	"bms:7K": "bms-7k";
+	"bms:14K": "bms-14k";
+	"chunithm:Single": "chunithm";
+	"ddr:DP": "ddr-dp";
+	"ddr:SP": "ddr-sp";
+	"gitadora:Dora": "gitadora-dora";
+	"gitadora:Gita": "gitadora-gita";
+	"iidx:DP": "iidx-dp";
+	"iidx:SP": "iidx-sp";
+	"itg:Stamina": "itg-stamina";
+	"jubeat:Single": "jubeat";
+	"maimai:Single": "maimai";
+	"maimaidx:Single": "maimaidx";
+	"museca:Single": "museca";
+	"ongeki:Single": "ongeki";
+	"pms:Controller": "pms-controller";
+	"pms:Keyboard": "pms-keyboard";
+	"popn:9B": "popn";
+	"sdvx:Single": "sdvx";
+	"usc:Controller": "usc-controller";
+	"usc:Keyboard": "usc-keyboard";
+	"wacca:Single": "wacca";
+};
 
 export type GPTStrings = {
 	[G in GameGroup]: `${G}:${Playtypes[G]}`;
@@ -191,7 +247,7 @@ export type ClassConfigs = {
 	[G in GPTString]: (typeof GAME_PT_CONFIGS)[G]["classes"];
 };
 
-export type ChartDocumentData = {
+export type MONGO_ChartDocumentData = {
 	[G in GPTString]: z.infer<(typeof GAME_PT_CONFIGS)[G]["chartData"]>;
 };
 
@@ -203,24 +259,34 @@ export type ScoreMeta = {
 	[G in GPTString]: z.infer<(typeof GAME_PT_CONFIGS)[G]["scoreMeta"]>;
 };
 
-export type ProvidedMetrics = {
-	[G in GPTString]: ExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["providedMetrics"]>;
+export type MongoProvidedMetrics = {
+	[G in GPTString]: MongoExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["providedMetrics"]>;
 };
 
-export type DerivedMetrics = {
-	[G in GPTString]: ExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["derivedMetrics"]>;
+export type MongoDerivedMetrics = {
+	[G in GPTString]: MongoExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["derivedMetrics"]>;
+};
+
+export type PgProvidedMetrics = {
+	[G in GPTString]: PgExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["providedMetrics"]>;
+};
+export type PgOptionalMetrics = {
+	[G in GPTString]: PgExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["optionalMetrics"]>;
+};
+export type PgDerivedMetrics = {
+	[G in GPTString]: PgExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["derivedMetrics"]>;
 };
 
 /**
  * Top level metrics on a score.
  */
-export type ScoreMetrics = {
-	[G in GPTString]: DerivedMetrics[G] & ProvidedMetrics[G];
+export type MongoScoreMetrics = {
+	[G in GPTString]: MongoDerivedMetrics[G] & MongoProvidedMetrics[G];
 };
 
-export type OptionalMetrics = {
+export type MongoOptionalMetrics = {
 	[G in GPTString]: AllFieldsNullableOptional<
-		ExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["optionalMetrics"]>
+		MongoExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["optionalMetrics"]>
 	>;
 };
 

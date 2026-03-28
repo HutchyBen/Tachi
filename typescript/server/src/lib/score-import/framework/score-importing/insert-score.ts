@@ -1,12 +1,12 @@
-import type { integer, ScoreDocument } from "tachi-common";
+import type { integer, MONGO_ScoreDocument } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import { log } from "#lib/log/log";
+import MONGODB_KILL from "#services/mongo/db";
 
 const MAX_PIPELINE_LENGTH = 500;
 
 interface ScoreQueue {
-	queue: Array<ScoreDocument>;
+	queue: Array<MONGO_ScoreDocument>;
 	scoreIDSet: Set<string>;
 }
 
@@ -48,7 +48,7 @@ function SetScoreQueue(userID: integer) {
 /**
  * Adds a new score to the given queue.
  */
-function AddToScoreQueue(scoreQueue: ScoreQueue, score: ScoreDocument) {
+function AddToScoreQueue(scoreQueue: ScoreQueue, score: MONGO_ScoreDocument) {
 	scoreQueue.queue.push(score);
 	scoreQueue.scoreIDSet.add(score.scoreID);
 }
@@ -64,7 +64,7 @@ export async function InsertQueue(userID: integer) {
 		delete ScoreQueues[userID];
 
 		try {
-			await db.scores.insert(queuedScores);
+			await MONGODB_KILL.scores.insert(queuedScores);
 		} catch (err) {
 			log.warn(
 				{ err },
@@ -83,7 +83,7 @@ export async function InsertQueue(userID: integer) {
  * @returns True on success, The amount of scores inserted on auto-pipeline-flush, and null if
  * the score provided is already loaded.
  */
-export function QueueScoreInsert(score: ScoreDocument) {
+export function QueueScoreInsert(score: MONGO_ScoreDocument) {
 	const scoreQueue = GetOrSetScoreQueue(score.userID);
 
 	if (scoreQueue.scoreIDSet.has(score.scoreID)) {

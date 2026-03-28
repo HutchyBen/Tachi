@@ -1,7 +1,7 @@
-import type { ChartDocument, integer, Playtypes } from "tachi-common";
+import type { integer, MONGO_ChartDocument, Playtypes } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import { log } from "#lib/log/log";
+import MONGODB_KILL from "#services/mongo/db";
 import { PoyashiBPI } from "rg-stats";
 
 interface PlaylistEntry {
@@ -39,7 +39,7 @@ export type TachiIIDXPlaylist = {
 );
 
 function ChartsToPlaylistFormat(
-	charts: Array<ChartDocument<"iidx:DP" | "iidx:SP">>,
+	charts: Array<MONGO_ChartDocument<"iidx:DP" | "iidx:SP">>,
 ): Array<PlaylistEntry> {
 	const arr: Array<PlaylistEntry> = [];
 
@@ -72,12 +72,12 @@ function ChartsToPlaylistFormat(
 		// highlight individual difference charts as "event".
 		if (
 			chart.playtype === "SP" &&
-			(chart as ChartDocument<"iidx:SP">).data.hcTier?.individualDifference
+			(chart as MONGO_ChartDocument<"iidx:SP">).data.hcTier?.individualDifference
 		) {
 			barStyle = "event";
 		} else if (
 			chart.playtype === "DP" &&
-			(chart as ChartDocument<"iidx:DP">).data.dpTier?.individualDifference
+			(chart as MONGO_ChartDocument<"iidx:DP">).data.dpTier?.individualDifference
 		) {
 			barStyle = "event";
 		}
@@ -110,10 +110,10 @@ export const CUSTOM_TACHI_IIDX_PLAYLISTS: Array<TachiIIDXPlaylist> = [
 				bounds.push([cutoffs[i], cutoffs[i + 1]] as [number, number]);
 			}
 
-			const charts = (await db.charts.iidx.find({
+			const charts = (await MONGODB_KILL.charts.iidx.find({
 				"data.kaidenAverage": { $ne: null },
 				playtype,
-			})) as Array<ChartDocument<"iidx:DP" | "iidx:SP">>;
+			})) as Array<MONGO_ChartDocument<"iidx:DP" | "iidx:SP">>;
 
 			const entries = [];
 

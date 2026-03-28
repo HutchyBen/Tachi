@@ -1,7 +1,8 @@
-import { AppendLogCtx, log as baseLogger } from "#log.js";
-import z, { ZodObject } from "zod";
+import { type ZodObject } from "zod";
 
-export type ActionResult = "GOOD" | "BAD" | "THROW";
+import { AppendLogCtx, log as baseLogger } from "./log";
+
+export type ActionResult = "BAD" | "GOOD" | "THROW";
 
 /**
  * Secret input and output fields (keys starting with "!") are stripped before logging.
@@ -66,11 +67,15 @@ export function MakeActionGuts({
 	appName,
 	kind,
 	fn: actionBodyFn,
+	inputSchema,
+	outputSchema,
 }: {
-	db: any;
 	appName: string;
-	kind: string;
+	db: any;
 	fn: (taker: ActionTaker | AnonActionTaker, input: object) => Promise<object>;
+	inputSchema: ZodObject;
+	kind: string;
+	outputSchema: ZodObject;
 }): unknown {
 	return async (taker: ActionTaker | AnonActionTaker, input: Record<string, unknown>) => {
 		const ts_start = new Date();
@@ -87,7 +92,24 @@ export function MakeActionGuts({
 		log.debug({ input: OmitPrivate(input) }, "Action started");
 
 		try {
+			const inputParsed = inputSchema.safeParse(input);
+
+			if (!inputParsed.success) {
+				throw new Error(
+					`Action ${kind} received invalid input: ${inputParsed.error.message}`,
+				);
+			}
+
 			retval = await actionBodyFn(taker, input);
+
+			const outputParsed = outputSchema.safeParse(retval);
+
+			if (!outputParsed.success) {
+				log.error(
+					{ errors: outputParsed.error.issues, output: OmitPrivate(retval ?? {}) },
+					`Action ${kind} returned invalid output`,
+				);
+			}
 
 			outputJSON = JSON.stringify(OmitPrivate(retval ?? {}));
 			log.debug(
@@ -106,6 +128,7 @@ export function MakeActionGuts({
 				result = "BAD";
 			} else {
 				log.error({ err: e, input: OmitPrivate(input) }, `Action ${kind} threw`);
+
 				outputJSON = JSON.stringify({ reason: String(e) });
 				result = "THROW";
 			}

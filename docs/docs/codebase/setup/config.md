@@ -44,11 +44,14 @@ the main benefits for us are as follows:
 		BETA_USER_BONUS: 5,
 	},
 	CDN_CONFIG: {
-		WEB_LOCATION: "/cdn",
+		WEB_LOCATION: "http://127.0.0.1:9000/tachi-public",
 		SAVE_LOCATION: {
-			TYPE: "LOCAL_FILESYSTEM",
-			LOCATION: "./test-cdn",
-			SERVE_OWN_CDN: true,
+			TYPE: "S3_BUCKET",
+			ENDPOINT: "http://tachi-s3:9000",
+			ACCESS_KEY_ID: "minio",
+			SECRET_ACCESS_KEY: "password",
+			BUCKET: "tachi-public",
+			REGION: "us-east-1",
 		},
 	},
 	TACHI_CONFIG: {
@@ -369,40 +372,32 @@ If no LOGGER_CONFIG is provided, this is not set.
 
 - Type: CDN_CONFIG
 
-Configures the CDN for the Tachi Server. For local development it's recommended you use a local filesystem share,
-for production usage it's recommended you're behind a CDN.
+Configures the CDN for the Tachi Server. Files are always stored in an S3-compatible bucket (AWS S3, Backblaze, MinIO, etc.).
+
+For local development with `docker-compose-dev.yml`, run the `tachi-s3` MinIO service and point `SAVE_LOCATION.ENDPOINT` at it (from the `tachi-dev` container, `http://tachi-s3:9000`). Use a `WEB_LOCATION` URL that browsers can load (for example `http://127.0.0.1:9000/<bucket>` when MinIO’s API port is published to the host).
 
 ```ts
 interface CDN_CONFIG: {
 	WEB_LOCATION: string;
-	SAVE_LOCATION:
-		| { TYPE: "LOCAL_FILESYSTEM"; LOCATION: string; SERVE_OWN_CDN?: boolean }
-		| {
-				TYPE: "S3_BUCKET";
-				ENDPOINT: string;
-				ACCESS_KEY_ID: string;
-				SECRET_ACCESS_KEY: string;
-				BUCKET: string;
-				KEY_PREFIX?: string;
-				REGION?: string;
-		  };
+	SAVE_LOCATION: {
+		TYPE: "S3_BUCKET";
+		ENDPOINT: string;
+		ACCESS_KEY_ID: string;
+		SECRET_ACCESS_KEY: string;
+		BUCKET: string;
+		KEY_PREFIX?: string;
+		REGION?: string;
+	};
 }
 ```
 
 #### WEB_LOCATION
 
-Configures a URL to redirect users to when returning CDN contents. This could be something like `cdn.boku.tachi.ac`.
+Configures a URL to redirect users to when returning CDN contents. This could be something like `https://cdn.boku.tachi.ac` or a path-style URL to your bucket on MinIO.
 
 #### SAVE_LOCATION
 
-Configures where files are actually saved to. If TYPE is "LOCAL_FILESYSTEM", it will save to `SAVE_LOCATION.LOCATION` on the servers drive.
-
-If TYPE is "S3_BUCKET", it will save files to an S3-API compatible bucket, like S3 itself or Backblaze.
-
-!!! note
-	LOCAL_FILESYSTEM's `SERVE_OWN_CDN` option is useful for local development, it will mount your cdn as an express endpoint under `/cdn`.
-	
-	This saves you having to set up your own NGINX box for serving local files.
+Configures the S3-compatible API endpoint and bucket used for uploads (profile pictures, score import payloads, etc.).
 
 ## Process Environment
 

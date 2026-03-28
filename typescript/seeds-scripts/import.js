@@ -23,7 +23,7 @@ if (!options.db) {
 	throw new Error(`Must provide database name with -d or --db.`);
 }
 
-const base = path.join(__dirname, "../collections");
+const base = path.join(__dirname, "../../db/seeds");
 
 for (const file of fs.readdirSync(base)) {
 	const filename = path.parse(file).name;

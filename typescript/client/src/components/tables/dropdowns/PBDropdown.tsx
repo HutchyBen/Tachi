@@ -10,11 +10,11 @@ import { type GoalsOnChartReturn, type UGPTChartPBComposition } from "#types/api
 import { type GamePT } from "#types/react";
 import React, { useContext, useMemo, useReducer, useState } from "react";
 import {
-	type ChartDocument,
 	type integer,
-	type PBScoreDocument,
-	type ScoreDocument,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
+	type MONGO_SongDocument,
 } from "tachi-common";
 
 import DocComponentCreator, {
@@ -28,10 +28,10 @@ import TargetInfo from "./components/TargetInfo";
 import { GPTDropdownSettings } from "./GPTDropdownSettings";
 
 export interface ScoreDropdownProps {
-	score: PBScoreDocument | ScoreDocument;
+	score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
 	scoreState: ScoreState;
 	pbData: UGPTChartPBComposition;
-	chart: ChartDocument;
+	chart: MONGO_ChartDocument;
 }
 
 export default function PBDropdown({
@@ -43,10 +43,10 @@ export default function PBDropdown({
 	userID,
 	song,
 }: {
-	chart: ChartDocument;
+	chart: MONGO_ChartDocument;
 	defaultView?: "debug" | "history" | "pb" | "rivals" | "targets" | `otherPB::${string}`;
 	scoreState: ScoreState;
-	song: SongDocument;
+	song: MONGO_SongDocument;
 	userID: integer;
 } & GamePT) {
 	const { user: currentUser } = useContext(UserContext);
@@ -60,7 +60,7 @@ export default function PBDropdown({
 		`/users/${userID}/games/${game}/${playtype}/pbs/${chart.chartID}?getComposition=true`,
 	);
 
-	const { error: histError, data: histData } = useApiQuery<ScoreDocument[]>(
+	const { error: histError, data: histData } = useApiQuery<MONGO_ScoreDocument[]>(
 		`/users/${userID}/games/${game}/${playtype}/scores/${chart.chartID}`,
 	);
 
@@ -76,7 +76,7 @@ export default function PBDropdown({
 		currentUser === null,
 	);
 
-	const currentScoreDoc: PBScoreDocument | ScoreDocument | null = useMemo(() => {
+	const currentScoreDoc: MONGO_PBScoreDocument | MONGO_ScoreDocument | null = useMemo(() => {
 		if (!data) {
 			// dont worry about this null, it never gets below the rquery checks
 			return null;

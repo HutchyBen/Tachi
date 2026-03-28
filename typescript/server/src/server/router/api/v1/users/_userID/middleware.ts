@@ -1,7 +1,7 @@
 import type { RequestHandler } from "express";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { IsNullish } from "#utils/misc";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { GetUserWithID, ResolveUser } from "#utils/user";

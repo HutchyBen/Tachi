@@ -6,16 +6,16 @@ import {
 	type AnyProfileRatingAlg,
 	type AnySessionRatingAlg,
 	type APIPermissions,
-	type ChartDocument,
 	type GameGroup,
 	type GamePTConfig,
 	GetGamePTConfig,
 	GetGPTString,
 	type integer,
+	type MONGO_ChartDocument,
+	type MONGO_QuestDocument,
+	type MONGO_QuestSubscriptionDocument,
+	type MONGO_ScoreDocument,
 	type Playtype,
-	type QuestDocument,
-	type QuestSubscriptionDocument,
-	type ScoreDocument,
 } from "tachi-common";
 
 export function RFA<T>(arr: T[]): T {
@@ -183,7 +183,7 @@ export function ComposeLogFn(base: number) {
 export function SelectRightChart(
 	_gptConfig: GamePTConfig,
 	chartID: string,
-	charts: ChartDocument[],
+	charts: MONGO_ChartDocument[],
 ) {
 	// try matching difficulty names, if it's not any of those, it's probably a chartID.
 	for (const chart of charts) {
@@ -191,7 +191,7 @@ export function SelectRightChart(
 			return chart;
 		}
 
-		if (chartID === chart.chartID) {
+		if (chartID === chart.chartID || chartID === chart.legacyChartId) {
 			return chart;
 		}
 	}
@@ -261,7 +261,7 @@ export function CountElements<T>(data: T[], collector: (element: T) => string | 
 export function FormatScoreRating(
 	game: GameGroup,
 	playtype: Playtype,
-	rating: keyof ScoreDocument["calculatedData"],
+	rating: keyof MONGO_ScoreDocument["calculatedData"],
 	value: number | null | undefined,
 ) {
 	if (value === null || value === undefined) {
@@ -548,8 +548,8 @@ export function clamp(a: number, low: number, up: number) {
 	return a;
 }
 
-export function CreateQuestMap(quests: Array<QuestDocument>) {
-	const map = new Map<string, QuestDocument>();
+export function CreateQuestMap(quests: Array<MONGO_QuestDocument>) {
+	const map = new Map<string, MONGO_QuestDocument>();
 
 	for (const q of quests) {
 		map.set(q.questID, q);
@@ -558,8 +558,8 @@ export function CreateQuestMap(quests: Array<QuestDocument>) {
 	return map;
 }
 
-export function CreateQuestSubMap(questSubs: Array<QuestSubscriptionDocument>) {
-	const map = new Map<string, QuestSubscriptionDocument>();
+export function CreateQuestSubMap(questSubs: Array<MONGO_QuestSubscriptionDocument>) {
+	const map = new Map<string, MONGO_QuestSubscriptionDocument>();
 
 	for (const q of questSubs) {
 		map.set(q.questID, q);

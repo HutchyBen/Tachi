@@ -1,15 +1,15 @@
 import { type GoalsOnChartReturn, type GoalsOnFolderReturn } from "#types/api-returns";
 import {
-	type ChartDocument,
 	type GameGroup,
-	type GoalDocument,
 	type GPTString,
 	type integer,
-	type QuestDocument,
-	type ScoreDocument,
+	type MONGO_ChartDocument,
+	type MONGO_GoalDocument,
+	type MONGO_QuestDocument,
+	type MONGO_ScoreDocument,
+	type MONGO_SongDocument,
+	type MONGO_UserDocument,
 	type SessionScoreInfo,
-	type SongDocument,
-	type UserDocument,
 } from "tachi-common";
 
 export function GetPBs(scoreInfo: SessionScoreInfo[]) {
@@ -28,8 +28,8 @@ export function GetPBs(scoreInfo: SessionScoreInfo[]) {
 	});
 }
 
-export function CreateSongMap<G extends GameGroup = GameGroup>(songs: SongDocument<G>[]) {
-	const songMap = new Map<integer, SongDocument<G>>();
+export function CreateSongMap<G extends GameGroup = GameGroup>(songs: MONGO_SongDocument<G>[]) {
+	const songMap = new Map<integer, MONGO_SongDocument<G>>();
 
 	for (const song of songs) {
 		songMap.set(song.id, song);
@@ -38,8 +38,8 @@ export function CreateSongMap<G extends GameGroup = GameGroup>(songs: SongDocume
 	return songMap;
 }
 
-export function CreateUserMap(users: UserDocument[]) {
-	const userMap = new Map<integer, UserDocument>();
+export function CreateUserMap(users: MONGO_UserDocument[]) {
+	const userMap = new Map<integer, MONGO_UserDocument>();
 
 	for (const user of users) {
 		userMap.set(user.id, user);
@@ -48,8 +48,8 @@ export function CreateUserMap(users: UserDocument[]) {
 	return userMap;
 }
 
-export function CreateGoalMap(goals: GoalDocument[]) {
-	const goalMap = new Map<string, GoalDocument>();
+export function CreateGoalMap(goals: MONGO_GoalDocument[]) {
+	const goalMap = new Map<string, MONGO_GoalDocument>();
 
 	for (const goal of goals) {
 		goalMap.set(goal.goalID, goal);
@@ -68,8 +68,10 @@ export function CreateChartIDMap<T extends { chartID: string }>(arr: T[]): Map<s
 	return map;
 }
 
-export function CreateChartMap<GPT extends GPTString = GPTString>(charts: ChartDocument<GPT>[]) {
-	const chartMap = new Map<string, ChartDocument<GPT>>();
+export function CreateChartMap<GPT extends GPTString = GPTString>(
+	charts: MONGO_ChartDocument<GPT>[],
+) {
+	const chartMap = new Map<string, MONGO_ChartDocument<GPT>>();
 
 	for (const chart of charts) {
 		chartMap.set(chart.chartID, chart);
@@ -78,8 +80,10 @@ export function CreateChartMap<GPT extends GPTString = GPTString>(charts: ChartD
 	return chartMap;
 }
 
-export function CreateScoreIDMap<GPT extends GPTString = GPTString>(scores: ScoreDocument<GPT>[]) {
-	const scoreMap = new Map<string, ScoreDocument<GPT>>();
+export function CreateScoreIDMap<GPT extends GPTString = GPTString>(
+	scores: MONGO_ScoreDocument<GPT>[],
+) {
+	const scoreMap = new Map<string, MONGO_ScoreDocument<GPT>>();
 
 	for (const score of scores) {
 		scoreMap.set(score.scoreID, score);
@@ -88,18 +92,12 @@ export function CreateScoreIDMap<GPT extends GPTString = GPTString>(scores: Scor
 	return scoreMap;
 }
 
-export function CreateChartLink(chart: ChartDocument, game: GameGroup) {
-	if (chart.isPrimary) {
-		return `/games/${game}/${chart.playtype}/songs/${chart.songID}/${encodeURIComponent(
-			chart.difficulty,
-		)}`;
-	}
-
-	return `/games/${game}/${chart.playtype}/songs/${chart.songID}/${chart.chartID}`;
+export function CreateChartLink(chart: MONGO_ChartDocument, game: GameGroup) {
+	return `/games/${game}/${chart.playtype}/charts/${chart.chartID}`;
 }
 
 // stolen from server
-export function GetGoalIDsFromQuest(quest: QuestDocument) {
+export function GetGoalIDsFromQuest(quest: MONGO_QuestDocument) {
 	// this sucks - maybe a nicer way to do this, because nested
 	// maps are just ugly
 	return quest.questData.map((e) => e.goals.map((e) => e.goalID)).flat(1);
@@ -107,7 +105,7 @@ export function GetGoalIDsFromQuest(quest: QuestDocument) {
 
 export function CreateGoalSubDataset(
 	data: GoalsOnChartReturn | GoalsOnFolderReturn,
-	userMap: Map<integer, UserDocument>,
+	userMap: Map<integer, MONGO_UserDocument>,
 ) {
 	const dataset = [];
 	const goalMap = CreateGoalMap(data.goals);

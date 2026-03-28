@@ -8,7 +8,8 @@
 		"lint": "eslint .",
 		"lint-fix": "eslint . --fix",
 		"run": "bun run src/main.ts",
-		"typecheck": "tsgo --noEmit"
+		"typecheck": "tsgo --noEmit",
+		"bench": "node -e \"process.exit(0)\""
 	},
 	"keywords": [],
 	"author": "zk",

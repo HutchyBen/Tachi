@@ -1,10 +1,11 @@
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { GetRivalUsers } from "#lib/rivals/rivals";
 import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch-manual/converter";
-import { SearchSpecificGameSongsAndCharts } from "#lib/search/search";
+import { SearchSpecificGameSongsAndCharts } from "#lib/search/song-charts.js";
 import prValidate from "#server/middleware/prudence-validate";
 import { AggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
+import { ResolveLegacyChartIdForMongo } from "#utils/chart-mongo-id";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { IsValidScoreAlg } from "#utils/misc";
 import { GetAdjacentAbove, GetAdjacentBelow } from "#utils/queries/pbs";
@@ -12,7 +13,7 @@ import { GetUGPT } from "#utils/req-tachi-data";
 import { FilterChartsAndSongs, GetPBOnChart, GetScoreIDsFromComposed } from "#utils/scores";
 import { GetUsersWithIDs } from "#utils/user";
 import { Router } from "express";
-import { GetGamePTConfig, type MatchTypeResolver } from "tachi-common";
+import { GetGamePTConfig, type MatchTypeResolver, MongoChartLegacyId } from "tachi-common";
 import { PR_RESOLVER } from "tachi-common/lib/schemas";
 
 const router: Router = Router({ mergeParams: true });
@@ -40,9 +41,9 @@ router.get("/", async (req, res) => {
 		playtype,
 	);
 
-	const pbs = await db["personal-bests"].find(
+	const pbs = await MONGODB_KILL["personal-bests"].find(
 		{
-			chartID: { $in: allCharts.map((e) => e.chartID) },
+			chartID: { $in: allCharts.map((e) => MongoChartLegacyId(e)) },
 			userID: user.id,
 		},
 		{
@@ -77,7 +78,7 @@ router.get("/", async (req, res) => {
 router.get("/all", AggressiveRateLimitMiddleware, async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const pbs = await db["personal-bests"].find({
+	const pbs = await MONGODB_KILL["personal-bests"].find({
 		userID: user.id,
 		game,
 		playtype,
@@ -117,7 +118,7 @@ router.get("/best", prValidate({ alg: "*string" }), async (req, res) => {
 
 	const alg = (req.query.alg as string | undefined) ?? gptConfig.defaultScoreRatingAlg;
 
-	const pbs = await db["personal-bests"].find(
+	const pbs = await MONGODB_KILL["personal-bests"].find(
 		{
 			userID: user.id,
 			game,
@@ -156,8 +157,17 @@ router.get("/best", prValidate({ alg: "*string" }), async (req, res) => {
 router.get("/:chartID", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const chart = await db.anyCharts[game].findOne({
-		chartID: req.params.chartID,
+	const legacyMongoId = await ResolveLegacyChartIdForMongo(game, playtype, req.params.chartID);
+
+	if (!legacyMongoId) {
+		return res.status(404).json({
+			success: false,
+			description: `This chart does not exist.`,
+		});
+	}
+
+	const chart = await MONGODB_KILL.anyCharts[game].findOne({
+		chartID: legacyMongoId,
 		playtype,
 	});
 
@@ -168,8 +178,8 @@ router.get("/:chartID", async (req, res) => {
 		});
 	}
 
-	const pb = await db["personal-bests"].findOne({
-		chartID: req.params.chartID,
+	const pb = await MONGODB_KILL["personal-bests"].findOne({
+		chartID: legacyMongoId,
 		userID: user.id,
 	});
 
@@ -183,7 +193,7 @@ router.get("/:chartID", async (req, res) => {
 	if (req.query.getComposition !== undefined) {
 		const scoreIDs = GetScoreIDsFromComposed(pb);
 
-		const scores = await db.scores.find({
+		const scores = await MONGODB_KILL.scores.find({
 			scoreID: { $in: scoreIDs },
 		});
 
@@ -216,14 +226,23 @@ router.get("/:chartID", async (req, res) => {
 router.get("/:chartID/rivals", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
+	const legacyMongoId = await ResolveLegacyChartIdForMongo(game, playtype, req.params.chartID);
+
+	if (!legacyMongoId) {
+		return res.status(404).json({
+			success: false,
+			description: `This chart does not exist.`,
+		});
+	}
+
 	const rivals = await GetRivalUsers(user.id, game, playtype);
 
-	const pbs = await db["personal-bests"].find({
+	const pbs = await MONGODB_KILL["personal-bests"].find({
 		userID: { $in: rivals.map((e) => e.id) },
-		chartID: req.params.chartID,
+		chartID: legacyMongoId,
 	});
 
-	const usersPB = await GetPBOnChart(user.id, req.params.chartID);
+	const usersPB = await GetPBOnChart(user.id, legacyMongoId);
 
 	if (usersPB) {
 		pbs.push(usersPB);
@@ -248,8 +267,17 @@ router.get("/:chartID/rivals", async (req, res) => {
 router.get("/:chartID/leaderboard-adjacent", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const chart = await db.anyCharts[game].findOne({
-		chartID: req.params.chartID,
+	const legacyMongoId = await ResolveLegacyChartIdForMongo(game, playtype, req.params.chartID);
+
+	if (!legacyMongoId) {
+		return res.status(404).json({
+			success: false,
+			description: `This chart does not exist.`,
+		});
+	}
+
+	const chart = await MONGODB_KILL.anyCharts[game].findOne({
+		chartID: legacyMongoId,
 		playtype,
 	});
 
@@ -260,8 +288,8 @@ router.get("/:chartID/leaderboard-adjacent", async (req, res) => {
 		});
 	}
 
-	const pb = await db["personal-bests"].findOne({
-		chartID: req.params.chartID,
+	const pb = await MONGODB_KILL["personal-bests"].findOne({
+		chartID: legacyMongoId,
 		userID: user.id,
 	});
 
@@ -315,7 +343,7 @@ router.post("/resolve", prValidate(PR_RESOLVER), async (req, res) => {
 		});
 	}
 
-	const pb = await GetPBOnChart(user.id, got.chart.chartID);
+	const pb = await GetPBOnChart(user.id, MongoChartLegacyId(got.chart));
 
 	if (!pb) {
 		return res.status(404).json({

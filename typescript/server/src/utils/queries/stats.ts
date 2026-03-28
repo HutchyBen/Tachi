@@ -1,7 +1,7 @@
 import type { Classes, GameGroup, GPTString, integer, Playtype } from "tachi-common";
 
 import { ONE_HOUR } from "#lib/constants/time";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import NodeCache from "node-cache";
 
 const classDistCache = new NodeCache();
@@ -18,7 +18,7 @@ export async function GetClassDistribution(
 		const distribution: Array<{
 			_id: string;
 			count: integer;
-		}> = await db["game-stats"].aggregate([
+		}> = await MONGODB_KILL["game-stats"].aggregate([
 			{
 				$match: {
 					game,

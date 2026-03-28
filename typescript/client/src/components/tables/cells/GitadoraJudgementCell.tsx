@@ -1,13 +1,13 @@
 import { IsNullish } from "#util/misc";
 import React from "react";
-import { COLOUR_SET, type PBScoreDocument, type ScoreDocument } from "tachi-common";
+import { COLOUR_SET, type MONGO_PBScoreDocument, type MONGO_ScoreDocument } from "tachi-common";
 
 export default function GitadoraJudgementCell({
 	score,
 }: {
 	score:
-		| PBScoreDocument<"gitadora:Dora" | "gitadora:Gita">
-		| ScoreDocument<"gitadora:Dora" | "gitadora:Gita">;
+		| MONGO_PBScoreDocument<"gitadora:Dora" | "gitadora:Gita">
+		| MONGO_ScoreDocument<"gitadora:Dora" | "gitadora:Gita">;
 }) {
 	const judgements = score.scoreData.judgements;
 

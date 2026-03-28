@@ -1,17 +1,18 @@
 import type { ScoreImportJob } from "#lib/score-import/worker/types";
 
-import { AppendLogCtx, type KtLogger } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import { AppendLogCtx, type KtLogger } from "#lib/log/log";
+import MONGODB_KILL from "#services/mongo/db";
 import { ClassToObject } from "#utils/misc";
 import {
-	type ChartDocument,
 	type GameGroup,
 	GetGPTString,
 	type ImportProcessingInfo,
 	type ImportTypes,
 	type integer,
-	type ScoreDocument,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_ScoreDocument,
+	type MONGO_SongDocument,
+	MongoChartLegacyId,
 } from "tachi-common";
 
 import type { ConverterFnSuccessReturn, ConverterFunction } from "../../import-types/common/types";
@@ -52,7 +53,7 @@ export async function ImportAllIterableData<D, C>(
 	// @optimisable: could filter harder with score.game and score.playtype
 	// stuff.
 	const blacklist = (
-		await db["score-blacklist"].find({
+		await MONGODB_KILL["score-blacklist"].find({
 			userID,
 		})
 	).map((e) => e.scoreID);
@@ -327,15 +328,21 @@ export async function ProcessSuccessfulConverterReturn(
 async function HydrateCheckAndInsertScore(
 	userID: integer,
 	dryScore: DryScore,
-	chart: ChartDocument,
-	song: SongDocument,
+	chart: MONGO_ChartDocument,
+	song: MONGO_SongDocument,
 	blacklist: Array<string>,
 	importLog: KtLogger,
 	force = false,
-): Promise<ScoreDocument | null> {
+): Promise<MONGO_ScoreDocument | null> {
 	const gptString = GetGPTString(dryScore.game, chart.playtype);
 
-	const scoreID = CreateScoreID(gptString, userID, dryScore, chart.chartID, importLog);
+	const scoreID = CreateScoreID(
+		gptString,
+		userID,
+		dryScore,
+		MongoChartLegacyId(chart),
+		importLog,
+	);
 
 	// sub-context thelog so the below logs are more accurate
 	const log = AppendLogCtx(scoreID, importLog);
@@ -345,7 +352,7 @@ async function HydrateCheckAndInsertScore(
 		return null;
 	}
 
-	const existingScore = await db.scores.findOne(
+	const existingScore = await MONGODB_KILL.scores.findOne(
 		{
 			scoreID,
 		},
@@ -377,7 +384,7 @@ async function HydrateCheckAndInsertScore(
 	let res;
 
 	if (force) {
-		res = await db.scores.insert(score);
+		res = await MONGODB_KILL.scores.insert(score);
 	} else {
 		res = await QueueScoreInsert(score);
 	}

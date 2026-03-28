@@ -1,10 +1,10 @@
-import { BotConfig } from "#config";
-import { PrependTachiUrl } from "#utils/fetch-tachi.js";
+import { Env } from "#config";
+import { PrependTachiUrl } from "#utils/fetch-tachi";
 import { log } from "#utils/log";
 import {
 	GetGameGroupConfig,
-	type GoalDocument,
 	type integer,
+	type MONGO_GoalDocument,
 	type WebhookEventGoalAchievedV1,
 } from "tachi-common";
 
@@ -35,7 +35,7 @@ export async function HandleGoalAchievedV1(
 		event.goals.map((e) => GetGoalWithID(e.goalID, game, e.playtype)),
 	);
 
-	const goalMap = new Map<string, GoalDocument>();
+	const goalMap = new Map<string, MONGO_GoalDocument>();
 
 	for (const goalDoc of goalDocuments) {
 		goalMap.set(goalDoc.goalID, goalDoc);
@@ -53,7 +53,7 @@ export async function HandleGoalAchievedV1(
 			)}!`,
 		)
 		.setThumbnail(PrependTachiUrl(`/users/${userDoc.id}/pfp`))
-		.setURL(`${BotConfig.TACHI_SERVER_LOCATION}/u/${userDoc.username}`)
+		.setURL(`${Env.TACHI_SERVER_LOCATION}/u/${userDoc.username}`)
 		.addFields(
 			event.goals.map((e) => {
 				const goal = goalMap.get(e.goalID)!;

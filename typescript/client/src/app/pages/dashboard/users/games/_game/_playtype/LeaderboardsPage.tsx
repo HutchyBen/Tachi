@@ -22,9 +22,9 @@ import {
 	GetGamePTConfig,
 	type GPTString,
 	type integer,
+	type MONGO_UserDocument,
+	type MONGO_UserGameStats,
 	type ProfileRatingAlgorithms,
-	type UserDocument,
-	type UserGameStats,
 } from "tachi-common";
 
 interface LeaderboardsData {
@@ -85,14 +85,14 @@ function LeaderboardsPageContent({
 }: {
 	alg: ProfileRatingAlgorithms[GPTString];
 	data: LeaderboardsData;
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 	setAlg: SetState<ProfileRatingAlgorithms[GPTString]>;
 } & GamePT) {
 	const { stats, leaderboard } = data;
 
 	const gptConfig = GetGamePTConfig(game, playtype);
 
-	const userMap = new Map<integer, UserDocument>();
+	const userMap = new Map<integer, MONGO_UserDocument>();
 
 	for (const u of stats.users) {
 		userMap.set(u.id, u);
@@ -107,7 +107,7 @@ function LeaderboardsPageContent({
 
 	const bestNearbyUser = stats.thisUsersRanking.ranking - stats.above.length - 1;
 
-	function LeaderboardRow({ s, i }: { i: integer; s: UserGameStats }) {
+	function LeaderboardRow({ s, i }: { i: integer; s: MONGO_UserGameStats }) {
 		return (
 			<tr
 				style={{

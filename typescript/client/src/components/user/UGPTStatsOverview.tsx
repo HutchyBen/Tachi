@@ -14,11 +14,11 @@ import {
 	type Classes,
 	GetGamePTConfig,
 	type GPTString,
+	type MONGO_UserGameStats,
 	type ProfileRatingAlgorithms,
-	type UserGameStats,
 } from "tachi-common";
 
-export default function UGPTRatingsTable({ ugs }: { ugs: UserGameStats }) {
+export default function UGPTRatingsTable({ ugs }: { ugs: MONGO_UserGameStats }) {
 	const gptConfig = GetGamePTConfig(ugs.game, ugs.playtype);
 
 	const ratings = Object.entries(ugs.ratings) as [ProfileRatingAlgorithms[GPTString], number][];

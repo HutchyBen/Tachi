@@ -4,6 +4,6 @@ export default [
 	...configTachi.base,
 	configTachi.node,
 	{
-		ignores: ["../collections/**", "node_modules/**", "js/**", "**/*.js"],
+		ignores: ["../../db/seeds/**", "node_modules/**", "js/**", "**/*.js"],
 	},
 ];

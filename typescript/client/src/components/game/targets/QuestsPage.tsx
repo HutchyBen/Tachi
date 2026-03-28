@@ -14,9 +14,9 @@ import { Link } from "react-router-dom";
 import {
 	FormatGameGroup,
 	GetGameGroupConfig,
-	type GoalDocument,
-	type QuestDocument,
-	type QuestlineDocument,
+	type MONGO_GoalDocument,
+	type MONGO_QuestDocument,
+	type MONGO_QuestlineDocument,
 } from "tachi-common";
 
 export default function QuestsPage({ game, playtype }: GamePT) {
@@ -35,9 +35,9 @@ export default function QuestsPage({ game, playtype }: GamePT) {
 
 function QuestlineSelector({ game, playtype }: GamePT) {
 	const { data, error } = useApiQuery<{
-		questlines: Array<QuestlineDocument>;
-		standalone: Array<QuestDocument>;
-		standaloneGoals: Array<GoalDocument>;
+		questlines: Array<MONGO_QuestlineDocument>;
+		standalone: Array<MONGO_QuestDocument>;
+		standaloneGoals: Array<MONGO_GoalDocument>;
 	}>(`/games/${game}/${playtype}/targets/questlines`);
 
 	if (error) {

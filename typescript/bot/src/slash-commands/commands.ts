@@ -1,6 +1,6 @@
 import type { SlashCommand } from "./types";
 
-import { BotConfig, ServerConfig } from "../config";
+import { Env, ServerConfig } from "../config";
 import faq from "./commands/faq";
 import invite from "./commands/invite";
 import letmein from "./commands/letmein";
@@ -16,7 +16,7 @@ export const SLASH_COMMANDS: Map<string, SlashCommand> = new Map(
 	}),
 );
 
-if (BotConfig.DISCORD.APPROVED_ROLE) {
+if (Env.DISCORD_APPROVED_ROLE) {
 	SLASH_COMMANDS.set("letmein", letmein);
 }
 

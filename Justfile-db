@@ -9,7 +9,7 @@ db POSTGRES_DB=DEFAULT_DB:
 db-reset POSTGRES_DB=DEFAULT_DB:
 	#!/bin/bash
 
-	export DATABASE_URL="{{POSTGRES_URL}}/{{POSTGRES_DB}}"
+	export POSTGRES_URL="{{POSTGRES_URL}}/{{POSTGRES_DB}}"
 	tachidb database drop
 	tachidb database create
 	tachidb migrate run
@@ -21,16 +21,11 @@ db-migrate-status POSTGRES_DB=DEFAULT_DB:
 		 FROM \"_migration\" \
 		 ORDER BY version"
 
-# Create (or recreate) the bot test template database with all migrations applied.
-# Workers clone from this template rather than re-running migrations each time.
-bot-db-test-template-reset:
-	#!/bin/bash
-	export DATABASE_URL="{{POSTGRES_URL}}/tachi_bot_test_template"
-	tachidb database drop || true
-	tachidb database create
-	tachidb migrate run
-
 # Load the seeds into the database.
 db-load-seeds POSTGRES_DB=DEFAULT_DB:
 	cd typescript/server && POSTGRES_URL="{{POSTGRES_URL}}/{{POSTGRES_DB}}" \
 		bun run src/scripts/load-seeds-pg.ts
+
+# Reset templatedb from migrations, then dump schema and indexes for local debugging.
+db-schema: (db-reset "templatedb")
+	pg_dump "{{POSTGRES_URL}}/templatedb" --schema-only --no-owner --no-acl -f db/schema.sql

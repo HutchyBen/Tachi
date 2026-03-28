@@ -2,7 +2,7 @@ import useScoreRatingAlg from "#components/util/useScoreRatingAlg";
 import { type RivalChartDataset } from "#types/tables";
 import { NumericSOV, StrSOV } from "#util/sorts";
 import React, { useState } from "react";
-import { type AnyScoreRatingAlg, type ChartDocument, type GameGroup } from "tachi-common";
+import { type AnyScoreRatingAlg, type GameGroup, type MONGO_ChartDocument } from "tachi-common";
 
 import IndexCell from "../cells/IndexCell";
 import RankingCell, { type RankingViewMode } from "../cells/RankingCell";
@@ -21,7 +21,7 @@ export default function RivalChartTable({
 	game,
 	chart,
 }: {
-	chart: ChartDocument;
+	chart: MONGO_ChartDocument;
 	dataset: RivalChartDataset;
 	game: GameGroup;
 }) {
@@ -78,7 +78,7 @@ function Row({
 	chart,
 	rankingViewMode,
 }: {
-	chart: ChartDocument;
+	chart: MONGO_ChartDocument;
 	data: RivalChartDataset[0];
 	game: GameGroup;
 	rankingViewMode: RankingViewMode;

@@ -1,21 +1,21 @@
-import type { KtLogger } from "#lib/log/log.js";
-import type { integer } from "tachi-common";
+import type { KtLogger } from "#lib/log/log";
+import type { integer, MONGO_KaiAuthDocument } from "tachi-common";
 
+import { SELECT_KAI_AUTH_TOKEN, ToKaiAuthDocument } from "#lib/db-formats/kai-auth-token";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
-import db from "#services/mongo/db";
+import DB from "#services/pg/db";
 
-export function GetKaiAuth(userID: integer, service: "EAG" | "FLO" | "MIN") {
-	return db["kai-auth-tokens"].findOne({
-		userID,
-		service,
-	});
-}
+export async function GetKaiAuth(
+	userID: integer,
+	service: "EAG" | "FLO" | "MIN",
+): Promise<MONGO_KaiAuthDocument | null> {
+	const row = await DB.selectFrom("priv_svc_kai_auth_token")
+		.select(SELECT_KAI_AUTH_TOKEN)
+		.where("user_id", "=", userID)
+		.where("service", "=", service)
+		.executeTakeFirst();
 
-export function RevokeKaiAuth(userID: integer, service: "EAG" | "FLO" | "MIN") {
-	return db["kai-auth-tokens"].remove({
-		userID,
-		service,
-	});
+	return row ? ToKaiAuthDocument(row) : null;
 }
 
 export async function GetKaiAuthGuaranteed(

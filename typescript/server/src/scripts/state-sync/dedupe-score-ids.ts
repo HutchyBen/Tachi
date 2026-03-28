@@ -1,13 +1,13 @@
 import type { IObjectID } from "monk";
 import type { integer } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import { log } from "#lib/log/log";
+import MONGODB_KILL from "#services/mongo/db";
 import { WrapScriptPromise } from "#utils/misc";
 
 async function DedupeScoreIDs() {
 	const dups: Array<{ count: integer; dups: Array<IObjectID>; id: string }> =
-		await db.scores.aggregate(
+		await MONGODB_KILL.scores.aggregate(
 			[
 				{
 					$group: {
@@ -30,7 +30,7 @@ async function DedupeScoreIDs() {
 	for (const dup of dups) {
 		dup.dups.shift();
 		// eslint-disable-next-line no-await-in-loop
-		await db.scores.remove({ _id: { $in: dup.dups } });
+		await MONGODB_KILL.scores.remove({ _id: { $in: dup.dups } });
 	}
 }
 

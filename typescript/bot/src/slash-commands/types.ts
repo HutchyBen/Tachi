@@ -31,4 +31,6 @@ export interface SlashCommand {
 		options: Array<APIApplicationCommandOption>;
 	};
 	exec: Command;
+	/** If true, this command may only be used in the #limbo channel. */
+	limboOnly?: boolean;
 }

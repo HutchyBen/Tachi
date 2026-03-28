@@ -1,17 +1,17 @@
 import { type JSONAttributeDiff } from "#util/misc";
 import {
-	type BMSCourseDocument,
-	type ChartDocument,
-	type FolderDocument,
 	type GameGroup,
-	type GoalDocument,
 	type GPTString,
 	type GPTStrings,
 	type GPTStringToGame,
-	type QuestDocument,
-	type QuestlineDocument,
-	type SongDocument,
-	type TableDocument,
+	type MONGO_BMSCourseDocument,
+	type MONGO_ChartDocument,
+	type MONGO_FolderDocument,
+	type MONGO_GoalDocument,
+	type MONGO_QuestDocument,
+	type MONGO_QuestlineDocument,
+	type MONGO_SongDocument,
+	type MONGO_TableDocument,
 } from "tachi-common";
 
 // To render seeds with their tables properly, we need to conjoin our data with
@@ -25,45 +25,45 @@ export type BMSCourseWithRelated = {
 		entries: Array<
 			| string
 			| {
-					chart: ChartDocument<"bms:7K" | "bms:14K">;
-					song: SongDocument<"bms">;
+					chart: MONGO_ChartDocument<"bms:7K" | "bms:14K">;
+					song: MONGO_SongDocument<"bms">;
 			  }
 		>;
 	};
-} & BMSCourseDocument;
+} & MONGO_BMSCourseDocument;
 
 export type TableWithRelated = {
 	__related: {
 		folders: {
-			[folderID: string]: FolderDocument | undefined;
+			[folderID: string]: MONGO_FolderDocument | undefined;
 		};
 	};
-} & TableDocument;
+} & MONGO_TableDocument;
 
 export type QuestlineWithRelated = {
 	__related: {
 		quests: {
-			[questID: string]: QuestDocument | undefined;
+			[questID: string]: MONGO_QuestDocument | undefined;
 		};
 	};
-} & QuestlineDocument;
+} & MONGO_QuestlineDocument;
 
 export type QuestWithRelated = {
 	__related: {
 		goals: {
-			[goalID: string]: GoalDocument | undefined;
+			[goalID: string]: MONGO_GoalDocument | undefined;
 		};
 	};
-} & QuestDocument;
+} & MONGO_QuestDocument;
 
 export type ChartWithRelated<T extends GPTString = GPTString> = {
 	__related: {
-		song: SongDocument<GPTStringToGame[T]> | undefined;
+		song: MONGO_SongDocument<GPTStringToGame[T]> | undefined;
 	};
-} & ChartDocument<T>;
+} & MONGO_ChartDocument<T>;
 
 type SongSeedsWithRelated = {
-	[G in GameGroup as `songs-${G}.json`]: Array<SongDocument<G>>;
+	[G in GameGroup as `songs-${G}.json`]: Array<MONGO_SongDocument<G>>;
 };
 
 type ChartSeedsWithRelated = {
@@ -79,9 +79,9 @@ export type DatabaseSeedsWithRelated = {
 	"bms-course-lookup.json": Array<BMSCourseWithRelated>;
 
 	// intentional: folders don't need to be joined with anything.
-	"folders.json": Array<FolderDocument>;
+	"folders.json": Array<MONGO_FolderDocument>;
 
-	"goals.json": Array<GoalDocument>;
+	"goals.json": Array<MONGO_GoalDocument>;
 	"questlines.json": Array<QuestlineWithRelated>;
 	"quests.json": Array<QuestWithRelated>;
 	"tables.json": Array<TableWithRelated>;

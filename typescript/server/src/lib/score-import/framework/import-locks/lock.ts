@@ -1,8 +1,8 @@
 import type { integer } from "tachi-common";
 
 import { ONE_DAY, ONE_HOUR } from "#lib/constants/time";
-import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import { log } from "#lib/log/log";
+import MONGODB_KILL from "#services/mongo/db";
 
 /**
  * If a user has no ongoing import, enable the import lock and return true.
@@ -13,19 +13,19 @@ import db from "#services/mongo/db";
  * has a lock.
  */
 export async function CheckAndSetOngoingImportLock(userID: integer) {
-	const lockExists = await db["import-locks"].findOne({
+	const lockExists = await MONGODB_KILL["import-locks"].findOne({
 		userID,
 	});
 
 	if (!lockExists) {
-		await db["import-locks"].insert({
+		await MONGODB_KILL["import-locks"].insert({
 			userID,
 			locked: false,
 			lockedAt: null,
 		});
 	} else if (lockExists.locked && lockExists.lockedAt! + ONE_DAY < Date.now()) {
 		log.warn(`Removed import lock for ${userID} as it is ostensibly stuck.`);
-		await db["import-locks"].update(
+		await MONGODB_KILL["import-locks"].update(
 			{
 				userID,
 			},
@@ -38,7 +38,7 @@ export async function CheckAndSetOngoingImportLock(userID: integer) {
 		);
 	}
 
-	const lockWasSet = await db["import-locks"].findOneAndUpdate(
+	const lockWasSet = await MONGODB_KILL["import-locks"].findOneAndUpdate(
 		{
 			userID,
 			locked: false,
@@ -68,7 +68,7 @@ export async function CheckAndSetOngoingImportLock(userID: integer) {
  * Disable a users import lock.
  */
 export function UnsetOngoingImportLock(userID: integer) {
-	return db["import-locks"].findOneAndUpdate(
+	return MONGODB_KILL["import-locks"].findOneAndUpdate(
 		{
 			userID,
 			locked: true,

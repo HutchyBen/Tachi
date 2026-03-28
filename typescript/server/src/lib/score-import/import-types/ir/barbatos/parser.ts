@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 
 import { FormatPrError } from "#utils/prudence";
 import { p } from "prudence";

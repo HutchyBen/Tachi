@@ -1,6 +1,6 @@
 import type { GameGroup, integer, Playtype } from "tachi-common";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { UpdateAllPBs } from "#utils/calculations/recalc-scores";
 
 /**
@@ -13,20 +13,20 @@ export default async function DestroyUserGamePlaytypeData(
 	game: GameGroup,
 	playtype: Playtype,
 ) {
-	await db["game-stats-snapshots"].remove({
+	await MONGODB_KILL["game-stats-snapshots"].remove({
 		userID,
 		game,
 		playtype,
 	});
 
-	await db.scores.remove({
+	await MONGODB_KILL.scores.remove({
 		userID,
 		game,
 		playtype,
 	});
 
 	const chartIDs = (
-		await db["personal-bests"].find(
+		await MONGODB_KILL["personal-bests"].find(
 			{
 				userID,
 				game,
@@ -40,7 +40,7 @@ export default async function DestroyUserGamePlaytypeData(
 		)
 	).map((e) => e.chartID);
 
-	await db["personal-bests"].remove({
+	await MONGODB_KILL["personal-bests"].remove({
 		userID,
 		game,
 		playtype,
@@ -50,25 +50,25 @@ export default async function DestroyUserGamePlaytypeData(
 		chartID: { $in: chartIDs },
 	});
 
-	await db.sessions.remove({
+	await MONGODB_KILL.sessions.remove({
 		userID,
 		game,
 		playtype,
 	});
 
-	await db.imports.remove({
+	await MONGODB_KILL.imports.remove({
 		userID,
 		game,
 		playtype,
 	});
 
-	await db["game-settings"].remove({
+	await MONGODB_KILL["game-settings"].remove({
 		userID,
 		game,
 		playtype,
 	});
 
-	await db["game-stats"].remove({
+	await MONGODB_KILL["game-stats"].remove({
 		userID,
 		game,
 		playtype,

@@ -25,27 +25,27 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import {
-	type FolderDocument,
 	type GameGroup,
 	type GamePTConfig,
 	GetGamePTConfig,
 	GetGPTString,
 	GetScoreMetricConf,
 	GetScoreMetrics,
+	type MONGO_FolderDocument,
+	type MONGO_TableDocument,
+	type MONGO_UserDocument,
 	type Playtype,
-	type TableDocument,
-	type UserDocument,
 } from "tachi-common";
 import { type ConfEnumScoreMetric } from "tachi-common/types/metrics";
 
 interface Props {
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 	game: GameGroup;
 	playtype: Playtype;
 }
 
 export default function FolderTablePage({ reqUser, game, playtype }: Props) {
-	const { data, error } = useApiQuery<TableDocument[]>(
+	const { data, error } = useApiQuery<MONGO_TableDocument[]>(
 		`/games/${game}/${playtype}/tables?showInactive=true`,
 	);
 
@@ -120,11 +120,16 @@ export default function FolderTablePage({ reqUser, game, playtype }: Props) {
 }
 
 interface UGPTFolderStats {
-	folder: FolderDocument;
+	folder: MONGO_FolderDocument;
 	stats: FolderStatsInfo;
 }
 
-function TableFolderViewer({ reqUser, game, playtype, table }: { table: TableDocument } & Props) {
+function TableFolderViewer({
+	reqUser,
+	game,
+	playtype,
+	table,
+}: { table: MONGO_TableDocument } & Props) {
 	const { data, error } = useApiQuery<UGPTTableReturns>(
 		`/users/${reqUser.id}/games/${game}/${playtype}/tables/${table.tableID}`,
 	);
@@ -180,7 +185,7 @@ function TableFolderTable({
 	playtype,
 }: {
 	dataMap: Map<string, UGPTFolderStats>;
-	table: TableDocument;
+	table: MONGO_TableDocument;
 } & Props) {
 	const dataset = useMemo(() => {
 		const arr = [];
@@ -245,7 +250,7 @@ function TableBarChart({
 	dataMap,
 }: {
 	dataMap: Map<string, UGPTFolderStats>;
-	table: TableDocument;
+	table: MONGO_TableDocument;
 }) {
 	const gptConfig = GetGamePTConfig(table.game, table.playtype);
 	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(table.game, table.playtype)];

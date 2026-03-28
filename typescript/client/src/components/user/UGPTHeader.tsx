@@ -17,7 +17,7 @@ import { FormatDurationHours, MillisToSince } from "#util/time";
 import { SendErrorToast, SendSuccessToast } from "#util/toaster";
 import React, { useContext } from "react";
 import { Button } from "react-bootstrap";
-import { type GameGroup, type integer, type Playtype, type UserDocument } from "tachi-common";
+import { type GameGroup, type integer, type MONGO_UserDocument, type Playtype } from "tachi-common";
 
 import ProfileBadges from "./ProfileBadges";
 import ProfilePicture from "./ProfilePicture";
@@ -32,7 +32,7 @@ export function UGPTHeaderBody({
 }: {
 	game: GameGroup;
 	playtype: Playtype;
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 	stats: UGPTStatsReturn;
 }) {
 	const { settings, setSettings } = useLUGPTSettings();

@@ -6,20 +6,20 @@ import type {
 	ScoreValidator,
 } from "#game-implementations/types";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { DDRFlare } from "rg-stats";
 import {
-	type ChartDocument,
 	DDR_GBOUNDARIES,
 	FmtNum,
 	type GameGroup,
 	GetGrade,
 	GetSpecificGPTConfig,
 	type integer,
-	type PBScoreDocument,
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
+	type MONGO_SongDocument,
 	type Playtype,
-	type ScoreDocument,
-	type SongDocument,
 } from "tachi-common";
 
 import { IsNullish } from "../../utils/misc";
@@ -27,8 +27,8 @@ import { CreatePBMergeFor } from "../utils/pb-merge";
 import { SessionAvgBest10For } from "../utils/session-calc";
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
-interface PBScoreDocumentWithSong extends PBScoreDocument<"ddr:DP" | "ddr:SP"> {
-	song: SongDocument<"ddr">;
+interface PBScoreDocumentWithSong extends MONGO_PBScoreDocument<"ddr:DP" | "ddr:SP"> {
+	song: MONGO_SongDocument<"ddr">;
 	top?: number;
 }
 
@@ -54,7 +54,10 @@ const DDR_GOAL_PG_FMT: GPTGoalProgressFormatters<"ddr:DP" | "ddr:SP"> = {
 };
 
 export const DDR_SCORE_VALIDATORS: Array<ScoreValidator<"ddr:DP" | "ddr:SP">> = [
-	(s: ScoreDocument<"ddr:DP" | "ddr:SP">, chart?: ChartDocument<"ddr:DP" | "ddr:SP">) => {
+	(
+		s: MONGO_ScoreDocument<"ddr:DP" | "ddr:SP">,
+		chart?: MONGO_ChartDocument<"ddr:DP" | "ddr:SP">,
+	) => {
 		if (s.scoreData.lamp === "FAILED" || !chart || IsNullish(chart.data.stepCount)) {
 			return;
 		}
@@ -157,7 +160,7 @@ const DDR_CALCULATE_FLARE_SKILL: GPTNewProfileCalcs<"ddr:DP" | "ddr:SP"> = async
 	playtype,
 	userID,
 ) => {
-	const sc: Array<PBScoreDocumentWithSong> = await db["personal-bests"].aggregate([
+	const sc: Array<PBScoreDocumentWithSong> = await MONGODB_KILL["personal-bests"].aggregate([
 		{
 			$match: {
 				userID,

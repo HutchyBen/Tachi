@@ -9,10 +9,10 @@ import { IsScore } from "#util/asserts";
 import { FormatGPTProfileRatingName } from "#util/misc";
 import React, { useContext, useEffect, useState } from "react";
 import {
-	type ChartDocument,
 	GetGPTString,
-	type PBScoreDocument,
-	type ScoreDocument,
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
 } from "tachi-common";
 
 import CommentContainer from "./CommentContainer";
@@ -25,8 +25,8 @@ export function ScoreInfo({
 	score,
 	chart,
 }: {
-	chart: ChartDocument;
-	score: PBScoreDocument | ScoreDocument;
+	chart: MONGO_ChartDocument;
+	score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
 }) {
 	const rating = useScoreRatingAlg(score.game, score.playtype);
 	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(score.game, chart.playtype)];
@@ -76,21 +76,21 @@ export default function DocumentComponent({
 	chart,
 	onScoreUpdate,
 }: {
-	chart: ChartDocument;
+	chart: MONGO_ChartDocument;
 	forceScoreData?: boolean;
 	GraphComponent?:
 		| (({
 				score,
 				chart,
 		  }: {
-				chart: ChartDocument;
-				score: PBScoreDocument | ScoreDocument;
+				chart: MONGO_ChartDocument;
+				score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
 		  }) => JSX.Element)
 		| null;
-	onScoreUpdate?: (sc: ScoreDocument) => void;
+	onScoreUpdate?: (sc: MONGO_ScoreDocument) => void;
 	pbData: UGPTChartPBComposition;
 	renderScoreInfo?: boolean;
-	score: PBScoreDocument | ScoreDocument;
+	score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
 	scoreState: {
 		highlight: boolean;
 		setComment?: SetState<string | null>;
@@ -190,19 +190,19 @@ export function GraphAndJudgementDataComponent({
 	GraphComponent = null,
 	chart,
 }: {
-	chart: ChartDocument;
+	chart: MONGO_ChartDocument;
 	forceScoreData?: boolean;
 	GraphComponent?:
 		| (({
 				score,
 				chart,
 		  }: {
-				chart: ChartDocument;
-				score: PBScoreDocument | ScoreDocument;
+				chart: MONGO_ChartDocument;
+				score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
 		  }) => JSX.Element)
 		| null;
 	renderScoreInfo?: boolean;
-	score: PBScoreDocument | ScoreDocument;
+	score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
 	showSingleScoreNote?: boolean;
 }) {
 	return (

@@ -1,32 +1,32 @@
 import { APIFetchV1, type UnsuccessfulAPIFetchResponse } from "#util/api";
 import { useEffect, useState } from "react";
 import {
-	type ChartDocument,
-	type FolderDocument,
 	type GPTString,
 	type integer,
-	type SongDocument,
-	type UserDocument,
+	type MONGO_ChartDocument,
+	type MONGO_FolderDocument,
+	type MONGO_SongDocument,
+	type MONGO_UserDocument,
 } from "tachi-common";
 
 type SearchResults = {
 	charts: {
 		[GPT in GPTString]?: Array<{
-			chart: ChartDocument;
+			chart: MONGO_ChartDocument;
 			playcount: integer;
-			song: SongDocument;
+			song: MONGO_SongDocument;
 		}>;
 	};
-	folders: Array<FolderDocument>;
-	users: Array<UserDocument>;
+	folders: Array<MONGO_FolderDocument>;
+	users: Array<MONGO_UserDocument>;
 };
 
 type ChartHashSearchReturns = {
 	charts: {
 		[GPT in GPTString]?: Array<{
-			chart: ChartDocument;
+			chart: MONGO_ChartDocument;
 			playcount: integer;
-			song: SongDocument;
+			song: MONGO_SongDocument;
 		}>;
 	};
 };
@@ -95,7 +95,7 @@ export function useTachiSearch(
 					}
 
 					if ("users" in result.body) {
-						setValue.users.push(...(result.body.users as Array<UserDocument>));
+						setValue.users.push(...(result.body.users as Array<MONGO_UserDocument>));
 					}
 				}
 

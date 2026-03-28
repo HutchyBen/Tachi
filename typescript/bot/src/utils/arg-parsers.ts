@@ -1,7 +1,7 @@
 import type { CommandInteraction } from "discord.js";
 import type { PrivDiscordUserMap } from "tachi-db";
 
-import { type GameGroup, type Playtype, type UserDocument } from "tachi-common";
+import { type GameGroup, type MONGO_UserDocument, type Playtype } from "tachi-common";
 
 import type { Emittable } from "../slash-commands/types";
 
@@ -16,7 +16,7 @@ export async function GetGPTAndUser(
 	interaction: CommandInteraction,
 	requestingUser: PrivDiscordUserMap,
 ): Promise<
-	| { content: { game: GameGroup; playtype: Playtype; userDoc: UserDocument }; error: null }
+	| { content: { game: GameGroup; playtype: Playtype; userDoc: MONGO_UserDocument }; error: null }
 	| { error: Emittable }
 > {
 	const userID = interaction.options.getString("other_user") ?? requestingUser.user_id.toString();

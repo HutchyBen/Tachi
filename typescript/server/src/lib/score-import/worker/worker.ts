@@ -1,7 +1,7 @@
 import type { ImportTypes } from "tachi-common";
 
 import { HandleSIGTERMGracefully } from "#lib/handlers/sigterm";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { Env, ServerConfig } from "#lib/setup/config";
 import { GetUserWithID } from "#utils/user";
 import { Worker } from "bullmq";
@@ -21,7 +21,7 @@ EventEmitter.defaultMaxListeners = 20;
 // all cores. Parallelism can only get us so far in the same process.
 
 // You don't have to run this. If it is being ran, you need to set USE_EXTERNAL_SCORE_IMPORT_WORKER
-// in conf.json5. That will ensure all score import jobs are thrown at redis and eventually
+// in env (TACHI_USE_EXTERNAL_SCORE_IMPORT_WORKER). That will ensure all score import jobs are thrown at redis and eventually
 // end up here.
 
 // If you don't, score importing will happen on the same thread as your router. That's probably
@@ -86,7 +86,7 @@ export const worker = new Worker(
 		});
 
 		try {
-			const importDocument = await ScoreImportMain(
+			const MONGO_ImportDocument = await ScoreImportMain(
 				user.id,
 				job.data.userIntent,
 				job.data.importType,
@@ -98,7 +98,7 @@ export const worker = new Worker(
 
 			log.debug(`Finished import.`);
 
-			return { success: true, importDocument };
+			return { success: true, MONGO_ImportDocument };
 		} catch (e) {
 			const err = e as Error | ScoreImportFatalError;
 

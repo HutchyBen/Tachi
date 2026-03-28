@@ -15,9 +15,9 @@ import React, { useContext, useState } from "react";
 import { Badge, Button } from "react-bootstrap";
 import {
 	FormatGameGroup,
-	type GoalDocument,
-	type GoalSubscriptionDocument,
-	type QuestDocument,
+	type MONGO_GoalDocument,
+	type MONGO_GoalSubscriptionDocument,
+	type MONGO_QuestDocument,
 	type QuestSection,
 } from "tachi-common";
 
@@ -27,8 +27,8 @@ export default function Quest({
 	collapsible = false,
 }: {
 	collapsible?: boolean;
-	goals: Map<string, GoalDocument>;
-	quest: QuestDocument;
+	goals: Map<string, MONGO_GoalDocument>;
+	quest: MONGO_QuestDocument;
 }) {
 	const { user } = useContext(UserContext);
 	const { questSubs, reloadTargets } = useContext(TargetsContext);
@@ -163,7 +163,7 @@ function QuestSectionComponent({
 	playtype,
 	goals,
 }: {
-	goals: Map<string, GoalDocument>;
+	goals: Map<string, MONGO_GoalDocument>;
 	section: QuestSection;
 } & GamePT) {
 	return (
@@ -206,8 +206,8 @@ export function InnerQuestSectionGoal({
 	goalSubOverride,
 }: {
 	dependencies?: string[];
-	goal: GoalDocument;
-	goalSubOverride?: GoalSubscriptionDocument;
+	goal: MONGO_GoalDocument;
+	goalSubOverride?: MONGO_GoalSubscriptionDocument;
 	note?: string;
 }) {
 	const { goalSubs } = useContext(TargetsContext);

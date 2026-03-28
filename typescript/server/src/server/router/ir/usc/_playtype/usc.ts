@@ -1,15 +1,15 @@
 import type {
-	ChartDocument,
 	GPTStrings,
 	integer,
-	PBScoreDocument,
-	ScoreDocument,
+	MONGO_ChartDocument,
+	MONGO_PBScoreDocument,
+	MONGO_ScoreDocument,
 } from "tachi-common";
 import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import { USCIR_ADJACENT_SCORE_N } from "#lib/constants/usc-ir";
-import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import { log } from "#lib/log/log";
+import MONGODB_KILL from "#services/mongo/db";
 import { MStoS } from "#utils/misc";
 import { GetPBOnChart, GetServerRecordOnChart } from "#utils/scores";
 
@@ -34,12 +34,12 @@ export const TACHI_LAMP_TO_USC: Record<
  * fields are null.
  */
 export async function TachiScoreToServerScore(
-	tachiScore: PBScoreDocument<"usc:Controller" | "usc:Keyboard">,
+	tachiScore: MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard">,
 ): Promise<USCServerScore> {
 	// @optimisable
 	// Repeated calls to this may pre-emptively provide usernames
 	// and score PBs.
-	const userDoc = await db.users.findOne(
+	const userDoc = await MONGODB_KILL.users.findOne(
 		{
 			id: tachiScore.userID,
 		},
@@ -61,9 +61,9 @@ export async function TachiScoreToServerScore(
 
 	const firstScoreID = tachiScore.composedFrom[0].scoreID;
 
-	const scorePB = (await db.scores.findOne({
+	const scorePB = (await MONGODB_KILL.scores.findOne({
 		scoreID: firstScoreID,
-	})) as ScoreDocument<"usc:Controller" | "usc:Keyboard"> | null;
+	})) as MONGO_ScoreDocument<"usc:Controller" | "usc:Keyboard"> | null;
 
 	if (!scorePB) {
 		log.error(
@@ -91,10 +91,10 @@ export async function TachiScoreToServerScore(
 
 export async function CreatePOSTScoresResponseBody(
 	userID: integer,
-	chartDoc: ChartDocument<"usc:Controller" | "usc:Keyboard">,
+	chartDoc: MONGO_ChartDocument<"usc:Controller" | "usc:Keyboard">,
 	scoreID: string,
 ): Promise<POSTScoresResponseBody> {
-	const scorePB = (await GetPBOnChart(userID, chartDoc.chartID)) as PBScoreDocument<
+	const scorePB = (await GetPBOnChart(userID, chartDoc.chartID)) as MONGO_PBScoreDocument<
 		"usc:Controller" | "usc:Keyboard"
 	> | null;
 
@@ -111,9 +111,9 @@ export async function CreatePOSTScoresResponseBody(
 		);
 	}
 
-	const ktServerRecord = (await GetServerRecordOnChart(chartDoc.chartID)) as PBScoreDocument<
-		"usc:Controller" | "usc:Keyboard"
-	> | null;
+	const ktServerRecord = (await GetServerRecordOnChart(
+		chartDoc.chartID,
+	)) as MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard"> | null;
 
 	// this is impossible to trigger without making a race-condition.
 	/* istanbul ignore next */
@@ -135,7 +135,7 @@ export async function CreatePOSTScoresResponseBody(
 	// This returns immediately ranked higher
 	// than the current user.
 
-	const adjAbove = (await db["personal-bests"].find(
+	const adjAbove = (await MONGODB_KILL["personal-bests"].find(
 		{
 			chartID: chartDoc.chartID,
 			"rankingData.rank": { $lt: usersRanking },
@@ -144,7 +144,7 @@ export async function CreatePOSTScoresResponseBody(
 			limit: USCIR_ADJACENT_SCORE_N,
 			sort: { "rankingData.rank": -1 },
 		},
-	)) as Array<PBScoreDocument<"usc:Controller" | "usc:Keyboard">>;
+	)) as Array<MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard">>;
 
 	// The specification enforces that we return them in
 	// ascending order, though, so we reverse this after
@@ -161,7 +161,7 @@ export async function CreatePOSTScoresResponseBody(
 
 	// Similar to above, this returns the N most immediate
 	// scores below the given user.
-	const adjBelow = (await db["personal-bests"].find(
+	const adjBelow = (await MONGODB_KILL["personal-bests"].find(
 		{
 			chartID: chartDoc.chartID,
 			"rankingData.rank": { $gt: usersRanking },
@@ -170,7 +170,7 @@ export async function CreatePOSTScoresResponseBody(
 			limit: USCIR_ADJACENT_SCORE_N,
 			sort: { "rankingData.rank": 1 },
 		},
-	)) as Array<PBScoreDocument<"usc:Controller" | "usc:Keyboard">>;
+	)) as Array<MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard">>;
 
 	const [score, serverRecord, adjacentAbove, adjacentBelow] = await Promise.all([
 		TachiScoreToServerScore(scorePB),
@@ -179,9 +179,9 @@ export async function CreatePOSTScoresResponseBody(
 		Promise.all(adjBelow.map(TachiScoreToServerScore)),
 	]);
 
-	const originalScore = (await db.scores.findOne({
+	const originalScore = (await MONGODB_KILL.scores.findOne({
 		scoreID,
-	})) as ScoreDocument<"usc:Controller" | "usc:Keyboard"> | null;
+	})) as MONGO_ScoreDocument<"usc:Controller" | "usc:Keyboard"> | null;
 
 	if (!originalScore) {
 		log.error(

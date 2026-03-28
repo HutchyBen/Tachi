@@ -1,205 +1,191 @@
-import type { UserDocument } from "tachi-common";
-
-import db from "#services/mongo/db";
-import { CreateFakeAuthCookie } from "#test-utils/fake-auth";
+import { seedApiToken } from "#actions/test-utils/api-tokens";
+import DB from "#services/pg/db";
 import mockApi from "#test-utils/mock-api";
-import ResetDBState from "#test-utils/resets";
-import deepmerge from "deepmerge";
-import t from "tap";
+import { seedUser } from "#test-utils/pg-fixtures";
+import { beforeEach, describe, expect, it } from "vitest";
 
-t.test("GET /api/v1/users/:userID/settings", (t) => {
-	t.beforeEach(ResetDBState);
+async function loginAs(username: string, password = "password123") {
+	const res = await mockApi.post("/api/v1/auth/login").send({
+		username,
+		"!password": password,
+		captcha: "test",
+	});
 
-	t.test("Should return the users settings.", async (t) => {
-		const res = await mockApi.get("/api/v1/users/1/settings");
+	return res.headers["set-cookie"] as unknown as string[];
+}
 
-		t.strictSame(res.body.body, {
-			userID: 1,
+async function getSettings(userId: number) {
+	return DB.selectFrom("account_settings")
+		.selectAll()
+		.where("user_id", "=", userId)
+		.executeTakeFirst();
+}
+
+// ─── GET /api/v1/users/:userID/settings ──────────────────────────────────────
+
+describe("GET /api/v1/users/:userID/settings", () => {
+	let userId: number;
+
+	beforeEach(async () => {
+		({ id: userId } = await seedUser({
+			username: "test_user",
+			withCredential: true,
+			withSettings: true,
+		}));
+	});
+
+	it("returns 200 with the user's settings", async () => {
+		const res = await mockApi.get(`/api/v1/users/${userId}/settings`);
+
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.body).toMatchObject({
+			userID: userId,
 			preferences: {
 				invisible: false,
-				developerMode: true,
+				developerMode: false,
 				advancedMode: false,
 				contentiousContent: false,
 				deletableScores: false,
 			},
 		});
-
-		t.end();
 	});
 
-	t.end();
+	it("returns 404 when the user does not exist", async () => {
+		const res = await mockApi.get("/api/v1/users/99999/settings");
+
+		expect(res.status).toBe(404);
+		expect(res.body.success).toBe(false);
+	});
 });
 
-t.test("PATCH /api/v1/users/:userID/settings", async (t) => {
-	t.beforeEach(ResetDBState);
+// ─── PATCH /api/v1/users/:userID/settings ────────────────────────────────────
 
-	const cookie = await CreateFakeAuthCookie(mockApi);
+describe("PATCH /api/v1/users/:userID/settings", () => {
+	let userId: number;
+	let cookie: string[];
 
-	t.test("Should mutate the users settings.", async (t) => {
-		const res = await mockApi.patch("/api/v1/users/1/settings").set("Cookie", cookie).send({
-			developerMode: false,
+	beforeEach(async () => {
+		({ id: userId } = await seedUser({
+			username: "test_user",
+			withCredential: true,
+			withSettings: true,
+		}));
+		cookie = await loginAs("test_user");
+	});
+
+	it("returns 401 when not authenticated", async () => {
+		const res = await mockApi
+			.patch(`/api/v1/users/${userId}/settings`)
+			.send({ invisible: true });
+
+		expect(res.status).toBe(401);
+		expect(res.body.success).toBe(false);
+	});
+
+	it("returns 403 when using an API key instead of a session cookie", async () => {
+		await seedApiToken({ token: "test_token", userId });
+
+		const res = await mockApi
+			.patch(`/api/v1/users/${userId}/settings`)
+			.set("Authorization", "Bearer test_token")
+			.send({ invisible: true });
+
+		expect(res.status).toBe(403);
+		expect(res.body.success).toBe(false);
+
+		const row = await getSettings(userId);
+		expect(row?.pf_invisible).toBe(false);
+	});
+
+	it("returns 403 when trying to modify another user's settings", async () => {
+		const { id: otherId } = await seedUser({
+			username: "other_user",
+			email: "other@example.com",
+			withCredential: true,
+			withSettings: true,
+		});
+		const otherCookie = await loginAs("other_user");
+
+		const res = await mockApi
+			.patch(`/api/v1/users/${userId}/settings`)
+			.set("Cookie", otherCookie)
+			.send({ invisible: true });
+
+		expect(res.status).toBe(403);
+		expect(res.body.success).toBe(false);
+
+		const row = await getSettings(otherId);
+		expect(row?.pf_invisible).toBe(false);
+	});
+
+	it("returns 400 when body is empty", async () => {
+		const res = await mockApi
+			.patch(`/api/v1/users/${userId}/settings`)
+			.set("Cookie", cookie)
+			.send({});
+
+		expect(res.status).toBe(400);
+		expect(res.body.success).toBe(false);
+	});
+
+	it("returns 400 when a boolean field has the wrong type", async () => {
+		const res = await mockApi
+			.patch(`/api/v1/users/${userId}/settings`)
+			.set("Cookie", cookie)
+			.send({ developerMode: "true" });
+
+		expect(res.status).toBe(400);
+		expect(res.body.success).toBe(false);
+	});
+
+	it("updates only the specified preferences and leaves others unchanged", async () => {
+		const res = await mockApi
+			.patch(`/api/v1/users/${userId}/settings`)
+			.set("Cookie", cookie)
+			.send({ invisible: true, developerMode: true });
+
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.body.preferences).toMatchObject({
 			invisible: true,
+			developerMode: true,
+			advancedMode: false,
+			contentiousContent: false,
+			deletableScores: false,
 		});
 
-		t.strictSame(res.body.body, {
-			userID: 1,
-			preferences: {
-				invisible: true,
-				developerMode: false,
-				advancedMode: false,
-				contentiousContent: false,
-				deletableScores: false,
-			},
-		});
-
-		const dbRes = await db["user-settings"].findOne({ userID: 1 });
-
-		t.strictSame(dbRes, {
-			userID: 1,
-			preferences: {
-				invisible: true,
-				developerMode: false,
-				advancedMode: false,
-				contentiousContent: false,
-				deletableScores: false,
-			},
-		});
-
-		t.end();
+		const row = await getSettings(userId);
+		expect(row?.pf_invisible).toBe(true);
+		expect(row?.pf_developer_mode).toBe(true);
+		expect(row?.pf_advanced_mode).toBe(false);
 	});
 
-	t.test("Should 400 if body is empty.", async (t) => {
-		const res = await mockApi.patch("/api/v1/users/1/settings").set("Cookie", cookie).send({});
-
-		t.equal(res.statusCode, 400);
-
-		const dbRes = await db["user-settings"].findOne({ userID: 1 });
-
-		t.strictSame(
-			dbRes,
-			{
-				userID: 1,
-				preferences: {
-					invisible: false,
-					developerMode: true,
-					advancedMode: false,
-					contentiousContent: false,
-					deletableScores: false,
-				},
-			},
-			"User Settings should be unmodified.",
-		);
-
-		t.end();
-	});
-
-	t.test("Should validate input.", async (t) => {
-		const res = await mockApi.patch("/api/v1/users/1/settings").set("Cookie", cookie).send({
-			developerMode: "true",
-		});
-
-		t.equal(res.statusCode, 400);
-
-		const res2 = await mockApi.patch("/api/v1/users/1/settings").set("Cookie", cookie).send({
-			invalid_prop: true,
-		});
-
-		t.equal(res2.statusCode, 400);
-
-		const res3 = await mockApi
-			.patch("/api/v1/users/1/settings")
-			.set("Cookie", cookie)
-			.send({
-				invisible: { $where: "alert(1)" },
-			});
-
-		t.equal(res3.statusCode, 400);
-
-		t.end();
-	});
-
-	t.test("Must be authenticated as that user.", async (t) => {
-		const user = await db.users.findOne({});
-
-		await db.users.insert(
-			deepmerge(user!, {
-				id: 2,
-				username: "something_else",
-				usernameLowercase: "something_else",
-			}) as UserDocument,
-		);
-
+	it("returns the updated settings document in body", async () => {
 		const res = await mockApi
-			.patch("/api/v1/users/2/settings")
-
-			// this token is for user 1, not 2
+			.patch(`/api/v1/users/${userId}/settings`)
 			.set("Cookie", cookie)
-			.send({
-				developerMode: false,
-			});
+			.send({ advancedMode: true });
 
-		t.equal(res.statusCode, 403);
-
-		const dbRes = await db["user-settings"].findOne({ userID: 1 });
-
-		t.equal(
-			dbRes?.preferences.developerMode,
-			true,
-			"Settings should not be modified in the database.",
-		);
-
-		t.end();
-	});
-
-	t.test("Must not work with an API key.", async (t) => {
-		await db["api-tokens"].insert({
-			identifier: "no perm",
-			permissions: {
-				// has relevant permissions
-				customise_profile: true,
-			},
-			token: "no_perm",
-			userID: 1,
-			fromAPIClient: null,
+		expect(res.status).toBe(200);
+		expect(res.body.body).toMatchObject({
+			userID: userId,
+			preferences: { advancedMode: true },
 		});
-
-		const res = await mockApi
-			.patch("/api/v1/users/1/settings")
-			.set("Authorization", "Bearer no_perm")
-			.send({
-				developerMode: false,
-			});
-
-		t.equal(res.statusCode, 403);
-
-		const dbRes = await db["user-settings"].findOne({ userID: 1 });
-
-		t.equal(
-			dbRes?.preferences.developerMode,
-			true,
-			"Settings should not be modified in the database.",
-		);
-
-		t.end();
 	});
 
-	t.test("Must be authenticated.", async (t) => {
-		const res = await mockApi.patch("/api/v1/users/1/settings").send({
-			developerMode: false,
-		});
+	it("writes a GOOD action row on success", async () => {
+		await mockApi
+			.patch(`/api/v1/users/${userId}/settings`)
+			.set("Cookie", cookie)
+			.send({ invisible: true });
 
-		t.equal(res.statusCode, 401);
+		const action = await DB.selectFrom("action")
+			.selectAll()
+			.where("kind", "=", "UPDATE_USER_SETTINGS")
+			.executeTakeFirst();
 
-		const dbRes = await db["user-settings"].findOne({ userID: 1 });
-
-		t.equal(
-			dbRes?.preferences.developerMode,
-			true,
-			"Settings should not be modified in the database.",
-		);
-
-		t.end();
+		expect(action).toBeDefined();
+		expect(action).toMatchObject({ result: "GOOD", user_id: userId });
 	});
-
-	t.end();
 });

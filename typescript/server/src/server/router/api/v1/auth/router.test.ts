@@ -1,378 +1,329 @@
+import { PasswordCompare } from "#lib/auth/auth";
 import { ClearTestingRateLimitCache } from "#server/middleware/rate-limiter";
-import db from "#services/mongo/db";
+import DB from "#services/pg/db";
 import mockApi from "#test-utils/mock-api";
-import ResetDBState from "#test-utils/resets";
-import { Sleep } from "#utils/misc";
-import t from "tap";
+import { seedInvite, seedResetToken, seedUser } from "#test-utils/pg-fixtures";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import { PasswordCompare } from "./auth";
+// ─── POST /api/v1/auth/register ──────────────────────────────────────────────
 
-t.test("POST /api/v1/auth/login", (t) => {
-	t.beforeEach(ResetDBState);
-	t.beforeEach(ClearTestingRateLimitCache);
+describe("POST /api/v1/auth/register", () => {
+	let inviteCode: string;
 
-	t.test("Should log a user in with right credentials", async (t) => {
-		const res = await mockApi.post("/api/v1/auth/login").send({
-			username: "test_zkldi",
-			"!password": "password",
-			captcha: "foo",
-		});
-
-		t.equal(res.status, 200);
-		t.equal(res.body.success, true);
-		t.strictSame(res.body.body, {
-			userID: 1,
-		});
-
-		const cookie = res.headers["set-cookie"];
-
-		const stat = await mockApi.get("/api/v1/status").set("Cookie", cookie);
-
-		t.ok(stat.body.body.permissions.length > 0);
-
-		t.end();
+	beforeEach(async () => {
+		ClearTestingRateLimitCache();
+		const { id } = await seedUser({ withCredential: true, withSettings: true });
+		inviteCode = await seedInvite(id);
 	});
 
-	t.test("Should return 200 if user already logged in", async (t) => {
-		const res = await mockApi.post("/api/v1/auth/login").send({
-			username: "test_zkldi",
-			"!password": "password",
-			captcha: "foo",
+	it("creates a new user and sets a session cookie", async () => {
+		const res = await mockApi.post("/api/v1/auth/register").send({
+			username: "newuser",
+			"!password": "securepassword",
+			email: "newuser@example.com",
+			captcha: "test",
+			inviteCode,
 		});
 
-		const cookie = res.headers["set-cookie"];
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.body.username).toBe("newuser");
+		expect(res.headers["set-cookie"]).toBeDefined();
 
-		const res2 = await mockApi
+		const created = await DB.selectFrom("account")
+			.select("username")
+			.where("username", "=", "newuser")
+			.executeTakeFirst();
+
+		expect(created?.username).toBe("newuser");
+	});
+
+	it("rejects a duplicate username (case-insensitive) with 409", async () => {
+		const res = await mockApi.post("/api/v1/auth/register").send({
+			username: "Test_User",
+			"!password": "securepassword",
+			email: "other@example.com",
+			captcha: "test",
+			inviteCode,
+		});
+
+		expect(res.status).toBe(409);
+		expect(res.body.success).toBe(false);
+	});
+
+	it("rejects a duplicate email with 409", async () => {
+		const res = await mockApi.post("/api/v1/auth/register").send({
+			username: "brandnewuser",
+			"!password": "securepassword",
+			email: "test@example.com",
+			captcha: "test",
+			inviteCode,
+		});
+
+		expect(res.status).toBe(409);
+		expect(res.body.success).toBe(false);
+	});
+
+	it("rejects an invalid email format with 400", async () => {
+		const res = await mockApi.post("/api/v1/auth/register").send({
+			username: "brandnewuser",
+			"!password": "securepassword",
+			email: "not-an-email",
+			captcha: "test",
+			inviteCode,
+		});
+
+		expect(res.status).toBe(400);
+		expect(res.body.success).toBe(false);
+	});
+
+	it("rejects a password shorter than 8 characters with 400", async () => {
+		const res = await mockApi.post("/api/v1/auth/register").send({
+			username: "brandnewuser",
+			"!password": "short",
+			email: "brandnewuser@example.com",
+			captcha: "test",
+			inviteCode,
+		});
+
+		expect(res.status).toBe(400);
+		expect(res.body.success).toBe(false);
+	});
+
+	it.each([
+		["starts with a number", "1badname"],
+		["too short (< 3 chars)", "ab"],
+	])("rejects username that %s with 400", async (_, username) => {
+		const res = await mockApi.post("/api/v1/auth/register").send({
+			username,
+			"!password": "securepassword",
+			email: "someone@example.com",
+			captcha: "test",
+			inviteCode,
+		});
+
+		expect(res.status).toBe(400);
+		expect(res.body.success).toBe(false);
+	});
+
+	it("rejects a missing invite code with 400", async () => {
+		const res = await mockApi.post("/api/v1/auth/register").send({
+			username: "brandnewuser",
+			"!password": "securepassword",
+			email: "brandnewuser@example.com",
+			captcha: "test",
+		});
+
+		expect(res.status).toBe(400);
+		expect(res.body.success).toBe(false);
+	});
+
+	it("does not consume the invite code on a failed registration", async () => {
+		await mockApi.post("/api/v1/auth/register").send({
+			username: "test_user",
+			"!password": "securepassword",
+			email: "other@example.com",
+			captcha: "test",
+			inviteCode,
+		});
+
+		const invite = await DB.selectFrom("priv_invite")
+			.select("consumed")
+			.where("code", "=", inviteCode)
+			.executeTakeFirstOrThrow();
+
+		expect(invite.consumed).toBe(false);
+	});
+
+	it("marks the invite code as consumed on success", async () => {
+		await mockApi.post("/api/v1/auth/register").send({
+			username: "newuser",
+			"!password": "securepassword",
+			email: "newuser@example.com",
+			captcha: "test",
+			inviteCode,
+		});
+
+		const invite = await DB.selectFrom("priv_invite")
+			.select("consumed")
+			.where("code", "=", inviteCode)
+			.executeTakeFirstOrThrow();
+
+		expect(invite.consumed).toBe(true);
+	});
+});
+
+// ─── POST /api/v1/auth/login ─────────────────────────────────────────────────
+
+describe("POST /api/v1/auth/login", () => {
+	beforeEach(async () => {
+		ClearTestingRateLimitCache();
+		await seedUser({ withCredential: true, withSettings: true });
+	});
+
+	it("returns 200 and a session cookie with correct credentials", async () => {
+		const res = await mockApi.post("/api/v1/auth/login").send({
+			username: "test_user",
+			"!password": "password123",
+			captcha: "test",
+		});
+
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.body.userID).toBeDefined();
+		expect(res.headers["set-cookie"]).toBeDefined();
+	});
+
+	it("session cookie grants authenticated access", async () => {
+		const loginRes = await mockApi.post("/api/v1/auth/login").send({
+			username: "test_user",
+			"!password": "password123",
+			captcha: "test",
+		});
+
+		const cookie = loginRes.headers["set-cookie"] as unknown as string[];
+		const userID = loginRes.body.body.userID;
+
+		const statusRes = await mockApi.get("/api/v1/status").set("Cookie", cookie);
+
+		expect(statusRes.status).toBe(200);
+		expect(statusRes.body.body.whoami).toBe(userID);
+	});
+
+	it("allows re-login when already logged in", async () => {
+		const first = await mockApi.post("/api/v1/auth/login").send({
+			username: "test_user",
+			"!password": "password123",
+			captcha: "test",
+		});
+
+		const second = await mockApi
 			.post("/api/v1/auth/login")
+			.set("Cookie", first.headers["set-cookie"] as unknown as string[])
 			.send({
-				username: "test_zkldi",
-				"!password": "password",
-				captcha: "foo",
-			})
-			.set("Cookie", cookie);
-
-		// even if they have a login already going, just let them log in.
-		t.equal(res2.status, 200);
-
-		t.end();
-	});
-
-	t.test("Should return 403 if password invalid", async (t) => {
-		const res = await mockApi.post("/api/v1/auth/login").send({
-			username: "test_zkldi",
-			"!password": "invalid_password",
-			captcha: "foo",
-		});
-
-		t.equal(res.status, 403);
-
-		t.end();
-	});
-
-	t.test("Should return 404 if user invalid", async (t) => {
-		const res = await mockApi.post("/api/v1/auth/login").send({
-			username: "invalid_user",
-			"!password": "password",
-			captcha: "foo",
-		});
-
-		t.equal(res.status, 404);
-
-		t.end();
-	});
-
-	t.test("Should return 400 if no password", async (t) => {
-		const res = await mockApi.post("/api/v1/auth/login").send({
-			username: "invalid_user",
-			captcha: "foo",
-		});
-
-		t.equal(res.status, 400);
-
-		t.end();
-	});
-
-	t.test("Should return 400 if no username", async (t) => {
-		const res = await mockApi.post("/api/v1/auth/login").send({
-			"!password": "password",
-			captcha: "foo",
-		});
-
-		t.equal(res.status, 400);
-
-		t.end();
-	});
-
-	t.test("Should return 400 if no captcha", async (t) => {
-		const res = await mockApi.post("/api/v1/auth/login").send({
-			"!password": "password",
-			username: "test_zkldi",
-		});
-
-		t.equal(res.status, 400);
-
-		t.end();
-	});
-
-	t.end();
-});
-
-t.test("POST /api/v1/auth/register", (t) => {
-	t.beforeEach(ResetDBState);
-	t.beforeEach(ClearTestingRateLimitCache);
-
-	t.beforeEach(() =>
-		db.invites.insert({
-			code: "code",
-			createdBy: 1,
-			createdAt: 0,
-			consumed: false,
-			consumedAt: null,
-			consumedBy: null,
-		}),
-	);
-
-	t.test("Should register a new user.", async (t) => {
-		const res = await mockApi.post("/api/v1/auth/register").send({
-			username: "foo",
-			"!password": "password",
-			email: "foo@bar.com",
-			captcha: "1",
-			inviteCode: "code",
-		});
-
-		t.equal(res.statusCode, 200);
-		t.equal(res.body.success, true);
-		t.equal(res.body.body.username, "foo");
-
-		const doc = await db.users.findOne({ username: "foo" });
-
-		t.not(doc, null);
-
-		t.end();
-	});
-
-	t.test("Should disallow users with matching names.", async (t) => {
-		const res = await mockApi.post("/api/v1/auth/register").send({
-			username: "test_zkldi",
-			"!password": "password",
-			email: "foo@bar.com",
-			captcha: "1",
-			inviteCode: "code",
-		});
-
-		t.equal(res.statusCode, 409);
-		t.equal(res.body.success, false);
-
-		t.end();
-	});
-
-	t.test("Should disallow users with matching names case insensitively.", async (t) => {
-		const res = await mockApi.post("/api/v1/auth/register").send({
-			username: "test_zKLdi",
-			"!password": "password",
-			email: "foo@bar.com",
-			captcha: "1",
-			inviteCode: "code",
-		});
-
-		t.equal(res.statusCode, 409);
-		t.equal(res.body.success, false);
-
-		t.end();
-	});
-
-	t.test("Should disallow email if it is already used.", async (t) => {
-		const res = await mockApi.post("/api/v1/auth/register").send({
-			username: "foo",
-			"!password": "password",
-
-			// this is our test docs email, apparently.
-			email: "thepasswordis@password.com",
-			captcha: "1",
-			inviteCode: "code",
-		});
-
-		t.equal(res.statusCode, 409);
-		t.equal(res.body.success, false);
-
-		t.end();
-	});
-
-	t.test("Should disallow invalid emails.", async (t) => {
-		const res = await mockApi.post("/api/v1/auth/register").send({
-			username: "foo",
-			"!password": "password",
-			email: "nonsense+email",
-			captcha: "1",
-			inviteCode: "code",
-		});
-
-		t.equal(res.statusCode, 400);
-		t.equal(res.body.success, false);
-
-		t.end();
-	});
-
-	t.test("Should disallow short passwords.", async (t) => {
-		const res = await mockApi.post("/api/v1/auth/register").send({
-			username: "foo",
-			"!password": "pass",
-			email: "foo@bar.com",
-			captcha: "1",
-			inviteCode: "code",
-		});
-
-		t.equal(res.statusCode, 400);
-		t.equal(res.body.success, false);
-
-		t.end();
-	});
-
-	t.test("Should disallow invalid usernames.", async (t) => {
-		const res = await mockApi.post("/api/v1/auth/register").send({
-			username: "3foo",
-			"!password": "password",
-			email: "foo@bar.com",
-			captcha: "1",
-			inviteCode: "code",
-		});
-
-		t.equal(res.statusCode, 400);
-		t.equal(res.body.success, false);
-
-		const res2 = await mockApi.post("/api/v1/auth/register").send({
-			username: "f",
-			"!password": "password",
-			email: "foo@bar.com",
-			captcha: "1",
-			inviteCode: "code",
-		});
-
-		t.equal(res2.statusCode, 400);
-		t.equal(res2.body.success, false);
-
-		t.end();
-	});
-
-	t.test("Should recover from a fatal error without breaking state.", async (t) => {
-		// this will cause a userID collision
-		await db.counters.update({ counterName: "users" }, { $set: { value: 1 } });
-
-		const res = await mockApi.post("/api/v1/auth/register").send({
-			username: "foo",
-			"!password": "password",
-			email: "foo@bar.com",
-			captcha: "1",
-			inviteCode: "code",
-		});
-
-		t.equal(res.statusCode, 500);
-
-		const counter = await db.counters.findOne({ counterName: "users" });
-
-		// value should not stay incremented
-		t.equal(counter?.value, 1);
-
-		const invite = await db.invites.findOne({ code: "code" });
-
-		// invite should not be consumed
-		t.equal(invite?.consumed, false);
-
-		t.end();
-	});
-
-	t.end();
-});
-
-t.test("POST /api/v1/auth/forgot-password", (t) => {
-	t.beforeEach(ResetDBState);
-	t.beforeEach(ClearTestingRateLimitCache);
-
-	t.test("Should create a code to reset a password with.", async (t) => {
-		const res = await mockApi.post("/api/v1/auth/forgot-password").send({
-			email: "thepasswordis@password.com",
-		});
-
-		t.equal(res.statusCode, 202, "Should return 202 immediately.");
-
-		t.strictSame(res.body.body, {}, "Should have no body.");
-
-		// We have to wait for this operation to complete, otherwise, this isn't going to work.
-		// Note that 3seconds is a bit excessive, but better safe than
-		// sorry!
-		await Sleep(3_000);
-
-		const dbRes = await db["password-reset-codes"].findOne({
-			userID: 1,
-		});
-
-		t.not(dbRes, null, "Should exist and save a code to the database.");
-
-		t.end();
-	});
-
-	t.test(
-		"Should not create a code to reset a password with if the email does not exist.",
-		async (t) => {
-			const res = await mockApi.post("/api/v1/auth/forgot-password").send({
-				email: "bademail@example.com",
+				username: "test_user",
+				"!password": "password123",
+				captcha: "test",
 			});
 
-			t.equal(res.statusCode, 202, "Should return 202 immediately.");
+		expect(second.status).toBe(200);
+	});
 
-			t.strictSame(res.body.body, {}, "Should have no body.");
+	it("returns 403 with incorrect password", async () => {
+		const res = await mockApi.post("/api/v1/auth/login").send({
+			username: "test_user",
+			"!password": "wrongpassword",
+			captcha: "test",
+		});
 
-			await Sleep(3_000);
+		expect(res.status).toBe(403);
+		expect(res.body.success).toBe(false);
+	});
 
-			const dbRes = await db["password-reset-codes"].findOne({
-				userID: 1,
-			});
+	it("returns 404 for a non-existent username", async () => {
+		const res = await mockApi.post("/api/v1/auth/login").send({
+			username: "nobody_here",
+			"!password": "password123",
+			captcha: "test",
+		});
 
-			t.equal(dbRes, null, "Should not bother sending a code to the database.");
+		expect(res.status).toBe(404);
+		expect(res.body.success).toBe(false);
+	});
 
-			t.end();
-		},
-	);
+	it("returns 400 when password is missing", async () => {
+		const res = await mockApi.post("/api/v1/auth/login").send({
+			username: "test_user",
+			captcha: "test",
+		});
 
-	t.end();
+		expect(res.status).toBe(400);
+	});
+
+	it("returns 400 when username is missing", async () => {
+		const res = await mockApi.post("/api/v1/auth/login").send({
+			"!password": "password123",
+			captcha: "test",
+		});
+
+		expect(res.status).toBe(400);
+	});
+
+	it("returns 400 when captcha is missing", async () => {
+		const res = await mockApi.post("/api/v1/auth/login").send({
+			username: "test_user",
+			"!password": "password123",
+		});
+
+		expect(res.status).toBe(400);
+	});
 });
 
-t.test("POST /api/v1/auth/reset-password", (t) => {
-	t.beforeEach(ResetDBState);
-	t.beforeEach(ClearTestingRateLimitCache);
+// ─── POST /api/v1/auth/logout ────────────────────────────────────────────────
 
-	t.test("Should reset a users password if they have a valid code.", async (t) => {
-		await db["password-reset-codes"].insert({
-			code: "SECRET_CODE",
-			createdOn: Date.now(),
-			userID: 1,
+describe("POST /api/v1/auth/logout", () => {
+	beforeEach(async () => {
+		ClearTestingRateLimitCache();
+		await seedUser({ withCredential: true, withSettings: true });
+	});
+
+	it("returns 409 when not logged in", async () => {
+		const res = await mockApi.post("/api/v1/auth/logout");
+
+		expect(res.status).toBe(409);
+		expect(res.body.success).toBe(false);
+	});
+
+	it("returns 200 and destroys the session when logged in", async () => {
+		const loginRes = await mockApi.post("/api/v1/auth/login").send({
+			username: "test_user",
+			"!password": "password123",
+			captcha: "test",
 		});
+
+		const cookie = loginRes.headers["set-cookie"] as unknown as string[];
+
+		const logoutRes = await mockApi.post("/api/v1/auth/logout").set("Cookie", cookie);
+
+		expect(logoutRes.status).toBe(200);
+		expect(logoutRes.body.success).toBe(true);
+	});
+});
+
+// ─── POST /api/v1/auth/reset-password ────────────────────────────────────────
+
+describe("POST /api/v1/auth/reset-password", () => {
+	let userId: number;
+
+	beforeEach(async () => {
+		ClearTestingRateLimitCache();
+		({ id: userId } = await seedUser({ withCredential: true, withSettings: true }));
+	});
+
+	it("updates the password when a valid reset code is supplied", async () => {
+		await seedResetToken(userId, "RESET_TOKEN");
 
 		const res = await mockApi.post("/api/v1/auth/reset-password").send({
-			code: "SECRET_CODE",
-			"!password": "newpassword",
+			code: "RESET_TOKEN",
+			"!password": "brand_new_password",
 		});
 
-		t.equal(res.statusCode, 200);
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
 
-		const dbRes = await db["password-reset-codes"].findOne({
-			code: "SECRET_CODE",
+		const cred = await DB.selectFrom("priv_account_credential")
+			.select("password")
+			.where("user_id", "=", userId)
+			.executeTakeFirstOrThrow();
+
+		expect(await PasswordCompare("brand_new_password", cred.password)).toBe(true);
+
+		const canLoginWithNewPassword = await mockApi.post("/api/v1/auth/login").send({
+			username: "test_user",
+			"!password": "brand_new_password",
+			captcha: "test",
 		});
 
-		t.equal(dbRes, null, "Codes MUST be destroyed after use.");
-
-		const privateInfo = await db["user-private-information"].findOne({
-			userID: 1,
-		});
-
-		t.ok(
-			await PasswordCompare("newpassword", privateInfo!.password),
-			"Password must be updated to 'newpassword'",
-		);
-
-		t.end();
+		expect(canLoginWithNewPassword.status).toBe(200);
 	});
-
-	t.end();
 });

@@ -1,6 +1,6 @@
-import type { ChartDocument } from "tachi-common";
+import type { MONGO_ChartDocument } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { PullDatabaseSeeds } from "#lib/seeds/repo";
 import { WrapScriptPromise } from "#utils/misc";
 import fetch from "node-fetch";
@@ -19,7 +19,7 @@ export async function UpdateAILevels() {
 
 	const repo = await PullDatabaseSeeds();
 
-	await repo.MutateCollection<ChartDocument<"bms:7K">>("charts-bms", (charts) => {
+	await repo.MutateCollection<MONGO_ChartDocument<"bms:7K">>("charts-bms", (charts) => {
 		for (const chart of charts) {
 			chart.data.aiLevel = map[chart.data.hashMD5] ?? null;
 		}

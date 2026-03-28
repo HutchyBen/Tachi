@@ -1,13 +1,13 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import fjsh from "fast-json-stable-hash";
 import {
 	GetGPTConfig,
 	type GPTString,
 	type integer,
-	type OptionalMetrics,
-	type ProvidedMetrics,
+	type MongoOptionalMetrics,
+	type MongoProvidedMetrics,
 } from "tachi-common";
 
 import type { DryScore } from "../common/types";
@@ -28,7 +28,7 @@ export function CreateScoreID(
 	const gptConfig = GetGPTConfig(gptString);
 
 	for (const m of Object.keys(gptConfig.providedMetrics)) {
-		const metric = m as keyof ProvidedMetrics[GPTString];
+		const metric = m as keyof MongoProvidedMetrics[GPTString];
 
 		elements[metric] = dryScore.scoreData[metric];
 	}
@@ -36,7 +36,7 @@ export function CreateScoreID(
 	// Also include optional metrics in the checksum if they should be
 	// part of the scoreID.
 	for (const [m, conf] of Object.entries(gptConfig.optionalMetrics)) {
-		const metric = m as keyof OptionalMetrics[GPTString];
+		const metric = m as keyof MongoOptionalMetrics[GPTString];
 
 		if (conf.partOfScoreID) {
 			elements[`optional.${metric}`] = dryScore.scoreData.optional[metric] ?? null;
@@ -58,7 +58,7 @@ export function CreateScoreID(
 }
 
 export function GetWithScoreID(scoreID: string) {
-	return db.scores.findOne({
+	return MONGODB_KILL.scores.findOne({
 		scoreID,
 	});
 }

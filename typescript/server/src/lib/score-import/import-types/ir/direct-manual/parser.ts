@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 import type { BatchManualScore } from "tachi-common";
 
 import type { BatchManualContext } from "../../common/batch-manual/types";

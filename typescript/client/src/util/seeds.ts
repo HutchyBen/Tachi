@@ -12,17 +12,17 @@ import {
 } from "#types/seeds";
 import {
 	type AllDatabaseSeeds,
-	type BMSCourseDocument,
-	type ChartDocument,
 	CreateSongMap,
 	DatabaseSeedNames,
-	type FolderDocument,
 	type GameGroup,
-	type GoalDocument,
-	type QuestDocument,
-	type QuestlineDocument,
-	type SongDocument,
-	type TableDocument,
+	type MONGO_BMSCourseDocument,
+	type MONGO_ChartDocument,
+	type MONGO_FolderDocument,
+	type MONGO_GoalDocument,
+	type MONGO_QuestDocument,
+	type MONGO_QuestlineDocument,
+	type MONGO_SongDocument,
+	type MONGO_TableDocument,
 } from "tachi-common";
 
 import { APIFetchV1 } from "./api";
@@ -207,7 +207,7 @@ function RelateBMSCourses(data: Partial<AllDatabaseSeeds>): BMSCourseWithRelated
 	}
 
 	const songMap = CreateSongMap(bmsSongs);
-	const chartMap = new Map<string, ChartDocument<"bms:7K" | "bms:14K">>();
+	const chartMap = new Map<string, MONGO_ChartDocument<"bms:7K" | "bms:14K">>();
 
 	for (const chart of bmsCharts) {
 		chartMap.set(chart.data.hashMD5, chart);
@@ -249,7 +249,7 @@ function RelateTables(data: Partial<AllDatabaseSeeds>): TableWithRelated[] {
 		return [];
 	}
 
-	const folderMap = new Map<string, FolderDocument>();
+	const folderMap = new Map<string, MONGO_FolderDocument>();
 
 	for (const folder of data["folders.json"] ?? []) {
 		folderMap.set(folder.folderID, folder);
@@ -305,9 +305,9 @@ function RelateCharts(data: Partial<AllDatabaseSeeds>, file: string): ChartWithR
 	const [_, game] = /charts-(.*?)\.json/u.exec(file)!;
 
 	// @ts-expect-error too lazy to fix this properly
-	const songs: SongDocument[] = data[`songs-${game}.json`];
+	const songs: MONGO_SongDocument[] = data[`songs-${game}.json`];
 	// @ts-expect-error too lazy to fix this properly
-	const charts: ChartDocument[] = data[`charts-${game}.json`];
+	const charts: MONGO_ChartDocument[] = data[`charts-${game}.json`];
 
 	if (!charts) {
 		return [];
@@ -504,36 +504,36 @@ function DiffCollection<T extends DBSeedsCollection>(
  */
 function GetUniqID<K extends keyof AllDatabaseSeeds>(collection: K, value: AllDatabaseSeeds[K][0]) {
 	if (collection.startsWith("songs-")) {
-		return (value as SongDocument).id.toString();
+		return (value as MONGO_SongDocument).id.toString();
 	} else if (collection.startsWith("charts-")) {
-		return (value as ChartDocument).chartID;
+		return (value as MONGO_ChartDocument).chartID;
 	}
 
 	const c = collection as NotSongsChartsSeeds;
 
 	switch (c) {
 		case "bms-course-lookup.json": {
-			const v = value as BMSCourseDocument;
+			const v = value as MONGO_BMSCourseDocument;
 			return `${v.set}-${v.playtype}-${v.value}`;
 		}
 		case "folders.json": {
-			const v = value as FolderDocument;
+			const v = value as MONGO_FolderDocument;
 			return v.folderID;
 		}
 		case "tables.json": {
-			const v = value as TableDocument;
+			const v = value as MONGO_TableDocument;
 			return v.tableID;
 		}
 		case "goals.json": {
-			const v = value as GoalDocument;
+			const v = value as MONGO_GoalDocument;
 			return v.goalID;
 		}
 		case "quests.json": {
-			const v = value as QuestDocument;
+			const v = value as MONGO_QuestDocument;
 			return v.questID;
 		}
 		case "questlines.json": {
-			const v = value as QuestlineDocument;
+			const v = value as MONGO_QuestlineDocument;
 			return v.questlineID;
 		}
 	}

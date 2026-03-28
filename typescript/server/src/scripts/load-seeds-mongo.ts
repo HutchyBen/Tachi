@@ -1,18 +1,18 @@
 import type { BulkWriteOperation, DeleteWriteOpResultObject } from "mongodb";
 import type { ICollection } from "monk";
 import type {
-	BMSCourseDocument,
-	ChartDocument,
-	FolderDocument,
 	GameGroup,
-	GoalDocument,
-	QuestDocument,
-	QuestlineDocument,
-	SongDocument,
-	TableDocument,
+	MONGO_BMSCourseDocument,
+	MONGO_ChartDocument,
+	MONGO_FolderDocument,
+	MONGO_GoalDocument,
+	MONGO_QuestDocument,
+	MONGO_QuestlineDocument,
+	MONGO_SongDocument,
+	MONGO_TableDocument,
 } from "tachi-common";
 
-import { type KtLogger, log } from "#lib/log/log.js";
+import { type KtLogger, log } from "#lib/log/log";
 import { UpdateGoalsInFolder } from "#lib/score-import/framework/goals/goals";
 import UpdateIsPrimaryStatus from "#lib/score-mutation/update-isprimary";
 import { PullDatabaseSeeds } from "#lib/seeds/repo";
@@ -20,10 +20,9 @@ import { TachiConfig } from "#lib/setup/config";
 import { RemoveStaleFolderShowcaseStats } from "#lib/showcase/showcase";
 import { UpdateQuestSubscriptions } from "#lib/targets/quests";
 /* eslint-disable no-await-in-loop */
-import db, { monkDB } from "#services/mongo/db";
+import MONGODB_KILL, { monkDB } from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";
 import { UpdateGameSongIDCounter } from "#utils/db";
-import { InitaliseFolderChartLookup } from "#utils/folder";
 import { ArrayDiff, IsSupported, WrapScriptPromise } from "#utils/misc";
 import fjsh from "fast-json-stable-hash";
 
@@ -179,15 +178,15 @@ const syncInstructions: Array<SyncInstructions> = [
 	{
 		pattern: /^charts-(b|p)ms/u,
 		handler: async (
-			charts: Array<ChartDocument>,
-			collection: ICollection<ChartDocument>,
+			charts: Array<MONGO_ChartDocument>,
+			collection: ICollection<MONGO_ChartDocument>,
 			log,
 			collectionName,
 		) => {
 			const r = await GenericUpsert(charts, collection, "chartID", log, false);
 
 			if (r.thingsChanged) {
-				await InitaliseFolderChartLookup();
+				// await InitaliseFolderChartLookup();
 				await UpdateIsPrimaryStatus();
 
 				await UpdateGameSongIDCounter(collectionName.includes("bms") ? "bms" : "pms");
@@ -202,15 +201,15 @@ const syncInstructions: Array<SyncInstructions> = [
 	{
 		pattern: /^charts-/u,
 		handler: async (
-			charts: Array<ChartDocument>,
-			collection: ICollection<ChartDocument>,
+			charts: Array<MONGO_ChartDocument>,
+			collection: ICollection<MONGO_ChartDocument>,
 			log,
 			collName,
 		) => {
 			const r = await GenericUpsert(charts, collection, "chartID", log, true);
 
 			if (r.thingsChanged) {
-				await InitaliseFolderChartLookup();
+				// await InitaliseFolderChartLookup();
 				await UpdateIsPrimaryStatus();
 
 				await RecalcAllScores({
@@ -223,8 +222,8 @@ const syncInstructions: Array<SyncInstructions> = [
 	{
 		pattern: /^songs-(b|p)ms/u,
 		handler: async (
-			songs: Array<SongDocument>,
-			collection: ICollection<SongDocument>,
+			songs: Array<MONGO_SongDocument>,
+			collection: ICollection<MONGO_SongDocument>,
 			log,
 			collName,
 		) => {
@@ -241,8 +240,8 @@ const syncInstructions: Array<SyncInstructions> = [
 	{
 		pattern: /^songs-/u,
 		handler: async (
-			songs: Array<SongDocument>,
-			collection: ICollection<SongDocument>,
+			songs: Array<MONGO_SongDocument>,
+			collection: ICollection<MONGO_SongDocument>,
 			log,
 			collName,
 		) => {
@@ -259,8 +258,8 @@ const syncInstructions: Array<SyncInstructions> = [
 	{
 		pattern: /^folders/u,
 		handler: async (
-			folders: Array<FolderDocument>,
-			collection: ICollection<FolderDocument>,
+			folders: Array<MONGO_FolderDocument>,
+			collection: ICollection<MONGO_FolderDocument>,
 			log,
 		) => {
 			const r = await GenericUpsert(
@@ -272,11 +271,11 @@ const syncInstructions: Array<SyncInstructions> = [
 			);
 
 			if (r.thingsChanged) {
-				await InitaliseFolderChartLookup();
+				// await InitaliseFolderChartLookup();
 
 				const allModifiedFolderIDs = r.changedFields as Array<string>;
 
-				const keptFolderIDs = await db.folders.find(
+				const keptFolderIDs = await MONGODB_KILL.folders.find(
 					{
 						folderID: { $in: allModifiedFolderIDs },
 					},
@@ -300,7 +299,11 @@ const syncInstructions: Array<SyncInstructions> = [
 	},
 	{
 		pattern: /^tables/u,
-		handler: (tables: Array<TableDocument>, collection: ICollection<TableDocument>, log) =>
+		handler: (
+			tables: Array<MONGO_TableDocument>,
+			collection: ICollection<MONGO_TableDocument>,
+			log,
+		) =>
 			GenericUpsert(
 				tables.filter((e) => TachiConfig.GAMES.includes(e.game)),
 				collection,
@@ -312,8 +315,8 @@ const syncInstructions: Array<SyncInstructions> = [
 	{
 		pattern: /^bms-course-lookup/u,
 		handler: async (
-			bmsCourseDocuments: Array<BMSCourseDocument>,
-			collection: ICollection<BMSCourseDocument>,
+			bmsCourseDocuments: Array<MONGO_BMSCourseDocument>,
+			collection: ICollection<MONGO_BMSCourseDocument>,
 			log,
 		) => {
 			if (TachiConfig.TYPE === "kamai") {
@@ -325,7 +328,11 @@ const syncInstructions: Array<SyncInstructions> = [
 	},
 	{
 		pattern: /^goals/u,
-		handler: async (goals: Array<GoalDocument>, collection: ICollection<GoalDocument>, log) => {
+		handler: async (
+			goals: Array<MONGO_GoalDocument>,
+			collection: ICollection<MONGO_GoalDocument>,
+			log,
+		) => {
 			// never remove goals. Never update goals either. Only insert new ones as
 			// they come in.
 			await GenericUpsert(
@@ -341,8 +348,8 @@ const syncInstructions: Array<SyncInstructions> = [
 	{
 		pattern: /^questlines/u,
 		handler: async (
-			questlines: Array<QuestlineDocument>,
-			collection: ICollection<QuestlineDocument>,
+			questlines: Array<MONGO_QuestlineDocument>,
+			collection: ICollection<MONGO_QuestlineDocument>,
 			log,
 		) => {
 			// removing and updating these is fine. Users cannot subscibe to sets.
@@ -357,8 +364,8 @@ const syncInstructions: Array<SyncInstructions> = [
 	{
 		pattern: /^quests/u,
 		handler: async (
-			quests: Array<QuestDocument>,
-			collection: ICollection<QuestDocument>,
+			quests: Array<MONGO_QuestDocument>,
+			collection: ICollection<MONGO_QuestDocument>,
 			log,
 		) => {
 			const r = await GenericUpsert(

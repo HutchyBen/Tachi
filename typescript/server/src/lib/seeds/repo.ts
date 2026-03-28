@@ -3,7 +3,7 @@ import type { GameGroup } from "tachi-common";
 
 import fs from "fs/promises";
 /* eslint-disable no-await-in-loop */
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { Env, ServerConfig } from "#lib/setup/config";
 import { asyncExec } from "#utils/misc";
 import os from "os";

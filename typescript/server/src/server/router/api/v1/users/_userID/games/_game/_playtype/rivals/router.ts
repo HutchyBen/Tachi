@@ -3,7 +3,7 @@ import { SetRivalsFailReasons } from "#lib/constants/err-codes";
 import { GetChallengerUsers, GetRivalIDs, GetRivalUsers, SetRivals } from "#lib/rivals/rivals";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { IsString } from "#utils/misc";
 import { GetUGPT } from "#utils/req-tachi-data";
@@ -138,7 +138,7 @@ router.get("/pb-leaderboard", async (req, res) => {
 	const rivalIDs = await GetRivalIDs(user.id, game, playtype);
 	const userSet = [...rivalIDs, user.id];
 
-	const pbs = await db["personal-bests"].find(
+	const pbs = await MONGODB_KILL["personal-bests"].find(
 		{
 			game,
 			playtype,

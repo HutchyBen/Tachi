@@ -1,0 +1,141 @@
+import type { Action, CronTask, CronTaskExecution, JobQueue } from "tachi-db";
+
+import DB from "#services/pg/db";
+
+export const ADMIN_PAGE_SIZE = 50;
+
+export interface JobQueueFilters {
+	job_kind?: string;
+	scope?: string;
+	status?: number;
+}
+
+export interface PaginatedResult<T> {
+	items: T[];
+	page: number;
+	pageSize: number;
+	total: number;
+}
+
+export function GetActiveJobs(): Promise<Array<JobQueue>> {
+	return DB.selectFrom("job_queue")
+		.selectAll()
+		.where("status", "=", 1)
+		.orderBy("scheduled_for", "asc")
+		.execute();
+}
+
+function jobQueueBaseQuery(filters: JobQueueFilters) {
+	let q = DB.selectFrom("job_queue");
+	if (filters.status !== undefined) {
+		q = q.where("status", "=", filters.status);
+	}
+	if (filters.job_kind) {
+		q = q.where("job_kind", "=", filters.job_kind);
+	}
+	if (filters.scope) {
+		q = q.where("scope", "=", filters.scope);
+	}
+	return q;
+}
+
+export async function GetJobQueue({
+	page = 0,
+	limit = ADMIN_PAGE_SIZE,
+	status,
+	job_kind,
+	scope,
+}: { limit?: number; page?: number } & JobQueueFilters): Promise<PaginatedResult<JobQueue>> {
+	const filters: JobQueueFilters = { job_kind, scope, status };
+	const base = jobQueueBaseQuery(filters);
+
+	const [items, countRow] = await Promise.all([
+		base
+			.selectAll()
+			.orderBy("created_at", "desc")
+			.limit(limit)
+			.offset(page * limit)
+			.execute(),
+		jobQueueBaseQuery(filters)
+			.select((eb) => eb.fn.countAll<number>().as("count"))
+			.executeTakeFirstOrThrow(),
+	]);
+
+	return {
+		items,
+		page,
+		pageSize: limit,
+		total: Number(countRow.count),
+	};
+}
+
+export interface ActionFilters {
+	kind?: string;
+	username?: string;
+}
+
+export type ActionRow = { username: string | null } & Action;
+
+function actionFilteredQuery(filters: ActionFilters) {
+	let q = DB.selectFrom("action").leftJoin("account", "account.id", "action.user_id");
+	if (filters.kind) {
+		q = q.where("action.kind", "=", filters.kind);
+	}
+	if (filters.username) {
+		q = q.where("account.username", "ilike", `%${filters.username}%`);
+	}
+	return q;
+}
+
+export async function GetActions({
+	page = 0,
+	limit = ADMIN_PAGE_SIZE,
+	kind,
+	username,
+}: { limit?: number; page?: number } & ActionFilters): Promise<PaginatedResult<ActionRow>> {
+	const filters: ActionFilters = { kind, username };
+	const base = actionFilteredQuery(filters);
+
+	const [items, countRow] = await Promise.all([
+		base
+			.select([
+				"action.row_id",
+				"action.user_id",
+				"action.ip",
+				"action.app",
+				"action.kind",
+				"action.result",
+				"action.input",
+				"action.output",
+				"action.ts_start",
+				"action.ts_end",
+				"account.username",
+			])
+			.orderBy("action.ts_start", "desc")
+			.limit(limit)
+			.offset(page * limit)
+			.execute(),
+		actionFilteredQuery(filters)
+			.select((eb) => eb.fn.countAll<number>().as("count"))
+			.executeTakeFirstOrThrow(),
+	]);
+
+	return {
+		items,
+		page,
+		pageSize: limit,
+		total: Number(countRow.count),
+	};
+}
+
+export function GetCronTasks(): Promise<Array<CronTask>> {
+	return DB.selectFrom("cron_task").selectAll().orderBy("id", "asc").execute();
+}
+
+export function GetCronTaskExecutions(limit = 100): Promise<Array<CronTaskExecution>> {
+	return DB.selectFrom("cron_task_execution")
+		.selectAll()
+		.orderBy("scheduled_at", "desc")
+		.limit(limit)
+		.execute();
+}

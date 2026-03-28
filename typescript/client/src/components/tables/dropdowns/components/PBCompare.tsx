@@ -1,6 +1,10 @@
 import { type UGPTChartPBComposition } from "#types/api-returns";
 import React from "react";
-import { type ChartDocument, type PBScoreDocument, type ScoreDocument } from "tachi-common";
+import {
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
+} from "tachi-common";
 
 import { type ScoreState } from "../ScoreDropdown";
 
@@ -11,10 +15,10 @@ export default function PBCompare({
 }: {
 	data: UGPTChartPBComposition;
 	DocComponent: (props: {
-		chart: ChartDocument;
+		chart: MONGO_ChartDocument;
 		forceScoreData: boolean;
 		pbData: UGPTChartPBComposition;
-		score: PBScoreDocument | ScoreDocument;
+		score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
 		scoreState: ScoreState;
 	}) => JSX.Element;
 	scoreState: ScoreState;

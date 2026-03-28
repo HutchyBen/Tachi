@@ -1,10 +1,10 @@
 import {
-	type ChartDocument,
 	type Difficulties,
 	type GameConfig,
 	GetGameGroupConfig,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
 	type Playtypes,
-	type SongDocument,
 	type Versions,
 } from "tachi-common";
 import { DDR_FLARE_CATEGORIES } from "tachi-common/config/game-support/ddr";
@@ -53,7 +53,7 @@ function seriesToFlareCategory(series: number) {
 	return DDR_FLARE_CATEGORIES.enum.NONE;
 }
 
-function buildSong(music: Music): SongDocument<"ddr"> {
+function buildSong(music: Music): MONGO_SongDocument<"ddr"> {
 	return {
 		artist: `${music.artist}`,
 		title: `${music.title}`,
@@ -73,7 +73,7 @@ function buildChart(
 	playtype: Playtypes["ddr"],
 	difficulty: Difficulties["ddr:DP" | "ddr:SP"],
 	version: Versions["ddr:DP" | "ddr:SP"],
-): ChartDocument<"ddr:DP" | "ddr:SP"> {
+): MONGO_ChartDocument<"ddr:DP" | "ddr:SP"> {
 	const splitDiff = music.diffLv.split(" ");
 	const diffIndex = (playtype === "SP" ? 0 : 5) + DIFFICULTIES.indexOf(difficulty);
 	return {
@@ -94,15 +94,15 @@ function buildChart(
 export function parseGameData(version: Versions["ddr:DP" | "ddr:SP"], gameData: Music[]) {
 	const songs = ReadCollection("songs-ddr.json");
 	const existingChartDocs = ReadCollection("charts-ddr.json");
-	const existingCharts = new Map<string, ChartDocument<"ddr:DP" | "ddr:SP">>();
+	const existingCharts = new Map<string, MONGO_ChartDocument<"ddr:DP" | "ddr:SP">>();
 	for (const chart of existingChartDocs) {
 		existingCharts.set(`${chart.data.inGameID}-${chart.difficulty}-${chart.playtype}`, chart);
 	}
 
-	const newSongs: SongDocument<"ddr">[] = [];
-	const newCharts: ChartDocument<"ddr:DP" | "ddr:SP">[] = [];
+	const newSongs: MONGO_SongDocument<"ddr">[] = [];
+	const newCharts: MONGO_ChartDocument<"ddr:DP" | "ddr:SP">[] = [];
 	for (const music of gameData) {
-		const song = songs.find((s: SongDocument<"ddr">) => s.data.inGameID === music.mcode);
+		const song = songs.find((s: MONGO_SongDocument<"ddr">) => s.data.inGameID === music.mcode);
 		if (!song) {
 			const newSong = buildSong(music);
 			console.log(

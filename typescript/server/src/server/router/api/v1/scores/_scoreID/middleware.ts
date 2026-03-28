@@ -1,13 +1,13 @@
 import type { RequestHandler } from "express";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import { LoadScoreDocumentById } from "#lib/db-formats/score";
+import { log } from "#lib/log/log";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { IsRequesterAdmin } from "#utils/user";
 
 export const GetScoreFromParam: RequestHandler = async (req, res, next) => {
-	const score = await db.scores.findOne({ scoreID: req.params.scoreID });
+	const score = await LoadScoreDocumentById(req.params.scoreID);
 
 	if (!score) {
 		return res.status(404).json({

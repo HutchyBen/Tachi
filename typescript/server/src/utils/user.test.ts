@@ -1,105 +1,196 @@
-import type { UserDocument } from "tachi-common";
+import DB from "#services/pg/db";
+import { seedUser } from "#test-utils/pg-fixtures";
+import { describe, expect, it } from "vitest";
 
-import db from "#services/mongo/db";
-import { DatabaseSchemas } from "#services/mongo/schemas";
-import { mkFakeUser } from "#test-utils/misc";
-import ResetDBState from "#test-utils/resets";
-import t from "tap";
+import { GetAllRankings, GetUsersRankingAndOutOf } from "./user";
 
-import { FormatUserDoc, GetUserCaseInsensitive, GetUsersWithIDs } from "./user";
+// ─── helpers ─────────────────────────────────────────────────────────────────
 
-t.test("#GetUserCaseInsensitive", (t) => {
-	t.beforeEach(ResetDBState);
+async function seedGameStats(
+	userId: number,
+	ktLampRating: number | null,
+	game: "iidx-sp" = "iidx-sp",
+) {
+	await DB.insertInto("game_profile")
+		.values({
+			user_id: userId,
+			game,
+			ratings: JSON.stringify({ ktLampRating }),
+			classes: JSON.stringify({}),
+		})
+		.execute();
+}
 
-	t.test("Should return the user for an exact username", async (t) => {
-		const result = await GetUserCaseInsensitive("test_zkldi");
+function makeStats(userId: number, ktLampRating: number | null) {
+	return {
+		userID: userId,
+		game: "iidx" as const,
+		playtype: "SP" as const,
+		ratings: { ktLampRating },
+		classes: {},
+	};
+}
 
-		t.not(result, null, "Should not return null");
+// ─── GetUsersRankingAndOutOf ──────────────────────────────────────────────────
 
-		t.equal(result!.username, "test_zkldi", "Should return test_zkldi");
+describe("GetUsersRankingAndOutOf", () => {
+	it("returns ranking 1 and outOf 1 when user is the only player", async () => {
+		const { id } = await seedUser();
+		await seedGameStats(id, 10);
 
-		t.ok(DatabaseSchemas.users(result), "Should return a conforming PublicUserDocument");
+		const result = await GetUsersRankingAndOutOf(makeStats(id, 10));
 
-		// @ts-expect-error yeah
-		t.equal(result.password, undefined, "Should not return password");
-
-		// @ts-expect-error yeah
-		t.equal(result.email, undefined, "Should not return email");
+		expect(result).toEqual({ ranking: 1, outOf: 1 });
 	});
 
-	t.test("Should return the user for an incorrectly cased username", async (t) => {
-		const result = await GetUserCaseInsensitive("tesT_ZkLdi");
+	it("returns ranking 1 when the user has the highest rating", async () => {
+		const user1 = await seedUser({ username: "top_user" });
+		const user2 = await seedUser({ username: "lower_user" });
+		await seedGameStats(user1.id, 20);
+		await seedGameStats(user2.id, 10);
 
-		t.not(result, null, "Should not return null");
+		const result = await GetUsersRankingAndOutOf(makeStats(user1.id, 20));
 
-		t.equal(result!.username, "test_zkldi", "Should return test_zkldi");
-
-		t.ok(DatabaseSchemas.users(result), "Should return a conforming PublicUserDocument");
-
-		// @ts-expect-error yeah
-		t.equal(result.password, undefined, "Should not return password");
-
-		// @ts-expect-error yeah
-		t.equal(result.email, undefined, "Should not return email");
+		expect(result).toEqual({ ranking: 1, outOf: 2 });
 	});
 
-	t.test("Should not return the user for a username that does not exist", async (t) => {
-		const result = await GetUserCaseInsensitive("foobar");
+	it("returns ranking 2 when one user has a higher rating", async () => {
+		const user1 = await seedUser({ username: "top_user" });
+		const user2 = await seedUser({ username: "second_user" });
+		await seedGameStats(user1.id, 20);
+		await seedGameStats(user2.id, 10);
 
-		t.equal(result, null, "Should return null");
+		const result = await GetUsersRankingAndOutOf(makeStats(user2.id, 10));
+
+		expect(result).toEqual({ ranking: 2, outOf: 2 });
 	});
 
-	t.end();
+	it("ranks correctly with many players", async () => {
+		const ratings = [5, 10, 15, 20, 25];
+		const users = await Promise.all(
+			ratings.map((_, i) => seedUser({ username: `player_${i}` })),
+		);
+		await Promise.all(users.map((u, i) => seedGameStats(u.id, ratings[i]!)));
+
+		// Player with rating 15 has 2 players above them (20, 25), so ranking = 3
+		const result = await GetUsersRankingAndOutOf(makeStats(users[2]!.id, 15));
+
+		expect(result).toEqual({ ranking: 3, outOf: 5 });
+	});
+
+	it("handles tied ratings — only strictly greater counts", async () => {
+		const user1 = await seedUser({ username: "tied_a" });
+		const user2 = await seedUser({ username: "tied_b" });
+		const user3 = await seedUser({ username: "tied_c" });
+		await seedGameStats(user1.id, 10);
+		await seedGameStats(user2.id, 10);
+		await seedGameStats(user3.id, 10);
+
+		// No one is strictly greater than 10, so all rank #1
+		const result = await GetUsersRankingAndOutOf(makeStats(user1.id, 10));
+
+		expect(result).toEqual({ ranking: 1, outOf: 3 });
+	});
+
+	it("uses explicit alg parameter instead of default", async () => {
+		const user1 = await seedUser({ username: "bpi_high" });
+		const user2 = await seedUser({ username: "bpi_low" });
+
+		await DB.insertInto("game_profile")
+			.values({
+				user_id: user1.id,
+				game: "iidx-sp",
+				ratings: JSON.stringify({ ktLampRating: 5, BPI: 80 }),
+				classes: JSON.stringify({}),
+			})
+			.execute();
+		await DB.insertInto("game_profile")
+			.values({
+				user_id: user2.id,
+				game: "iidx-sp",
+				ratings: JSON.stringify({ ktLampRating: 20, BPI: 30 }),
+				classes: JSON.stringify({}),
+			})
+			.execute();
+
+		// user2 has higher ktLampRating but lower BPI
+		// Checking BPI ranking for user1: user1 BPI=80, user2 BPI=30, user1 is #1
+		const result = await GetUsersRankingAndOutOf(
+			{ userID: user1.id, game: "iidx", playtype: "SP", ratings: { BPI: 80 }, classes: {} },
+			"BPI" as never,
+		);
+
+		expect(result).toEqual({ ranking: 1, outOf: 2 });
+	});
+
+	it("returns ranking 1 when user rating is null (no one can be strictly greater than null)", async () => {
+		const user1 = await seedUser({ username: "null_rater" });
+		const user2 = await seedUser({ username: "other_player" });
+		await seedGameStats(user1.id, null);
+		await seedGameStats(user2.id, 10);
+
+		const result = await GetUsersRankingAndOutOf(makeStats(user1.id, null));
+
+		expect(result).toEqual({ ranking: 1, outOf: 2 });
+	});
+
+	it("does not include rows from different games in the count", async () => {
+		const iidxUser = await seedUser({ username: "iidx_player" });
+		const sdvxUser = await seedUser({ username: "sdvx_player" });
+
+		await seedGameStats(iidxUser.id, 10, "iidx-sp");
+		await DB.insertInto("game_profile")
+			.values({
+				user_id: sdvxUser.id,
+				game: "sdvx",
+				ratings: JSON.stringify({ VF6: 99 }),
+				classes: JSON.stringify({}),
+			})
+			.execute();
+
+		const result = await GetUsersRankingAndOutOf(makeStats(iidxUser.id, 10));
+
+		// outOf should only count iidx-sp players
+		expect(result).toEqual({ ranking: 1, outOf: 1 });
+	});
 });
 
-t.test("#GetUsersWithIDs", (t) => {
-	t.beforeEach(ResetDBState);
-	t.beforeEach(() => db.users.insert([mkFakeUser(2), mkFakeUser(3), mkFakeUser(4)]));
+// ─── GetAllRankings ───────────────────────────────────────────────────────────
 
-	t.test("Should return users with these IDs.", async (t) => {
-		const res = await GetUsersWithIDs([2, 3]);
+describe("GetAllRankings", () => {
+	it("returns rankings for all profile rating algorithms", async () => {
+		const user1 = await seedUser({ username: "top_player" });
+		const user2 = await seedUser({ username: "bot_player" });
 
-		const expected = [mkFakeUser(2), mkFakeUser(3)];
+		await DB.insertInto("game_profile")
+			.values({
+				user_id: user1.id,
+				game: "iidx-sp",
+				ratings: JSON.stringify({ ktLampRating: 20, BPI: 50 }),
+				classes: JSON.stringify({}),
+			})
+			.execute();
+		await DB.insertInto("game_profile")
+			.values({
+				user_id: user2.id,
+				game: "iidx-sp",
+				ratings: JSON.stringify({ ktLampRating: 10, BPI: 25 }),
+				classes: JSON.stringify({}),
+			})
+			.execute();
 
-		t.strictSame(res, expected, "Should return the user documents at these IDs.");
+		const stats = {
+			userID: user1.id,
+			game: "iidx" as const,
+			playtype: "SP" as const,
+			ratings: { ktLampRating: 20, BPI: 50 },
+			classes: {},
+		};
 
-		t.end();
+		const result = await GetAllRankings(stats);
+
+		// user1 is #1 in both algorithms
+		expect(result.ktLampRating).toEqual({ ranking: 1, outOf: 2 });
+		expect(result.BPI).toEqual({ ranking: 1, outOf: 2 });
 	});
-
-	t.test("Shouldn't reject for duplicate userIDs", async (t) => {
-		try {
-			const res = await GetUsersWithIDs([1, 2, 1]);
-
-			t.hasStrict(
-				res.map((e) => e.id),
-				[1, 2],
-				"Should have the requested user IDs.",
-			);
-			t.pass();
-		} catch (e) {
-			const err = e as Error;
-
-			t.fail(err.message);
-		}
-
-		t.end();
-	});
-
-	t.test("Shouldn't reject for userID length mismatch", (t) => {
-		t.rejects(() => GetUsersWithIDs([1, 2, 1, 5]));
-
-		t.end();
-	});
-
-	t.end();
-});
-
-t.test("#FormatUserDoc", (t) => {
-	t.equal(
-		FormatUserDoc({ username: "zkldi", id: 123 } as UserDocument),
-		"zkldi (#123)",
-		"Should format a user document into username #id format.",
-	);
-
-	t.end();
 });

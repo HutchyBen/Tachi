@@ -37,10 +37,6 @@ export const V3_FOLDER_SCHEMA = z.strictObject({
 	versionFilter: z.array(z.string()).optional(),
 	where: z.string(),
 	slug: z.string().optional(),
-
-	// temp
-	data: z.any(),
-	type: z.enum(["songs", "charts", "static"]),
 });
 
 export const V3_TABLE_SCHEMA = z.strictObject({

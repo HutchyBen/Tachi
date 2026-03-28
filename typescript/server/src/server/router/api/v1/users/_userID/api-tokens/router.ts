@@ -1,12 +1,9 @@
-import { log } from "#lib/log/log.js";
-import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
-import { Random20Hex } from "#utils/misc";
+import { ACTION_CreateApiToken } from "#actions/create-api-token.js";
+import { ACTION_DeleteApiToken } from "#actions/delete-api-token.js";
+import { SELECT_API_TOKEN, ToAPITokenDocument } from "#lib/db-formats/api-token";
+import DB from "#services/pg/db";
 import { GetTachiData } from "#utils/req-tachi-data";
-import { FormatUserDoc } from "#utils/user";
 import { Router } from "express";
-import { p } from "prudence";
-import { ALL_PERMISSIONS, type APIPermissions, type APITokenDocument } from "tachi-common";
 
 import { RequireSelfRequestFromUser } from "../middleware";
 
@@ -15,7 +12,7 @@ const router: Router = Router({ mergeParams: true });
 router.use(RequireSelfRequestFromUser);
 
 /**
- * Retrieve this users API tokens.
+ * Retrieve this user's API tokens.
  * This request MUST be performed with session-level auth.
  *
  * @name GET /api/v1/users/:userID/api-tokens
@@ -23,14 +20,15 @@ router.use(RequireSelfRequestFromUser);
 router.get("/", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	const keys = await db["api-tokens"].find({
-		userID: user.id,
-	});
+	const keys = await DB.selectFrom("priv_api_token")
+		.select(SELECT_API_TOKEN)
+		.where("user_id", "=", user.id)
+		.execute();
 
 	return res.status(200).json({
 		success: true,
 		description: `Returned ${keys.length} keys.`,
-		body: keys,
+		body: keys.map(ToAPITokenDocument),
 	});
 });
 
@@ -40,136 +38,64 @@ router.get("/", async (req, res) => {
  * @param clientID - Create a token that has the permissions implied from this client.
  * @param identifier - A user provided string to identify this API Key.
  * @param permissions - An array of strings dictating what permissions to create with.
- * This is incompatible with the first option.
+ * This is incompatible with clientID.
  *
  * @name POST /api/v1/users/:userID/api-tokens/create
  */
-router.post(
-	"/create",
-	prValidate({
-		permissions: p.optional([p.isIn(Object.keys(ALL_PERMISSIONS))]),
-		identifier: "*string",
-		clientID: "*string",
-	}),
-	async (req, res) => {
-		const body = req.safeBody as {
-			clientID?: string;
-			identifier?: string;
-			permissions?: Array<APIPermissions>;
-		};
+router.post("/create", async (req, res) => {
+	const user = GetTachiData(req, "requestedUser");
 
-		if (body.clientID !== undefined && body.permissions) {
-			return res.status(400).json({
-				success: false,
-				description: `Cannot use ClientID creation and permissions creation at the same time!`,
-			});
-		}
+	const body = req.body as {
+		clientID?: string;
+		identifier?: string;
+		permissions?: Array<string>;
+	};
 
-		let permissions: Array<APIPermissions>;
+	const { token, wasExisting } = await ACTION_CreateApiToken(
+		{
+			acct: {
+				id: user.id,
+				username: user.username,
+			},
+			ip: req.ip,
+		},
+		{
+			clientID: body.clientID,
+			permissions: body.permissions,
+			identifier: body.identifier,
+		},
+	);
 
-		const user = GetTachiData(req, "requestedUser");
+	const tokenRow = await DB.selectFrom("priv_api_token")
+		.select(SELECT_API_TOKEN)
+		.where("token", "=", token)
+		.executeTakeFirstOrThrow();
 
-		let identifier: string;
-		let fromAPIClient = null;
-
-		if (body.clientID !== undefined) {
-			const client = await db["api-clients"].findOne(
-				{
-					clientID: body.clientID,
-				},
-				{
-					projection: {
-						clientSecret: 0,
-					},
-				},
-			);
-
-			if (!client) {
-				return res.status(404).json({
-					success: false,
-					description: `This client does not exist.`,
-				});
-			}
-
-			const exists = await db["api-tokens"].findOne({
-				userID: user.id,
-				fromAPIClient: client.clientID,
-			});
-
-			if (exists) {
-				return res.status(200).json({
-					success: true,
-					description: `Returned existing key`,
-					body: exists,
-				});
-			}
-
-			permissions = client.requestedPermissions;
-			identifier = client.name;
-			fromAPIClient = client.clientID;
-
-			log.info(
-				`Creating API Key for ${FormatUserDoc(user)} from ${client.name} specification.`,
-			);
-		} else if (body.permissions) {
-			permissions = body.permissions;
-			identifier = body.identifier ?? "Custom Token";
-
-			log.info(`Creating API Key for ${FormatUserDoc(user)} with ${permissions.join(", ")}.`);
-		} else {
-			return res.status(400).json({
-				success: false,
-				description: `Invalid request, must specify either clientID or permissions.`,
-			});
-		}
-
-		const permissionsObject = Object.fromEntries(permissions.map((e) => [e, true]));
-
-		const apiTokenDocument: APITokenDocument = {
-			identifier,
-			permissions: permissionsObject,
-			token: Random20Hex(),
-			userID: user.id,
-			fromAPIClient,
-		};
-
-		await db["api-tokens"].insert(apiTokenDocument);
-
-		log.info(`Inserted new API Key for ${FormatUserDoc(user)}.`);
-
-		return res.status(200).json({
-			success: true,
-			description: `Successfully created new API Token.`,
-			body: apiTokenDocument,
-		});
-	},
-);
+	return res.status(200).json({
+		success: true,
+		description: wasExisting ? "Returned existing key." : "Successfully created new API Token.",
+		body: ToAPITokenDocument(tokenRow),
+	});
+});
 
 /**
  * Delete this token.
  *
- * @name DELETE /api/v1/users/:userID/api-token/:token
+ * @name DELETE /api/v1/users/:userID/api-tokens/:token
  */
 router.delete("/:token", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	log.info(`received request from ${FormatUserDoc(user)} to delete token ${req.params.token}.`);
-
-	const token = await db["api-tokens"].findOne({
-		token: req.params.token,
-		userID: user.id,
-	});
-
-	if (!token) {
-		return res.status(404).json({
-			success: false,
-			description: `This key does not exist.`,
-		});
-	}
-
-	await db["api-tokens"].remove({ token: req.params.token });
-
-	log.info(`Deleted ${req.params.token}, which belonged to ${FormatUserDoc(user)}.`);
+	await ACTION_DeleteApiToken(
+		{
+			acct: {
+				id: user.id,
+				username: user.username,
+			},
+			ip: req.ip,
+		},
+		{ token: req.params.token },
+	);
 
 	return res.status(200).json({
 		success: true,

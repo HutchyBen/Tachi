@@ -1,24 +1,33 @@
+import { ACTION_RebuildFolderChartLookup } from "#actions/rebuild-folder-chart-lookup.js";
+import { ACTION_SetUserSupporterStatus } from "#actions/set-user-supporter-status.js";
+import {
+	GetActions,
+	GetActiveJobs,
+	GetCronTaskExecutions,
+	GetCronTasks,
+	GetJobQueue,
+} from "#lib/admin/admin-queries.js";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { SendSiteAnnouncementNotification } from "#lib/notifications/notification-wrappers";
 import { UpdateGoalsForUser } from "#lib/score-import/framework/goals/goals";
 import { UpdateQuestsForUser } from "#lib/score-import/framework/quests/quests";
 import { DeleteMultipleScores, DeleteScore } from "#lib/score-mutation/delete-scores";
 import { TachiConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { RecalcAllScores, UpdateAllPBs } from "#utils/calculations/recalc-scores";
 import { RecalcSessions } from "#utils/calculations/recalc-sessions";
 import { IsValidPlaytype } from "#utils/misc";
 import DestroyUserGamePlaytypeData from "#utils/reset-state/destroy-ugpt";
 import { GetScoresFromSession } from "#utils/session";
-import { GetUserWithID, ResolveUser } from "#utils/user";
+import { GetUserWithID, GetUserWithIDGuaranteed, ResolveUser } from "#utils/user";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
 import {
 	type GameGroup,
-	type GoalSubscriptionDocument,
 	type integer,
+	type MONGO_GoalSubscriptionDocument,
 	type Playtype,
 	UserAuthLevels,
 } from "tachi-common";
@@ -57,6 +66,72 @@ const RequireAdminLevel: RequestHandler = async (req, res, next) => {
 };
 
 router.use(RequireAdminLevel);
+
+/**
+ * @name GET /api/v1/admin/job-queue
+ */
+router.get("/job-queue", async (req, res) => {
+	const page = Math.max(0, Number(req.query.page ?? 0));
+	const statusRaw = req.query.status;
+	let status: number | undefined;
+	if (typeof statusRaw === "string" && statusRaw !== "") {
+		const n = Number.parseInt(statusRaw, 10);
+		if (!Number.isNaN(n)) {
+			status = n;
+		}
+	}
+	const job_kind =
+		typeof req.query.job_kind === "string" && req.query.job_kind !== ""
+			? req.query.job_kind
+			: undefined;
+	const scope =
+		typeof req.query.scope === "string" && req.query.scope !== "" ? req.query.scope : undefined;
+
+	const [activeJobs, jobQueue] = await Promise.all([
+		GetActiveJobs(),
+		GetJobQueue({ page, status, job_kind, scope }),
+	]);
+
+	return res.status(200).json({
+		success: true,
+		description: "Done.",
+		body: { activeJobs, jobQueue, filters: { status, job_kind, scope } },
+	});
+});
+
+/**
+ * @name GET /api/v1/admin/actions
+ */
+router.get("/actions", async (req, res) => {
+	const page = Math.max(0, Number(req.query.page ?? 0));
+	const kind =
+		typeof req.query.kind === "string" && req.query.kind !== "" ? req.query.kind : undefined;
+	const username =
+		typeof req.query.username === "string" && req.query.username !== ""
+			? req.query.username
+			: undefined;
+
+	const actions = await GetActions({ page, kind, username });
+
+	return res.status(200).json({
+		success: true,
+		description: "Done.",
+		body: { actions, filters: { kind, username } },
+	});
+});
+
+/**
+ * @name GET /api/v1/admin/cron-tasks
+ */
+router.get("/cron-tasks", async (_req, res) => {
+	const [tasks, executions] = await Promise.all([GetCronTasks(), GetCronTaskExecutions(100)]);
+
+	return res.status(200).json({
+		success: true,
+		description: "Done.",
+		body: { tasks, executions },
+	});
+});
 
 /**
  * Resynchronises all PBs that match the given query or users.
@@ -98,7 +173,7 @@ router.post(
 router.post("/delete-score", prValidate({ scoreID: "string" }), async (req, res) => {
 	const body = req.safeBody as { scoreID: string };
 
-	const score = await db.scores.findOne({ scoreID: body.scoreID });
+	const score = await MONGODB_KILL.scores.findOne({ scoreID: body.scoreID });
 
 	if (!score) {
 		return res.status(404).json({
@@ -126,7 +201,7 @@ router.post("/delete-score", prValidate({ scoreID: "string" }), async (req, res)
 router.post("/delete-session", prValidate({ sessionID: "string" }), async (req, res) => {
 	const body = req.safeBody as { sessionID: string };
 
-	const session = await db.sessions.findOne({ scoreID: body.sessionID });
+	const session = await MONGODB_KILL.sessions.findOne({ scoreID: body.sessionID });
 
 	if (!session) {
 		return res.status(404).json({
@@ -179,7 +254,7 @@ router.post(
 			userID: integer;
 		};
 
-		const ugpt = await db["game-stats"].findOne({
+		const ugpt = await MONGODB_KILL["game-stats"].findOne({
 			userID,
 			game,
 			playtype,
@@ -221,17 +296,17 @@ router.post(
 
 		const { game, chartID } = body;
 
-		const scores = await db.scores.find({
+		const scores = await MONGODB_KILL.scores.find({
 			chartID,
 		});
 
 		await DeleteMultipleScores(scores);
 
-		await db.anyCharts[game].remove({
+		await MONGODB_KILL.anyCharts[game].remove({
 			chartID,
 		});
 
-		await db["personal-bests"].remove({
+		await MONGODB_KILL["personal-bests"].remove({
 			chartID,
 		});
 
@@ -254,7 +329,7 @@ router.post("/recalc", async (req, res) => {
 	await RecalcAllScores(filter);
 
 	const scoreIDs = (
-		await db.scores.find(filter, {
+		await MONGODB_KILL.scores.find(filter, {
 			projection: {
 				scoreID: 1,
 			},
@@ -322,16 +397,28 @@ router.post(
  * @name POST /api/v1/admin/supporter/:userID
  */
 router.post("/supporter/:userID", async (req, res) => {
-	const user = await ResolveUser(req.params.userID);
+	const target = await ResolveUser(req.params.userID);
 
-	if (!user) {
+	if (!target) {
 		return res.status(404).json({
 			success: false,
 			description: `This user does not exist.`,
 		});
 	}
 
-	await db.users.update({ id: user.id }, { $set: { isSupporter: true } });
+	const adminUserID = req[SYMBOL_TACHI_API_AUTH].userID;
+
+	if (adminUserID === null) {
+		return res.status(401).json({
+			success: false,
+			description: `You are not authenticated.`,
+		});
+	}
+
+	const adminUser = await GetUserWithIDGuaranteed(adminUserID);
+	const taker = { ip: req.ip, acct: { id: adminUser.id, username: adminUser.username } };
+
+	await ACTION_SetUserSupporterStatus(taker, { userID: target.id, isSupporter: true });
 
 	return res.status(200).json({
 		success: true,
@@ -343,19 +430,31 @@ router.post("/supporter/:userID", async (req, res) => {
 /**
  * Un-Make this user a Tachi supporter.
  *
- * @name POST /api/v1/admin/supporter/:userID
+ * @name DELETE /api/v1/admin/supporter/:userID
  */
 router.delete("/supporter/:userID", async (req, res) => {
-	const user = await ResolveUser(req.params.userID);
+	const target = await ResolveUser(req.params.userID);
 
-	if (!user) {
+	if (!target) {
 		return res.status(404).json({
 			success: false,
 			description: `This user does not exist.`,
 		});
 	}
 
-	await db.users.update({ id: user.id }, { $set: { isSupporter: false } });
+	const adminUserID = req[SYMBOL_TACHI_API_AUTH].userID;
+
+	if (adminUserID === null) {
+		return res.status(401).json({
+			success: false,
+			description: `You are not authenticated.`,
+		});
+	}
+
+	const adminUser = await GetUserWithIDGuaranteed(adminUserID);
+	const taker = { ip: req.ip, acct: { id: adminUser.id, username: adminUser.username } };
+
+	await ACTION_SetUserSupporterStatus(taker, { userID: target.id, isSupporter: false });
 
 	return res.status(200).json({
 		success: true,
@@ -365,6 +464,44 @@ router.delete("/supporter/:userID", async (req, res) => {
 });
 
 /**
+ * Rebuilds the Postgres `folder_chart_lookup` table (chart → folders cache).
+ *
+ * @param folderId - If set, only rebuild that folder's rows.
+ *
+ * @name POST /api/v1/admin/rebuild-folder-chart-lookup
+ */
+router.post(
+	"/rebuild-folder-chart-lookup",
+	prValidate({
+		folderId: p.optional("string"),
+	}),
+	async (req, res) => {
+		const userID = req[SYMBOL_TACHI_API_AUTH].userID;
+
+		if (userID === null) {
+			return res.status(401).json({
+				success: false,
+				description: `You are not authenticated.`,
+			});
+		}
+
+		const user = await GetUserWithIDGuaranteed(userID);
+		const body = req.safeBody as { folderId?: string };
+		const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
+
+		const result = await ACTION_RebuildFolderChartLookup(taker, {
+			folderId: body.folderId,
+		});
+
+		return res.status(200).json({
+			success: true,
+			description: `Rebuilt folder_chart_lookup (${result.folderCount} folders, ${result.rowCount} rows).`,
+			body: result,
+		});
+	},
+);
+
+/**
  * Reprocess all goals for every user. This should be used to un-screw the site
  * if the server goes down or peoples goals fall out of sync. Obviously, this
  * should never happen, but the error handling around this stuff is really wacky.
@@ -372,37 +509,37 @@ router.delete("/supporter/:userID", async (req, res) => {
  * @name POST /api/v1/admin/reprocess-all-goals
  */
 router.post("/reprocess-all-goals", async (req, res) => {
-	const ugpts = await db["game-stats"].find({});
+	const ugpts = await MONGODB_KILL["game-stats"].find({});
 
 	const promises = [];
 
 	for (const ugpt of ugpts) {
 		promises.push(async () => {
-			const goalSubs = await db["goal-subs"].find({
+			const goalSubs = await MONGODB_KILL["goal-subs"].find({
 				game: ugpt.game,
 				playtype: ugpt.playtype,
 				userID: ugpt.userID,
 			});
 
-			const goalSubsMap = new Map<string, GoalSubscriptionDocument>();
+			const goalSubsMap = new Map<string, MONGO_GoalSubscriptionDocument>();
 
 			for (const gSub of goalSubs) {
 				goalSubsMap.set(gSub.goalID, gSub);
 			}
 
-			const goals = await db.goals.find({
+			const goals = await MONGODB_KILL.goals.find({
 				goalID: { $in: goalSubs.map((e) => e.goalID) },
 			});
 
 			await UpdateGoalsForUser(goals, goalSubsMap, ugpt.userID, log);
 
-			const allQuestSubs = await db["quest-subs"].find({
+			const allQuestSubs = await MONGODB_KILL["quest-subs"].find({
 				game: ugpt.game,
 				playtype: ugpt.playtype,
 				userID: ugpt.userID,
 			});
 
-			const quests = await db.quests.find({
+			const quests = await MONGODB_KILL.quests.find({
 				questID: { $in: allQuestSubs.map((e) => e.questID) },
 			});
 

@@ -1,28 +1,28 @@
 import type { FilterQuery } from "mongodb";
 import type { ICollection } from "monk";
 
-import { log } from "#lib/log/log.js";
+import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user";
 import { TachiConfig } from "#lib/setup/config";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { GetSongForIDGuaranteed } from "#utils/db";
-import { EscapeStringRegexp } from "#utils/misc";
+import { EscapeForILIKE } from "#utils/misc";
+import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { GetOnlineCutoff } from "#utils/user";
 import {
-	type ChartDocument,
-	CreateSongMap,
-	type FolderDocument,
 	type GameGroup,
-	type GPTString,
 	type GPTStrings,
 	type integer,
+	type MONGO_ChartDocument,
+	type MONGO_FolderDocument,
+	type MONGO_SessionDocument,
+	type MONGO_SongDocument,
+	type MONGO_UserDocument,
 	type Playtype,
-	type SessionDocument,
-	type SongDocument,
-	SplitGPT,
-	type UserDocument,
 } from "tachi-common";
 
 import { AsyncFzf } from "./fzf/main";
+import { SearchSpecificGameSongs, type SongSearchReturn } from "./songs.js";
 
 interface SearchControls {
 	keys: Array<string>;
@@ -39,7 +39,7 @@ const SEARCH_CONTROLS = {
 	quests: { keys: ["name"], primary: "questID" },
 	users: { keys: ["username"], primary: "id" },
 	folders: { keys: ["title", "searchTerms"], primary: "folderID" },
-} satisfies Partial<Record<keyof typeof db, SearchControls>>;
+} satisfies Partial<Record<keyof typeof MONGODB_KILL, SearchControls>>;
 
 interface SearchData {
 	primaryKey: number | string;
@@ -150,99 +150,6 @@ export async function SearchCollection<T extends object>(
 	return documents;
 }
 
-export type SongSearchReturn = {
-	__textScore: number;
-} & SongDocument;
-
-export function SearchSpecificGameSongs(
-	game: GameGroup,
-	search: string,
-	limit = 100,
-): Promise<Array<SongSearchReturn>> {
-	return SearchCollection(db.anySongs[game], search, "songs", {}, limit);
-}
-
-export async function SearchSpecificGameSongsAndCharts(
-	game: GameGroup,
-	search: string,
-	playtype?: Playtype,
-	limit = 100,
-) {
-	const songs = await SearchSpecificGameSongs(game, search, limit);
-
-	const chartQuery: FilterQuery<ChartDocument> = {
-		songID: { $in: songs.map((e) => e.id) },
-	};
-
-	if (playtype) {
-		chartQuery.playtype = playtype;
-	}
-
-	const charts = (await db.anyCharts[game].find(chartQuery)) as Array<ChartDocument>;
-
-	return { songs, charts };
-}
-
-/**
- * Search this Game/GPTs songs and charts, but globally.
- */
-export async function SearchGlobalGameSongsAndCharts(
-	game: GameGroup,
-	search: string,
-	playtype?: Playtype,
-	limit = 100,
-): Promise<Array<{ chart: ChartDocument; playcount: integer; song: SongDocument }>> {
-	const songs = await SearchSpecificGameSongs(game, search, limit);
-
-	const chartQuery: FilterQuery<ChartDocument> = {
-		songID: { $in: songs.map((e) => e.id) },
-	};
-
-	if (playtype) {
-		chartQuery.playtype = playtype;
-	}
-
-	const charts = (await db.anyCharts[game].find(chartQuery)) as unknown as Array<
-		{ __playcount: integer } & ChartDocument
-	>;
-
-	const playcounts: Array<{ _id: string; playcount: integer }> = await db.scores.aggregate([
-		{
-			$match: {
-				chartID: { $in: charts.map((e) => e.chartID) },
-			},
-		},
-		{
-			$group: {
-				_id: "$chartID",
-				playcount: { $sum: 1 },
-			},
-		},
-	]);
-
-	const playcountLookup = Object.fromEntries(playcounts.map((e) => [e._id, e.playcount]));
-	const songMap = CreateSongMap(songs);
-
-	const output = [];
-
-	for (const chart of charts) {
-		const song = songMap.get(chart.songID);
-
-		if (!song) {
-			log.warn(`Failed to find parent song for ${chart.songID} (${game})? Skipping.`);
-			continue;
-		}
-
-		output.push({
-			song,
-			chart,
-			playcount: playcountLookup[chart.chartID] ?? 0,
-		});
-	}
-
-	return output;
-}
-
 export function SearchSessions(
 	search: string,
 	game?: GameGroup,
@@ -250,7 +157,7 @@ export function SearchSessions(
 	userID?: integer,
 	limit = 100,
 ) {
-	const baseMatch: FilterQuery<SessionDocument> = {};
+	const baseMatch: FilterQuery<MONGO_SessionDocument> = {};
 
 	if (game) {
 		baseMatch.game = game;
@@ -264,7 +171,7 @@ export function SearchSessions(
 		baseMatch.userID = userID;
 	}
 
-	return SearchCollection(db.sessions, search, "sessions", baseMatch, limit);
+	return SearchCollection(MONGODB_KILL.sessions, search, "sessions", baseMatch, limit);
 }
 
 /**
@@ -275,20 +182,26 @@ export function SearchSessions(
  * aren't allowed spaces in their name. In short, $text is very
  * poor at actually matching usernames.
  */
-export function SearchUsersRegExp(search: string, matchOnline = false) {
-	const regexEsc = EscapeStringRegexp(search.toLowerCase());
+export function SearchUsersRegExp(
+	search: string,
+	matchOnline = false,
+): Promise<Array<MONGO_UserDocument>> {
+	const likeEsc = EscapeForILIKE(search.toLowerCase());
 
-	const matchQuery: FilterQuery<UserDocument> = {
-		usernameLowercase: { $regex: new RegExp(regexEsc, "u") },
-	};
+	const onlineCutoff = UnixMillisecondsToISO8601(GetOnlineCutoff());
+
+	let q = DB.selectFrom("account")
+		.select(SELECT_USER)
+		.where("normalized_username", "like", `%${likeEsc}%`);
 
 	if (matchOnline) {
-		matchQuery.lastSeen = { $gt: GetOnlineCutoff() };
+		q = q.where("last_seen", ">", onlineCutoff);
 	}
 
-	return db.users.find(matchQuery, {
-		limit: 25,
-	});
+	return q
+		.limit(25)
+		.execute()
+		.then((res) => res.map(ToUserDocument));
 }
 
 /**
@@ -328,34 +241,16 @@ export async function SearchGamesSongs(search: string, games: Array<GameGroup>) 
 	return res.flat(1).sort((a, b) => b.__textScore - a.__textScore);
 }
 
-export async function SearchGamesSongsCharts(search: string, gpts: Array<GPTString>) {
-	const promises = [];
-
-	const results: Partial<
-		Record<GPTString, Array<{ chart: ChartDocument; playcount: integer; song: SongDocument }>>
-	> = {};
-
-	for (const gpt of gpts) {
-		const [game, playtype] = SplitGPT(gpt);
-
-		promises.push(
-			SearchGlobalGameSongsAndCharts(game, search, playtype).then((res) => {
-				results[gpt] = res;
-			}),
-		);
-	}
-
-	await Promise.all(promises);
-
-	return results;
-}
-
 export async function SearchForChartHash(search: string) {
 	const results = await Promise.all([
-		db.charts.bms.find({ $or: [{ "data.hashMD5": search }, { "data.hashSHA256": search }] }),
-		db.charts.pms.find({ $or: [{ "data.hashMD5": search }, { "data.hashSHA256": search }] }),
-		db.charts.usc.find({ "data.hashSHA1": search }),
-		db.charts.itg.find({ "data.hashGSv3": search }),
+		MONGODB_KILL.charts.bms.find({
+			$or: [{ "data.hashMD5": search }, { "data.hashSHA256": search }],
+		}),
+		MONGODB_KILL.charts.pms.find({
+			$or: [{ "data.hashMD5": search }, { "data.hashSHA256": search }],
+		}),
+		MONGODB_KILL.charts.usc.find({ "data.hashSHA1": search }),
+		MONGODB_KILL.charts.itg.find({ "data.hashGSv3": search }),
 	]);
 
 	const [bmsCharts, pmsCharts, uscCharts, itgCharts] = results;
@@ -363,9 +258,9 @@ export async function SearchForChartHash(search: string) {
 	const output: Record<
 		GPTStrings["bms" | "itg" | "pms" | "usc"],
 		Array<{
-			chart: ChartDocument;
+			chart: MONGO_ChartDocument;
 			playcount: null;
-			song: SongDocument;
+			song: MONGO_SongDocument;
 		}>
 	> = {
 		"bms:7K": [],
@@ -385,7 +280,7 @@ export async function SearchForChartHash(search: string) {
 	] as const;
 
 	for (const [game, charts] of zip) {
-		for (const chart of charts as Array<ChartDocument>) {
+		for (const chart of charts as Array<MONGO_ChartDocument>) {
 			const song = await GetSongForIDGuaranteed(game, chart.songID);
 
 			// @ts-expect-error ts doesn't like this hack but it'll work.
@@ -402,18 +297,8 @@ export async function SearchForChartHash(search: string) {
 
 export function SearchFolders(
 	search: string,
-	existingMatch?: FilterQuery<FolderDocument>,
+	existingMatch?: FilterQuery<MONGO_FolderDocument>,
 	limit?: integer,
 ) {
-	return SearchCollection(db.folders, search, "folders", existingMatch, limit);
-}
-
-function AddGamePropToSong(
-	songDocument: SongDocument,
-	game: GameGroup,
-): { game: GameGroup } & SongDocument {
-	// @ts-expect-error Yep, that's intentional.
-	songDocument.game = game;
-
-	return songDocument as { game: GameGroup } & SongDocument;
+	return SearchCollection(MONGODB_KILL.folders, search, "folders", existingMatch, limit);
 }

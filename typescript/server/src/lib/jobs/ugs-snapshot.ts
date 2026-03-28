@@ -1,7 +1,7 @@
-import type { UserGameStats, UserGameStatsSnapshotDocument } from "tachi-common";
+import type { MONGO_UserGameStats, MONGO_UserGameStatsSnapshotDocument } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import { log } from "#lib/log/log";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetMillisecondsSince } from "#utils/misc";
 import { GetAllRankings } from "#utils/user";
 
@@ -9,14 +9,16 @@ import { GetAllRankings } from "#utils/user";
 // nonsense happens. we'll have to see.
 const currentTime = new Date().setUTCHours(0, 0, 0, 0);
 
-let batchWrite: Array<UserGameStatsSnapshotDocument> = [];
+let batchWrite: Array<MONGO_UserGameStatsSnapshotDocument> = [];
 
 // This code is intentionally *very* robust, and handles a lot of unanticipated failures
 // because if it breaks, we brick the database.
 export async function UGSSnapshot() {
 	const timeStart = process.hrtime.bigint();
 
-	const alreadyExists = await db["game-stats-snapshots"].findOne({ timestamp: currentTime });
+	const alreadyExists = await MONGODB_KILL["game-stats-snapshots"].findOne({
+		timestamp: currentTime,
+	});
 
 	if (alreadyExists) {
 		log.warn(
@@ -28,24 +30,28 @@ export async function UGSSnapshot() {
 		);
 	}
 
-	log.info(`Snapshotting UserGameStats.`);
+	log.info(`Snapshotting MONGO_UserGameStats.`);
 
 	try {
-		await db["game-stats"]
+		await MONGODB_KILL["game-stats"]
 			.find({})
 
 			// @ts-expect-error faulty TS types
-			.each(async (ugs: UserGameStats, { pause, resume }) => {
+			.each(async (ugs: MONGO_UserGameStats, { pause, resume }) => {
 				pause();
 
 				log.debug(`Snapshotting ${ugs.userID} ${ugs.playtype} ${ugs.game}.`);
 
 				const [playcount, rankings] = await Promise.all([
-					db.scores.count({ userID: ugs.userID, playtype: ugs.playtype, game: ugs.game }),
+					MONGODB_KILL.scores.count({
+						userID: ugs.userID,
+						playtype: ugs.playtype,
+						game: ugs.game,
+					}),
 					GetAllRankings(ugs),
 				]);
 
-				const ugsSnapshot: UserGameStatsSnapshotDocument = {
+				const ugsSnapshot: MONGO_UserGameStatsSnapshotDocument = {
 					...ugs,
 					playcount,
 					rankings,
@@ -56,7 +62,7 @@ export async function UGSSnapshot() {
 
 				if (batchWrite.length >= 500) {
 					log.debug(`Flushed batch.`);
-					await db["game-stats-snapshots"].insert(batchWrite);
+					await MONGODB_KILL["game-stats-snapshots"].insert(batchWrite);
 
 					batchWrite = [];
 				}
@@ -65,7 +71,7 @@ export async function UGSSnapshot() {
 			});
 
 		if (batchWrite.length) {
-			await db["game-stats-snapshots"].insert(batchWrite);
+			await MONGODB_KILL["game-stats-snapshots"].insert(batchWrite);
 		}
 
 		log.info(
@@ -84,7 +90,7 @@ export async function UGSSnapshot() {
 
 		log.info(`Removing all snapshots at this timestamp (${currentTime}).`);
 
-		await db["game-stats-snapshots"].remove({ timestamp: currentTime });
+		await MONGODB_KILL["game-stats-snapshots"].remove({ timestamp: currentTime });
 
 		log.info(`Removed.`);
 

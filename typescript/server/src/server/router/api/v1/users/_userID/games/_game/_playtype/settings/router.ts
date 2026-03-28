@@ -1,6 +1,6 @@
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { RequirePermissions } from "#server/middleware/auth";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { FormatPrError, optNull } from "#utils/prudence";
 import { GetUGPT } from "#utils/req-tachi-data";
 import { FormatUserDoc } from "#utils/user";
@@ -9,8 +9,8 @@ import { p } from "prudence";
 import {
 	GetGamePTConfig,
 	GetScoreMetrics,
+	type MONGO_UGPTSettingsDocument,
 	PrudenceZodShim,
-	type UGPTSettingsDocument,
 } from "tachi-common";
 
 import { RequireAuthedAsUser } from "../../../../middleware";
@@ -59,10 +59,10 @@ router.patch(
 			});
 		}
 
-		const body = req.safeBody as Partial<UGPTSettingsDocument["preferences"]>;
+		const body = req.safeBody as Partial<MONGO_UGPTSettingsDocument["preferences"]>;
 
 		if (typeof body.defaultTable === "string") {
-			const table = await db.tables.findOne({
+			const table = await MONGODB_KILL.tables.findOne({
 				game,
 				playtype,
 				tableID: body.defaultTable,
@@ -108,7 +108,7 @@ router.patch(
 		}
 
 		if (Object.keys(updateQuery).length === 0) {
-			const settings = await db["game-settings"].findOne({
+			const settings = await MONGODB_KILL["game-settings"].findOne({
 				userID: user.id,
 				game,
 				playtype,
@@ -121,7 +121,7 @@ router.patch(
 			});
 		}
 
-		await db["game-settings"].update(
+		await MONGODB_KILL["game-settings"].update(
 			{
 				userID: user.id,
 				game,
@@ -132,7 +132,7 @@ router.patch(
 			},
 		);
 
-		const settings = await db["game-settings"].findOne({
+		const settings = await MONGODB_KILL["game-settings"].findOne({
 			userID: user.id,
 			game,
 			playtype,
@@ -167,7 +167,7 @@ router.patch(
 router.get("/", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const settings = await db["game-settings"].findOne({
+	const settings = await MONGODB_KILL["game-settings"].findOne({
 		userID: user.id,
 		game,
 		playtype,

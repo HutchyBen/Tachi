@@ -3,14 +3,18 @@ import { IsScore } from "#util/asserts";
 import { ChangeOpacity } from "#util/color-opacity";
 import { IsNotNullish } from "#util/misc";
 import React from "react";
-import { type ChartDocument, type PBScoreDocument, type ScoreDocument } from "tachi-common";
+import {
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
+} from "tachi-common";
 
 export default function IIDXLampCell({
 	sc,
 	chart,
 }: {
-	chart: ChartDocument<"iidx:DP" | "iidx:SP">;
-	sc: PBScoreDocument<"iidx:DP" | "iidx:SP"> | ScoreDocument<"iidx:DP" | "iidx:SP">;
+	chart: MONGO_ChartDocument<"iidx:DP" | "iidx:SP">;
+	sc: MONGO_PBScoreDocument<"iidx:DP" | "iidx:SP"> | MONGO_ScoreDocument<"iidx:DP" | "iidx:SP">;
 }) {
 	let gaugeText = null;
 

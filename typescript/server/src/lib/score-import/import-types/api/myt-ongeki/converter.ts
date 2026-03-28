@@ -1,6 +1,6 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
 import type { EmptyObject } from "#utils/types";
-import type { ScoreData } from "tachi-common";
+import type { MONGO_ScoreData } from "tachi-common";
 
 import {
 	InternalFailure,
@@ -20,22 +20,22 @@ import type { ConverterFunction } from "../../common/types";
 import type { MytOngekiScore } from "./types";
 
 const DIFFICULTIES = {
-	[OngekiLevel.ONGEKI_LEVEL_UNSPECIFIED]: undefined,
-	[OngekiLevel.ONGEKI_LEVEL_BASIC]: "BASIC",
-	[OngekiLevel.ONGEKI_LEVEL_ADVANCED]: "ADVANCED",
-	[OngekiLevel.ONGEKI_LEVEL_EXPERT]: "EXPERT",
-	[OngekiLevel.ONGEKI_LEVEL_MASTER]: "MASTER",
-	[OngekiLevel.ONGEKI_LEVEL_LUNATIC]: "LUNATIC",
+	[OngekiLevel.UNSPECIFIED]: undefined,
+	[OngekiLevel.BASIC]: "BASIC",
+	[OngekiLevel.ADVANCED]: "ADVANCED",
+	[OngekiLevel.EXPERT]: "EXPERT",
+	[OngekiLevel.MASTER]: "MASTER",
+	[OngekiLevel.LUNATIC]: "LUNATIC",
 };
 
 function getNoteLamp(
 	comboStatus: number,
 	clearStatus: number,
 	techScore: number,
-): ScoreData<"ongeki:Single">["noteLamp"] | undefined {
+): MONGO_ScoreData<"ongeki:Single">["noteLamp"] | undefined {
 	if (
-		comboStatus === OngekiComboStatus.ONGEKI_COMBO_STATUS_UNSPECIFIED ||
-		clearStatus === OngekiClearStatus.ONGEKI_CLEAR_STATUS_UNSPECIFIED
+		comboStatus === OngekiComboStatus.UNSPECIFIED ||
+		clearStatus === OngekiClearStatus.UNSPECIFIED
 	) {
 		return undefined;
 	}
@@ -44,22 +44,22 @@ function getNoteLamp(
 		return "ALL BREAK+";
 	}
 
-	if (comboStatus === OngekiComboStatus.ONGEKI_COMBO_STATUS_ALL_BREAK) {
+	if (comboStatus === OngekiComboStatus.ALL_BREAK) {
 		return "ALL BREAK";
 	}
 
-	if (comboStatus === OngekiComboStatus.ONGEKI_COMBO_STATUS_FULL_COMBO) {
+	if (comboStatus === OngekiComboStatus.FULL_COMBO) {
 		return "FULL COMBO";
 	}
 
 	if (
-		clearStatus === OngekiClearStatus.ONGEKI_CLEAR_STATUS_OVER_DAMAGE ||
-		clearStatus === OngekiClearStatus.ONGEKI_CLEAR_STATUS_CLEARED
+		clearStatus === OngekiClearStatus.OVER_DAMAGE ||
+		clearStatus === OngekiClearStatus.CLEARED
 	) {
 		return "CLEAR";
 	}
 
-	if (clearStatus === OngekiClearStatus.ONGEKI_CLEAR_STATUS_FAILED) {
+	if (clearStatus === OngekiClearStatus.FAILED) {
 		return "LOSS";
 	}
 

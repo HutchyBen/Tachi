@@ -1,12 +1,12 @@
-import type { APITokenDocument, UserDocument, WebhookEvents } from "tachi-common";
+import type { MONGO_APITokenDocument, MONGO_UserDocument, WebhookEvents } from "tachi-common";
 
-import { log } from "#utils/log.js";
-import { HandleQuestAchievedV1 } from "#webhook-handlers/quest-achieved.js";
+import { log } from "#utils/log";
+import { HandleQuestAchievedV1 } from "#webhook-handlers/quest-achieved";
 import express, { type Express } from "express";
 import path from "path";
 
-import { ACTION_Register } from "../actions/register";
-import { BotConfig, Env } from "../config";
+import { ANON_ACTION_Register } from "../anon-actions/register";
+import { Env } from "../config";
 import { RequestTypes, TachiServerV1Get, TachiServerV1Request } from "../utils/fetch-tachi";
 import { VERSION_PRETTY } from "../version";
 import { HandleClassUpdateV1 } from "../webhook-handlers/class-update";
@@ -58,16 +58,16 @@ app.get("/oauth/callback", async (req, res) => {
 		return res.status(400).send("Bad Request.");
 	}
 
-	const tokenRes = await TachiServerV1Request<APITokenDocument>(
+	const tokenRes = await TachiServerV1Request<MONGO_APITokenDocument>(
 		RequestTypes.POST,
 		"/oauth/token",
 		null,
 		{
 			code: req.query.code,
-			client_id: BotConfig.OAUTH.CLIENT_ID,
-			client_secret: BotConfig.OAUTH.CLIENT_SECRET,
+			client_id: Env.OAUTH_CLIENT_ID,
+			client_secret: Env.OAUTH_CLIENT_SECRET,
 			grant_type: "authorization_code",
-			redirect_uri: `${BotConfig.HTTP_SERVER.URL}/oauth/callback`,
+			redirect_uri: `${Env.HTTP_SERVER_URL}/oauth/callback`,
 		},
 	);
 
@@ -84,7 +84,7 @@ app.get("/oauth/callback", async (req, res) => {
 	const discordID = req.query.context;
 	const apiToken = tokenRes.body.token!;
 
-	const whoamiRes = await TachiServerV1Get<UserDocument>("/users/me", apiToken);
+	const whoamiRes = await TachiServerV1Get<MONGO_UserDocument>("/users/me", apiToken);
 
 	if (!whoamiRes.success) {
 		log.error({ discordID }, "Failed to request user with token we just got?");
@@ -99,7 +99,7 @@ app.get("/oauth/callback", async (req, res) => {
 
 	log.info(`Saving user-discord-link for ${user.username} (id: ${user.id}).`);
 
-	const { was_update } = await ACTION_Register(
+	const { was_update } = await ANON_ACTION_Register(
 		{ ip: req.ip },
 		{ user_id: user.id, discord_id: discordID, "!api_token": apiToken },
 	);

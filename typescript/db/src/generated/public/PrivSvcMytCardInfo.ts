@@ -11,7 +11,7 @@ export type priv_svc_myt_card_info_card_access_code = string;
 export default interface PrivSvcMytCardInfoTable {
   card_access_code: ColumnType<priv_svc_myt_card_info_card_access_code, priv_svc_myt_card_info_card_access_code, priv_svc_myt_card_info_card_access_code>;
 
-  user_id: ColumnType<account_id | null, account_id | null, account_id | null>;
+  user_id: ColumnType<account_id, account_id, account_id>;
 }
 
 export type PrivSvcMytCardInfo = Selectable<PrivSvcMytCardInfoTable>;

@@ -1,18 +1,18 @@
 import type { CommandInteraction } from "discord.js";
 import type {
-	ChartDocument,
 	GameGroup,
-	GoalDocument,
-	ImportDocument,
 	integer,
-	PBScoreDocument,
+	MONGO_ChartDocument,
+	MONGO_GoalDocument,
+	MONGO_ImportDocument,
+	MONGO_PBScoreDocument,
+	MONGO_QuestDocument,
+	MONGO_SongDocument,
+	MONGO_UserDocument,
 	Playtype,
-	QuestDocument,
-	SongDocument,
-	UserDocument,
 } from "tachi-common";
 
-import { BotConfig } from "#config";
+import { Env } from "#config";
 import { log } from "#utils/log";
 
 import type { ImportDeferred, ImportPollStatus, UGPTStats } from "./return-types";
@@ -21,7 +21,7 @@ import { RequestTypes, TachiServerV1Get, TachiServerV1Request } from "./fetch-ta
 import { Sleep } from "./misc";
 
 export async function GetUserInfo(userID: string | integer) {
-	const res = await TachiServerV1Get<UserDocument>(`/users/${userID}`, null);
+	const res = await TachiServerV1Get<MONGO_UserDocument>(`/users/${userID}`, null);
 
 	if (!res.success) {
 		throw new Error(`Failed to fetch user with userID ${userID}.`);
@@ -44,7 +44,7 @@ export async function GetUGPTStats(userID: string | integer, game: GameGroup, pl
 }
 
 export async function GetGoalWithID(goalID: string, game: GameGroup, playtype: Playtype) {
-	const res = await TachiServerV1Get<{ goal: GoalDocument }>(
+	const res = await TachiServerV1Get<{ goal: MONGO_GoalDocument }>(
 		`/games/${game}/${playtype}/targets/goals/${goalID}`,
 		null,
 	);
@@ -57,7 +57,7 @@ export async function GetGoalWithID(goalID: string, game: GameGroup, playtype: P
 }
 
 export async function GetQuestWithID(questID: string, game: GameGroup, playtype: Playtype) {
-	const res = await TachiServerV1Get<{ quest: QuestDocument }>(
+	const res = await TachiServerV1Get<{ quest: MONGO_QuestDocument }>(
 		`/games/${game}/${playtype}/targets/quests/${questID}`,
 		null,
 	);
@@ -75,7 +75,7 @@ export async function GetChartInfoForUser(
 	game: GameGroup,
 	playtype: Playtype,
 ) {
-	const res = await TachiServerV1Get<{ chart: ChartDocument; song: SongDocument }>(
+	const res = await TachiServerV1Get<{ chart: MONGO_ChartDocument; song: MONGO_SongDocument }>(
 		`/games/${game}/${playtype}/charts/${chartID}`,
 		null,
 	);
@@ -84,7 +84,7 @@ export async function GetChartInfoForUser(
 		throw new Error(`Failed to fetch song/chart with chartID ${chartID}.`);
 	}
 
-	const pbRes = await TachiServerV1Get<{ chart: ChartDocument; pb: PBScoreDocument }>(
+	const pbRes = await TachiServerV1Get<{ chart: MONGO_ChartDocument; pb: MONGO_PBScoreDocument }>(
 		`/users/${userID}/games/${game}/${playtype}/pbs/${chartID}`,
 		null,
 	);
@@ -104,7 +104,7 @@ export async function PerformScoreImport(
 	body: Record<string, unknown>,
 	interaction?: CommandInteraction,
 ) {
-	const initRes = await TachiServerV1Request<ImportDeferred | ImportDocument>(
+	const initRes = await TachiServerV1Request<ImportDeferred | MONGO_ImportDocument>(
 		RequestTypes.POST,
 		url,
 		authToken,
@@ -122,7 +122,7 @@ export async function PerformScoreImport(
 
 	// this server does not defer imports to a scorequeue
 	if (initRes.statusCode === 200) {
-		const result = initRes.body as ImportDocument;
+		const result = initRes.body as MONGO_ImportDocument;
 
 		return result;
 	} else if (initRes.statusCode === 202) {
@@ -161,7 +161,7 @@ export async function PerformScoreImport(
 					throw new Error(`Failed to import scores.
 Your authentication with this service has expired, and a bug on their end prevents us from automatically renewing it.
 
-Please go to ${BotConfig.TACHI_SERVER_LOCATION}/u/me/integrations/services to un-link and re-link.`);
+Please go to ${Env.TACHI_SERVER_LOCATION}/u/me/integrations/services to un-link and re-link.`);
 				}
 
 				throw new Error(`Failed to import scores. ${pollRes.description}.`);

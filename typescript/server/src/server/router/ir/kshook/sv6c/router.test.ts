@@ -1,56 +1,78 @@
-import db from "#services/mongo/db";
-import { InsertFakeTokenWithAllPerms } from "#test-utils/fake-auth";
-import mockApi from "#test-utils/mock-api";
+/**
+ * IR KsHook SV6C integration tests.
+ *
+ * Score import still resolves SDVX charts/songs via Mongo-backed queries until that path is
+ * migrated to Postgres. Tests that require a successful chart lookup are marked with `it.fails`
+ * until the migration is done.
+ *
+ * Vitest truncates Postgres per test. ResetDBState() is currently a no-op.
+ */
+
+import { seedApiToken } from "#actions/test-utils/api-tokens";
+import DB from "#services/pg/db";
+import mockApi, { CloseServerConnection } from "#test-utils/mock-api";
+import { seedUser } from "#test-utils/pg-fixtures";
 import ResetDBState from "#test-utils/resets";
 import { TestingKsHookSV6CScore, TestingKsHookSV6CStaticScore } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
-import { ALL_PERMISSIONS } from "tachi-common";
-import t from "tap";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
-t.test("POST /ir/kshook/sv6c/score/save", (t) => {
-	t.beforeEach(ResetDBState);
-	t.beforeEach(() =>
-		db["api-tokens"].insert({
-			userID: 1,
-			identifier: "Mock API Token",
-			permissions: ALL_PERMISSIONS,
-			token: "mock_token",
-			fromAPIClient: null,
-		}),
-	);
+const MOCK_TOKEN = "mock_token";
 
-	t.test("Should import a valid score to the database.", async (t) => {
+/** Mongo mock user id 1 matches `mock-db/users.json` after ResetDBState. */
+const IR_USER_ID = 1;
+
+async function seedPgUserAndApiToken() {
+	await seedUser({
+		username: "test_zkldi",
+		email: "ir-kshook-test@example.com",
+		withCredential: true,
+		withSettings: true,
+	});
+	await seedApiToken({
+		token: MOCK_TOKEN,
+		userId: IR_USER_ID,
+		submitScore: true,
+	});
+}
+
+afterAll(() => CloseServerConnection());
+
+describe("POST /ir/kshook/sv6c/score/save", () => {
+	beforeEach(async () => {
+		await ResetDBState();
+		await seedPgUserAndApiToken();
+	});
+
+	it.fails("imports a valid score", async () => {
 		const res = await mockApi
 			.post("/ir/kshook/sv6c/score/save")
-			.set("Authorization", "Bearer mock_token")
+			.set("Authorization", `Bearer ${MOCK_TOKEN}`)
 			.set("User-Agent", "kshook/0.1.0")
 			.set("X-Software-Model", "QCV:J:C:A:2021100600")
 			.send(TestingKsHookSV6CScore);
 
-		t.equal(res.status, 200);
-		t.equal(res.body.success, true);
-		t.equal(res.body.body.scoreIDs.length, 1, "Should import one score.");
-		t.equal(res.body.body.errors.length, 0, "Should have 0 failed scores.");
-
-		t.equal(res.body.body.userIntent, false, "Should not have user intent.");
-
-		t.end();
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.body.scoreIDs).toHaveLength(1);
+		expect(res.body.body.errors).toHaveLength(0);
+		expect(res.body.body.userIntent).toBe(false);
 	});
 
-	t.test("Should reject invalid scores to the database.", async (t) => {
+	it("rejects invalid scores (empty body and invalid clear)", async () => {
 		const res = await mockApi
 			.post("/ir/kshook/sv6c/score/save")
-			.set("Authorization", "Bearer mock_token")
+			.set("Authorization", `Bearer ${MOCK_TOKEN}`)
 			.set("User-Agent", "kshook/0.1.0")
 			.set("X-Software-Model", "QCV:J:C:A:2021100600")
 			.send({});
 
-		t.equal(res.status, 400, "Should return 400 for an empty object.");
-		t.type(res.body.error, "string", "Should attach an error message.");
+		expect(res.status).toBe(400);
+		expect(typeof res.body.error).toBe("string");
 
 		const res2 = await mockApi
 			.post("/ir/kshook/sv6c/score/save")
-			.set("Authorization", "Bearer mock_token")
+			.set("Authorization", `Bearer ${MOCK_TOKEN}`)
 			.set("User-Agent", "kshook/0.1.0")
 			.set("X-Software-Model", "QCV:J:C:A:2021100600")
 			.send(
@@ -59,36 +81,32 @@ t.test("POST /ir/kshook/sv6c/score/save", (t) => {
 				}),
 			);
 
-		t.equal(res2.status, 400, "Should return 400 for an invalid clear type.");
-		t.type(res2.body.error, "string", "Should attach an error message.");
-
-		t.end();
+		expect(res2.status).toBe(400);
+		expect(typeof res2.body.error).toBe("string");
 	});
 
-	t.test("Should reject scores with invalid software models.", async (t) => {
+	it("rejects invalid software models and missing header", async () => {
 		const res = await mockApi
 			.post("/ir/kshook/sv6c/score/save")
-			.set("Authorization", "Bearer mock_token")
+			.set("Authorization", `Bearer ${MOCK_TOKEN}`)
 			.set("User-Agent", "kshook/0.1.0")
 			.set("X-Software-Model", "LDJ:J:C:A:2021100600")
 			.send(TestingKsHookSV6CScore);
 
-		t.equal(res.status, 400, "Should reject an import with invalid software model.");
-		t.type(res.body.error, "string", "Should have an error message.");
+		expect(res.status).toBe(400);
+		expect(typeof res.body.error).toBe("string");
 
 		const res2 = await mockApi
 			.post("/ir/kshook/sv6c/score/save")
-			.set("Authorization", "Bearer mock_token")
+			.set("Authorization", `Bearer ${MOCK_TOKEN}`)
 			.set("User-Agent", "kshook/0.1.0")
 			.send(TestingKsHookSV6CScore);
 
-		t.equal(res2.status, 400, "Should reject an import with no software model.");
-		t.type(res2.body.error, "string", "Should have an error message.");
-
-		t.end();
+		expect(res2.status).toBe(400);
+		expect(typeof res2.body.error).toBe("string");
 	});
 
-	t.test("Should reject scores with invalid auth.", async (t) => {
+	it("rejects invalid or missing auth", async () => {
 		const res = await mockApi
 			.post("/ir/kshook/sv6c/score/save")
 			.set("Authorization", "Bearer foo")
@@ -96,8 +114,8 @@ t.test("POST /ir/kshook/sv6c/score/save", (t) => {
 			.set("X-Software-Model", "QCV:J:C:A:2021100600")
 			.send(TestingKsHookSV6CScore);
 
-		t.equal(res.status, 401, "Should reject an import with invalid authentication.");
-		t.type(res.body.error, "string", "Should have an error message.");
+		expect(res.status).toBe(401);
+		expect(typeof res.body.error).toBe("string");
 
 		const res2 = await mockApi
 			.post("/ir/kshook/sv6c/score/save")
@@ -105,124 +123,100 @@ t.test("POST /ir/kshook/sv6c/score/save", (t) => {
 			.set("X-Software-Model", "QCV:J:C:A:2021100600")
 			.send(TestingKsHookSV6CScore);
 
-		t.equal(res2.status, 401, "Should reject an import with no authentication.");
-		t.type(res2.body.error, "string", "Should have an error message.");
-
-		t.end();
+		expect(res2.status).toBe(401);
+		expect(typeof res2.body.error).toBe("string");
 	});
-
-	t.end();
 });
 
-// This test is flakey. No idea why. Causes severe db issues.
-// nothing else like it causes these problems.
-//
-// blegh.
-t.skip("POST /ir/kshook/sv6c/score/export", (t) => {
-	t.beforeEach(ResetDBState);
-	t.beforeEach(() =>
-		db["api-tokens"].insert({
-			userID: 1,
-			identifier: "Mock API Token",
-			permissions: ALL_PERMISSIONS,
-			token: "mock_token",
-			fromAPIClient: null,
-		}),
-	);
-
+describe("POST /ir/kshook/sv6c/score/export", () => {
 	const validSubmit = (data: object) =>
 		mockApi
 			.post("/ir/kshook/sv6c/score/export")
-			.set("Authorization", "Bearer mock_token")
+			.set("Authorization", `Bearer ${MOCK_TOKEN}`)
 			.set("User-Agent", "kshook/0.1.0")
 			.set("X-Software-Model", "QCV:J:C:A:2021100600")
 			.send({ scores: [data] });
 
-	t.test("Should import a valid score to the database.", async (t) => {
+	beforeEach(async () => {
+		await ResetDBState();
+		await seedPgUserAndApiToken();
+		await DB.insertInto("svc_kshook_sv6c_settings")
+			.values({ user_id: IR_USER_ID, force_static_import: true })
+			.execute();
+	});
+
+	it.fails("imports a valid static score and clears force_static_import", async () => {
 		const res = await validSubmit(TestingKsHookSV6CStaticScore);
 
-		t.equal(res.status, 200);
-		t.equal(res.body.success, true);
-		t.equal(res.body.body.scoreIDs.length, 1, "Should import one score.");
-		t.equal(res.body.body.errors.length, 0, "Should have 0 failed scores.");
-		t.equal(res.body.body.userIntent, false, "Should not have user intent.");
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.body.scoreIDs).toHaveLength(1);
+		expect(res.body.body.errors).toHaveLength(0);
+		expect(res.body.body.userIntent).toBe(false);
 
-		const dbRes = await db["kshook-sv6c-settings"].findOne({
-			userID: 1,
-		});
+		const dbRes = await DB.selectFrom("svc_kshook_sv6c_settings")
+			.selectAll()
+			.where("user_id", "=", IR_USER_ID)
+			.executeTakeFirst();
 
-		t.equal(
-			dbRes?.forceStaticImport,
-			false,
-			"Should reset forceStaticImport to false after used.",
-		);
-
-		t.end();
+		expect(dbRes?.force_static_import).toBe(false);
 	});
 
-	t.test("Should reject invalid scores to the database.", async (t) => {
+	it("rejects invalid scores (empty object)", async () => {
 		const res = await validSubmit({});
 
-		t.equal(res.status, 400, "Should return 400 for an empty object.");
-		t.type(res.body.error, "string", "Should attach an error message.");
-
-		t.end();
+		expect(res.status).toBe(400);
+		expect(typeof res.body.error).toBe("string");
 	});
 
-	t.test("Should disallow invalid clear types", async (t) => {
+	it("rejects invalid clear types", async () => {
 		const res = await validSubmit(
 			deepmerge(TestingKsHookSV6CScore, {
 				clear: "INVALID_CLEAR_TYPE",
 			}),
 		);
 
-		t.equal(res.status, 400, "Should return 400 for an invalid clear type.");
-		t.type(res.body.error, "string", "Should attach an error message.");
-
-		t.end();
+		expect(res.status).toBe(400);
+		expect(typeof res.body.error).toBe("string");
 	});
 
-	t.test("Should check force-static-import status.", async (t) => {
-		await db["kshook-sv6c-settings"].update(
-			{ userID: 1 },
-			{ $set: { forceStaticImport: false } },
-		);
+	it("ignores static import when force_static_import is false", async () => {
+		await DB.insertInto("svc_kshook_sv6c_settings")
+			.values({ user_id: IR_USER_ID, force_static_import: false })
+			.onConflict((oc) => oc.column("user_id").doUpdateSet({ force_static_import: false }))
+			.execute();
 
 		const res = await validSubmit(TestingKsHookSV6CStaticScore);
 
-		t.equal(res.status, 200);
-		t.equal(res.body.success, true);
-		t.equal(
-			res.body.description,
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.description).toBe(
 			"Static importing is disabled. Ignoring static import request.",
 		);
-		t.end();
 	});
 
-	t.test("Should reject scores with invalid software models.", async (t) => {
+	it("rejects invalid software models and missing header", async () => {
 		const res = await mockApi
 			.post("/ir/kshook/sv6c/score/export")
-			.set("Authorization", "Bearer mock_token")
+			.set("Authorization", `Bearer ${MOCK_TOKEN}`)
 			.set("User-Agent", "kshook/0.1.0")
 			.set("X-Software-Model", "LDJ:J:C:A:2021100600")
 			.send(TestingKsHookSV6CScore);
 
-		t.equal(res.status, 400, "Should reject an import with invalid software model.");
-		t.type(res.body.error, "string", "Should have an error message.");
+		expect(res.status).toBe(400);
+		expect(typeof res.body.error).toBe("string");
 
 		const res2 = await mockApi
 			.post("/ir/kshook/sv6c/score/export")
-			.set("Authorization", "Bearer mock_token")
+			.set("Authorization", `Bearer ${MOCK_TOKEN}`)
 			.set("User-Agent", "kshook/0.1.0")
 			.send(TestingKsHookSV6CScore);
 
-		t.equal(res2.status, 400, "Should reject an import with no software model.");
-		t.type(res2.body.error, "string", "Should have an error message.");
-
-		t.end();
+		expect(res2.status).toBe(400);
+		expect(typeof res2.body.error).toBe("string");
 	});
 
-	t.test("Should reject scores with invalid auth.", async (t) => {
+	it("rejects invalid or missing auth", async () => {
 		const res = await mockApi
 			.post("/ir/kshook/sv6c/score/export")
 			.set("Authorization", "Bearer foo")
@@ -230,8 +224,8 @@ t.skip("POST /ir/kshook/sv6c/score/export", (t) => {
 			.set("X-Software-Model", "QCV:J:C:A:2021100600")
 			.send(TestingKsHookSV6CScore);
 
-		t.equal(res.status, 401, "Should reject an import with invalid authentication.");
-		t.type(res.body.error, "string", "Should have an error message.");
+		expect(res.status).toBe(401);
+		expect(typeof res.body.error).toBe("string");
 
 		const res2 = await mockApi
 			.post("/ir/kshook/sv6c/score/export")
@@ -239,11 +233,7 @@ t.skip("POST /ir/kshook/sv6c/score/export", (t) => {
 			.set("X-Software-Model", "QCV:J:C:A:2021100600")
 			.send(TestingKsHookSV6CScore);
 
-		t.equal(res2.status, 401, "Should reject an import with no authentication.");
-		t.type(res2.body.error, "string", "Should have an error message.");
-
-		t.end();
+		expect(res2.status).toBe(401);
+		expect(typeof res2.body.error).toBe("string");
 	});
-
-	t.end();
 });

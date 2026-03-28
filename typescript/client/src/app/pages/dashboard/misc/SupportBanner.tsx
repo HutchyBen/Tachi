@@ -5,9 +5,9 @@ import useApiQuery from "#components/util/query/useApiQuery";
 import { TachiConfig } from "#lib/config";
 import { ONE_DAY } from "#util/constants/time";
 import React, { useEffect, useState } from "react";
-import { type integer, type UserDocument } from "tachi-common";
+import { type integer, type MONGO_UserDocument } from "tachi-common";
 
-export default function SupportBanner({ user }: { user: UserDocument }) {
+export default function SupportBanner({ user }: { user: MONGO_UserDocument }) {
 	const { data, error } = useApiQuery<{ scores: integer; sessions: integer }>(
 		`/users/${user.id}/stats`,
 	);

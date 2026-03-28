@@ -14,12 +14,12 @@ import { Button, Col, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
 	type integer,
-	type InviteCodeDocument,
+	type MONGO_InviteCodeDocument,
+	type MONGO_UserDocument,
 	UserAuthLevels,
-	type UserDocument,
 } from "tachi-common";
 
-export default function UserInvitesPage({ reqUser }: { reqUser: UserDocument }) {
+export default function UserInvitesPage({ reqUser }: { reqUser: MONGO_UserDocument }) {
 	useSetSubheader(
 		["Users", reqUser.username, "Invites"],
 		[reqUser],
@@ -91,10 +91,10 @@ export default function UserInvitesPage({ reqUser }: { reqUser: UserDocument }) 
 	);
 }
 
-function InviteList({ reqUser }: { reqUser: UserDocument }) {
+function InviteList({ reqUser }: { reqUser: MONGO_UserDocument }) {
 	const { data, error } = useApiQuery<{
-		consumers: UserDocument[];
-		invites: InviteCodeDocument[];
+		consumers: MONGO_UserDocument[];
+		invites: MONGO_InviteCodeDocument[];
 	}>(`/users/${reqUser.id}/invites`);
 
 	if (error) {

@@ -16,7 +16,8 @@
 		"prepublishOnly": "tsgo -p tsconfig.build.json",
 		"lint": "eslint .",
 		"lint-fix": "eslint . --fix",
-		"typecheck": "tsgo --noEmit"
+		"typecheck": "tsgo --noEmit",
+		"bench": "node -e \"process.exit(0)\""
 	},
 	"publishConfig": {
 		"main": "./build/index.js",
@@ -36,18 +37,11 @@
 	"dependencies": {
 		"pino": "catalog:",
 		"pino-pretty": "catalog:",
-		"zod": "^4.3.6"
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@typescript/native-preview": "catalog:",
 		"eslint-config-tachi": "workspace:*",
 		"typescript": "catalog:"
-	},
-	"imports": {
-		"#*": [
-			"./src/*",
-			"./src/*.ts",
-			"./src/*/index.ts"
-		]
 	}
 }

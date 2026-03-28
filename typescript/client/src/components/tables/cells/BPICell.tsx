@@ -8,12 +8,12 @@ import { IsNullish } from "#util/misc";
 import React, { useContext } from "react";
 import { PoyashiBPI } from "rg-stats";
 import {
-	type ChartDocument,
 	GetGrade,
 	IIDXLIKE_GBOUNDARIES,
 	type integer,
-	type PBScoreDocument,
-	type ScoreDocument,
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
 } from "tachi-common";
 
 import MiniTable from "../components/MiniTable";
@@ -24,8 +24,10 @@ export default function BPICell({
 	score,
 	chart,
 }: {
-	chart: ChartDocument<"iidx:DP" | "iidx:SP">;
-	score: PBScoreDocument<"iidx:DP" | "iidx:SP"> | ScoreDocument<"iidx:DP" | "iidx:SP">;
+	chart: MONGO_ChartDocument<"iidx:DP" | "iidx:SP">;
+	score:
+		| MONGO_PBScoreDocument<"iidx:DP" | "iidx:SP">
+		| MONGO_ScoreDocument<"iidx:DP" | "iidx:SP">;
 }) {
 	const { user } = useContext(UserContext);
 	const { settings } = useLUGPTSettings<"iidx:DP" | "iidx:SP">();

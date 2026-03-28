@@ -1,14 +1,12 @@
 import type { RequestHandler } from "express";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import { LoadSessionDocumentById } from "#lib/db-formats/session";
+import { log } from "#lib/log/log";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 
 export const GetSessionFromParam: RequestHandler = async (req, res, next) => {
-	const session = await db.sessions.findOne({
-		sessionID: req.params.sessionID,
-	});
+	const session = await LoadSessionDocumentById(req.params.sessionID);
 
 	if (!session) {
 		return res.status(404).json({

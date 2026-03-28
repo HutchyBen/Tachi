@@ -1,14 +1,22 @@
-import type { FilterQuery } from "mongodb";
-
-import { log } from "#lib/log/log.js";
+import { LoadFolderDocumentsByIds } from "#lib/db-formats/folders";
+import { GetSongByLegacyID } from "#lib/db-formats/song";
+import { GetFolderIDsForChartId } from "#lib/folders/folders";
+import { log } from "#lib/log/log";
 import { SearchUsersRegExp } from "#lib/search/search";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { IsString } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";
+import { apiSuccess } from "#utils/response";
 import { ParseStrPositiveNonZeroInt } from "#utils/string-checks";
 import { GetUsersWithIDs } from "#utils/user";
 import { Router } from "express";
-import { type FolderDocument, FormatChart } from "tachi-common";
+import {
+	FormatChart,
+	type MONGO_FolderDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_UserDocument,
+	MongoChartLegacyId,
+} from "tachi-common";
 
 import { ValidateAndGetChart } from "./middleware";
 
@@ -25,13 +33,11 @@ router.get("/", async (req, res) => {
 	const chart = GetTachiData(req, "chartDoc");
 	const game = GetTachiData(req, "game");
 
-	const song = await db.anySongs[game].findOne({
-		id: chart.songID,
-	});
+	const songRes = await GetSongByLegacyID(game, chart.songID);
 
-	if (!song) {
+	if (!songRes) {
 		log.error(
-			`Song ${chart.songID} does not exist, yet chart ${chart.chartID} has it as a parent?`,
+			`Song ${chart.songID} does not exist, yet chart ${chart.chartID} (${chart.legacyChartId}) has it as a parent?`,
 		);
 
 		return res.status(500).json({
@@ -39,6 +45,8 @@ router.get("/", async (req, res) => {
 			description: `An internal server error has occured.`,
 		});
 	}
+
+	const song = songRes.doc;
 
 	return res.status(200).json({
 		success: true,
@@ -60,26 +68,15 @@ router.get("/", async (req, res) => {
 router.get("/folders", async (req, res) => {
 	const chart = GetTachiData(req, "chartDoc");
 
-	const folderIDs = await db["folder-chart-lookup"].find(
-		{
-			chartID: chart.chartID,
-		},
-		{
-			projection: {
-				folderID: 1,
-			},
-		},
-	);
-
-	const query: FilterQuery<FolderDocument> = {
-		folderID: { $in: folderIDs.map((e) => e.folderID) },
-	};
+	const folderIds = await GetFolderIDsForChartId(chart.chartID);
+	const byId = await LoadFolderDocumentsByIds(folderIds);
+	let folders = folderIds
+		.map((id) => byId.get(id))
+		.filter((f): f is MONGO_FolderDocument => f !== undefined);
 
 	if (req.query.inactive === undefined) {
-		query.inactive = false;
+		folders = folders.filter((f) => !f.inactive);
 	}
-
-	const folders = await db.folders.find(query);
 
 	return res.status(200).json({
 		success: true,
@@ -96,7 +93,9 @@ router.get("/folders", async (req, res) => {
 router.get("/playcount", async (req, res) => {
 	const chart = GetTachiData(req, "chartDoc");
 
-	const count = await db["personal-bests"].count({ chartID: chart.chartID });
+	const count = await MONGODB_KILL["personal-bests"].count({
+		chartID: MongoChartLegacyId(chart),
+	});
 
 	return res.status(200).json({
 		success: true,
@@ -120,9 +119,9 @@ router.get("/pbs", async (req, res) => {
 
 	const startRanking = ParseStrPositiveNonZeroInt(req.query.startRanking) ?? 1;
 
-	const pbs = await db["personal-bests"].find(
+	const pbs = await MONGODB_KILL["personal-bests"].find(
 		{
-			chartID: chart.chartID,
+			chartID: MongoChartLegacyId(chart),
 			"rankingData.rank": { $gte: startRanking },
 		},
 		{
@@ -164,19 +163,20 @@ router.get("/pbs/search", async (req, res) => {
 
 	const users = await SearchUsersRegExp(req.query.search);
 
-	const pbs = await db["personal-bests"].find({
-		chartID: chart.chartID,
+	const pbs = await MONGODB_KILL["personal-bests"].find({
+		chartID: MongoChartLegacyId(chart),
 		userID: { $in: users.map((e) => e.id) },
 	});
 
-	return res.status(200).json({
-		success: true,
-		description: `Returned ${pbs.length} scores.`,
-		body: {
-			pbs,
-			users,
-		},
-	});
+	return res.status(200).json(
+		apiSuccess<{ pbs: Array<MONGO_PBScoreDocument>; users: Array<MONGO_UserDocument> }>(
+			`Returned ${pbs.length} scores.`,
+			{
+				pbs,
+				users,
+			},
+		),
+	);
 });
 
 export default router;

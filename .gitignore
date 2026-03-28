@@ -24,6 +24,9 @@ build
 coverage
 test-results
 
+# Vitest bench --outputJson (see Justfile-bench bench-json)
+typescript/server/bench-results.json
+
 *.tsbuildinfo
 
 # legacy bootstrap flag
@@ -32,3 +35,6 @@ I_HAVE_BOOTSTRAPPED_OK
 BOOTSTRAP_OK
 # v3 bootstrap flag (omg)
 _SETUP_OK
+
+# Local debugging: `just db-schema` (see Justfile-db)
+db/schema.sql

@@ -6,9 +6,8 @@
 	"type": "module",
 	"scripts": {
 		"dev": "bun --watch src/main.ts",
-		"test": "tap",
-		"snap": "TAP_SNAPSHOT=1 tap",
-		"watchtest": "tap --watch",
+		"test": "vitest",
+		"bench": "vitest bench --passWithNoTests",
 		"build": "tsgo -b tsconfig.build.json -v",
 		"typecheck": "tsgo --noEmit",
 		"lint": "eslint ./src",
@@ -21,8 +20,8 @@
 		"@types/google-protobuf": "catalog:",
 		"@types/pg": "catalog:",
 		"@types/supertest": "catalog:",
-		"@types/tap": "catalog:",
 		"@typescript/native-preview": "catalog:",
+		"@vitest/coverage-v8": "catalog:",
 		"eslint-config-tachi": "workspace:*",
 		"glob": "catalog:",
 		"google-protobuf": "catalog:",
@@ -30,9 +29,9 @@
 		"node-mocks-http": "catalog:",
 		"nodemon": "catalog:",
 		"supertest": "catalog:",
-		"tap": "workspace:*",
 		"ts-protoc-gen": "catalog:",
-		"tsconfig-paths": "catalog:"
+		"tsconfig-paths": "catalog:",
+		"vitest": "catalog:"
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "catalog:",
@@ -59,6 +58,7 @@
 		"@types/semver": "catalog:",
 		"@valuabletouch/winston-seq": "catalog:",
 		"bcryptjs": "catalog:",
+		"bliss": "workspace:*",
 		"bms-table-loader": "catalog:",
 		"bullmq": "catalog:",
 		"bunyan": "catalog:",
@@ -66,6 +66,7 @@
 		"connect-redis": "catalog:",
 		"csv-parse": "catalog:",
 		"deepmerge": "catalog:",
+		"dotenv": "catalog:",
 		"express": "catalog:",
 		"express-async-errors": "catalog:",
 		"express-prom-bundle": "catalog:",
@@ -77,6 +78,7 @@
 		"html-entities": "catalog:",
 		"json5": "catalog:",
 		"kysely": "catalog:",
+		"lodash": "catalog:",
 		"mkdirp": "catalog:",
 		"mongodb": "catalog:",
 		"monk": "catalog:",
@@ -86,7 +88,6 @@
 		"node-html-parser": "catalog:",
 		"nodemailer": "catalog:",
 		"pg": "catalog:",
-		"bliss": "workspace:*",
 		"prudence": "catalog:",
 		"rate-limit-redis": "catalog:",
 		"redis": "catalog:",
@@ -115,7 +116,7 @@
 			"src/*/!(test-utils)/**/*.ts"
 		],
 		"exclude": [
-			"src/**/*.test.ts",
+			"src/**/*.oldtest.ts",
 			"src/external/mongo/schemas.ts"
 		]
 	},

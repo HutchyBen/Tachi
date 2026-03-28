@@ -1,5 +1,4 @@
 # Test stuffs
-.env
 .setup_env
 failed-tests.txt
 
@@ -13,5 +12,4 @@ scripts/validate-database-errs/*
 local-cdn
 test-cdn
 
-!test.conf.json5
 !example/**

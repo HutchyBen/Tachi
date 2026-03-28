@@ -2,12 +2,12 @@ import { GPT_CLIENT_IMPLEMENTATIONS } from "#lib/game-implementations";
 import { ChangeOpacity } from "#util/color-opacity";
 import { FormatMillions, ToFixedFloor } from "#util/misc";
 import React from "react";
-import { type PBScoreDocument, type ScoreDocument } from "tachi-common";
+import { type MONGO_PBScoreDocument, type MONGO_ScoreDocument } from "tachi-common";
 
 export default function JubeatScoreCell({
 	sc,
 }: {
-	sc: PBScoreDocument<"jubeat:Single"> | ScoreDocument<"jubeat:Single">;
+	sc: MONGO_PBScoreDocument<"jubeat:Single"> | MONGO_ScoreDocument<"jubeat:Single">;
 }) {
 	return (
 		<td

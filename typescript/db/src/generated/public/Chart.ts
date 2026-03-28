@@ -26,6 +26,8 @@ export default interface ChartTable {
 
   difficulty: ColumnType<string, string, string>;
 
+  versions: ColumnType<string[], string[], string[]>;
+
   data: ColumnType<unknown, unknown, unknown>;
 }
 

@@ -10,22 +10,22 @@ import { type UGSWithRankingData } from "#types/api-returns";
 import { GetSortedGPTs } from "#util/site";
 import React, { memo, useContext } from "react";
 import { Col, Row } from "react-bootstrap";
-import { FormatGameGroup, type UserDocument, type UserGameStats } from "tachi-common";
+import { FormatGameGroup, type MONGO_UserDocument, type MONGO_UserGameStats } from "tachi-common";
 
 import RankingData from "./UGPTRankingData";
 import UGPTRatingsTable from "./UGPTStatsOverview";
 
 interface GamesInfoProps {
-	ugsList: UserGameStats[];
-	reqUser: UserDocument;
+	ugsList: MONGO_UserGameStats[];
+	reqUser: MONGO_UserDocument;
 }
 
 interface GamesInfoUnitProps {
 	ugs: UGSWithRankingData;
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 }
 
-export default function UGPTProfiles({ reqUser }: { reqUser?: UserDocument }) {
+export default function UGPTProfiles({ reqUser }: { reqUser?: MONGO_UserDocument }) {
 	const { user } = useContext(UserContext);
 
 	return (
@@ -45,13 +45,13 @@ export default function UGPTProfiles({ reqUser }: { reqUser?: UserDocument }) {
 	);
 }
 
-const ContextualGamesInfo = memo(({ user }: { user: UserDocument }) => {
+const ContextualGamesInfo = memo(({ user }: { user: MONGO_UserDocument }) => {
 	const { ugs } = useContext(AllLUGPTStatsContext);
 
 	return <GamesInfo reqUser={user} ugsList={ugs ?? []} />;
 });
 
-function QueryGamesInfo({ reqUser }: { reqUser: UserDocument }) {
+function QueryGamesInfo({ reqUser }: { reqUser: MONGO_UserDocument }) {
 	const { data, error } = useApiQuery<UGSWithRankingData[]>(
 		`/users/${reqUser.id}/game-stats`,
 		undefined,
@@ -73,7 +73,7 @@ function QueryGamesInfo({ reqUser }: { reqUser: UserDocument }) {
 function GamesInfo({ ugsList, reqUser }: GamesInfoProps) {
 	if (ugsList.length === 0) {
 		return (
-			<div className="col-12 text-center">
+			<div className="col-12 w-100 text-center">
 				<Muted>
 					<ReferToUser reqUser={reqUser} /> not played anything.
 				</Muted>

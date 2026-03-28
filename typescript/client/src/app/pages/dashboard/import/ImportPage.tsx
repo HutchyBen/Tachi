@@ -23,10 +23,10 @@ import {
 	GetGameGroupConfig,
 	type ImportTypes,
 	type integer,
-	type UserDocument,
+	type MONGO_UserDocument,
 } from "tachi-common";
 
-export default function ImportPage({ user }: { user: UserDocument }) {
+export default function ImportPage({ user }: { user: MONGO_UserDocument }) {
 	useSetSubheader(["Import Scores"]);
 
 	const [game, setGame] = useState<GameGroup | null>(null);
@@ -89,7 +89,7 @@ function ShowRecentImports() {
 	return <InnerShowRecentImports user={user} />;
 }
 
-function InnerShowRecentImports({ user }: { user: UserDocument }) {
+function InnerShowRecentImports({ user }: { user: MONGO_UserDocument }) {
 	const { data, error } = useApiQuery<{ count: integer; importType: ImportTypes }[]>(
 		`/users/${user.id}/recent-imports`,
 	);

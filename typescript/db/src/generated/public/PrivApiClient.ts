@@ -36,6 +36,12 @@ export default interface PrivApiClientTable {
   api_key_template: ColumnType<string | null, string | null, string | null>;
 
   api_key_filename: ColumnType<string | null, string | null, string | null>;
+
+  webhook_uri: ColumnType<string | null, string | null, string | null>;
+
+  redirect_uri: ColumnType<string | null, string | null, string | null>;
+
+  is_builtin: ColumnType<boolean, boolean | undefined, boolean>;
 }
 
 export type PrivApiClient = Selectable<PrivApiClientTable>;

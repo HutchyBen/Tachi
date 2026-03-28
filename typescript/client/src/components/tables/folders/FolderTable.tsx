@@ -8,7 +8,7 @@ import React, { useState } from "react";
 import {
 	type GameGroup,
 	type GPTString,
-	type PBScoreDocument,
+	type MONGO_PBScoreDocument,
 	type Playtype,
 	type ScoreRatingAlgorithms,
 } from "tachi-common";
@@ -131,7 +131,7 @@ function RowInner({
 	game: GameGroup;
 	rankingViewMode: RankingViewMode;
 	rating: ScoreRatingAlgorithms[GPTString];
-	score: PBScoreDocument;
+	score: MONGO_PBScoreDocument;
 }) {
 	// screw the rules of hooks
 	const scoreState = usePBState(score);

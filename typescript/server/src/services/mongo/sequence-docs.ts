@@ -1,11 +1,11 @@
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 
-import db from "./db";
+import MONGODB_KILL from "./db";
 
 export async function InitSequenceDocs() {
-	await db.counters.remove({});
+	await MONGODB_KILL.counters.remove({});
 
-	const userWithLargestID = await db.users.findOne(
+	const userWithLargestID = await MONGODB_KILL.users.findOne(
 		{},
 		{
 			sort: {
@@ -14,7 +14,7 @@ export async function InitSequenceDocs() {
 		},
 	);
 
-	const largestBMSSongID = await db.songs.bms.findOne(
+	const largestBMSSongID = await MONGODB_KILL.songs.bms.findOne(
 		{},
 		{
 			sort: {
@@ -23,7 +23,7 @@ export async function InitSequenceDocs() {
 		},
 	);
 
-	const largestPMSSongID = await db.songs.pms.findOne(
+	const largestPMSSongID = await MONGODB_KILL.songs.pms.findOne(
 		{},
 		{
 			sort: {
@@ -51,5 +51,5 @@ export async function InitSequenceDocs() {
 		`Setting Counters -> ${Counters.map((e) => `${e.counterName}: ${e.value}`).join(", ")}`,
 	);
 
-	await db.counters.insert(Counters);
+	await MONGODB_KILL.counters.insert(Counters);
 }

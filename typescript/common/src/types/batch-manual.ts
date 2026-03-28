@@ -13,7 +13,7 @@ import type {
 	ScoreMeta,
 	Versions,
 } from "./game-config";
-import type { ExtractMetrics } from "./metrics";
+import type { MongoExtractMetrics } from "./metrics";
 import type { AllFieldsNullableOptional } from "./utils";
 
 // These MatchTypes don't need `difficulty` set in the batch manual.
@@ -55,10 +55,10 @@ export type BatchManualScore<GPT extends GPTString = GPTString> = {
 	/**
 	 * @deprecated Use `optional` instead.
 	 */
-	hitMeta?: AllFieldsNullableOptional<ExtractMetrics<ConfOptionalMetrics[GPT]>>;
+	hitMeta?: AllFieldsNullableOptional<MongoExtractMetrics<ConfOptionalMetrics[GPT]>>;
 	identifier: string;
 	judgements?: Record<Judgements[GPT], integer>;
-	optional?: AllFieldsNullableOptional<ExtractMetrics<ConfOptionalMetrics[GPT]>>;
+	optional?: AllFieldsNullableOptional<MongoExtractMetrics<ConfOptionalMetrics[GPT]>>;
 
 	scoreMeta?: Partial<ScoreMeta[GPT]>;
 	timeAchieved?: number | null;
@@ -72,7 +72,7 @@ export type BatchManualScore<GPT extends GPTString = GPTString> = {
 			matchType: MatchTypesNoDifficulty;
 	  }
 ) &
-	ExtractMetrics<ConfProvidedMetrics[GPT]>;
+	MongoExtractMetrics<ConfProvidedMetrics[GPT]>;
 
 export interface BatchManual<GPT extends GPTString = GPTString> {
 	meta: {

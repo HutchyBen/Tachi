@@ -1,13 +1,13 @@
 import type { RequestHandler } from "express";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import { LoadImportDocumentById } from "#lib/db-formats/import-document";
+import { log } from "#lib/log/log";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { IsRequesterAdmin } from "#utils/user";
 
 export const GetImportFromParam: RequestHandler = async (req, res, next) => {
-	const importDoc = await db.imports.findOne({ importID: req.params.importID });
+	const importDoc = await LoadImportDocumentById(req.params.importID);
 
 	if (!importDoc) {
 		return res.status(404).json({

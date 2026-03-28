@@ -1,140 +1,107 @@
-import { Env, ServerConfig } from "#lib/setup/config";
-import { expressRequestMock } from "#test-utils/mock-request";
-import fs from "fs";
-import path from "path";
-import t from "tap";
+/**
+ * Integration tests for the CDN layer (MinIO/S3). Requires the same setup as the rest of the
+ * server suite: `.env.test` CDN settings, and MinIO reachable at that endpoint (see
+ * `vitest.globalSetup.ts` + `ensure-test-cdn-bucket`). Object keys use random UUIDs so workers can
+ * run in parallel without sharing keys.
+ */
+
+import { ServerConfig } from "#lib/setup/config";
+import { randomUUID } from "node:crypto";
+import { describe, expect, it, vi } from "vitest";
 
 import { CDNDelete, CDNRedirect, CDNRetrieve, CDNStoreOrOverwrite } from "./cdn";
+import { cdnObjectKey } from "./s3";
 
-if (ServerConfig.CDN_CONFIG.SAVE_LOCATION.TYPE !== "LOCAL_FILESYSTEM") {
-	throw new Error(`Tests must run against LOCAL_FILESYSTEM.`);
+/** Unique object path per test so parallel vitest workers do not clobber the same MinIO keys. */
+function testKey(suffix: string) {
+	return `/vitest/${randomUUID()}/${suffix}`;
 }
 
-const CDN_FILE_ROOT = ServerConfig.CDN_CONFIG.SAVE_LOCATION.LOCATION;
+describe("cdn (S3 integration)", () => {
+	it("stores and retrieves string content", async () => {
+		const loc = testKey("hello.txt");
+		await CDNStoreOrOverwrite(loc, "hello world");
+		const buf = await CDNRetrieve(loc);
+		expect(buf.toString("utf8")).toBe("hello world");
+		await CDNDelete(loc);
+	});
 
-function getTestTxt() {
-	return fs.readFileSync(path.join(CDN_FILE_ROOT, "test.txt"), "utf-8");
-}
+	it("stores and retrieves binary buffers", async () => {
+		const loc = testKey("bin.dat");
+		const original = Buffer.from([0, 255, 128, 1]);
+		await CDNStoreOrOverwrite(loc, original);
+		const got = await CDNRetrieve(loc);
+		expect(Buffer.compare(got, original)).toBe(0);
+		await CDNDelete(loc);
+	});
 
-const ResetFileRoot = () => {
-	if (Env.NODE_ENV !== "test") {
-		throw new Error(
-			`Not in test, yet CDN.test.ts was triggered, which could rm -rf something important.`,
+	it("overwrites an existing object", async () => {
+		const loc = testKey("overwrite.txt");
+		await CDNStoreOrOverwrite(loc, "first");
+		await CDNStoreOrOverwrite(loc, "second");
+		expect((await CDNRetrieve(loc)).toString("utf8")).toBe("second");
+		await CDNDelete(loc);
+	});
+
+	it("handles concurrent writes to different keys", async () => {
+		const a = testKey("concurrent-a.txt");
+		const b = testKey("concurrent-b.txt");
+		await Promise.all([
+			CDNStoreOrOverwrite(a, "alpha"),
+			CDNStoreOrOverwrite(b, "beta"),
+		]);
+		expect((await CDNRetrieve(a)).toString("utf8")).toBe("alpha");
+		expect((await CDNRetrieve(b)).toString("utf8")).toBe("beta");
+		await CDNDelete(a);
+		await CDNDelete(b);
+	});
+
+	it("supports nested paths without leading slash segments in the middle", async () => {
+		const loc = testKey("a/b/c/d.txt");
+		await CDNStoreOrOverwrite(loc, "nested");
+		expect((await CDNRetrieve(loc)).toString("utf8")).toBe("nested");
+		await CDNDelete(loc);
+	});
+
+	it("supports API-style paths with a leading slash (profile URLs)", async () => {
+		const loc = `/users/${randomUUID()}/pfp-test`;
+		await CDNStoreOrOverwrite(loc, "pfp-bytes");
+		expect((await CDNRetrieve(loc)).toString("utf8")).toBe("pfp-bytes");
+		await CDNDelete(loc);
+	});
+
+	it("rejects GetObject when the key does not exist", async () => {
+		const loc = testKey("nope.bin");
+		await expect(CDNRetrieve(loc)).rejects.toThrow();
+	});
+
+	it("CDNDelete on a missing key does not throw (S3 idempotent delete)", async () => {
+		const loc = testKey("never-written.txt");
+		await CDNDelete(loc);
+	});
+});
+
+describe("CDNRedirect", () => {
+	it("redirects to WEB_LOCATION + fileLoc", () => {
+		const res = { redirect: vi.fn() };
+		CDNRedirect(res as never, "/users/1/pfp-hash");
+
+		expect(res.redirect).toHaveBeenCalledOnce();
+		expect(res.redirect).toHaveBeenCalledWith(
+			`${ServerConfig.CDN_CONFIG.WEB_LOCATION}/users/1/pfp-hash`,
 		);
-	}
-
-	if (CDN_FILE_ROOT !== "./test-cdn") {
-		throw new Error(
-			`Unexpected CDN_FILE_ROOT of ${CDN_FILE_ROOT}. This is a security precaution, so that tests do not unexpectedly rm -rf important directories.`,
-		);
-	}
-
-	// isn't this terrifyingly risky?
-	fs.rmSync(CDN_FILE_ROOT, { recursive: true, force: true });
-};
-
-t.test("#CDNRetrieve", (t) => {
-	t.beforeEach(ResetFileRoot);
-
-	t.test("Should retrieve the file at the given location.", async (t) => {
-		await CDNStoreOrOverwrite("test.txt", "1");
-
-		const data = await CDNRetrieve("test.txt");
-
-		t.equal(data.toString(), "1", "Should contain the contents of test.txt");
-
-		t.end();
 	});
 
-	t.test("Should throw if the file does not exist.", (t) => {
-		t.rejects(() => CDNRetrieve("fake-file.txt"));
-
-		t.end();
+	it("throws when fileLoc does not start with /", () => {
+		const res = { redirect: vi.fn() };
+		expect(() => CDNRedirect(res as never, "bad")).toThrow(/did not start with \//u);
+		expect(res.redirect).not.toHaveBeenCalled();
 	});
-
-	t.end();
 });
 
-t.test("#CDNStoreOrOverwrite", (t) => {
-	t.beforeEach(ResetFileRoot);
-
-	t.test("Should store a value.", async (t) => {
-		await CDNStoreOrOverwrite("test.txt", "hello world");
-
-		const data = fs.readFileSync(path.join(CDN_FILE_ROOT, "test.txt"), "utf8");
-
-		t.equal(data, "hello world", "Should store the data at the CDN_FILE_ROOT.");
-
-		t.end();
+describe("cdnObjectKey", () => {
+	it("matches KEY_PREFIX + fileLoc from the loaded test config", () => {
+		const prefix = ServerConfig.CDN_CONFIG.SAVE_LOCATION.KEY_PREFIX ?? "";
+		expect(cdnObjectKey("/x")).toBe(`${prefix}/x`);
 	});
-
-	t.test("Should generate paths on the way to the file if they do not exist.", async (t) => {
-		await CDNStoreOrOverwrite("a/b/c/d/e/f/g.txt", "hello");
-
-		const data = fs.readFileSync(path.join(CDN_FILE_ROOT, "a/b/c/d/e/f/g.txt"), "utf8");
-
-		t.equal(data, "hello", "Should store the data at the deeply nested location.");
-
-		t.end();
-	});
-
-	t.test("Should store a file if one doesn't exist", async (t) => {
-		await CDNStoreOrOverwrite("test.txt", "1");
-
-		t.equal(getTestTxt(), "1");
-
-		t.end();
-	});
-
-	t.test("Should overwrite the file if it exists.", async (t) => {
-		await CDNStoreOrOverwrite("test.txt", "1");
-		t.equal(getTestTxt(), "1");
-
-		await CDNStoreOrOverwrite("test.txt", "2");
-		t.equal(getTestTxt(), "2");
-
-		t.end();
-	});
-
-	t.end();
-});
-
-t.test("#CDNDelete", (t) => {
-	t.beforeEach(ResetFileRoot);
-
-	t.test("Should delete the file at the given location.", async (t) => {
-		await CDNStoreOrOverwrite("test.txt", "1");
-
-		const data = getTestTxt();
-
-		t.equal(data, "1");
-
-		await CDNDelete("test.txt");
-
-		t.not(fs.existsSync(path.join(CDN_FILE_ROOT, "test.txt")), "File should not exist.");
-
-		t.end();
-	});
-
-	t.end();
-});
-
-t.test("#CDNRedirect", (t) => {
-	t.beforeEach(ResetFileRoot);
-
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const mockMW = (req: any, res: any) => {
-		CDNRedirect(res, "/test.txt");
-	};
-
-	t.test("Should redirect a user to the CDN Url", async (t) => {
-		const { res } = await expressRequestMock(mockMW, {});
-
-		t.equal(res.statusCode, 302);
-		t.equal(res._getRedirectUrl(), "/cdn/test.txt");
-
-		t.end();
-	});
-
-	t.end();
 });

@@ -18,13 +18,12 @@ import type { default as ImportLockTable } from './ImportLock';
 import type { default as ScoreBlacklistTable } from './ScoreBlacklist';
 import type { default as PrivDiscordUserMapTable } from './PrivDiscordUserMap';
 import type { default as TableFolderTable } from './TableFolder';
-import type { default as GameStatsTable } from './GameStats';
 import type { default as PrivOauth2AuthTokenTable } from './PrivOauth2AuthToken';
 import type { default as ImportSessionTable } from './ImportSession';
 import type { default as PrivSvcFerCardTable } from './PrivSvcFerCard';
 import type { default as PbComposedFromTable } from './PbComposedFrom';
 import type { default as BmsCourseLookupTable } from './BmsCourseLookup';
-import type { default as SongSearchTermTable } from './SongSearchTerm';
+import type { default as GameProfileTable } from './GameProfile';
 import type { default as ImportGameTable } from './ImportGame';
 import type { default as ImportGoalTable } from './ImportGoal';
 import type { default as OrphanChartUserTable } from './OrphanChartUser';
@@ -35,7 +34,6 @@ import type { default as PrivPasswordResetTokenTable } from './PrivPasswordReset
 import type { default as SongTable } from './Song';
 import type { default as AccountUsernameChangeTable } from './AccountUsernameChange';
 import type { default as MigrationTable } from './Migration';
-import type { default as AccountBadgeTable } from './AccountBadge';
 import type { default as ActionTable } from './Action';
 import type { default as PrivSvcKaiAuthTokenTable } from './PrivSvcKaiAuthToken';
 import type { default as ChartTable } from './Chart';
@@ -50,14 +48,13 @@ import type { default as QuestSubTable } from './QuestSub';
 import type { default as OrphanScoreTable } from './OrphanScore';
 import type { default as FolderViewTable } from './FolderView';
 import type { default as TableTable } from './Table';
-import type { default as ChartVersionTable } from './ChartVersion';
 import type { default as GoalSubTable } from './GoalSub';
-import type { default as FolderSearchTermTable } from './FolderSearchTerm';
 import type { default as JobQueueTable } from './JobQueue';
 import type { default as PrivApiClientTable } from './PrivApiClient';
 import type { default as PrivApiTokenTable } from './PrivApiToken';
 import type { default as SvcKshookSv6cSettingsTable } from './SvcKshookSv6cSettings';
 import type { default as ImportErrorTable } from './ImportError';
+import type { default as FolderChartLookupTable } from './FolderChartLookup';
 import type { default as QuestTable } from './Quest';
 import type { default as AccountSettingsTable } from './AccountSettings';
 import type { default as PbTable } from './Pb';
@@ -66,7 +63,6 @@ import type { default as QuestlineQuestTable } from './QuestlineQuest';
 import type { default as QuestlineTable } from './Questline';
 import type { default as CronTaskTable } from './CronTask';
 import type { default as ImportClassTable } from './ImportClass';
-import type { default as SongAltTitleTable } from './SongAltTitle';
 import type { default as GameStatsSnapshotTable } from './GameStatsSnapshot';
 import type { default as ChartLeaderboardTable } from './ChartLeaderboard';
 
@@ -105,8 +101,6 @@ export default interface PublicSchema {
 
   table_folder: TableFolderTable;
 
-  game_stats: GameStatsTable;
-
   priv_oauth2_auth_token: PrivOauth2AuthTokenTable;
 
   import_session: ImportSessionTable;
@@ -117,7 +111,7 @@ export default interface PublicSchema {
 
   bms_course_lookup: BmsCourseLookupTable;
 
-  song_search_term: SongSearchTermTable;
+  game_profile: GameProfileTable;
 
   import_game: ImportGameTable;
 
@@ -138,8 +132,6 @@ export default interface PublicSchema {
   account_username_change: AccountUsernameChangeTable;
 
   _migration: MigrationTable;
-
-  account_badge: AccountBadgeTable;
 
   action: ActionTable;
 
@@ -169,11 +161,7 @@ export default interface PublicSchema {
 
   table: TableTable;
 
-  chart_version: ChartVersionTable;
-
   goal_sub: GoalSubTable;
-
-  folder_search_term: FolderSearchTermTable;
 
   job_queue: JobQueueTable;
 
@@ -184,6 +172,8 @@ export default interface PublicSchema {
   svc_kshook_sv6c_settings: SvcKshookSv6cSettingsTable;
 
   import_error: ImportErrorTable;
+
+  folder_chart_lookup: FolderChartLookupTable;
 
   quest: QuestTable;
 
@@ -200,8 +190,6 @@ export default interface PublicSchema {
   cron_task: CronTaskTable;
 
   import_class: ImportClassTable;
-
-  song_alt_title: SongAltTitleTable;
 
   game_stats_snapshot: GameStatsSnapshotTable;
 

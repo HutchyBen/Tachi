@@ -1,9 +1,9 @@
 import type { GoalCriteriaFormatter } from "#game-implementations/types";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
-import db from "#services/mongo/db";
+import { GetFolderChartIDs } from "#lib/folders/folders.js";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetFolderForIDGuaranteed, HumaniseChartID } from "#utils/db";
-import { GetFolderChartIDs } from "#utils/folder";
 import { HumanisedJoinArray, OnlyFloatToDP } from "#utils/misc";
 import {
 	FormatGameGroup,
@@ -12,14 +12,14 @@ import {
 	GetGPTString,
 	GetScoreMetricConf,
 	GetSpecificGPTConfig,
-	type GoalDocument,
 	type GPTString,
+	type MONGO_GoalDocument,
 	type Playtype,
 } from "tachi-common";
 
 export async function CreateGoalTitle(
-	charts: GoalDocument["charts"],
-	criteria: GoalDocument["criteria"],
+	charts: MONGO_GoalDocument["charts"],
+	criteria: MONGO_GoalDocument["criteria"],
 	game: GameGroup,
 	playtype: Playtype,
 ) {
@@ -92,8 +92,8 @@ export async function CreateGoalTitle(
 }
 
 async function FormatCharts(
-	charts: GoalDocument["charts"],
-	criteria: GoalDocument["criteria"],
+	charts: MONGO_GoalDocument["charts"],
+	criteria: MONGO_GoalDocument["criteria"],
 	game: GameGroup,
 ) {
 	switch (charts.type) {
@@ -126,14 +126,14 @@ async function FormatCharts(
 		default:
 			throw new Error(
 				`Invalid goal charts.type -- got ${
-					(charts as GoalDocument["charts"]).type
+					(charts as MONGO_GoalDocument["charts"]).type
 				}, which we don't support?`,
 			);
 	}
 }
 
 function FormatCriteria<GPT extends GPTString>(
-	criteria: GoalDocument<GPT>["criteria"],
+	criteria: MONGO_GoalDocument<GPT>["criteria"],
 	gptString: GPT,
 ) {
 	const gptConfig = GetSpecificGPTConfig(gptString);
@@ -175,8 +175,8 @@ function FormatCriteria<GPT extends GPTString>(
  * @warn This function is disgusting. This should have never happened.
  */
 export async function ValidateGoalChartsAndCriteria(
-	charts: GoalDocument["charts"],
-	criteria: GoalDocument["criteria"],
+	charts: MONGO_GoalDocument["charts"],
+	criteria: MONGO_GoalDocument["criteria"],
 	game: GameGroup,
 	playtype: Playtype,
 ) {
@@ -186,7 +186,7 @@ export async function ValidateGoalChartsAndCriteria(
 
 	switch (charts.type) {
 		case "single": {
-			const chart = await db.anyCharts[game].findOne({
+			const chart = await MONGODB_KILL.anyCharts[game].findOne({
 				playtype,
 				chartID: charts.data,
 			});
@@ -202,7 +202,7 @@ export async function ValidateGoalChartsAndCriteria(
 		}
 
 		case "folder": {
-			const folder = await db.folders.findOne({
+			const folder = await MONGODB_KILL.folders.findOne({
 				game,
 				playtype,
 				folderID: charts.data,
@@ -225,7 +225,7 @@ export async function ValidateGoalChartsAndCriteria(
 				);
 			}
 
-			const multiCharts = await db.anyCharts[game].find({
+			const multiCharts = await MONGODB_KILL.anyCharts[game].find({
 				playtype,
 				chartID: { $in: charts.data },
 			});
@@ -297,7 +297,7 @@ export async function ValidateGoalChartsAndCriteria(
 			let err;
 
 			if (config.chartDependentMax) {
-				const chart = await db.anyCharts[game].findOne({
+				const chart = await MONGODB_KILL.anyCharts[game].findOne({
 					playtype,
 					// guaranteed by previous if statement
 					chartID: charts.data as string,

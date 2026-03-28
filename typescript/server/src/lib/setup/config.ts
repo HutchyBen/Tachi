@@ -1,24 +1,10 @@
-import { log } from "#lib/log/log.js";
-import JSON5 from "json5";
+import { log } from "#lib/log/log";
+import { loadServerEnvFile } from "#lib/setup/load-server-env";
 import { allSupportedGameGroups, type GameGroup, type ImportTypes } from "tachi-common";
 import { allImportTypes } from "tachi-common/constants/import-types";
 import { z } from "zod";
 
-const rawConf = process.env.TACHI_CONFIG;
-
-if (!rawConf) {
-	log.error("TACHI_CONFIG environment variable is not set. Terminating.");
-	process.exit(1);
-}
-
-let config: unknown;
-
-try {
-	config = JSON5.parse(rawConf);
-} catch (err) {
-	log.error({ err }, "Failed to parse TACHI_CONFIG as JSON5.");
-	process.exit(1);
-}
+loadServerEnvFile(process.env.NODE_ENV === "test" ? ".env.test" : ".env");
 
 const oauth2Schema = z.object({
 	CLIENT_ID: z.string(),
@@ -29,6 +15,16 @@ const oauth2Schema = z.object({
 const cgConfigSchema = z.object({
 	API_KEY: z.string(),
 	URL: z.string(),
+});
+
+const cdnS3SaveLocationSchema = z.object({
+	TYPE: z.literal("S3_BUCKET"),
+	ENDPOINT: z.string(),
+	ACCESS_KEY_ID: z.string(),
+	SECRET_ACCESS_KEY: z.string(),
+	BUCKET: z.string(),
+	KEY_PREFIX: z.string().optional(),
+	REGION: z.string().optional(),
 });
 
 const configSchema = z.object({
@@ -62,9 +58,7 @@ const configSchema = z.object({
 	EMAIL_CONFIG: z
 		.object({
 			FROM: z.string(),
-			// Nodemailer does not export the DKIM type properly, so we accept any object.
 			DKIM: z.any().optional(),
-			// The actual content is just a wacky options object — not worth asserting precisely.
 			TRANSPORT_OPS: z.any().optional(),
 		})
 		.optional(),
@@ -93,22 +87,8 @@ const configSchema = z.object({
 	}),
 	CDN_CONFIG: z.object({
 		WEB_LOCATION: z.string(),
-		SAVE_LOCATION: z.union([
-			z.object({
-				TYPE: z.literal("LOCAL_FILESYSTEM"),
-				SERVE_OWN_CDN: z.boolean().optional(),
-				LOCATION: z.string(),
-			}),
-			z.object({
-				TYPE: z.literal("S3_BUCKET"),
-				ENDPOINT: z.string(),
-				ACCESS_KEY_ID: z.string(),
-				SECRET_ACCESS_KEY: z.string(),
-				BUCKET: z.string(),
-				KEY_PREFIX: z.string().optional(),
-				REGION: z.string().optional(),
-			}),
-		]),
+		SAVE_LOCATION: cdnS3SaveLocationSchema,
+		SAVE_LOCATION_PRIVATE: cdnS3SaveLocationSchema,
 	}),
 	SEEDS_CONFIG: z
 		.union([
@@ -131,10 +111,258 @@ export type OAuth2Info = z.infer<typeof oauth2Schema>;
 export type CGConfig = z.infer<typeof cgConfigSchema>;
 export type TachiServerConfig = z.infer<typeof configSchema>;
 
-const result = configSchema.safeParse(config);
+function req(key: string): string {
+	const v = process.env[key];
+	if (v === undefined || v === "") {
+		log.error(`${key} is not set. Terminating.`);
+		process.exit(1);
+	}
+	return v;
+}
+
+function opt(key: string): string | undefined {
+	const v = process.env[key];
+	if (v === undefined || v === "") {
+		return undefined;
+	}
+	return v;
+}
+
+function optUrl(key: string): string | undefined {
+	return opt(key);
+}
+
+function parseBool(key: string, defaultVal?: boolean): boolean | undefined {
+	const v = opt(key);
+	if (v === undefined) {
+		return defaultVal;
+	}
+	if (v === "true" || v === "1") {
+		return true;
+	}
+	if (v === "false" || v === "0") {
+		return false;
+	}
+	return defaultVal;
+}
+
+function parseIntEnv(key: string, defaultVal: number): number {
+	const v = opt(key);
+	if (v === undefined) {
+		return defaultVal;
+	}
+	const n = Number.parseInt(v, 10);
+	return Number.isNaN(n) ? defaultVal : n;
+}
+
+function parseCsv<T extends string>(key: string, valid: readonly T[]): T[] {
+	const raw = req(key);
+	const parts = raw
+		.split(",")
+		.map((s) => s.trim())
+		.filter(Boolean);
+	const validSet = new Set(valid);
+	for (const p of parts) {
+		if (!validSet.has(p as T)) {
+			throw new Error(`${key} contains invalid value "${p}".`);
+		}
+	}
+	return parts as T[];
+}
+
+function oauth2Optional(prefix: "EAG" | "FLO" | "MIN"): z.infer<typeof oauth2Schema> | undefined {
+	const id = opt(`TACHI_${prefix}_OAUTH2_CLIENT_ID`);
+	const secret = opt(`TACHI_${prefix}_OAUTH2_CLIENT_SECRET`);
+	const redirect = opt(`TACHI_${prefix}_OAUTH2_REDIRECT_URI`);
+	if (id && secret && redirect) {
+		return { CLIENT_ID: id, CLIENT_SECRET: secret, REDIRECT_URI: redirect };
+	}
+	if (!id && !secret && !redirect) {
+		return undefined;
+	}
+	throw new Error(
+		`Incomplete TACHI_${prefix}_OAUTH2_*: set all of CLIENT_ID, CLIENT_SECRET, and REDIRECT_URI, or none.`,
+	);
+}
+
+function cgOptional(suffix: "DEV" | "GAN" | "NAG"): CGConfig | undefined {
+	const apiKey = opt(`TACHI_CG_${suffix}_API_KEY`);
+	const url = opt(`TACHI_CG_${suffix}_URL`);
+	if (apiKey && url) {
+		return { API_KEY: apiKey, URL: url };
+	}
+	if (!apiKey && !url) {
+		return undefined;
+	}
+	throw new Error(`Incomplete TACHI_CG_${suffix}_*: set both API_KEY and URL, or neither.`);
+}
+
+function s3SaveLocation(
+	prefix: "TACHI_CDN_SAVE_LOCATION" | "TACHI_CDN_SAVE_LOCATION_PRIVATE",
+): z.infer<typeof cdnS3SaveLocationSchema> {
+	const keyPrefix = opt(`${prefix}_KEY_PREFIX`);
+	const region = opt(`${prefix}_REGION`);
+	return {
+		TYPE: "S3_BUCKET",
+		ENDPOINT: req(`${prefix}_ENDPOINT`),
+		ACCESS_KEY_ID: req(`${prefix}_ACCESS_KEY_ID`),
+		SECRET_ACCESS_KEY: req(`${prefix}_SECRET_ACCESS_KEY`),
+		BUCKET: req(`${prefix}_BUCKET`),
+		...(keyPrefix !== undefined ? { KEY_PREFIX: keyPrefix } : {}),
+		...(region !== undefined ? { REGION: region } : {}),
+	};
+}
+
+function seedsConfig(): TachiServerConfig["SEEDS_CONFIG"] {
+	const type = opt("TACHI_SEEDS_TYPE");
+	if (type === undefined) {
+		return undefined;
+	}
+	if (type === "LOCAL_FILES") {
+		return { TYPE: "LOCAL_FILES", PATH: req("TACHI_SEEDS_PATH") };
+	}
+	if (type === "GIT_REPO") {
+		const userName = opt("TACHI_SEEDS_USER_NAME");
+		const userEmail = opt("TACHI_SEEDS_USER_EMAIL");
+		return {
+			TYPE: "GIT_REPO",
+			REPO_URL: req("TACHI_SEEDS_REPO_URL"),
+			USER_NAME: userName === undefined || userName === "" ? null : userName,
+			USER_EMAIL: userEmail === undefined || userEmail === "" ? null : userEmail,
+			...(opt("TACHI_SEEDS_BRANCH") !== undefined
+				? { BRANCH: opt("TACHI_SEEDS_BRANCH") }
+				: {}),
+		};
+	}
+	throw new Error(`Invalid TACHI_SEEDS_TYPE "${type}". Expected LOCAL_FILES or GIT_REPO.`);
+}
+
+function emailConfig(): TachiServerConfig["EMAIL_CONFIG"] {
+	const from = opt("TACHI_EMAIL_FROM");
+	if (from === undefined) {
+		return undefined;
+	}
+	const dkimRaw = opt("TACHI_EMAIL_DKIM_JSON");
+	const transportRaw = opt("TACHI_EMAIL_TRANSPORT_OPS_JSON");
+	let dkim: unknown;
+	let transportOps: unknown;
+	if (dkimRaw !== undefined) {
+		dkim = JSON.parse(dkimRaw) as unknown;
+	}
+	if (transportRaw !== undefined) {
+		transportOps = JSON.parse(transportRaw) as unknown;
+	}
+	return {
+		FROM: from,
+		...(dkim !== undefined ? { DKIM: dkim } : {}),
+		...(transportOps !== undefined ? { TRANSPORT_OPS: transportOps } : {}),
+	};
+}
+
+function inviteCodeConfig(): TachiServerConfig["INVITE_CODE_CONFIG"] {
+	const batch = opt("TACHI_INVITE_CODE_BATCH_SIZE");
+	const cap = opt("TACHI_INVITE_CODE_INVITE_CAP");
+	const bonus = opt("TACHI_INVITE_CODE_BETA_USER_BONUS");
+	if (batch && cap && bonus) {
+		return {
+			BATCH_SIZE: Number.parseInt(batch, 10),
+			INVITE_CAP: Number.parseInt(cap, 10),
+			BETA_USER_BONUS: Number.parseInt(bonus, 10),
+		};
+	}
+	if (!batch && !cap && !bonus) {
+		return undefined;
+	}
+	throw new Error(
+		"Incomplete TACHI_INVITE_CODE_*: set BATCH_SIZE, INVITE_CAP, and BETA_USER_BONUS, or none.",
+	);
+}
+
+function clientDevServer(): string | null | undefined {
+	const v = opt("TACHI_CLIENT_DEV_SERVER");
+	if (v === undefined) {
+		return undefined;
+	}
+	if (v === "null" || v === "") {
+		return null;
+	}
+	return v;
+}
+
+const games = parseCsv("TACHI_GAMES", allSupportedGameGroups as readonly GameGroup[]);
+const importTypes = parseCsv("TACHI_IMPORT_TYPES", allImportTypes as readonly ImportTypes[]);
+
+const cgDev = cgOptional("DEV");
+const cgNag = cgOptional("NAG");
+const cgGan = cgOptional("GAN");
+const floOauth = oauth2Optional("FLO");
+const eagOauth = oauth2Optional("EAG");
+const minOauth = oauth2Optional("MIN");
+const emailCfg = emailConfig();
+const inviteCfg = inviteCodeConfig();
+const seedsCfg = seedsConfig();
+const clientDev = clientDevServer();
+const extWorkerConc = opt("TACHI_EXTERNAL_SCORE_IMPORT_WORKER_CONCURRENCY");
+
+const configFromEnv: unknown = {
+	MONGO_DATABASE_NAME: req("TACHI_MONGO_DATABASE_NAME"),
+	CAPTCHA_SECRET_KEY: req("TACHI_CAPTCHA_SECRET_KEY"),
+	SESSION_SECRET: req("TACHI_SESSION_SECRET"),
+	FLO_API_URL: optUrl("TACHI_FLO_API_URL"),
+	EAG_API_URL: optUrl("TACHI_EAG_API_URL"),
+	MIN_API_URL: optUrl("TACHI_MIN_API_URL"),
+	ARC_API_URL: optUrl("TACHI_ARC_API_URL"),
+	MYT_API_HOST: opt("TACHI_MYT_API_HOST"),
+
+	...(cgDev !== undefined ? { CG_DEV_CONFIG: cgDev } : {}),
+	...(cgNag !== undefined ? { CG_NAG_CONFIG: cgNag } : {}),
+	...(cgGan !== undefined ? { CG_GAN_CONFIG: cgGan } : {}),
+
+	...(floOauth !== undefined ? { FLO_OAUTH2_INFO: floOauth } : {}),
+	...(eagOauth !== undefined ? { EAG_OAUTH2_INFO: eagOauth } : {}),
+	...(minOauth !== undefined ? { MIN_OAUTH2_INFO: minOauth } : {}),
+	ARC_AUTH_TOKEN: opt("TACHI_ARC_AUTH_TOKEN"),
+	MYT_AUTH_TOKEN: opt("TACHI_MYT_AUTH_TOKEN"),
+	ENABLE_SERVER_HTTPS: parseBool("TACHI_ENABLE_SERVER_HTTPS"),
+	...(clientDev !== undefined ? { CLIENT_DEV_SERVER: clientDev } : {}),
+	RATE_LIMIT: parseIntEnv("TACHI_RATE_LIMIT", 500),
+	OAUTH_CLIENT_CAP: parseIntEnv("TACHI_OAUTH_CLIENT_CAP", 15),
+	OPTIONS_ALWAYS_SUCCEEDS: parseBool("TACHI_OPTIONS_ALWAYS_SUCCEEDS"),
+	USE_EXTERNAL_SCORE_IMPORT_WORKER: parseBool("TACHI_USE_EXTERNAL_SCORE_IMPORT_WORKER", false),
+	EXTERNAL_SCORE_IMPORT_WORKER_CONCURRENCY: parseIntEnv(
+		"TACHI_EXTERNAL_SCORE_IMPORT_WORKER_CONCURRENCY",
+		10,
+	),
+	ALLOW_RUNNING_OFFLINE: parseBool("TACHI_ALLOW_RUNNING_OFFLINE"),
+	ENABLE_METRICS: parseBool("TACHI_ENABLE_METRICS", false) ?? false,
+	...(emailCfg !== undefined ? { EMAIL_CONFIG: emailCfg } : {}),
+	USC_QUEUE_SIZE: parseIntEnv("TACHI_USC_QUEUE_SIZE", 3),
+	BEATORAJA_QUEUE_SIZE: parseIntEnv("TACHI_BEATORAJA_QUEUE_SIZE", 3),
+	MAX_GOAL_SUBSCRIPTIONS: parseIntEnv("TACHI_MAX_GOAL_SUBSCRIPTIONS", 1_000),
+	MAX_QUEST_SUBSCRIPTIONS: parseIntEnv("TACHI_MAX_QUEST_SUBSCRIPTIONS", 100),
+	MAX_FOLLOWING_AMOUNT: parseIntEnv("TACHI_MAX_FOLLOWING_AMOUNT", 1_000),
+	MAX_RIVALS: parseIntEnv("TACHI_MAX_RIVALS", 5),
+	OUR_URL: req("TACHI_OUR_URL"),
+	...(inviteCfg !== undefined ? { INVITE_CODE_CONFIG: inviteCfg } : {}),
+	TACHI_CONFIG: {
+		NAME: req("TACHI_NAME"),
+		TYPE: req("TACHI_TYPE"),
+		GAMES: games,
+		IMPORT_TYPES: importTypes,
+		SIGNUPS_ENABLED: parseBool("TACHI_SIGNUPS_ENABLED", true) ?? true,
+	},
+	CDN_CONFIG: {
+		WEB_LOCATION: req("TACHI_CDN_WEB_LOCATION"),
+		SAVE_LOCATION: s3SaveLocation("TACHI_CDN_SAVE_LOCATION"),
+		SAVE_LOCATION_PRIVATE: s3SaveLocation("TACHI_CDN_SAVE_LOCATION_PRIVATE"),
+	},
+	...(seedsCfg !== undefined ? { SEEDS_CONFIG: seedsCfg } : {}),
+};
+
+const result = configSchema.safeParse(configFromEnv);
 
 if (!result.success) {
-	throw new Error(`Invalid TCHIS_CONF: ${result.error.message}`);
+	throw new Error(`Invalid server config: ${result.error.message}`);
 }
 
 export const TachiConfig = result.data.TACHI_CONFIG;
@@ -152,8 +380,6 @@ if (Number.isNaN(PORT) && process.env.IS_SERVER) {
 const REDIS_URL = process.env.REDIS_URL;
 
 if (!REDIS_URL) {
-	// n.b. These logs should be critical level, but thelog cant actually instantiate
-	// itself in this file, because this file also controlls the log. Ouch!
 	log.error(`No REDIS_URL specified in environment. Terminating.`);
 	process.exit(1);
 }
@@ -179,7 +405,6 @@ if (!["dev", "production", "staging", "test"].includes(NODE_ENV)) {
 	process.exit(1);
 }
 
-// if (bms XOR pms) is enabled
 if (TachiConfig.GAMES.includes("bms") !== TachiConfig.GAMES.includes("pms")) {
 	log.error(`BMS and PMS MUST be enabled at the same time, due to how the beatoraja IR works.`);
 
@@ -222,7 +447,6 @@ if (!COMMIT_HASH) {
 	process.exit(1);
 }
 
-// Typed variant of process.env
 export const Env = {
 	PORT,
 	REDIS_URL,

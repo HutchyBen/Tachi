@@ -15,32 +15,68 @@ import SelectButton from "#components/util/SelectButton";
 import { UserContext } from "#context/UserContext";
 import { ONE_MINUTE } from "#util/constants/time";
 import { NumericSOV, StrSOV } from "#util/sorts";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useLayoutEffect, useState } from "react";
 import { Badge, Col, Form, Row } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link, useHistory, useLocation } from "react-router-dom";
 import {
-	type ChartDocument,
 	FormatGameGroup,
 	type GPTString,
 	type integer,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
+	type MONGO_UserDocument,
 	SplitGPT,
-	type UserDocument,
 } from "tachi-common";
+
+function parseSearchParams(search: string) {
+	const params = new URLSearchParams(search);
+	return {
+		q: params.get("q") ?? "",
+		hasPlayedGame: params.get("hasPlayedGame") !== "false",
+	};
+}
 
 export default function SearchPage() {
 	useSetSubheader("Search");
 
 	const { user } = useContext(UserContext);
+	const history = useHistory();
+	const location = useLocation();
 
-	const [search, setSearch] = useState("");
-	const [hasPlayedGame, setHasPlayedGame] = useState(true);
+	const { q: initialQ, hasPlayedGame: initialHasPlayed } = parseSearchParams(location.search);
+	const [search, setSearch] = useState(initialQ);
+	const [hasPlayedGame, setHasPlayedGame] = useState(initialHasPlayed);
+
+	useLayoutEffect(() => {
+		const { q, hasPlayedGame: h } = parseSearchParams(location.search);
+		setSearch(q);
+		setHasPlayedGame(h);
+	}, [location.search]);
+
+	useEffect(() => {
+		const next = new URLSearchParams();
+		if (search) {
+			next.set("q", search);
+		}
+		if (!hasPlayedGame) {
+			next.set("hasPlayedGame", "false");
+		}
+		const nextStr = next.toString();
+		const current = new URLSearchParams(history.location.search).toString();
+		if (nextStr !== current) {
+			history.replace({
+				pathname: location.pathname,
+				search: nextStr ? `?${nextStr}` : "",
+			});
+		}
+	}, [search, hasPlayedGame, history, location.pathname]);
 
 	return (
 		<Row>
 			<Col xs={12}>
 				<DebounceSearch
 					autoFocus
+					committedSearch={search}
 					placeholder="Search songs, users..."
 					setSearch={setSearch}
 				/>
@@ -175,9 +211,9 @@ function ChartView({
 	gpt,
 }: {
 	charts: Array<{
-		chart: ChartDocument;
+		chart: MONGO_ChartDocument;
 		playcount: integer;
-		song: SongDocument;
+		song: MONGO_SongDocument;
 	}>;
 	gpt: GPTString;
 }) {
@@ -212,7 +248,7 @@ function ChartView({
 	);
 }
 
-function UsersView({ users }: { users: Array<UserDocument> }) {
+function UsersView({ users }: { users: Array<MONGO_UserDocument> }) {
 	return (
 		<Row>
 			<div

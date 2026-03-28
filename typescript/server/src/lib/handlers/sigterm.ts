@@ -1,10 +1,10 @@
 import type http from "http";
 import type https from "https";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { CloseScoreImportQueue } from "#lib/score-import/worker/queue";
 import { monkDB } from "#services/mongo/db";
-import { ClosePgConnection } from "#services/pg/db.js";
+import { ClosePgConnection } from "#services/pg/db";
 import { CloseRedisConnection } from "#services/redis/redis";
 
 export function HandleSIGTERMGracefully(instance?: http.Server | https.Server) {

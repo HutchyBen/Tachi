@@ -3,9 +3,9 @@ import { type GamePT } from "#types/react";
 import { ToAPIURL } from "#util/api";
 import React from "react";
 import { Link } from "react-router-dom";
-import { type UserDocument } from "tachi-common";
+import { type MONGO_UserDocument } from "tachi-common";
 
-export default function UserCell({ user, game, playtype }: { user: UserDocument } & GamePT) {
+export default function UserCell({ user, game, playtype }: { user: MONGO_UserDocument } & GamePT) {
 	return (
 		<td
 			className="fading-image-td-right"

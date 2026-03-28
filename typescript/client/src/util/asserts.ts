@@ -3,9 +3,9 @@ import {
 	type GameGroup,
 	GetGameGroupConfig,
 	type GPTString,
-	type PBScoreDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
 	type Playtypes,
-	type ScoreDocument,
 } from "tachi-common";
 
 export function IsSupportedGame(str: string): str is GameGroup {
@@ -22,8 +22,8 @@ export function IsSupportedPlaytype<G extends GameGroup = GameGroup>(
 }
 
 export function IsScore<GPT extends GPTString>(
-	pbOrScore: PBScoreDocument<GPT> | ScoreDocument<GPT>,
-): pbOrScore is ScoreDocument<GPT> {
+	pbOrScore: MONGO_PBScoreDocument<GPT> | MONGO_ScoreDocument<GPT>,
+): pbOrScore is MONGO_ScoreDocument<GPT> {
 	// @ts-expect-error thats the test...
 	return !!pbOrScore.scoreMeta;
 }

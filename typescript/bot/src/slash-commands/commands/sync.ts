@@ -1,4 +1,4 @@
-import { BotConfig, ServerConfig } from "#config";
+import { Env, ServerConfig } from "#config";
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { ExpectedErr } from "bliss";
 
@@ -66,7 +66,7 @@ const command: SlashCommand = {
 				.addField("Errors", result.error_count.toString(), true)
 				.addField(
 					"Your Profile",
-					`${BotConfig.TACHI_SERVER_LOCATION}/u/${result.user_id}/games/${result.game}`,
+					`${Env.TACHI_SERVER_LOCATION}/u/${result.user_id}/games/${result.game}`,
 				);
 		} catch (e) {
 			if (ExpectedErr.is(e)) {

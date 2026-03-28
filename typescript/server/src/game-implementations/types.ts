@@ -1,29 +1,29 @@
 import type { DryScoreData } from "#lib/score-import/framework/common/types";
-import type { PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
+import type { MONGO_PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
 import type {
-	ChartDocument,
 	ClassConfigs,
 	ConfDerivedMetrics,
 	ConfScoreMetrics,
-	DerivedMetrics,
 	GPTString,
 	GPTStringToGame,
 	GPTStringToPlaytype,
 	integer,
+	MONGO_ChartDocument,
+	MONGO_PBScoreDocument,
+	MONGO_ScoreData,
+	MONGO_ScoreDocument,
+	MONGO_SpecificUserGameStats,
+	MongoDerivedMetrics,
 	PBReference,
-	PBScoreDocument,
 	ProfileRatingAlgorithms,
-	ScoreData,
-	ScoreDocument,
 	ScoreRatingAlgorithms,
 	SessionRatingAlgorithms,
-	SpecificUserGameStats,
 } from "tachi-common";
 import type { DerivedClassConfig } from "tachi-common/types/game-config-utils";
 import type {
+	__OLD_KILL_ScoreMetricDeriver,
 	AllConfMetrics,
 	ConfEnumScoreMetric,
-	ScoreMetricDeriver,
 } from "tachi-common/types/metrics";
 
 /**
@@ -32,7 +32,7 @@ import type {
  */
 export type ChartSpecificMetricValidator<GPT extends GPTString> = (
 	metric: number,
-	chart: ChartDocument<GPT>,
+	chart: MONGO_ChartDocument<GPT>,
 ) => string | true;
 
 interface ChartDependentMax {
@@ -41,11 +41,11 @@ interface ChartDependentMax {
 
 export type ScoreCalculator<GPT extends GPTString> = (
 	scoreData: DryScoreData<GPT>,
-	chart: ChartDocument<GPT>,
+	chart: MONGO_ChartDocument<GPT>,
 ) => number | null;
 
 export type SessionCalculator<GPT extends GPTString> = (
-	scoreCalcData: Array<ScoreDocument<GPT>["calculatedData"]>,
+	scoreCalcData: Array<MONGO_ScoreDocument<GPT>["calculatedData"]>,
 ) => number | null;
 
 /**
@@ -70,7 +70,7 @@ export type GPTProfileCalculators<GPT extends GPTString> = {
 };
 
 export type ClassDeriver<GPT extends GPTString, V extends string> = (
-	profileRatings: SpecificUserGameStats<GPT>["ratings"],
+	profileRatings: MONGO_SpecificUserGameStats<GPT>["ratings"],
 ) => V | null | undefined;
 
 // absolutely stupid magic.
@@ -104,7 +104,7 @@ export type PBMergeFunction<GPT extends GPTString> = (
 	userID: integer,
 	chartID: string,
 	asOfTimestamp: number | null,
-	existingPB: PBScoreDocumentNoRank<GPT>,
+	existingPB: MONGO_PBScoreDocumentNoRank<GPT>,
 ) => Promise<PBReference | null>;
 
 /**
@@ -117,35 +117,38 @@ export type GPTChartSpecificMetricValidators<GPT extends GPTString> = {
 		: never]: ChartSpecificMetricValidator<GPT>;
 };
 
-export type GPTDerivers<GPT extends GPTString> = {
-	// @ts-expect-error This *might* be a bug in the typescript compiler
-	// as this works for all GPT inputs normally.
-	// Possibly some generic nonsense but like...
+export type __OLD_KILL_GPTDerivers<GPT extends GPTString> = {
+	[K in keyof ConfDerivedMetrics[GPT]]: __OLD_KILL_ScoreMetricDeriver<
+		// @ts-expect-error This *might* be a bug in the typescript compiler
+		// as this works for all GPT inputs normally.
+		// Possibly some generic nonsense but like...
 
-	// can you really blame them for this not working?
-	// can you? LOOK at what we're doing.
-	[K in keyof ConfDerivedMetrics[GPT]]: ScoreMetricDeriver<ConfDerivedMetrics[GPT][K], GPT>;
+		// can you really blame them for this not working?
+		// can you? LOOK at what we're doing.
+		ConfDerivedMetrics[GPT][K],
+		GPT
+	>;
 };
 
 // New-style deriver; just f(scoreData, chart) -> derivedMetrics
 // instead of the overly complex shit above.
 export type GPTNewDeriver<GPT extends GPTString> = (
-	scoreData: ScoreData<GPT>,
-	chart: ChartDocument<GPT>,
-) => DerivedMetrics[GPT];
+	scoreData: MONGO_ScoreData<GPT>,
+	chart: MONGO_ChartDocument<GPT>,
+) => MongoDerivedMetrics[GPT];
 
 // New-style score calc; just f(scoreData, derivedData, chart) -> calculatedData
 // instead of the per-algorithm record above.
 export type GPTNewCalcs<GPT extends GPTString> = (
-	scoreData: ScoreData<GPT>,
-	derivedData: DerivedMetrics[GPT],
-	chart: ChartDocument<GPT>,
+	scoreData: MONGO_ScoreData<GPT>,
+	derivedData: MongoDerivedMetrics[GPT],
+	chart: MONGO_ChartDocument<GPT>,
 ) => Record<ScoreRatingAlgorithms[GPT], number | null>;
 
 // New-style session calc; just f(scoreCalcData) -> sessionCalcData
 // instead of the per-algorithm record above.
 export type GPTNewSessionCalcs<GPT extends GPTString> = (
-	scoreCalcData: Array<ScoreDocument<GPT>["calculatedData"]>,
+	scoreCalcData: Array<MONGO_ScoreDocument<GPT>["calculatedData"]>,
 ) => Record<SessionRatingAlgorithms[GPT], number | null>;
 
 // New-style profile calc; just f(game, playtype, userID) -> profileCalcData
@@ -159,7 +162,7 @@ export type GPTNewProfileCalcs<GPT extends GPTString> = (
 // New-style class deriver; just f(profileRatings) -> derivedClasses
 // instead of the per-class record above.
 export type GPTNewClassDerivers<GPT extends GPTString> = (
-	profileRatings: SpecificUserGameStats<GPT>["ratings"],
+	profileRatings: MONGO_SpecificUserGameStats<GPT>["ratings"],
 ) => { [C in keyof GPTClassDerivers<GPT>]: ReturnType<GPTClassDerivers<GPT>[C]> };
 
 /**
@@ -183,7 +186,7 @@ export interface RankingValues {
  * that determine how this PB is ordered against other PBs on the same chart.
  */
 export type PBRankingValuesFunction<GPT extends GPTString> = (
-	pb: PBScoreDocumentNoRank<GPT>,
+	pb: MONGO_PBScoreDocumentNoRank<GPT>,
 ) => RankingValues;
 
 /**
@@ -212,7 +215,7 @@ export type GPTGoalFormatters<GPT extends GPTString> = {
  * This only applies to "single" goals, i.e. goals on a single chart.
  */
 export type GoalProgressFormatter<GPT extends GPTString> = (
-	pb: PBScoreDocument<GPT>,
+	pb: MONGO_PBScoreDocument<GPT>,
 	goalValue: integer,
 ) => string;
 
@@ -225,8 +228,8 @@ export type GPTGoalProgressFormatters<GPT extends GPTString> = {
  * indicating what the error was on failure.
  */
 export type ScoreValidator<GPT extends GPTString> = (
-	score: ScoreDocument<GPT>,
-	chart: ChartDocument<GPT>,
+	score: MONGO_ScoreDocument<GPT>,
+	chart: MONGO_ChartDocument<GPT>,
 ) => string | undefined;
 
 export interface GPTServerImplementation<GPT extends GPTString> {
@@ -239,7 +242,7 @@ export interface GPTServerImplementation<GPT extends GPTString> {
 	/**
 	 * How should we derive the derived metrics for this game?
 	 */
-	derivers: GPTDerivers<GPT>;
+	derivers: __OLD_KILL_GPTDerivers<GPT>;
 
 	/**
 	 * How should we derive the derived metrics for this game?

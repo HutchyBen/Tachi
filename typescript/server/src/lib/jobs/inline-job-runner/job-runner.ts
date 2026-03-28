@@ -1,4 +1,4 @@
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { TachiConfig } from "#lib/setup/config";
 import { DedupeArr } from "#utils/misc";
 import { Queue, Worker } from "bullmq";
@@ -7,6 +7,7 @@ import { BacksyncBMSPMSSongsAndCharts } from "../backsync-bms-pms-data";
 import { UpdateAILevels } from "../bms-ai-table-sync";
 import { SyncBMSTables } from "../bms-table-sync";
 import { DeorphanScoresMain } from "../deorphan-scores";
+import { RebuildFolderChartLookupJob } from "../rebuild-folder-chart-lookup";
 import { UGSSnapshot } from "../ugs-snapshot";
 import { UpdatePoyashiData } from "../update-bpi-data";
 import { UpdateDPTiers } from "../update-dp-tiers";
@@ -18,6 +19,11 @@ interface Job {
 }
 
 const jobs: Array<Job> = [
+	{
+		name: "Rebuild folder chart lookup",
+		cronFormat: "5 0 * * *",
+		run: RebuildFolderChartLookupJob,
+	},
 	{
 		name: "Snapshot User Game Stats",
 		cronFormat: "0 0 * * *",

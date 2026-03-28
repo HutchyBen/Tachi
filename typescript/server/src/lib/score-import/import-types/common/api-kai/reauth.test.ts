@@ -1,34 +1,48 @@
-import type { KaiAuthDocument } from "tachi-common";
+import type { MONGO_KaiAuthDocument } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { ServerConfig } from "#lib/setup/config";
-import db from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { MockJSONFetch } from "#test-utils/mock-fetch";
-import ResetDBState from "#test-utils/resets";
-import deepmerge from "deepmerge";
-import t from "tap";
+import { seedUser } from "#test-utils/pg-fixtures";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { CreateKaiReauthFunction } from "./reauth";
 
-const authDoc: KaiAuthDocument = {
-	refreshToken: "REFRESH_TOKEN",
-	service: "FLO",
-	token: "foobar",
-	userID: 1,
-};
+describe("#CreateKaiReauthFunction", () => {
+	let userId: number;
 
-t.test("#CreateKaiReauthFunction", (t) => {
-	t.beforeEach(ResetDBState);
-	// eslint-disable-next-line no-return-await
-	t.beforeEach(async () => await db["kai-auth-tokens"].remove({}));
+	beforeEach(async () => {
+		({ id: userId } = await seedUser({
+			username: "reauth_user",
+			withCredential: true,
+			withSettings: true,
+		}));
 
-	if (!ServerConfig.FLO_OAUTH2_INFO) {
-		throw new Error(
-			`Panic in test - No dummy FLO_OAUTH2_INFO configured, and the test depends on some dummy data here.`,
-		);
-	}
+		await DB.insertInto("priv_svc_kai_auth_token")
+			.values({
+				user_id: userId,
+				service: "FLO",
+				token: "foobar",
+				refresh_token: "REFRESH_TOKEN",
+			})
+			.execute();
+	});
 
-	t.test("Should create a working reauthentication for the service.", async (t) => {
+	it("creates a working reauthentication for the service", async () => {
+		if (!ServerConfig.FLO_OAUTH2_INFO) {
+			throw new Error(
+				`Panic in test - No dummy FLO_OAUTH2_INFO configured, and the test depends on some dummy data here.`,
+			);
+		}
+
+		const authDoc: MONGO_KaiAuthDocument = {
+			refreshToken: "REFRESH_TOKEN",
+			service: "FLO",
+			token: "foobar",
+			userID: userId,
+		};
+
 		const mockFetch = MockJSONFetch({
 			[`${ServerConfig.FLO_API_URL}/oauth/token`]: {
 				access_token: "NEW_ACCESS_TOKEN",
@@ -36,87 +50,89 @@ t.test("#CreateKaiReauthFunction", (t) => {
 			},
 		});
 
-		await db["kai-auth-tokens"].insert(deepmerge(authDoc, {}));
-
 		const reauthFn = CreateKaiReauthFunction("FLO", authDoc, log, mockFetch);
 
-		t.equal(reauthFn.length, 0, "Should return a function with arity 0.");
+		expect(reauthFn.length).toBe(0);
 
 		const data = await reauthFn();
 
-		t.equal(data, "NEW_ACCESS_TOKEN");
+		expect(data).toBe("NEW_ACCESS_TOKEN");
 
-		const dbChange = await db["kai-auth-tokens"].findOne({
-			userID: 1,
-			service: "FLO",
-		});
+		const dbChange = await DB.selectFrom("priv_svc_kai_auth_token")
+			.selectAll()
+			.where("user_id", "=", userId)
+			.where("service", "=", "FLO")
+			.executeTakeFirstOrThrow();
 
-		// should also update the db
-		t.equal(dbChange?.token, "NEW_ACCESS_TOKEN");
-
-		t.end();
+		expect(dbChange.token).toBe("NEW_ACCESS_TOKEN");
+		expect(dbChange.refresh_token).toBe("NEW_REFRESH_TOKEN");
 	});
 
-	t.test("Should throw on fetch error.", async (t) => {
-		// will fail
-		const mockFetch = MockJSONFetch({});
+	it("throws on fetch error without changing tokens", async () => {
+		if (!ServerConfig.FLO_OAUTH2_INFO) {
+			throw new Error(
+				`Panic in test - No dummy FLO_OAUTH2_INFO configured, and the test depends on some dummy data here.`,
+			);
+		}
 
-		await db["kai-auth-tokens"].insert(deepmerge(authDoc, {}));
+		const authDoc: MONGO_KaiAuthDocument = {
+			refreshToken: "REFRESH_TOKEN",
+			service: "FLO",
+			token: "foobar",
+			userID: userId,
+		};
+
+		const mockFetch = MockJSONFetch({});
 
 		const reauthFn = CreateKaiReauthFunction("FLO", authDoc, log, mockFetch);
 
-		t.rejects(() => reauthFn(), {
+		await expect(reauthFn()).rejects.toMatchObject({
 			message: "An error has occured while attempting reauthentication.",
 		});
 
-		const dbChange = await db["kai-auth-tokens"].findOne({
-			userID: 1,
-			service: "FLO",
-		});
+		const dbChange = await DB.selectFrom("priv_svc_kai_auth_token")
+			.selectAll()
+			.where("user_id", "=", userId)
+			.where("service", "=", "FLO")
+			.executeTakeFirstOrThrow();
 
-		t.equal(
-			dbChange?.refreshToken,
-			authDoc.refreshToken,
-			"DB should not be changed for refreshToken.",
-		);
-		t.equal(dbChange?.token, authDoc.token, "DB should not be changed for token.");
-
-		t.end();
+		expect(dbChange.refresh_token).toBe(authDoc.refreshToken);
+		expect(dbChange.token).toBe(authDoc.token);
 	});
 
-	t.test("Should throw on invalid JSON response", async (t) => {
+	it("throws on invalid JSON response without changing tokens", async () => {
+		if (!ServerConfig.FLO_OAUTH2_INFO) {
+			throw new Error(
+				`Panic in test - No dummy FLO_OAUTH2_INFO configured, and the test depends on some dummy data here.`,
+			);
+		}
+
+		const authDoc: MONGO_KaiAuthDocument = {
+			refreshToken: "REFRESH_TOKEN",
+			service: "FLO",
+			token: "foobar",
+			userID: userId,
+		};
+
 		const mockFetch = MockJSONFetch({
-			[`${ServerConfig.FLO_API_URL}/oauth/token?refresh_token=${
-				authDoc.refreshToken
-			}&grant_type=refresh_token&client_secret=${
-				ServerConfig.FLO_OAUTH2_INFO!.CLIENT_SECRET
-			}&client_id=${ServerConfig.FLO_OAUTH2_INFO!.CLIENT_ID}`]: {
-				// missing access_token
+			[`${ServerConfig.FLO_API_URL}/oauth/token`]: {
+				/* missing access_token */
 			},
 		});
 
-		await db["kai-auth-tokens"].insert(deepmerge(authDoc, {}));
-
 		const reauthFn = CreateKaiReauthFunction("FLO", authDoc, log, mockFetch);
 
-		t.rejects(() => reauthFn(), {
+		await expect(reauthFn()).rejects.toMatchObject({
 			message: "An error has occured while attempting reauthentication.",
 		});
 
-		const dbChange = await db["kai-auth-tokens"].findOne({
-			userID: 1,
-			service: "FLO",
-		});
+		const dbChange = await DB.selectFrom("priv_svc_kai_auth_token")
+			.selectAll()
+			.where("user_id", "=", userId)
+			.where("service", "=", "FLO")
+			.executeTakeFirstOrThrow();
 
-		t.equal(
-			dbChange?.refreshToken,
-			authDoc.refreshToken,
-			"DB should not be changed for refreshToken.",
-		);
-		t.equal(dbChange?.token, authDoc.token, "DB should not be changed for token.");
-
-		t.end();
+		expect(dbChange.refresh_token).toBe(authDoc.refreshToken);
+		expect(dbChange.token).toBe(authDoc.token);
 	});
-
-	t.end();
 });

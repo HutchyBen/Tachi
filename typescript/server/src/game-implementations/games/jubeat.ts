@@ -3,7 +3,7 @@ import type { GPTServerImplementation } from "#game-implementations/types";
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileSumBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { IsNullish } from "#utils/misc";
 import { p } from "prudence";
 import { Jubility } from "rg-stats";
@@ -13,7 +13,7 @@ import {
 	GetGrade,
 	type integer,
 	JUBEAT_GBOUNDARIES,
-	type PBScoreDocument,
+	type MONGO_PBScoreDocument,
 	type Playtype,
 	type Versions,
 } from "tachi-common";
@@ -26,80 +26,82 @@ async function GetBestJubilityOnSongs(
 	game: GameGroup,
 	playtype: Playtype,
 	limit: integer,
-): Promise<Array<PBScoreDocument>> {
-	const r: Array<{ doc: PBScoreDocument }> = await db["personal-bests"].aggregate([
-		{
-			$match: {
-				game,
-				playtype,
-				userID,
-				songID: { $in: songIDs },
+): Promise<Array<MONGO_PBScoreDocument>> {
+	const r: Array<{ doc: MONGO_PBScoreDocument }> = await MONGODB_KILL["personal-bests"].aggregate(
+		[
+			{
+				$match: {
+					game,
+					playtype,
+					userID,
+					songID: { $in: songIDs },
+				},
 			},
-		},
-		{
-			// we need to do stuff dependent on the chart difficulty,
-			// so we need the chart difficulty
-			$lookup: {
-				from: "charts-jubeat",
-				localField: "chartID",
-				foreignField: "chartID",
-				as: "chart",
+			{
+				// we need to do stuff dependent on the chart difficulty,
+				// so we need the chart difficulty
+				$lookup: {
+					from: "charts-jubeat",
+					localField: "chartID",
+					foreignField: "chartID",
+					as: "chart",
+				},
 			},
-		},
-		{
-			// "chart" is an array unless we unwind it.
-			$unwind: {
-				path: "$chart",
+			{
+				// "chart" is an array unless we unwind it.
+				$unwind: {
+					path: "$chart",
+				},
 			},
-		},
-		{
-			// sort on jubility (so we get the best score)
-			$sort: {
-				[`calculatedData.jubility`]: -1,
+			{
+				// sort on jubility (so we get the best score)
+				$sort: {
+					[`calculatedData.jubility`]: -1,
+				},
 			},
-		},
-		{
-			$group: {
-				_id: {
-					songID: "$songID",
+			{
+				$group: {
+					_id: {
+						songID: "$songID",
 
-					// Jubility is unique upon songID + difficulty. However, you
-					// cannot have a PB on both a HARD BSC and a BSC counted for
-					// jubility. This query is awkward. Sorry!
-					difficulty: {
-						$switch: {
-							branches: [
-								{
-									case: { $in: ["$chart.difficulty", ["HARD BSC", "BSC"]] },
-									then: "BSC",
-								},
-								{
-									case: { $in: ["$chart.difficulty", ["HARD ADV", "ADV"]] },
-									then: "ADV",
-								},
-								{
-									case: { $in: ["$chart.difficulty", ["HARD EXT", "EXT"]] },
-									then: "EXT",
-								},
-							],
+						// Jubility is unique upon songID + difficulty. However, you
+						// cannot have a PB on both a HARD BSC and a BSC counted for
+						// jubility. This query is awkward. Sorry!
+						difficulty: {
+							$switch: {
+								branches: [
+									{
+										case: { $in: ["$chart.difficulty", ["HARD BSC", "BSC"]] },
+										then: "BSC",
+									},
+									{
+										case: { $in: ["$chart.difficulty", ["HARD ADV", "ADV"]] },
+										then: "ADV",
+									},
+									{
+										case: { $in: ["$chart.difficulty", ["HARD EXT", "EXT"]] },
+										then: "EXT",
+									},
+								],
+							},
 						},
 					},
+					doc: { $first: "$$ROOT" },
 				},
-				doc: { $first: "$$ROOT" },
 			},
-		},
 
-		// for some godforsaken reason you have to sort twice. after a grouping
-		// the sort order becomes nondeterministic
-		{
-			$sort: {
-				[`doc.calculatedData.jubility`]: -1,
+			// for some godforsaken reason you have to sort twice. after a grouping
+			// the sort order becomes nondeterministic
+			{
+				$sort: {
+					[`doc.calculatedData.jubility`]: -1,
+				},
 			},
-		},
-		{
-			$limit: limit,
-		},
-	]);
+			{
+				$limit: limit,
+			},
+		],
+	);
 
 	return r.map((e) => e.doc);
 }
@@ -107,14 +109,14 @@ async function GetBestJubilityOnSongs(
 const CURRENT_JUBEAT_HOT_VERSION: Versions["jubeat:Single"] = "ave";
 
 export async function GetPBsForJubility(userID: integer) {
-	const hotSongs = await db.songs.jubeat.find(
+	const hotSongs = await MONGODB_KILL.songs.jubeat.find(
 		{ "data.displayVersion": CURRENT_JUBEAT_HOT_VERSION },
 		{ projection: { id: 1 } },
 	);
 
 	const hotSongIDs = hotSongs.map((e) => e.id);
 
-	const coldSongs = await db.songs.jubeat.find(
+	const coldSongs = await MONGODB_KILL.songs.jubeat.find(
 		{ "data.displayVersion": { $ne: CURRENT_JUBEAT_HOT_VERSION } },
 		{ projection: { id: 1 } },
 	);

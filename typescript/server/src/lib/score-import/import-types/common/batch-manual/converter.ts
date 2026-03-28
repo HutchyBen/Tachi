@@ -1,7 +1,7 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import {
 	FindBMSChartOnHash,
 	FindChartWithPTDF,
@@ -13,15 +13,15 @@ import {
 import { FindSongOnID, FindSongOnTitleInsensitive } from "#utils/queries/songs";
 import {
 	type BatchManualScore,
-	type ChartDocument,
 	type Difficulties,
 	FormatGameGroup,
 	GetGamePTConfig,
 	type GPTString,
 	type MatchTypeResolver,
 	type MatchTypeResolverWithDifficulty,
-	type ProvidedMetrics,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
+	type MongoProvidedMetrics,
 	type Versions,
 } from "tachi-common";
 
@@ -99,7 +99,7 @@ export const ConverterBatchManual: ConverterFunction<BatchManualScore, BatchManu
 
 	// create the metrics for this score.
 	// @ts-expect-error this is filled out in a second, promise!
-	const metrics: ProvidedMetrics[GPTString] = {};
+	const metrics: MongoProvidedMetrics[GPTString] = {};
 
 	const config = GetGamePTConfig(game, playtype);
 
@@ -137,7 +137,7 @@ export const ConverterBatchManual: ConverterFunction<BatchManualScore, BatchManu
 export async function ResolveSongAndChart(
 	resolver: MatchTypeResolver,
 	log: KtLogger,
-): Promise<{ chart: ChartDocument; song: SongDocument } | null> {
+): Promise<{ chart: MONGO_ChartDocument; song: MONGO_SongDocument } | null> {
 	const { game, playtype } = resolver;
 
 	const config = GetGamePTConfig(game, playtype);
@@ -211,7 +211,7 @@ export async function ResolveSongAndChart(
 				throw new InvalidScoreFailure(`Invalid playtype '${playtype}', expected 9B.`);
 			}
 
-			const chart = await db.charts.popn.findOne({
+			const chart = await MONGODB_KILL.charts.popn.findOne({
 				playtype,
 				"data.hashSHA256": resolver.identifier,
 			});
@@ -274,7 +274,7 @@ export async function ResolveSongAndChart(
 		}
 
 		case "sdvxInGameID": {
-			let chart: ChartDocument | null;
+			let chart: MONGO_ChartDocument | null;
 
 			const identifier = Number(resolver.identifier);
 
@@ -328,7 +328,7 @@ export async function ResolveSongAndChart(
 				return null;
 			}
 
-			const song = await db.anySongs[game].findOne({ id: chart.songID });
+			const song = await MONGODB_KILL.anySongs[game].findOne({ id: chart.songID });
 
 			if (!song) {
 				log.error(`Song-Chart desync on ${chart.songID}.`);
@@ -343,17 +343,17 @@ export async function ResolveSongAndChart(
 
 			const difficulty = AssertStrAsDifficulty(resolver.difficulty, game, resolver.playtype);
 
-			let chart: ChartDocument | null | undefined;
+			let chart: MONGO_ChartDocument | null | undefined;
 
 			if (resolver.version) {
-				chart = await db.anyCharts[game].findOne({
+				chart = await MONGODB_KILL.anyCharts[game].findOne({
 					"data.inGameID": identifier,
 					playtype: resolver.playtype,
 					difficulty,
 					versions: resolver.version,
 				});
 			} else {
-				chart = await db.anyCharts[game].findOne({
+				chart = await MONGODB_KILL.anyCharts[game].findOne({
 					"data.inGameID": identifier,
 					playtype: resolver.playtype,
 					difficulty,
@@ -365,7 +365,7 @@ export async function ResolveSongAndChart(
 				return null;
 			}
 
-			const song = await db.anySongs[game].findOne({ id: chart.songID });
+			const song = await MONGODB_KILL.anySongs[game].findOne({ id: chart.songID });
 
 			if (!song) {
 				log.error(`Song-Chart desync on ${chart.songID}.`);
@@ -381,14 +381,14 @@ export async function ResolveSongAndChart(
 			let chart;
 
 			if (resolver.version) {
-				chart = await db.anyCharts[game].findOne({
+				chart = await MONGODB_KILL.anyCharts[game].findOne({
 					"data.inGameStrID": resolver.identifier,
 					playtype: resolver.playtype,
 					difficulty,
 					versions: resolver.version,
 				});
 			} else {
-				chart = await db.anyCharts[game].findOne({
+				chart = await MONGODB_KILL.anyCharts[game].findOne({
 					"data.inGameStrID": resolver.identifier,
 					playtype: resolver.playtype,
 					difficulty,
@@ -400,7 +400,7 @@ export async function ResolveSongAndChart(
 				return null;
 			}
 
-			const song = await db.anySongs[game].findOne({ id: chart.songID });
+			const song = await MONGODB_KILL.anySongs[game].findOne({ id: chart.songID });
 
 			if (!song) {
 				log.error(`Song-Chart desync on ${chart.songID}.`);
@@ -419,7 +419,7 @@ export async function ResolveSongAndChart(
 				throw new InvalidScoreFailure(`Invalid playtype, expected Keyboard or Controller.`);
 			}
 
-			const chart = await db.charts.usc.findOne({
+			const chart = await MONGODB_KILL.charts.usc.findOne({
 				"data.hashSHA1": resolver.identifier,
 				playtype,
 			});
@@ -428,7 +428,7 @@ export async function ResolveSongAndChart(
 				return null;
 			}
 
-			const song = await db.anySongs[game].findOne({ id: chart.songID });
+			const song = await MONGODB_KILL.anySongs[game].findOne({ id: chart.songID });
 
 			if (!song) {
 				log.error(`Song-Chart desync on ${chart.songID}.`);
@@ -445,7 +445,7 @@ export async function ResolveSongAndChart(
 
 			const difficulty = AssertStrAsDifficulty(resolver.difficulty, game, resolver.playtype);
 
-			const song = await db.anySongs.ddr.findOne({
+			const song = await MONGODB_KILL.anySongs.ddr.findOne({
 				"data.ddrSongHash": resolver.identifier,
 			});
 
@@ -454,7 +454,7 @@ export async function ResolveSongAndChart(
 			}
 
 			// check that a chart with the song's id exists
-			const chartSync = await db.anyCharts.ddr.findOne({
+			const chartSync = await MONGODB_KILL.anyCharts.ddr.findOne({
 				songID: song.id,
 			});
 
@@ -466,14 +466,14 @@ export async function ResolveSongAndChart(
 			let chart;
 
 			if (resolver.version) {
-				chart = await db.anyCharts.ddr.findOne({
+				chart = await MONGODB_KILL.anyCharts.ddr.findOne({
 					songID: song.id,
 					playtype: resolver.playtype,
 					difficulty,
 					versions: resolver.version,
 				});
 			} else {
-				chart = await db.anyCharts.ddr.findOne({
+				chart = await MONGODB_KILL.anyCharts.ddr.findOne({
 					songID: song.id,
 					playtype: resolver.playtype,
 					difficulty,
@@ -502,7 +502,7 @@ export async function ResolveSongAndChart(
 }
 
 export async function ResolveChartFromSong(
-	song: SongDocument,
+	song: MONGO_SongDocument,
 	resolver: MatchTypeResolverWithDifficulty,
 ) {
 	const game = resolver.game;

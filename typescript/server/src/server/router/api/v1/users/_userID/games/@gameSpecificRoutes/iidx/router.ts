@@ -1,9 +1,9 @@
 import type {
-	ChartDocument,
 	integer,
-	PBScoreDocument,
+	MONGO_ChartDocument,
+	MONGO_PBScoreDocument,
+	MONGO_SongDocument,
 	Playtypes,
-	SongDocument,
 } from "tachi-common";
 import type { GetEnumValue } from "tachi-common/types/metrics";
 
@@ -14,8 +14,8 @@ import {
 import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch-manual/converter";
 import { EAM_VERSION_NAMES } from "#lib/score-import/import-types/common/eamusement-iidx-csv/parser";
 import { AggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
-import { ValidatePlaytypeFromParamFor } from "#server/router/api/v1/games/_game/_playtype/middleware.js";
-import db from "#services/mongo/db";
+import { ValidatePlaytypeFromParamFor } from "#server/router/api/v1/games/_game/_playtype/middleware";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetUser } from "#utils/req-tachi-data";
 import { Router } from "express";
 
@@ -57,9 +57,9 @@ router.get(
 
 		const pbData: Array<{
 			_id: integer;
-			pbs: Array<PBScoreDocument<"iidx:DP" | "iidx:SP">>;
-			song: SongDocument<"iidx">;
-		}> = await db["personal-bests"].aggregate([
+			pbs: Array<MONGO_PBScoreDocument<"iidx:DP" | "iidx:SP">>;
+			song: MONGO_SongDocument<"iidx">;
+		}> = await MONGODB_KILL["personal-bests"].aggregate([
 			{
 				$match: {
 					userID: user.id,
@@ -91,13 +91,13 @@ router.get(
 		const rows = [EAMUSEMENT_CSV_HEADER];
 
 		// get all relevant charts
-		const charts = await db.charts.iidx.find({
+		const charts = await MONGODB_KILL.charts.iidx.find({
 			songID: { $in: pbData.map((e) => e.song.id) },
 			difficulty: { $in: ["NORMAL", "HYPER", "ANOTHER", "LEGGENDARIA"] },
 		});
 
 		// get a lookup table for songID + difficulty -> chart.
-		const chartMap = new Map<string, ChartDocument>();
+		const chartMap = new Map<string, MONGO_ChartDocument>();
 
 		for (const chart of charts) {
 			chartMap.set(`${chart.songID}-${chart.difficulty}`, chart);
@@ -137,7 +137,7 @@ router.get(
 				// this song might not have a beginner/normal/hyper/another/legg
 				if (chart) {
 					// try and find the user's PB
-					pb = pbs.find((e) => e.chartID === chart.chartID);
+					pb = pbs.find((e) => e.chartID === chart.legacyChartId);
 				}
 
 				if (pb) {

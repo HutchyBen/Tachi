@@ -1,18 +1,18 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 import type { BulkWriteUpdateOneOperation } from "mongodb";
 import type {
 	GameGroup,
 	GoalImportInfo,
 	integer,
+	MONGO_QuestDocument,
+	MONGO_QuestSubscriptionDocument,
 	Playtype,
-	QuestDocument,
 	QuestImportInfo,
-	QuestSubscriptionDocument,
 } from "tachi-common";
 
 import { EvaluateQuestProgress } from "#lib/targets/quests";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 export async function UpdateUsersQuests(
 	importGoalInfo: Array<GoalImportInfo>,
@@ -29,8 +29,8 @@ export async function UpdateUsersQuests(
 }
 
 export async function UpdateQuestsForUser(
-	quests: Array<QuestDocument>,
-	questSubs: Array<QuestSubscriptionDocument>,
+	quests: Array<MONGO_QuestDocument>,
+	questSubs: Array<MONGO_QuestSubscriptionDocument>,
 
 	game: GameGroup,
 	userID: integer,
@@ -38,13 +38,13 @@ export async function UpdateQuestsForUser(
 ) {
 	// create a map here to avoid linear searching when
 	// co-iterating
-	const questSubMap = new Map<string, QuestSubscriptionDocument>();
+	const questSubMap = new Map<string, MONGO_QuestSubscriptionDocument>();
 
 	for (const um of questSubs) {
 		questSubMap.set(um.questID, um);
 	}
 
-	const bwrite: Array<BulkWriteUpdateOneOperation<QuestSubscriptionDocument>> = [];
+	const bwrite: Array<BulkWriteUpdateOneOperation<MONGO_QuestSubscriptionDocument>> = [];
 
 	const importQuestInfo: Array<QuestImportInfo> = [];
 
@@ -62,7 +62,7 @@ export async function UpdateQuestsForUser(
 				return;
 			}
 
-			const bwriteOp: BulkWriteUpdateOneOperation<QuestSubscriptionDocument> = {
+			const bwriteOp: BulkWriteUpdateOneOperation<MONGO_QuestSubscriptionDocument> = {
 				updateOne: {
 					filter: { questID: quest.questID, userID },
 					update: {
@@ -114,7 +114,7 @@ export async function UpdateQuestsForUser(
 	);
 
 	if (bwrite.length !== 0) {
-		await db["quest-subs"].bulkWrite(bwrite, { ordered: false });
+		await MONGODB_KILL["quest-subs"].bulkWrite(bwrite, { ordered: false });
 	}
 
 	return importQuestInfo;
@@ -127,7 +127,7 @@ async function GetRelevantQuests(
 	userID: integer,
 	log: KtLogger,
 ) {
-	const questSubs = await db["quest-subs"].find({
+	const questSubs = await MONGODB_KILL["quest-subs"].find({
 		game,
 		playtype: { $in: playtypes },
 		userID,
@@ -135,7 +135,7 @@ async function GetRelevantQuests(
 
 	log.debug(`Found ${questSubs.length} quest-subs.`);
 
-	const quests = await db.quests.find({
+	const quests = await MONGODB_KILL.quests.find({
 		questID: { $in: questSubs.map((e) => e.questID) },
 		"questData.goals.goalID": { $in: goalIDs },
 	});

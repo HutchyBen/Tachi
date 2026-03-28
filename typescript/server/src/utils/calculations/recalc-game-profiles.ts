@@ -1,15 +1,15 @@
 /* eslint-disable no-await-in-loop */
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { UpdateUsersGamePlaytypeStats } from "#lib/score-import/framework/ugpt-stats/update-ugpt-stats";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { FormatUserDoc } from "#utils/user";
 
 export async function RecalcGameProfiles(filter = {}) {
-	const profiles = await db["game-stats"].find(filter);
+	const profiles = await MONGODB_KILL["game-stats"].find(filter);
 
 	for (const profile of profiles) {
-		const user = await db.users.findOne({
+		const user = await MONGODB_KILL.users.findOne({
 			id: profile.userID,
 		});
 

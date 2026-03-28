@@ -1,13 +1,17 @@
 /* eslint-disable no-await-in-loop */
 import type { FilterQuery } from "mongodb";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { DeorphanIfInQueue } from "#lib/orphan-queue/orphan-queue";
-import db from "#services/mongo/db";
-import { InitaliseFolderChartLookup } from "#utils/folder";
+import MONGODB_KILL from "#services/mongo/db";
 import { FormatBMSTables, WrapScriptPromise } from "#utils/misc";
 import { type BMSTableEntry, LoadBMSTable } from "bms-table-loader";
-import { BMS_TABLES, type BMSTableInfo, type ChartDocument, type Playtypes } from "tachi-common";
+import {
+	BMS_TABLES,
+	type BMSTableInfo,
+	type MONGO_ChartDocument,
+	type Playtypes,
+} from "tachi-common";
 
 /**
  * Tables might have updates that remove charts from their table.
@@ -34,10 +38,10 @@ async function HandleTableRemovals(
 
 	// *unless this script crashes, in which case it's
 	// no longer temporary
-	const existingCharts = (await db.charts.bms.find({
+	const existingCharts = (await MONGODB_KILL.charts.bms.find({
 		playtype,
 		"data.tableFolders.table": prefix,
-	})) as unknown as Array<ChartDocument<"bms:7K" | "bms:14K">>;
+	})) as unknown as Array<MONGO_ChartDocument<"bms:7K" | "bms:14K">>;
 
 	log.info(
 		`Found ${existingCharts.length} existing chart(s) in the database for table ${prefix}.`,
@@ -85,7 +89,7 @@ async function HandleTableRemovals(
 
 	// remove this table info from all of the charts that no longer
 	// exist in the table.
-	await db.charts.bms.update(
+	await MONGODB_KILL.charts.bms.update(
 		{
 			chartID: { $in: toRemove },
 		},
@@ -115,7 +119,7 @@ async function ImportTableLevels(
 		.filter((e) => e.checksum.type === "md5")
 		.map((e) => e.checksum.value);
 
-	await db.charts.bms.update(
+	await MONGODB_KILL.charts.bms.update(
 		{
 			"data.hashMD5": { $in: md5s },
 		},
@@ -127,7 +131,7 @@ async function ImportTableLevels(
 		{ multi: true },
 	);
 
-	await db.charts.bms.update(
+	await MONGODB_KILL.charts.bms.update(
 		{
 			"data.hashSHA256": { $in: sha256s },
 		},
@@ -140,7 +144,7 @@ async function ImportTableLevels(
 	);
 
 	for (const td of tableEntries) {
-		let query: FilterQuery<ChartDocument<"bms:7K" | "bms:14K">>;
+		let query: FilterQuery<MONGO_ChartDocument<"bms:7K" | "bms:14K">>;
 
 		switch (td.checksum.type) {
 			case "md5": {
@@ -154,7 +158,8 @@ async function ImportTableLevels(
 			}
 		}
 
-		let chart: ChartDocument<"bms:7K" | "bms:14K"> | null = await db.charts.bms.findOne(query);
+		let chart: MONGO_ChartDocument<"bms:7K" | "bms:14K"> | null =
+			await MONGODB_KILL.charts.bms.findOne(query);
 
 		if (!chart) {
 			// didn't find it in the DB?
@@ -195,7 +200,7 @@ async function ImportTableLevels(
 			return a.level.localeCompare(b.level);
 		});
 
-		await db.charts.bms.update(
+		await MONGODB_KILL.charts.bms.update(
 			{
 				chartID: chart.chartID,
 			},
@@ -206,7 +211,7 @@ async function ImportTableLevels(
 			},
 		);
 
-		await db.songs.bms.update(
+		await MONGODB_KILL.songs.bms.update(
 			{
 				id: chart.songID,
 			},
@@ -242,7 +247,7 @@ export async function SyncBMSTables() {
 	}
 
 	log.info(`Re-initialising folder-chart-lookup, since changes may have been made.`);
-	await InitaliseFolderChartLookup();
+	// await InitaliseFolderChartLookup();
 	log.info(`Done.`);
 }
 

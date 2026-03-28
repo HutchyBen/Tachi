@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express-serve-static-core";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import {
 	type ErrorMessages,
 	type MiddlewareErrorHandler,

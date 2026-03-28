@@ -1,12 +1,12 @@
 import type {
-	ImportDocument,
 	ImportTypes,
 	integer,
+	MONGO_ImportDocument,
 	SuccessfulAPIResponse,
 	UnsuccessfulAPIResponse,
 } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { Random20Hex } from "#utils/misc";
 
 import type { ParserArguments } from "../worker/types";
@@ -16,7 +16,7 @@ import ScoreImportFatalError from "./score-importing/score-import-error";
 
 export interface WrappedAPIResponse {
 	statusCode: number;
-	body: SuccessfulAPIResponse<ImportDocument> | UnsuccessfulAPIResponse;
+	body: SuccessfulAPIResponse<MONGO_ImportDocument> | UnsuccessfulAPIResponse;
 }
 
 /**

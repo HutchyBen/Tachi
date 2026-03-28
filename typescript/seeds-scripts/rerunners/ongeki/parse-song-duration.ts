@@ -6,7 +6,7 @@ import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
-import { type ChartDocument, type SongDocument } from "tachi-common";
+import { type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
 
 import { ReadCollection, WriteCollection } from "../../util";
 
@@ -25,8 +25,8 @@ const game = options.game;
 
 const readOpt = async (
 	musicPath: string,
-	charts: ChartDocument<"chunithm:Single" | "ongeki:Single">[],
-	songs: SongDocument<"chunithm" | "ongeki">[],
+	charts: MONGO_ChartDocument<"chunithm:Single" | "ongeki:Single">[],
+	songs: MONGO_SongDocument<"chunithm" | "ongeki">[],
 ) => {
 	let musicDir: string[];
 	try {

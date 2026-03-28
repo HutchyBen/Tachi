@@ -3,12 +3,12 @@ import { type ScoreDataset } from "#types/tables";
 import { NumericSOV } from "#util/sorts";
 import React, { useState } from "react";
 import {
-	type ChartDocument,
 	type GameGroup,
 	type GPTString,
 	type integer,
+	type MONGO_ChartDocument,
+	type MONGO_ScoreDocument,
 	type Playtype,
-	type ScoreDocument,
 	type ScoreRatingAlgorithms,
 } from "tachi-common";
 
@@ -29,8 +29,8 @@ export default function HistoryScoreTable({
 	game,
 	chart,
 }: {
-	chart: ChartDocument;
-	dataset: ScoreDocument[];
+	chart: MONGO_ChartDocument;
+	dataset: MONGO_ScoreDocument[];
 	game: GameGroup;
 	pageLen?: integer;
 	playtype: Playtype;
@@ -67,10 +67,10 @@ function Row({
 	rating,
 	game,
 }: {
-	chart: ChartDocument;
+	chart: MONGO_ChartDocument;
 	game: GameGroup;
 	rating: ScoreRatingAlgorithms[GPTString];
-	sc: ScoreDocument;
+	sc: MONGO_ScoreDocument;
 }) {
 	return (
 		<DropdownRow

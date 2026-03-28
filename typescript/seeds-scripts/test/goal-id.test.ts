@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { type GoalDocument } from "tachi-common";
+import { type MONGO_GoalDocument } from "tachi-common";
 
 import { CreateGoalID, ReadCollection } from "../util";
 import { FormatFunctions } from "./test-utils";
@@ -7,7 +7,7 @@ import { FormatFunctions } from "./test-utils";
 let success = 0;
 let fails = 0;
 
-const goals = ReadCollection("goals.json", true) as GoalDocument[];
+const goals = ReadCollection("goals.json", true) as MONGO_GoalDocument[];
 
 for (const goal of goals) {
 	const pretty = FormatFunctions["goals.json"]!(goal, null);

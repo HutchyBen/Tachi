@@ -1,19 +1,20 @@
-import { BotConfig } from "#config";
+import { Env } from "#config";
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { ExpectedErr } from "bliss";
 import { GuildMember } from "discord.js";
 
 import type { SlashCommand } from "../types";
 
-import { ACTION_Letmein } from "../../actions/letmein";
+import { ANON_ACTION_Letmein } from "../../anon-actions/letmein";
 
 const command: SlashCommand = {
 	info: new SlashCommandBuilder()
 		.setName("letmein")
 		.setDescription("Let yourself into the server.")
 		.toJSON(),
+	limboOnly: true,
 	exec: async (interaction) => {
-		if (!BotConfig.DISCORD.APPROVED_ROLE) {
+		if (!Env.DISCORD_APPROVED_ROLE) {
 			return null; // no-op
 		}
 
@@ -22,11 +23,11 @@ const command: SlashCommand = {
 		}
 
 		try {
-			await ACTION_Letmein(
+			await ANON_ACTION_Letmein(
 				{ ip: null },
 				{
 					discord_user_id: interaction.user.id,
-					role_id: BotConfig.DISCORD.APPROVED_ROLE,
+					role_id: Env.DISCORD_APPROVED_ROLE,
 					"!member": interaction.member,
 				},
 			);

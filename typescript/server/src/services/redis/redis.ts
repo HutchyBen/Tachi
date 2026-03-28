@@ -1,5 +1,5 @@
 import { ONE_MINUTE, ONE_SECOND } from "#lib/constants/time";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { Env } from "#lib/setup/config";
 import { GetMillisecondsSince } from "#utils/misc";
 import redis from "redis";

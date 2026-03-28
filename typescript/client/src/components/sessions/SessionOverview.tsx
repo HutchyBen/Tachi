@@ -18,16 +18,16 @@ import {
 	type AnySessionRatingAlg,
 	GetGamePTConfig,
 	GetGPTString,
-	type PBScoreDocument,
-	type ScoreDocument,
-	type SessionDocument,
-	type UserDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
+	type MONGO_SessionDocument,
+	type MONGO_UserDocument,
 } from "tachi-common";
 
 import SessionFolderRaiseBreakdown from "./SessionFolderRaiseBreakdown";
 import SessionRaiseBreakdown from "./SessionRaiseBreakdown";
 
-type PBsData = { pbs: Array<PBScoreDocument> };
+type PBsData = { pbs: Array<MONGO_PBScoreDocument> };
 
 export default function SessionOverview({
 	sessionData,
@@ -35,7 +35,7 @@ export default function SessionOverview({
 	scoreDataset,
 	reqUser,
 }: {
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 	scoreDataset: ScoreDataset;
 	sessionData: SessionReturns;
 	setSessionData: SetState<SessionReturns>;
@@ -45,7 +45,7 @@ export default function SessionOverview({
 	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(session.game, session.playtype)];
 	const MAX_SCORES = gptImpl.sessionImportantScoreCount;
 
-	const setScores = (scores: ScoreDocument[]) => {
+	const setScores = (scores: MONGO_ScoreDocument[]) => {
 		setSessionData({
 			...sessionData,
 			scores,
@@ -217,7 +217,7 @@ export default function SessionOverview({
 
 // Temporarily shoved to the bottom, as it needs to be significantly improved,
 // but we can't really just remove it lol.
-function RatingsOverview({ session }: { session: SessionDocument }) {
+function RatingsOverview({ session }: { session: MONGO_SessionDocument }) {
 	const gptConfig = GetGamePTConfig(session.game, session.playtype);
 
 	function Thing({ value, name }: { name: string; value: number | string }) {

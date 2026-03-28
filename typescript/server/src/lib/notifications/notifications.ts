@@ -1,13 +1,13 @@
-import type { integer, NotificationBody, NotificationDocument } from "tachi-common";
+import type { integer, MONGO_NotificationDocument, NotificationBody } from "tachi-common";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { Random20Hex } from "#utils/misc";
 
 function ConstructNotificationDoc(
 	title: string,
 	toUserID: integer,
 	body: NotificationBody,
-): NotificationDocument {
+): MONGO_NotificationDocument {
 	return {
 		title,
 		sentTo: toUserID,
@@ -28,7 +28,7 @@ function ConstructNotificationDoc(
 export function SendNotification(title: string, toUserID: integer, body: NotificationBody) {
 	const notification = ConstructNotificationDoc(title, toUserID, body);
 
-	return db.notifications.insert(notification);
+	return MONGODB_KILL.notifications.insert(notification);
 }
 
 /**
@@ -42,5 +42,5 @@ export function BulkSendNotification(
 ) {
 	const notifications = toUserIDs.map((e) => ConstructNotificationDoc(title, e, body));
 
-	return db.notifications.insert(notifications);
+	return MONGODB_KILL.notifications.insert(notifications);
 }

@@ -1,9 +1,9 @@
 import { CreateActivityRouteHandler } from "#lib/activity/activity";
+import { PasswordCompare, ValidatePassword } from "#lib/auth/auth";
 import { ONE_MONTH, ONE_WEEK, ONE_YEAR } from "#lib/constants/time";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import prValidate from "#server/middleware/prudence-validate";
-import { PasswordCompare, ValidatePassword } from "#server/router/api/v1/auth/auth.js";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { IsString } from "#utils/misc";
 import { GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import DestroyUserGamePlaytypeData from "#utils/reset-state/destroy-ugpt";
@@ -23,9 +23,9 @@ import {
 	GetGamePTConfig,
 	type GPTString,
 	type integer,
-	type PBScoreDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_UserGameStatsSnapshotDocument,
 	type ProfileRatingAlgorithms,
-	type UserGameStatsSnapshotDocument,
 } from "tachi-common";
 
 import { RequireAuthedAsUser, RequireSelfRequestFromUser } from "../../../middleware";
@@ -54,12 +54,12 @@ router.get("/", async (req, res) => {
 	const stats = GetTachiData(req, "requestedUserGameStats");
 
 	const [totalScores, firstScore, mostRecentScore, rankingData, playtime] = await Promise.all([
-		db.scores.count({
+		MONGODB_KILL.scores.count({
 			userID: user.id,
 			game,
 			playtype,
 		}),
-		db.scores.findOne(
+		MONGODB_KILL.scores.findOne(
 			{
 				userID: user.id,
 				game,
@@ -72,7 +72,7 @@ router.get("/", async (req, res) => {
 				},
 			},
 		),
-		db.scores.findOne(
+		MONGODB_KILL.scores.findOne(
 			{
 				userID: user.id,
 				game,
@@ -86,7 +86,7 @@ router.get("/", async (req, res) => {
 			},
 		),
 		GetAllRankings(stats),
-		db.sessions.aggregate<[] | [{ playtime: number }]>([
+		MONGODB_KILL.sessions.aggregate<[] | [{ playtime: number }]>([
 			{
 				$match: {
 					userID: user.id,
@@ -163,7 +163,7 @@ router.get(
 
 		const stats = GetTachiData(req, "requestedUserGameStats");
 
-		const snapshots = (await db["game-stats-snapshots"].find(
+		const snapshots = (await MONGODB_KILL["game-stats-snapshots"].find(
 			{
 				userID: user.id,
 				game,
@@ -182,18 +182,20 @@ router.get(
 					playtype: 0,
 				},
 			},
-		)) as Array<Omit<UserGameStatsSnapshotDocument, "game" | "playtype" | "userID">>;
+		)) as Array<Omit<MONGO_UserGameStatsSnapshotDocument, "game" | "playtype" | "userID">>;
 
-		const currentSnapshot: Omit<UserGameStatsSnapshotDocument, "game" | "playtype" | "userID"> =
-			{
-				classes: stats.classes,
-				ratings: stats.ratings,
+		const currentSnapshot: Omit<
+			MONGO_UserGameStatsSnapshotDocument,
+			"game" | "playtype" | "userID"
+		> = {
+			classes: stats.classes,
+			ratings: stats.ratings,
 
-				// lazy, should probably be this midnight
-				timestamp: Date.now(),
-				playcount: await GetUGPTPlaycount(user.id, game, playtype),
-				rankings: await GetAllRankings(stats),
-			};
+			// lazy, should probably be this midnight
+			timestamp: Date.now(),
+			playcount: await GetUGPTPlaycount(user.id, game, playtype),
+			rankings: await GetAllRankings(stats),
+		};
 
 		return res.status(200).json({
 			success: true,
@@ -212,7 +214,7 @@ router.get("/most-played", async (req, res) => {
 	const { game, playtype, user } = GetUGPT(req);
 
 	const mostPlayed: Array<{ _id: string; playcount: integer; songID: integer }> =
-		await db.scores.aggregate([
+		await MONGODB_KILL.scores.aggregate([
 			{
 				$match: {
 					userID: user.id,
@@ -243,9 +245,9 @@ router.get("/most-played", async (req, res) => {
 	const songIDs = mostPlayed.map((e) => e.songID);
 
 	const [songs, charts, pbs] = await Promise.all([
-		await db.anySongs[game].find({ id: { $in: songIDs } }),
-		await db.anyCharts[game].find({ chartID: { $in: chartIDs } }),
-		await db["personal-bests"].find({ chartID: { $in: chartIDs }, userID: user.id }),
+		await MONGODB_KILL.anySongs[game].find({ id: { $in: songIDs } }),
+		await MONGODB_KILL.anyCharts[game].find({ chartID: { $in: chartIDs } }),
+		await MONGODB_KILL["personal-bests"].find({ chartID: { $in: chartIDs }, userID: user.id }),
 	]);
 
 	const playcountMap = new Map<string, integer>();
@@ -255,7 +257,7 @@ router.get("/most-played", async (req, res) => {
 	}
 
 	// @ts-expect-error monkeypatching
-	const playcountPBs = pbs as Array<{ __playcount: integer } & PBScoreDocument>;
+	const playcountPBs = pbs as Array<{ __playcount: integer } & MONGO_PBScoreDocument>;
 
 	// monkey patch __playcount on
 	for (const pb of playcountPBs) {
@@ -304,7 +306,11 @@ router.get("/leaderboard-adjacent", async (req, res) => {
 		alg = temp;
 	}
 
-	const thisUsersStats = await db["game-stats"].findOne({ game, playtype, userID: user.id });
+	const thisUsersStats = await MONGODB_KILL["game-stats"].findOne({
+		game,
+		playtype,
+		userID: user.id,
+	});
 
 	if (!thisUsersStats) {
 		return res.status(400).json({
@@ -314,7 +320,7 @@ router.get("/leaderboard-adjacent", async (req, res) => {
 	}
 
 	const [above, below] = await Promise.all([
-		db["game-stats"].find(
+		MONGODB_KILL["game-stats"].find(
 			{
 				game,
 				playtype,
@@ -328,7 +334,7 @@ router.get("/leaderboard-adjacent", async (req, res) => {
 				},
 			},
 		),
-		db["game-stats"].find(
+		MONGODB_KILL["game-stats"].find(
 			{
 				game,
 				playtype,

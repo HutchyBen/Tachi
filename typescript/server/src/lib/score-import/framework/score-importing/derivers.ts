@@ -1,16 +1,16 @@
-import type { GPTDerivers } from "#game-implementations/types";
-import type { KtLogger } from "#lib/log/log.js";
+import type { __OLD_KILL_GPTDerivers } from "#game-implementations/types";
+import type { KtLogger } from "#lib/log/log";
 import type { MetricValue } from "tachi-common/types/metrics";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import {
-	type ChartDocument,
-	type DerivedMetrics,
 	GetGPTConfig,
 	type GPTString,
 	type integer,
+	type MONGO_ChartDocument,
+	type MONGO_ScoreData,
+	type MongoDerivedMetrics,
 	type OptionalEnumIndexes,
-	type ScoreData,
 	type ScoreEnumIndexes,
 } from "tachi-common";
 
@@ -25,9 +25,10 @@ import { InternalFailure } from "../common/converter-failures";
 function DeriveMetrics<GPT extends GPTString>(
 	gpt: GPT,
 	metrics: DryScoreData<GPT>,
-	chart: ChartDocument<GPT>,
+	chart: MONGO_ChartDocument<GPT>,
 ) {
-	const deriverImplementation: GPTDerivers<GPT> = GPT_SERVER_IMPLEMENTATIONS[gpt].derivers;
+	const deriverImplementation: __OLD_KILL_GPTDerivers<GPT> =
+		GPT_SERVER_IMPLEMENTATIONS[gpt].derivers;
 
 	const derivedMetrics: Record<string, MetricValue> = {};
 
@@ -47,7 +48,7 @@ function DeriveMetrics<GPT extends GPTString>(
 		derivedMetrics[key] = value;
 	}
 
-	return derivedMetrics as DerivedMetrics[GPT];
+	return derivedMetrics as MongoDerivedMetrics[GPT];
 }
 
 export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any, log: KtLogger) {
@@ -121,7 +122,7 @@ export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any,
 export function CreateFullScoreData<GPT extends GPTString>(
 	gpt: GPT,
 	dryScoreData: DryScore<GPT>["scoreData"],
-	chart: ChartDocument<GPT>,
+	chart: MONGO_ChartDocument<GPT>,
 	log: KtLogger,
 ) {
 	const derivedMetrics = DeriveMetrics(gpt, dryScoreData, chart);
@@ -129,7 +130,7 @@ export function CreateFullScoreData<GPT extends GPTString>(
 	const scoreData = {
 		...dryScoreData,
 		...derivedMetrics,
-	} as unknown as ScoreData<GPT>;
+	} as unknown as MONGO_ScoreData<GPT>;
 	// ^ hacky force-cast because these types are *really* unstable.
 
 	const { indexes, optionalIndexes } = CreateEnumIndexes(gpt, scoreData, log);

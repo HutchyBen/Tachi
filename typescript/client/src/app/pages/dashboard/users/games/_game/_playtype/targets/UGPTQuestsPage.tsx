@@ -12,18 +12,18 @@ import React, { useMemo, useState } from "react";
 import { Col, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
-	type GoalDocument,
-	type QuestDocument,
-	type QuestSubscriptionDocument,
+	type MONGO_GoalDocument,
+	type MONGO_QuestDocument,
+	type MONGO_QuestSubscriptionDocument,
 } from "tachi-common";
 
 export default function UGPTQuestsPage({ reqUser, game, playtype }: UGPT) {
 	const [show, setShow] = useState<"achieved" | "all" | "unachieved">("all");
 
 	const { data, error } = useApiQuery<{
-		goals: Array<GoalDocument>;
-		quests: Array<QuestDocument>;
-		questSubs: Array<QuestSubscriptionDocument>;
+		goals: Array<MONGO_GoalDocument>;
+		quests: Array<MONGO_QuestDocument>;
+		questSubs: Array<MONGO_QuestSubscriptionDocument>;
 	}>(`/users/${reqUser.id}/games/${game}/${playtype}/targets/quests`);
 
 	const questsToShow = useMemo(() => {

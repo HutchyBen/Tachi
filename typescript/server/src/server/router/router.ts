@@ -4,7 +4,7 @@ import { Router } from "express";
 
 import { RejectIfBanned, SetRequestPermissions } from "../middleware/auth";
 import { NormalRateLimitMiddleware } from "../middleware/rate-limiter";
-import apiRouterV1Mongo from "./api/v1/router";
+import apiRouterV1 from "./api/v1/router";
 import irRouter from "./ir/router";
 
 const router: Router = Router({ mergeParams: true });
@@ -18,7 +18,7 @@ router.use("/ir", NormalRateLimitMiddleware, irRouter);
 router.use(SetRequestPermissions);
 router.use(UpdateLastSeen);
 
-router.use("/api/v1mongo", apiRouterV1Mongo);
+router.use("/api/v1", apiRouterV1);
 
 // if in localdev, add a debug endpoint to tell users when they got a successful fetch
 // on the root endpoint.

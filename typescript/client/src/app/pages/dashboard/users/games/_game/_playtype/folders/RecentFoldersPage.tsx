@@ -8,9 +8,9 @@ import React, { useContext } from "react";
 import { Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
-	type FolderDocument,
-	type RecentlyViewedFolderDocument,
-	type UserDocument,
+	type MONGO_FolderDocument,
+	type MONGO_RecentlyViewedFolderDocument,
+	type MONGO_UserDocument,
 } from "tachi-common";
 
 import { FolderInfoComponent } from "./FolderSelectPage";
@@ -25,11 +25,11 @@ export default function RecentFoldersPage({ reqUser, game, playtype }: UGPT) {
 	return <Inner game={game} playtype={playtype} reqUser={reqUser} user={user} />;
 }
 
-function Inner({ reqUser, game, playtype, user }: { user: UserDocument } & UGPT) {
+function Inner({ reqUser, game, playtype, user }: { user: MONGO_UserDocument } & UGPT) {
 	const { data, error } = useApiQuery<{
-		folders: FolderDocument[];
+		folders: MONGO_FolderDocument[];
 		stats: FolderStatsInfo[];
-		views: RecentlyViewedFolderDocument[];
+		views: MONGO_RecentlyViewedFolderDocument[];
 	}>(`/users/${user.id}/games/${game}/${playtype}/folders/recent`);
 
 	if (error) {

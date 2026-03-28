@@ -1,11 +1,11 @@
 import { IsNullish } from "#util/misc";
 import React from "react";
-import { COLOUR_SET, type PBScoreDocument, type ScoreDocument } from "tachi-common";
+import { COLOUR_SET, type MONGO_PBScoreDocument, type MONGO_ScoreDocument } from "tachi-common";
 
 export default function WaccaJudgementCell({
 	score,
 }: {
-	score: PBScoreDocument<"wacca:Single"> | ScoreDocument<"wacca:Single">;
+	score: MONGO_PBScoreDocument<"wacca:Single"> | MONGO_ScoreDocument<"wacca:Single">;
 }) {
 	const judgements = score.scoreData.judgements;
 

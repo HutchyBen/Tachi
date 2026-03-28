@@ -1,14 +1,14 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 import type { ClassProvider } from "#lib/score-import/framework/calculated-data/types";
 import type { USCClientScore } from "#server/router/ir/usc/_playtype/types";
 import type { EmptyObject } from "#utils/types";
 import type {
 	BatchManualScore,
-	ChartDocument,
 	GameGroup,
 	ImportTypes,
 	integer,
-	SongDocument,
+	MONGO_ChartDocument,
+	MONGO_SongDocument,
 } from "tachi-common";
 
 import type { ConverterFailure } from "../../framework/common/converter-failures";
@@ -143,8 +143,8 @@ export interface OrphanScoreDocument<T extends ImportTypes = ImportTypes> {
 
 export interface ConverterFnSuccessReturn {
 	dryScore: DryScore;
-	chart: ChartDocument;
-	song: SongDocument;
+	chart: MONGO_ChartDocument;
+	song: MONGO_SongDocument;
 }
 
 export type ConverterFnReturnOrFailure = ConverterFailure | ConverterFnSuccessReturn;

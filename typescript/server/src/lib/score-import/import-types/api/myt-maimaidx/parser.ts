@@ -1,26 +1,40 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 import type { EmptyObject } from "#utils/types";
 import type { integer } from "tachi-common";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
-import { MaimaiUserClient } from "#proto/generated/maimai/user_grpc_pb";
-import { GetPlaylogRequest, type GetPlaylogStreamItem } from "#proto/generated/maimai/user_pb";
-import { credentials } from "@grpc/grpc-js";
+import { GetPlaylogRequestSchema, MaimaiUser } from "#proto/generated/maimai/user_pb";
+import { create } from "@bufbuild/protobuf";
+import { ConnectError, createClient } from "@connectrpc/connect";
 
 import type { ParserFunctionReturns } from "../../common/types";
 import type { MytMaimaiDxScore } from "./types";
 
-import {
-	FetchMytTitleAPIID,
-	GetMytHostname,
-	StreamRPCAsAsync,
-} from "../../common/api-myt/traverse-api";
+import { CreateMytTransport, FetchMytTitleAPIID } from "../../common/api-myt/traverse-api";
 
-async function* getObjectsFromGrpcIterable(
-	iterable: AsyncIterable<GetPlaylogStreamItem>,
-): AsyncIterable<MytMaimaiDxScore> {
-	for await (const item of iterable) {
-		yield item.toObject();
+async function* streamPlaylog(userID: integer, log: KtLogger): AsyncIterable<MytMaimaiDxScore> {
+	const profileApiId = await FetchMytTitleAPIID(userID, "maimaidx", log);
+	const client = createClient(MaimaiUser, CreateMytTransport());
+	const request = create(GetPlaylogRequestSchema, { profileApiId });
+
+	try {
+		for await (const item of client.getPlaylog(request)) {
+			yield item;
+		}
+	} catch (err) {
+		if (err instanceof ConnectError) {
+			log.error(
+				{ err, code: err.code },
+				`MYT gRPC error streaming maimai DX playlog for userID ${userID}`,
+			);
+		} else {
+			log.error(
+				{ err },
+				`Unexpected MYT error streaming maimai DX playlog for userID ${userID}`,
+			);
+		}
+
+		throw new ScoreImportFatalError(500, `Failed to get scores from MYT.`);
 	}
 }
 
@@ -28,29 +42,8 @@ export default async function ParseMytMaimaiDx(
 	userID: integer,
 	log: KtLogger,
 ): Promise<ParserFunctionReturns<MytMaimaiDxScore, EmptyObject>> {
-	const profileApiId = await FetchMytTitleAPIID(userID, "maimaidx", log);
-	const endpoint = GetMytHostname();
-	const client = new MaimaiUserClient(endpoint, credentials.createSsl());
-	const request = new GetPlaylogRequest();
-
-	request.setProfileApiId(profileApiId);
-
-	let iterable;
-
-	try {
-		const stream = StreamRPCAsAsync(client.getPlaylog.bind(client), request, log);
-
-		iterable = getObjectsFromGrpcIterable(stream);
-	} catch (err) {
-		log.error(
-			`Unexpected MYT error while streaming maimai DX playlog items for userID ${userID}: ${err}`,
-		);
-
-		throw new ScoreImportFatalError(500, `Failed to get scores from MYT.`);
-	}
-
 	return {
-		iterable,
+		iterable: streamPlaylog(userID, log),
 		context: {},
 		classProvider: null,
 		game: "maimaidx",

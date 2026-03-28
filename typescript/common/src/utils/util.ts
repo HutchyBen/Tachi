@@ -3,14 +3,14 @@ import type { ZodObject } from "zod";
 
 import type { GradeBoundary, IIDXLikes } from "../constants/grade-boundaries";
 import type {
-	BMSCourseDocument,
-	ChartDocument,
 	GameGroup,
 	GPTString,
 	GPTStrings,
 	integer,
+	MONGO_BMSCourseDocument,
+	MONGO_ChartDocument,
+	MONGO_SongDocument,
 	Playtypes,
-	SongDocument,
 	V3Game,
 } from "../types";
 import type { GetEnumValue } from "../types/metrics";
@@ -28,9 +28,9 @@ export function FormatInt(v: number): string {
 	return Math.floor(v).toFixed(0);
 }
 
-export function FormatDifficulty(chart: ChartDocument, game: GameGroup): string {
+export function FormatDifficulty(chart: MONGO_ChartDocument, game: GameGroup): string {
 	if (game === "bms" || game === "pms") {
-		const bmsChart = chart as ChartDocument<"bms:7K" | "bms:14K">;
+		const bmsChart = chart as MONGO_ChartDocument<"bms:7K" | "bms:14K">;
 
 		return (
 			bmsChart.data.tableFolders.map((e) => `${e.table}${e.level}`).join(", ") || "Unrated"
@@ -38,7 +38,7 @@ export function FormatDifficulty(chart: ChartDocument, game: GameGroup): string 
 	}
 
 	if (game === "itg") {
-		const itgChart = chart as ChartDocument<"itg:Stamina">;
+		const itgChart = chart as MONGO_ChartDocument<"itg:Stamina">;
 
 		const level = itgChart.data.rankedLevel ?? itgChart.data.chartLevel;
 		const unranked = itgChart.data.rankedLevel === null ? "UNRANKED " : "";
@@ -47,7 +47,7 @@ export function FormatDifficulty(chart: ChartDocument, game: GameGroup): string 
 	}
 
 	if (game === "gitadora") {
-		const ch = chart as ChartDocument<GPTStrings["gitadora"]>;
+		const ch = chart as MONGO_ChartDocument<GPTStrings["gitadora"]>;
 
 		const gptConfig = GetSpecificGPTConfig<GPTStrings["gitadora"]>(
 			GetGPTString(game, chart.playtype) as GPTStrings["gitadora"],
@@ -79,12 +79,12 @@ export function FormatDifficulty(chart: ChartDocument, game: GameGroup): string 
  * Formats a chart's difficulty into a shorter variant. This handles a lot of
  * game-specific strange edge cases.
  */
-export function FormatDifficultyShort(chart: ChartDocument, game: GameGroup): string {
+export function FormatDifficultyShort(chart: MONGO_ChartDocument, game: GameGroup): string {
 	const gameConfig = GetGameGroupConfig(game);
 	const gptConfig = GetGamePTConfig(game, chart.playtype);
 
 	if (game === "itg") {
-		const itgChart = chart as ChartDocument<"itg:Stamina">;
+		const itgChart = chart as MONGO_ChartDocument<"itg:Stamina">;
 
 		return `S${itgChart.data.difficultyTag} ${chart.level}`;
 	}
@@ -110,11 +110,11 @@ export function FormatDifficultyShort(chart: ChartDocument, game: GameGroup): st
 /**
  * Formats a chart's difficulty for searching, such as forwarding this query to youtube.
  */
-export function FormatDifficultySearch(chart: ChartDocument, game: GameGroup): string | null {
+export function FormatDifficultySearch(chart: MONGO_ChartDocument, game: GameGroup): string | null {
 	const gptConfig = GetGamePTConfig(game, chart.playtype);
 
 	if (game === "itg") {
-		const itgChart = chart as ChartDocument<"itg:Stamina">;
+		const itgChart = chart as MONGO_ChartDocument<"itg:Stamina">;
 
 		return `S${itgChart.data.difficultyTag} ${chart.level}`;
 	}
@@ -172,14 +172,14 @@ export function V3FormatGame(game: V3Game): string {
 
 export function FormatChart(
 	game: GameGroup,
-	song: SongDocument,
-	chart: ChartDocument,
+	song: MONGO_SongDocument,
+	chart: MONGO_ChartDocument,
 	short = false,
 ): string {
 	if (game === "bms") {
-		const tables = (chart as ChartDocument<GPTStrings["bms"]>).data.tableFolders;
+		const tables = (chart as MONGO_ChartDocument<GPTStrings["bms"]>).data.tableFolders;
 
-		const bmsSong = song as SongDocument<"bms">;
+		const bmsSong = song as MONGO_SongDocument<"bms">;
 
 		let realTitle = bmsSong.title;
 
@@ -197,7 +197,7 @@ export function FormatChart(
 
 		return `${realTitle} (${tables.map((e) => `${e.table}${e.level}`).join(", ")})`;
 	} else if (game === "usc") {
-		const uscChart = chart as ChartDocument<GPTStrings["usc"]>;
+		const uscChart = chart as MONGO_ChartDocument<GPTStrings["usc"]>;
 
 		// If this chart isn't an official, render it differently
 		if (!uscChart.data.isOfficial) {
@@ -217,8 +217,8 @@ export function FormatChart(
 
 		// otherwise, it's just an official and should be rendered like any other game.
 	} else if (game === "itg") {
-		const itgChart = chart as ChartDocument<"itg:Stamina">;
-		const itgSong = song as SongDocument<"itg">;
+		const itgChart = chart as MONGO_ChartDocument<"itg:Stamina">;
+		const itgSong = song as MONGO_SongDocument<"itg">;
 
 		const level = itgChart.data.rankedLevel ?? `${itgChart.data.chartLevel}?`;
 
@@ -431,8 +431,10 @@ export function GetCloserGradeDelta<G extends string>(
 	return lower;
 }
 
-export function CreateSongMap<G extends GameGroup = GameGroup>(songs: Array<SongDocument<G>>) {
-	const songMap = new Map<integer, SongDocument<G>>();
+export function CreateSongMap<G extends GameGroup = GameGroup>(
+	songs: Array<MONGO_SongDocument<G>>,
+) {
+	const songMap = new Map<integer, MONGO_SongDocument<G>>();
 
 	for (const song of songs) {
 		songMap.set(song.id, song);
@@ -442,15 +444,23 @@ export function CreateSongMap<G extends GameGroup = GameGroup>(songs: Array<Song
 }
 
 export function CreateChartMap<GPT extends GPTString = GPTString>(
-	charts: Array<ChartDocument<GPT>>,
+	charts: Array<MONGO_ChartDocument<GPT>>,
 ) {
-	const chartMap = new Map<string, ChartDocument<GPT>>();
+	const chartMap = new Map<string, MONGO_ChartDocument<GPT>>();
 
 	for (const chart of charts) {
 		chartMap.set(chart.chartID, chart);
+		if (chart.legacyChartId) {
+			chartMap.set(chart.legacyChartId, chart);
+		}
 	}
 
 	return chartMap;
+}
+
+/** Mongo `chartID` field (`personal-bests`, `scores`, etc.): legacy string, or same as `chartID` on raw Mongo chart docs. */
+export function MongoChartLegacyId(chart: MONGO_ChartDocument): string {
+	return chart.legacyChartId ?? chart.chartID;
 }
 
 /**
@@ -467,7 +477,7 @@ export function FormatPrError(err: PrudenceError, foreword = "Error"): string {
 	return `${foreword}: ${err.keychain} | ${err.message}${receivedText}.`;
 }
 
-export function GetBMSCourseIndex(course: BMSCourseDocument) {
+export function GetBMSCourseIndex(course: MONGO_BMSCourseDocument) {
 	const gptConf = GetGamePTConfig("bms", course.playtype);
 
 	const cls = gptConf.classes[course.set];

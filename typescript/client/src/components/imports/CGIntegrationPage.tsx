@@ -12,7 +12,7 @@ import { type SetState } from "#types/react";
 import { APIFetchV1 } from "#util/api";
 import React, { useContext, useMemo, useReducer, useState } from "react";
 import { Button, Form } from "react-bootstrap";
-import { type APIImportTypes, type CGCardInfo, GetGameGroupConfig } from "tachi-common";
+import { type APIImportTypes, GetGameGroupConfig, type MONGO_CGCardInfo } from "tachi-common";
 
 import ImportStateRenderer from "./ImportStateRenderer";
 
@@ -37,7 +37,7 @@ export default function CGIntegrationPage({ cgType, game }: Props) {
 	}
 
 	// eslint-disable-next-line react-hooks/rules-of-hooks
-	const { data, error } = useApiQuery<CGCardInfo | null>(
+	const { data, error } = useApiQuery<MONGO_CGCardInfo | null>(
 		`/users/${user.id}/integrations/cg/${cgType}`,
 		undefined,
 		[reload],

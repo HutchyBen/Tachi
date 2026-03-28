@@ -1,84 +1,107 @@
-import type { FindOneResult } from "monk";
-
 import { ONE_DAY } from "#lib/constants/time";
-import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user";
+import { SELECT_USER_SETTINGS, ToUserSettingsDocument } from "#lib/db-formats/user-settings";
+import { log } from "#lib/log/log";
+import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
+import { ISO8601ToUnixMilliseconds } from "#utils/time";
+import { type Kysely, sql, type Transaction } from "kysely";
 import {
-	type APITokenDocument,
 	type GameGroup,
+	GamePTToV3,
 	GetGamePTConfig,
 	type GPTString,
 	type integer,
+	type MONGO_APITokenDocument,
+	type MONGO_UserDocument,
+	type MONGO_UserGameStats,
+	type MONGO_UserSettingsDocument,
 	type Playtype,
 	type ProfileRatingAlgorithms,
 	UserAuthLevels,
-	type UserDocument,
-	type UserGameStats,
+	V3ToGamePT,
 } from "tachi-common";
+import { type Database } from "tachi-db";
+
+import { GetFollowingForUser } from "./queries/settings";
 
 /**
  * Returns a user's username from their ID. Throws if no user with that ID exists.
  */
 export async function GetUsernameFromUserID(userID: integer): Promise<string> {
-	const partialDoc = await db.users.findOne(
-		{
-			id: userID,
-		},
-		{
-			projection: {
-				username: 1,
-			},
-		},
-	);
+	const username = await DB.selectFrom("account")
+		.select("username")
+		.where("id", "=", userID)
+		.executeTakeFirst()
+		.then((res) => res?.username);
 
-	if (!partialDoc) {
+	if (!username) {
 		throw new Error(`Could not find username for userID ${userID}.`);
 	}
-
-	return partialDoc.username;
+	return username;
 }
 
 /**
  * Gets a user based on their username case-insensitively.
  */
-export function GetUserCaseInsensitive(username: string): Promise<FindOneResult<UserDocument>> {
-	return db.users.findOne({
-		usernameLowercase: username.toLowerCase(),
-	});
+export function GetUserCaseInsensitive(username: string): Promise<MONGO_UserDocument | null> {
+	return DB.selectFrom("account")
+		.select(SELECT_USER)
+		.where("normalized_username", "=", username.toLowerCase())
+		.executeTakeFirst()
+		.then((res) => (res ? ToUserDocument(res) : null));
 }
 
 export async function CheckIfEmailInUse(email: string) {
-	const doc = await db["user-private-information"].findOne({ email });
+	const exists = await DB.selectFrom("priv_account_credential")
+		.where("email", "=", email)
+		.executeTakeFirst()
+		.then((res) => !!res);
 
-	return !!doc;
+	return exists;
 }
 
 export function GetUserPrivateInfo(userID: integer) {
-	return db["user-private-information"].findOne({ userID });
+	return DB.selectFrom("priv_account_credential")
+		.selectAll()
+		.where("user_id", "=", userID)
+		.executeTakeFirst();
 }
 
 /**
  * Gets a user from their userID.
  */
-export function GetUserWithID(userID: integer): Promise<FindOneResult<UserDocument>> {
-	return db.users.findOne({
-		id: userID,
-	});
+export function GetUserWithID(userID: integer): Promise<MONGO_UserDocument | null> {
+	return DB.selectFrom("account")
+		.select(SELECT_USER)
+		.where("id", "=", userID)
+		.executeTakeFirst()
+		.then((res) => (res ? ToUserDocument(res) : null));
 }
 
-export function GetSettingsForUser(userID: integer) {
-	return db["user-settings"].findOne({
-		userID,
-	});
+export async function GetSettingsForUser(userID: integer): Promise<MONGO_UserSettingsDocument> {
+	const following = await GetFollowingForUser(userID);
+
+	return DB.selectFrom("account_settings")
+		.select(SELECT_USER_SETTINGS)
+		.where("user_id", "=", userID)
+		.executeTakeFirstOrThrow()
+		.then((res) => ToUserSettingsDocument(following, res));
 }
 
 /**
  * Gets the users for these user IDs.
  */
 export async function GetUsersWithIDs(userIDs: Array<integer>) {
-	const users = await db.users.find({
-		id: { $in: userIDs },
-	});
+	if (userIDs.length === 0) {
+		return [];
+	}
+
+	const users = await DB.selectFrom("account")
+		.select(SELECT_USER)
+		.where("id", "in", userIDs)
+		.execute()
+		.then((rows) => rows.map(ToUserDocument));
 
 	// Note that we should dedupe this by making a set
 	// as passing [1, 1, 1] is perfectly legal to this function.
@@ -100,7 +123,7 @@ export async function GetUsersWithIDs(userIDs: Array<integer>) {
  * If the user document is not found, a severe error is logged, and this
  * function throws.
  */
-export async function GetUserWithIDGuaranteed(userID: integer): Promise<UserDocument> {
+export async function GetUserWithIDGuaranteed(userID: integer): Promise<MONGO_UserDocument> {
 	const userDoc = await GetUserWithID(userID);
 
 	if (!userDoc) {
@@ -133,14 +156,14 @@ export function ResolveUser(usernameOrID: string) {
 /**
  * Returns a formatted string indicating the user. This is used for logging.
  */
-export function FormatUserDoc(userdoc: UserDocument) {
+export function FormatUserDoc(userdoc: MONGO_UserDocument) {
 	return `${userdoc.username} (#${userdoc.id})`;
 }
 
-export async function GetUsersRanking(stats: UserGameStats) {
+export async function GetUsersRanking(stats: MONGO_UserGameStats) {
 	const gptConfig = GetGamePTConfig(stats.game, stats.playtype);
 
-	const aggRes: [{ _id: null; ranking: integer }] = await db["game-stats"].aggregate([
+	const aggRes: [{ _id: null; ranking: integer }] = await MONGODB_KILL["game-stats"].aggregate([
 		{
 			$match: {
 				game: stats.game,
@@ -172,10 +195,17 @@ export async function GetUsersRanking(stats: UserGameStats) {
 }
 
 export function GetUGPTPlaycount(userID: integer, game: GameGroup, playtype: Playtype) {
-	return db.scores.count({ userID, game, playtype });
+	const v3Game = GamePTToV3(game, playtype);
+
+	return DB.selectFrom("score")
+		.select((eb) => eb.fn.countAll().as("playcount"))
+		.where("user_id", "=", userID)
+		.where("game", "=", v3Game)
+		.executeTakeFirst()
+		.then((res) => Number(res?.playcount ?? 0));
 }
 
-export async function GetAllRankings(stats: UserGameStats) {
+export async function GetAllRankings(stats: MONGO_UserGameStats) {
 	const gptConfig = GetGamePTConfig(stats.game, stats.playtype);
 
 	const entries = await Promise.all(
@@ -194,48 +224,27 @@ export async function GetAllRankings(stats: UserGameStats) {
 }
 
 export async function GetUsersRankingAndOutOf(
-	stats: UserGameStats,
+	stats: MONGO_UserGameStats,
 	alg?: ProfileRatingAlgorithms[GPTString],
 ) {
 	const gptConfig = GetGamePTConfig(stats.game, stats.playtype);
-
 	const ratingAlg = alg ?? gptConfig.defaultProfileRatingAlg;
+	const v3Game = GamePTToV3(stats.game, stats.playtype);
+	const userRating = stats.ratings[ratingAlg] ?? null;
 
-	const aggRes: [
-		{
-			_id: null;
-			outOf: integer;
-			ranking: integer;
-		},
-	] = await db["game-stats"].aggregate([
-		{
-			$match: {
-				game: stats.game,
-				playtype: stats.playtype,
-			},
-		},
-		{
-			$group: {
-				_id: null,
-				outOf: { $sum: 1 },
-				ranking: {
-					$sum: {
-						$cond: {
-							if: {
-								$gt: [`$ratings.${ratingAlg}`, stats.ratings[ratingAlg]],
-							},
-							then: 1,
-							else: 0,
-						},
-					},
-				},
-			},
-		},
-	]);
+	const result = await DB.selectFrom("game_profile")
+		.select([
+			(eb) => eb.fn.countAll().as("out_of"),
+			sql<number>`COUNT(*) FILTER (WHERE (ratings->>${ratingAlg})::numeric > ${userRating})`.as(
+				"ranking_count",
+			),
+		])
+		.where("game", "=", v3Game)
+		.executeTakeFirstOrThrow();
 
 	return {
-		ranking: aggRes[0].ranking + 1,
-		outOf: aggRes[0].outOf,
+		ranking: Number(result.ranking_count) + 1,
+		outOf: Number(result.out_of),
 	};
 }
 
@@ -252,7 +261,7 @@ export function GetOnlineCutoff() {
 /**
  * Returns whether a given userID is an administrator or not.
  */
-export async function IsRequesterAdmin(request: APITokenDocument) {
+export async function IsRequesterAdmin(request: MONGO_APITokenDocument) {
 	// API Tokens created on the behalf of an admin do NOT inherit admin permissions.
 	if (request.token !== null) {
 		return false;
@@ -267,20 +276,42 @@ export async function IsRequesterAdmin(request: APITokenDocument) {
 	return user.authLevel === UserAuthLevels.ADMIN;
 }
 
+export async function IsUserAdmin(userID: integer) {
+	const exists = await DB.selectFrom("account")
+		.select("auth_level")
+		.where("id", "=", userID)
+		.where("auth_level", "=", "admin")
+		.executeTakeFirst()
+		.then((res) => !!res);
+
+	return exists;
+}
+
+export async function IsUserBanned(userID: integer) {
+	return DB.selectFrom("account")
+		.select("auth_level")
+		.where("id", "=", userID)
+		.where("auth_level", "=", "banned")
+		.executeTakeFirst()
+		.then((res) => !!res);
+}
+
 /**
  * Return all the GPTs this userID has played.
  */
 export async function GetUserPlayedGPTs(userID: integer) {
-	const gpts = (await db["game-stats"].find(
-		{ userID },
-		{ projection: { game: 1, playtype: 1 } },
-	)) as Array<Pick<UserGameStats, "game" | "playtype">>;
+	const rows = await DB.selectFrom("game_profile")
+		.select("game")
+		.where("user_id", "=", userID)
+		.execute();
 
-	return gpts;
+	return rows.map((r) => V3ToGamePT(r.game));
 }
 
 export async function GetAllUserRivals(userID: integer) {
-	const rivals = (await db["game-settings"].find({ userID }, { projection: { rivals: 1 } }))
+	const rivals = (
+		await MONGODB_KILL["game-settings"].find({ userID }, { projection: { rivals: 1 } })
+	)
 		.map((e) => e.rivals)
 		.flat();
 
@@ -289,21 +320,53 @@ export async function GetAllUserRivals(userID: integer) {
 
 const USERNAME_CHANGE_COOLDOWN = ONE_DAY * 180; // 6 months
 
-export async function CanChangeUsername(userID: integer) {
-	const nextAvailableChange = await GetNextAvailableUsernameChange(userID);
+export async function CanChangeUsername(
+	txn: Kysely<Database> | Transaction<Database>,
+	userID: integer,
+) {
+	const nextAvailableChange = await GetNextAvailableUsernameChange(txn, userID);
 
 	return nextAvailableChange === null || nextAvailableChange < Date.now();
 }
 
-export async function GetNextAvailableUsernameChange(userID: integer): Promise<integer | null> {
-	const lastChange = await db["user-name-changes"].findOne(
-		{ userID },
-		{ sort: { timestamp: -1 } },
-	);
+export async function GetNextAvailableUsernameChange(
+	txn: Kysely<Database> | Transaction<Database>,
+	userID: integer,
+): Promise<integer | null> {
+	const lastChange = await txn
+		.selectFrom("account_username_change")
+		.select("timestamp")
+		.where("user_id", "=", userID)
+		.orderBy("timestamp", "desc")
+		.executeTakeFirst();
 
 	if (!lastChange) {
 		return null;
 	}
 
-	return lastChange.timestamp + USERNAME_CHANGE_COOLDOWN;
+	return ISO8601ToUnixMilliseconds(lastChange.timestamp) + USERNAME_CHANGE_COOLDOWN;
+}
+
+/**
+ * Get the admin for the instance.
+ *
+ * This is used for things like builtin clients
+ * and "default" admin actions. It would honestly be
+ * clearer if there was a sort of "god" user on tachi
+ * that was an admin but also just unique.
+ *
+ * In practice, that's how these things work anyway.
+ */
+export async function GetFirstAdmin(): Promise<MONGO_UserDocument> {
+	const admin = await DB.selectFrom("account")
+		.select(SELECT_USER)
+		.where("auth_level", "=", "admin")
+		.orderBy("id", "asc")
+		.executeTakeFirst();
+
+	if (!admin) {
+		throw new Error("There is no admin on this instance of Tachi.");
+	}
+
+	return ToUserDocument(admin);
 }

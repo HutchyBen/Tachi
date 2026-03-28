@@ -1,9 +1,11 @@
 import type { CGServices } from "#lib/score-import/import-types/common/api-cg/types";
 import type { RequestHandler } from "express-serve-static-core";
-import type { CGCardInfo } from "tachi-common";
 
+import { ACTION_DeleteCgCardInfo } from "#actions/delete-cg-card-info.js";
+import { ACTION_UpdateCgCardInfo } from "#actions/update-cg-card-info.js";
+import { SELECT_CG_CARD_INFO, ToCGCardInfo } from "#lib/db-formats/cg-card-info";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
 import { p } from "prudence";
@@ -33,12 +35,13 @@ router.get("/", ValidateCGType, RequireSelfRequestFromUser, async (req, res) => 
 	const user = GetTachiData(req, "requestedUser");
 	const cgType = req.params.cgType as CGServices;
 
-	const cardInfo = await db["cg-card-info"].findOne({
-		userID: user.id,
-		service: cgType,
-	});
+	const row = await DB.selectFrom("priv_svc_cg_card_info")
+		.select(SELECT_CG_CARD_INFO)
+		.where("user_id", "=", user.id)
+		.where("service", "=", cgType)
+		.executeTakeFirst();
 
-	if (!cardInfo) {
+	if (!row) {
 		return res.status(200).json({
 			success: true,
 			description: `User has no card info set.`,
@@ -49,7 +52,7 @@ router.get("/", ValidateCGType, RequireSelfRequestFromUser, async (req, res) => 
 	return res.status(200).json({
 		success: true,
 		description: `Found card info.`,
-		body: cardInfo,
+		body: ToCGCardInfo(row),
 	});
 });
 
@@ -81,24 +84,9 @@ router.put(
 			pin: string;
 		};
 
-		const newCardInfo: CGCardInfo = {
-			service: cgType,
-			cardID,
-			pin,
-			userID: user.id,
-		};
+		const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
 
-		await db["cg-card-info"].update(
-			{
-				userID: user.id,
-				service: cgType,
-			},
-			{ $set: newCardInfo },
-			{
-				// insert new card info if the user doesn't have it yet.
-				upsert: true,
-			},
-		);
+		await ACTION_UpdateCgCardInfo(taker, { service: cgType, cardID, pin });
 
 		return res.status(200).json({
 			success: true,
@@ -117,10 +105,9 @@ router.delete("/", ValidateCGType, RequireSelfRequestFromUser, async (req, res) 
 	const user = GetTachiData(req, "requestedUser");
 	const cgType = req.params.cgType as CGServices;
 
-	await db["cg-card-info"].remove({
-		userID: user.id,
-		service: cgType,
-	});
+	const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
+
+	await ACTION_DeleteCgCardInfo(taker, { service: cgType });
 
 	return res.status(200).json({
 		success: true,

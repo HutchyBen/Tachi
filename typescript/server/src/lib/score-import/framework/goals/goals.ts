@@ -1,9 +1,14 @@
-import type { KtLogger } from "#lib/log/log.js";
-import type { GameGroup, GoalDocument, GoalSubscriptionDocument, integer } from "tachi-common";
+import type { KtLogger } from "#lib/log/log";
+import type {
+	GameGroup,
+	integer,
+	MONGO_GoalDocument,
+	MONGO_GoalSubscriptionDocument,
+} from "tachi-common";
 
 import { EvaluateGoalForUser, GetRelevantGoals } from "#lib/targets/goals";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 /**
  * Update a user's progress on all of their set goals.
@@ -27,14 +32,14 @@ export async function GetAndUpdateUsersGoals(
 }
 
 export async function UpdateGoalsForUser(
-	goals: Array<GoalDocument>,
-	goalSubsMap: Map<string, GoalSubscriptionDocument>,
+	goals: Array<MONGO_GoalDocument>,
+	goalSubsMap: Map<string, MONGO_GoalSubscriptionDocument>,
 	userID: integer,
 	log: KtLogger,
 	skipMismatch = false,
 ) {
 	const returns = await Promise.all(
-		goals.map((goal: GoalDocument) => {
+		goals.map((goal: MONGO_GoalDocument) => {
 			const goalSub = goalSubsMap.get(goal.goalID);
 
 			if (!goalSub) {
@@ -90,7 +95,7 @@ export async function UpdateGoalsForUser(
 		});
 	}
 
-	await db["goal-subs"].bulkWrite(bulkWrite, { ordered: false });
+	await MONGODB_KILL["goal-subs"].bulkWrite(bulkWrite, { ordered: false });
 
 	return importInfo;
 }
@@ -102,8 +107,8 @@ export async function UpdateGoalsForUser(
  * to say (i.e. user didnt raise the goal).
  */
 export async function ProcessGoal(
-	goal: GoalDocument,
-	goalSub: GoalSubscriptionDocument,
+	goal: MONGO_GoalDocument,
+	goalSub: MONGO_GoalSubscriptionDocument,
 	userID: integer,
 	log: KtLogger,
 ) {
@@ -170,7 +175,7 @@ export async function ProcessGoal(
 		// that haven't changed return nothing instead of
 		// getting to this point.
 		lastInteraction: Date.now(),
-	} as unknown as Partial<GoalSubscriptionDocument>;
+	} as unknown as Partial<MONGO_GoalSubscriptionDocument>;
 
 	// If this goal was achieved, and is now *not* achieved, we need to unset
 	// some things.
@@ -209,21 +214,21 @@ export async function ProcessGoal(
 }
 
 export async function UpdateGoalsInFolder(folderID: string, log: KtLogger) {
-	const goals = await db.goals.find({
+	const goals = await MONGODB_KILL.goals.find({
 		"charts.type": "folder",
 		"charts.data": folderID,
 	});
 
 	log.info(`Updating ${goals.length} goals for ${folderID}`);
 
-	const goalSubs = await db["goal-subs"].find({
+	const goalSubs = await MONGODB_KILL["goal-subs"].find({
 		goalID: { $in: goals.map((e) => e.goalID) },
 	});
 
 	log.info(`Updating ${goalSubs.length} goal subs for ${folderID}`);
 
 	// (User -> (goalID -> GoalSub))
-	const ugsMap = new Map<integer, Map<string, GoalSubscriptionDocument>>();
+	const ugsMap = new Map<integer, Map<string, MONGO_GoalSubscriptionDocument>>();
 
 	for (const gSub of goalSubs) {
 		const userID = gSub.userID;

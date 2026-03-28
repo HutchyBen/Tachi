@@ -1,94 +1,94 @@
 import {
-	type ChartDocument,
-	type GoalDocument,
-	type GoalSubscriptionDocument,
 	type GPTString,
 	type GPTStringToGame,
-	type ImportDocument,
 	type ImportTrackerFailed,
 	type integer,
-	type PBScoreDocument,
-	type QuestDocument,
-	type ScoreDocument,
-	type SongDocument,
-	type UserDocument,
-	type UserGameStats,
+	type MONGO_ChartDocument,
+	type MONGO_GoalDocument,
+	type MONGO_GoalSubscriptionDocument,
+	type MONGO_ImportDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_QuestDocument,
+	type MONGO_ScoreDocument,
+	type MONGO_SongDocument,
+	type MONGO_UserDocument,
+	type MONGO_UserGameStats,
 } from "tachi-common";
 
 export type PBDataset<GPT extends GPTString = GPTString> = ({
 	__playcount?: integer;
 	__related: {
-		chart: ChartDocument<GPT>;
+		chart: MONGO_ChartDocument<GPT>;
 		index: integer;
-		song: SongDocument<GPTStringToGame[GPT]>;
-		user?: UserDocument;
+		song: MONGO_SongDocument<GPTStringToGame[GPT]>;
+		user?: MONGO_UserDocument;
 	};
-} & PBScoreDocument<GPT>)[];
+} & MONGO_PBScoreDocument<GPT>)[];
 
 export type ScoreDataset<GPT extends GPTString = GPTString> = ({
 	__related: {
-		chart: ChartDocument<GPT>;
+		chart: MONGO_ChartDocument<GPT>;
 		index: integer;
-		song: SongDocument<GPTStringToGame[GPT]>;
-		user: UserDocument;
+		song: MONGO_SongDocument<GPTStringToGame[GPT]>;
+		user: MONGO_UserDocument;
 	};
-} & ScoreDocument<GPT>)[];
+} & MONGO_ScoreDocument<GPT>)[];
 
 export type FolderDataset<GPT extends GPTString = GPTString> = ({
 	__related: {
-		pb: PBScoreDocument<GPT> | null;
-		song: SongDocument<GPTStringToGame[GPT]>;
-		user: UserDocument;
+		pb: MONGO_PBScoreDocument<GPT> | null;
+		song: MONGO_SongDocument<GPTStringToGame[GPT]>;
+		user: MONGO_UserDocument;
 	};
-} & ChartDocument<GPT>)[];
+} & MONGO_ChartDocument<GPT>)[];
 
 export type ChartLeaderboardDataset<GPT extends GPTString = GPTString> = ({
 	__related: {
-		user: UserDocument;
+		user: MONGO_UserDocument;
 	};
-} & PBScoreDocument<GPT>)[];
+} & MONGO_PBScoreDocument<GPT>)[];
 
 export type UGSDataset = ({
 	__related: {
 		index: integer;
-		user: UserDocument;
+		user: MONGO_UserDocument;
 	};
-} & UserGameStats)[];
+} & MONGO_UserGameStats)[];
 
 export type RivalChartDataset<GPT extends GPTString = GPTString> = ({
 	__related: {
 		index: number;
-		pb: PBScoreDocument<GPT> | null;
+		pb: MONGO_PBScoreDocument<GPT> | null;
 	};
-} & UserDocument)[];
+} & MONGO_UserDocument)[];
 
 export type ComparePBsDataset<GPT extends GPTString = GPTString> = Array<{
-	base: PBScoreDocument<GPT> | null;
-	chart: ChartDocument;
-	compare: PBScoreDocument<GPT> | null;
-	song: SongDocument;
+	base: MONGO_PBScoreDocument<GPT> | null;
+	chart: MONGO_ChartDocument;
+	compare: MONGO_PBScoreDocument<GPT> | null;
+	song: MONGO_SongDocument;
 }>;
 
 export type ImportDataset = Array<
 	{
 		__related: {
-			user: UserDocument;
+			user: MONGO_UserDocument;
 		};
-	} & ImportDocument
+	} & MONGO_ImportDocument
 >;
 
 export type FailedImportDataset = Array<
 	{
 		__related: {
-			user: UserDocument;
+			user: MONGO_UserDocument;
 		};
 	} & ImportTrackerFailed
 >;
 
 export type GoalSubDataset = ({
 	__related: {
-		goal: GoalDocument;
-		parentQuests: Array<QuestDocument>;
-		user: UserDocument;
+		goal: MONGO_GoalDocument;
+		parentQuests: Array<MONGO_QuestDocument>;
+		user: MONGO_UserDocument;
 	};
-} & GoalSubscriptionDocument)[];
+} & MONGO_GoalSubscriptionDocument)[];

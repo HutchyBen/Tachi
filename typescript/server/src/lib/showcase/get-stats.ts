@@ -1,5 +1,5 @@
-import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import { log } from "#lib/log/log";
+import MONGODB_KILL from "#services/mongo/db";
 import {
 	type GameGroup,
 	GetGPTString,
@@ -24,7 +24,7 @@ export async function EvaluateUsersStatsShowcase(
 	projectUserStats?: integer,
 ) {
 	const getSettingsID = projectUserStats ?? userID;
-	const settings = await db["game-settings"].findOne({
+	const settings = await MONGODB_KILL["game-settings"].findOne({
 		userID: getSettingsID,
 		game,
 		playtype,

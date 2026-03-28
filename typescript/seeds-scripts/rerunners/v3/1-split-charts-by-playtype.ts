@@ -4,7 +4,7 @@ import { GAME_GROUP_CONFIGS, GAME_PT_CONFIGS, GPTStringToV3 } from "tachi-common
 
 import { ReadCollection, WriteCollection } from "../../util";
 
-const COLLECTIONS_DIR = path.join(__dirname, "../../../collections");
+const COLLECTIONS_DIR = path.join(__dirname, "../../../../db/seeds");
 
 // Games where the Postgres game name equals the game group name (single playtype).
 // These files are left as-is.

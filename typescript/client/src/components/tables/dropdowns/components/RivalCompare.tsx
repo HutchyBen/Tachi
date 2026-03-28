@@ -11,14 +11,20 @@ import React, { useContext } from "react";
 import { Col } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
-	type ChartDocument,
 	type GameGroup,
 	GetGamePTConfig,
+	type MONGO_ChartDocument,
+	type MONGO_UserDocument,
 	type Playtype,
-	type UserDocument,
 } from "tachi-common";
 
-export default function RivalCompare({ chart, game }: { chart: ChartDocument; game: GameGroup }) {
+export default function RivalCompare({
+	chart,
+	game,
+}: {
+	chart: MONGO_ChartDocument;
+	game: GameGroup;
+}) {
 	const { user: currentUser } = useContext(UserContext);
 
 	const playtype = chart.playtype;
@@ -36,8 +42,8 @@ function Inner({
 	playtype,
 	chart,
 }: {
-	chart: ChartDocument;
-	currentUser: UserDocument;
+	chart: MONGO_ChartDocument;
+	currentUser: MONGO_UserDocument;
 	game: GameGroup;
 	playtype: Playtype;
 }) {

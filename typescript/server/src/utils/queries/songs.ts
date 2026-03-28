@@ -1,12 +1,12 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 import type { FindOneResult } from "monk";
-import type { GameGroup, integer, SongDocument } from "tachi-common";
+import type { GameGroup, integer, MONGO_SongDocument } from "tachi-common";
 
 import {
 	AmbiguousTitleFailure,
 	InternalFailure,
 } from "#lib/score-import/framework/common/converter-failures";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 import { EscapeStringRegexp } from "../misc";
 
@@ -16,14 +16,14 @@ import { EscapeStringRegexp } from "../misc";
  * rather difficult. Prefer other functions!
  * @param game - The game to search upon.
  * @param title - The song title to match.
- * @returns SongDocument
+ * @returns MONGO_SongDocument
  */
 export async function FindSongOnTitle(
 	game: GameGroup,
 	title: string,
-): Promise<SongDocument | null> {
+): Promise<MONGO_SongDocument | null> {
 	// @optimisable: Performance should be tested here by having a utility field for all-titles.
-	const res = await db.anySongs[game].find(
+	const res = await MONGODB_KILL.anySongs[game].find(
 		{
 			$or: [
 				{
@@ -57,13 +57,13 @@ export async function FindSongOnTitleInsensitive(
 	game: GameGroup,
 	title: string,
 	artist?: string | null,
-): Promise<SongDocument | null> {
+): Promise<MONGO_SongDocument | null> {
 	// @optimisable: Performance should be tested here by having a utility field for all-titles.
 
 	const regexTitle = new RegExp(`^${EscapeStringRegexp(title)}$`, "iu");
 	const regexArtist = new RegExp(`^${EscapeStringRegexp(artist ?? "")}$`, "iu");
 
-	const res = await db.anySongs[game].find(
+	const res = await MONGODB_KILL.anySongs[game].find(
 		{
 			$and: [
 				{
@@ -105,13 +105,13 @@ export async function FindSongOnTitleInsensitive(
  * also be the in-game-ID.
  * @param game - The game to search upon.
  * @param songID - The song ID to match.
- * @returns SongDocument
+ * @returns MONGO_SongDocument
  */
 export function FindSongOnID(
 	game: GameGroup,
 	songID: integer,
-): Promise<FindOneResult<SongDocument>> {
-	return db.anySongs[game].findOne({
+): Promise<FindOneResult<MONGO_SongDocument>> {
+	return MONGODB_KILL.anySongs[game].findOne({
 		id: songID,
 	});
 }

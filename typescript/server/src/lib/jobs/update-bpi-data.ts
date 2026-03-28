@@ -1,15 +1,15 @@
 import type {
-	ChartDocument,
 	Difficulties,
 	integer,
+	MONGO_ChartDocument,
+	MONGO_SongDocument,
 	Playtypes,
-	SongDocument,
 	Versions,
 } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { BacksyncCollection, PullDatabaseSeeds } from "#lib/seeds/repo";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";
 import fetch from "#utils/fetch";
 import { WrapScriptPromise } from "#utils/misc";
@@ -61,8 +61,8 @@ export async function UpdatePoyashiData() {
 
 	log.info("Fetched data.");
 
-	const iidxSongs: Array<SongDocument<"iidx">> = await repo.ReadCollection("songs-iidx");
-	const iidxCharts: Array<ChartDocument<"iidx:DP" | "iidx:SP">> =
+	const iidxSongs: Array<MONGO_SongDocument<"iidx">> = await repo.ReadCollection("songs-iidx");
+	const iidxCharts: Array<MONGO_ChartDocument<"iidx:DP" | "iidx:SP">> =
 		await repo.ReadCollection("charts-iidx");
 
 	// Utility functions for finding matching charts.
@@ -173,7 +173,7 @@ export async function UpdatePoyashiData() {
 
 	await repo.Destroy();
 
-	await BacksyncCollection("charts-iidx", db.charts.iidx, "Update BPI Data");
+	await BacksyncCollection("charts-iidx", MONGODB_KILL.charts.iidx, "Update BPI Data");
 }
 
 if (require.main === module) {

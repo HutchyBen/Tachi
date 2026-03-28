@@ -1,6 +1,6 @@
 import type { GameGroup, integer, Playtype } from "tachi-common";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 export async function GetRecentUGPTScores(
 	userID: integer,
@@ -8,7 +8,7 @@ export async function GetRecentUGPTScores(
 	playtype: Playtype,
 	limit = 100,
 ) {
-	return db.scores.find(
+	return MONGODB_KILL.scores.find(
 		{
 			userID,
 			game,
@@ -29,7 +29,7 @@ export async function GetRecentUGPTHighlights(
 	playtype: Playtype,
 	limit = 100,
 ) {
-	return db.scores.find(
+	return MONGODB_KILL.scores.find(
 		{
 			userID,
 			game,

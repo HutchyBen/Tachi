@@ -1,111 +1,175 @@
-import type { UserDocument } from "tachi-common";
-
-import db from "#services/mongo/db";
-import { CreateFakeAuthCookie } from "#test-utils/fake-auth";
+import DB from "#services/pg/db";
 import mockApi from "#test-utils/mock-api";
-import ResetDBState from "#test-utils/resets";
-import t from "tap";
+import { seedUser } from "#test-utils/pg-fixtures";
+import { beforeEach, describe, expect, it } from "vitest";
 
-t.test("GET /api/v1/users/:userID/integrations/kshook-sv6c/settings", async (t) => {
-	t.beforeEach(ResetDBState);
+async function loginAs(username: string, password = "password123") {
+	const res = await mockApi.post("/api/v1/auth/login").send({
+		username,
+		"!password": password,
+		captcha: "test",
+	});
 
-	const cookie = await CreateFakeAuthCookie(mockApi);
+	return res.headers["set-cookie"] as unknown as string[];
+}
 
-	t.test("Should return null if this user has no settings set.", async (t) => {
-		await db["kshook-sv6c-settings"].remove({});
+async function seedKshookSettings(userId: number, forceStaticImport: boolean) {
+	await DB.insertInto("svc_kshook_sv6c_settings")
+		.values({ user_id: userId, force_static_import: forceStaticImport })
+		.execute();
+}
+
+// ─── GET /api/v1/users/:userID/integrations/kshook-sv6c/settings ──────────────
+
+describe("GET /api/v1/users/:userID/integrations/kshook-sv6c/settings", () => {
+	let cookie: string[];
+	let userId: number;
+
+	beforeEach(async () => {
+		({ id: userId } = await seedUser({
+			username: "test_user",
+			withCredential: true,
+			withSettings: true,
+		}));
+		cookie = await loginAs("test_user");
+	});
+
+	it("returns 401 when not authenticated", async () => {
+		const res = await mockApi.get(`/api/v1/users/${userId}/integrations/kshook-sv6c/settings`);
+
+		expect(res.status).toBe(401);
+		expect(res.body.success).toBe(false);
+	});
+
+	it("returns null body when the user has no settings", async () => {
+		const res = await mockApi
+			.get(`/api/v1/users/${userId}/integrations/kshook-sv6c/settings`)
+			.set("Cookie", cookie);
+
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.body).toBeNull();
+	});
+
+	it("returns the user's settings when present", async () => {
+		await seedKshookSettings(userId, true);
 
 		const res = await mockApi
-			.get("/api/v1/users/1/integrations/kshook-sv6c/settings")
+			.get(`/api/v1/users/${userId}/integrations/kshook-sv6c/settings`)
 			.set("Cookie", cookie);
 
-		t.equal(res.statusCode, 200);
-
-		t.equal(res.body.body, null);
-
-		t.end();
+		expect(res.status).toBe(200);
+		expect(res.body.body).toEqual({ userID: userId, forceStaticImport: true });
 	});
 
-	t.test("Should return this users settings if they have them.", async (t) => {
+	it("does not return another user's settings", async () => {
+		const other = await seedUser({ username: "other_user" });
+		await seedKshookSettings(other.id, true);
+
 		const res = await mockApi
-			.get("/api/v1/users/1/integrations/kshook-sv6c/settings")
+			.get(`/api/v1/users/${userId}/integrations/kshook-sv6c/settings`)
 			.set("Cookie", cookie);
 
-		t.equal(res.statusCode, 200);
-
-		t.strictSame(res.body.body, {
-			userID: 1,
-			forceStaticImport: true,
-		});
-
-		t.end();
+		expect(res.status).toBe(200);
+		expect(res.body.body).toBeNull();
 	});
-
-	t.test("Must require self-key level authentication.", async (t) => {
-		const res = await mockApi.get("/api/v1/users/1/integrations/kshook-sv6c/settings");
-
-		t.equal(res.statusCode, 401);
-
-		const res2 = await mockApi
-			.get("/api/v1/users/1/integrations/kshook-sv6c/settings")
-			.set("Authorization", "Bearer fake_api_token");
-
-		t.equal(res2.statusCode, 403);
-
-		// insert a fake user doc so this doesn't 404
-		await db.users.insert({
-			id: 2,
-			username: "foo",
-			usernameLowercase: "foo",
-		} as UserDocument);
-
-		const res3 = await mockApi
-			.get("/api/v1/users/2/integrations/kshook-sv6c/settings")
-			.set("Cookie", cookie);
-
-		t.equal(res3.statusCode, 403);
-
-		t.end();
-	});
-
-	t.end();
 });
 
-t.test("PATCH /api/v1/users/:userID/integrations/kshook-sv6c/settings", async (t) => {
-	t.beforeEach(ResetDBState);
+// ─── PATCH /api/v1/users/:userID/integrations/kshook-sv6c/settings ────────────
 
-	const cookie = await CreateFakeAuthCookie(mockApi);
+describe("PATCH /api/v1/users/:userID/integrations/kshook-sv6c/settings", () => {
+	let cookie: string[];
+	let userId: number;
 
-	t.test("Should update a users settings.", async (t) => {
-		const res = await mockApi
-			.patch("/api/v1/users/1/integrations/kshook-sv6c/settings")
-			.send({ forceStaticImport: true })
-			.set("Cookie", cookie);
-
-		t.strictSame(res.body.body.forceStaticImport, true);
-
-		const dbRes = await db["kshook-sv6c-settings"].findOne({ userID: 1 });
-
-		t.strictSame(dbRes?.forceStaticImport, true);
-
-		t.end();
+	beforeEach(async () => {
+		({ id: userId } = await seedUser({
+			username: "test_user",
+			withCredential: true,
+			withSettings: true,
+		}));
+		cookie = await loginAs("test_user");
 	});
 
-	t.test("Should insert a setting filter document if one doesn't exist.", async (t) => {
-		await db["kshook-sv6c-settings"].remove({});
-
+	it("returns 401 when not authenticated", async () => {
 		const res = await mockApi
-			.patch("/api/v1/users/1/integrations/kshook-sv6c/settings")
-			.send({ forceStaticImport: true })
-			.set("Cookie", cookie);
+			.patch(`/api/v1/users/${userId}/integrations/kshook-sv6c/settings`)
+			.send({ forceStaticImport: true });
 
-		t.strictSame(res.body.body.forceStaticImport, true);
-
-		const dbRes = await db["kshook-sv6c-settings"].findOne({ userID: 1 });
-
-		t.strictSame(dbRes?.forceStaticImport, true);
-
-		t.end();
+		expect(res.status).toBe(401);
+		expect(res.body.success).toBe(false);
 	});
 
-	t.end();
+	it("returns 403 when authenticated as a different user", async () => {
+		const other = await seedUser({
+			username: "other_user",
+			email: "other@example.com",
+			withCredential: true,
+			withSettings: true,
+		});
+		const otherCookie = await loginAs("other_user");
+
+		const res = await mockApi
+			.patch(`/api/v1/users/${userId}/integrations/kshook-sv6c/settings`)
+			.set("Cookie", otherCookie)
+			.send({ forceStaticImport: true });
+
+		expect(res.status).toBe(403);
+		// suppress unused-variable warning
+		void other;
+	});
+
+	it("creates a settings row and returns 200 on first call", async () => {
+		const res = await mockApi
+			.patch(`/api/v1/users/${userId}/integrations/kshook-sv6c/settings`)
+			.set("Cookie", cookie)
+			.send({ forceStaticImport: true });
+
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.body).toEqual({ userID: userId, forceStaticImport: true });
+	});
+
+	it("updates an existing settings row", async () => {
+		await seedKshookSettings(userId, false);
+
+		const res = await mockApi
+			.patch(`/api/v1/users/${userId}/integrations/kshook-sv6c/settings`)
+			.set("Cookie", cookie)
+			.send({ forceStaticImport: true });
+
+		expect(res.status).toBe(200);
+		expect(res.body.body.forceStaticImport).toBe(true);
+	});
+
+	it("persists the change to the database", async () => {
+		await mockApi
+			.patch(`/api/v1/users/${userId}/integrations/kshook-sv6c/settings`)
+			.set("Cookie", cookie)
+			.send({ forceStaticImport: true });
+
+		const row = await DB.selectFrom("svc_kshook_sv6c_settings")
+			.selectAll()
+			.where("user_id", "=", userId)
+			.executeTakeFirstOrThrow();
+
+		expect(row.force_static_import).toBe(true);
+	});
+
+	it("returns 400 when forceStaticImport is missing", async () => {
+		const res = await mockApi
+			.patch(`/api/v1/users/${userId}/integrations/kshook-sv6c/settings`)
+			.set("Cookie", cookie)
+			.send({});
+
+		expect(res.status).toBe(400);
+	});
+
+	it("returns 400 when forceStaticImport is not a boolean", async () => {
+		const res = await mockApi
+			.patch(`/api/v1/users/${userId}/integrations/kshook-sv6c/settings`)
+			.set("Cookie", cookie)
+			.send({ forceStaticImport: "yes" });
+
+		expect(res.status).toBe(400);
+	});
 });

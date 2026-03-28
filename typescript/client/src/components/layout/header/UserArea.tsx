@@ -1,7 +1,7 @@
 import ProfilePicture from "#components/user/ProfilePicture";
 import LinkButton from "#components/util/LinkButton";
 import React from "react";
-import { type UserDocument } from "tachi-common/types/documents";
+import { type MONGO_UserDocument } from "tachi-common/types/documents";
 
 import { SearchButton } from "./SearchButton";
 import { UserNotificationButton } from "./UserNotificationButton";
@@ -12,7 +12,7 @@ export default function UserArea({
 	dropdownMenuStyle,
 }: {
 	dropdownMenuStyle?: React.CSSProperties;
-	user: UserDocument | null;
+	user: MONGO_UserDocument | null;
 }) {
 	return (
 		<div className="d-flex align-items-center gap-2">

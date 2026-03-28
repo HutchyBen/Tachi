@@ -1,39 +1,43 @@
 import {
-	type ChartDocument,
-	type ClassAchievementDocument,
-	type GoalDocument,
-	type GoalSubscriptionDocument,
 	type integer,
-	type QuestDocument,
-	type QuestSubscriptionDocument,
-	type ScoreDocument,
-	type SessionDocument,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_ClassAchievementDocument,
+	type MONGO_GoalDocument,
+	type MONGO_GoalSubscriptionDocument,
+	type MONGO_QuestDocument,
+	type MONGO_QuestSubscriptionDocument,
+	type MONGO_ScoreDocument,
+	type MONGO_SessionDocument,
+	type MONGO_SongDocument,
 } from "tachi-common";
 
 export type ClumpedActivityScores = {
-	scores: Array<{ __related: { chart: ChartDocument; song: SongDocument } } & ScoreDocument>;
+	scores: Array<
+		{
+			__related: { chart: MONGO_ChartDocument; song: MONGO_SongDocument };
+		} & MONGO_ScoreDocument
+	>;
 	type: "SCORES";
 };
 
 export type ClumpedActivitySession = {
 	type: "SESSION";
-} & SessionDocument;
+} & MONGO_SessionDocument;
 
 export type ClumpedActivityClassAchievement = {
 	type: "CLASS_ACHIEVEMENT";
-} & ClassAchievementDocument;
+} & MONGO_ClassAchievementDocument;
 
 export type ClumpedActivityGoalAchievement = {
-	goals: Array<{ __related: { goal: GoalDocument } } & GoalSubscriptionDocument>;
+	goals: Array<{ __related: { goal: MONGO_GoalDocument } } & MONGO_GoalSubscriptionDocument>;
 	type: "GOAL_ACHIEVEMENTS";
 	// redundant, but convenient.
 	userID: integer;
 };
 
 export type ClumpedActivityQuestAchievement = {
-	quest: QuestDocument;
-	sub: QuestSubscriptionDocument;
+	quest: MONGO_QuestDocument;
+	sub: MONGO_QuestSubscriptionDocument;
 	type: "QUEST_ACHIEVEMENT";
 	userID: integer;
 };
@@ -55,7 +59,7 @@ export type ClumpedActivity = Array<
  */
 export type RawQuestDocument = {
 	rawQuestData: Array<RawQuestSection>;
-} & Omit<QuestDocument, "questData" | "questID">;
+} & Omit<MONGO_QuestDocument, "questData" | "questID">;
 
 export type RawQuestSection = {
 	desc: string;
@@ -64,6 +68,6 @@ export type RawQuestSection = {
 };
 
 export type RawQuestGoal = {
-	goal: Pick<GoalDocument, "charts" | "criteria" | "name">;
+	goal: Pick<MONGO_GoalDocument, "charts" | "criteria" | "name">;
 	note?: string;
 };

@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 import type { EmptyObject } from "#utils/types";
 
 import { CsvError as CSVError, parse } from "csv-parse/sync";

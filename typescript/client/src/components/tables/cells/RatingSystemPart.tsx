@@ -5,7 +5,7 @@ import { GPT_CLIENT_IMPLEMENTATIONS } from "#lib/game-implementations";
 import { type GPTRatingSystem } from "#lib/types";
 import { IsNotNullish } from "#util/misc";
 import React from "react";
-import { type ChartDocument, type GameGroup, GetGPTString } from "tachi-common";
+import { type GameGroup, GetGPTString, type MONGO_ChartDocument } from "tachi-common";
 
 import MiniTable from "../components/MiniTable";
 
@@ -13,7 +13,7 @@ export default function RatingSystemPart({
 	chart,
 	game,
 }: {
-	chart: ChartDocument;
+	chart: MONGO_ChartDocument;
 	game: GameGroup;
 }) {
 	const ratingSystems: Array<GPTRatingSystem<any>> =

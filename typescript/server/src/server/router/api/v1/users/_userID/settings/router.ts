@@ -1,8 +1,7 @@
-import { log } from "#lib/log/log.js";
+import { ACTION_UpdateUserSettings } from "#actions/update-user-settings";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
 import { GetTachiData } from "#utils/req-tachi-data";
-import { FormatUserDoc, GetSettingsForUser } from "#utils/user";
+import { GetSettingsForUser } from "#utils/user";
 import { Router } from "express";
 
 import { RequireSelfRequestFromUser } from "../middleware";
@@ -10,24 +9,14 @@ import { RequireSelfRequestFromUser } from "../middleware";
 const router: Router = Router({ mergeParams: true });
 
 /**
- * Retrieve this users settings. Note that these settings are NOT private.
+ * Retrieve this user's settings. Note that these settings are NOT private.
  *
  * @name GET /api/v1/users/:userID/settings
  */
 router.get("/", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	const settings = await db["user-settings"].findOne({
-		userID: user.id,
-	});
-
-	if (!settings) {
-		log.error(`User ${FormatUserDoc(user)} has no settings?`);
-		return res.status(500).json({
-			success: false,
-			description: `An internal server error has occured.`,
-		});
-	}
+	const settings = await GetSettingsForUser(user.id);
 
 	return res.status(200).json({
 		success: true,
@@ -43,6 +32,7 @@ router.get("/", async (req, res) => {
  * @param developerMode - Whether to display developer specific information in the WebUI.
  * @param advancedMode - Whether to display more advanced options in the WebUI.
  * @param contentiousContent - Whether to display slightly inappropriate splash messages.
+ * @param deletableScores - Whether scores can be deleted.
  *
  * @name PATCH /api/v1/users/:userID/settings
  */
@@ -58,8 +48,9 @@ router.patch(
 	}),
 	async (req, res) => {
 		const user = GetTachiData(req, "requestedUser");
+		const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
 
-		const preferences = req.safeBody as {
+		const body = req.safeBody as {
 			advancedMode?: boolean;
 			contentiousContent?: boolean;
 			deletableScores?: boolean;
@@ -67,38 +58,9 @@ router.patch(
 			invisible?: boolean;
 		};
 
-		if (Object.keys(preferences).length === 0) {
-			return res.status(400).json({
-				success: false,
-				description: `Nothing was provided to change!`,
-			});
-		}
-
-		const modifyObject: Record<string, boolean> = {};
-
-		for (const [k, v] of Object.entries(preferences)) {
-			modifyObject[`preferences.${k}`] = v;
-		}
-
-		await db["user-settings"].update(
-			{
-				userID: user.id,
-			},
-			{ $set: modifyObject },
-		);
+		await ACTION_UpdateUserSettings(taker, body);
 
 		const settings = await GetSettingsForUser(user.id);
-
-		if (!settings) {
-			log.error(
-				{ user },
-				`User ${FormatUserDoc(user)} has no settings, yet just successfully updated them?`,
-			);
-			return res.status(500).json({
-				success: false,
-				description: `An internal server error has occured.`,
-			});
-		}
 
 		if (req.session.tachi?.settings) {
 			req.session.tachi.settings = settings;

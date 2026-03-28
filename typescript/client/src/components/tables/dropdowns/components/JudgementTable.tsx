@@ -4,11 +4,15 @@ import React from "react";
 import {
 	COLOUR_SET,
 	GetGamePTConfig,
-	type PBScoreDocument,
-	type ScoreDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
 } from "tachi-common";
 
-export default function JudgementTable({ score }: { score: PBScoreDocument | ScoreDocument }) {
+export default function JudgementTable({
+	score,
+}: {
+	score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
+}) {
 	const gptConfig = GetGamePTConfig(score.game, score.playtype);
 
 	return (

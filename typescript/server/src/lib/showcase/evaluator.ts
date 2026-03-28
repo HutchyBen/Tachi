@@ -1,4 +1,4 @@
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetFolderChartIDs } from "#utils/folder";
 import {
 	GetGPTConfig,
@@ -36,12 +36,12 @@ async function EvaluateShowcaseChartStat(
 ) {
 	// requires special handling
 	if (details.metric === "playcount") {
-		return { value: await db.scores.count({ chartID: details.chartID, userID }) };
+		return { value: await MONGODB_KILL.scores.count({ chartID: details.chartID, userID }) };
 	}
 
 	const mongoProp = PropToMongoProp(gpt, details.metric);
 
-	const pb = await db["personal-bests"].findOne(
+	const pb = await MONGODB_KILL["personal-bests"].findOne(
 		{ chartID: details.chartID, userID },
 		{ projection: { [mongoProp]: 1 } },
 	);
@@ -77,14 +77,14 @@ async function EvaluateShowcaseFolderStat(
 	let chartIDs;
 
 	if (Array.isArray(details.folderID)) {
-		chartIDs = (await Promise.all(details.folderID.map(GetFolderChartIDs))).flat(1);
+		chartIDs = (await Promise.all(details.folderID.map((id) => GetFolderChartIDs(id)))).flat(1);
 	} else {
 		chartIDs = await GetFolderChartIDs(details.folderID);
 	}
 
 	const mongoProp = PropToMongoProp(gpt, details.metric);
 
-	const value = await db["personal-bests"].count({
+	const value = await MONGODB_KILL["personal-bests"].count({
 		userID,
 
 		// @optimisable - This is slightly inefficent, maybe we can use relational-style querying?

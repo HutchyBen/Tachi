@@ -2,9 +2,9 @@ import TimestampCell from "#components/tables/cells/TimestampCell";
 import Icon from "#components/util/Icon";
 import React from "react";
 import { Link } from "react-router-dom";
-import { type NotificationDocument } from "tachi-common";
+import { type MONGO_NotificationDocument } from "tachi-common";
 
-export default function NotificationRow({ notif }: { notif: NotificationDocument }) {
+export default function NotificationRow({ notif }: { notif: MONGO_NotificationDocument }) {
 	const url = NotifToURL(notif);
 
 	return (
@@ -32,7 +32,7 @@ export default function NotificationRow({ notif }: { notif: NotificationDocument
 	);
 }
 
-function NotifToURL(notif: NotificationDocument) {
+function NotifToURL(notif: MONGO_NotificationDocument) {
 	switch (notif.body.type) {
 		case "QUEST_CHANGED": {
 			const { game, playtype, questID } = notif.body.content;

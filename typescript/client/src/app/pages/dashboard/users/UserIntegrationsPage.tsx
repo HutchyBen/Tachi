@@ -20,18 +20,18 @@ import { Alert, Button, Col, Form, Modal, Row } from "react-bootstrap";
 import { Link, Route, Switch } from "react-router-dom";
 import {
 	type APIPermissions,
-	type APITokenDocument,
-	type CGCardInfo,
 	type integer,
-	type MytCardInfo,
-	type TachiAPIClientDocument,
-	type UserDocument,
+	type MONGO_APITokenDocument,
+	type MONGO_CGCardInfo,
+	type MONGO_MytCardInfo,
+	type MONGO_TachiAPIClientDocument,
+	type MONGO_UserDocument,
 } from "tachi-common";
 
 import FervidexIntegrationPage from "./FervidexIntegrationPage";
 import KsHookSV6CIntegrationPage from "./KsHookSV6CIntegrationPage";
 
-export default function UserIntegrationsPage({ reqUser }: { reqUser: UserDocument }) {
+export default function UserIntegrationsPage({ reqUser }: { reqUser: MONGO_UserDocument }) {
 	useSetSubheader(
 		["Users", reqUser.username, "Integrations"],
 		[reqUser],
@@ -102,9 +102,9 @@ function OAuthClientPage() {
 }
 
 function OAuthClientInfo() {
-	const { data, error } = useApiQuery<TachiAPIClientDocument[]>("/clients");
+	const { data, error } = useApiQuery<MONGO_TachiAPIClientDocument[]>("/clients");
 
-	const [clients, setClients] = useState<TachiAPIClientDocument[]>([]);
+	const [clients, setClients] = useState<MONGO_TachiAPIClientDocument[]>([]);
 
 	useEffect(() => {
 		setClients(data ?? []);
@@ -144,7 +144,11 @@ function OAuthClientInfo() {
 	);
 }
 
-function CreateNewOAuthClient({ setClients }: { setClients: SetState<TachiAPIClientDocument[]> }) {
+function CreateNewOAuthClient({
+	setClients,
+}: {
+	setClients: SetState<MONGO_TachiAPIClientDocument[]>;
+}) {
 	const [show, setShow] = useState(false);
 	const [name, setName] = useState("");
 	const [redirectUri, setRedirectUri] = useState("");
@@ -236,6 +240,7 @@ function CreateNewOAuthClient({ setClients }: { setClients: SetState<TachiAPICli
 							fieldName="File Template"
 							placeholder={JSON.stringify({ token: "%%TACHI_KEY%%" }, null, "\t")}
 							setValue={setApiKeyTemplate}
+							style={{ minHeight: 200 }}
 							value={apiKeyTemplate}
 						/>
 						<Muted>
@@ -305,9 +310,9 @@ function CreateNewOAuthClient({ setClients }: { setClients: SetState<TachiAPICli
 }
 
 interface OAuthClientProps {
-	client: TachiAPIClientDocument;
-	clients: TachiAPIClientDocument[];
-	setClients: SetState<TachiAPIClientDocument[]>;
+	client: MONGO_TachiAPIClientDocument;
+	clients: MONGO_TachiAPIClientDocument[];
+	setClients: SetState<MONGO_TachiAPIClientDocument[]>;
 }
 
 function OAuthClientRow({ client, clients, setClients }: OAuthClientProps) {
@@ -348,6 +353,7 @@ function OAuthClientRow({ client, clients, setClients }: OAuthClientProps) {
 					<textarea
 						className="w-100 mt-2 font-monospace"
 						readOnly
+						style={{ minHeight: 200 }}
 						value={client.apiKeyTemplate ?? "%%TACHI_KEY%%"}
 					/>
 				</h5>
@@ -386,7 +392,7 @@ function OAuthClientRow({ client, clients, setClients }: OAuthClientProps) {
 				<div className="mt-8">
 					<Button
 						onClick={async () => {
-							const res = await APIFetchV1<TachiAPIClientDocument>(
+							const res = await APIFetchV1<MONGO_TachiAPIClientDocument>(
 								`/clients/${client.clientID}/reset-secret`,
 								{
 									method: "POST",
@@ -500,7 +506,7 @@ function EditClientModal({
 					onSubmit={async (e) => {
 						e.preventDefault();
 
-						const res = await APIFetchV1<TachiAPIClientDocument>(
+						const res = await APIFetchV1<MONGO_TachiAPIClientDocument>(
 							`/clients/${client.clientID}`,
 							{
 								method: "PATCH",
@@ -570,6 +576,7 @@ function EditClientModal({
 						fieldName="File Template"
 						placeholder={JSON.stringify({ token: "%%TACHI_KEY%%" }, null, "\t")}
 						setValue={setApiKeyTemplate}
+						style={{ minHeight: 200 }}
 						value={apiKeyTemplate}
 					/>
 					<Muted>
@@ -614,7 +621,7 @@ function EditClientModal({
 	);
 }
 
-function ServicesPage({ reqUser }: { reqUser: UserDocument }) {
+function ServicesPage({ reqUser }: { reqUser: MONGO_UserDocument }) {
 	if (TachiConfig.TYPE === "boku") {
 		return (
 			<Row className="text-center">
@@ -754,11 +761,13 @@ function KAIIntegrationStatus({
 	);
 }
 
-function APIKeysPage({ reqUser }: { reqUser: UserDocument }) {
-	const [apiKeys, setApiKeys] = useState<APITokenDocument[]>([]);
+function APIKeysPage({ reqUser }: { reqUser: MONGO_UserDocument }) {
+	const [apiKeys, setApiKeys] = useState<MONGO_APITokenDocument[]>([]);
 	const [showModal, setShowModal] = useState(false);
 
-	const { data, error } = useApiQuery<APITokenDocument[]>(`/users/${reqUser.id}/api-tokens`);
+	const { data, error } = useApiQuery<MONGO_APITokenDocument[]>(
+		`/users/${reqUser.id}/api-tokens`,
+	);
 
 	useEffect(() => {
 		if (data) {
@@ -818,9 +827,9 @@ function CreateAPIKeyModal({
 	apiKeys,
 	setApiKeys,
 }: {
-	apiKeys: APITokenDocument[];
-	reqUser: UserDocument;
-	setApiKeys: SetState<APITokenDocument[]>;
+	apiKeys: MONGO_APITokenDocument[];
+	reqUser: MONGO_UserDocument;
+	setApiKeys: SetState<MONGO_APITokenDocument[]>;
 	setShowModal: SetState<boolean>;
 	showModal: boolean;
 }) {
@@ -834,7 +843,7 @@ function CreateAPIKeyModal({
 				<form
 					onSubmit={async (e) => {
 						e.preventDefault();
-						const res = await APIFetchV1<APITokenDocument>(
+						const res = await APIFetchV1<MONGO_APITokenDocument>(
 							`/users/${reqUser.id}/api-tokens/create`,
 							{
 								method: "POST",
@@ -905,9 +914,9 @@ function APIKeyRow({
 	setApiKeys,
 	apiKeys,
 }: {
-	apiKey: APITokenDocument;
-	apiKeys: APITokenDocument[];
-	setApiKeys: SetState<APITokenDocument[]>;
+	apiKey: MONGO_APITokenDocument;
+	apiKeys: MONGO_APITokenDocument[];
+	setApiKeys: SetState<MONGO_APITokenDocument[]>;
 }) {
 	const [show, setShow] = useState(false);
 	const [sure, setSure] = useState(false);
@@ -953,7 +962,7 @@ function APIKeyRow({
 function CGIntegrationInfo({ cgType, userID }: { cgType: "dev" | "gan" | "nag"; userID: integer }) {
 	const [reload, shouldReloadCardInfo] = useReducer((x) => x + 1, 0);
 
-	const { data, error } = useApiQuery<CGCardInfo | null>(
+	const { data, error } = useApiQuery<MONGO_CGCardInfo | null>(
 		`/users/${userID}/integrations/cg/${cgType}`,
 		undefined,
 		[reload],
@@ -998,7 +1007,7 @@ function CGIntegrationInfo({ cgType, userID }: { cgType: "dev" | "gan" | "nag"; 
 function MytIntegrationInfo({ userID }: { userID: integer }) {
 	const [reload, shouldReloadCardInfo] = useReducer((x) => x + 1, 0);
 
-	const { data, error } = useApiQuery<MytCardInfo | null>(
+	const { data, error } = useApiQuery<MONGO_MytCardInfo | null>(
 		`/users/${userID}/integrations/myt`,
 		undefined,
 		[reload],

@@ -1,7 +1,7 @@
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { BacksyncCollection } from "#lib/seeds/repo";
 /* eslint-disable no-await-in-loop */
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";
 import fetch from "#utils/fetch";
 import { WrapScriptPromise } from "#utils/misc";
@@ -56,7 +56,7 @@ export async function UpdateDPTiers() {
 					continue;
 				}
 
-				const result = await db.charts.iidx.update(
+				const result = await MONGODB_KILL.charts.iidx.update(
 					{
 						versions: "29",
 						playtype: "DP",
@@ -92,7 +92,7 @@ export async function UpdateDPTiers() {
 
 		log.info(`Recalced those scores.`);
 
-		await BacksyncCollection("charts-iidx", db.charts.iidx, "Update DP Tierlist");
+		await BacksyncCollection("charts-iidx", MONGODB_KILL.charts.iidx, "Update DP Tierlist");
 	}
 
 	log.info("Done.");

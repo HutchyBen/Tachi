@@ -6,8 +6,8 @@ import React from "react";
 import {
 	FormatGameGroup,
 	GetGameGroupConfig,
-	type UserDocument,
-	type UserGameStats,
+	type MONGO_UserDocument,
+	type MONGO_UserGameStats,
 } from "tachi-common";
 
 export default function UGPTDropdown({
@@ -22,8 +22,8 @@ export default function UGPTDropdown({
 	menuClassName?: string;
 	setState?: SetState<boolean>;
 	style?: React.CSSProperties;
-	ugs: UserGameStats[];
-	user: UserDocument;
+	ugs: MONGO_UserGameStats[];
+	user: MONGO_UserDocument;
 }) {
 	const userProfileLinks = [];
 

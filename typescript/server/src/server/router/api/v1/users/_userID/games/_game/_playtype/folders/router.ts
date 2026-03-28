@@ -1,5 +1,5 @@
 import { SearchCollection } from "#lib/search/search";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetEnumDistForFolders, GetRecentlyViewedFolders } from "#utils/folder";
 import { IsString } from "#utils/misc";
 import { GetUGPT } from "#utils/req-tachi-data";
@@ -37,7 +37,7 @@ router.get("/", async (req, res) => {
 	const inactive = req.query.inactive === undefined ? false : undefined;
 
 	const folders = await SearchCollection(
-		db.folders,
+		MONGODB_KILL.folders,
 		req.query.search,
 		"folders",
 		{ game, playtype, inactive },

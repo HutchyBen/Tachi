@@ -1,12 +1,12 @@
 import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
 import {
-	type ChartDocument,
 	type Difficulties,
 	type GPTStrings,
 	type integer,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
 	type Playtypes,
-	type SongDocument,
 } from "tachi-common";
 
 import { CreateChartID, GetFreshScoreIDGenerator, MutateCollection } from "../../util";
@@ -36,7 +36,7 @@ function ConvertAixStuff(d: AixData, songID: integer) {
 		searchTerms.push(d.title_ascii);
 	}
 
-	const song: SongDocument<"iidx"> = {
+	const song: MONGO_SongDocument<"iidx"> = {
 		title: d.title,
 		artist: d.artist,
 		altTitles: [],
@@ -48,7 +48,7 @@ function ConvertAixStuff(d: AixData, songID: integer) {
 		id: songID,
 	};
 
-	const charts: Array<ChartDocument<GPTStrings["iidx"]>> = [];
+	const charts: Array<MONGO_ChartDocument<GPTStrings["iidx"]>> = [];
 	for (const [diff, c] of Object.entries(d.charts)) {
 		// wonderful ts oddity
 		charts.push(ParseAixChart(d, c, diff as ChartStrings, songID));
@@ -84,10 +84,10 @@ function SplitAixDiff(diff: ChartStrings): {
 function ParseAixChart(d: AixData, c: AixChart, diff: ChartStrings, songID: integer) {
 	const { difficulty, playtype } = SplitAixDiff(diff);
 
-	let chart: ChartDocument<GPTStrings["iidx"]>;
+	let chart: MONGO_ChartDocument<GPTStrings["iidx"]>;
 
 	if (playtype === "SP") {
-		const temp: ChartDocument<"iidx:SP"> = {
+		const temp: MONGO_ChartDocument<"iidx:SP"> = {
 			chartID: CreateChartID(),
 			data: {
 				notecount: c.note_count,
@@ -112,7 +112,7 @@ function ParseAixChart(d: AixData, c: AixChart, diff: ChartStrings, songID: inte
 
 		chart = temp;
 	} else {
-		const temp: ChartDocument<"iidx:DP"> = {
+		const temp: MONGO_ChartDocument<"iidx:DP"> = {
 			chartID: CreateChartID(),
 			data: {
 				notecount: c.note_count,
@@ -144,8 +144,8 @@ if (require.main === module) {
 
 	const getSongID = GetFreshScoreIDGenerator("iidx");
 
-	const newSongs: Array<SongDocument<"iidx">> = [];
-	const newCharts: Array<ChartDocument<GPTStrings["iidx"]>> = [];
+	const newSongs: Array<MONGO_SongDocument<"iidx">> = [];
+	const newCharts: Array<MONGO_ChartDocument<GPTStrings["iidx"]>> = [];
 	for (const file of files) {
 		if (file.endsWith(".json")) {
 			const songID = getSongID();

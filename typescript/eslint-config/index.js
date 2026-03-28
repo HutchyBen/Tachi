@@ -14,6 +14,9 @@ const base = tseslint.config(
 	...tseslint.configs.recommended,
 	pluginPerfectionist.configs["recommended-natural"],
 	{
+		ignores: ["**/*.oldtest.ts"],
+	},
+	{
 		name: "zenith/base",
 		files: ["**/*.{ts,tsx}"],
 		plugins: {
@@ -92,10 +95,11 @@ const base = tseslint.config(
 			"no-new-func": "error",
 			"no-new-object": "error",
 			"no-octal-escape": "error",
-			"no-param-reassign": "error",
+			"no-param-reassign": "off",
 			"no-proto": "error",
 			"no-prototype-builtins": "off",
 			"no-return-await": "error",
+			"no-empty-pattern": "off",
 			"no-template-curly-in-string": "error",
 			"no-throw-literal": "error",
 			"no-unmodified-loop-condition": "error",

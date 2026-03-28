@@ -1,6 +1,5 @@
-import { SearchCollection } from "#lib/search/search";
-import db from "#services/mongo/db";
-import { GetFolderCharts } from "#utils/folder";
+import { GetFolderChartsAndSongs } from "#lib/folders/folders.js";
+import { SearchFoldersForGameFtsAndTrgm } from "#lib/search/folders.js";
 import { IsString } from "#utils/misc";
 import { GetGPT, GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
@@ -27,18 +26,13 @@ router.get("/", async (req, res) => {
 		});
 	}
 
-	// if inactive is passed, we need this to be undefined so that
-	// mongodb returns both inactive and active folders.
-	// Otherwise, only return active folders.
-	const inactive = req.query.inactive === undefined ? false : undefined;
+	// If `inactive` is passed, include inactive folders; otherwise only active folders.
+	const onlyActiveFolders = req.query.inactive === undefined;
 
-	const folders = await SearchCollection(
-		db.folders,
-		req.query.search,
-		"folders",
-		{ game, playtype, inactive },
-		100,
-	);
+	const folders = await SearchFoldersForGameFtsAndTrgm(game, playtype, req.query.search, {
+		limit: 100,
+		onlyActiveFolders,
+	});
 
 	return res.status(200).json({
 		success: true,
@@ -55,7 +49,7 @@ router.get("/", async (req, res) => {
 router.get("/:folderID", GetFolderFromParam, async (req, res) => {
 	const folder = GetTachiData(req, "folderDoc");
 
-	const { songs, charts } = await GetFolderCharts(folder, {}, true);
+	const { songs, charts } = await GetFolderChartsAndSongs(folder, {});
 
 	return res.status(200).json({
 		success: true,

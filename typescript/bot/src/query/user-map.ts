@@ -1,8 +1,8 @@
 import type { integer } from "tachi-common";
 
 import db from "#services/pg/db";
-import { type RequestingUser } from "#slash-commands/types.js";
-import { log } from "#utils/log.js";
+import { type RequestingUser } from "#slash-commands/types";
+import { log } from "#utils/log";
 
 export async function GetUserAndTokenForDiscordID(
 	discordID: string,

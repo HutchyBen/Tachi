@@ -7,7 +7,7 @@ import {
 	HandleBMSTableHTMLRequest,
 	type TachiBMSTable,
 } from "#lib/game-specific/custom-bms-tables";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
 
@@ -138,12 +138,12 @@ router.get(
 router.get("/:playtype/sieglinde-charts", ValidatePlaytypeFromParamFor("bms"), async (req, res) => {
 	const playtype = req.params.playtype as Playtypes["bms"];
 
-	const charts = await db.charts.bms.find({
+	const charts = await MONGODB_KILL.charts.bms.find({
 		playtype,
 		$or: [{ "data.sglEC": { $gt: 0 } }, { "data.sglHC": { $gt: 0 } }],
 	});
 
-	const songs = await db.songs.bms.find({ id: { $in: charts.map((e) => e.songID) } });
+	const songs = await MONGODB_KILL.songs.bms.find({ id: { $in: charts.map((e) => e.songID) } });
 
 	return res.status(200).json({
 		success: true,

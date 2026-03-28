@@ -22,11 +22,10 @@ import {
 	type GoalsOnChartReturn,
 	type UGPTChartLeaderboardAdjacent,
 } from "#types/api-returns";
-import { type GamePT, type SetState } from "#types/react";
+import { type GamePT } from "#types/react";
 import { type PBDataset } from "#types/tables";
 import { APIFetchV1, type UnsuccessfulAPIFetchResponse } from "#util/api";
 import { CreateChartLink, CreateUserMap } from "#util/data";
-import { SelectRightChart } from "#util/misc";
 import { MillisToSince } from "#util/time";
 import React, { useContext, useMemo, useState } from "react";
 import ButtonGroup from "react-bootstrap/ButtonGroup";
@@ -34,38 +33,27 @@ import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import Stack from "react-bootstrap/Stack";
 import { useQuery } from "react-query";
-import { Link, Route, Switch, useParams } from "react-router-dom";
+import { Link, Route, Switch } from "react-router-dom";
 import {
-	type ChartDocument,
 	FormatDifficulty,
 	GetGameGroupConfig,
-	GetGamePTConfig,
 	type integer,
-	type PBScoreDocument,
-	type SongDocument,
-	type UserDocument,
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_SongDocument,
+	type MONGO_UserDocument,
 } from "tachi-common";
 
-// This component forms a wrapper around the Real GPT Chart Page
-// which handles the case where activeChart == null.
+// Wrapper around the chart leaderboard UI; `chart` comes from the `/charts/:chartID` route.
 export default function GPTChartPage({
 	chart,
-	setActiveChart,
 	game,
 	song,
 	playtype,
-	allCharts,
 }: {
-	allCharts: ChartDocument[];
-	chart: ChartDocument | null;
-	setActiveChart: SetState<ChartDocument | null>;
-	song: SongDocument;
+	chart: MONGO_ChartDocument | null;
+	song: MONGO_SongDocument;
 } & GamePT) {
-	const { difficulty: d } = useParams<{ difficulty: string }>();
-	const difficulty = decodeURIComponent(d);
-
-	const gptConfig = GetGamePTConfig(game, playtype);
-
 	const formatSongTitle = `${song.artist} - ${song.title}`;
 	const formatDiff = chart ? FormatDifficulty(chart, game) : "Loading...";
 
@@ -74,8 +62,6 @@ export default function GPTChartPage({
 		[game, playtype, chart],
 		`${formatSongTitle} (${formatDiff})`,
 	);
-
-	setActiveChart(SelectRightChart(gptConfig, difficulty, allCharts));
 
 	if (!chart) {
 		return <Loading />;
@@ -97,13 +83,13 @@ function InternalGPTChartPage({
 	song,
 	playtype,
 }: {
-	chart: ChartDocument;
-	song: SongDocument;
+	chart: MONGO_ChartDocument;
+	song: MONGO_SongDocument;
 } & GamePT) {
 	const { user } = useContext(UserContext);
 
 	const { data, error } = useQuery<ChartPBData, UnsuccessfulAPIFetchResponse>(
-		["PBInfo", `${chart.chartID}`],
+		["PBInfo", chart.chartID],
 		async () => {
 			const lRes = await APIFetchV1<ChartPBLeaderboardReturn>(
 				`/games/${game}/${playtype}/charts/${chart.chartID}/pbs`,
@@ -217,11 +203,11 @@ function InternalGPTChartPage({
 			</Row>
 			<div className="mt-4">
 				<Switch>
-					<Route exact path="/games/:game/:playtype/songs/:songID/:difficulty/targets">
+					<Route exact path="/games/:game/:playtype/charts/:chartID/targets">
 						<ChartTargetInfo {...{ chart, game, playtype, song, user: user! }} />
 					</Route>
 
-					<Route exact path="/games/:game/:playtype/songs/:songID/:difficulty">
+					<Route exact path="/games/:game/:playtype/charts/:chartID">
 						<ChartLeaderboardTable
 							{...{
 								data,
@@ -236,7 +222,7 @@ function InternalGPTChartPage({
 						/>
 					</Route>
 
-					<Route exact path="/games/:game/:playtype/songs/:songID/:difficulty/me">
+					<Route exact path="/games/:game/:playtype/charts/:chartID/me">
 						<ChartLeaderboardTable
 							{...{
 								data,
@@ -251,7 +237,7 @@ function InternalGPTChartPage({
 						/>
 					</Route>
 
-					<Route exact path="/games/:game/:playtype/songs/:songID/:difficulty/rivals">
+					<Route exact path="/games/:game/:playtype/charts/:chartID/rivals">
 						<ChartLeaderboardTable
 							{...{
 								data,
@@ -278,9 +264,9 @@ function ChartTargetInfo({
 	chart,
 	song,
 }: {
-	chart: ChartDocument;
-	song: SongDocument;
-	user: UserDocument;
+	chart: MONGO_ChartDocument;
+	song: MONGO_SongDocument;
+	user: MONGO_UserDocument;
 } & GamePT) {
 	const { reloadTargets } = useContext(TargetsContext);
 	const [shouldReload, setShouldReload] = useState(0);
@@ -325,19 +311,19 @@ function ChartLeaderboardTable({
 	chart,
 	song,
 }: {
-	chart: ChartDocument;
+	chart: MONGO_ChartDocument;
 	data: ChartPBData;
 	mode: "adjacent" | "leaderboard" | "rivals";
-	song: SongDocument;
-	user: UserDocument | null;
-	userMap: Map<integer, UserDocument>;
+	song: MONGO_SongDocument;
+	user: MONGO_UserDocument | null;
+	userMap: Map<integer, MONGO_UserDocument>;
 } & GamePT) {
 	const { settings } = useLUGPTSettings();
 
 	const dataset: PBDataset = useMemo(() => {
 		const ds: PBDataset = [];
 
-		let pbs: Array<PBScoreDocument> = [];
+		let pbs: Array<MONGO_PBScoreDocument> = [];
 		if (mode === "leaderboard") {
 			pbs = data.leaderboard.pbs;
 		} else if (mode === "adjacent") {
@@ -385,10 +371,10 @@ function TopShowcase({
 	userMap,
 	chart,
 }: {
-	chart: ChartDocument;
+	chart: MONGO_ChartDocument;
 	data: ChartPBData;
-	user: UserDocument | null;
-	userMap: Map<integer, UserDocument>;
+	user: MONGO_UserDocument | null;
+	userMap: Map<integer, MONGO_UserDocument>;
 }) {
 	// We have a couple of conditions.
 	// User is #1: col-12 #1,
@@ -442,10 +428,10 @@ function PlayCard({
 	name,
 	chart,
 }: {
-	chart: ChartDocument;
+	chart: MONGO_ChartDocument;
 	name: string;
-	pb: PBScoreDocument;
-	user: UserDocument;
+	pb: MONGO_PBScoreDocument;
+	user: MONGO_UserDocument;
 }) {
 	const {
 		breakpoint: { isLg },

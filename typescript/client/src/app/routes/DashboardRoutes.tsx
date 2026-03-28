@@ -14,6 +14,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { Redirect, Route, Switch } from "react-router-dom";
 
 import { DashboardPage } from "../pages/dashboard/DashboardPage";
+import AdminRoutes from "./AdminRoutes";
 import GameRoutes from "./GameRoutes";
 import ImportRoutes from "./ImportRoutes";
 import { RedirectLegacyUserRoutes } from "./RedirectLegacyRoutes";
@@ -118,6 +119,10 @@ export default function DashboardRoutes() {
 
 					<Route path="/notifications">
 						<NotificationsPage />
+					</Route>
+
+					<Route path="/admin">
+						<AdminRoutes />
 					</Route>
 
 					<Route path="*">

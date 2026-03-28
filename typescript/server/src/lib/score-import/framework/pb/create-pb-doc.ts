@@ -1,27 +1,28 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 import type { BulkWriteUpdateOneOperation, FilterQuery, SortOptionObject } from "mongodb";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import { GetEveryonesRivalIDs } from "#lib/rivals/rivals";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { DeleteUndefinedProps } from "#utils/misc";
 import {
-	type ChartDocument,
 	type GameGroup,
 	GetGamePTConfig,
 	GetGPTConfig,
 	type GPTString,
 	type integer,
-	type PBScoreDocument,
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
+	MongoChartLegacyId,
 	type Playtype,
-	type ScoreDocument,
 } from "tachi-common";
 
 import { CreateScoreCalcData } from "../calculated-data/score";
 import { CreateEnumIndexes } from "../score-importing/derivers";
 
-export type PBScoreDocumentNoRank<GPT extends GPTString = GPTString> = Omit<
-	PBScoreDocument<GPT>,
+export type MONGO_PBScoreDocumentNoRank<GPT extends GPTString = GPTString> = Omit<
+	MONGO_PBScoreDocument<GPT>,
 	"rankingData"
 >;
 
@@ -32,13 +33,13 @@ export type PBScoreDocumentNoRank<GPT extends GPTString = GPTString> = Omit<
 export async function CreatePBDoc(
 	gpt: GPTString,
 	userID: integer,
-	chart: ChartDocument,
+	chart: MONGO_ChartDocument,
 	log: KtLogger,
 	asOfTimestamp?: number,
 ) {
-	const chartID = chart.chartID;
+	const chartID = MongoChartLegacyId(chart);
 
-	const query: FilterQuery<ScoreDocument> = {
+	const query: FilterQuery<MONGO_ScoreDocument> = {
 		userID,
 		chartID,
 	};
@@ -49,7 +50,7 @@ export async function CreatePBDoc(
 
 	const gptConfig = GetGPTConfig(gpt);
 
-	const defaultMetricPB = await db.scores.findOne(query, {
+	const defaultMetricPB = await MONGODB_KILL.scores.findOne(query, {
 		sort: {
 			[`scoreData.${gptConfig.defaultMetric}`]: -1,
 		},
@@ -74,7 +75,7 @@ export async function CreatePBDoc(
 
 	const gptImpl = GPT_SERVER_IMPLEMENTATIONS[gpt];
 
-	const pbDoc: PBScoreDocumentNoRank = {
+	const pbDoc: MONGO_PBScoreDocumentNoRank = {
 		composedFrom: [
 			{
 				name: gptImpl.defaultMergeRefName,
@@ -136,7 +137,7 @@ export async function UpdateChartRanking(game: GameGroup, playtype: Playtype, ch
 
 	const allRivals = await GetEveryonesRivalIDs(game, playtype);
 
-	const bwrite: Array<BulkWriteUpdateOneOperation<PBScoreDocument>> = [];
+	const bwrite: Array<BulkWriteUpdateOneOperation<MONGO_PBScoreDocument>> = [];
 
 	let rank = 0;
 
@@ -177,12 +178,12 @@ export async function UpdateChartRanking(game: GameGroup, playtype: Playtype, ch
 		return;
 	}
 
-	await db["personal-bests"].bulkWrite(bwrite, { ordered: false });
+	await MONGODB_KILL["personal-bests"].bulkWrite(bwrite, { ordered: false });
 }
 
 async function GetSortedPBs(game: GameGroup, playtype: Playtype, chartID: string) {
 	const gptConfig = GetGamePTConfig(game, playtype);
-	let sortOptions: SortOptionObject<PBScoreDocument> = {
+	let sortOptions: SortOptionObject<MONGO_PBScoreDocument> = {
 		[`scoreData.${gptConfig.defaultMetric}`]: -1,
 	};
 
@@ -199,7 +200,7 @@ async function GetSortedPBs(game: GameGroup, playtype: Playtype, chartID: string
 		};
 	}
 
-	return db["personal-bests"].aggregate([
+	return MONGODB_KILL["personal-bests"].aggregate([
 		{
 			$match: {
 				chartID,

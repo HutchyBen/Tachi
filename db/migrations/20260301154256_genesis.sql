@@ -1,6 +1,9 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
-LOAD 'auto_explain';
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+-- Query stats (requires shared_preload_libraries=pg_stat_statements; see docker-compose-dev.yml).
+CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+-- auto_explain is loaded via shared_preload_libraries in dev (same docker-compose).
 
 -- Tables starting with "priv_" are private and should never ever be exposed
 -- everything else is assumed to be sound, public information.
@@ -179,8 +182,12 @@ CREATE TABLE "account" (
 	sm_youtube TEXT,
 	sm_twitch TEXT,
 
+	bd_alpha BOOLEAN NOT NULL DEFAULT FALSE,
+	bd_beta BOOLEAN NOT NULL DEFAULT FALSE,
+	bd_dev_team BOOLEAN NOT NULL DEFAULT FALSE,
+
 	joined TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-	about TEXT CHECK (LENGTH(about) <= 2000),
+	about TEXT CHECK (LENGTH(about) <= 2000) NOT NULL,
 	status TEXT CHECK (LENGTH(status) <= 140),
 
 	custom_pfp_location TEXT,
@@ -188,7 +195,8 @@ CREATE TABLE "account" (
 
 	last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
-	auth_level AUTH_LEVEL NOT NULL DEFAULT 'user'
+	auth_level AUTH_LEVEL NOT NULL DEFAULT 'user',
+	is_supporter BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- ==> Another Zenith Essential
@@ -234,13 +242,6 @@ CREATE TABLE "account_following" (
 	CHECK (user_id != followee)
 );
 
-CREATE TABLE "account_badge" (
-	user_id BIGINT REFERENCES account(id) NOT NULL,
-	badge ACCOUNT_BADGE_KIND NOT NULL,
-
-	PRIMARY KEY (user_id, badge)
-);
-
 CREATE TABLE "account_username_change" (
 	row_id UUID PRIMARY KEY NOT NULL DEFAULT uuidv7(),
 
@@ -274,7 +275,10 @@ CREATE TABLE "priv_api_client" (
 	pm_manage_challenges BOOLEAN,
 
 	api_key_template TEXT CHECK (api_key_template ~ '%%TACHI_KEY%%'),
-	api_key_filename TEXT
+	api_key_filename TEXT,
+	webhook_uri TEXT,
+	redirect_uri TEXT,
+	is_builtin BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE "priv_api_token" (
@@ -307,19 +311,19 @@ CREATE TABLE "priv_invite" (
 CREATE TABLE "priv_verify_email_token" (
 	token TEXT PRIMARY KEY NOT NULL,
 	email TEXT NOT NULL,
-	user_id BIGINT REFERENCES account(id)
+	user_id BIGINT REFERENCES account(id) NOT NULL
 );
 
 CREATE TABLE "priv_password_reset_token" (
 	token TEXT PRIMARY KEY NOT NULL,
 	created_on TIMESTAMPTZ NOT NULL,
-	user_id BIGINT REFERENCES account(id)
+	user_id BIGINT REFERENCES account(id) NOT NULL
 );
 
 CREATE TABLE "priv_oauth2_auth_token" (
 	token TEXT PRIMARY KEY NOT NULL,
 	created_on TIMESTAMPTZ NOT NULL,
-	user_id BIGINT REFERENCES account(id)
+	user_id BIGINT REFERENCES account(id) NOT NULL
 );
 
 CREATE TABLE "priv_svc_myt_card_info" (
@@ -330,7 +334,10 @@ CREATE TABLE "priv_svc_myt_card_info" (
 	--
 	-- n.g.
 	card_access_code TEXT PRIMARY KEY,
-	user_id BIGINT REFERENCES account(id)
+	user_id BIGINT REFERENCES account(id) NOT NULL,
+
+	-- One MYT card integration row per account (upsert target for UPDATE_MYT_CARD_INFO).
+	CONSTRAINT priv_svc_myt_card_info_user_id_key UNIQUE (user_id)
 );
 
 CREATE TABLE "priv_svc_cg_card_info" (
@@ -422,19 +429,15 @@ CREATE TABLE "folder" (
 	-- Used in URLs. should be short, but must be unique per game!
 	slug TEXT,
 
-	-- TODO(zk) unsure what format this data should take
-	-- I think this should genuinely just be the WHERE $x$ part
-	-- of a sql query on a joined song/charts table.
-	query TEXT NOT NULL
+	-- SQL predicate (no leading WHERE) for charts in this folder; matches seeds `where`.
+	-- Quoted: "where" is a reserved word in SQL.
+	"where" TEXT NOT NULL,
+
+	-- NULL means no version restriction.
+	version_filter TEXT[],
+	search_terms TEXT[] NOT NULL
 );
 CREATE UNIQUE INDEX folder_unique_slug_game ON "folder" (game, slug) WHERE slug IS NOT NULL;
-
-CREATE TABLE "folder_search_term" (
-	id TEXT REFERENCES folder(id) NOT NULL,
-	search_term TEXT NOT NULL,
-
-	PRIMARY KEY (id, search_term)
-);
 
 CREATE TABLE "table" ( -- heh
 	id TEXT PRIMARY KEY NOT NULL,
@@ -473,22 +476,37 @@ CREATE TABLE "song" (
 
 	title TEXT NOT NULL,
 	artist TEXT NOT NULL,
+
+	search_terms TEXT[] NOT NULL,
+	alt_titles TEXT[] NOT NULL,
+
+	-- Denormalized search_term + alt_title text for FTS (kept in sync with seeds / triggers).
+	fts_document TEXT NOT NULL DEFAULT '',
+	textsearch tsvector NOT NULL GENERATED ALWAYS AS (
+		setweight(to_tsvector('simple', coalesce(title, '')), 'A') ||
+			setweight(to_tsvector('simple', coalesce(artist, '')), 'B') ||
+			setweight(to_tsvector('simple', coalesce(fts_document, '')), 'C')
+	) STORED,
 	data JSONB NOT NULL -- game specific payload
 );
 
-CREATE TABLE "song_search_term" (
-	song_id TEXT REFERENCES song(id) NOT NULL,
-	search_term TEXT NOT NULL,
-	
-	PRIMARY KEY (song_id, search_term)
+-- Populate fts_document from search_terms / alt_titles (no-op on empty DB; seeds also set this column).
+UPDATE song AS s
+SET fts_document = trim(
+	both ' ' FROM concat_ws(
+		' ',
+		coalesce(array_to_string(s.search_terms, ' '), ''),
+		coalesce(array_to_string(s.alt_titles, ' '), '')
+	)
 );
 
-CREATE TABLE "song_alt_title" (
-	song_id TEXT REFERENCES song(id) NOT NULL,
-	alt_title TEXT NOT NULL,
+CREATE INDEX song_textsearch_gin ON song USING GIN (textsearch);
 
-	PRIMARY KEY (song_id, alt_title)
-);
+CREATE INDEX song_title_trgm ON song USING GIN (title gin_trgm_ops);
+
+CREATE INDEX song_artist_trgm ON song USING GIN (artist gin_trgm_ops);
+
+CREATE INDEX song_fts_document_trgm ON song USING GIN (fts_document gin_trgm_ops);
 
 CREATE TABLE "chart" (
 	id TEXT PRIMARY KEY NOT NULL,
@@ -502,15 +520,20 @@ CREATE TABLE "chart" (
 	is_primary BOOLEAN NOT NULL,
 	difficulty TEXT NOT NULL,
 
+	versions TEXT[] NOT NULL,
+
 	data JSONB NOT NULL -- game specific payload
 );
 
-CREATE TABLE "chart_version" (
-	chart_id TEXT REFERENCES chart(id) NOT NULL,
-	version TEXT NOT NULL,
+-- Denormalized chart → folders cache (rebuilt by app; see rebuildFolderChartLookup).
+CREATE TABLE "folder_chart_lookup" (
+	folder_id TEXT NOT NULL REFERENCES folder(id) ON DELETE CASCADE,
+	chart_id TEXT NOT NULL REFERENCES chart(id) ON DELETE CASCADE,
 
-	PRIMARY KEY (chart_id, version)
+	PRIMARY KEY (folder_id, chart_id)
 );
+CREATE INDEX ON "folder_chart_lookup" (folder_id);
+CREATE INDEX ON "folder_chart_lookup" (chart_id);
 
 CREATE TABLE "game_settings" (
 	user_id BIGINT REFERENCES account(id) NOT NULL,
@@ -548,7 +571,7 @@ CREATE TABLE "game_settings_showcase" (
 	data JSONB NOT NULL
 );
 
-CREATE TABLE "game_stats" (
+CREATE TABLE "game_profile" (
 	user_id BIGINT REFERENCES account(id) NOT NULL,
 	game GAME NOT NULL,
 
@@ -706,6 +729,8 @@ CREATE TABLE "score" (
 	derived_data JSONB NOT NULL,
 	-- f(chart, score.data) => score.calculated_data
 	calculated_data JSONB NOT NULL,
+	-- What was "judgements" in Mongo
+	judgements JSONB NOT NULL,
 
 	meta JSONB NOT NULL,
 	
@@ -1038,6 +1063,12 @@ CREATE INDEX game_stats_snapshot_game_idx ON game_stats_snapshot (game, timestam
 -- "All charts for song X" — song pages, chart listing. Postgres does NOT
 -- auto-index FK columns, so this needs to be explicit.
 CREATE INDEX chart_song_idx ON chart (song_id);
+
+-- Folder membership (`BuildFolderQuery`): seeds often use `chart.level` / `chart.level_num`
+-- without `chart.game`. Folder rows are per-game, so the app ANDs `chart.game = folder.game`;
+-- these indexes avoid scanning all games' charts (~260k rows).
+CREATE INDEX chart_game_level_idx ON chart (game, level);
+CREATE INDEX chart_game_level_num_idx ON chart (game, level_num);
 
 -- Primary chart lookup by (song, difficulty): score import and routing.
 -- Partial: only index primary charts since those are what's looked up 99% of the time.

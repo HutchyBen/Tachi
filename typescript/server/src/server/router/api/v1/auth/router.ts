@@ -1,40 +1,33 @@
-import type { integer } from "tachi-common";
-
-import { SendEmail } from "#lib/email/client";
-import { EmailFormatResetPassword, EmailFormatVerifyEmail } from "#lib/email/formats";
-import { log } from "#lib/log/log.js";
+import { ACTION_ResendVerifyEmail } from "#actions/resend-verify-email";
+import { ANON_ACTION_ForgotPassword } from "#anon-actions/forgot-password";
+import { ANON_ACTION_Register } from "#anon-actions/register";
+import { ANON_ACTION_ResetPassword } from "#anon-actions/reset-password";
+import { ANON_ACTION_VerifyEmail } from "#anon-actions/verify-email";
+import {
+	MountAuthCookie,
+	PasswordCompare,
+	ValidateCaptcha,
+	ValidateEmail,
+	ValidatePassword,
+} from "#lib/auth/auth";
+import { log } from "#lib/log/log";
 import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
 import {
 	AggressiveRateLimitMiddleware,
 	HyperAggressiveRateLimitMiddleware,
 } from "#server/middleware/rate-limiter";
-import db from "#services/mongo/db";
-import { DecrementCounterValue, GetNextCounterValue } from "#utils/db";
-import { Random20Hex } from "#utils/misc";
+import { apiSuccess } from "#utils/response";
 import {
-	CheckIfEmailInUse,
 	FormatUserDoc,
 	GetSettingsForUser,
 	GetUserCaseInsensitive,
 	GetUserPrivateInfo,
 	GetUserWithID,
-	GetUserWithIDGuaranteed,
 } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-
-import {
-	AddNewUser,
-	HashPassword,
-	InsertDefaultUserSettings,
-	MountAuthCookie,
-	PasswordCompare,
-	ReinstateInvite,
-	ValidateCaptcha,
-	ValidateEmail,
-	ValidatePassword,
-} from "./auth";
+import { type MONGO_UserDocument } from "tachi-common";
 
 const router: Router = Router({ mergeParams: true });
 
@@ -88,7 +81,7 @@ router.post(
 
 			log.debug("Captcha validated!");
 		} else {
-			log.warn("Skipped captcha check because not in production.");
+			log.debug("Skipped captcha check because not in production.");
 		}
 
 		const requestedUser = await GetUserCaseInsensitive(body.username);
@@ -137,12 +130,7 @@ router.post(
 			});
 		}
 
-		let settings = await GetSettingsForUser(requestedUser.id);
-
-		if (!settings) {
-			log.warn(`User ${FormatUserDoc(user)} has no settings. Inserting default settings.`);
-			settings = await InsertDefaultUserSettings(user.id);
-		}
+		const settings = await GetSettingsForUser(requestedUser.id);
 
 		MountAuthCookie(req, user, settings);
 
@@ -199,149 +187,43 @@ router.post(
 			username: string;
 		};
 
-		// force lowercase for emails to avoid case-confusion in lookups...
-		body.email = body.email.toLowerCase();
+		const newUser = await ANON_ACTION_Register(
+			{
+				ip: req.ip,
+			},
+			{
+				email: body.email,
+				"!password": body["!password"],
+				inviteCode: body.inviteCode ?? null,
+				captcha: body.captcha,
+				username: body.username,
+			},
+		);
 
-		if (body.inviteCode === undefined && ServerConfig.INVITE_CODE_CONFIG) {
-			return res.status(400).json({
-				success: false,
-				description: `No invite code given, yet the server uses invites.`,
-			});
-		}
+		const user = await GetUserWithID(newUser.userID);
 
-		log.debug(`received register request with username ${body.username} (${req.ip})`);
-
-		/* istanbul ignore next */
-		if (Env.NODE_ENV === "production" || Env.NODE_ENV === "staging") {
-			log.debug("Validating captcha...");
-			const validCaptcha = await ValidateCaptcha(body.captcha, req.socket.remoteAddress);
-
-			if (!validCaptcha) {
-				log.debug("Captcha failed.");
-				return res.status(400).json({
-					success: false,
-					description: `Captcha failed.`,
-				});
-			}
-
-			log.debug("Captcha validated.");
-		} else {
-			log.warn("Skipped captcha check because not in production.");
-		}
-
-		const existingUser = await GetUserCaseInsensitive(body.username);
-
-		if (existingUser) {
-			log.debug(`Invalid username ${body.username}, already in use.`);
-			return res.status(409).json({
-				success: false,
-				description: "This username is already in use.",
-			});
-		}
-
-		const existingEmail = await CheckIfEmailInUse(body.email);
-
-		if (existingEmail) {
-			log.info(`User attempted to sign up with email that was already in use.`);
-			return res.status(409).json({
-				success: false,
-				description: `This email is already in use.`,
-			});
-		}
-
-		let hasInsertedUserID: integer | null = null;
-
-		try {
-			const userID = await GetNextCounterValue("users");
-
-			if (ServerConfig.INVITE_CODE_CONFIG) {
-				const inviteCodeDoc = await db.invites.findOneAndUpdate(
-					{
-						code: body.inviteCode,
-						consumed: false,
-					},
-					{
-						$set: {
-							consumed: true,
-							consumedAt: Date.now(),
-							consumedBy: userID,
-						},
-					},
-				);
-
-				if (!inviteCodeDoc) {
-					log.info(`Invalid invite code given: ${body.inviteCode}.`);
-					return res.status(401).json({
-						success: false,
-						description: `This invite code is not valid.`,
-					});
-				}
-
-				log.info(`Consumed invite ${inviteCodeDoc.code}.`);
-			}
-
-			// if we get to this point, We're good to create the user.
-
-			const { newUser, newSettings } = await AddNewUser(
-				body.username,
-				body["!password"],
-				body.email,
-				userID,
+		if (!user) {
+			log.error(
+				`User ${newUser.userID} does not have a user document, but one was just created.`,
 			);
-
-			hasInsertedUserID = newUser.id;
-
-			// re-fetch the user like this so we guaranteeably omit the private fields.
-			const user = await GetUserWithIDGuaranteed(newUser.id);
-
-			MountAuthCookie(req, user, newSettings);
-
-			// If we have an EMAIL_CONFIG set, send out
-			// authentication emails.
-			// Otherwise, don't bother; this is equivalent to
-			// automatically verifying all users' emails.
-			if (ServerConfig.EMAIL_CONFIG) {
-				const resetEmailCode = Random20Hex();
-
-				await db["verify-email-codes"].insert({
-					code: resetEmailCode,
-					userID,
-					email: body.email,
-				});
-
-				const { text, html } = EmailFormatVerifyEmail(user.username, resetEmailCode);
-
-				void SendEmail(body.email, "Email Verification", html, text);
-			}
-
-			return res.status(200).json({
-				success: true,
-				description: `Successfully created account ${body.username}!`,
-				body: user,
-			});
-		} catch (err) {
-			log.error({ err }, `Bailed on user creation ${body.username}.`);
-
-			if (ServerConfig.INVITE_CODE_CONFIG && body.inviteCode !== undefined) {
-				await ReinstateInvite(body.inviteCode);
-			}
-
-			if (hasInsertedUserID !== null) {
-				log.warn(
-					`Removing user ${body.username} (#${hasInsertedUserID}), as their document was created, but creation still failed.`,
-				);
-				await db.users.remove({ username: body.username });
-				await db["user-settings"].remove({ userID: hasInsertedUserID });
-				await db["user-private-information"].remove({ userID: hasInsertedUserID });
-			}
-
-			await DecrementCounterValue("users");
 
 			return res.status(500).json({
 				success: false,
 				description: "An internal server error has occured.",
 			});
 		}
+
+		const settings = await GetSettingsForUser(user.id);
+		MountAuthCookie(req, user, settings);
+
+		return res
+			.status(200)
+			.json(
+				apiSuccess<MONGO_UserDocument>(
+					`Successfully created account ${body.username}!`,
+					user,
+				),
+			);
 	},
 );
 
@@ -363,20 +245,7 @@ router.post(
 			code: string;
 		};
 
-		const code = await db["verify-email-codes"].findOne({
-			code: body.code,
-		});
-
-		if (!code) {
-			return res.status(400).json({
-				success: false,
-				description: `This email code is invalid.`,
-			});
-		}
-
-		await db["verify-email-codes"].remove({
-			code: body.code,
-		});
+		await ANON_ACTION_VerifyEmail({ ip: req.ip }, { code: body.code });
 
 		return res.status(200).json({
 			success: true,
@@ -409,20 +278,16 @@ router.post("/resend-verify-email", HyperAggressiveRateLimitMiddleware, async (r
 		return;
 	}
 
-	const userID = user.id;
-
-	const verifyInfo = await db["verify-email-codes"].findOne({ userID });
-
-	if (!verifyInfo) {
-		log.warn(`Attempted to send reset email to ${userID}, but no verifyInfo was set for them.`);
-		return;
-	}
-
-	// Send the email again.
-
-	const { text, html } = EmailFormatVerifyEmail(user.username, verifyInfo.code);
-
-	void SendEmail(verifyInfo.email, "Email Verification", html, text);
+	await ACTION_ResendVerifyEmail(
+		{
+			ip: req.ip,
+			acct: {
+				id: user.id,
+				username: user.username,
+			},
+		},
+		{},
+	);
 });
 
 /**
@@ -430,6 +295,10 @@ router.post("/resend-verify-email", HyperAggressiveRateLimitMiddleware, async (r
  * @name POST /api/v1/auth/logout
  */
 router.post("/logout", (req, res) => {
+	// this is sorrrrt of an action, but it does
+	// mutation of req, it's not "pure" enough
+	// for me to want to make it an action.
+
 	if (req.session.tachi?.user.id === undefined) {
 		return res.status(409).json({
 			success: false,
@@ -470,10 +339,6 @@ router.post(
 			email: string;
 		};
 
-		body.email = body.email.toLowerCase();
-
-		log.debug(`received password reset request for ${body.email}.`);
-
 		// For timing attack and infosec reasons, we can't do anything but **immediately** return here.
 		res.status(202).json({
 			success: true,
@@ -481,37 +346,10 @@ router.post(
 			body: {},
 		});
 
-		const userPrivateInfo = await db["user-private-information"].findOne({
-			email: body.email,
-		});
-
-		if (userPrivateInfo) {
-			const user = await db.users.findOne({ id: userPrivateInfo.userID });
-
-			if (!user) {
-				log.error(
-					`User ${userPrivateInfo.userID} has private information but no real account.`,
-				);
-				return;
-			}
-
-			const code = `M${Random20Hex()}`;
-
-			log.debug(`Created password reset code for ${FormatUserDoc(user)}.`);
-
-			await db["password-reset-codes"].insert({
-				code,
-				userID: user.id,
-				createdOn: Date.now(),
-			});
-
-			const { html, text } = EmailFormatResetPassword(user.username, code, req.ip);
-
-			void SendEmail(userPrivateInfo.email, "Reset Password", html, text);
-		} else {
-			log.info(
-				`Silently rejected password reset request for ${body.email}, as no user has this email.`,
-			);
+		try {
+			await ANON_ACTION_ForgotPassword({ ip: req.ip }, { email: body.email });
+		} catch (_err) {
+			// error is logged elsewhere.
 		}
 	},
 );
@@ -538,31 +376,13 @@ router.post(
 			code: string;
 		};
 
-		const code = await db["password-reset-codes"].findOneAndDelete({
-			code: body.code,
-		});
-
-		if (!code) {
-			return res.status(404).json({
-				success: false,
-				description: `Invalid Reset Code.`,
-			});
-		}
-
-		const encryptedPassword = await HashPassword(body["!password"]);
-
-		await db["user-private-information"].update(
+		await ANON_ACTION_ResetPassword(
+			{ ip: req.ip },
 			{
-				userID: code.userID,
-			},
-			{
-				$set: {
-					password: encryptedPassword,
-				},
+				code: body.code,
+				"!password": body["!password"],
 			},
 		);
-
-		log.info(`User ${code.userID} reset their password.`);
 
 		return res.status(200).json({
 			success: true,

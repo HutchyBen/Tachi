@@ -1,4 +1,4 @@
-import type { KtLogger } from "#lib/log/log.js";
+import type { KtLogger } from "#lib/log/log";
 
 import { ONE_MEGABYTE } from "#lib/constants/filesize";
 import { ONE_HOUR, ONE_SECOND } from "#lib/constants/time";
@@ -30,6 +30,25 @@ export function EscapeStringRegexp(string: string) {
 	// Escape characters with special meaning either inside or outside character sets.
 	// Use a simple backslash escape when it's always valid, and a `\xnn` escape when the simpler form would be disallowed by Unicode patterns' stricter grammar.
 	return string.replace(/[|\\{}()[\]^$+*?.]/gu, "\\$&").replace(/-/gu, "\\x2d");
+}
+
+export function EscapeForILIKE(str: string): string {
+	// Escape special characters used in ILIKE patterns
+	return str
+		.replaceAll("\\", "\\\\") // Escape backslashes first
+		.replaceAll("%", "\\%") // Escape % wildcard
+		.replaceAll("_", "\\_"); // Escape _ wildcard
+}
+
+/**
+ * Stick this in the "default" branch of switch exprs to statically typecheck that your
+ * switch is exhaustive.
+ *
+ * This works because the argument to this function should be "never" because all of its
+ * variants should be exhausted.
+ */
+export function staticAssertUnreachable(_: never): never {
+	throw new Error(`unreachable (Got ${JSON.stringify(_)})`);
 }
 
 /**

@@ -1,8 +1,8 @@
 import React from "react";
 import { Badge } from "react-bootstrap";
-import { type UserBadges, type UserDocument } from "tachi-common";
+import { type MONGO_UserDocument, type UserBadges } from "tachi-common";
 
-export default function ProfileBadges({ user }: { user: UserDocument }) {
+export default function ProfileBadges({ user }: { user: MONGO_UserDocument }) {
 	return (
 		<>
 			{user.badges.map((e, i) => (

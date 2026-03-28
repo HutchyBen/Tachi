@@ -21,7 +21,7 @@ import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
 import Stack from "react-bootstrap/Stack";
 import { Link } from "react-router-dom";
-import { type FolderDocument, type UserDocument } from "tachi-common";
+import { type MONGO_FolderDocument, type MONGO_UserDocument } from "tachi-common";
 
 export default function RivalCompareFolderPage({
 	reqUser,
@@ -29,17 +29,17 @@ export default function RivalCompareFolderPage({
 	playtype,
 	folder,
 }: {
-	folder: FolderDocument;
-	reqUser: UserDocument;
+	folder: MONGO_FolderDocument;
+	reqUser: MONGO_UserDocument;
 } & GamePT) {
 	const { settings } = useLUGPTSettings();
 	const { user } = useContext(UserContext);
 
-	const [selectedUser, setSelectedUser] = useState<UserDocument | null>(null);
+	const [selectedUser, setSelectedUser] = useState<MONGO_UserDocument | null>(null);
 	const [show, setShow] = useState(false);
 
 	// honestly don't care if this errors or not
-	const { data, error } = useApiQuery<Array<UserDocument>>(
+	const { data, error } = useApiQuery<Array<MONGO_UserDocument>>(
 		`/users/${settings?.userID}/games/${game}/${playtype}/rivals`,
 		undefined,
 		// [settings?.rivals.join(",")]
@@ -124,9 +124,9 @@ function FolderCompare({
 	withUser,
 	folder,
 }: {
-	folder: FolderDocument;
-	reqUser: UserDocument;
-	withUser: UserDocument;
+	folder: MONGO_FolderDocument;
+	reqUser: MONGO_UserDocument;
+	withUser: MONGO_UserDocument;
 } & GamePT) {
 	const { data: baseData, error: baseError } = useApiQuery<UGPTFolderReturns>(
 		`/users/${reqUser.id}/games/${game}/${playtype}/folders/${folder.folderID}`,
@@ -202,7 +202,7 @@ function FolderCompare({
 	);
 }
 
-function UserCard({ user, game, playtype }: { user: UserDocument } & GamePT) {
+function UserCard({ user, game, playtype }: { user: MONGO_UserDocument } & GamePT) {
 	const { data, error } = useApiQuery<UGPTStatsReturn>(
 		`/users/${user.username}/games/${game}/${playtype}`,
 	);

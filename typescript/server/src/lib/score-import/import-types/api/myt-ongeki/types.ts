@@ -1,3 +1,3 @@
 import type { GetPlaylogStreamItem } from "#proto/generated/ongeki/user_pb";
 
-export type MytOngekiScore = GetPlaylogStreamItem.AsObject;
+export type MytOngekiScore = GetPlaylogStreamItem;

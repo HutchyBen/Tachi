@@ -1,5 +1,5 @@
-import type { KtLogger } from "#lib/log/log.js";
-import type { KaiAuthDocument } from "tachi-common";
+import type { KtLogger } from "#lib/log/log";
+import type { MONGO_KaiAuthDocument } from "tachi-common";
 
 import nodeFetch from "#utils/fetch";
 
@@ -13,7 +13,7 @@ import { CreateKaiIIDXClassProvider } from "./class-handler";
 
 export async function ParseKaiIIDX(
 	service: "EAG" | "FLO",
-	authDoc: KaiAuthDocument,
+	authDoc: MONGO_KaiAuthDocument,
 	log: KtLogger,
 	fetch = nodeFetch,
 	reauthFn: (() => Promise<string>) | null = null,

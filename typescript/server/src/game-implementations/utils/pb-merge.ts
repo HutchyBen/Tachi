@@ -1,16 +1,16 @@
 import type { PBMergeFunction } from "#game-implementations/types";
-import type { PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
+import type { MONGO_PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
 import type { FilterQuery } from "mongodb";
 import type {
 	ConfDerivedMetrics,
 	ConfOptionalMetrics,
 	ConfProvidedMetrics,
 	GPTString,
-	ScoreDocument,
+	MONGO_ScoreDocument,
 } from "tachi-common";
 import type { ExtractEnumMetricNames } from "tachi-common/types/metrics";
 
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 
 // insane typemagic to get mongodb-safe names for this GPT's metrics.
 type MetricKeys<GPT extends GPTString> = Exclude<
@@ -27,9 +27,9 @@ type MetricKeys<GPT extends GPTString> = Exclude<
 >;
 
 export function HandleAsOf(
-	query: FilterQuery<ScoreDocument>,
+	query: FilterQuery<MONGO_ScoreDocument>,
 	asOfTimestamp: number | null,
-): FilterQuery<ScoreDocument> {
+): FilterQuery<MONGO_ScoreDocument> {
 	if (asOfTimestamp === null) {
 		return query;
 	}
@@ -52,10 +52,10 @@ export function CreatePBMergeFor<GPT extends GPTString>(
 	direction: "largest" | "smallest",
 	metric: MetricKeys<GPT>,
 	name: string,
-	applicator: (base: PBScoreDocumentNoRank<GPT>, score: ScoreDocument<GPT>) => void,
+	applicator: (base: MONGO_PBScoreDocumentNoRank<GPT>, score: MONGO_ScoreDocument<GPT>) => void,
 ): PBMergeFunction<GPT> {
 	return async (userID, chartID, asOfTimestamp, base) => {
-		const bestScoreFor = (await db.scores.findOne(
+		const bestScoreFor = (await MONGODB_KILL.scores.findOne(
 			HandleAsOf(
 				{
 					userID,
@@ -71,7 +71,7 @@ export function CreatePBMergeFor<GPT extends GPTString>(
 					timeAchieved: 1,
 				},
 			},
-		)) as ScoreDocument<GPT> | null;
+		)) as MONGO_ScoreDocument<GPT> | null;
 
 		if (bestScoreFor === null) {
 			return null;

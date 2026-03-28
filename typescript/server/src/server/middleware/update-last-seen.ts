@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 
-import db from "#services/mongo/db";
+import DB from "#services/pg/db.js";
+import { sql } from "kysely";
 
 export const UpdateLastSeen: RequestHandler = (req, _res, next) => {
 	if (req.session.tachi?.user.id === undefined) {
@@ -14,14 +15,12 @@ export const UpdateLastSeen: RequestHandler = (req, _res, next) => {
 	}
 
 	// fire, but we have no reason to await it.
-	void db.users.update(
-		{ id: req.session.tachi.user.id },
-		{
-			$set: {
-				lastSeen: Date.now(),
-			},
-		},
-	);
+	void DB.updateTable("account")
+		.set({
+			last_seen: sql`NOW()`,
+		})
+		.where("id", "=", req.session.tachi.user.id)
+		.execute();
 
 	next();
 };

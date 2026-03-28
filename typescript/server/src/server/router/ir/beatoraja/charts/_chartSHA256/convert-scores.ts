@@ -1,4 +1,4 @@
-import type { integer, PBScoreDocument } from "tachi-common";
+import type { integer, MONGO_PBScoreDocument } from "tachi-common";
 
 const LAMP_TO_BEATORAJA = [0, 1, 3, 4, 5, 6, 7, 8] as const;
 
@@ -45,7 +45,7 @@ export type BeatorajaIRScoreFormat = BeatorajaPartialScoreFormat & BeatorajaScor
  * @returns A Beatoraja Score Document.
  */
 export function TachiScoreDataToBeatorajaFormat(
-	pbScore: PBScoreDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard">,
+	pbScore: MONGO_PBScoreDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard">,
 	sha256: string,
 	username: string,
 	notecount: integer,

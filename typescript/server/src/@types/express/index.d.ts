@@ -1,5 +1,5 @@
 import type { Session, SessionData } from "express-session";
-import type { APITokenDocument } from "tachi-common";
+import type { MONGO_APITokenDocument } from "tachi-common";
 
 import type { SYMBOL_TACHI_API_AUTH, SYMBOL_TACHI_DATA } from "../../lib/constants/tachi";
 import type { TachiRequestData, TachiSessionData } from "../../utils/types";
@@ -21,7 +21,7 @@ declare global {
 
 			// even though this is technically *not* present on every request
 			// it's always assigned in the main router, so its functionally equivalent.
-			[SYMBOL_TACHI_API_AUTH]: APITokenDocument;
+			[SYMBOL_TACHI_API_AUTH]: MONGO_APITokenDocument;
 		}
 	}
 }

@@ -13,7 +13,7 @@ import { Alert, Button, Form } from "react-bootstrap";
 import ReCAPTCHA from "react-google-recaptcha";
 import toast from "react-hot-toast";
 import { Link, useHistory } from "react-router-dom";
-import { type UserDocument } from "tachi-common";
+import { type MONGO_UserDocument } from "tachi-common";
 
 // seconds it takes for a user to actually read the rules.
 const RULES_READ_TIME = Number(import.meta.env.VITE_RULES_READ_TIME) || 30;
@@ -62,7 +62,7 @@ export default function RegisterPage() {
 				return;
 			}
 
-			const rj = await APIFetchV1<UserDocument>(
+			const rj = await APIFetchV1<MONGO_UserDocument>(
 				"/auth/register",
 				{
 					method: "POST",

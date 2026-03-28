@@ -7,8 +7,7 @@ import useImport from "#components/util/import/useImport";
 import Loading from "#components/util/Loading";
 import useApiQuery from "#components/util/query/useApiQuery";
 import { UserContext } from "#context/UserContext";
-import hashjs from "hash.js";
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { type APIImportTypes, GetGameGroupConfig } from "tachi-common";
 
@@ -127,13 +126,23 @@ function KAINeedsIntegrate({ kaiType, hash, clientID, redirectUri }: Omit<Props,
 	});
 
 	const [url, setUrl] = useState<string>("");
+	const [valid, setValid] = useState<boolean | null>(null);
 
-	const valid = useMemo(() => {
+	useEffect(() => {
 		if (!url) {
-			return null;
+			setValid(null);
+			return;
 		}
 
-		return hashjs.sha256().update(url).digest("hex") === hash;
+		const data = new TextEncoder().encode(url);
+
+		crypto.subtle.digest("SHA-256", data).then((hashBuffer) => {
+			const hashHex = Array.from(new Uint8Array(hashBuffer))
+				.map((b) => b.toString(16).padStart(2, "0"))
+				.join("");
+
+			setValid(hashHex === hash);
+		});
 	}, [url]);
 
 	return (

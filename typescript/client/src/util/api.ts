@@ -16,7 +16,6 @@ if (!CDN_URL) {
 
 export function ToAPIURL(url: string) {
 	if (url[0] !== "/") {
-		// eslint-disable-next-line no-param-reassign
 		url = `/${url}`;
 	}
 
@@ -25,7 +24,6 @@ export function ToAPIURL(url: string) {
 
 export function ToCDNURL(url: string) {
 	if (url[0] !== "/") {
-		// eslint-disable-next-line no-param-reassign
 		url = `/${url}`;
 	}
 
@@ -34,7 +32,6 @@ export function ToCDNURL(url: string) {
 
 export function ToServerURL(url: string) {
 	if (url[0] !== "/") {
-		// eslint-disable-next-line no-param-reassign
 		url = `/${url}`;
 	}
 

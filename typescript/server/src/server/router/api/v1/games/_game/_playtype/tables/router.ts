@@ -1,11 +1,10 @@
-import type { FilterQuery } from "mongodb";
-
-import { log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import { GetTableDocumentsForGamePlaytype } from "#lib/db-formats/table";
+import { log } from "#lib/log/log";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetFoldersFromTable } from "#utils/folder";
 import { GetGPT, GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
-import { FormatGameGroup, type TableDocument } from "tachi-common";
+import { FormatGameGroup } from "tachi-common";
 
 import { GetTableFromParam } from "./middleware";
 
@@ -21,13 +20,9 @@ const router: Router = Router({ mergeParams: true });
 router.get("/", async (req, res) => {
 	const { game, playtype } = GetGPT(req);
 
-	const query: FilterQuery<TableDocument> = { game, playtype };
+	const includeInactive = req.query.showInactive !== undefined;
 
-	if (req.query.showInactive === undefined) {
-		query.inactive = false;
-	}
-
-	const tables = await db.tables.find(query);
+	const tables = await GetTableDocumentsForGamePlaytype(game, playtype, includeInactive);
 
 	if (tables.length === 0) {
 		log.error(

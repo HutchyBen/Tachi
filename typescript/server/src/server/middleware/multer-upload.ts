@@ -2,7 +2,7 @@ import type { RequestHandler } from "express";
 import type { integer } from "tachi-common";
 
 import { SIXTEEN_MEGABTYES } from "#lib/constants/filesize";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import multer, { MulterError } from "multer";
 
 // 16MB

@@ -10,7 +10,7 @@ import { type UnsuccessfulAPIFetchResponse } from "#util/api";
 import { CreateGoalSubDataset, CreateUserMap } from "#util/data";
 import React, { useState } from "react";
 import { Button, Col } from "react-bootstrap";
-import { type ChartDocument, FormatChart, type SongDocument } from "tachi-common";
+import { FormatChart, type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
 
 export default function TargetInfo({
 	data,
@@ -22,11 +22,11 @@ export default function TargetInfo({
 	song,
 	onGoalSet,
 }: {
-	chart: ChartDocument;
+	chart: MONGO_ChartDocument;
 	data: GoalsOnChartReturn | undefined;
 	error: UnsuccessfulAPIFetchResponse | null;
 	onGoalSet: () => void;
-	song: SongDocument;
+	song: MONGO_SongDocument;
 } & UGPT) {
 	const [show, setShow] = useState(false);
 

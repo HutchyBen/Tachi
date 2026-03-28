@@ -46,7 +46,7 @@ function fish_greeting
 
 	echo "Welcome to $(rgb "Tachi" e61c6e 131313)!"
 
-	if ! test -e /tachi/BOOTSTRAP_OK
+	if ! test -e /tachi/_SETUP_OK
 		echo ""
 		echo $(rgb "Something went wrong and Tachi didn't set up correctly." ff0000 000000)
 		echo ""

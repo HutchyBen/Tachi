@@ -1,20 +1,20 @@
 import type { DryScoreData } from "#lib/score-import/framework/common/types";
 
-import { log as globalLog, type KtLogger } from "#lib/log/log.js";
+import { log as globalLog, type KtLogger } from "#lib/log/log";
 import { CreateScoreCalcData } from "#lib/score-import/framework/calculated-data/score";
 import { CreateSessionCalcData } from "#lib/score-import/framework/calculated-data/session";
 import { UpdateChartRanking } from "#lib/score-import/framework/pb/create-pb-doc";
 import { CreateFullScoreData } from "#lib/score-import/framework/score-importing/derivers";
 import { CreateScoreID } from "#lib/score-import/framework/score-importing/score-id";
-import { GetGPTString, type GPTString, type ScoreDocument } from "tachi-common";
+import { GetGPTString, type GPTString, type MONGO_ScoreDocument } from "tachi-common";
 /* eslint-disable no-await-in-loop */
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { UpdateAllPBs } from "#utils/calculations/recalc-scores";
 import { FormatUserDoc, GetUserWithID } from "#utils/user";
 
 type NewScore =
-	| ({ scoreData: DryScoreData<GPTString> } & Omit<ScoreDocument, "scoreData">)
-	| ScoreDocument;
+	| ({ scoreData: DryScoreData<GPTString> } & Omit<MONGO_ScoreDocument, "scoreData">)
+	| MONGO_ScoreDocument;
 
 /**
  * Updates a score from oldScore to newScore, applying all necessary state
@@ -26,7 +26,7 @@ type NewScore =
  * @note You don't need to recalc the scoreID for newScore, it's done for you.
  */
 export default async function UpdateScore(
-	oldScore: ScoreDocument,
+	oldScore: MONGO_ScoreDocument,
 	newScore: NewScore,
 	updateOldChart = true,
 	skipUpdatingPBs = false,
@@ -46,7 +46,7 @@ export default async function UpdateScore(
 
 	const chartID = newScore.chartID;
 
-	const chart = await db.anyCharts[oldScore.game].findOne({
+	const chart = await MONGODB_KILL.anyCharts[oldScore.game].findOne({
 		chartID,
 	});
 
@@ -105,18 +105,18 @@ export default async function UpdateScore(
 			delete newScore._id;
 		}
 
-		await db.scores.update(
+		await MONGODB_KILL.scores.update(
 			{
 				scoreID: oldScoreID,
 			},
-			{ $set: newScore as ScoreDocument },
+			{ $set: newScore as MONGO_ScoreDocument },
 		);
 	} catch (err) {
 		log.error(err);
 		log.warn(
 			`Score ID ${newScoreID} already existed -- this update caused a collision. Removing old score and updating old references anyway.`,
 		);
-		await db.scores.remove({
+		await MONGODB_KILL.scores.remove({
 			scoreID: oldScoreID,
 		});
 	}
@@ -131,13 +131,13 @@ export default async function UpdateScore(
 		return;
 	}
 
-	const sessions = await db.sessions.find({
+	const sessions = await MONGODB_KILL.sessions.find({
 		scoreIDs: oldScoreID,
 	});
 
 	// another session already has the new score? (i.e. migrating to an already
 	// existing score?)
-	const existsElsewhere = await db.sessions.findOne({
+	const existsElsewhere = await MONGODB_KILL.sessions.findOne({
 		scoreIDs: newScoreID,
 	});
 
@@ -166,7 +166,7 @@ export default async function UpdateScore(
 			}
 		}
 
-		const scores = await db.scores.find({
+		const scores = await MONGODB_KILL.scores.find({
 			scoreID: { $in: newScoreIDs },
 		});
 
@@ -176,7 +176,7 @@ export default async function UpdateScore(
 			scores,
 		);
 
-		await db.sessions.update(
+		await MONGODB_KILL.sessions.update(
 			{
 				sessionID: session.sessionID,
 			},
@@ -207,14 +207,14 @@ export default async function UpdateScore(
 		}
 	}
 
-	const imports = await db.imports.find({
+	const imports = await MONGODB_KILL.imports.find({
 		scoreIDs: oldScoreID,
 	});
 
 	log.debug(`Updating ${imports.length} imports.`);
 
 	for (const importDoc of imports) {
-		await db.imports.update(
+		await MONGODB_KILL.imports.update(
 			{
 				importID: importDoc.importID,
 			},

@@ -11,17 +11,19 @@ migrate-v3:
 mongo-to-pg POSTGRES_DB_NAME MONGO_DB_NAME:
 	just db-reset "{{ POSTGRES_DB_NAME }}"
 
-	cd typescript/server && POSTGRES_URL="{{POSTGRES_URL}}/{{POSTGRES_DB_NAME}}" MONGO_URL="mongodb://tachi-mongo/{{MONGO_DB_NAME}}" \
+	cd typescript/server && VERSION=$(jq -r .version package.json) COMMIT_HASH=$(git rev-parse --short HEAD) POSTGRES_URL="{{POSTGRES_URL}}/{{POSTGRES_DB_NAME}}" MONGO_URL="mongodb://tachi-mongo/{{MONGO_DB_NAME}}" \
 		bun run src/scripts/migrate-to-postgres.ts
 
-# Rollback the seeds to the state stored somewhere.
+# Rollback the seeds to the state stored somewhere (v2 keeps seeds in seeds/collections, v3 in db/seeds).
 seeds-rollback ROLLBACK_DIR="/host-pc/Documents/Repos/Tachi/seeds/collections":
-	rsync -avz --delete "{{ROLLBACK_DIR}}/" seeds/collections
+	rsync -avz --delete "{{ROLLBACK_DIR}}/" db/seeds
 
 seeds-v3-migrate: seeds-rollback
-	#!/bin/bash
-	cd seeds/scripts/rerunners/v3
-	
-	for f in *.ts; do
-		ts-node "$f"
+	#!/usr/bin/env bash
+	set -euo pipefail
+	cd "typescript/seeds-scripts"
+
+	for script in $(ls -1 rerunners/v3/*.ts); do
+		bun run "./$script"
 	done
+	just fmt

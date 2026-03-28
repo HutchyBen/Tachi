@@ -8,7 +8,8 @@
 	"scripts": {
 		"build": "tsgo -b",
 		"start": "tsgo -b && node js/main.js",
-		"typecheck": "tsgo --noEmit"
+		"typecheck": "tsgo --noEmit",
+		"bench": "node -e \"process.exit(0)\""
 	},
 	"dependencies": {
 		"@octokit/app": "catalog:",

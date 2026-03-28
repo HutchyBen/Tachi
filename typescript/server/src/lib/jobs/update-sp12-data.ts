@@ -1,10 +1,10 @@
-import type { ChartDocument, Difficulties, integer } from "tachi-common";
+import type { Difficulties, integer, MONGO_ChartDocument } from "tachi-common";
 
 /* eslint-disable no-await-in-loop */
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { BacksyncCollection } from "#lib/seeds/repo";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { RecalcAllScores } from "#utils/calculations/recalc-scores";
 import { WrapScriptPromise } from "#utils/misc";
 import { FindChartWithPTDF } from "#utils/queries/charts";
@@ -59,7 +59,7 @@ async function FetchSP12Data() {
 	const updatedChartIDs: Array<string> = [];
 
 	for (const sh of rj.sheets) {
-		let chart: ChartDocument<"iidx:SP"> | null;
+		let chart: MONGO_ChartDocument<"iidx:SP"> | null;
 
 		try {
 			chart = await HumanisedTitleLookup(sh.title);
@@ -172,7 +172,7 @@ async function FetchSP12Data() {
 
 			updatedChartIDs.push(chart.chartID);
 
-			await db.charts.iidx.update(
+			await MONGODB_KILL.charts.iidx.update(
 				{
 					chartID: chart.chartID,
 				},
@@ -203,7 +203,7 @@ async function FetchSP12Data() {
 
 		log.info(`Finished recalcing scores.`);
 
-		await BacksyncCollection("charts-iidx", db.charts.iidx, "Update SP12 Tierlist");
+		await BacksyncCollection("charts-iidx", MONGODB_KILL.charts.iidx, "Update SP12 Tierlist");
 	}
 
 	process.exit(0);
@@ -248,7 +248,7 @@ async function HumanisedTitleLookup(originalTitle: string) {
 		);
 	}
 
-	return chart as ChartDocument<"iidx:SP">;
+	return chart as MONGO_ChartDocument<"iidx:SP">;
 }
 
 if (require.main === module) {

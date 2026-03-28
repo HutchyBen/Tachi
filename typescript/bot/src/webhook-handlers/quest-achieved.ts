@@ -1,5 +1,5 @@
-import { BotConfig } from "#config";
-import { PrependTachiUrl } from "#utils/fetch-tachi.js";
+import { Env } from "#config";
+import { PrependTachiUrl } from "#utils/fetch-tachi";
 import { log } from "#utils/log";
 import { GetGameGroupConfig, type integer, type WebhookEventQuestAchievedV1 } from "tachi-common";
 
@@ -33,7 +33,7 @@ export async function HandleQuestAchievedV1(
 
 	const embed = CreateEmbed(userDoc.id)
 		.setThumbnail(PrependTachiUrl(`/users/${userDoc.id}/pfp`))
-		.setURL(`${BotConfig.TACHI_SERVER_LOCATION}/u/${userDoc.username}`)
+		.setURL(`${Env.TACHI_SERVER_LOCATION}/u/${userDoc.username}`)
 		.setTitle(
 			`${userDoc.username} just completed the ${quest.name}${shouldShowPlaytype} quest!`,
 		);

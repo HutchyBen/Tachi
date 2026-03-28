@@ -11,19 +11,23 @@ check:
 	post_evaluate
 
 typecheck:
-	bun run --filter '!tachi-seeds-scripts' typecheck
+	bun run --elide-lines=0 --filter '!tachi-seeds-scripts' typecheck
 
-fix: fmt
+typecheck-sequential:
+	bun run --elide-lines=0 --sequential --filter '!tachi-seeds-scripts' typecheck
+
+fix:
 	#!/bin/bash
 	set -euo pipefail
 
 	just gen
 	bun run --filter '*' lint-fix
 	.scripts/ts_autoinherit.js
+	just fmt
 
 # Automatically fix any issues we can in the codebase and then
 # make a commit for them
-autofix: fmt
+autofix:
 	#!/bin/bash
 	set -euo pipefail
 
@@ -50,22 +54,45 @@ fmt-check:
 	bun prettier --check .
 	# cd deploy/infra && tofu fmt --check -diff
 
-test:
+test FILTER="*":
 	#!/bin/bash
 	set -euo pipefail
 
 	source .scripts/multi_evaluator.sh
 
-	evaluate "just test-typescript"
+	evaluate "just test-typescript '{{FILTER}}'"
 
 	post_evaluate
 
-test-typescript:
+test-typescript FILTER="*":
 	#!/bin/bash
 	set -euo pipefail
 
-	bun run --filter '*' test -- --coverage.reporter=lcov --reporter=default --reporter=junit --outputFile.junit=test-results/junit.xml
+	bun run --elide-lines=0 --sequential --filter '{{FILTER}}' test -- --coverage.reporter=lcov --reporter=default --reporter=junit --outputFile.junit=test-results/junit.xml
+
 
 # Run all parity suites, or a single one if a name is given.
 test-parity suite="":
 	TACHI_SERVER=https://127.0.0.1:8080 bun vitest run {{ if suite != "" { "tests/" + suite + ".test.ts" } else { "" } }}
+
+# ==> Orchestration of parallel db tests
+
+# Create (or recreate) the bot test template database with all migrations applied.
+# Workers clone from this template rather than re-running migrations each time.
+bot-db-test-template-reset:
+	#!/bin/bash
+	export POSTGRES_URL="{{POSTGRES_URL}}/tachi_bot_test_template"
+	tachidb database drop || true
+	tachidb database create
+	tachidb migrate run
+
+# Create (or recreate) the server test template database with all migrations applied.
+# Workers clone from this template rather than re-running migrations each time.
+server-db-test-template-reset:
+	#!/bin/bash
+	export POSTGRES_URL="{{POSTGRES_URL}}/tachi_server_test_template"
+	tachidb database drop || true
+	tachidb database create
+	tachidb migrate run
+
+# <== End of parallel db test justscripts

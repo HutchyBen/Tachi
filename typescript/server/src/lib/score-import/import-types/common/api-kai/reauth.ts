@@ -1,9 +1,10 @@
-import type { KtLogger } from "#lib/log/log.js";
-import type { KaiAuthDocument } from "tachi-common";
+import type { KtLogger } from "#lib/log/log";
+import type { MONGO_KaiAuthDocument } from "tachi-common";
 
+import { updateKaiAuthTokensInDb } from "#lib/kai-auth-token/persist";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ServerConfig } from "#lib/setup/config";
-import db from "#services/mongo/db";
+import DB from "#services/pg/db";
 import nodeFetch from "#utils/fetch";
 import { p } from "prudence";
 
@@ -16,7 +17,7 @@ const REAUTH_SCHEMA = {
 
 export function CreateKaiReauthFunction(
 	kaiType: "EAG" | "FLO" | "MIN",
-	authDoc: KaiAuthDocument,
+	authDoc: MONGO_KaiAuthDocument,
 	log: KtLogger,
 	fetch = nodeFetch,
 ) {
@@ -109,17 +110,12 @@ export function CreateKaiReauthFunction(
 			refresh_token: string;
 		};
 
-		await db["kai-auth-tokens"].update(
-			{
-				userID: authDoc.userID,
-				service: authDoc.service,
-			},
-			{
-				$set: {
-					token: validatedContent.access_token,
-					refreshToken: validatedContent.refresh_token,
-				},
-			},
+		await updateKaiAuthTokensInDb(
+			DB,
+			authDoc.userID,
+			authDoc.service,
+			validatedContent.access_token,
+			validatedContent.refresh_token,
 		);
 
 		return validatedContent.access_token;

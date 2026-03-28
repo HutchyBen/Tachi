@@ -1,13 +1,13 @@
-import type { GameGroup, Playtype, ScoreDocument } from "tachi-common";
+import type { GameGroup, MONGO_ScoreDocument, Playtype } from "tachi-common";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { GetAndUpdateUsersGoals } from "#lib/score-import/framework/goals/goals";
 import { UpdateChartRanking } from "#lib/score-import/framework/pb/create-pb-doc";
 import { ProcessPBs } from "#lib/score-import/framework/pb/process-pbs";
 import { UpdateUsersQuests } from "#lib/score-import/framework/quests/quests";
 import { UpdateUsersGamePlaytypeStats } from "#lib/score-import/framework/ugpt-stats/update-ugpt-stats";
 /* eslint-disable no-await-in-loop */
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { RecalcSessions } from "#utils/calculations/recalc-sessions";
 
 /**
@@ -15,15 +15,15 @@ import { RecalcSessions } from "#utils/calculations/recalc-sessions";
  * needing to unset things like sessions and recalcs.
  */
 export async function DeleteScore(
-	score: ScoreDocument,
+	score: MONGO_ScoreDocument,
 	blacklist = false,
 	attemptPBReprocess = true,
 ) {
-	await db.scores.remove({
+	await MONGODB_KILL.scores.remove({
 		scoreID: score.scoreID,
 	});
 
-	const sessions = await db.sessions.find({
+	const sessions = await MONGODB_KILL.sessions.find({
 		scoreIDs: score.scoreID,
 	});
 
@@ -31,13 +31,13 @@ export async function DeleteScore(
 		// If a session only has one score, then pulling it should kill
 		// the session.
 		if (session.scoreIDs.length === 1) {
-			await db.sessions.remove({
+			await MONGODB_KILL.sessions.remove({
 				sessionID: session.sessionID,
 			});
 		}
 	}
 
-	await db.sessions.update(
+	await MONGODB_KILL.sessions.update(
 		{
 			sessionID: { $in: sessions.map((e) => e.sessionID) },
 		},
@@ -53,17 +53,17 @@ export async function DeleteScore(
 
 	await RecalcSessions({ sessionID: { $in: sessions.map((e) => e.sessionID) } });
 
-	const importDoc = await db.imports.findOne({
+	const importDoc = await MONGODB_KILL.imports.findOne({
 		scoreIDs: score.scoreID,
 	});
 
 	if (importDoc) {
 		if (importDoc.scoreIDs.length === 1) {
-			await db.imports.remove({
+			await MONGODB_KILL.imports.remove({
 				importID: importDoc.importID,
 			});
 		} else {
-			await db.imports.update(
+			await MONGODB_KILL.imports.update(
 				{
 					importID: importDoc.importID,
 				},
@@ -79,7 +79,7 @@ export async function DeleteScore(
 		}
 	}
 
-	const userHasOtherScores = await db.scores.findOne({
+	const userHasOtherScores = await MONGODB_KILL.scores.findOne({
 		userID: score.userID,
 		chartID: score.chartID,
 	});
@@ -87,7 +87,7 @@ export async function DeleteScore(
 	if (userHasOtherScores && attemptPBReprocess) {
 		await ProcessPBs(score.game, score.playtype, score.userID, new Set([score.chartID]), log);
 	} else {
-		await db["personal-bests"].remove({
+		await MONGODB_KILL["personal-bests"].remove({
 			userID: score.userID,
 			chartID: score.chartID,
 		});
@@ -98,14 +98,14 @@ export async function DeleteScore(
 	await UpdateUsersGamePlaytypeStats(score.game, score.playtype, score.userID, null, log);
 
 	if (blacklist) {
-		const alreadyBlacklisted = await db["score-blacklist"].findOne({
+		const alreadyBlacklisted = await MONGODB_KILL["score-blacklist"].findOne({
 			userID: score.userID,
 			scoreID: score.scoreID,
 		});
 
 		if (!alreadyBlacklisted) {
 			log.info(`Blacklisted ${score.scoreID}.`);
-			await db["score-blacklist"].insert({
+			await MONGODB_KILL["score-blacklist"].insert({
 				userID: score.userID,
 				scoreID: score.scoreID,
 				score,
@@ -114,17 +114,17 @@ export async function DeleteScore(
 	}
 }
 
-export async function DeleteMultipleScores(scores: Array<ScoreDocument>, blacklist = false) {
+export async function DeleteMultipleScores(scores: Array<MONGO_ScoreDocument>, blacklist = false) {
 	log.info(`Received request to delete ${scores.length} score(s) (Blacklist: ${blacklist}).`);
 
 	const scoreIDs = scores.map((e) => e.scoreID);
 	const chartIDs = scores.map((e) => e.chartID);
 
-	await db.scores.remove({
+	await MONGODB_KILL.scores.remove({
 		scoreID: { $in: scoreIDs },
 	});
 
-	const sessions = await db.sessions.find({
+	const sessions = await MONGODB_KILL.sessions.find({
 		scoreIDs: { $in: scoreIDs },
 	});
 
@@ -132,13 +132,13 @@ export async function DeleteMultipleScores(scores: Array<ScoreDocument>, blackli
 		// If a session only has one score, then pulling it should kill
 		// the session.
 		if (session.scoreIDs.length === 1) {
-			await db.sessions.remove({
+			await MONGODB_KILL.sessions.remove({
 				sessionID: session.sessionID,
 			});
 		}
 	}
 
-	await db.sessions.update(
+	await MONGODB_KILL.sessions.update(
 		{
 			sessionID: { $in: sessions.map((e) => e.sessionID) },
 		},
@@ -153,20 +153,20 @@ export async function DeleteMultipleScores(scores: Array<ScoreDocument>, blackli
 	);
 
 	// remove all sessions that no longer have scores in them.
-	await db.sessions.remove({
+	await MONGODB_KILL.sessions.remove({
 		sessionID: { $in: sessions.map((e) => e.sessionID) },
 		scoreIDs: { $size: 0 },
 	});
 
 	await RecalcSessions({ sessionID: { $in: sessions.map((e) => e.sessionID) } });
 
-	const importDoc = await db.imports.findOne({
+	const importDoc = await MONGODB_KILL.imports.findOne({
 		scoreIDs: { $in: scoreIDs },
 	});
 
 	if (importDoc) {
 		// pull all scoreIDs from this import.
-		await db.imports.update(
+		await MONGODB_KILL.imports.update(
 			{
 				importID: importDoc.importID,
 			},
@@ -181,14 +181,14 @@ export async function DeleteMultipleScores(scores: Array<ScoreDocument>, blackli
 		);
 
 		// remove this import if no scores belong to it anymore.
-		await db.imports.remove({
+		await MONGODB_KILL.imports.remove({
 			importID: importDoc.importID,
 			scoreIDs: { $size: 0 },
 		});
 	}
 
 	for (const score of scores) {
-		const userHasOtherScores = await db.scores.findOne({
+		const userHasOtherScores = await MONGODB_KILL.scores.findOne({
 			userID: score.userID,
 			chartID: score.chartID,
 		});
@@ -202,7 +202,7 @@ export async function DeleteMultipleScores(scores: Array<ScoreDocument>, blackli
 				log,
 			);
 		} else {
-			await db["personal-bests"].remove({
+			await MONGODB_KILL["personal-bests"].remove({
 				userID: score.userID,
 				chartID: score.chartID,
 			});
@@ -211,14 +211,14 @@ export async function DeleteMultipleScores(scores: Array<ScoreDocument>, blackli
 		}
 
 		if (blacklist) {
-			const alreadyBlacklisted = await db["score-blacklist"].findOne({
+			const alreadyBlacklisted = await MONGODB_KILL["score-blacklist"].findOne({
 				userID: score.userID,
 				scoreID: score.scoreID,
 			});
 
 			if (!alreadyBlacklisted) {
 				log.info(`Blacklisted ${score.scoreID}.`);
-				await db["score-blacklist"].insert({
+				await MONGODB_KILL["score-blacklist"].insert({
 					userID: score.userID,
 					scoreID: score.scoreID,
 					score,

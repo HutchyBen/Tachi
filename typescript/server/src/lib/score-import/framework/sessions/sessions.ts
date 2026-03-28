@@ -1,6 +1,6 @@
 import { ONE_HOUR } from "#lib/constants/time";
-import { AppendLogCtx, type KtLogger, log } from "#lib/log/log.js";
-import db from "#services/mongo/db";
+import { AppendLogCtx, type KtLogger, log } from "#lib/log/log";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetChartForIDGuaranteed } from "#utils/db";
 import { GetScoresFromSession } from "#utils/session";
 import crypto from "crypto";
@@ -11,9 +11,9 @@ import {
 	GetScoreMetricConf,
 	GetScoreMetrics,
 	type integer,
+	type MONGO_ScoreDocument,
+	type MONGO_SessionDocument,
 	type Playtype,
-	type ScoreDocument,
-	type SessionDocument,
 	type SessionInfoReturn,
 	type SessionScoreInfo,
 } from "tachi-common";
@@ -21,7 +21,7 @@ import {
 import type { ScorePlaytypeMap } from "../common/types";
 
 import { CreateSessionCalcData } from "../calculated-data/session";
-import { CreatePBDoc, type PBScoreDocumentNoRank } from "../pb/create-pb-doc";
+import { CreatePBDoc, type MONGO_PBScoreDocumentNoRank } from "../pb/create-pb-doc";
 import { GenerateRandomSessionName } from "./name-generation";
 
 const TWO_HOURS = ONE_HOUR * 2;
@@ -56,8 +56,8 @@ export async function CreateSessions(
  * as a SessionScoreInfo object.
  */
 function ScoreToSessionScoreInfo(
-	score: ScoreDocument,
-	previousPB: PBScoreDocumentNoRank | undefined,
+	score: MONGO_ScoreDocument,
+	previousPB: MONGO_PBScoreDocumentNoRank | undefined,
 ): SessionScoreInfo {
 	if (!previousPB) {
 		return {
@@ -97,9 +97,9 @@ function ScoreToSessionScoreInfo(
  * time.
  */
 export async function GetSessionScoreInfo(
-	session: SessionDocument,
+	session: MONGO_SessionDocument,
 ): Promise<Array<SessionScoreInfo>> {
-	const scores = await db.scores.find({
+	const scores = await MONGODB_KILL.scores.find({
 		scoreID: { $in: session.scoreIDs },
 	});
 
@@ -127,10 +127,10 @@ export function CreateSessionID() {
 }
 
 function UpdateExistingSession(
-	existingSession: SessionDocument,
+	existingSession: MONGO_SessionDocument,
 	newScoreIDs: Array<string>,
-	oldScores: Array<ScoreDocument>,
-	newScores: Array<ScoreDocument>,
+	oldScores: Array<MONGO_ScoreDocument>,
+	newScores: Array<MONGO_ScoreDocument>,
 ) {
 	const allScores = [...oldScores, ...newScores];
 
@@ -156,10 +156,10 @@ function UpdateExistingSession(
 function CreateSession(
 	userID: integer,
 	scoreIDs: Array<string>,
-	groupScores: Array<ScoreDocument>,
+	groupScores: Array<MONGO_ScoreDocument>,
 	game: GameGroup,
 	playtype: Playtype,
-): SessionDocument {
+): MONGO_SessionDocument {
 	const name = GenerateRandomSessionName();
 
 	const calculatedData = CreateSessionCalcData(GetGPTString(game, playtype), groupScores);
@@ -182,7 +182,7 @@ function CreateSession(
 
 export async function LoadScoresIntoSessions(
 	userID: integer,
-	importScores: Array<ScoreDocument>,
+	importScores: Array<MONGO_ScoreDocument>,
 	game: GameGroup,
 	playtype: Playtype,
 	baseLog: KtLogger,
@@ -214,8 +214,8 @@ export async function LoadScoresIntoSessions(
 	// The "Score Groups" for the array of scores provided.
 	// This contains scores split on 2hr margins, which allows for more optimised
 	// session db requests.
-	const sessionScoreGroups: Array<Array<ScoreDocument>> = [];
-	let curGroup: Array<ScoreDocument> = [];
+	const sessionScoreGroups: Array<Array<MONGO_ScoreDocument>> = [];
+	let curGroup: Array<MONGO_ScoreDocument> = [];
 	let lastTimestamp = 0;
 
 	for (const score of timestampedScores) {
@@ -253,7 +253,7 @@ export async function LoadScoresIntoSessions(
 		// Find any sessions with +/-2hrs of this group. This is rather exhaustive, and could result in some issues
 		// if this query returns more than one session. We could account for that by smushing sessions together.
 		// This is not possible however, so this is now just a known tachi oddity.
-		const nearbySession = await db.sessions.findOne({
+		const nearbySession = await MONGODB_KILL.sessions.findOne({
 			userID,
 			game,
 			playtype,
@@ -276,7 +276,7 @@ export async function LoadScoresIntoSessions(
 
 			infoReturn = { sessionID: session.sessionID, type: "Appended" };
 
-			await db.sessions.update(
+			await MONGODB_KILL.sessions.update(
 				{
 					sessionID: session.sessionID,
 				},
@@ -292,7 +292,7 @@ export async function LoadScoresIntoSessions(
 			const session = CreateSession(userID, scoreIDs, groupScores, game, playtype);
 
 			infoReturn = { sessionID: session.sessionID, type: "Created" };
-			await db.sessions.insert(session);
+			await MONGODB_KILL.sessions.insert(session);
 		}
 
 		sessionInfoReturns.push(infoReturn);

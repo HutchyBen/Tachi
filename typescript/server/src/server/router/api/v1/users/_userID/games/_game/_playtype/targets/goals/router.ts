@@ -1,5 +1,5 @@
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { ServerConfig } from "#lib/setup/config";
 import {
 	ConstructGoal,
@@ -10,12 +10,12 @@ import {
 import { GetParentQuests } from "#lib/targets/quests";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
-import db from "#services/mongo/db";
+import MONGODB_KILL from "#services/mongo/db";
 import { GetGoalForIDGuaranteed } from "#utils/db";
 import { AssignToReqTachiData, GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
-import { GetGamePTConfig, type GoalDocument, type QuestDocument } from "tachi-common";
+import { GetGamePTConfig, type MONGO_GoalDocument, type MONGO_QuestDocument } from "tachi-common";
 
 import { RequireAuthedAsUser } from "../../../../../middleware";
 
@@ -29,19 +29,19 @@ const router: Router = Router({ mergeParams: true });
 router.get("/", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const goalSubs = await db["goal-subs"].find({
+	const goalSubs = await MONGODB_KILL["goal-subs"].find({
 		userID: user.id,
 		game,
 		playtype,
 	});
 
-	const goals = await db.goals.find({
+	const goals = await MONGODB_KILL.goals.find({
 		goalID: { $in: goalSubs.map((e) => e.goalID) },
 	});
 
 	const allQuests = await GetParentQuests(user.id, game, playtype, goalSubs);
 
-	const questSubs = await db["quest-subs"].find({ userID: user.id, game, playtype });
+	const questSubs = await MONGODB_KILL["quest-subs"].find({ userID: user.id, game, playtype });
 
 	const questSubIDs = questSubs.map((e) => e.questID);
 
@@ -60,7 +60,7 @@ router.get("/", async (req, res) => {
 	});
 });
 
-type GoalCreationBody = Pick<GoalDocument, "charts" | "criteria">;
+type GoalCreationBody = Pick<MONGO_GoalDocument, "charts" | "criteria">;
 
 /**
  * Add a goal to your account. If the goal document already exists, it is subscribed to.
@@ -136,7 +136,7 @@ router.post(
 	async (req, res) => {
 		const { user, game, playtype } = GetUGPT(req);
 
-		const existingGoalsCount = await db["goal-subs"].count({
+		const existingGoalsCount = await MONGODB_KILL["goal-subs"].count({
 			userID: user.id,
 			game,
 			playtype,
@@ -212,7 +212,7 @@ router.post(
 const GetGoalSubscription: RequestHandler = async (req, res, next) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const goalSub = await db["goal-subs"].findOne({
+	const goalSub = await MONGODB_KILL["goal-subs"].findOne({
 		userID: user.id,
 		game,
 		playtype,
@@ -241,7 +241,7 @@ router.get("/:goalID", GetGoalSubscription, async (req, res) => {
 
 	const goalSub = GetTachiData(req, "goalSubDoc");
 
-	const quests: Array<QuestDocument> = await GetQuestsThatContainGoal(goalSub.goalID);
+	const quests: Array<MONGO_QuestDocument> = await GetQuestsThatContainGoal(goalSub.goalID);
 
 	const goal = await GetGoalForIDGuaranteed(goalSub.goalID);
 
