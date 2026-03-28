@@ -10,7 +10,7 @@ import { type UGPT } from "#types/react";
 import { CreateGoalSubDataset, CreateUserMap } from "#util/data";
 import React, { useContext, useReducer, useState } from "react";
 import { Button, Col } from "react-bootstrap";
-import { type FolderDocument } from "tachi-common";
+import { type MONGO_FolderDocument } from "tachi-common";
 
 export default function FolderQuestsPage({
 	folder,
@@ -18,7 +18,7 @@ export default function FolderQuestsPage({
 	playtype,
 	reqUser,
 }: {
-	folder: FolderDocument;
+	folder: MONGO_FolderDocument;
 } & UGPT) {
 	const [refresh, forceRefresh] = useReducer((x) => x + 1, 0);
 	const { reloadTargets } = useContext(TargetsContext);
@@ -68,7 +68,7 @@ function FolderQuestsInner({
 	data,
 }: {
 	data: GoalsOnFolderReturn;
-	folder: FolderDocument;
+	folder: MONGO_FolderDocument;
 } & UGPT) {
 	const userMap = CreateUserMap([reqUser]);
 

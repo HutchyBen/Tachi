@@ -1,4 +1,4 @@
-import { SearchSpecificGameSongsAndCharts } from "#lib/search/search";
+import { SearchSpecificGameSongsAndCharts } from "#lib/search/song-charts.js";
 import { HyperAggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
 import MONGODB_KILL from "#services/mongo/db";
 import { ResolveLegacyChartIdForMongo } from "#utils/chart-mongo-id";

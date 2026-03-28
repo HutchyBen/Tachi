@@ -21,7 +21,7 @@ import {
 import { CreateScoreCalcData } from "../calculated-data/score";
 import { CreateEnumIndexes } from "../score-importing/derivers";
 
-export type PBScoreDocumentNoRank<GPT extends GPTString = GPTString> = Omit<
+export type MONGO_PBScoreDocumentNoRank<GPT extends GPTString = GPTString> = Omit<
 	MONGO_PBScoreDocument<GPT>,
 	"rankingData"
 >;
@@ -75,7 +75,7 @@ export async function CreatePBDoc(
 
 	const gptImpl = GPT_SERVER_IMPLEMENTATIONS[gpt];
 
-	const pbDoc: PBScoreDocumentNoRank = {
+	const pbDoc: MONGO_PBScoreDocumentNoRank = {
 		composedFrom: [
 			{
 				name: gptImpl.defaultMergeRefName,

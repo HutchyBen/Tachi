@@ -2,7 +2,7 @@ import type { FilterQuery } from "mongodb";
 
 import prValidate from "#server/middleware/prudence-validate";
 import MONGODB_KILL from "#services/mongo/db";
-import { GetEnumDistForFolder, GetFolderCharts, GetPBsOnFolder } from "#utils/folder";
+import { GetEnumDistForFolder, GetFolderChartsAndSongs, GetPBsOnFolder } from "#utils/folder";
 import { GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import { ParseStrPositiveInt } from "#utils/string-checks";
 import { Router } from "express";
@@ -144,7 +144,7 @@ router.get(
 			});
 		}
 
-		const { songs, charts } = await GetFolderCharts(folder, {}, true);
+		const { songs, charts } = await GetFolderChartsAndSongs(folder, {});
 
 		const err = ValidateMetric(gptConfig, metric, criteriaValue);
 

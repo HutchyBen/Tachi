@@ -1,7 +1,11 @@
 import React from "react";
-import { COLOUR_SET, type PBScoreDocument, type ScoreDocument } from "tachi-common";
+import { COLOUR_SET, type MONGO_PBScoreDocument, type MONGO_ScoreDocument } from "tachi-common";
 
-export default function JubilityCell({ score }: { score: PBScoreDocument | ScoreDocument }) {
+export default function JubilityCell({
+	score,
+}: {
+	score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
+}) {
 	let color: string | undefined = undefined;
 
 	const jubility = score.calculatedData.jubility;

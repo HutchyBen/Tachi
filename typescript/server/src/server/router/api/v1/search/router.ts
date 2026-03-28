@@ -1,18 +1,13 @@
 import type { FilterQuery } from "mongodb";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import {
-	SearchFolders,
-	SearchForChartHash,
-	SearchGamesSongsCharts,
-	SearchUsersRegExp,
-} from "#lib/search/search";
+import { SearchFolders, SearchForChartHash, SearchUsersRegExp } from "#lib/search/search";
+import { SearchGamesSongsCharts } from "#lib/search/song-charts.js";
 import { TachiConfig } from "#lib/setup/config";
 import { IsString } from "#utils/misc";
 import { GetAllUserRivals, GetUserPlayedGPTs } from "#utils/user";
 import { Router } from "express";
 import {
-	GameGroup,
 	GetGameGroupConfig,
 	GetGPTString,
 	type GPTString,

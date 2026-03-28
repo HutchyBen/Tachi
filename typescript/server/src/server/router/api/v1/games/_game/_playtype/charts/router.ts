@@ -2,7 +2,7 @@ import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { GetSongsByLegacyIDs } from "#lib/db-formats/song";
 import { log } from "#lib/log/log";
 import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch-manual/converter";
-import { SearchSpecificGameSongs } from "#lib/search/search";
+import { SearchSpecificGameSongs } from "#lib/search/songs.js";
 import prValidate from "#server/middleware/prudence-validate";
 import MONGODB_KILL from "#services/mongo/db";
 import { IsString } from "#utils/misc";

@@ -6,7 +6,7 @@ import { GetRivalUsers } from "#lib/rivals/rivals";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import {
-	GetFolderCharts,
+	GetFolderChartsAndSongs,
 	GetFolderNamesInOrder,
 	GetFoldersFromTable,
 	GetTableForIDGuaranteed,
@@ -86,7 +86,7 @@ export async function TachiTableToBMSTableJSON(
 		// note: we have to do this in sync so that 'response' is in the correct
 		// order.
 		// eslint-disable-next-line no-await-in-loop
-		const data = await GetFolderCharts(folder, {}, true);
+		const data = await GetFolderChartsAndSongs(folder, {});
 		const charts = data.charts as Array<MONGO_ChartDocument<"bms:7K">>;
 		const songMap = CreateSongMap(data.songs);
 

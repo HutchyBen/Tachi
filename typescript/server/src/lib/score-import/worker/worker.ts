@@ -86,7 +86,7 @@ export const worker = new Worker(
 		});
 
 		try {
-			const importDocument = await ScoreImportMain(
+			const MONGO_ImportDocument = await ScoreImportMain(
 				user.id,
 				job.data.userIntent,
 				job.data.importType,
@@ -98,7 +98,7 @@ export const worker = new Worker(
 
 			log.debug(`Finished import.`);
 
-			return { success: true, importDocument };
+			return { success: true, MONGO_ImportDocument };
 		} catch (e) {
 			const err = e as Error | ScoreImportFatalError;
 

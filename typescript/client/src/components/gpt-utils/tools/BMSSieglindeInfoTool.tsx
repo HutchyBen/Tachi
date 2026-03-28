@@ -13,15 +13,17 @@ import { CreateSongMap } from "#util/data";
 import { NumericSOV, StrSOV } from "#util/sorts";
 import React from "react";
 import { Col, Row } from "react-bootstrap";
-import { BMS_TABLES, type ChartDocument, type SongDocument } from "tachi-common";
+import { BMS_TABLES, type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
 import { FormatSieglindeBMS } from "tachi-common/config/game-support/bms";
 
-type DatasetElement = { __related: { song: SongDocument } } & ChartDocument<"bms:7K" | "bms:14K">;
+type DatasetElement = { __related: { song: MONGO_SongDocument } } & MONGO_ChartDocument<
+	"bms:7K" | "bms:14K"
+>;
 
 function Component({ game, playtype }: UGPT) {
 	const { data, error } = useApiQuery<{
-		charts: Array<ChartDocument<"bms:7K" | "bms:14K">>;
-		songs: Array<SongDocument<"bms">>;
+		charts: Array<MONGO_ChartDocument<"bms:7K" | "bms:14K">>;
+		songs: Array<MONGO_SongDocument<"bms">>;
 	}>(`/games/${game}/${playtype}/sieglinde-charts`);
 
 	if (error) {
@@ -73,7 +75,7 @@ function Component({ game, playtype }: UGPT) {
 					defaultSortMode="EASY CLEAR Sieglinde"
 					entryName="Charts"
 					headers={[
-						ChartHeader("bms", (k) => k as ChartDocument),
+						ChartHeader("bms", (k) => k as MONGO_ChartDocument),
 						["Song", "Song", StrSOV((x) => x.__related.song.title)],
 						[
 							"EASY CLEAR Sieglinde",

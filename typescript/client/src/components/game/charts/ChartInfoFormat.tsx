@@ -15,14 +15,14 @@ import React, { useContext } from "react";
 import { Col, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
-	type ChartDocument,
-	type FolderDocument,
 	FormatDifficultySearch,
 	type GameGroup,
 	GetGameGroupConfig,
 	GetGamePTConfig,
 	GetGPTString,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_FolderDocument,
+	type MONGO_SongDocument,
 } from "tachi-common";
 
 export default function ChartInfoFormat({
@@ -30,12 +30,12 @@ export default function ChartInfoFormat({
 	chart,
 	game,
 	playtype,
-}: { chart: ChartDocument; song: SongDocument } & GamePT) {
+}: { chart: MONGO_ChartDocument; song: MONGO_SongDocument } & GamePT) {
 	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, playtype)];
 
 	const ratingSystems = gptImpl.ratingSystems;
 
-	const { data, error } = useApiQuery<FolderDocument[]>(
+	const { data, error } = useApiQuery<MONGO_FolderDocument[]>(
 		`/games/${game}/${playtype}/charts/${chart.chartID}/folders`,
 	);
 
@@ -145,12 +145,12 @@ function ChartInfoMiddle({
 	song,
 	chart,
 }: {
-	chart: ChartDocument;
+	chart: MONGO_ChartDocument;
 	game: GameGroup;
-	song: SongDocument;
+	song: MONGO_SongDocument;
 }) {
 	if (game === "bms") {
-		const bmsChart = chart as ChartDocument<"bms:7K" | "bms:14K">;
+		const bmsChart = chart as MONGO_ChartDocument<"bms:7K" | "bms:14K">;
 
 		return (
 			<>
@@ -168,7 +168,7 @@ function ChartInfoMiddle({
 			</>
 		);
 	} else if (game === "pms") {
-		const pmsChart = chart as ChartDocument<"pms:Controller" | "pms:Keyboard">;
+		const pmsChart = chart as MONGO_ChartDocument<"pms:Controller" | "pms:Keyboard">;
 
 		return (
 			<>

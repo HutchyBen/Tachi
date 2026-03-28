@@ -129,7 +129,7 @@ export async function CloseMongoConnection() {
 	await monkDB.close();
 }
 
-// Typescript incorrectly casts this into songs[string] => songdocument,
+// Typescript incorrectly casts this into songs[string] => MONGO_SongDocument,
 // Force cast it out.
 const songs = Object.fromEntries(
 	allSupportedGameGroups.map((e) => [e, monkDB.get<MONGO_SongDocument>(`songs-${e}`)]),

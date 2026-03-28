@@ -22,21 +22,21 @@ import {
 	GetGPTString,
 	GetScoreMetricConf,
 	IIDX_LAMPS,
-	type SessionDocument,
+	type MONGO_SessionDocument,
+	type MONGO_UserDocument,
 	type SessionScoreInfo,
-	type UserDocument,
 } from "tachi-common";
 
 type Props = {
 	enumMetric: string;
 	folderDataset: FolderDataset;
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 } & GamePT;
 
 export default function FolderMinimap(props: Props) {
 	const { data, isLoading, error } = useApiQuery<{
 		scoreInfo: Array<SessionScoreInfo>;
-		session: SessionDocument;
+		session: MONGO_SessionDocument;
 	}>(`/users/${props.reqUser.id}/games/${props.game}/${props.playtype}/sessions/last`);
 
 	const session = useMemo(() => {
@@ -76,7 +76,7 @@ function FolderMinimapMain({
 	enumMetric,
 	recentSession,
 }: {
-	recentSession: { scoreInfo: Array<SessionScoreInfo>; session: SessionDocument } | null;
+	recentSession: { scoreInfo: Array<SessionScoreInfo>; session: MONGO_SessionDocument } | null;
 } & Props) {
 	const gptConfig = GetGamePTConfig(game, playtype);
 

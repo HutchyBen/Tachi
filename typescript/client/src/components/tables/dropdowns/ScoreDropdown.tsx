@@ -10,12 +10,12 @@ import { type GoalsOnChartReturn, type UGPTChartPBComposition } from "#types/api
 import { type GamePT, type SetState } from "#types/react";
 import React, { useContext, useReducer, useState } from "react";
 import {
-	type ChartDocument,
-	type PBScoreDocument,
-	type ScoreDocument,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
+	type MONGO_SongDocument,
+	type MONGO_UserDocument,
 	UserAuthLevels,
-	type UserDocument,
 } from "tachi-common";
 
 import DeleteScoreBtn from "./components/DeleteScoreBtn";
@@ -33,7 +33,7 @@ export interface ScoreState {
 }
 
 export interface ScoreDropdownProps {
-	score: PBScoreDocument | ScoreDocument;
+	score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
 	scoreState: ScoreState;
 }
 
@@ -48,13 +48,13 @@ export default function ScoreDropdown({
 	defaultView = "moreInfo",
 	onScoreUpdate,
 }: {
-	chart: ChartDocument;
+	chart: MONGO_ChartDocument;
 	defaultView?: "debug" | "history" | "manage" | "moreInfo" | "rivals" | "targets" | "vsPB";
-	onScoreUpdate?: (sc: ScoreDocument) => void;
+	onScoreUpdate?: (sc: MONGO_ScoreDocument) => void;
 	scoreState: ScoreState;
-	song: SongDocument;
-	thisScore: ScoreDocument;
-	user: UserDocument;
+	song: MONGO_SongDocument;
+	thisScore: MONGO_ScoreDocument;
+	user: MONGO_UserDocument;
 } & GamePT) {
 	const DocComponent: DocumentComponentType = (props) =>
 		DocComponentCreator({
@@ -71,7 +71,7 @@ export default function ScoreDropdown({
 		`/users/${user.id}/games/${game}/${playtype}/pbs/${chart.chartID}?getComposition=true`,
 	);
 
-	const { error: histError, data: histData } = useApiQuery<ScoreDocument[]>(
+	const { error: histError, data: histData } = useApiQuery<MONGO_ScoreDocument[]>(
 		`/users/${user.id}/games/${game}/${playtype}/scores/${chart.chartID}`,
 	);
 

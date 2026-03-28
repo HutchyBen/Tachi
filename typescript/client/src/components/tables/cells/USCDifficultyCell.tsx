@@ -5,14 +5,14 @@ import { type GPTClientImplementation } from "#lib/types";
 import { ChangeOpacity } from "#util/color-opacity";
 import { FormatTables } from "#util/misc";
 import React from "react";
-import { type ChartDocument, COLOUR_SET } from "tachi-common";
+import { COLOUR_SET, type MONGO_ChartDocument } from "tachi-common";
 
 import RatingSystemPart from "./RatingSystemPart";
 
 export default function USCDifficultyCell({
 	chart,
 }: {
-	chart: ChartDocument<"usc:Controller" | "usc:Keyboard">;
+	chart: MONGO_ChartDocument<"usc:Controller" | "usc:Keyboard">;
 }) {
 	const levelText = chart.data.isOfficial
 		? `${chart.difficulty} ${chart.level}`

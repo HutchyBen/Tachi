@@ -1,10 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { type GoalDocument } from "tachi-common";
+import { type MONGO_GoalDocument } from "tachi-common";
 
 import useLUGPTSettings from "./useLUGPTSettings";
 
-export default function GoalLink({ goal, noPad }: { goal: GoalDocument; noPad?: boolean }) {
+export default function GoalLink({ goal, noPad }: { goal: MONGO_GoalDocument; noPad?: boolean }) {
 	const { settings } = useLUGPTSettings();
 
 	const pad = noPad ? "" : "ms-2";

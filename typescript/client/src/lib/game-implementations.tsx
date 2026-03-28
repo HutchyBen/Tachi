@@ -26,8 +26,8 @@ import {
 	COLOUR_SET,
 	GetGPTString,
 	type GPTString,
-	type PBScoreDocument,
-	type ScoreDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
 } from "tachi-common";
 
 import { bgc, RAINBOW_EX_GRADIENT, RAINBOW_GRADIENT, RAINBOW_SHINY_GRADIENT } from "./games/_util";
@@ -902,7 +902,10 @@ export const GPT_CLIENT_IMPLEMENTATIONS: GPTClientImplementations = {
 	"usc:Keyboard": USC_IMPL,
 };
 
-export function GetEnumColour(score: PBScoreDocument | ScoreDocument, enumName: string) {
+export function GetEnumColour(
+	score: MONGO_PBScoreDocument | MONGO_ScoreDocument,
+	enumName: string,
+) {
 	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(score.game, score.playtype)];
 
 	// @ts-expect-error lol

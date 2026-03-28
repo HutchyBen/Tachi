@@ -1,17 +1,17 @@
 import React, { useEffect, useRef } from "react";
 import {
-	type ChartDocument,
 	COLOUR_SET,
-	type PBScoreDocument,
-	type ScoreDocument,
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
 } from "tachi-common";
 
 export function JubeatGraphsComponent({
 	score,
 	chart,
 }: {
-	chart: ChartDocument<"jubeat:Single">;
-	score: PBScoreDocument<"jubeat:Single"> | ScoreDocument<"jubeat:Single">;
+	chart: MONGO_ChartDocument<"jubeat:Single">;
+	score: MONGO_PBScoreDocument<"jubeat:Single"> | MONGO_ScoreDocument<"jubeat:Single">;
 }) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 

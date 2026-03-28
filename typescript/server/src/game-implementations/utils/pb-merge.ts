@@ -1,5 +1,5 @@
 import type { PBMergeFunction } from "#game-implementations/types";
-import type { PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
+import type { MONGO_PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
 import type { FilterQuery } from "mongodb";
 import type {
 	ConfDerivedMetrics,
@@ -52,7 +52,7 @@ export function CreatePBMergeFor<GPT extends GPTString>(
 	direction: "largest" | "smallest",
 	metric: MetricKeys<GPT>,
 	name: string,
-	applicator: (base: PBScoreDocumentNoRank<GPT>, score: MONGO_ScoreDocument<GPT>) => void,
+	applicator: (base: MONGO_PBScoreDocumentNoRank<GPT>, score: MONGO_ScoreDocument<GPT>) => void,
 ): PBMergeFunction<GPT> {
 	return async (userID, chartID, asOfTimestamp, base) => {
 		const bestScoreFor = (await MONGODB_KILL.scores.findOne(

@@ -12,7 +12,7 @@ import {
 	GetGamePTConfig,
 	GetScoreEnumConfs,
 	type GPTString,
-	type UserDocument,
+	type MONGO_UserDocument,
 } from "tachi-common";
 
 import FolderMinimap from "./FolderMinimap";
@@ -28,7 +28,7 @@ export default function FolderInfoHeader({
 }: {
 	folderDataset: FolderDataset;
 	folderTitle: string;
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 } & GamePT) {
 	const preferredDefaultEnum = useBucket(game, playtype);
 

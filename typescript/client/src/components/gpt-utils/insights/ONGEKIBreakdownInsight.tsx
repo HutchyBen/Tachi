@@ -20,15 +20,15 @@ import React from "react";
 import { Col, Row } from "react-bootstrap";
 import {
 	type AnyScoreRatingAlg,
-	type ChartDocument,
 	COLOUR_SET,
 	CreateSongMap,
 	FmtNum,
 	type GameGroup,
 	type GPTString,
 	type integer,
-	type PBScoreDocument,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_SongDocument,
 } from "tachi-common";
 
 function ComponentClassic({ game, playtype, reqUser }: UGPT) {
@@ -37,9 +37,9 @@ function ComponentClassic({ game, playtype, reqUser }: UGPT) {
 	}
 
 	const { data, error } = useApiQuery<{
-		charts: Array<ChartDocument<"ongeki:Single">>;
-		pbs: Array<PBScoreDocument<"ongeki:Single">>;
-		songs: Array<SongDocument<"ongeki">>;
+		charts: Array<MONGO_ChartDocument<"ongeki:Single">>;
+		pbs: Array<MONGO_PBScoreDocument<"ongeki:Single">>;
+		songs: Array<MONGO_SongDocument<"ongeki">>;
 	}>(`/users/${reqUser.id}/games/${game}/${playtype}/pbs/best?alg=rating`);
 
 	if (error) {
@@ -100,15 +100,15 @@ function ComponentRefresh({ game, playtype, reqUser }: UGPT) {
 	}
 
 	const query1 = useApiQuery<{
-		charts: Array<ChartDocument<"ongeki:Single">>;
-		pbs: Array<PBScoreDocument<"ongeki:Single">>;
-		songs: Array<SongDocument<"ongeki">>;
+		charts: Array<MONGO_ChartDocument<"ongeki:Single">>;
+		pbs: Array<MONGO_PBScoreDocument<"ongeki:Single">>;
+		songs: Array<MONGO_SongDocument<"ongeki">>;
 	}>(`/users/${reqUser.id}/games/${game}/${playtype}/pbs/best?alg=scoreRating`);
 
 	const query2 = useApiQuery<{
-		charts: Array<ChartDocument<"ongeki:Single">>;
-		pbs: Array<PBScoreDocument<"ongeki:Single">>;
-		songs: Array<SongDocument<"ongeki">>;
+		charts: Array<MONGO_ChartDocument<"ongeki:Single">>;
+		pbs: Array<MONGO_PBScoreDocument<"ongeki:Single">>;
+		songs: Array<MONGO_SongDocument<"ongeki">>;
 	}>(`/users/${reqUser.id}/games/${game}/${playtype}/pbs/best?alg=starRating`);
 
 	if (query1.error) {
@@ -229,12 +229,12 @@ function CompactRow({
 }: {
 	count?: number;
 	game: GameGroup;
-	lampField: (pb: PBScoreDocument<"ongeki:Single">) => string | JSX.Element;
+	lampField: (pb: MONGO_PBScoreDocument<"ongeki:Single">) => string | JSX.Element;
 	pbs: PBDataset<"ongeki:Single">[0][];
-	ratingField: (pb: PBScoreDocument<"ongeki:Single">) => string | JSX.Element;
+	ratingField: (pb: MONGO_PBScoreDocument<"ongeki:Single">) => string | JSX.Element;
 	scoreField: (
-		pb: PBScoreDocument<"ongeki:Single">,
-		chart: ChartDocument<"ongeki:Single">,
+		pb: MONGO_PBScoreDocument<"ongeki:Single">,
+		chart: MONGO_ChartDocument<"ongeki:Single">,
 	) => string | JSX.Element;
 }) {
 	return (
@@ -273,15 +273,15 @@ function CompactCell({
 	ratingField,
 	lampField,
 }: {
-	chart: ChartDocument<"ongeki:Single">;
-	lampField: (pb: PBScoreDocument<"ongeki:Single">) => string | JSX.Element;
-	pb: PBScoreDocument<"ongeki:Single">;
-	ratingField: (pb: PBScoreDocument<"ongeki:Single">) => string | JSX.Element;
+	chart: MONGO_ChartDocument<"ongeki:Single">;
+	lampField: (pb: MONGO_PBScoreDocument<"ongeki:Single">) => string | JSX.Element;
+	pb: MONGO_PBScoreDocument<"ongeki:Single">;
+	ratingField: (pb: MONGO_PBScoreDocument<"ongeki:Single">) => string | JSX.Element;
 	scoreField: (
-		pb: PBScoreDocument<"ongeki:Single">,
-		chart: ChartDocument<"ongeki:Single">,
+		pb: MONGO_PBScoreDocument<"ongeki:Single">,
+		chart: MONGO_ChartDocument<"ongeki:Single">,
 	) => string | JSX.Element;
-	song: SongDocument;
+	song: MONGO_SongDocument;
 }) {
 	// Third-party scripts may find this useful
 	const className = `c-${chart.data.inGameID}`;
@@ -395,7 +395,7 @@ function CreateFlatDataset<T extends GPTString>(data: any, alg: AnyScoreRatingAl
 	const chartMap = CreateChartMap<T>(data.charts);
 
 	const sortedRatings = data.pbs
-		.map((e: PBScoreDocument) => e.calculatedData[alg])
+		.map((e: MONGO_PBScoreDocument) => e.calculatedData[alg])
 		.sort(NumericSOV((x: number) => x ?? -Infinity, true));
 
 	for (const pb of data.pbs.slice(0, count)) {

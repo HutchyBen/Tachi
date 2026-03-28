@@ -14,12 +14,17 @@ import FullCalendar from "@fullcalendar/react"; // must go before plugins
 import React from "react";
 import { Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { COLOUR_SET, FormatGameGroup, type SessionDocument, type UserDocument } from "tachi-common";
+import {
+	COLOUR_SET,
+	FormatGameGroup,
+	type MONGO_SessionDocument,
+	type MONGO_UserDocument,
+} from "tachi-common";
 
 import SessionRaiseBreakdown from "./SessionRaiseBreakdown";
 
 type MinSession = Pick<
-	SessionDocument,
+	MONGO_SessionDocument,
 	"desc" | "game" | "highlight" | "name" | "playtype" | "sessionID" | "timeEnded" | "timeStarted"
 >;
 
@@ -30,7 +35,7 @@ export default function SessionCalendar({
 }: {
 	shouldDifferentiateGames?: boolean;
 	url: string;
-	user: UserDocument;
+	user: MONGO_UserDocument;
 }) {
 	const { data, error } = useApiQuery<Array<MinSession>>(url);
 

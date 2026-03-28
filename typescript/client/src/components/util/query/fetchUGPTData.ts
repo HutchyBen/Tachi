@@ -3,10 +3,10 @@ import { APIFetchV1 } from "#util/api";
 import {
 	FormatGameGroup,
 	type GameGroup,
+	type MONGO_UGPTSettingsDocument,
+	type MONGO_UserDocument,
+	type MONGO_UserGameStats,
 	type Playtype,
-	type UGPTSettingsDocument,
-	type UserDocument,
-	type UserGameStats,
 } from "tachi-common";
 
 /**
@@ -15,11 +15,11 @@ import {
  * It's worth keeping this around for both the currently-viewed user and the currently-logged-in user.
  */
 export interface UGPTData {
-	settings: UGPTSettingsDocument;
-	stats: UserGameStats;
+	settings: MONGO_UGPTSettingsDocument;
+	stats: MONGO_UserGameStats;
 	game: GameGroup;
 	playtype: Playtype;
-	user: UserDocument;
+	user: MONGO_UserDocument;
 }
 
 /**
@@ -48,7 +48,7 @@ export default async function fetchUGPTData(
 		);
 	}
 
-	const settingsRes = await APIFetchV1<UGPTSettingsDocument>(
+	const settingsRes = await APIFetchV1<MONGO_UGPTSettingsDocument>(
 		`/users/${userID}/games/${game}/${playtype}/settings`,
 	);
 
@@ -60,7 +60,7 @@ export default async function fetchUGPTData(
 		);
 	}
 
-	const userRes = await APIFetchV1<UserDocument>(`/users/${userID}`);
+	const userRes = await APIFetchV1<MONGO_UserDocument>(`/users/${userID}`);
 
 	if (!userRes.success) {
 		throw new Error(`Failed to fetch user info for ${userID}: ${userRes.description}`);

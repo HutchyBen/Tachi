@@ -34,10 +34,10 @@ import {
 	GetGameGroupConfig,
 	GetGamePTConfig,
 	GetScoreMetrics,
+	type MONGO_TableDocument,
+	type MONGO_UGPTSettingsDocument,
+	type MONGO_UserDocument,
 	type ShowcaseStatDetails,
-	type TableDocument,
-	type UGPTSettingsDocument,
-	type UserDocument,
 } from "tachi-common";
 
 export default function UGPTSettingsPage({ reqUser, game, playtype }: UGPT) {
@@ -140,7 +140,7 @@ function PreferencesForm({
 			preferredRanking: settings!.preferences.preferredRanking ?? "global",
 		},
 		onSubmit: async (values) => {
-			const rj = await APIFetchV1<UserDocument>(
+			const rj = await APIFetchV1<MONGO_UserDocument>(
 				`/users/${reqUser.id}/games/${game}/${playtype}/settings`,
 				{
 					method: "PATCH",
@@ -156,13 +156,15 @@ function PreferencesForm({
 			if (rj.success) {
 				setLoggedInData({
 					...loggedInData,
-					settings: deepmerge(settings as UGPTSettingsDocument, { preferences: values }),
+					settings: deepmerge(settings as MONGO_UGPTSettingsDocument, {
+						preferences: values,
+					}),
 				});
 			}
 		},
 	});
 
-	const { data: tables, error } = useApiQuery<TableDocument[]>(
+	const { data: tables, error } = useApiQuery<MONGO_TableDocument[]>(
 		`/games/${game}/${playtype}/tables?showInactive=true`,
 	);
 
@@ -414,7 +416,7 @@ function ShowcaseForm({
 	const [show, setShow] = useState(false);
 
 	const SaveChanges = async () => {
-		const r = await APIFetchV1<UGPTSettingsDocument>(
+		const r = await APIFetchV1<MONGO_UGPTSettingsDocument>(
 			`/users/${reqUser.id}/games/${game}/${playtype}/showcase`,
 			{
 				method: "PUT",

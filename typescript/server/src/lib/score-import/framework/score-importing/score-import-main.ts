@@ -189,7 +189,7 @@ export default async function ScoreImportMain<D, C>(
 
 		// --- 9. Finalise Import Document ---
 		// Create and Save an import document to the database, and finish everything up!
-		const ImportDocument: MONGO_ImportDocument = {
+		const MONGO_ImportDocument: MONGO_ImportDocument = {
 			importType,
 			gptStrings: playtypes.map((e) => `${game}:${e}`) as Array<GPTString>,
 			scoreIDs,
@@ -207,11 +207,11 @@ export default async function ScoreImportMain<D, C>(
 			userIntent,
 		};
 
-		const logMessage = `Import took: ${ImportDocument.timeFinished - timeStarted}ms, with ${
+		const logMessage = `Import took: ${MONGO_ImportDocument.timeFinished - timeStarted}ms, with ${
 			importInfo.length
 		} documents (Fails: ${errors.length}, Successes: ${scoreIDs.length}, Sessions: ${
 			sessionInfo.length
-		}). Aprx ${(ImportDocument.timeFinished - timeStarted) / importInfo.length}ms/doc`;
+		}). Aprx ${(MONGO_ImportDocument.timeFinished - timeStarted) / importInfo.length}ms/doc`;
 
 		// I only really want to log "big" imports. The others are here for debugging purposes.
 		if (scoreIDs.length > 500) {
@@ -222,14 +222,14 @@ export default async function ScoreImportMain<D, C>(
 			log.debug(logMessage);
 		}
 
-		await MONGODB_KILL.imports.insert(ImportDocument);
+		await MONGODB_KILL.imports.insert(MONGO_ImportDocument);
 
 		// we don't await this because we don't
 		// particularly care about waiting for it.
 		void MONGODB_KILL["import-timings"].insert({
 			importID,
 			timestamp: Date.now(),
-			total: ImportDocument.timeFinished - timeStarted,
+			total: MONGO_ImportDocument.timeFinished - timeStarted,
 			rel: {
 				import: importTimeRel,
 				importParse: importParseTimeRel,
@@ -248,7 +248,7 @@ export default async function ScoreImportMain<D, C>(
 			},
 		});
 
-		return ImportDocument;
+		return MONGO_ImportDocument;
 	} finally {
 		await UnsetOngoingImportLock(user.id);
 	}

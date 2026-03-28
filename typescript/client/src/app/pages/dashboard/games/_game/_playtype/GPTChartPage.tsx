@@ -35,13 +35,13 @@ import Stack from "react-bootstrap/Stack";
 import { useQuery } from "react-query";
 import { Link, Route, Switch } from "react-router-dom";
 import {
-	type ChartDocument,
 	FormatDifficulty,
 	GetGameGroupConfig,
 	type integer,
-	type PBScoreDocument,
-	type SongDocument,
-	type UserDocument,
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_SongDocument,
+	type MONGO_UserDocument,
 } from "tachi-common";
 
 // Wrapper around the chart leaderboard UI; `chart` comes from the `/charts/:chartID` route.
@@ -51,8 +51,8 @@ export default function GPTChartPage({
 	song,
 	playtype,
 }: {
-	chart: ChartDocument | null;
-	song: SongDocument;
+	chart: MONGO_ChartDocument | null;
+	song: MONGO_SongDocument;
 } & GamePT) {
 	const formatSongTitle = `${song.artist} - ${song.title}`;
 	const formatDiff = chart ? FormatDifficulty(chart, game) : "Loading...";
@@ -83,8 +83,8 @@ function InternalGPTChartPage({
 	song,
 	playtype,
 }: {
-	chart: ChartDocument;
-	song: SongDocument;
+	chart: MONGO_ChartDocument;
+	song: MONGO_SongDocument;
 } & GamePT) {
 	const { user } = useContext(UserContext);
 
@@ -264,9 +264,9 @@ function ChartTargetInfo({
 	chart,
 	song,
 }: {
-	chart: ChartDocument;
-	song: SongDocument;
-	user: UserDocument;
+	chart: MONGO_ChartDocument;
+	song: MONGO_SongDocument;
+	user: MONGO_UserDocument;
 } & GamePT) {
 	const { reloadTargets } = useContext(TargetsContext);
 	const [shouldReload, setShouldReload] = useState(0);
@@ -311,19 +311,19 @@ function ChartLeaderboardTable({
 	chart,
 	song,
 }: {
-	chart: ChartDocument;
+	chart: MONGO_ChartDocument;
 	data: ChartPBData;
 	mode: "adjacent" | "leaderboard" | "rivals";
-	song: SongDocument;
-	user: UserDocument | null;
-	userMap: Map<integer, UserDocument>;
+	song: MONGO_SongDocument;
+	user: MONGO_UserDocument | null;
+	userMap: Map<integer, MONGO_UserDocument>;
 } & GamePT) {
 	const { settings } = useLUGPTSettings();
 
 	const dataset: PBDataset = useMemo(() => {
 		const ds: PBDataset = [];
 
-		let pbs: Array<PBScoreDocument> = [];
+		let pbs: Array<MONGO_PBScoreDocument> = [];
 		if (mode === "leaderboard") {
 			pbs = data.leaderboard.pbs;
 		} else if (mode === "adjacent") {
@@ -371,10 +371,10 @@ function TopShowcase({
 	userMap,
 	chart,
 }: {
-	chart: ChartDocument;
+	chart: MONGO_ChartDocument;
 	data: ChartPBData;
-	user: UserDocument | null;
-	userMap: Map<integer, UserDocument>;
+	user: MONGO_UserDocument | null;
+	userMap: Map<integer, MONGO_UserDocument>;
 }) {
 	// We have a couple of conditions.
 	// User is #1: col-12 #1,
@@ -428,10 +428,10 @@ function PlayCard({
 	name,
 	chart,
 }: {
-	chart: ChartDocument;
+	chart: MONGO_ChartDocument;
 	name: string;
-	pb: PBScoreDocument;
-	user: UserDocument;
+	pb: MONGO_PBScoreDocument;
+	user: MONGO_UserDocument;
 }) {
 	const {
 		breakpoint: { isLg },

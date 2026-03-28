@@ -11,19 +11,19 @@ import { useFormik } from "formik";
 import React, { type ChangeEventHandler, useContext, useEffect, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import {
-	type FolderDocument,
 	FormatDifficulty,
 	type GameGroup,
 	GetGamePTConfig,
 	GetScoreMetricConf,
 	GetScoreMetrics,
+	type MONGO_FolderDocument,
+	type MONGO_UserDocument,
 	type Playtype,
 	type ShowcaseStatDetails,
-	type UserDocument,
 } from "tachi-common";
 
 interface Props {
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 	game: GameGroup;
 	playtype: Playtype;
 	onCreate: (stat: ShowcaseStatDetails) => void;
@@ -118,7 +118,7 @@ function UGPTStatInnerSearchyBit({ game, playtype, onCreate, setShow }: Props) {
 				search,
 			});
 
-			const res = await APIFetchV1<FolderDocument[]>(
+			const res = await APIFetchV1<MONGO_FolderDocument[]>(
 				`/games/${game}/${playtype}/folders?${params.toString()}`,
 				{},
 				false,

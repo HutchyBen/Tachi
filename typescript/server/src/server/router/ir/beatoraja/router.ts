@@ -103,7 +103,7 @@ router.post("/submit-score", RequireNotGuest, async (req, res) => {
 
 	if (!scoreDoc) {
 		log.error(
-			`ScoreDocument ${importRes.body.body.scoreIDs[0]} was claimed to be inserted, but wasn't.`,
+			`MONGO_ScoreDocument ${importRes.body.body.scoreIDs[0]} was claimed to be inserted, but wasn't.`,
 		);
 		return res.status(500).json({
 			success: false,

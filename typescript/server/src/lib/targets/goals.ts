@@ -3,9 +3,9 @@ import type { FilterQuery } from "mongodb";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
+import { GetFolderChartIDs } from "#lib/folders/folders.js";
 import { type KtLogger, log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
-import { GetFolderChartIDs } from "#utils/folder";
 import fjsh from "fast-json-stable-hash";
 import {
 	FormatGameGroup,
@@ -310,7 +310,7 @@ export async function ConstructGoal(
 
 	// @ts-expect-error It's complaining because the potential criteria types might mismatch.
 	// they're right, but this is enforced by ValidateGoalChartsAndCriteria.
-	const goalDocument: MONGO_GoalDocument = {
+	const MONGO_GoalDocument: MONGO_GoalDocument = {
 		game,
 		playtype,
 		criteria,
@@ -319,7 +319,7 @@ export async function ConstructGoal(
 		name: await CreateGoalName(charts, criteria, game, playtype),
 	};
 
-	return goalDocument;
+	return MONGO_GoalDocument;
 }
 
 /**
@@ -335,19 +335,19 @@ export async function ConstructGoal(
  */
 export async function SubscribeToGoal(
 	userID: integer,
-	goalDocument: MONGO_GoalDocument,
+	MONGO_GoalDocument: MONGO_GoalDocument,
 	isStandaloneAssignment: boolean,
 ) {
-	const goalExists = await MONGODB_KILL.goals.findOne({ goalID: goalDocument.goalID });
+	const goalExists = await MONGODB_KILL.goals.findOne({ goalID: MONGO_GoalDocument.goalID });
 
 	if (!goalExists) {
-		await MONGODB_KILL.goals.insert(goalDocument);
-		log.info(`Inserting new goal '${goalDocument.name}'.`);
+		await MONGODB_KILL.goals.insert(MONGO_GoalDocument);
+		log.info(`Inserting new goal '${MONGO_GoalDocument.name}'.`);
 	}
 
 	const userAlreadySubscribed = await MONGODB_KILL["goal-subs"].findOne({
 		userID,
-		goalID: goalDocument.goalID,
+		goalID: MONGO_GoalDocument.goalID,
 	});
 
 	if (userAlreadySubscribed) {
@@ -368,7 +368,7 @@ export async function SubscribeToGoal(
 		await MONGODB_KILL["goal-subs"].update(
 			{
 				userID,
-				goalID: goalDocument.goalID,
+				goalID: MONGO_GoalDocument.goalID,
 			},
 			{
 				$set: {
@@ -381,7 +381,7 @@ export async function SubscribeToGoal(
 		return { ...userAlreadySubscribed, wasAssignedStandalone: true };
 	}
 
-	const result = await EvaluateGoalForUser(goalDocument, userID, log);
+	const result = await EvaluateGoalForUser(MONGO_GoalDocument, userID, log);
 
 	if (!result) {
 		throw new Error(`Couldn't evaluate goal? See previous logs.`);
@@ -403,9 +403,9 @@ export async function SubscribeToGoal(
 		userID,
 		lastInteraction: null,
 		timeAchieved: result.achieved ? Date.now() : null,
-		game: goalDocument.game,
-		playtype: goalDocument.playtype,
-		goalID: goalDocument.goalID,
+		game: MONGO_GoalDocument.game,
+		playtype: MONGO_GoalDocument.playtype,
+		goalID: MONGO_GoalDocument.goalID,
 		achieved: result.achieved,
 		wasInstantlyAchieved: result.achieved,
 		wasAssignedStandalone: isStandaloneAssignment,

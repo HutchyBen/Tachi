@@ -16,7 +16,7 @@ import { EscapeStringRegexp } from "../misc";
  * rather difficult. Prefer other functions!
  * @param game - The game to search upon.
  * @param title - The song title to match.
- * @returns SongDocument
+ * @returns MONGO_SongDocument
  */
 export async function FindSongOnTitle(
 	game: GameGroup,
@@ -105,7 +105,7 @@ export async function FindSongOnTitleInsensitive(
  * also be the in-game-ID.
  * @param game - The game to search upon.
  * @param songID - The song ID to match.
- * @returns SongDocument
+ * @returns MONGO_SongDocument
  */
 export function FindSongOnID(
 	game: GameGroup,

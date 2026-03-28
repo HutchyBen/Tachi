@@ -1,10 +1,10 @@
 import { FormatTables } from "#util/misc";
 import React from "react";
 import {
-	type ChartDocument,
 	FormatDifficulty,
 	type GameGroup,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
 } from "tachi-common";
 
 export default function IIDXStyleSongChartInfoFormat({
@@ -12,9 +12,9 @@ export default function IIDXStyleSongChartInfoFormat({
 	chart,
 	game,
 }: {
-	chart: ChartDocument | null;
+	chart: MONGO_ChartDocument | null;
 	game: GameGroup;
-	song: SongDocument<"bms" | "chunithm" | "iidx" | "maimaidx" | "ongeki" | "pms" | "popn">;
+	song: MONGO_SongDocument<"bms" | "chunithm" | "iidx" | "maimaidx" | "ongeki" | "pms" | "popn">;
 }) {
 	return (
 		<>
@@ -26,7 +26,7 @@ export default function IIDXStyleSongChartInfoFormat({
 	);
 }
 
-function LevelText(chart: ChartDocument, game: GameGroup) {
+function LevelText(chart: MONGO_ChartDocument, game: GameGroup) {
 	if ("tableFolders" in chart.data) {
 		const hasLevel = chart.data.tableFolders.length > 0;
 		return hasLevel ? FormatTables(chart.data.tableFolders) : "No Level";

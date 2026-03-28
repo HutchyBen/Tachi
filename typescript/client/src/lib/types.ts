@@ -1,14 +1,14 @@
 import { type Header } from "#components/tables/components/TachiTable";
 import { type CSSProperties } from "react";
 import {
-	type ChartDocument,
 	type ClassConfigs,
 	type ConfScoreMetrics,
 	type Difficulties,
 	type GPTString,
 	type integer,
-	type PBScoreDocument,
-	type ScoreDocument,
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
 	type ScoreRatingAlgorithms,
 } from "tachi-common";
 import { type ExtractEnumMetricNames, type GetEnumValue } from "tachi-common/types/metrics";
@@ -38,7 +38,9 @@ export type GPTRatingSystem<GPT extends GPTString> = {
 	 * end user (i.e. the string lamp when the target is hard clear)
 	 * the second is whether they achieved this or not.
 	 */
-	achievementFn?: (p: PBScoreDocument<GPT> | ScoreDocument<GPT>) => [number | string, boolean];
+	achievementFn?: (
+		p: MONGO_PBScoreDocument<GPT> | MONGO_ScoreDocument<GPT>,
+	) => [number | string, boolean];
 	description: string;
 	enumName: string;
 
@@ -46,12 +48,12 @@ export type GPTRatingSystem<GPT extends GPTString> = {
 	 * Does this rating system say this chart has strong individual differences
 	 * between players?
 	 */
-	idvDifference: (c: ChartDocument<GPT>) => boolean | null | undefined;
+	idvDifference: (c: MONGO_ChartDocument<GPT>) => boolean | null | undefined;
 	name: string;
 
-	toNumber: (c: ChartDocument<GPT>) => number | null | undefined;
+	toNumber: (c: MONGO_ChartDocument<GPT>) => number | null | undefined;
 
-	toString: (c: ChartDocument<GPT>) => string | null | undefined;
+	toString: (c: MONGO_ChartDocument<GPT>) => string | null | undefined;
 };
 
 export type GPTClassColours<GPT extends GPTString> = {
@@ -109,7 +111,7 @@ export interface GPTClientImplementation<GPT extends GPTString = GPTString> {
 	/**
 	 * What headers should be used when rendering scores in a table for this game?
 	 */
-	scoreHeaders: Array<Header<PBScoreDocument<GPT> | ScoreDocument<GPT>>>;
+	scoreHeaders: Array<Header<MONGO_PBScoreDocument<GPT> | MONGO_ScoreDocument<GPT>>>;
 
 	/**
 	 * How should we render the "core cells" for a score row in this game?
@@ -117,8 +119,8 @@ export interface GPTClientImplementation<GPT extends GPTString = GPTString> {
 	 * This should render exactly the same amount of cells as there are headers.
 	 */
 	scoreCoreCells: (props: {
-		chart: ChartDocument<GPT>;
-		sc: PBScoreDocument<GPT> | ScoreDocument<GPT>;
+		chart: MONGO_ChartDocument<GPT>;
+		sc: MONGO_PBScoreDocument<GPT> | MONGO_ScoreDocument<GPT>;
 	}) => JSX.Element;
 
 	/**
@@ -132,9 +134,9 @@ export interface GPTClientImplementation<GPT extends GPTString = GPTString> {
 	 * got 0 points on an unranked chart, etc..
 	 */
 	ratingCell: (props: {
-		chart: ChartDocument<GPT>;
+		chart: MONGO_ChartDocument<GPT>;
 		rating: ScoreRatingAlgorithms[GPT];
-		sc: PBScoreDocument<GPT> | ScoreDocument<GPT>;
+		sc: MONGO_PBScoreDocument<GPT> | MONGO_ScoreDocument<GPT>;
 	}) => JSX.Element;
 
 	/**

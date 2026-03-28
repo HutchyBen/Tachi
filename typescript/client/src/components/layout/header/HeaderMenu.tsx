@@ -5,7 +5,7 @@ import { UserSettingsContext } from "#context/UserSettingsContext";
 import { type SetState } from "#types/react";
 import React, { useContext, useEffect } from "react";
 import Nav from "react-bootstrap/Nav";
-import { type UserGameStats } from "tachi-common";
+import { type MONGO_UserGameStats } from "tachi-common";
 
 import GlobalInfoDropdown from "./GlobalInfoDropdown";
 import ImportScoresDropdown from "./ImportScoresDropdown";
@@ -26,7 +26,7 @@ export function HeaderMenu({
 	const { ugs, setUGS } = useContext(AllLUGPTStatsContext);
 	const { settings } = useContext(UserSettingsContext);
 
-	const { data, error } = useApiQuery<UserGameStats[]>(
+	const { data, error } = useApiQuery<MONGO_UserGameStats[]>(
 		// We should generate a valid url just in case the skip somehow fails
 		`/users/${user?.id ?? "me"}/game-stats`,
 		undefined,

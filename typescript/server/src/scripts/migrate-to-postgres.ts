@@ -98,7 +98,7 @@ import { buildChartIdMap, importSeeds } from "./load-seeds-pg";
 // Extension types for MongoDB documents that have extra fields not in the TS interface
 // ──────────────────────────────────────────────────────────────────────────────
 
-/** InviteCodeDocument extended – always has all fields in practice. */
+/** MONGO_InviteCodeDocument extended – always has all fields in practice. */
 interface InviteCodeDocumentFull {
 	code: string;
 	createdBy: number;
@@ -518,7 +518,7 @@ async function main(): Promise<void> {
 	// ── priv_invite ───────────────────────────────────────────────────────────
 	{
 		console.log("\n[priv_invite]");
-		// InviteCodeDocument is a discriminated union; use the full flattened type.
+		// MONGO_InviteCodeDocument is a discriminated union; use the full flattened type.
 		const invites = await mongoDB.get<InviteCodeDocumentFull>("invites").find({});
 
 		const inviteRows: Array<NewPrivInvite> = invites.map((inv) => ({

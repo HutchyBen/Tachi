@@ -15,18 +15,18 @@ import React, { useState } from "react";
 import { Col, Form, Row } from "react-bootstrap";
 import { Route, Switch } from "react-router-dom";
 import {
-	type ChartDocument,
 	FormatGameGroup,
 	type GameGroup,
 	GetGameGroupConfig,
 	GetGamePTConfig,
 	type GPTString,
-	type PBScoreDocument,
-	type ScoreDocument,
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
+	type MONGO_SongDocument,
+	type MONGO_UserDocument,
 	type ScoreRatingAlgorithms,
-	type SongDocument,
 	type UnsuccessfulAPIResponse,
-	type UserDocument,
 } from "tachi-common";
 
 export default function ScoresPage({
@@ -34,7 +34,7 @@ export default function ScoresPage({
 	game,
 	playtype,
 }: {
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 } & GamePT) {
 	const gameConfig = GetGameGroupConfig(game);
 	const gptConfig = GetGamePTConfig(game, playtype);
@@ -136,11 +136,11 @@ function AlgSelector({
 	);
 }
 
-function useFetchPBs(url: string, reqUser: UserDocument) {
+function useFetchPBs(url: string, reqUser: MONGO_UserDocument) {
 	const { data, error } = useApiQuery<{
-		charts: ChartDocument[];
-		pbs: PBScoreDocument[];
-		songs: SongDocument[];
+		charts: MONGO_ChartDocument[];
+		pbs: MONGO_PBScoreDocument[];
+		songs: MONGO_SongDocument[];
 	}>(url);
 
 	return {
@@ -160,7 +160,7 @@ function PBsOverview({
 }: {
 	alg?: ScoreRatingAlgorithms[GPTString];
 	indexCol?: boolean;
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 	showPlaycount?: boolean;
 	url: string;
 } & GamePT) {
@@ -197,10 +197,15 @@ function PBsOverview({
 }
 
 function FormatData<
-	D extends PBScoreDocument | ScoreDocument,
+	D extends MONGO_PBScoreDocument | MONGO_ScoreDocument,
 	GPT extends GPTString = GPTString,
 	G extends GameGroup = GameGroup,
->(d: D[], songs: SongDocument<G>[], charts: ChartDocument<GPT>[], reqUser: UserDocument) {
+>(
+	d: D[],
+	songs: MONGO_SongDocument<G>[],
+	charts: MONGO_ChartDocument<GPT>[],
+	reqUser: MONGO_UserDocument,
+) {
 	const songMap = new Map();
 	const chartMap = new Map();
 
@@ -225,11 +230,11 @@ function FormatData<
 	return data;
 }
 
-function useFetchScores(url: string, reqUser: UserDocument) {
+function useFetchScores(url: string, reqUser: MONGO_UserDocument) {
 	const { data, error } = useApiQuery<{
-		charts: ChartDocument[];
-		scores: ScoreDocument[];
-		songs: SongDocument[];
+		charts: MONGO_ChartDocument[];
+		scores: MONGO_ScoreDocument[];
+		songs: MONGO_SongDocument[];
 	}>(url);
 
 	return {
@@ -246,7 +251,7 @@ function PBsSearch({
 	alg,
 }: {
 	alg?: ScoreRatingAlgorithms[GPTString];
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 	search: string;
 } & GamePT) {
 	const { data, error } = useFetchPBs(
@@ -302,7 +307,7 @@ function ScoresSearch({
 	game,
 	playtype,
 	search,
-}: { reqUser: UserDocument; search: string } & GamePT) {
+}: { reqUser: MONGO_UserDocument; search: string } & GamePT) {
 	const { data, error } = useFetchScores(
 		`/users/${reqUser.id}/games/${game}/${playtype}/scores?search=${search}`,
 		reqUser,

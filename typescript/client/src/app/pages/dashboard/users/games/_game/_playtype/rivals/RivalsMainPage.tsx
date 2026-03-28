@@ -12,8 +12,8 @@ import {
 	FormatGameGroup,
 	type GameGroup,
 	GetGameGroupConfig,
+	type MONGO_UserDocument,
 	type Playtype,
-	type UserDocument,
 } from "tachi-common";
 
 import RivalsActivityPage from "./RivalsActivityPage";
@@ -26,7 +26,7 @@ export default function RivalsMainPage({
 }: {
 	game: GameGroup;
 	playtype: Playtype;
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 }) {
 	const gameConfig = GetGameGroupConfig(game);
 

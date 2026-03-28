@@ -1,10 +1,13 @@
 import type { FilterQuery } from "mongodb";
 
+import { SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart";
 import { log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db.js";
 import { GetFolderForIDGuaranteed } from "#utils/db";
 import deepmerge from "deepmerge";
 import fjsh from "fast-json-stable-hash";
+import { sql } from "kysely";
 import {
 	FormatGameGroup,
 	type GameGroup,
@@ -19,52 +22,88 @@ import {
 	type MONGO_TableDocument,
 	type Playtype,
 } from "tachi-common";
-
 export async function GetFolderCharts(
 	folder: MONGO_FolderDocument,
-	filter: FilterQuery<MONGO_ChartDocument>,
-	getSongs: true,
-): Promise<{ charts: Array<MONGO_ChartDocument>; songs: Array<MONGO_SongDocument> }>;
-export async function GetFolderCharts(
-	folder: MONGO_FolderDocument,
-	filter: FilterQuery<MONGO_ChartDocument>,
-	getSongs: false,
-): Promise<{ charts: Array<MONGO_ChartDocument> }>;
-export async function GetFolderCharts(
-	folder: MONGO_FolderDocument,
-	filter: FilterQuery<MONGO_ChartDocument> = {},
-	getSongs = false,
-): Promise<{ charts: Array<MONGO_ChartDocument>; songs?: Array<MONGO_SongDocument> }> {
-	const chartIDs = await GetFolderChartIDs(folder.folderID);
+	_filter: FilterQuery<MONGO_ChartDocument> = {},
+): Promise<{ charts: Array<MONGO_ChartDocument> }> {
+	const chartIds = await GetFolderChartIDs(folder.folderID);
 
-	const charts = await MONGODB_KILL.anyCharts[folder.game].find(
-		deepmerge.all([{ playtype: folder.playtype }, { chartID: { $in: chartIDs } }, filter]),
-	);
-
-	if (getSongs) {
-		const songs = await MONGODB_KILL.anySongs[folder.game].find({
-			id: { $in: charts.map((e) => e.songID) },
-		});
-
-		return { songs, charts };
+	if (chartIds.length === 0) {
+		return { charts: [] };
 	}
+
+	const rows = await DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select([...SELECT_CHART, "song.legacy_id as song_legacy_id"])
+		.where("chart.id", "in", chartIds)
+		.execute();
+
+	const charts = rows.map((row) => ToChartDocument(row, row.song_legacy_id));
 
 	return { charts };
 }
 
-export async function GetFolderChartIDs(folderID: string) {
-	const chartIDs = await MONGODB_KILL["folder-chart-lookup"].find(
-		{
-			folderID,
-		},
-		{
-			projection: {
-				chartID: 1,
-			},
-		},
-	);
+export async function GetFolderChartsAndSongs(
+	folder: MONGO_FolderDocument,
+	filter: FilterQuery<MONGO_ChartDocument> = {},
+): Promise<{ charts: Array<MONGO_ChartDocument>; songs: Array<MONGO_SongDocument> }> {
+	const { charts } = await GetFolderCharts(folder, filter);
 
-	return chartIDs.map((e) => e.chartID);
+	const songs = await MONGODB_KILL.anySongs[folder.game].find({
+		id: { $in: charts.map((e) => e.songID) },
+	});
+
+	return { songs, charts };
+}
+
+export async function BuildFolderQuery(folderID: string) {
+	const folder = await DB.selectFrom("folder")
+		.select(["folder.game", "folder.query", "folder.version_filter"])
+		.where("folder.id", "=", folderID)
+		.executeTakeFirst();
+
+	if (!folder) {
+		throw new Error(`Folder with ID '${folderID}' not found.`);
+	}
+
+	const interpolateQueryRaw = sql.raw(folder.query);
+
+	if (folder.version_filter) {
+		const vf = folder.version_filter;
+
+		return {
+			folderQuery: sql`
+				SELECT
+					chart.id
+				FROM
+					chart
+				WHERE
+					${interpolateQueryRaw}
+
+				AND chart.versions && ARRAY[${sql.join(vf.map((v) => sql`${v}`))}]::text[]
+			`,
+		};
+	}
+
+	return {
+		folderQuery: sql`
+			SELECT
+				chart.id
+			FROM
+				chart
+			WHERE
+				${interpolateQueryRaw}
+		`,
+	};
+}
+
+export async function GetFolderChartIDs(folderID: string) {
+	const { folderQuery } = await BuildFolderQuery(folderID);
+
+	const res = await folderQuery.execute(DB);
+	const rows = res.rows as Array<{ id: string }>;
+
+	return rows.map((e) => e.id);
 }
 
 export async function GetFoldersFromTable(table: MONGO_TableDocument) {
@@ -119,7 +158,7 @@ export async function GetFolderNamesInOrder(table: MONGO_TableDocument): Promise
 }
 
 export async function GetPBsOnFolder(userID: integer, folder: MONGO_FolderDocument) {
-	const { charts, songs } = await GetFolderCharts(folder, {}, true);
+	const { charts, songs } = await GetFolderChartsAndSongs(folder, {});
 
 	const pbs = await MONGODB_KILL["personal-bests"].find({
 		userID,
@@ -153,7 +192,7 @@ export async function GetEnumDistForFolder(userID: integer, folder: MONGO_Folder
 /**
  * Get the distribution for this all gpt enums for this user on all these folders.
  */
-export async function GetEnumDistForFolders(userID: integer, folders: Array<MONGO_FolderDocument>) {
+export function GetEnumDistForFolders(userID: integer, folders: Array<MONGO_FolderDocument>) {
 	return Promise.all(folders.map((folder) => GetEnumDistForFolder(userID, folder)));
 }
 

@@ -36,11 +36,11 @@ export async function MakeScoreImport<I extends ImportTypes>(
 	await StartTrackingImport(jobData);
 
 	try {
-		const importDocument = await MakeScoreImportInner(jobData);
+		const MONGO_ImportDocument = await MakeScoreImportInner(jobData);
 
 		await EndTrackingImport(jobData.importID);
 
-		return importDocument;
+		return MONGO_ImportDocument;
 	} catch (e) {
 		const err = e as Error | ScoreImportFatalError;
 
@@ -77,7 +77,7 @@ async function MakeScoreImportInner<I extends ImportTypes>(
 
 			if (data.success) {
 				await EndTrackingImport(jobData.importID);
-				return data.importDocument;
+				return data.MONGO_ImportDocument;
 			} else if (data.statusCode !== 409) {
 				throw new ScoreImportFatalError(data.statusCode, data.description);
 			}

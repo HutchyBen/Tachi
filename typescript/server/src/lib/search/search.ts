@@ -1,12 +1,6 @@
 import type { FilterQuery } from "mongodb";
 import type { ICollection } from "monk";
 
-import { GetChartsBySongPgId } from "#lib/db-formats/chart";
-import {
-	LoadSongChildrenForPgIds,
-	MAX_SONG_SEARCH_RESULTS_PER_GAME,
-	SearchSongsForGameFtsAndTrgm,
-} from "#lib/db-formats/song-search";
 import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user";
 import { TachiConfig } from "#lib/setup/config";
 import MONGODB_KILL from "#services/mongo/db";
@@ -15,11 +9,8 @@ import { GetSongForIDGuaranteed } from "#utils/db";
 import { EscapeForILIKE } from "#utils/misc";
 import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { GetOnlineCutoff } from "#utils/user";
-import { sql } from "kysely";
 import {
 	type GameGroup,
-	GamePTToV3,
-	type GPTString,
 	type GPTStrings,
 	type integer,
 	type MONGO_ChartDocument,
@@ -27,13 +18,11 @@ import {
 	type MONGO_SessionDocument,
 	type MONGO_SongDocument,
 	type MONGO_UserDocument,
-	MongoChartLegacyId,
 	type Playtype,
-	type SongDocumentData,
-	SplitGPT,
 } from "tachi-common";
 
 import { AsyncFzf } from "./fzf/main";
+import { SearchSpecificGameSongs, type SongSearchReturn } from "./songs.js";
 
 interface SearchControls {
 	keys: Array<string>;
@@ -161,173 +150,6 @@ export async function SearchCollection<T extends object>(
 	return documents;
 }
 
-export type SongSearchReturn = {
-	__textScore: number;
-} & MONGO_SongDocument;
-
-/**
- * Fuzzy song search over Postgres `song` metadata (same behaviour as legacy Mongo SearchCollection).
- */
-export async function searchSpecificGameSongsWithPgIds(
-	game: GameGroup,
-	search: string,
-	limit = 100,
-): Promise<{
-	pgIdByLegacyId: Map<integer, string>;
-	songs: Array<SongSearchReturn>;
-}> {
-	const rows = await SearchSongsForGameFtsAndTrgm(game, search, limit);
-
-	if (rows.length === 0) {
-		return { songs: [], pgIdByLegacyId: new Map() };
-	}
-
-	const children = await LoadSongChildrenForPgIds(rows.map((r) => r.id));
-
-	const pgIdByLegacyId = new Map<integer, string>();
-	const songs: Array<SongSearchReturn> = [];
-
-	for (const row of rows) {
-		const ch = children.get(row.id);
-
-		pgIdByLegacyId.set(row.legacy_id, row.id);
-
-		songs.push({
-			id: row.legacy_id,
-			title: row.title,
-			artist: row.artist,
-			searchTerms: ch?.searchTerms ?? [],
-			altTitles: ch?.altTitles ?? [],
-			data: row.data as SongDocumentData[typeof game],
-			__textScore: Math.round(1000 * row.rank),
-		});
-	}
-
-	return { songs, pgIdByLegacyId };
-}
-
-export async function SearchSpecificGameSongs(
-	game: GameGroup,
-	search: string,
-	limit = 100,
-): Promise<Array<SongSearchReturn>> {
-	const { songs } = await searchSpecificGameSongsWithPgIds(game, search, limit);
-
-	return songs;
-}
-
-export async function SearchSpecificGameSongsAndCharts(
-	game: GameGroup,
-	search: string,
-	playtype?: Playtype,
-	limit = 100,
-) {
-	const { songs, pgIdByLegacyId } = await searchSpecificGameSongsWithPgIds(game, search, limit);
-
-	if (!playtype) {
-		throw new Error("SearchSpecificGameSongsAndCharts requires playtype");
-	}
-
-	const v3Game = GamePTToV3(game, playtype);
-
-	const chartLists = await Promise.all(
-		songs.map((song) => {
-			const pgId = pgIdByLegacyId.get(song.id);
-
-			if (!pgId) {
-				return Promise.resolve([] as Array<MONGO_ChartDocument>);
-			}
-
-			return GetChartsBySongPgId(v3Game, pgId, song.id, {
-				omit2dxtraCharts: game === "iidx",
-			});
-		}),
-	);
-
-	const charts = chartLists.flat();
-
-	return { songs, charts };
-}
-
-/**
- * Search this Game/GPTs songs and charts, but globally.
- *
- * Returns at most `limit` **chart** rows per GPT (same cap as song search). Without this,
- * N matched songs × charts per song could return a huge payload from `/api/v1/search`.
- */
-export async function SearchGlobalGameSongsAndCharts(
-	game: GameGroup,
-	search: string,
-	playtype?: Playtype,
-	limit = MAX_SONG_SEARCH_RESULTS_PER_GAME,
-): Promise<Array<{ chart: MONGO_ChartDocument; playcount: integer; song: MONGO_SongDocument }>> {
-	const { songs, pgIdByLegacyId } = await searchSpecificGameSongsWithPgIds(game, search, limit);
-
-	if (!playtype) {
-		throw new Error("SearchGlobalGameSongsAndCharts requires playtype");
-	}
-
-	const v3Game = GamePTToV3(game, playtype);
-
-	const output: Array<{
-		chart: MONGO_ChartDocument;
-		playcount: integer;
-		song: MONGO_SongDocument;
-	}> = [];
-
-	for (const song of songs) {
-		if (output.length >= limit) {
-			break;
-		}
-
-		const pgId = pgIdByLegacyId.get(song.id);
-
-		if (!pgId) {
-			continue;
-		}
-
-		// eslint-disable-next-line no-await-in-loop -- stop after enough charts; avoids loading every song's charts when the cap is already reached.
-		const songCharts = await GetChartsBySongPgId(v3Game, pgId, song.id, {
-			omit2dxtraCharts: game === "iidx",
-		});
-
-		for (const chart of songCharts) {
-			if (output.length >= limit) {
-				break;
-			}
-
-			output.push({
-				song,
-				chart,
-				playcount: 0,
-			});
-		}
-	}
-
-	if (output.length === 0) {
-		return [];
-	}
-
-	const chartLegacyIds = output.map((o) => MongoChartLegacyId(o.chart));
-
-	const playcountRows = await DB.selectFrom("score")
-		.innerJoin("chart", "chart.id", "score.chart_id")
-		.select(["chart.legacy_id", sql<number>`count(score.id)::int`.as("playcount")])
-		.where("chart.legacy_id", "in", chartLegacyIds)
-		.groupBy("chart.legacy_id")
-		.execute();
-
-	const playcountLookup = Object.fromEntries(
-		playcountRows.map((r) => [r.legacy_id, r.playcount]),
-	);
-
-	for (const row of output) {
-		row.playcount = playcountLookup[MongoChartLegacyId(row.chart)] ?? 0;
-	}
-
-	return output;
-}
-
 export function SearchSessions(
 	search: string,
 	game?: GameGroup,
@@ -417,31 +239,6 @@ export async function SearchGamesSongs(search: string, games: Array<GameGroup>) 
 	const res = await Promise.all(promises);
 
 	return res.flat(1).sort((a, b) => b.__textScore - a.__textScore);
-}
-
-export async function SearchGamesSongsCharts(search: string, gpts: Array<GPTString>) {
-	const promises = [];
-
-	const results: Partial<
-		Record<
-			GPTString,
-			Array<{ chart: MONGO_ChartDocument; playcount: integer; song: MONGO_SongDocument }>
-		>
-	> = {};
-
-	for (const gpt of gpts) {
-		const [game, playtype] = SplitGPT(gpt);
-
-		promises.push(
-			SearchGlobalGameSongsAndCharts(game, search, playtype).then((res) => {
-				results[gpt] = res;
-			}),
-		);
-	}
-
-	await Promise.all(promises);
-
-	return results;
 }
 
 export async function SearchForChartHash(search: string) {

@@ -19,6 +19,8 @@ async function seedSongAndChart() {
 			game_group: "iidx",
 			title: "Test Song",
 			artist: "Test Artist",
+			search_terms: [],
+			alt_titles: [],
 			data: JSON.stringify({}),
 			fts_document: "",
 		})
@@ -34,6 +36,7 @@ async function seedSongAndChart() {
 			level_num: 12,
 			is_primary: true,
 			difficulty: "ANOTHER",
+			versions: [],
 			data: JSON.stringify({}),
 		})
 		.execute();

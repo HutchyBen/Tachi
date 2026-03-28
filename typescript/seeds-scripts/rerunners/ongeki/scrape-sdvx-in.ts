@@ -1,12 +1,12 @@
 /* eslint-disable no-await-in-loop */
 
 import readline from "readline";
-import { type ChartDocument, type SongDocument } from "tachi-common";
+import { type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
 
 import { ReadCollection, WriteCollection } from "../../util";
 
-type OngekiChart = ChartDocument<"ongeki:Single">;
-type OngekiSong = SongDocument<"ongeki">;
+type OngekiChart = MONGO_ChartDocument<"ongeki:Single">;
+type OngekiSong = MONGO_SongDocument<"ongeki">;
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 const prompt = (query: string) => new Promise((resolve) => rl.question(query, resolve));

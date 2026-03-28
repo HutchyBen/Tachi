@@ -3,7 +3,7 @@ import Muted from "#components/util/Muted";
 import { ToCDNURL } from "#util/api";
 import { CreateChartLink } from "#util/data";
 import React from "react";
-import { type ChartDocument, type GameGroup, type SongDocument } from "tachi-common";
+import { type GameGroup, type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
 
 export default function TitleCell({
 	game,
@@ -16,13 +16,13 @@ export default function TitleCell({
 }: {
 	// chart is optional as we overload this titlecell to render pretty song tables
 	// in some places
-	chart?: ChartDocument;
+	chart?: MONGO_ChartDocument;
 	comment?: string | null;
 	game: GameGroup;
 	noArtist?: boolean;
 	showAltTitles?: boolean;
 	showSearchTerms?: boolean;
-	song: SongDocument;
+	song: MONGO_SongDocument;
 }) {
 	let backgroundImage = undefined;
 	let center = false;
@@ -32,7 +32,7 @@ export default function TitleCell({
 			`/misc/popn/banners/${(chart as any).data.inGameID}.png`,
 		)})`;
 	} else if (game === "itg" && chart) {
-		const itgChart = chart as ChartDocument<"itg:Stamina">;
+		const itgChart = chart as MONGO_ChartDocument<"itg:Stamina">;
 		const banner = itgChart.data.bannerLocationOverride ?? itgChart.data.originalPack;
 
 		if (banner) {
@@ -56,11 +56,11 @@ export default function TitleCell({
 		>
 			{game === "popn" && (
 				<>
-					{(song as SongDocument<"popn">).data.genre === song.title ||
-					(song as SongDocument<"popn">).data.genre === null ? (
+					{(song as MONGO_SongDocument<"popn">).data.genre === song.title ||
+					(song as MONGO_SongDocument<"popn">).data.genre === null ? (
 						<Muted>Unknown Genre</Muted>
 					) : (
-						(song as SongDocument<"popn">).data.genre
+						(song as MONGO_SongDocument<"popn">).data.genre
 					)}
 					<br />
 				</>

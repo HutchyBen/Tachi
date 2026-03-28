@@ -14,11 +14,11 @@ import { NumericSOV, StrSOV } from "#util/sorts";
 import React, { useState } from "react";
 import { Col, Row } from "react-bootstrap";
 import {
-	type ChartDocument,
 	FormatGameGroup,
 	GetGameGroupConfig,
 	type integer,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
 } from "tachi-common";
 
 export default function GPTChartsPage({ game, playtype }: GamePT) {
@@ -47,8 +47,8 @@ function SearchSongsTable({ game, playtype, search }: { search: string } & GameP
 	const params = new URLSearchParams({ search });
 
 	const { data, error } = useApiQuery<{
-		charts: ({ __playcount: integer } & ChartDocument)[];
-		songs: SongDocument[];
+		charts: ({ __playcount: integer } & MONGO_ChartDocument)[];
+		songs: MONGO_SongDocument[];
 	}>(`/games/${game}/${playtype}/charts${search !== "" ? `?${params.toString()}` : ""}`);
 
 	if (error) {

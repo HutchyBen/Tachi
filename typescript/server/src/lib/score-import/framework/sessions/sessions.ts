@@ -21,7 +21,7 @@ import {
 import type { ScorePlaytypeMap } from "../common/types";
 
 import { CreateSessionCalcData } from "../calculated-data/session";
-import { CreatePBDoc, type PBScoreDocumentNoRank } from "../pb/create-pb-doc";
+import { CreatePBDoc, type MONGO_PBScoreDocumentNoRank } from "../pb/create-pb-doc";
 import { GenerateRandomSessionName } from "./name-generation";
 
 const TWO_HOURS = ONE_HOUR * 2;
@@ -57,7 +57,7 @@ export async function CreateSessions(
  */
 function ScoreToSessionScoreInfo(
 	score: MONGO_ScoreDocument,
-	previousPB: PBScoreDocumentNoRank | undefined,
+	previousPB: MONGO_PBScoreDocumentNoRank | undefined,
 ): SessionScoreInfo {
 	if (!previousPB) {
 		return {

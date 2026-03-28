@@ -50,6 +50,6 @@ export type ScoreImportWorkerReturns =
 			success: false;
 	  }
 	| {
-			importDocument: MONGO_ImportDocument;
+			MONGO_ImportDocument: MONGO_ImportDocument;
 			success: true;
 	  };

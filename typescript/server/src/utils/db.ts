@@ -1,8 +1,8 @@
 import type { FilterQuery } from "mongodb";
 
+import { LoadFolderDocumentById } from "#lib/db-formats/folders.js";
 import { log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
-import DB from "#services/pg/db.js";
 import {
 	FormatChart,
 	type GameGroup,
@@ -131,12 +131,8 @@ export async function GetSongForIDGuaranteed(game: GameGroup, songID: integer) {
 	return song;
 }
 
-export async function GetFolder(folderID: string) {
-	return DB.selectFrom("folder")
-		.select(SELECT_FOLDER)
-		.where("id", "=", folderID)
-		.executeTakeFirst()
-		.then((res) => (res ? ToFolderDocument(res) : null));
+export function GetFolder(folderID: string) {
+	return LoadFolderDocumentById(folderID).then((doc) => doc ?? null);
 }
 
 export async function GetFolderForIDGuaranteed(folderID: string) {

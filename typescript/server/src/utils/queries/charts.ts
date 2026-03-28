@@ -4,13 +4,13 @@ import MONGODB_KILL from "#services/mongo/db";
 import DB from "#services/pg/db";
 import { sql, type SqlBool } from "kysely";
 import {
-	type ChartDocumentData,
 	type Difficulties,
 	type GameGroup,
 	GamePTToV3,
 	type GPTString,
 	type integer,
 	type MONGO_ChartDocument,
+	type MONGO_ChartDocumentData,
 	type Playtype,
 	type Playtypes,
 	V3ToGamePT,
@@ -269,6 +269,7 @@ export async function FindChartsOnPopularity(
 			"chart.level_num",
 			"chart.is_primary",
 			"chart.difficulty",
+			"chart.versions",
 			"chart.data",
 			"song.legacy_id as song_legacy_id",
 			sql<number>`count(score.id)::int`.as("playcount"),
@@ -283,26 +284,6 @@ export async function FindChartsOnPopularity(
 		return [];
 	}
 
-	const chartPgIds = rows.map((r) => r.id);
-
-	const versionRows = await DB.selectFrom("chart_version")
-		.select(["chart_id", "version"])
-		.where("chart_id", "in", chartPgIds)
-		.execute();
-
-	const versionsByChartId = new Map<string, string[]>();
-
-	for (const v of versionRows) {
-		let list = versionsByChartId.get(v.chart_id);
-
-		if (!list) {
-			list = [];
-			versionsByChartId.set(v.chart_id, list);
-		}
-
-		list.push(v.version);
-	}
-
 	return rows.map((row) => {
 		const { playtype: chartPlaytype } = V3ToGamePT(row.game);
 
@@ -315,8 +296,8 @@ export async function FindChartsOnPopularity(
 			isPrimary: row.is_primary,
 			difficulty: row.difficulty as Difficulties[GPTString],
 			playtype: chartPlaytype,
-			data: row.data as ChartDocumentData[GPTString],
-			versions: (versionsByChartId.get(row.id) ?? []) as Versions[GPTString][],
+			data: row.data as MONGO_ChartDocumentData[GPTString],
+			versions: row.versions as Versions[GPTString][],
 			__playcount: row.playcount,
 		} as { __playcount: integer } & MONGO_ChartDocument;
 	});

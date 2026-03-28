@@ -46,7 +46,7 @@ export type Playtypes = {
  */
 export type Playtype = Playtypes[GameGroup];
 
-export type SongDocumentData = {
+export type MONGO_SongDocumentData = {
 	[G in GameGroup]: z.infer<(typeof GAME_GROUP_CONFIGS)[G]["songData"]>;
 };
 
@@ -247,7 +247,7 @@ export type ClassConfigs = {
 	[G in GPTString]: (typeof GAME_PT_CONFIGS)[G]["classes"];
 };
 
-export type ChartDocumentData = {
+export type MONGO_ChartDocumentData = {
 	[G in GPTString]: z.infer<(typeof GAME_PT_CONFIGS)[G]["chartData"]>;
 };
 

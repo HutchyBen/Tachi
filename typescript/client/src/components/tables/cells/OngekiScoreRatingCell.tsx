@@ -3,7 +3,7 @@ import { GPT_CLIENT_IMPLEMENTATIONS } from "#lib/game-implementations";
 import { ChangeOpacity } from "#util/color-opacity";
 import { FormatMillions, FormatScoreRating } from "#util/misc";
 import React from "react";
-import { type PBScoreDocument, type ScoreDocument } from "tachi-common";
+import { type MONGO_PBScoreDocument, type MONGO_ScoreDocument } from "tachi-common";
 
 import MiniTable from "../components/MiniTable";
 import LampCell from "./LampCell";
@@ -11,7 +11,7 @@ import LampCell from "./LampCell";
 export default function OngekiScoreRatingCell({
 	score,
 }: {
-	score: PBScoreDocument<"ongeki:Single"> | ScoreDocument<"ongeki:Single">;
+	score: MONGO_PBScoreDocument<"ongeki:Single"> | MONGO_ScoreDocument<"ongeki:Single">;
 }) {
 	const ratingValue = score.calculatedData.scoreRating ?? 0;
 	const noteLamp = score.scoreData.noteLamp;

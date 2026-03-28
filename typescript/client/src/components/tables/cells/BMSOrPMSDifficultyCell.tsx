@@ -7,9 +7,9 @@ import { FormatTables } from "#util/misc";
 import React from "react";
 import {
 	BMS_TABLES,
-	type ChartDocument,
 	COLOUR_SET,
-	type UGPTSettingsDocument,
+	type MONGO_ChartDocument,
+	type MONGO_UGPTSettingsDocument,
 } from "tachi-common";
 
 import RatingSystemPart from "./RatingSystemPart";
@@ -18,16 +18,17 @@ export default function BMSOrPMSDifficultyCell({
 	chart,
 	game,
 }: {
-	chart: ChartDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard">;
+	chart: MONGO_ChartDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard">;
 	game: "bms" | "pms";
 }) {
 	const { settings } = useLUGPTSettings() as {
-		settings: UGPTSettingsDocument<"bms:7K" | "bms:14K">;
+		settings: MONGO_UGPTSettingsDocument<"bms:7K" | "bms:14K">;
 	};
 
 	const hasLevel = chart.data.tableFolders.length > 0;
 
-	const aiLevel = game === "bms" && (chart as ChartDocument<"bms:7K" | "bms:14K">).data.aiLevel;
+	const aiLevel =
+		game === "bms" && (chart as MONGO_ChartDocument<"bms:7K" | "bms:14K">).data.aiLevel;
 
 	let levelText = "No Rating";
 	let backgroundColour = hasLevel ? COLOUR_SET.red : COLOUR_SET.gray;
@@ -95,7 +96,7 @@ export default function BMSOrPMSDifficultyCell({
 }
 
 function FindTableColour(
-	tableFolders: ChartDocument<"bms:7K" | "bms:14K">["data"]["tableFolders"],
+	tableFolders: MONGO_ChartDocument<"bms:7K" | "bms:14K">["data"]["tableFolders"],
 ) {
 	const lookup = new Map(BMS_TABLES.map((e) => [e.prefix, e.colour]));
 

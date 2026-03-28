@@ -11,7 +11,10 @@ check:
 	post_evaluate
 
 typecheck:
-	bun run --filter '!tachi-seeds-scripts' typecheck
+	bun run --elide-lines=0 --filter '!tachi-seeds-scripts' typecheck
+
+typecheck-sequential:
+	bun run --elide-lines=0 --sequential --filter '!tachi-seeds-scripts' typecheck
 
 fix:
 	#!/bin/bash
@@ -65,7 +68,8 @@ test-typescript FILTER="*":
 	#!/bin/bash
 	set -euo pipefail
 
-	bun run --filter '{{FILTER}}' test -- --coverage.reporter=lcov --reporter=default --reporter=junit --outputFile.junit=test-results/junit.xml
+	bun run --elide-lines=0 --sequential --filter '{{FILTER}}' test -- --coverage.reporter=lcov --reporter=default --reporter=junit --outputFile.junit=test-results/junit.xml
+
 
 # Run all parity suites, or a single one if a name is given.
 test-parity suite="":

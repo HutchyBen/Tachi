@@ -5,11 +5,11 @@ import { type SetState } from "#types/react";
 import React, { useState } from "react";
 import { Nav } from "react-bootstrap";
 import {
-	type ChartDocument,
-	type MongoScoreData,
-	type PBScoreDocument,
-	type ScoreDocument,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreData,
+	type MONGO_ScoreDocument,
+	type MONGO_SongDocument,
 } from "tachi-common";
 
 type ChartType = "Bells" | "Life" | "Platinum" | "Score";
@@ -18,8 +18,8 @@ export function OngekiGraphsComponent({
 	score,
 	chart,
 }: {
-	chart: ChartDocument<"ongeki:Single">;
-	score: PBScoreDocument<"ongeki:Single"> | ScoreDocument<"ongeki:Single">;
+	chart: MONGO_ChartDocument<"ongeki:Single">;
+	score: MONGO_PBScoreDocument<"ongeki:Single"> | MONGO_ScoreDocument<"ongeki:Single">;
 }) {
 	const [graph, setGraph] = useState<ChartType>("Score");
 	const available =
@@ -58,13 +58,13 @@ function Inner({
 }: {
 	available: boolean;
 	availablePlat: (number | null)[] | null | undefined;
-	chart: ChartDocument<"ongeki:Single">;
+	chart: MONGO_ChartDocument<"ongeki:Single">;
 	graph: ChartType;
-	score: PBScoreDocument<"ongeki:Single"> | ScoreDocument<"ongeki:Single">;
+	score: MONGO_PBScoreDocument<"ongeki:Single"> | MONGO_ScoreDocument<"ongeki:Single">;
 	setGraph: SetState<ChartType>;
 }) {
 	const { data, error } = useApiQuery<{
-		song: SongDocument<"ongeki">;
+		song: MONGO_SongDocument<"ongeki">;
 	}>(`/games/ongeki/Single/songs/${score.songID}`);
 	if (error !== null || data === undefined) {
 		return <Box message="Error retrieving chart" />;
@@ -127,9 +127,9 @@ function GraphComponent({
 	song,
 	chart,
 }: {
-	chart: ChartDocument<"ongeki:Single">;
-	scoreData: MongoScoreData<"ongeki:Single">;
-	song: SongDocument<"ongeki">;
+	chart: MONGO_ChartDocument<"ongeki:Single">;
+	scoreData: MONGO_ScoreData<"ongeki:Single">;
+	song: MONGO_SongDocument<"ongeki">;
 	type: ChartType;
 }) {
 	const values =

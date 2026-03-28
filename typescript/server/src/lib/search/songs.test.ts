@@ -1,5 +1,5 @@
 import { GetChartsBySongPgId } from "#lib/db-formats/chart";
-import { SearchGlobalGameSongsAndCharts, SearchSpecificGameSongs } from "#lib/search/search";
+import { SearchGlobalGameSongsAndCharts } from "#lib/search/song-charts.js";
 import DB from "#services/pg/db";
 import { importSeedsSubset } from "#services/pg/seeds";
 import { resolveSeedsDir, seedsJsonAvailable } from "#test-utils/seed-paths";
@@ -12,8 +12,9 @@ import {
 	LoadSongChildrenForPgIds,
 	MAX_SONG_SEARCH_RESULTS_PER_GAME,
 	SearchSongsForGameFtsAndTrgm,
+	SearchSpecificGameSongs,
 	SHORT_QUERY_STRICT_MAX_LEN,
-} from "./song-search";
+} from "./songs.js";
 
 function makeSongId(n: number): string {
 	return `S${n.toString(16).padStart(20, "0")}`;
@@ -54,6 +55,8 @@ describe("SearchSongsForGameFtsAndTrgm (synthetic rows)", () => {
 				game_group: "iidx",
 				title: "Empty Query Test",
 				artist: "X",
+				search_terms: [],
+				alt_titles: [],
 				fts_document: "",
 				data: JSON.stringify({}),
 			})
@@ -72,6 +75,8 @@ describe("SearchSongsForGameFtsAndTrgm (synthetic rows)", () => {
 					game_group: "iidx",
 					title: "UniqueAlphaToken",
 					artist: "Artist A",
+					search_terms: [],
+					alt_titles: [],
 					fts_document: "",
 					data: JSON.stringify({}),
 				},
@@ -81,6 +86,8 @@ describe("SearchSongsForGameFtsAndTrgm (synthetic rows)", () => {
 					game_group: "sdvx",
 					title: "UniqueAlphaToken Other Game",
 					artist: "Artist B",
+					search_terms: [],
+					alt_titles: [],
 					fts_document: "",
 					data: JSON.stringify({}),
 				},
@@ -103,16 +110,11 @@ describe("SearchSongsForGameFtsAndTrgm (synthetic rows)", () => {
 				game_group: "iidx",
 				title: "Child Row Test",
 				artist: "Z",
+				search_terms: ["synonym"],
+				alt_titles: ["Extra JP"],
 				fts_document: "synonym extra",
 				data: JSON.stringify({}),
 			})
-			.execute();
-
-		await DB.insertInto("song_search_term")
-			.values({ song_id: sid, search_term: "synonym" })
-			.execute();
-		await DB.insertInto("song_alt_title")
-			.values({ song_id: sid, alt_title: "Extra JP" })
 			.execute();
 
 		const rows = await SearchSongsForGameFtsAndTrgm("iidx", "Child", 10);
@@ -131,6 +133,8 @@ describe("SearchSongsForGameFtsAndTrgm (synthetic rows)", () => {
 			game_group: "iidx" as const,
 			title: `CapBulk ${i}`,
 			artist: "Cap Artist",
+			search_terms: [],
+			alt_titles: [],
 			fts_document: "",
 			data: JSON.stringify({}),
 		}));
@@ -150,6 +154,8 @@ describe("SearchSongsForGameFtsAndTrgm (synthetic rows)", () => {
 				game_group: "iidx",
 				title: "Qx",
 				artist: "ShortQ Artist",
+				search_terms: [],
+				alt_titles: [],
 				fts_document: "",
 				data: JSON.stringify({}),
 			})
@@ -171,6 +177,8 @@ describe("SearchSongsForGameFtsAndTrgm (very short titles / strict query)", () =
 					game_group: "iidx",
 					title: "A",
 					artist: "Some Artist",
+					search_terms: [],
+					alt_titles: [],
 					fts_document: "",
 					data: JSON.stringify({}),
 				},
@@ -180,6 +188,8 @@ describe("SearchSongsForGameFtsAndTrgm (very short titles / strict query)", () =
 					game_group: "iidx",
 					title: "About Something",
 					artist: "B",
+					search_terms: [],
+					alt_titles: [],
 					fts_document: "",
 					data: JSON.stringify({}),
 				},
@@ -189,6 +199,8 @@ describe("SearchSongsForGameFtsAndTrgm (very short titles / strict query)", () =
 					game_group: "iidx",
 					title: "Many Letters",
 					artist: "Alpha",
+					search_terms: [],
+					alt_titles: [],
 					fts_document: "",
 					data: JSON.stringify({}),
 				},
@@ -212,6 +224,8 @@ describe("SearchSongsForGameFtsAndTrgm (very short titles / strict query)", () =
 					game_group: "iidx",
 					title: "A",
 					artist: "X",
+					search_terms: [],
+					alt_titles: [],
 					fts_document: "",
 					data: JSON.stringify({}),
 				},
@@ -221,6 +235,8 @@ describe("SearchSongsForGameFtsAndTrgm (very short titles / strict query)", () =
 					game_group: "iidx",
 					title: "AA",
 					artist: "Y",
+					search_terms: [],
+					alt_titles: [],
 					fts_document: "",
 					data: JSON.stringify({}),
 				},
@@ -248,12 +264,11 @@ describe("SearchSongsForGameFtsAndTrgm (very short titles / strict query)", () =
 				game_group: "iidx",
 				title: "Long Title",
 				artist: "Z",
+				search_terms: ["V"],
+				alt_titles: [],
 				fts_document: "",
 				data: JSON.stringify({}),
 			})
-			.execute();
-		await DB.insertInto("song_search_term")
-			.values({ song_id: sid, search_term: "V" })
 			.execute();
 
 		const res = await SearchSongsForGameFtsAndTrgm("iidx", "V", 10);
@@ -271,6 +286,8 @@ describe("SearchSongsForGameFtsAndTrgm (very short titles / strict query)", () =
 				game_group: "iidx",
 				title: "ZzzUniqueToken",
 				artist: "Z",
+				search_terms: [],
+				alt_titles: [],
 				fts_document: "",
 				data: JSON.stringify({}),
 			})
@@ -292,6 +309,8 @@ describe("SearchSongsForGameFtsAndTrgm (hostile / injection-shaped input)", () =
 					game_group: "iidx",
 					title: "Bait Song",
 					artist: "Bait",
+					search_terms: [],
+					alt_titles: [],
 					fts_document: "",
 					data: JSON.stringify({}),
 				},
@@ -301,6 +320,8 @@ describe("SearchSongsForGameFtsAndTrgm (hostile / injection-shaped input)", () =
 					game_group: "iidx",
 					title: "Other Bait",
 					artist: "Bait",
+					search_terms: [],
+					alt_titles: [],
 					fts_document: "",
 					data: JSON.stringify({}),
 				},
@@ -336,6 +357,8 @@ describe("SearchSongsForGameFtsAndTrgm (hostile / injection-shaped input)", () =
 				game_group: "iidx",
 				title: "NulProbe",
 				artist: "X",
+				search_terms: [],
+				alt_titles: [],
 				fts_document: "",
 				data: JSON.stringify({}),
 			})
@@ -361,6 +384,8 @@ describe("SearchSongsForGameFtsAndTrgm (hostile / injection-shaped input)", () =
 					game_group: "iidx",
 					title: "ExactPercent",
 					artist: "NoWildcard",
+					search_terms: [],
+					alt_titles: [],
 					fts_document: "",
 					data: JSON.stringify({}),
 				},
@@ -370,6 +395,8 @@ describe("SearchSongsForGameFtsAndTrgm (hostile / injection-shaped input)", () =
 					game_group: "iidx",
 					title: "Something Else Entirely",
 					artist: "NoWildcard",
+					search_terms: [],
+					alt_titles: [],
 					fts_document: "",
 					data: JSON.stringify({}),
 				},
@@ -392,6 +419,8 @@ describe("SearchSpecificGameSongs", () => {
 				game_group: "iidx",
 				title: "ScoreFieldTest",
 				artist: "Z",
+				search_terms: [],
+				alt_titles: [],
 				fts_document: "",
 				data: JSON.stringify({ displayVersion: "1" }),
 			})
@@ -416,6 +445,8 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 				game_group: "iidx",
 				title: "Only2dxtraSearchToken",
 				artist: "X",
+				search_terms: [],
+				alt_titles: [],
 				fts_document: "",
 				data: JSON.stringify({}),
 			})
@@ -431,6 +462,7 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 				level_num: 12,
 				is_primary: true,
 				difficulty: "ANOTHER",
+				versions: [],
 				data: JSON.stringify({ "2dxtraSet": "test-set", notecount: 100 }),
 			})
 			.execute();
@@ -450,6 +482,8 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 				game_group: "iidx",
 				title: "Mixed2dxtraSearchToken",
 				artist: "X",
+				search_terms: [],
+				alt_titles: [],
 				fts_document: "",
 				data: JSON.stringify({}),
 			})
@@ -466,6 +500,7 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 					level_num: 12,
 					is_primary: true,
 					difficulty: "ANOTHER",
+					versions: [],
 					data: JSON.stringify({ "2dxtraSet": "x", notecount: 100 }),
 				},
 				{
@@ -477,6 +512,7 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 					level_num: 11,
 					is_primary: false,
 					difficulty: "HYPER",
+					versions: [],
 					data: JSON.stringify({ "2dxtraSet": null, notecount: 80 }),
 				},
 			])
@@ -497,6 +533,8 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 				game_group: "iidx",
 				title: "ChartFilter",
 				artist: "X",
+				search_terms: [],
+				alt_titles: [],
 				fts_document: "",
 				data: JSON.stringify({}),
 			})
@@ -513,6 +551,7 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 					level_num: 12,
 					is_primary: true,
 					difficulty: "ANOTHER",
+					versions: [],
 					data: JSON.stringify({ "2dxtraSet": "x", notecount: 100 }),
 				},
 				{
@@ -524,6 +563,7 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 					level_num: 11,
 					is_primary: false,
 					difficulty: "HYPER",
+					versions: [],
 					data: JSON.stringify({ notecount: 80 }),
 				},
 			])
@@ -549,6 +589,8 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 				game_group: "iidx",
 				title: "GlobalSearch2dxtraToken",
 				artist: "X",
+				search_terms: [],
+				alt_titles: [],
 				fts_document: "",
 				data: JSON.stringify({}),
 			})
@@ -565,6 +607,7 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 					level_num: 12,
 					is_primary: true,
 					difficulty: "ANOTHER",
+					versions: [],
 					data: JSON.stringify({ "2dxtraSet": "set-a", notecount: 100 }),
 				},
 				{
@@ -576,6 +619,7 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 					level_num: 11,
 					is_primary: false,
 					difficulty: "HYPER",
+					versions: [],
 					data: JSON.stringify({ notecount: 80 }),
 				},
 			])
@@ -609,6 +653,8 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 				game_group: "iidx",
 				title: "Pop2dxtraToken",
 				artist: "X",
+				search_terms: [],
+				alt_titles: [],
 				fts_document: "",
 				data: JSON.stringify({}),
 			})
@@ -625,6 +671,7 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 					level_num: 12,
 					is_primary: true,
 					difficulty: "ANOTHER",
+					versions: [],
 					data: JSON.stringify({ "2dxtraSet": "x", notecount: 100 }),
 				},
 				{
@@ -636,6 +683,7 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 					level_num: 11,
 					is_primary: false,
 					difficulty: "HYPER",
+					versions: [],
 					data: JSON.stringify({ notecount: 80 }),
 				},
 			])
@@ -660,6 +708,8 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 				game_group: "sdvx",
 				title: "Sdvx2dxtraKeyInJson",
 				artist: "X",
+				search_terms: [],
+				alt_titles: [],
 				fts_document: "",
 				data: JSON.stringify({}),
 			})
@@ -675,6 +725,7 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 				level_num: 18,
 				is_primary: true,
 				difficulty: "EXHAUST",
+				versions: [],
 				data: JSON.stringify({ "2dxtraSet": "ignored-for-sdvx", notecount: 100 }),
 			})
 			.execute();

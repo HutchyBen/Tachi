@@ -20,7 +20,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Col, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
-	type ChartDocument,
 	FormatChart,
 	type GameGroup,
 	type GamePTConfig,
@@ -29,8 +28,9 @@ import {
 	GetScoreMetricConf,
 	type GPTString,
 	type integer,
-	type SongDocument,
-	type TableDocument,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
+	type MONGO_TableDocument,
 } from "tachi-common";
 import { type ConfEnumScoreMetric } from "tachi-common/types/metrics";
 
@@ -46,13 +46,15 @@ export default function SessionFolderRaiseBreakdown({
 	const playtype = sessionData.session.playtype;
 	const gptConfig = GetGamePTConfig(game, playtype);
 
-	const [selectedTable, setSelectedTable] = useState<"LOADING" | TableDocument | null>("LOADING");
+	const [selectedTable, setSelectedTable] = useState<"LOADING" | MONGO_TableDocument | null>(
+		"LOADING",
+	);
 
 	const { data, error } = useApiQuery<Array<SessionFolderRaises>>(
 		`/sessions/${sessionData.session.sessionID}/folder-raises`,
 	);
 
-	const { data: tableData, error: tableError } = useApiQuery<Array<TableDocument>>(
+	const { data: tableData, error: tableError } = useApiQuery<Array<MONGO_TableDocument>>(
 		`/games/${game}/${playtype}/tables`,
 	);
 
@@ -216,11 +218,11 @@ function FolderRaiseRender({
 	chartMap,
 	gptString,
 }: {
-	chartMap: Map<string, ChartDocument>;
+	chartMap: Map<string, MONGO_ChartDocument>;
 	folderRaiseInfo: SessionFolderRaises;
 	game: GameGroup;
 	gptString: GPTString;
-	songMap: Map<integer, SongDocument>;
+	songMap: Map<integer, MONGO_SongDocument>;
 }) {
 	const colour =
 		// @ts-expect-error lazy
@@ -288,10 +290,10 @@ function ChartRaises({
 	game,
 	raisedCharts,
 }: {
-	chartMap: Map<string, ChartDocument>;
+	chartMap: Map<string, MONGO_ChartDocument>;
 	game: GameGroup;
 	raisedCharts: Array<string>;
-	songMap: Map<integer, SongDocument>;
+	songMap: Map<integer, MONGO_SongDocument>;
 }) {
 	const els = [];
 

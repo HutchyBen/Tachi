@@ -2,12 +2,12 @@
 
 import * as cheerio from "cheerio";
 import fetch from "node-fetch";
-import { type ChartDocument, type SongDocument } from "tachi-common";
+import { type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
 
 import { ReadCollection, WriteCollection } from "../../util";
 
-type SDVXChart = ChartDocument<"sdvx:Single">;
-type SDVXSong = SongDocument<"sdvx">;
+type SDVXChart = MONGO_ChartDocument<"sdvx:Single">;
+type SDVXSong = MONGO_SongDocument<"sdvx">;
 
 // Internal data for PUC tierlists are inconsistent
 const MANUAL_PUC_TIERS: { [level: number]: { [tier: string]: string } } = {

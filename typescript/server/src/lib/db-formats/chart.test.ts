@@ -19,6 +19,8 @@ async function seedSong() {
 			game_group: "iidx",
 			title: "Test",
 			artist: "Artist",
+			search_terms: [],
+			alt_titles: [],
 			data: {},
 			fts_document: "",
 		})
@@ -36,15 +38,13 @@ async function seedChart() {
 			level: "10",
 			level_num: 10,
 			is_primary: true,
+			versions: ["27"],
 			data: { inGameID: 1, notecount: 100 },
 		})
 		.execute();
-
-	await DB.insertInto("chart_version").values({ chart_id: CHART_PG_ID, version: "27" }).execute();
 }
 
 async function cleanup() {
-	await DB.deleteFrom("chart_version").where("chart_id", "=", CHART_PG_ID).execute();
 	await DB.deleteFrom("chart").where("id", "=", CHART_PG_ID).execute();
 	await DB.deleteFrom("song").where("id", "=", SONG_PG_ID).execute();
 }

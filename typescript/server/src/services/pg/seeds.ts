@@ -14,16 +14,12 @@ import type {
 	GameGroup,
 	NewBmsCourseLookup,
 	NewChart,
-	NewChartVersion,
 	NewFolder,
-	NewFolderSearchTerm,
 	NewGoal,
 	NewQuest,
 	NewQuestline,
 	NewQuestlineQuest,
 	NewSong,
-	NewSongAltTitle,
-	NewSongSearchTerm,
 	NewTable,
 	NewTableFolder,
 	Game as PgGame,
@@ -47,6 +43,8 @@ type SeedFolder = {
 	game: string;
 	id: string;
 	legacyFolderID?: string;
+	/** Denormalized from chart `data.versions` in folders.json; preferred when set. */
+	versionFilter?: Array<string>;
 } & Omit<MONGO_FolderDocument, "folderID" | "game" | "playtype">;
 // After 3-migrate-folders-tables.ts: tableID → legacyTableID + id, game+playtype → game,
 // folders array now contains new hex ids.
@@ -58,6 +56,33 @@ type SeedTable = {
 } & Omit<MONGO_TableDocument, "folders" | "game" | "playtype" | "tableID">;
 
 const INSERT_CHUNK = 500;
+
+/** Resolves chart version filter from seed `versionFilter` or `data.versions`. */
+function seedFolderVersionFilter(f: SeedFolder): Array<string> | null {
+	if (f.versionFilter && f.versionFilter.length > 0) {
+		return f.versionFilter;
+	}
+
+	if (f.type !== "charts" || f.data === null || typeof f.data !== "object") {
+		return null;
+	}
+
+	const versions = (f.data as Record<string, unknown>).versions;
+
+	if (versions === undefined) {
+		return null;
+	}
+
+	if (typeof versions === "string") {
+		return [versions];
+	}
+
+	if (Array.isArray(versions)) {
+		return versions.map(String);
+	}
+
+	return null;
+}
 
 function readJsonSeed<T>(seedsDir: string, filename: string): Array<T> {
 	return JSON.parse(fs.readFileSync(path.join(seedsDir, filename), "utf-8")) as Array<T>;
@@ -102,8 +127,6 @@ async function upsertSongsForGameGroup(
 	songs: Array<SeedSong>,
 ): Promise<void> {
 	const songRows: Array<NewSong> = [];
-	const searchTermRows: Array<NewSongSearchTerm> = [];
-	const altTitleRows: Array<NewSongAltTitle> = [];
 
 	for (const s of songs) {
 		if (!s.id) {
@@ -111,6 +134,9 @@ async function upsertSongsForGameGroup(
 				`Song ${gameGroup}:${s.legacySongID} is missing an id. Run 1-migrate-to-pg-style.ts first.`,
 			);
 		}
+
+		const searchTerms = s.searchTerms ?? [];
+		const altTitles = s.altTitles ?? [];
 
 		songRows.push({
 			id: s.id,
@@ -122,20 +148,12 @@ async function upsertSongsForGameGroup(
 			game_group: gameGroup,
 			title: s.title,
 			artist: s.artist,
+			search_terms: searchTerms,
+			alt_titles: altTitles,
 			data: JSON.stringify(s.data),
-			fts_document: [...s.searchTerms, ...s.altTitles].filter(Boolean).join(" "),
+			fts_document: [...searchTerms, ...altTitles].filter(Boolean).join(" "),
 		});
-
-		for (const term of s.searchTerms) {
-			searchTermRows.push({ song_id: s.id, search_term: term });
-		}
-
-		for (const alt of s.altTitles) {
-			altTitleRows.push({ song_id: s.id, alt_title: alt });
-		}
 	}
-
-	const songIds = songs.map((s) => s.id);
 
 	for (let i = 0; i < songRows.length; i = i + INSERT_CHUNK) {
 		const chunk = songRows.slice(i, i + INSERT_CHUNK);
@@ -148,17 +166,13 @@ async function upsertSongsForGameGroup(
 					title: sql`excluded.title`,
 					artist: sql`excluded.artist`,
 					data: sql`excluded.data`,
+					search_terms: sql`excluded.search_terms`,
+					alt_titles: sql`excluded.alt_titles`,
 					fts_document: sql`excluded.fts_document`,
 				}),
 			)
 			.execute();
 	}
-
-	await chunkedDeletePg(pg, "song_search_term", "song_id", songIds);
-	await chunkedDeletePg(pg, "song_alt_title", "song_id", songIds);
-
-	await batchIgnorePg(pg, "song_search_term", searchTermRows);
-	await batchIgnorePg(pg, "song_alt_title", altTitleRows);
 }
 
 async function upsertChartsForPgGame(
@@ -171,7 +185,6 @@ async function upsertChartsForPgGame(
 	}
 
 	const chartRows: Array<NewChart> = [];
-	const versionRows: Array<NewChartVersion> = [];
 
 	for (const c of charts) {
 		if (!c.id) {
@@ -196,15 +209,10 @@ async function upsertChartsForPgGame(
 			level_num: c.levelNum,
 			is_primary: c.isPrimary,
 			difficulty: c.difficulty,
+			versions: (c.versions ?? []).map(String),
 			data: JSON.stringify(c.data),
 		});
-
-		for (const version of c.versions) {
-			versionRows.push({ chart_id: c.id, version: version as string });
-		}
 	}
-
-	const chartSids = charts.map((c) => c.id);
 
 	for (let i = 0; i < chartRows.length; i = i + INSERT_CHUNK) {
 		const chunk = chartRows.slice(i, i + INSERT_CHUNK);
@@ -218,14 +226,12 @@ async function upsertChartsForPgGame(
 					level_num: sql`excluded.level_num`,
 					is_primary: sql`excluded.is_primary`,
 					difficulty: sql`excluded.difficulty`,
+					versions: sql`excluded.versions`,
 					data: sql`excluded.data`,
 				}),
 			)
 			.execute();
 	}
-
-	await chunkedDeletePg(pg, "chart_version", "chart_id", chartSids);
-	await batchIgnorePg(pg, "chart_version", versionRows);
 }
 
 export type ImportSeedsSubsetOptions = {
@@ -352,7 +358,7 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 
 	// ── songs ──────────────────────────────────────────────────────────────
 	{
-		console.log("[song / song_search_term / song_alt_title]");
+		console.log("[song]");
 		let total = 0;
 
 		for (const file of songFiles) {
@@ -370,7 +376,7 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 
 	// ── charts ─────────────────────────────────────────────────────────────
 	{
-		console.log("[chart / chart_version]");
+		console.log("[chart]");
 		let total = 0;
 
 		for (const file of chartFiles) {
@@ -390,7 +396,7 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 
 	// ── folders ────────────────────────────────────────────────────────────
 	if (files.has("folders.json")) {
-		console.log("[folder / folder_search_term]");
+		console.log("[folder]");
 		const folders = readCollection<SeedFolder>("folders.json");
 
 		const folderRows: Array<NewFolder> = folders.map((f) => ({
@@ -406,6 +412,8 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 			inactive: f.inactive,
 			title: f.title,
 			query: JSON.stringify({ type: f.type, data: f.data }),
+			version_filter: seedFolderVersionFilter(f),
+			search_terms: f.searchTerms ?? [],
 		}));
 
 		for (let i = 0; i < folderRows.length; i = i + INSERT_CHUNK) {
@@ -419,21 +427,14 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 						inactive: sql`excluded.inactive`,
 						title: sql`excluded.title`,
 						query: sql`excluded.query`,
+						version_filter: sql`excluded.version_filter`,
+						search_terms: sql`excluded.search_terms`,
 					}),
 				)
 				.execute();
 		}
 
-		const folderIds = folders.map((f) => f.id);
-
-		await chunkedDeletePg(pg, "folder_search_term", "id", folderIds);
-
-		const termRows: Array<NewFolderSearchTerm> = folders.flatMap((f) =>
-			f.searchTerms.map((term) => ({ id: f.id, search_term: term })),
-		);
-
-		await batchIgnorePg(pg, "folder_search_term", termRows);
-		console.log(`  ${folders.length} folders, ${termRows.length} search terms\n`);
+		console.log(`  ${folders.length} folders\n`);
 	}
 
 	// ── tables ─────────────────────────────────────────────────────────────

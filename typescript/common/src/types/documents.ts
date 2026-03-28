@@ -2,7 +2,6 @@ import type { FilterQuery } from "mongodb";
 
 import type {
 	AnyClasses,
-	ChartDocumentData,
 	Classes,
 	Difficulties,
 	ExtractedClasses,
@@ -13,6 +12,8 @@ import type {
 	GPTStringToPlaytype,
 	integer,
 	Judgements,
+	MONGO_ChartDocumentData,
+	MONGO_SongDocumentData,
 	MongoDerivedMetrics as MongoDerivedMetrics,
 	MongoOptionalMetrics as MongoOptionalMetrics,
 	MongoProvidedMetrics as MongoProvidedMetrics,
@@ -28,7 +29,6 @@ import type {
 	ScoreMeta,
 	ScoreRatingAlgorithms,
 	SessionRatingAlgorithms,
-	SongDocumentData,
 	UserAuthLevels,
 	V3Game,
 	V3GameToGPTString,
@@ -371,7 +371,7 @@ export interface MONGO_ChartDocument<GPT extends GPTString = GPTString> {
 	isPrimary: boolean;
 	difficulty: Difficulties[GPT];
 	playtype: GPTStringToPlaytype[GPT];
-	data: ChartDocumentData[GPT];
+	data: MONGO_ChartDocumentData[GPT];
 	versions: Array<Versions[GPT]>;
 }
 
@@ -381,7 +381,7 @@ export interface MONGO_SongDocument<G extends GameGroup = GameGroup> {
 	artist: string;
 	searchTerms: Array<string>;
 	altTitles: Array<string>;
-	data: SongDocumentData[G];
+	data: MONGO_SongDocumentData[G];
 }
 
 export interface MONGO_TableDocument {

@@ -11,7 +11,7 @@ import { XMLParser } from "fast-xml-parser";
  */
 import fs from "fs";
 import path from "path";
-import { type ChartDocument, type SongDocument } from "tachi-common";
+import { type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
 
 import { MutateCollection, ReadCollection } from "../../util";
 
@@ -156,10 +156,10 @@ function normalizeTitle(title: string): string {
 }
 
 function findSong(
-	songs: SongDocument<"maimaidx">[],
+	songs: MONGO_SongDocument<"maimaidx">[],
 	title: string,
 	category: string,
-): SongDocument<"maimaidx"> | undefined {
+): MONGO_SongDocument<"maimaidx"> | undefined {
 	// There are two songs with the exact same title and that only differs
 	// by category:
 	// - Link (maimai) is 68
@@ -196,7 +196,7 @@ function calculateDifficulty(style: string, sheetDifficulty: string): string {
 function addTmaiSheet(csvData: string[][]) {
 	const songs = ReadCollection("songs-maimaidx.json");
 
-	MutateCollection("charts-maimaidx.json", (charts: ChartDocument<"maimaidx:Single">[]) => {
+	MutateCollection("charts-maimaidx.json", (charts: MONGO_ChartDocument<"maimaidx:Single">[]) => {
 		for (let rowNumber = 1; rowNumber < csvData.length; rowNumber++) {
 			const row = csvData[rowNumber]!;
 			const title = row[1];
@@ -257,7 +257,7 @@ function addOtherSheet(csvData: string[][], headerRow: number, options: AddOther
 	const categoryColumnOffset = hasCategoryColumn ? 1 : 0;
 	let currentCategory = "";
 
-	MutateCollection("charts-maimaidx.json", (charts: ChartDocument<"maimaidx:Single">[]) => {
+	MutateCollection("charts-maimaidx.json", (charts: MONGO_ChartDocument<"maimaidx:Single">[]) => {
 		for (
 			let colNumber = 0;
 			colNumber + 4 + categoryColumnOffset < csvData[0]!.length;
@@ -335,7 +335,7 @@ if (options.directory) {
 	const songs = ReadCollection("songs-maimaidx.json");
 	const parser = new XMLParser({ ignoreAttributes: false });
 
-	MutateCollection("charts-maimaidx.json", (charts: ChartDocument<"maimaidx:Single">[]) => {
+	MutateCollection("charts-maimaidx.json", (charts: MONGO_ChartDocument<"maimaidx:Single">[]) => {
 		const items = fs.readdirSync(options.directory);
 
 		for (const item of items) {

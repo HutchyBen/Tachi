@@ -11,15 +11,15 @@ import React, { useEffect, useState } from "react";
 import { Button, Col, Form, InputGroup, Modal, Row } from "react-bootstrap";
 import { type GroupBase, type OptionsOrGroups } from "react-select";
 import {
-	type ChartDocument,
-	type FolderDocument,
 	FormatChart,
 	GetGamePTConfig,
 	GetGPTString,
 	GetScoreMetricConf,
-	type GoalDocument,
 	type GPTString,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_FolderDocument,
+	type MONGO_GoalDocument,
+	type MONGO_SongDocument,
 } from "tachi-common";
 import { type ConfEnumScoreMetric } from "tachi-common/types/metrics";
 
@@ -47,7 +47,7 @@ export default function AddNewGoalForQuestModal({
 		gptConfig.preferredDefaultEnum,
 	) as ConfEnumScoreMetric<string>;
 
-	const [criteria, setCriteria] = useState<GoalDocument["criteria"]>(
+	const [criteria, setCriteria] = useState<MONGO_GoalDocument["criteria"]>(
 		initialState?.goal.criteria ?? {
 			mode: "single",
 			key: gptConfig.preferredDefaultEnum,
@@ -55,7 +55,7 @@ export default function AddNewGoalForQuestModal({
 		},
 	);
 
-	const [charts, setCharts] = useState<GoalDocument["charts"]>(
+	const [charts, setCharts] = useState<MONGO_GoalDocument["charts"]>(
 		initialState?.goal.charts ??
 			({
 				type: "single",
@@ -204,10 +204,10 @@ function RenderGoalChartPicker({
 	playtype,
 	onChange,
 }: {
-	charts: GoalDocument["charts"];
-	onChange: (charts: GoalDocument["charts"]) => void;
+	charts: MONGO_GoalDocument["charts"];
+	onChange: (charts: MONGO_GoalDocument["charts"]) => void;
 } & GamePT) {
-	const [type, setType] = useState<GoalDocument["charts"]["type"]>(charts.type);
+	const [type, setType] = useState<MONGO_GoalDocument["charts"]["type"]>(charts.type);
 
 	// hackily declaring this as any because type and chartInfo are technically disjoint
 	// however, due to the code, these will always be in sync.
@@ -279,7 +279,7 @@ function FolderSelect({ game, playtype, onChange }: { onChange: (data: string) =
 
 		// debounce this query to only run after 300ms of no more user input.
 		lastTimeout = window.setTimeout(async () => {
-			const res = await APIFetchV1<Array<FolderDocument>>(
+			const res = await APIFetchV1<Array<MONGO_FolderDocument>>(
 				`/games/${game}/${playtype}/folders?search=${input}`,
 			);
 			if (!res.success) {
@@ -333,8 +333,8 @@ function ChartSelect({
 				charts: Record<
 					GPTString,
 					{
-						chart: ChartDocument;
-						song: SongDocument;
+						chart: MONGO_ChartDocument;
+						song: MONGO_SongDocument;
 					}[]
 				>;
 			}>(`/search/chart-hash?search=${encodeURIComponent(input)}`);

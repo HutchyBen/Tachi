@@ -18,7 +18,7 @@ import React, { useContext, useMemo, useState } from "react";
 import Button from "react-bootstrap/Button";
 import Row from "react-bootstrap/Row";
 import toast from "react-hot-toast";
-import { type SessionDocument } from "tachi-common";
+import { type MONGO_SessionDocument } from "tachi-common";
 
 export default function SessionCard({ sessionID }: { sessionID: string }) {
 	const { user } = useContext(UserContext);
@@ -117,7 +117,7 @@ export default function SessionCard({ sessionID }: { sessionID: string }) {
 	);
 }
 
-function SessionOverview({ session }: { session: SessionDocument }) {
+function SessionOverview({ session }: { session: MONGO_SessionDocument }) {
 	return (
 		<Row lg={{ cols: 2 }} xs={{ cols: 1 }}>
 			<StatIcon name="Scores" value={session.scoreIDs.length} />

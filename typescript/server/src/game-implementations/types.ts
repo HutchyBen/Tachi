@@ -1,5 +1,5 @@
 import type { DryScoreData } from "#lib/score-import/framework/common/types";
-import type { PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
+import type { MONGO_PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
 import type {
 	ClassConfigs,
 	ConfDerivedMetrics,
@@ -104,7 +104,7 @@ export type PBMergeFunction<GPT extends GPTString> = (
 	userID: integer,
 	chartID: string,
 	asOfTimestamp: number | null,
-	existingPB: PBScoreDocumentNoRank<GPT>,
+	existingPB: MONGO_PBScoreDocumentNoRank<GPT>,
 ) => Promise<PBReference | null>;
 
 /**
@@ -186,7 +186,7 @@ export interface RankingValues {
  * that determine how this PB is ordered against other PBs on the same chart.
  */
 export type PBRankingValuesFunction<GPT extends GPTString> = (
-	pb: PBScoreDocumentNoRank<GPT>,
+	pb: MONGO_PBScoreDocumentNoRank<GPT>,
 ) => RankingValues;
 
 /**

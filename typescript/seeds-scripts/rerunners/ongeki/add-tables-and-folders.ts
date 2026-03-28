@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { type FolderDocument, GetGamePTConfig } from "tachi-common";
+import { GetGamePTConfig, type MONGO_FolderDocument } from "tachi-common";
 
 import { CreateFolderID, MutateCollection } from "../../util";
 
@@ -45,7 +45,7 @@ if (!versionName) {
 	);
 }
 
-const newFolders: FolderDocument[] = [];
+const newFolders: MONGO_FolderDocument[] = [];
 const levelFolderIDs: string[] = [];
 const difficultyFolderIDs: string[] = [];
 

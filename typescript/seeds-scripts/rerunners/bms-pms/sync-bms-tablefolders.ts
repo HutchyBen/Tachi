@@ -3,8 +3,8 @@ import { LoadBMSTable } from "bms-table-loader";
 import {
 	BMS_TABLES,
 	type BMSTableInfo,
-	type FolderDocument,
-	type TableDocument,
+	type MONGO_FolderDocument,
+	type MONGO_TableDocument,
 } from "tachi-common";
 
 import { MutateCollection, ReadCollection } from "../../util";
@@ -25,10 +25,10 @@ async function UpdateTable(tableInfo: BMSTableInfo) {
 
 	const levels = table.getLevelOrder();
 
-	const folders: Array<FolderDocument> = [];
+	const folders: Array<MONGO_FolderDocument> = [];
 
 	for (const level of levels) {
-		const f: Omit<FolderDocument, "folderID"> = {
+		const f: Omit<MONGO_FolderDocument, "folderID"> = {
 			title: `${tableInfo.prefix}${level}`,
 			playtype: tableInfo.playtype,
 			game: "bms",
@@ -50,7 +50,7 @@ async function UpdateTable(tableInfo: BMSTableInfo) {
 		const realFolder = {
 			...f,
 			folderID,
-		} as FolderDocument;
+		} as MONGO_FolderDocument;
 
 		if (existsFolders.includes(folderID)) {
 			continue;
@@ -66,7 +66,7 @@ async function UpdateTable(tableInfo: BMSTableInfo) {
 		return f;
 	});
 
-	MutateCollection("tables.json", (t: Array<TableDocument>) => {
+	MutateCollection("tables.json", (t: Array<MONGO_TableDocument>) => {
 		t.push({
 			folders: folders.map((e) => e.folderID),
 			game: "bms",
@@ -101,7 +101,7 @@ async function UpdateTable(tableInfo: BMSTableInfo) {
 	const realFolder = {
 		...f,
 		folderID,
-	} as FolderDocument;
+	} as MONGO_FolderDocument;
 
 	// add this to meta table.
 	if (!existsFolders.includes(folderID)) {

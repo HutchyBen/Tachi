@@ -35,9 +35,9 @@ import {
 	FormatGameGroup,
 	type GameGroup,
 	GetGameGroupConfig,
+	type MONGO_UserDocument,
+	type MONGO_UserGameStats,
 	type Playtype,
-	type UserDocument,
-	type UserGameStats,
 } from "tachi-common";
 
 import ScoresPage from "../pages/dashboard/users/games/_game/_playtype/ScoresPage";
@@ -48,7 +48,7 @@ export default function UserRoutes() {
 	const { userID } = useParams<{ userID: string }>();
 	const history = useHistory();
 
-	const { data: reqUser, error } = useApiQuery<UserDocument>(`/users/${params.userID}`);
+	const { data: reqUser, error } = useApiQuery<MONGO_UserDocument>(`/users/${params.userID}`);
 
 	const { setBackground } = useContext(BackgroundContext);
 	useEffect(() => {
@@ -105,7 +105,7 @@ export default function UserRoutes() {
 	);
 }
 
-function UserProfileRoutes({ reqUser }: { reqUser: UserDocument }) {
+function UserProfileRoutes({ reqUser }: { reqUser: MONGO_UserDocument }) {
 	const { settings } = useContext(UserSettingsContext);
 
 	return (
@@ -150,7 +150,7 @@ function UserProfileRoutes({ reqUser }: { reqUser: UserDocument }) {
 	);
 }
 
-function UserGameRoutes({ reqUser }: { reqUser: UserDocument }) {
+function UserGameRoutes({ reqUser }: { reqUser: MONGO_UserDocument }) {
 	const { game } = useParams<{ game: string }>();
 
 	if (!IsSupportedGame(game)) {
@@ -187,7 +187,13 @@ function UserGameRoutes({ reqUser }: { reqUser: UserDocument }) {
 	);
 }
 
-function UserGamePlaytypeRoutes({ reqUser, game }: { game: GameGroup; reqUser: UserDocument }) {
+function UserGamePlaytypeRoutes({
+	reqUser,
+	game,
+}: {
+	game: GameGroup;
+	reqUser: MONGO_UserDocument;
+}) {
 	const { playtype } = useParams<{ playtype: string }>();
 
 	if (!IsSupportedPlaytype(game, playtype)) {
@@ -209,11 +215,11 @@ function Inner({
 }: {
 	game: GameGroup;
 	playtype: Playtype;
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 }) {
 	const { user } = useContext(UserContext);
 
-	const { data, error } = useQuery<UGPTStatsReturn, APIFetchV1Return<UserGameStats>>(
+	const { data, error } = useQuery<UGPTStatsReturn, APIFetchV1Return<MONGO_UserGameStats>>(
 		[reqUser.id, game, playtype],
 		async () => {
 			const res = await APIFetchV1<UGPTStatsReturn>(

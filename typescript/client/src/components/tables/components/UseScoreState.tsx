@@ -1,6 +1,6 @@
 import { type ScoreDataset } from "#types/tables";
 import { useEffect, useState } from "react";
-import { type PBScoreDocument } from "tachi-common";
+import { type MONGO_PBScoreDocument } from "tachi-common";
 
 export function useScoreState(sc: ScoreDataset[0]) {
 	const [highlight, setHighlight] = useState(sc.highlight);
@@ -14,7 +14,7 @@ export function useScoreState(sc: ScoreDataset[0]) {
 	return { highlight, comment, setHighlight, setComment };
 }
 
-export function usePBState(pb: PBScoreDocument) {
+export function usePBState(pb: MONGO_PBScoreDocument) {
 	const [highlight, setHighlight] = useState(pb.highlight);
 
 	useEffect(() => {

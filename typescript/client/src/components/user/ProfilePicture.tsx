@@ -2,7 +2,7 @@ import { type GamePT } from "#types/react";
 import { ToAPIURL } from "#util/api";
 import React from "react";
 import { Link } from "react-router-dom";
-import { type UserDocument } from "tachi-common";
+import { type MONGO_UserDocument } from "tachi-common";
 
 export default function ProfilePicture({
 	user,
@@ -31,7 +31,7 @@ export default function ProfilePicture({
 	 */
 	toGPT?: GamePT;
 
-	user: UserDocument;
+	user: MONGO_UserDocument;
 }) {
 	const dimensions = size === "sm" ? 32 : 128;
 	const props = {

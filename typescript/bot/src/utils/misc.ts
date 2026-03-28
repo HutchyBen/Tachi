@@ -4,7 +4,6 @@ import type { ClassInfo } from "tachi-common/types/game-config-utils";
 import _ from "lodash";
 import { DateTime } from "luxon";
 import {
-	type ChartDocument,
 	type Classes,
 	type GameGroup,
 	type GameGroupConfig,
@@ -12,6 +11,7 @@ import {
 	GetGamePTConfig,
 	type GPTString,
 	type integer,
+	type MONGO_ChartDocument,
 	type Playtype,
 } from "tachi-common";
 
@@ -145,7 +145,7 @@ export function GetLimboChannel(client: Client) {
 /**
  * Given a chart and a game, return a link to the site for that chart.
  */
-export function CreateChartLink(chart: ChartDocument, game: GameGroup) {
+export function CreateChartLink(chart: MONGO_ChartDocument, game: GameGroup) {
 	if (chart.isPrimary) {
 		return `${Env.TACHI_SERVER_LOCATION}/games/${game}/${chart.playtype}/songs/${
 			chart.songID

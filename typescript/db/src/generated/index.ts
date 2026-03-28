@@ -23,7 +23,6 @@ export { type import_session_row_id, type default as ImportSessionTable, type Im
 export { type priv_svc_fer_card_card_id, type default as PrivSvcFerCardTable, type PrivSvcFerCard, type NewPrivSvcFerCard, type PrivSvcFerCardUpdate } from './public/PrivSvcFerCard';
 export { type default as PbComposedFromTable, type PbComposedFrom, type NewPbComposedFrom, type PbComposedFromUpdate } from './public/PbComposedFrom';
 export { type bms_course_lookup_md5sums, type default as BmsCourseLookupTable, type BmsCourseLookup, type NewBmsCourseLookup, type BmsCourseLookupUpdate } from './public/BmsCourseLookup';
-export { type song_search_term_search_term, type default as SongSearchTermTable, type SongSearchTerm, type NewSongSearchTerm, type SongSearchTermUpdate } from './public/SongSearchTerm';
 export { type game_profile_game, type default as GameProfileTable, type GameProfile, type NewGameProfile, type GameProfileUpdate } from './public/GameProfile';
 export { type import_game_game, type default as ImportGameTable, type ImportGame, type NewImportGame, type ImportGameUpdate } from './public/ImportGame';
 export { type import_goal_row_id, type default as ImportGoalTable, type ImportGoal, type NewImportGoal, type ImportGoalUpdate } from './public/ImportGoal';
@@ -49,9 +48,7 @@ export { type default as QuestSubTable, type QuestSub, type NewQuestSub, type Qu
 export { type orphan_score_row_id, type default as OrphanScoreTable, type OrphanScore, type NewOrphanScore, type OrphanScoreUpdate } from './public/OrphanScore';
 export { type default as FolderViewTable, type FolderView, type NewFolderView, type FolderViewUpdate } from './public/FolderView';
 export { type table_id, type default as TableTable, type Table, type NewTable, type TableUpdate } from './public/Table';
-export { type chart_version_version, type default as ChartVersionTable, type ChartVersion, type NewChartVersion, type ChartVersionUpdate } from './public/ChartVersion';
 export { type default as GoalSubTable, type GoalSub, type NewGoalSub, type GoalSubUpdate } from './public/GoalSub';
-export { type folder_search_term_search_term, type default as FolderSearchTermTable, type FolderSearchTerm, type NewFolderSearchTerm, type FolderSearchTermUpdate } from './public/FolderSearchTerm';
 export { type job_queue_row_id, type default as JobQueueTable, type JobQueue, type NewJobQueue, type JobQueueUpdate } from './public/JobQueue';
 export { type priv_api_client_client_id, type default as PrivApiClientTable, type PrivApiClient, type NewPrivApiClient, type PrivApiClientUpdate } from './public/PrivApiClient';
 export { type priv_api_token_token, type default as PrivApiTokenTable, type PrivApiToken, type NewPrivApiToken, type PrivApiTokenUpdate } from './public/PrivApiToken';
@@ -65,7 +62,6 @@ export { type default as QuestlineQuestTable, type QuestlineQuest, type NewQuest
 export { type questline_id, type default as QuestlineTable, type Questline, type NewQuestline, type QuestlineUpdate } from './public/Questline';
 export { type cron_task_id, type default as CronTaskTable, type CronTask, type NewCronTask, type CronTaskUpdate } from './public/CronTask';
 export { type import_class_row_id, type default as ImportClassTable, type ImportClass, type NewImportClass, type ImportClassUpdate } from './public/ImportClass';
-export { type song_alt_title_alt_title, type default as SongAltTitleTable, type SongAltTitle, type NewSongAltTitle, type SongAltTitleUpdate } from './public/SongAltTitle';
 export { type game_stats_snapshot_game, type game_stats_snapshot_timestamp, type default as GameStatsSnapshotTable, type GameStatsSnapshot, type NewGameStatsSnapshot, type GameStatsSnapshotUpdate } from './public/GameStatsSnapshot';
 export { type default as ChartLeaderboardTable, type ChartLeaderboard } from './public/ChartLeaderboard';
 export { type default as AuthLevel } from './public/AuthLevel';

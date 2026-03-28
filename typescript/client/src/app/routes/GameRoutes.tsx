@@ -37,14 +37,14 @@ import React, { useContext, useEffect, useState } from "react";
 import { Col, Row } from "react-bootstrap";
 import { Redirect, Route, Switch, useParams } from "react-router-dom";
 import {
-	type ChartDocument,
 	COLOUR_SET,
 	FormatDifficulty,
 	type GameGroup,
 	GetGameGroupConfig,
 	GetGamePTConfig,
 	GetGPTString,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
 } from "tachi-common";
 import { type FixedDifficulties } from "tachi-common/types/game-config-utils";
 
@@ -182,8 +182,8 @@ function ChartPageRoutes({ game, playtype }: GamePT) {
 	const { chartID } = useParams<{ chartID: string }>();
 
 	const { data: singleData, error: chartErr } = useApiQuery<{
-		chart: ChartDocument;
-		song: SongDocument;
+		chart: MONGO_ChartDocument;
+		song: MONGO_SongDocument;
 	}>(`/games/${game}/${playtype}/charts/${chartID}`);
 
 	const songLegacyId = singleData?.song.id;
@@ -197,7 +197,7 @@ function ChartPageRoutes({ game, playtype }: GamePT) {
 
 	const { settings } = useContext(UserSettingsContext);
 
-	const [activeChart, setActiveChart] = useState<ChartDocument | null>(null);
+	const [activeChart, setActiveChart] = useState<MONGO_ChartDocument | null>(null);
 
 	useEffect(() => {
 		const c = songsData?.charts.find((x) => x.chartID === chartID);
@@ -305,7 +305,11 @@ function SongChartRedirectRoutes({ game, playtype }: GamePT) {
 	);
 }
 
-function SongSongIdOnlyRedirect({ charts, game, playtype }: { charts: ChartDocument[] } & GamePT) {
+function SongSongIdOnlyRedirect({
+	charts,
+	game,
+	playtype,
+}: { charts: MONGO_ChartDocument[] } & GamePT) {
 	const hardest = charts.slice(0).sort(NumericSOV((x) => x.levelNum, true))[0];
 
 	if (!hardest.chartID) {
@@ -341,7 +345,10 @@ function SongInfoHeader({
 	charts,
 	activeChart,
 	setActiveChart,
-}: { activeChart: ChartDocument | null; setActiveChart: SetState<ChartDocument | null> } & GamePT &
+}: {
+	activeChart: MONGO_ChartDocument | null;
+	setActiveChart: SetState<MONGO_ChartDocument | null>;
+} & GamePT &
 	SongsReturn) {
 	const gptConfig = GetGamePTConfig(game, playtype);
 
@@ -418,9 +425,9 @@ function SongInfoHeader({
 }
 
 type Props = {
-	activeChart: ChartDocument | null;
-	setActiveChart: SetState<ChartDocument | null>;
-} & { song: SongDocument } & GamePT;
+	activeChart: MONGO_ChartDocument | null;
+	setActiveChart: SetState<MONGO_ChartDocument | null>;
+} & { song: MONGO_SongDocument } & GamePT;
 
 const ITG_COLOUR_LOOKUP = {
 	Beginner: COLOUR_SET.paleBlue,
@@ -437,7 +444,7 @@ function DifficultyButton({
 	playtype,
 	setActiveChart,
 	activeChart,
-}: { chart: ChartDocument } & Props) {
+}: { chart: MONGO_ChartDocument } & Props) {
 	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, playtype)];
 
 	const diffTag = chart.difficulty;
@@ -497,7 +504,7 @@ function DifficultyList({
 	game,
 	playtype,
 }: {
-	charts: ChartDocument[];
+	charts: MONGO_ChartDocument[];
 } & Props) {
 	return (
 		<>
@@ -528,14 +535,14 @@ function IIDXDifficultyList({
 	game,
 	playtype,
 }: {
-	charts: ChartDocument[];
+	charts: MONGO_ChartDocument[];
 } & Props) {
 	const { settings } = useLUGPTSettings<"iidx:DP" | "iidx:SP">();
 
 	const [set, setSet] = useState<"All Scratch" | "Kichiku" | "Kiraku" | null>(null);
 
 	if (
-		!(activeChart as ChartDocument<"iidx:DP" | "iidx:SP">)?.data["2dxtraSet"] &&
+		!(activeChart as MONGO_ChartDocument<"iidx:DP" | "iidx:SP">)?.data["2dxtraSet"] &&
 		!settings?.preferences.gameSpecific.display2DXTra
 	) {
 		return (
@@ -543,7 +550,8 @@ function IIDXDifficultyList({
 				{...{
 					charts: charts.filter(
 						// @ts-expect-error hack
-						(e: ChartDocument<"iidx:DP" | "iidx:SP">) => e.data["2dxtraSet"] === null,
+						(e: MONGO_ChartDocument<"iidx:DP" | "iidx:SP">) =>
+							e.data["2dxtraSet"] === null,
 					),
 					song,
 					activeChart,
@@ -575,7 +583,7 @@ function IIDXDifficultyList({
 				{...{
 					charts: charts.filter(
 						// @ts-expect-error hack
-						(e: ChartDocument<"iidx:DP" | "iidx:SP">) =>
+						(e: MONGO_ChartDocument<"iidx:DP" | "iidx:SP">) =>
 							set ? e.difficulty.startsWith(set) : e.data["2dxtraSet"] === null,
 					),
 					song,

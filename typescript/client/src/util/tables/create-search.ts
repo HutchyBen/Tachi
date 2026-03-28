@@ -8,17 +8,17 @@ import { HumanFriendlyStrToEnumIndex } from "#util/str-to-num";
 import { type ValueGetterOrHybrid } from "#util/ztable/search";
 import {
 	BMS_TABLES,
-	type ChartDocument,
 	type GameGroup,
 	type GamePTConfig,
 	GetGamePTConfig,
 	type GPTString,
-	type PBScoreDocument,
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
 	type Playtype,
-	type ScoreDocument,
 } from "tachi-common";
 
-function GetBMSTableVal(chart: ChartDocument<"bms:7K" | "bms:14K">, key: string) {
+function GetBMSTableVal(chart: MONGO_ChartDocument<"bms:7K" | "bms:14K">, key: string) {
 	for (const table of chart.data.tableFolders) {
 		if (table.table === key) {
 			return Number(table.level);
@@ -55,9 +55,12 @@ export function CreateDefaultScoreSearchParams<GPT extends GPTString = GPTString
 export function GetMetricSearchParams(
 	game: GameGroup,
 	playtype: Playtype,
-	kMapper: (v: any) => PBScoreDocument | ScoreDocument = (v) => v,
+	kMapper: (v: any) => MONGO_PBScoreDocument | MONGO_ScoreDocument = (v) => v,
 ) {
-	const searchFns: Record<string, ValueGetterOrHybrid<PBScoreDocument | ScoreDocument>> = {};
+	const searchFns: Record<
+		string,
+		ValueGetterOrHybrid<MONGO_PBScoreDocument | MONGO_ScoreDocument>
+	> = {};
 
 	const gptConfig = GetGamePTConfig(game, playtype);
 
@@ -193,7 +196,7 @@ function CreateCalcDataSearchFns(gptConfig: GamePTConfig) {
 function HandleBMSNonsense(
 	searchFunctions: Record<string, any>,
 	playtype: Playtype,
-	chartGetter: (u: any) => ChartDocument<"bms:7K" | "bms:14K">,
+	chartGetter: (u: any) => MONGO_ChartDocument<"bms:7K" | "bms:14K">,
 ) {
 	const appendSearches: Record<string, ValueGetterOrHybrid<any>> = Object.fromEntries(
 		BMS_TABLES.filter((e) => e.playtype === playtype).map((e) => [

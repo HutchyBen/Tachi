@@ -1,14 +1,18 @@
-import type { GameGroup } from "tachi-common";
-
 import DB from "#services/pg/db";
 import { EscapeForILIKE } from "#utils/misc";
 import { sql } from "kysely";
+import {
+	type GameGroup,
+	type integer,
+	type MONGO_SongDocument,
+	type MONGO_SongDocumentData,
+} from "tachi-common";
 
 /** Hard cap on song hits per `game_group` (FTS + trgm combined). */
 export const MAX_SONG_SEARCH_RESULTS_PER_GAME = 100;
 
 /** Use trigram / ILIKE supplement when the query is this short or FTS returns nothing. */
-const SHORT_QUERY_LEN = 3;
+export const SHORT_QUERY_LEN = 3;
 
 /**
  * Queries this short match almost every row if we use substring `ILIKE '%q%'` / trgm.
@@ -55,7 +59,7 @@ export type SongSearchRow = {
  * (Zenith-style — no full-table load, no huge IN lists).
  *
  * Queries with length ≤ {@link SHORT_QUERY_STRICT_MAX_LEN} also run an **exact** match pass
- * (title, artist, `song_search_term`, `song_alt_title`) with a boosted rank; substring
+ * (title, artist, `search_terms`, `alt_titles`) with a boosted rank; substring
  * `ILIKE '%q%'` trgm is skipped so single-letter titles like “A” are findable without noise.
  */
 export async function SearchSongsForGameFtsAndTrgm(
@@ -107,13 +111,13 @@ export async function SearchSongsForGameFtsAndTrgm(
 						OR lower(song.artist) = lower(${q})
 						OR EXISTS (
 							SELECT 1
-							FROM song_search_term st
-							WHERE st.song_id = song.id AND lower(st.search_term) = lower(${q})
+							FROM unnest(song.search_terms) AS st(term)
+							WHERE lower(term) = lower(${q})
 						)
 						OR EXISTS (
 							SELECT 1
-							FROM song_alt_title at
-							WHERE at.song_id = song.id AND lower(at.alt_title) = lower(${q})
+							FROM unnest(song.alt_titles) AS at(alt_title)
+							WHERE lower(alt_title) = lower(${q})
 						)
 					)
 				LIMIT ${cap}
@@ -219,7 +223,7 @@ export async function SearchSongsForGameFtsAndTrgm(
 }
 
 /**
- * Loads search_term and alt_title rows for a bounded set of song PKs (e.g. search hits).
+ * Loads `search_terms` and `alt_titles` for a bounded set of song PKs (e.g. search hits).
  */
 export async function LoadSongChildrenForPgIds(
 	songIds: string[],
@@ -228,50 +232,78 @@ export async function LoadSongChildrenForPgIds(
 		return new Map();
 	}
 
-	const [searchTermRows, altTitleRows] = await Promise.all([
-		DB.selectFrom("song_search_term")
-			.select(["song_id", "search_term"])
-			.where("song_id", "in", songIds)
-			.execute(),
-		DB.selectFrom("song_alt_title")
-			.select(["song_id", "alt_title"])
-			.where("song_id", "in", songIds)
-			.execute(),
-	]);
+	const rows = await DB.selectFrom("song")
+		.select(["id", "search_terms", "alt_titles"])
+		.where("id", "in", songIds)
+		.execute();
 
-	const termsBySong = new Map<string, string[]>();
-	const altsBySong = new Map<string, string[]>();
-
-	for (const r of searchTermRows) {
-		let list = termsBySong.get(r.song_id);
-
-		if (!list) {
-			list = [];
-			termsBySong.set(r.song_id, list);
-		}
-
-		list.push(r.search_term);
-	}
-
-	for (const r of altTitleRows) {
-		let list = altsBySong.get(r.song_id);
-
-		if (!list) {
-			list = [];
-			altsBySong.set(r.song_id, list);
-		}
-
-		list.push(r.alt_title);
-	}
+	const byId = new Map(rows.map((r) => [r.id, r] as const));
 
 	const out = new Map<string, { altTitles: string[]; searchTerms: string[] }>();
 
 	for (const id of songIds) {
+		const row = byId.get(id);
+
 		out.set(id, {
-			searchTerms: termsBySong.get(id) ?? [],
-			altTitles: altsBySong.get(id) ?? [],
+			searchTerms: row?.search_terms ?? [],
+			altTitles: row?.alt_titles ?? [],
 		});
 	}
 
 	return out;
+}
+
+export type SongSearchReturn = {
+	__textScore: number;
+} & MONGO_SongDocument;
+
+/**
+ * Fuzzy song search over Postgres `song` metadata (same behaviour as legacy Mongo SearchCollection).
+ */
+export async function searchSpecificGameSongsWithPgIds(
+	game: GameGroup,
+	search: string,
+	limit = 100,
+): Promise<{
+	pgIdByLegacyId: Map<integer, string>;
+	songs: Array<SongSearchReturn>;
+}> {
+	const rows = await SearchSongsForGameFtsAndTrgm(game, search, limit);
+
+	if (rows.length === 0) {
+		return { songs: [], pgIdByLegacyId: new Map() };
+	}
+
+	const children = await LoadSongChildrenForPgIds(rows.map((r) => r.id));
+
+	const pgIdByLegacyId = new Map<integer, string>();
+	const songs: Array<SongSearchReturn> = [];
+
+	for (const row of rows) {
+		const ch = children.get(row.id);
+
+		pgIdByLegacyId.set(row.legacy_id, row.id);
+
+		songs.push({
+			id: row.legacy_id,
+			title: row.title,
+			artist: row.artist,
+			searchTerms: ch?.searchTerms ?? [],
+			altTitles: ch?.altTitles ?? [],
+			data: row.data as MONGO_SongDocumentData[typeof game],
+			__textScore: Math.round(1000 * row.rank),
+		});
+	}
+
+	return { songs, pgIdByLegacyId };
+}
+
+export async function SearchSpecificGameSongs(
+	game: GameGroup,
+	search: string,
+	limit = 100,
+): Promise<Array<SongSearchReturn>> {
+	const { songs } = await searchSpecificGameSongsWithPgIds(game, search, limit);
+
+	return songs;
 }

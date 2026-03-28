@@ -16,24 +16,24 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Alert, ButtonGroup } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
-	type ChartDocument,
 	type GameGroup,
-	type ImportDocument,
+	type MONGO_ChartDocument,
+	type MONGO_ImportDocument,
+	type MONGO_ScoreDocument,
+	type MONGO_SessionDocument,
+	type MONGO_SongDocument,
+	type MONGO_UserDocument,
+	type MONGO_UserGameStats,
 	type Playtype,
-	type ScoreDocument,
-	type SessionDocument,
-	type SongDocument,
-	type UserDocument,
-	type UserGameStats,
 } from "tachi-common";
 
 interface Data {
-	import: ImportDocument;
-	scores: ScoreDocument[];
-	charts: ChartDocument[];
-	songs: SongDocument[];
-	sessions: SessionDocument[];
-	user: UserDocument;
+	import: MONGO_ImportDocument;
+	scores: MONGO_ScoreDocument[];
+	charts: MONGO_ChartDocument[];
+	songs: MONGO_SongDocument[];
+	sessions: MONGO_SessionDocument[];
+	user: MONGO_UserDocument;
 }
 
 export default function ImportInfo({
@@ -54,7 +54,7 @@ export default function ImportInfo({
 			return;
 		}
 
-		APIFetchV1<UserGameStats[]>(`/users/${user!.id}/game-stats`).then((r) => {
+		APIFetchV1<MONGO_UserGameStats[]>(`/users/${user!.id}/game-stats`).then((r) => {
 			if (!r.success) {
 				console.warn(`Can't update user stats post-import. ${r.description}`);
 				return;
@@ -160,7 +160,7 @@ function SessionTab({ data }: { data: Data }) {
 
 	const dataset = [];
 
-	const sessionMap: Map<string, SessionDocument> = new Map();
+	const sessionMap: Map<string, MONGO_SessionDocument> = new Map();
 
 	for (const session of data.sessions) {
 		sessionMap.set(session.sessionID, session);

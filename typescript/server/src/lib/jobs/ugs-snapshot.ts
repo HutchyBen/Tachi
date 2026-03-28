@@ -30,7 +30,7 @@ export async function UGSSnapshot() {
 		);
 	}
 
-	log.info(`Snapshotting UserGameStats.`);
+	log.info(`Snapshotting MONGO_UserGameStats.`);
 
 	try {
 		await MONGODB_KILL["game-stats"]

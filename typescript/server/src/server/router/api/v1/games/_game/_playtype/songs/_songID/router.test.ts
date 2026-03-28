@@ -28,22 +28,12 @@ async function seedSong({
 			game_group: "iidx",
 			title,
 			artist,
+			search_terms: searchTerms,
+			alt_titles: altTitles,
 			data: { displayVersion: "1", genre: "PIANO AMBIENT" },
 			fts_document: [...searchTerms, ...altTitles].filter(Boolean).join(" "),
 		})
 		.execute();
-
-	if (searchTerms.length > 0) {
-		await DB.insertInto("song_search_term")
-			.values(searchTerms.map((t) => ({ song_id: pgId, search_term: t })))
-			.execute();
-	}
-
-	if (altTitles.length > 0) {
-		await DB.insertInto("song_alt_title")
-			.values(altTitles.map((t) => ({ song_id: pgId, alt_title: t })))
-			.execute();
-	}
 }
 
 async function seedChart({
@@ -66,15 +56,10 @@ async function seedChart({
 			level,
 			level_num: levelNum,
 			is_primary: isPrimary,
+			versions,
 			data: { inGameID: 1000, notecount: 786 },
 		})
 		.execute();
-
-	if (versions.length > 0) {
-		await DB.insertInto("chart_version")
-			.values(versions.map((v) => ({ chart_id: pgId, version: v })))
-			.execute();
-	}
 }
 
 // ─── GET /api/v1/games/iidx/SP/songs/:songID ─────────────────────────────────
@@ -168,6 +153,7 @@ describe("GET /api/v1/games/iidx/SP/songs/:songID", () => {
 				level: "10",
 				level_num: 10,
 				is_primary: true,
+				versions: ["27", "26"],
 				data: { inGameID: 1000, notecount: 786 },
 			})
 			.execute();

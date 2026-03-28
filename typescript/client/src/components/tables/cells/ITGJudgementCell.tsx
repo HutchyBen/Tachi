@@ -1,11 +1,11 @@
 import { IsNotNullish, IsNullish } from "#util/misc";
 import React from "react";
-import { COLOUR_SET, type PBScoreDocument, type ScoreDocument } from "tachi-common";
+import { COLOUR_SET, type MONGO_PBScoreDocument, type MONGO_ScoreDocument } from "tachi-common";
 
 export default function ITGJudgementCell({
 	score,
 }: {
-	score: PBScoreDocument<"itg:Stamina"> | ScoreDocument<"itg:Stamina">;
+	score: MONGO_PBScoreDocument<"itg:Stamina"> | MONGO_ScoreDocument<"itg:Stamina">;
 }) {
 	const judgements = score.scoreData.judgements;
 

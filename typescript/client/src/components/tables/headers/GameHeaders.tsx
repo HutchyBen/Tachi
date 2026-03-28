@@ -16,9 +16,9 @@ import {
 	GetGamePTConfig,
 	GetGPTString,
 	type GPTString,
-	type PBScoreDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
 	type Playtype,
-	type ScoreDocument,
 	type ScoreRatingAlgorithms,
 } from "tachi-common";
 
@@ -37,7 +37,7 @@ export function GetGPTCoreHeaders<
 	playtype: Playtype,
 	rating: ScoreRatingAlgorithms[GPTString],
 	setRating: SetState<ScoreRatingAlgorithms[GPTString]>,
-	kMapToScoreOrPB: (k: Dataset[0]) => PBScoreDocument | ScoreDocument | null,
+	kMapToScoreOrPB: (k: Dataset[0]) => MONGO_PBScoreDocument | MONGO_ScoreDocument | null,
 ): Header<Dataset[0]>[] {
 	const gptConfig = GetGamePTConfig(game, playtype);
 

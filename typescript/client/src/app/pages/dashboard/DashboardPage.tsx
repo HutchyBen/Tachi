@@ -24,7 +24,7 @@ import React, { useContext, useMemo } from "react";
 import Alert from "react-bootstrap/Alert";
 import Stack from "react-bootstrap/Stack";
 import { Link, Route, Switch } from "react-router-dom";
-import { type UserDocument } from "tachi-common";
+import { type MONGO_UserDocument } from "tachi-common";
 
 import SupportBanner from "./misc/SupportBanner";
 
@@ -42,7 +42,7 @@ export function DashboardPage() {
 	return <DashboardLoggedIn user={user} />;
 }
 
-function DashboardLoggedIn({ user }: { user: UserDocument }) {
+function DashboardLoggedIn({ user }: { user: MONGO_UserDocument }) {
 	const splash = useMemo(() => RFA(heySplashes), []);
 
 	return (
@@ -78,7 +78,7 @@ function DashboardLoggedIn({ user }: { user: UserDocument }) {
 	);
 }
 
-function RecentInfo({ user }: { user: UserDocument }) {
+function RecentInfo({ user }: { user: MONGO_UserDocument }) {
 	const { data, error } = useApiQuery<UserRecentSummary>(`/users/${user.id}/recent-summary`);
 
 	if (error) {

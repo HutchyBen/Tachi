@@ -86,11 +86,11 @@ export function ClassToIndex(gptString: GPTString, classSet: Classes[GPTString],
 
 /**
  * Updates a user's class value if it is greater than the one in their
- * UserGameStats.
+ * MONGO_UserGameStats.
  * @returns False if nothing was updated.
- * Null if it was updated because there was nothing in UserGameStats to
+ * Null if it was updated because there was nothing in MONGO_UserGameStats to
  * compare to.
- * True if it was updated because it was better than UserGameStats.
+ * True if it was updated because it was better than MONGO_UserGameStats.
  */
 export async function UpdateClassIfGreater(
 	userID: integer,

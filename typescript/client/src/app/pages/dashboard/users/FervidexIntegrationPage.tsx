@@ -7,10 +7,10 @@ import { isCardIDValid } from "#util/misc";
 import React, { useState } from "react";
 import { Button, Col, Form } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { type FervidexSettingsDocument, type UserDocument } from "tachi-common";
+import { type MONGO_FervidexSettingsDocument, type MONGO_UserDocument } from "tachi-common";
 
-export default function FervidexIntegrationPage({ reqUser }: { reqUser: UserDocument }) {
-	const { data: settings, error } = useApiQuery<FervidexSettingsDocument | null>(
+export default function FervidexIntegrationPage({ reqUser }: { reqUser: MONGO_UserDocument }) {
+	const { data: settings, error } = useApiQuery<MONGO_FervidexSettingsDocument | null>(
 		`/users/${reqUser.id}/integrations/fervidex/settings`,
 	);
 
@@ -48,10 +48,12 @@ function FervidexForm({
 	reqUser,
 	settings,
 }: {
-	reqUser: UserDocument;
-	settings: FervidexSettingsDocument | null;
+	reqUser: MONGO_UserDocument;
+	settings: MONGO_FervidexSettingsDocument | null;
 }) {
-	const [formSettings, setFormSettings] = useState<Omit<FervidexSettingsDocument, "userID">>(
+	const [formSettings, setFormSettings] = useState<
+		Omit<MONGO_FervidexSettingsDocument, "userID">
+	>(
 		settings
 			? { forceStaticImport: settings.forceStaticImport, cards: settings.cards }
 			: {

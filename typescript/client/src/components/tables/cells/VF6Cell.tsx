@@ -4,11 +4,11 @@ import { IsNullish } from "#util/misc";
 import React, { useContext } from "react";
 import { Volforce } from "rg-stats";
 import {
-	type ChartDocument,
 	GetGPTString,
 	GetSpecificGPTConfig,
-	type PBScoreDocument,
-	type ScoreDocument,
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
 } from "tachi-common";
 
 type VF6GPTString = "sdvx:Single" | "usc:Controller" | "usc:Keyboard";
@@ -24,8 +24,8 @@ export default function VF6Cell({
 	score,
 	chart,
 }: {
-	chart: ChartDocument<VF6GPTString>;
-	score: PBScoreDocument<VF6GPTString> | ScoreDocument<VF6GPTString>;
+	chart: MONGO_ChartDocument<VF6GPTString>;
+	score: MONGO_PBScoreDocument<VF6GPTString> | MONGO_ScoreDocument<VF6GPTString>;
 }) {
 	const { user } = useContext(UserContext);
 	const { settings } = useLUGPTSettings<VF6GPTString>();

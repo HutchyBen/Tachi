@@ -1,7 +1,7 @@
 import { log } from "#lib/log/log";
 import { GetRivalUsers } from "#lib/rivals/rivals";
 import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch-manual/converter";
-import { SearchSpecificGameSongsAndCharts } from "#lib/search/search";
+import { SearchSpecificGameSongsAndCharts } from "#lib/search/song-charts.js";
 import prValidate from "#server/middleware/prudence-validate";
 import { AggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
 import MONGODB_KILL from "#services/mongo/db";

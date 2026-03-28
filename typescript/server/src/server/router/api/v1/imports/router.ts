@@ -342,7 +342,7 @@ router.get("/:importID/poll-status", async (req, res) => {
 				description: `Import was completed!`,
 				body: {
 					importStatus: "completed",
-					import: content.importDocument,
+					import: content.MONGO_ImportDocument,
 				},
 			});
 		}

@@ -7,13 +7,13 @@ import React, { useState } from "react";
 import { Button, Col, Form } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
-	type FervidexSettingsDocument,
-	type KsHookSettingsDocument,
-	type UserDocument,
+	type MONGO_FervidexSettingsDocument,
+	type MONGO_KsHookSettingsDocument,
+	type MONGO_UserDocument,
 } from "tachi-common";
 
-export default function KsHookSV6CIntegrationPage({ reqUser }: { reqUser: UserDocument }) {
-	const { data: settings, error } = useApiQuery<FervidexSettingsDocument | null>(
+export default function KsHookSV6CIntegrationPage({ reqUser }: { reqUser: MONGO_UserDocument }) {
+	const { data: settings, error } = useApiQuery<MONGO_FervidexSettingsDocument | null>(
 		`/users/${reqUser.id}/integrations/kshook-sv6c/settings`,
 	);
 
@@ -51,10 +51,10 @@ function KsHookSV6CForm({
 	reqUser,
 	settings,
 }: {
-	reqUser: UserDocument;
-	settings: KsHookSettingsDocument | null;
+	reqUser: MONGO_UserDocument;
+	settings: MONGO_KsHookSettingsDocument | null;
 }) {
-	const [formSettings, setFormSettings] = useState<Omit<KsHookSettingsDocument, "userID">>(
+	const [formSettings, setFormSettings] = useState<Omit<MONGO_KsHookSettingsDocument, "userID">>(
 		settings ? { forceStaticImport: settings.forceStaticImport } : { forceStaticImport: false },
 	);
 

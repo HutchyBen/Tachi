@@ -32,7 +32,6 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Col, Form, Row } from "react-bootstrap";
 import { Link, Route, Switch, useParams } from "react-router-dom";
 import {
-	type ChartDocument,
 	COLOUR_SET,
 	FormatDifficultyShort,
 	type GameGroup,
@@ -41,10 +40,11 @@ import {
 	GetScoreEnumConfs,
 	type GPTString,
 	type integer,
+	type MONGO_ChartDocument,
+	type MONGO_ScoreDocument,
+	type MONGO_SongDocument,
+	type MONGO_UserDocument,
 	type Playtype,
-	type ScoreDocument,
-	type SongDocument,
-	type UserDocument,
 } from "tachi-common";
 import { type ConfEnumScoreMetric } from "tachi-common/types/metrics";
 
@@ -52,7 +52,7 @@ import FolderComparePage from "./FolderComparePage";
 import FolderQuestsPage from "./FolderQuestsPage";
 
 interface Props {
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 	game: GameGroup;
 	playtype: Playtype;
 }
@@ -257,9 +257,9 @@ function TimelineMain({
 	value: string;
 } & Props) {
 	const { data, error } = useApiQuery<{
-		charts: ChartDocument[];
-		scores: ScoreDocument[];
-		songs: SongDocument[];
+		charts: MONGO_ChartDocument[];
+		scores: MONGO_ScoreDocument[];
+		songs: MONGO_SongDocument[];
 	}>(
 		`/users/${
 			reqUser.id
@@ -369,10 +369,10 @@ function TimelineElement({
 	index: integer;
 	scoreData: {
 		__related: {
-			chart: ChartDocument;
-			song: SongDocument;
+			chart: MONGO_ChartDocument;
+			song: MONGO_SongDocument;
 		};
-	} & ScoreDocument;
+	} & MONGO_ScoreDocument;
 }) {
 	return (
 		<div className="timeline-item">
@@ -526,7 +526,7 @@ function TierlistInfoLadder({
 	game: GameGroup;
 	playerStats: Record<string, { score: string | null; status: AchievedStatuses }>;
 	playtype: Playtype;
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 	tierlistImpl: GPTRatingSystem<GPTString>;
 	useFancyColour: boolean;
 }) {
@@ -635,7 +635,7 @@ function TierlistBucket({
 	forceGridView: boolean;
 	game: GameGroup;
 	playtype: Playtype;
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 	tierlistImpl: GPTRatingSystem<GPTString>;
 	useFancyColour: boolean;
 }) {
@@ -698,7 +698,7 @@ function TierlistInfoBucketValues({
 	game: GameGroup;
 	i: integer;
 	playtype: Playtype;
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 	tierlistImpl: GPTRatingSystem<GPTString>;
 	tierlistInfo: TierlistInfo;
 	useFancyColour: boolean;

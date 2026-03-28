@@ -1,9 +1,9 @@
 import type { GoalCriteriaFormatter } from "#game-implementations/types";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
+import { GetFolderChartIDs } from "#lib/folders/folders.js";
 import MONGODB_KILL from "#services/mongo/db";
 import { GetFolderForIDGuaranteed, HumaniseChartID } from "#utils/db";
-import { GetFolderChartIDs } from "#utils/folder";
 import { HumanisedJoinArray, OnlyFloatToDP } from "#utils/misc";
 import {
 	FormatGameGroup,

@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import fs from "fs";
-import { type GoalDocument, type QuestDocument } from "tachi-common";
+import { type MONGO_GoalDocument, type MONGO_QuestDocument } from "tachi-common";
 
 import { CreateGoalID, CreateQuestID, MutateCollection } from "../util";
 
@@ -13,7 +13,7 @@ const options = program.opts();
 // stolen from client/src/types/tachi.ts
 type RawQuestDocument = {
 	rawQuestData: Array<RawQuestSection>;
-} & Omit<QuestDocument, "questData" | "questID">;
+} & Omit<MONGO_QuestDocument, "questData" | "questID">;
 
 type RawQuestSection = {
 	desc: string;
@@ -22,16 +22,16 @@ type RawQuestSection = {
 };
 
 type RawQuestGoal = {
-	goal: Pick<GoalDocument, "charts" | "criteria" | "name">;
+	goal: Pick<MONGO_GoalDocument, "charts" | "criteria" | "name">;
 	note?: string;
 };
 
 const data = JSON.parse(fs.readFileSync(options.file, "utf-8")) as Array<RawQuestDocument>;
 
-const newGoals: Array<GoalDocument> = [];
+const newGoals: Array<MONGO_GoalDocument> = [];
 
-function HydrateQuest(raw: RawQuestDocument): QuestDocument {
-	const questData: QuestDocument["questData"] = [];
+function HydrateQuest(raw: RawQuestDocument): MONGO_QuestDocument {
+	const questData: MONGO_QuestDocument["questData"] = [];
 
 	const { game, playtype } = raw;
 
@@ -41,14 +41,14 @@ function HydrateQuest(raw: RawQuestDocument): QuestDocument {
 		for (const rawGoal of rawQuest.rawGoals) {
 			const goalID = CreateGoalID(rawGoal.goal.charts, rawGoal.goal.criteria, game, playtype);
 
-			const newGoal: GoalDocument = {
+			const newGoal: MONGO_GoalDocument = {
 				charts: rawGoal.goal.charts,
 				criteria: rawGoal.goal.criteria,
 				game,
 				playtype,
 				goalID,
 				name: rawGoal.goal.name,
-			} as GoalDocument;
+			} as MONGO_GoalDocument;
 
 			newGoals.push(newGoal);
 

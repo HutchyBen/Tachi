@@ -39,6 +39,8 @@ describe("LoadSessionDocumentById", () => {
 				game_group: "iidx",
 				title: "T",
 				artist: "A",
+				search_terms: [],
+				alt_titles: [],
 				data: JSON.stringify({}),
 				fts_document: "",
 			})
@@ -54,6 +56,7 @@ describe("LoadSessionDocumentById", () => {
 				level_num: 1,
 				is_primary: true,
 				difficulty: "NORMAL",
+				versions: [],
 				data: JSON.stringify({}),
 			})
 			.execute();

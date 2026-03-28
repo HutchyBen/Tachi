@@ -23,7 +23,6 @@ import type { default as ImportSessionTable } from './ImportSession';
 import type { default as PrivSvcFerCardTable } from './PrivSvcFerCard';
 import type { default as PbComposedFromTable } from './PbComposedFrom';
 import type { default as BmsCourseLookupTable } from './BmsCourseLookup';
-import type { default as SongSearchTermTable } from './SongSearchTerm';
 import type { default as GameProfileTable } from './GameProfile';
 import type { default as ImportGameTable } from './ImportGame';
 import type { default as ImportGoalTable } from './ImportGoal';
@@ -49,9 +48,7 @@ import type { default as QuestSubTable } from './QuestSub';
 import type { default as OrphanScoreTable } from './OrphanScore';
 import type { default as FolderViewTable } from './FolderView';
 import type { default as TableTable } from './Table';
-import type { default as ChartVersionTable } from './ChartVersion';
 import type { default as GoalSubTable } from './GoalSub';
-import type { default as FolderSearchTermTable } from './FolderSearchTerm';
 import type { default as JobQueueTable } from './JobQueue';
 import type { default as PrivApiClientTable } from './PrivApiClient';
 import type { default as PrivApiTokenTable } from './PrivApiToken';
@@ -65,7 +62,6 @@ import type { default as QuestlineQuestTable } from './QuestlineQuest';
 import type { default as QuestlineTable } from './Questline';
 import type { default as CronTaskTable } from './CronTask';
 import type { default as ImportClassTable } from './ImportClass';
-import type { default as SongAltTitleTable } from './SongAltTitle';
 import type { default as GameStatsSnapshotTable } from './GameStatsSnapshot';
 import type { default as ChartLeaderboardTable } from './ChartLeaderboard';
 
@@ -113,8 +109,6 @@ export default interface PublicSchema {
   pb_composed_from: PbComposedFromTable;
 
   bms_course_lookup: BmsCourseLookupTable;
-
-  song_search_term: SongSearchTermTable;
 
   game_profile: GameProfileTable;
 
@@ -166,11 +160,7 @@ export default interface PublicSchema {
 
   table: TableTable;
 
-  chart_version: ChartVersionTable;
-
   goal_sub: GoalSubTable;
-
-  folder_search_term: FolderSearchTermTable;
 
   job_queue: JobQueueTable;
 
@@ -197,8 +187,6 @@ export default interface PublicSchema {
   cron_task: CronTaskTable;
 
   import_class: ImportClassTable;
-
-  song_alt_title: SongAltTitleTable;
 
   game_stats_snapshot: GameStatsSnapshotTable;
 

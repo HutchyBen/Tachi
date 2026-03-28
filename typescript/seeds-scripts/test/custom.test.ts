@@ -2,10 +2,10 @@ import chalk from "chalk";
 import fs from "fs";
 import path from "path";
 import {
-	type ChartDocument,
 	type GameGroup,
 	type GPTStrings,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
 } from "tachi-common";
 
 import { ReadCollection } from "../util";
@@ -26,7 +26,7 @@ function test<T>(desc: string, fn: TestFn<T>, reason?: FmtFn<T>): Test<T> {
 // TODO(zk): This is stratified on GameGroup when it
 // should really be on Game, alas, poor yorick, I knew
 // him well.
-const CHART_CHECKS: { [G in GameGroup]?: Array<Test<ChartDocument<GPTStrings[G]>>> } = {
+const CHART_CHECKS: { [G in GameGroup]?: Array<Test<MONGO_ChartDocument<GPTStrings[G]>>> } = {
 	iidx: [
 		test("Level should not be 0", (c) => c.level !== "0"),
 		test("LevelNum should be an integer greater than 0 if level is known", (c) =>
@@ -110,7 +110,7 @@ const CHART_CHECKS: { [G in GameGroup]?: Array<Test<ChartDocument<GPTStrings[G]>
 	],
 };
 
-const SONG_CHECKS: { [G in GameGroup]?: Array<Test<SongDocument<G>>> } = {};
+const SONG_CHECKS: { [G in GameGroup]?: Array<Test<MONGO_SongDocument<G>>> } = {};
 
 let exitCode = 0;
 const suites: Array<{ good: boolean; name: string; report: unknown }> = [];

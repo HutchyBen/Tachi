@@ -5,12 +5,12 @@ import { type SetState } from "#types/react";
 import React, { useState } from "react";
 import { Nav } from "react-bootstrap";
 import {
-	type ChartDocument,
 	type Difficulties,
-	type MongoScoreData,
-	type PBScoreDocument,
-	type ScoreDocument,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreData,
+	type MONGO_ScoreDocument,
+	type MONGO_SongDocument,
 } from "tachi-common";
 
 type ChartType = "Life" | "Score";
@@ -19,8 +19,8 @@ export function ChunithmGraphsComponent({
 	score,
 	chart,
 }: {
-	chart: ChartDocument<"chunithm:Single">;
-	score: PBScoreDocument<"chunithm:Single"> | ScoreDocument<"chunithm:Single">;
+	chart: MONGO_ChartDocument<"chunithm:Single">;
+	score: MONGO_PBScoreDocument<"chunithm:Single"> | MONGO_ScoreDocument<"chunithm:Single">;
 }) {
 	const [graph, setGraph] = useState<ChartType>("Score");
 	const available = score.scoreData.optional.scoreGraph && score.scoreData.optional.lifeGraph;
@@ -48,13 +48,13 @@ function Inner({
 	available,
 }: {
 	available: number[] | null | undefined;
-	chart: ChartDocument<"chunithm:Single">;
+	chart: MONGO_ChartDocument<"chunithm:Single">;
 	graph: ChartType;
-	score: PBScoreDocument<"chunithm:Single"> | ScoreDocument<"chunithm:Single">;
+	score: MONGO_PBScoreDocument<"chunithm:Single"> | MONGO_ScoreDocument<"chunithm:Single">;
 	setGraph: SetState<ChartType>;
 }) {
 	const { data, error } = useApiQuery<{
-		song: SongDocument<"chunithm">;
+		song: MONGO_SongDocument<"chunithm">;
 	}>(`/games/chunithm/Single/songs/${score.songID}`);
 
 	if (error !== null || data === undefined) {
@@ -106,8 +106,8 @@ function GraphComponent({
 	type,
 }: {
 	difficulty: Difficulties["chunithm:Single"];
-	scoreData: MongoScoreData<"chunithm:Single">;
-	song: SongDocument<"chunithm">;
+	scoreData: MONGO_ScoreData<"chunithm:Single">;
+	song: MONGO_SongDocument<"chunithm">;
 	type: ChartType;
 }) {
 	const values =

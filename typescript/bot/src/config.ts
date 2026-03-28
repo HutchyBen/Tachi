@@ -10,6 +10,8 @@ import { FormatPrError } from "./utils/prudence";
 // Initialise .env.
 config();
 
+export const Env = ParseEnvVars();
+
 function ParseGameChannels(raw: string | undefined): Partial<Record<GameGroup, string>> {
 	if (!raw) {
 		return {};
@@ -130,8 +132,6 @@ async function GetServerConfig() {
 }
 
 export const ServerConfig = await GetServerConfig();
-
-export const Env = ParseEnvVars();
 
 // General warnings for config misuse.
 // This warns people if their parent server supports games that they aren't acknowledging.

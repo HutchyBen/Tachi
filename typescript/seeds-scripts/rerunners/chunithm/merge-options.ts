@@ -3,11 +3,11 @@ import { XMLParser } from "fast-xml-parser";
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import path from "path";
 import {
-	type ChartDocument,
 	type Difficulties,
 	GetGamePTConfig,
 	type integer,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
 } from "tachi-common";
 
 import { log } from "../../log";
@@ -120,14 +120,15 @@ if (!tachiVersions.includes(options.version)) {
 const isOmnimixVersion = /-omni$/u.test(options.version);
 const isLatestVersion = VERSIONS.indexOf(baseVersion) === VERSIONS.length - 1;
 
-const existingSongDocs: Array<SongDocument<"chunithm">> = ReadCollection("songs-chunithm.json");
-const existingChartDocs: Array<ChartDocument<"chunithm:Single">> =
+const existingSongDocs: Array<MONGO_SongDocument<"chunithm">> =
+	ReadCollection("songs-chunithm.json");
+const existingChartDocs: Array<MONGO_ChartDocument<"chunithm:Single">> =
 	ReadCollection("charts-chunithm.json");
 
 const songMap = new Map(existingSongDocs.map((s) => [s.id, s]));
 const songTitleMap = new Map(existingSongDocs.map((s) => [s.title, s]));
 const inGameIDToSongIDMap = new Map<number, number>();
-const existingCharts = new Map<string, ChartDocument<"chunithm:Single">>();
+const existingCharts = new Map<string, MONGO_ChartDocument<"chunithm:Single">>();
 
 for (const chart of existingChartDocs) {
 	inGameIDToSongIDMap.set(chart.data.inGameID, chart.songID);
@@ -144,8 +145,8 @@ const parser = new XMLParser({
 	},
 });
 
-const newSongs: Array<SongDocument<"chunithm">> = [];
-const newCharts: Array<ChartDocument<"chunithm:Single">> = [];
+const newSongs: Array<MONGO_SongDocument<"chunithm">> = [];
+const newCharts: Array<MONGO_ChartDocument<"chunithm:Single">> = [];
 
 for (const optionsDir of options.input) {
 	for (const option of readdirSync(optionsDir)) {
@@ -252,7 +253,7 @@ for (const optionsDir of options.input) {
 					);
 				}
 
-				const songDoc: SongDocument<"chunithm"> = {
+				const songDoc: MONGO_SongDocument<"chunithm"> = {
 					title: musicData.name.str,
 					altTitles: [],
 					searchTerms: [],
@@ -348,7 +349,7 @@ for (const optionsDir of options.input) {
 					continue;
 				}
 
-				const chartDoc: ChartDocument<"chunithm:Single"> = {
+				const chartDoc: MONGO_ChartDocument<"chunithm:Single"> = {
 					chartID: CreateChartID(),
 					songID: tachiSongID,
 					difficulty: difficultyName as Difficulties["chunithm:Single"],

@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { type ChartDocument, type Difficulties, type SongDocument } from "tachi-common";
+import { type Difficulties, type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
 
 import { CreateChartID, MutateCollection, ReadCollection, WriteCollection } from "../../util";
 
@@ -147,15 +147,15 @@ function releaseDateToVersion(date: Date): string {
 	const existingChartDocs = ReadCollection("charts-chunithm.json");
 
 	const inGameIDToSongIDMap = new Map<number, number>();
-	const existingCharts = new Map<string, ChartDocument<"chunithm:Single">>();
+	const existingCharts = new Map<string, MONGO_ChartDocument<"chunithm:Single">>();
 
 	for (const chart of existingChartDocs) {
 		inGameIDToSongIDMap.set(chart.data.inGameID, chart.songID);
 		existingCharts.set(`${chart.data.inGameID}-${chart.difficulty}`, chart);
 	}
 
-	const newSongs: Array<SongDocument<"chunithm">> = [];
-	const newCharts: Array<ChartDocument<"chunithm:Single">> = [];
+	const newSongs: Array<MONGO_SongDocument<"chunithm">> = [];
+	const newCharts: Array<MONGO_ChartDocument<"chunithm:Single">> = [];
 
 	for (const chunithmSong of chunithmSongs) {
 		const inGameID = Number(chunithmSong.id);
@@ -239,7 +239,7 @@ function releaseDateToVersion(date: Date): string {
 		}
 	}
 
-	MutateCollection("songs-chunithm.json", (songs: Array<SongDocument<"chunithm">>) => [
+	MutateCollection("songs-chunithm.json", (songs: Array<MONGO_SongDocument<"chunithm">>) => [
 		...songs,
 		...newSongs,
 	]);

@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, bench, describe } from "vitest";
 
-import { LoadSongChildrenForPgIds, SearchSongsForGameFtsAndTrgm } from "./song-search";
+import { LoadSongChildrenForPgIds, SearchSongsForGameFtsAndTrgm } from "./songs.js";
 
 /** Default: repo `db/seeds` (override with `SEEDS_DIR` for custom trees). */
 const SEEDS_DIR =
@@ -51,7 +51,7 @@ describe("Postgres song search (full seeds)", () => {
 		await SearchSongsForGameFtsAndTrgm(GAME_BMS, "fezike", 50);
 	});
 
-	bench("iidx search + song_search_term / song_alt_title children", async () => {
+	bench("iidx search + song search_terms / alt_titles columns", async () => {
 		await searchWithSongChildren(GAME_IIDX, "gradius", 50);
 	});
 });

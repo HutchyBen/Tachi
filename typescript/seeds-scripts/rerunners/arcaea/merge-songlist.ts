@@ -2,10 +2,10 @@ import { Command } from "commander";
 import fjsh from "fast-json-stable-hash";
 import fs from "fs";
 import {
-	type ChartDocument,
 	type Difficulties,
 	type integer,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
 } from "tachi-common";
 
 import { CreateChartID, ReadCollection, WriteCollection } from "../../util";
@@ -142,16 +142,16 @@ const packlistContent = fs.readFileSync(options.packlist, { encoding: "utf-8" })
 const packlistData: { packs: Array<PacklistEntry> } = JSON.parse(packlistContent);
 const packsByID = Object.fromEntries(packlistData.packs.map((p) => [p.id, p]));
 
-const existingSongDocsById: Map<number, SongDocument<"arcaea">> = new Map(
-	ReadCollection("songs-arcaea.json").map((e: SongDocument<"arcaea">) => [e.id, e]),
+const existingSongDocsById: Map<number, MONGO_SongDocument<"arcaea">> = new Map(
+	ReadCollection("songs-arcaea.json").map((e: MONGO_SongDocument<"arcaea">) => [e.id, e]),
 );
-const existingChartDocs: Array<ChartDocument<"arcaea:Touch">> =
+const existingChartDocs: Array<MONGO_ChartDocument<"arcaea:Touch">> =
 	ReadCollection("charts-arcaea.json");
 const inGameIDToSongsMap: MultiMapUniqueValues<
 	string,
-	SongDocument<"arcaea">
+	MONGO_SongDocument<"arcaea">
 > = new MultiMapUniqueValues();
-const existingCharts: Map<string, ChartDocument<"arcaea:Touch">> = new Map();
+const existingCharts: Map<string, MONGO_ChartDocument<"arcaea:Touch">> = new Map();
 
 for (const chart of existingChartDocs) {
 	const song = existingSongDocsById.get(chart.songID);
@@ -165,8 +165,8 @@ for (const chart of existingChartDocs) {
 
 const getNewSongID = GetFreshSongIDGenerator("arcaea");
 
-const newSongs: Array<SongDocument<"arcaea">> = [];
-const newCharts: Array<ChartDocument<"arcaea:Touch">> = [];
+const newSongs: Array<MONGO_SongDocument<"arcaea">> = [];
+const newCharts: Array<MONGO_ChartDocument<"arcaea:Touch">> = [];
 
 for (const entry of data.songs) {
 	const inGameID = entry.id;
@@ -186,7 +186,7 @@ for (const entry of data.songs) {
 			...new Set(Object.values(entry.title_localized).filter((t) => t !== title)),
 		];
 
-		const songDoc: SongDocument<"arcaea"> = {
+		const songDoc: MONGO_SongDocument<"arcaea"> = {
 			title,
 			artist: entry.artist,
 			altTitles,
@@ -204,7 +204,7 @@ for (const entry of data.songs) {
 	}
 
 	for (const chart of entry.difficulties) {
-		let song: SongDocument<"arcaea">;
+		let song: MONGO_SongDocument<"arcaea">;
 
 		if (chart.hidden_until_unlocked && chart.hidden_until === "always") {
 			// Deactivated difficulty
@@ -238,7 +238,7 @@ for (const entry of data.songs) {
 				...new Set(Object.values(chart.title_localized).filter((t) => t !== title)),
 			];
 
-			const songDoc: SongDocument<"arcaea"> = {
+			const songDoc: MONGO_SongDocument<"arcaea"> = {
 				title,
 				artist: chart.artist ?? entry.artist,
 				altTitles,
@@ -265,7 +265,7 @@ for (const entry of data.songs) {
 			song = possibleSong;
 		}
 
-		const chartDoc: ChartDocument<"arcaea:Touch"> = {
+		const chartDoc: MONGO_ChartDocument<"arcaea:Touch"> = {
 			chartID: CreateChartID(),
 			songID: song.id,
 			difficulty,

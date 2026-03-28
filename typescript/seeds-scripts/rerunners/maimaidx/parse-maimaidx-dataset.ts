@@ -1,5 +1,5 @@
 import { log } from "#log";
-import { type ChartDocument, type Difficulties, type SongDocument } from "tachi-common";
+import { type Difficulties, type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
 
 import {
 	CreateChartID,
@@ -151,8 +151,9 @@ async function ParseInternalLevelData(
 }
 
 async function ParseMaimaiDXDataset() {
-	const songs: Array<SongDocument<"maimaidx">> = ReadCollection("songs-maimaidx.json");
-	const charts: Array<ChartDocument<"maimaidx:Single">> = ReadCollection("charts-maimaidx.json");
+	const songs: Array<MONGO_SongDocument<"maimaidx">> = ReadCollection("songs-maimaidx.json");
+	const charts: Array<MONGO_ChartDocument<"maimaidx:Single">> =
+		ReadCollection("charts-maimaidx.json");
 
 	const existingSongMap = new Map(songs.map((s) => [`${s.title}-${s.artist}`, s]));
 	const existingChartMap = new Map(charts.map((c) => [`${c.songID}-${c.difficulty}`, c]));
@@ -205,7 +206,7 @@ async function ParseMaimaiDXDataset() {
 		if (!tachiSongID) {
 			tachiSongID = getFreeSongID();
 
-			const songDoc: SongDocument<"maimaidx"> = {
+			const songDoc: MONGO_SongDocument<"maimaidx"> = {
 				id: tachiSongID,
 				title: data.title.trim(),
 				artist: data.artist.trim(),
@@ -275,7 +276,7 @@ async function ParseMaimaiDXDataset() {
 				continue;
 			}
 
-			const chartDoc: ChartDocument<"maimaidx:Single"> = {
+			const chartDoc: MONGO_ChartDocument<"maimaidx:Single"> = {
 				songID: tachiSongID,
 				chartID: CreateChartID(),
 				level,

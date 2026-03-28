@@ -7,8 +7,8 @@ import {
 	type AnyScoreRatingAlg,
 	type GameGroup,
 	type integer,
+	type MONGO_ScoreDocument,
 	type Playtype,
-	type ScoreDocument,
 } from "tachi-common";
 
 import DifficultyCell from "../cells/DifficultyCell";
@@ -40,7 +40,7 @@ export default function ScoreTable({
 	dataset: ScoreDataset;
 	game: GameGroup;
 	noTopDisplayStr?: boolean;
-	onScoreUpdate?: (sc: ScoreDocument) => void;
+	onScoreUpdate?: (sc: MONGO_ScoreDocument) => void;
 	pageLen?: integer;
 	playtype: Playtype;
 	userCol?: boolean;
@@ -93,7 +93,7 @@ function Row({
 	onScoreUpdate,
 }: {
 	game: GameGroup;
-	onScoreUpdate?: (sc: ScoreDocument) => void;
+	onScoreUpdate?: (sc: MONGO_ScoreDocument) => void;
 	playtype: Playtype;
 	rating: AnyScoreRatingAlg;
 	sc: ScoreDataset[0];

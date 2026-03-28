@@ -1,5 +1,10 @@
 import React from "react";
-import { COLOUR_SET, type GameGroup, type PBScoreDocument, type Playtype } from "tachi-common";
+import {
+	COLOUR_SET,
+	type GameGroup,
+	type MONGO_PBScoreDocument,
+	type Playtype,
+} from "tachi-common";
 import { type ConfScoreMetric } from "tachi-common/types/metrics";
 
 export default function PBCompareCell({
@@ -8,8 +13,8 @@ export default function PBCompareCell({
 	metricConf,
 	metric,
 }: {
-	base: PBScoreDocument | null;
-	compare: PBScoreDocument | null;
+	base: MONGO_PBScoreDocument | null;
+	compare: MONGO_PBScoreDocument | null;
 	game: GameGroup;
 	metric: string;
 	metricConf: ConfScoreMetric;
@@ -22,9 +27,9 @@ export default function PBCompareCell({
 	const getMetricNum =
 		metricConf.type === "ENUM"
 			? // @ts-expect-error bad hacks
-				(pb: PBScoreDocument) => pb.scoreData.enumIndexes[metric]
+				(pb: MONGO_PBScoreDocument) => pb.scoreData.enumIndexes[metric]
 			: // @ts-expect-error bad hacks
-				(pb: PBScoreDocument) => pb.scoreData[metric];
+				(pb: MONGO_PBScoreDocument) => pb.scoreData[metric];
 
 	// wut?
 	if (!base && !compare) {

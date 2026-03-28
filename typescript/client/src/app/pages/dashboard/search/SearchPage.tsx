@@ -19,13 +19,13 @@ import React, { useContext, useEffect, useState } from "react";
 import { Badge, Col, Form, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
-	type ChartDocument,
 	FormatGameGroup,
 	type GPTString,
 	type integer,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
+	type MONGO_UserDocument,
 	SplitGPT,
-	type UserDocument,
 } from "tachi-common";
 
 export default function SearchPage() {
@@ -175,9 +175,9 @@ function ChartView({
 	gpt,
 }: {
 	charts: Array<{
-		chart: ChartDocument;
+		chart: MONGO_ChartDocument;
 		playcount: integer;
-		song: SongDocument;
+		song: MONGO_SongDocument;
 	}>;
 	gpt: GPTString;
 }) {
@@ -212,7 +212,7 @@ function ChartView({
 	);
 }
 
-function UsersView({ users }: { users: Array<UserDocument> }) {
+function UsersView({ users }: { users: Array<MONGO_UserDocument> }) {
 	return (
 		<Row>
 			<div

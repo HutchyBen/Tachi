@@ -1,4 +1,4 @@
-import { type FolderDocument } from "tachi-common";
+import { type MONGO_FolderDocument } from "tachi-common";
 import { JUBEAT_SINGLE_CONF } from "tachi-common/config/game-support/jubeat";
 
 import { CreateFolderID, MutateCollection } from "../../util";
@@ -27,8 +27,8 @@ for (const version of versions) {
 	const shouldAddDecimals = true;
 
 	const versionPretty = JUBEAT_SINGLE_CONF.versions[version];
-	const levelFolders: Array<FolderDocument> = [];
-	const levelHardFolders: Array<FolderDocument> = [];
+	const levelFolders: Array<MONGO_FolderDocument> = [];
+	const levelHardFolders: Array<MONGO_FolderDocument> = [];
 
 	for (const level of ["1", "2", "3", "4", "5", "6", "7", "8"]) {
 		const f = CreateFolder(
@@ -82,8 +82,8 @@ for (const version of versions) {
 		),
 	);
 
-	const detailFolders: Array<FolderDocument> = [];
-	const detailHardFolders: Array<FolderDocument> = [];
+	const detailFolders: Array<MONGO_FolderDocument> = [];
+	const detailHardFolders: Array<MONGO_FolderDocument> = [];
 
 	if (shouldAddDecimals) {
 		for (const level of [

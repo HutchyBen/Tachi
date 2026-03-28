@@ -11,14 +11,14 @@ import { GetGoalIDsFromQuest } from "#util/data";
 import { FormatTime } from "#util/time";
 import React, { useContext } from "react";
 import { Button, Col } from "react-bootstrap";
-import { type QuestDocument, type QuestlineDocument } from "tachi-common";
+import { type MONGO_QuestDocument, type MONGO_QuestlineDocument } from "tachi-common";
 
 export default function Questline({
 	questline,
 	quests,
 }: {
-	questline: QuestlineDocument;
-	quests?: Map<string, QuestDocument>;
+	questline: MONGO_QuestlineDocument;
+	quests?: Map<string, MONGO_QuestDocument>;
 }) {
 	const { game, playtype } = questline;
 
@@ -75,7 +75,7 @@ export default function Questline({
 	);
 }
 
-export function InnerQuestInfo({ quest }: { quest: QuestDocument }) {
+export function InnerQuestInfo({ quest }: { quest: MONGO_QuestDocument }) {
 	const { settings } = useLUGPTSettings();
 	const { questSubs, reloadTargets } = useContext(TargetsContext);
 

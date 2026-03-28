@@ -1,7 +1,6 @@
 {
 	"files": [],
 	"references": [
-		{ "path": "./typescript/api-parity" },
 		{ "path": "./typescript/bliss" },
 		{ "path": "./typescript/common" },
 		{ "path": "./typescript/db" },

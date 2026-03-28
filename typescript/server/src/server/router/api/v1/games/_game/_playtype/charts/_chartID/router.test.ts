@@ -17,6 +17,8 @@ async function seedSong() {
 			game_group: "iidx",
 			title: "5.1.1.",
 			artist: "dj nagureo",
+			search_terms: [],
+			alt_titles: [],
 			data: { displayVersion: "1", genre: "PIANO AMBIENT" },
 			fts_document: "",
 		})
@@ -34,16 +36,14 @@ async function seedChart() {
 			level: "10",
 			level_num: 10,
 			is_primary: true,
+			versions: ["27"],
 			data: { inGameID: 1000, notecount: 786 },
 		})
 		.execute();
-
-	await DB.insertInto("chart_version").values({ chart_id: CHART_PG_ID, version: "27" }).execute();
 }
 
 describe("GET /api/v1/games/iidx/SP/charts/:chartID", () => {
 	beforeEach(async () => {
-		await DB.deleteFrom("chart_version").where("chart_id", "=", CHART_PG_ID).execute();
 		await DB.deleteFrom("chart").where("id", "=", CHART_PG_ID).execute();
 		await DB.deleteFrom("song").where("id", "=", SONG_PG_ID).execute();
 		await seedSong();

@@ -4,7 +4,7 @@ import MONGODB_KILL from "#services/mongo/db";
 import { GetChartForIDGuaranteed } from "#utils/db";
 import { type GameGroup, GetGPTString, type integer, type Playtype } from "tachi-common";
 
-import { CreatePBDoc, type PBScoreDocumentNoRank, UpdateChartRanking } from "./create-pb-doc";
+import { CreatePBDoc, type MONGO_PBScoreDocumentNoRank, UpdateChartRanking } from "./create-pb-doc";
 
 /**
  * Process, recalculate and update a users PBs for this set of chartIDs.
@@ -34,7 +34,7 @@ export async function ProcessPBs(
 
 	const pbDocsReturn = await Promise.all(promises);
 
-	const pbDocs: Array<PBScoreDocumentNoRank> = [];
+	const pbDocs: Array<MONGO_PBScoreDocumentNoRank> = [];
 
 	for (const doc of pbDocsReturn) {
 		if (!doc) {

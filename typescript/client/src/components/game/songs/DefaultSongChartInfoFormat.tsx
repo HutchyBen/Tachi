@@ -1,10 +1,10 @@
 import { DisplayLevelNum } from "#components/tables/cells/DifficultyCell";
 import React from "react";
 import {
-	type ChartDocument,
 	FormatDifficulty,
 	type GameGroup,
-	type SongDocument,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
 } from "tachi-common";
 
 export default function DefaultSongChartInfoFormat({
@@ -12,9 +12,9 @@ export default function DefaultSongChartInfoFormat({
 	chart,
 	game,
 }: {
-	chart: ChartDocument | null;
+	chart: MONGO_ChartDocument | null;
 	game: GameGroup;
-	song: SongDocument;
+	song: MONGO_SongDocument;
 }) {
 	return (
 		<>

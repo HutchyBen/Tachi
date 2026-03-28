@@ -17,16 +17,16 @@ import React, { useContext, useState } from "react";
 import { Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
-	type ChartDocument,
-	type FolderDocument,
 	FormatChart,
 	type GameGroup,
 	GetGamePTConfig,
 	GetScoreMetricConf,
+	type MONGO_ChartDocument,
+	type MONGO_FolderDocument,
+	type MONGO_SongDocument,
+	type MONGO_UserDocument,
 	type Playtype,
 	type ShowcaseStatDetails,
-	type SongDocument,
-	type UserDocument,
 } from "tachi-common";
 
 import UGPTStatContainer from "./UGPTStatContainer";
@@ -356,9 +356,9 @@ export function GetStatName(
 	related: UGPTPreferenceStatsReturn["related"],
 ) {
 	if (stat.mode === "folder") {
-		return (related as { folder: FolderDocument }).folder.title;
+		return (related as { folder: MONGO_FolderDocument }).folder.title;
 	} else if (stat.mode === "chart") {
-		const r = related as { chart: ChartDocument; song: SongDocument };
+		const r = related as { chart: MONGO_ChartDocument; song: MONGO_SongDocument };
 		return FormatChart(game, r.song, r.chart);
 	}
 
@@ -374,14 +374,14 @@ export function StatDisplay({
 	playtype,
 }: {
 	compareData?: UGPTPreferenceStatsReturn;
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 	statData: UGPTPreferenceStatsReturn;
 } & GamePT) {
 	const { stat, result, related } = statData;
 	const { user } = useContext(UserContext);
 
 	if (stat.mode === "chart") {
-		const { song, chart } = related as { chart: ChartDocument; song: SongDocument };
+		const { song, chart } = related as { chart: MONGO_ChartDocument; song: MONGO_SongDocument };
 
 		return (
 			<Card
@@ -410,7 +410,7 @@ export function StatDisplay({
 			</Card>
 		);
 	} else if (stat.mode === "folder") {
-		const { folder } = related as { folder: FolderDocument };
+		const { folder } = related as { folder: MONGO_FolderDocument };
 
 		const headerStr = folder.title;
 

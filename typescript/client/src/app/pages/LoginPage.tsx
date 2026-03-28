@@ -10,7 +10,7 @@ import { Alert, Button, Form } from "react-bootstrap";
 import ReCAPTCHA from "react-google-recaptcha";
 import toast from "react-hot-toast";
 import { Link, useHistory } from "react-router-dom";
-import { type UserDocument } from "tachi-common";
+import { type MONGO_UserDocument } from "tachi-common";
 
 export default function LoginPage() {
 	useSetSubheader("Login");
@@ -54,7 +54,7 @@ export default function LoginPage() {
 			return;
 		}
 
-		const userRJ = await APIFetchV1<UserDocument>("/users/me");
+		const userRJ = await APIFetchV1<MONGO_UserDocument>("/users/me");
 
 		if (userRJ.statusCode === 403) {
 			setErr("You are banned.");

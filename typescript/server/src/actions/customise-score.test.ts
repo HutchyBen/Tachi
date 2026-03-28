@@ -49,6 +49,8 @@ describe("ACTION_CustomiseScore", () => {
 				game_group: "iidx",
 				title: "S",
 				artist: "A",
+				search_terms: [],
+				alt_titles: [],
 				data: JSON.stringify({}),
 				fts_document: "",
 			})
@@ -64,6 +66,7 @@ describe("ACTION_CustomiseScore", () => {
 				level_num: 10,
 				is_primary: true,
 				difficulty: "NORMAL",
+				versions: [],
 				data: JSON.stringify({}),
 			})
 			.execute();

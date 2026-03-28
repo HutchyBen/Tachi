@@ -9,10 +9,10 @@ import { APIFetchV1 } from "#util/api";
 import React, { useContext, useEffect, useState } from "react";
 import { Button } from "react-bootstrap";
 import ReactMarkdown from "react-markdown";
-import { type UserDocument } from "tachi-common";
+import { type MONGO_UserDocument } from "tachi-common";
 
 interface Props {
-	reqUser: UserDocument;
+	reqUser: MONGO_UserDocument;
 }
 
 export default function UserPage({ reqUser }: Props) {

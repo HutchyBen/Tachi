@@ -13,7 +13,7 @@ interface OngoingImportError {
 }
 
 /**
- * Given an importDocument, undo it. This will remove all of the scores inside the import.
+ * Given an MONGO_ImportDocument, undo it. This will remove all of the scores inside the import.
  *
  * It will *not* undo things like classes that were set, but it will invoke a profile recalculation.
  *

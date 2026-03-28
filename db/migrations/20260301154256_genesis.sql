@@ -430,16 +430,13 @@ CREATE TABLE "folder" (
 	-- TODO(zk) unsure what format this data should take
 	-- I think this should genuinely just be the WHERE $x$ part
 	-- of a sql query on a joined song/charts table.
-	query TEXT NOT NULL
+	query TEXT NOT NULL,
+
+	-- NULL means no version restriction.
+	version_filter TEXT[],
+	search_terms TEXT[]
 );
 CREATE UNIQUE INDEX folder_unique_slug_game ON "folder" (game, slug) WHERE slug IS NOT NULL;
-
-CREATE TABLE "folder_search_term" (
-	id TEXT REFERENCES folder(id) NOT NULL,
-	search_term TEXT NOT NULL,
-
-	PRIMARY KEY (id, search_term)
-);
 
 CREATE TABLE "table" ( -- heh
 	id TEXT PRIMARY KEY NOT NULL,
@@ -478,6 +475,10 @@ CREATE TABLE "song" (
 
 	title TEXT NOT NULL,
 	artist TEXT NOT NULL,
+
+	search_terms TEXT[] NOT NULL,
+	alt_titles TEXT[] NOT NULL,
+
 	-- Denormalized search_term + alt_title text for FTS (kept in sync with seeds / triggers).
 	fts_document TEXT NOT NULL DEFAULT '',
 	textsearch tsvector NOT NULL GENERATED ALWAYS AS (
@@ -488,35 +489,13 @@ CREATE TABLE "song" (
 	data JSONB NOT NULL -- game specific payload
 );
 
-CREATE TABLE "song_search_term" (
-	song_id TEXT REFERENCES song(id) NOT NULL,
-	search_term TEXT NOT NULL,
-	
-	PRIMARY KEY (song_id, search_term)
-);
-
-CREATE TABLE "song_alt_title" (
-	song_id TEXT REFERENCES song(id) NOT NULL,
-	alt_title TEXT NOT NULL,
-
-	PRIMARY KEY (song_id, alt_title)
-);
-
--- Populate fts_document from child tables (no-op on empty DB; seeds also set this column).
+-- Populate fts_document from search_terms / alt_titles (no-op on empty DB; seeds also set this column).
 UPDATE song AS s
 SET fts_document = trim(
 	both ' ' FROM concat_ws(
 		' ',
-		(
-			SELECT coalesce(string_agg(DISTINCT st.search_term, ' '), '')
-			FROM song_search_term AS st
-			WHERE st.song_id = s.id
-		),
-		(
-			SELECT coalesce(string_agg(DISTINCT at.alt_title, ' '), '')
-			FROM song_alt_title AS at
-			WHERE at.song_id = s.id
-		)
+		coalesce(array_to_string(s.search_terms, ' '), ''),
+		coalesce(array_to_string(s.alt_titles, ' '), '')
 	)
 );
 
@@ -540,14 +519,9 @@ CREATE TABLE "chart" (
 	is_primary BOOLEAN NOT NULL,
 	difficulty TEXT NOT NULL,
 
+	versions TEXT[] NOT NULL,
+
 	data JSONB NOT NULL -- game specific payload
-);
-
-CREATE TABLE "chart_version" (
-	chart_id TEXT NOT NULL REFERENCES chart(id) ON DELETE CASCADE,
-	version TEXT NOT NULL,
-
-	PRIMARY KEY (chart_id, version)
 );
 
 CREATE TABLE "game_settings" (

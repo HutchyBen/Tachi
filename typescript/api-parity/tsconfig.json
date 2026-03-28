@@ -1,8 +1,0 @@
-{
-	"extends": "../../tsconfig.base.json",
-	"compilerOptions": {
-		"module": "Preserve",
-		"moduleResolution": "bundler"
-	},
-	"include": ["src", "tests", "vitest.config.ts"]
-}

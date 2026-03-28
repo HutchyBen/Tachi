@@ -1,4 +1,4 @@
-import type { APITokenDocument, UserDocument, WebhookEvents } from "tachi-common";
+import type { MONGO_APITokenDocument, MONGO_UserDocument, WebhookEvents } from "tachi-common";
 
 import { log } from "#utils/log";
 import { HandleQuestAchievedV1 } from "#webhook-handlers/quest-achieved";
@@ -58,7 +58,7 @@ app.get("/oauth/callback", async (req, res) => {
 		return res.status(400).send("Bad Request.");
 	}
 
-	const tokenRes = await TachiServerV1Request<APITokenDocument>(
+	const tokenRes = await TachiServerV1Request<MONGO_APITokenDocument>(
 		RequestTypes.POST,
 		"/oauth/token",
 		null,
@@ -84,7 +84,7 @@ app.get("/oauth/callback", async (req, res) => {
 	const discordID = req.query.context;
 	const apiToken = tokenRes.body.token!;
 
-	const whoamiRes = await TachiServerV1Get<UserDocument>("/users/me", apiToken);
+	const whoamiRes = await TachiServerV1Get<MONGO_UserDocument>("/users/me", apiToken);
 
 	if (!whoamiRes.success) {
 		log.error({ discordID }, "Failed to request user with token we just got?");
