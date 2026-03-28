@@ -31,6 +31,7 @@ async function seedSong({
 			title,
 			artist,
 			data: { displayVersion: "1", genre: "PIANO AMBIENT" },
+			fts_document: [...searchTerms, ...altTitles].filter(Boolean).join(" "),
 		})
 		.execute();
 

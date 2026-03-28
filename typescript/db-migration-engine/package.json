@@ -17,7 +17,8 @@
 		"lint": "eslint .",
 		"lint-fix": "eslint . --fix",
 		"typecheck": "tsgo --noEmit",
-		"build": "tsgo -p tsconfig.build.json"
+		"build": "tsgo -p tsconfig.build.json",
+		"bench": "node -e \"process.exit(0)\""
 	},
 	"dependencies": {
 		"kysely": "catalog:",

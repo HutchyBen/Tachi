@@ -20,9 +20,9 @@ import { Kysely, PostgresDialect } from "kysely";
 import path from "path";
 import { Pool } from "pg";
 
-import { buildChartIdMap, importSeeds, toPgGame } from "../services/pg/seeds";
+import { buildChartIdMap, importSeeds, importSeedsSubset, toPgGame } from "../services/pg/seeds";
 
-export { buildChartIdMap, importSeeds, toPgGame };
+export { buildChartIdMap, importSeeds, importSeedsSubset, toPgGame };
 
 // ── Standalone entrypoint ──────────────────────────────────────────────────
 

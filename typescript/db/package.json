@@ -8,7 +8,8 @@
 	"scripts": {
 		"build": "tsgo -b",
 		"start": "tsgo -b && node js/main.js",
-		"typecheck": "tsgo --noEmit"
+		"typecheck": "tsgo --noEmit",
+		"bench": "vitest bench --passWithNoTests"
 	},
 	"dependencies": {
 		"kysely": "catalog:",

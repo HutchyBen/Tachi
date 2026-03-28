@@ -18,8 +18,8 @@ describe("mergeScoreDataFromPg", () => {
 			optional: {},
 		} as MongoScoreData<"iidx:SP">;
 
-		const { data, derived, judgements } = mongoScoreDataToPg("iidx:SP", original);
-		const back = pgScoreDataToMongo("iidx:SP", data, derived, judgements);
+		const pg = mongoScoreDataToPg("iidx:SP", { ...original, judgements: {} });
+		const back = pgScoreDataToMongo("iidx-sp", pg);
 
 		expect(back).toMatchObject({
 			grade: "F",
@@ -50,6 +50,7 @@ describe("ACTION_CustomiseScore", () => {
 				title: "S",
 				artist: "A",
 				data: JSON.stringify({}),
+				fts_document: "",
 			})
 			.execute();
 
@@ -73,6 +74,7 @@ describe("ACTION_CustomiseScore", () => {
 			percent: 0,
 			score: 100,
 			optional: {},
+			judgements: {},
 		} as MongoScoreData<"iidx:SP">);
 
 		await DB.insertInto("score")

@@ -1,5 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 LOAD 'auto_explain';
 
 -- Tables starting with "priv_" are private and should never ever be exposed
@@ -474,6 +475,13 @@ CREATE TABLE "song" (
 
 	title TEXT NOT NULL,
 	artist TEXT NOT NULL,
+	-- Denormalized search_term + alt_title text for FTS (kept in sync with seeds / triggers).
+	fts_document TEXT NOT NULL DEFAULT '',
+	textsearch tsvector NOT NULL GENERATED ALWAYS AS (
+		setweight(to_tsvector('simple', coalesce(title, '')), 'A') ||
+			setweight(to_tsvector('simple', coalesce(artist, '')), 'B') ||
+			setweight(to_tsvector('simple', coalesce(fts_document, '')), 'C')
+	) STORED,
 	data JSONB NOT NULL -- game specific payload
 );
 
@@ -490,6 +498,32 @@ CREATE TABLE "song_alt_title" (
 
 	PRIMARY KEY (song_id, alt_title)
 );
+
+-- Populate fts_document from child tables (no-op on empty DB; seeds also set this column).
+UPDATE song AS s
+SET fts_document = trim(
+	both ' ' FROM concat_ws(
+		' ',
+		(
+			SELECT coalesce(string_agg(DISTINCT st.search_term, ' '), '')
+			FROM song_search_term AS st
+			WHERE st.song_id = s.id
+		),
+		(
+			SELECT coalesce(string_agg(DISTINCT at.alt_title, ' '), '')
+			FROM song_alt_title AS at
+			WHERE at.song_id = s.id
+		)
+	)
+);
+
+CREATE INDEX song_textsearch_gin ON song USING GIN (textsearch);
+
+CREATE INDEX song_title_trgm ON song USING GIN (title gin_trgm_ops);
+
+CREATE INDEX song_artist_trgm ON song USING GIN (artist gin_trgm_ops);
+
+CREATE INDEX song_fts_document_trgm ON song USING GIN (fts_document gin_trgm_ops);
 
 CREATE TABLE "chart" (
 	id TEXT PRIMARY KEY NOT NULL,

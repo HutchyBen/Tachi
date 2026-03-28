@@ -12,7 +12,8 @@
 		"lint": "eslint .",
 		"lint-fix": "eslint . --fix",
 		"typecheck": "tsgo --noEmit",
-		"test": "vitest"
+		"test": "vitest",
+		"bench": "vitest bench --passWithNoTests"
 	},
 	"devDependencies": {
 		"@types/express": "catalog:",

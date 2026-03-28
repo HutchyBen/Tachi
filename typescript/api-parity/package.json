@@ -6,6 +6,7 @@
 	"license": "MIT",
 	"scripts": {
 		"test": "vitest",
+		"bench": "vitest bench --passWithNoTests",
 		"test:watch": "vitest",
 		"typecheck": "tsc --noEmit"
 	},

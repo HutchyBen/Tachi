@@ -19,6 +19,7 @@ import {
 	type UserDocument,
 	type UserGameStats,
 	type UserSettingsDocument,
+	V3ToGamePT,
 } from "tachi-common";
 import { type Database } from "tachi-db";
 
@@ -299,12 +300,12 @@ export async function IsUserBanned(userID: integer) {
  * Return all the GPTs this userID has played.
  */
 export async function GetUserPlayedGPTs(userID: integer) {
-	const gpts = (await MONGODB_KILL["game-stats"].find(
-		{ userID },
-		{ projection: { game: 1, playtype: 1 } },
-	)) as Array<Pick<UserGameStats, "game" | "playtype">>;
+	const rows = await DB.selectFrom("game_profile")
+		.select("game")
+		.where("user_id", "=", userID)
+		.execute();
 
-	return gpts;
+	return rows.map((r) => V3ToGamePT(r.game));
 }
 
 export async function GetAllUserRivals(userID: integer) {

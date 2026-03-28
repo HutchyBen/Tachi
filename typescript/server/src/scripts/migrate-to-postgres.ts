@@ -27,7 +27,7 @@ import type {
 	NewGameRival,
 	NewGameSettings,
 	NewGameSettingsShowcase,
-	NewGameStats,
+	NewGameProfile,
 	NewGameStatsSnapshot,
 	NewGoalSub,
 	NewImport,
@@ -743,20 +743,20 @@ async function main(): Promise<void> {
 		);
 	}
 
-	// ── game_stats ────────────────────────────────────────────────────────────
+	// ── game_profile ───────────────────────────────────────────────────────────
 	{
-		console.log("\n[game_stats]");
+		console.log("\n[game_profile]");
 		const gameStats = await mongoDB.get<UserGameStats>("game-stats").find({});
 
-		const statsRows: Array<NewGameStats> = gameStats.map((gs) => ({
+		const statsRows: Array<NewGameProfile> = gameStats.map((gs) => ({
 			user_id: gs.userID,
 			game: toGame(gs.game, gs.playtype),
 			ratings: JSON.stringify(gs.ratings),
 			classes: JSON.stringify(gs.classes),
 		}));
 
-		await batchInsert("game_stats", statsRows);
-		console.log(`  ${gameStats.length} game stats.`);
+		await batchInsert("game_profile", statsRows);
+		console.log(`  ${gameStats.length} game profiles.`);
 	}
 
 	// ── game_stats_snapshot ───────────────────────────────────────────────────

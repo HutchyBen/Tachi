@@ -93,7 +93,21 @@ beforeAll(async () => {
 	await createWorkerDatabase();
 });
 
-beforeEach(async () => {
+beforeEach(async (ctx) => {
+	// Benchmark tasks load real seed data in beforeAll; truncating here would wipe it
+	// before every bench() and between iterations.
+	const task = ctx.task as { file?: { filepath?: string }; meta?: { benchmark?: boolean } };
+
+	if (task.meta?.benchmark === true) {
+		return;
+	}
+
+	const fp = task.file?.filepath;
+
+	if (typeof fp === "string" && fp.endsWith(".bench.ts")) {
+		return;
+	}
+
 	await resetDatabase();
 	// Login-heavy router tests share the in-memory login rate limiter; reset each
 	// test so AggressiveRateLimit (15 / 10 min) does not 429 and omit Set-Cookie.

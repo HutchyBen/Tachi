@@ -13,6 +13,7 @@
 	},
 	"scripts": {
 		"test": "vitest",
+		"bench": "vitest bench --passWithNoTests",
 		"build": "tsgo -p tsconfig.build.json",
 		"prepublishOnly": "tsgo -p tsconfig.build.json",
 		"lint": "eslint .",
@@ -44,7 +45,8 @@
 	"devDependencies": {
 		"@typescript/native-preview": "catalog:",
 		"eslint-config-tachi": "workspace:*",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"vitest": "catalog:"
 	},
 	"nyc": {
 		"reporter": [

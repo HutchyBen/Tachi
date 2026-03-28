@@ -40,6 +40,7 @@ describe("LoadSessionDocumentById", () => {
 				title: "T",
 				artist: "A",
 				data: JSON.stringify({}),
+				fts_document: "",
 			})
 			.execute();
 

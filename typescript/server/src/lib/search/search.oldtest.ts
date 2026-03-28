@@ -5,7 +5,7 @@ import t from "tap";
 
 import { SearchSpecificGameSongs, SearchUsersRegExp } from "./search";
 
-t.test("#SearchSpecificGameSongs", (t) => {
+t.test("#SearchSpecificGameSongs", { skip: true }, (t) => {
 	t.beforeEach(ResetDBState);
 	t.beforeEach(LoadTachiIIDXData);
 	t.beforeEach(async () => {

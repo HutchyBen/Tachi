@@ -10,7 +10,8 @@
 		"lint-fix": "eslint . --fix",
 		"typecheck": "tsgo --noEmit",
 		"sort": "node sort-seeds.js",
-		"test": "./run-tests.sh"
+		"test": "./run-tests.sh",
+		"bench": "node -e \"process.exit(0)\""
 	},
 	"author": "zk",
 	"license": "MIT",

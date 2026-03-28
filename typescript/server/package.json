@@ -7,6 +7,7 @@
 	"scripts": {
 		"dev": "bun --watch src/main.ts",
 		"test": "vitest",
+		"bench": "vitest bench --passWithNoTests",
 		"build": "tsgo -b tsconfig.build.json -v",
 		"typecheck": "tsgo --noEmit",
 		"lint": "eslint ./src",

@@ -1,16 +1,21 @@
-import type { FilterQuery } from "mongodb";
-import type {
-	ChartDocument,
-	Difficulties,
-	GameGroup,
-	GPTString,
-	integer,
-	Playtype,
-	Playtypes,
-	Versions,
-} from "tachi-common";
+import type { Game } from "tachi-db";
 
 import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
+import { sql } from "kysely";
+import {
+	type ChartDocument,
+	type ChartDocumentData,
+	type Difficulties,
+	type GameGroup,
+	GamePTToV3,
+	type GPTString,
+	type integer,
+	type Playtype,
+	type Playtypes,
+	V3ToGamePT,
+	type Versions,
+} from "tachi-common";
 
 export function FindChartWithChartID(game: GameGroup, chartID: string) {
 	return MONGODB_KILL.anyCharts[game].findOne({ chartID });
@@ -230,8 +235,9 @@ export function FindChartOnSHA256Playtype(game: GameGroup, hash: string, playtyp
 
 /**
  * Returns the N most popular charts for this game + playtype.
- * Popularity is determined by how many scores match in the score
- * collection.
+ * Popularity is determined by how many rows exist in Postgres `score` for each chart.
+ *
+ * @param _scoreCollection — ignored; kept for API compatibility with the old Mongo implementation.
  */
 export async function FindChartsOnPopularity(
 	game: GameGroup,
@@ -239,64 +245,77 @@ export async function FindChartsOnPopularity(
 	songIDs?: Array<integer>,
 	skip = 0,
 	limit = 100,
-	scoreCollection: "personal-bests" | "scores" = "personal-bests",
+	_scoreCollection: "personal-bests" | "scores" = "personal-bests",
 ): Promise<Array<{ __playcount: integer } & ChartDocument>> {
-	const matchQuery: FilterQuery<ChartDocument> = {
-		playtype,
-	};
+	const v3Game = GamePTToV3(game, playtype);
 
-	if (songIDs) {
-		matchQuery.songID = { $in: songIDs };
+	let q = DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.leftJoin("score", "score.chart_id", "chart.id")
+		.where("chart.game", "=", v3Game as Game);
+
+	if (songIDs && songIDs.length > 0) {
+		q = q.where("song.legacy_id", "in", songIDs);
 	}
 
-	// MongoDB is a hard beast to wield.
-	// This code might look very inefficient, but originally this *was*
-	// a single aggregate pipeline.
-	//
-	// We've split it up into multiple queries as this is an order of
-	// magnitude faster.
-	// Not entirely sure why, but $lookup is incredibly inefficient,
-	// and you should just avoid it.
-	const charts = (await MONGODB_KILL.anyCharts[game].find(matchQuery)) as unknown as Array<
-		{
-			__playcount: integer;
-		} & ChartDocument
-	>;
+	const rows = await q
+		.select([
+			"chart.id",
+			"chart.legacy_id",
+			"chart.game",
+			"chart.song_id",
+			"chart.level",
+			"chart.level_num",
+			"chart.is_primary",
+			"chart.difficulty",
+			"chart.data",
+			"song.legacy_id as song_legacy_id",
+			sql<number>`count(score.id)::int`.as("playcount"),
+		])
+		.groupBy(["chart.id", "song.legacy_id"])
+		.orderBy(sql`count(score.id)`, "desc")
+		.offset(skip)
+		.limit(limit)
+		.execute();
 
-	const scoreCounts: Array<{ _id: string; count: integer }> = await MONGODB_KILL[
-		scoreCollection
-	].aggregate([
-		{
-			$match: { chartID: { $in: charts.map((e) => e.chartID) } },
-		},
-		{
-			$group: {
-				_id: "$chartID",
-				count: { $sum: 1 },
-			},
-		},
-		{
-			$sort: {
-				count: -1,
-			},
-		},
-		{
-			$skip: skip,
-		},
-		{
-			$limit: limit,
-		},
-	]);
-
-	const scoreCountMap = new Map<string, integer>();
-
-	for (const sc of scoreCounts) {
-		scoreCountMap.set(sc._id, sc.count);
+	if (rows.length === 0) {
+		return [];
 	}
 
-	for (const chart of charts) {
-		chart.__playcount = scoreCountMap.get(chart.chartID) ?? 0;
+	const chartPgIds = rows.map((r) => r.id);
+
+	const versionRows = await DB.selectFrom("chart_version")
+		.select(["chart_id", "version"])
+		.where("chart_id", "in", chartPgIds)
+		.execute();
+
+	const versionsByChartId = new Map<string, string[]>();
+
+	for (const v of versionRows) {
+		let list = versionsByChartId.get(v.chart_id);
+
+		if (!list) {
+			list = [];
+			versionsByChartId.set(v.chart_id, list);
+		}
+
+		list.push(v.version);
 	}
 
-	return charts.sort((a, b) => b.__playcount - a.__playcount).slice(skip, skip + limit);
+	return rows.map((row) => {
+		const { playtype: chartPlaytype } = V3ToGamePT(row.game);
+
+		return {
+			chartID: row.legacy_id,
+			songID: row.song_legacy_id,
+			level: row.level,
+			levelNum: row.level_num,
+			isPrimary: row.is_primary,
+			difficulty: row.difficulty as Difficulties[GPTString],
+			playtype: chartPlaytype,
+			data: row.data as ChartDocumentData[GPTString],
+			versions: (versionsByChartId.get(row.id) ?? []) as Versions[GPTString][],
+			__playcount: row.playcount,
+		} as { __playcount: integer } & ChartDocument;
+	});
 }

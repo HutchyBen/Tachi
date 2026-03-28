@@ -24,6 +24,9 @@ build
 coverage
 test-results
 
+# Vitest bench --outputJson (see Justfile-bench bench-json)
+typescript/server/bench-results.json
+
 *.tsbuildinfo
 
 # legacy bootstrap flag

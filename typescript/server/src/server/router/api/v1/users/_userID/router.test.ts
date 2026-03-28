@@ -20,6 +20,7 @@ async function seedSongAndChart() {
 			title: "Test Song",
 			artist: "Test Artist",
 			data: JSON.stringify({}),
+			fts_document: "",
 		})
 		.execute();
 

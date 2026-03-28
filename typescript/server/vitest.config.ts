@@ -20,6 +20,9 @@ export default defineConfig({
 	},
 
 	test: {
+		// `vitest bench` uses this same config: globalSetup + setupFiles + per-worker POSTGRES_URL.
+		// Use for API / DB performance work as well as microbenches (*.bench.ts).
+		//
 		// Static env vars. POSTGRES_URL is set dynamically per-worker in vitest.setup.ts
 		// so each worker gets its own isolated database.
 		env: {
@@ -45,7 +48,7 @@ export default defineConfig({
 		coverage: {
 			provider: "v8",
 			include: ["src/**/*.ts"],
-			exclude: ["src/**/*.test.ts", "src/**/*.oldtest.ts", "src/test-utils/**"],
+			exclude: ["src/**/*.test.ts", "src/**/*.bench.ts", "src/**/*.oldtest.ts", "src/test-utils/**"],
 		},
 	},
 });

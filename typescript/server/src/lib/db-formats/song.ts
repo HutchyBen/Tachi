@@ -1,5 +1,6 @@
+import type { GameGroup, integer, SongDocument, SongDocumentData } from "tachi-common";
+
 import DB from "#services/pg/db";
-import type { GameGroup, SongDocument, SongDocumentData } from "tachi-common";
 
 /**
  * Fetches a song by its legacy numeric ID (from the URL / Mongo era), together
@@ -38,4 +39,91 @@ export async function GetSongByLegacyID(
 	};
 
 	return { doc, pgId: row.id };
+}
+
+/**
+ * Batch-loads song documents by legacy numeric IDs (order follows first occurrence in `legacyIds`).
+ */
+export async function GetSongsByLegacyIDs(
+	game: GameGroup,
+	legacyIds: Array<integer>,
+): Promise<Array<SongDocument>> {
+	if (legacyIds.length === 0) {
+		return [];
+	}
+
+	const unique = [...new Set(legacyIds)];
+
+	const songRows = await DB.selectFrom("song")
+		.select(["id", "legacy_id", "title", "artist", "data"])
+		.where("game_group", "=", game)
+		.where("legacy_id", "in", unique)
+		.execute();
+
+	if (songRows.length === 0) {
+		return [];
+	}
+
+	const ids = songRows.map((s) => s.id);
+
+	const [searchTermRows, altTitleRows] = await Promise.all([
+		DB.selectFrom("song_search_term")
+			.select(["song_id", "search_term"])
+			.where("song_id", "in", ids)
+			.execute(),
+		DB.selectFrom("song_alt_title")
+			.select(["song_id", "alt_title"])
+			.where("song_id", "in", ids)
+			.execute(),
+	]);
+
+	const termsBySong = new Map<string, string[]>();
+	const altsBySong = new Map<string, string[]>();
+
+	for (const r of searchTermRows) {
+		let list = termsBySong.get(r.song_id);
+
+		if (!list) {
+			list = [];
+			termsBySong.set(r.song_id, list);
+		}
+
+		list.push(r.search_term);
+	}
+
+	for (const r of altTitleRows) {
+		let list = altsBySong.get(r.song_id);
+
+		if (!list) {
+			list = [];
+			altsBySong.set(r.song_id, list);
+		}
+
+		list.push(r.alt_title);
+	}
+
+	const byLegacy = new Map<integer, SongDocument>();
+
+	for (const row of songRows) {
+		byLegacy.set(row.legacy_id, {
+			id: row.legacy_id,
+			title: row.title,
+			artist: row.artist,
+			searchTerms: termsBySong.get(row.id) ?? [],
+			altTitles: altsBySong.get(row.id) ?? [],
+			data: row.data as SongDocumentData[typeof game],
+		});
+	}
+
+	const out: Array<SongDocument> = [];
+
+	for (const id of legacyIds) {
+		const doc = byLegacy.get(id);
+
+		if (doc) {
+			out.push(doc);
+		}
+	}
+
+	return out;
 }

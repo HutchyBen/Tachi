@@ -4,6 +4,7 @@ import "Justfile-db"
 import "Justfile-misc"
 import "Justfile-migrate"
 import "Justfile-test"
+import "Justfile-bench"
 import "Justfile-dataset"
 import "Justfile-repo"
 

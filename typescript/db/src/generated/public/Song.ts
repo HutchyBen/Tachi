@@ -19,6 +19,10 @@ export default interface SongTable {
 
   artist: ColumnType<string, string, string>;
 
+  fts_document: ColumnType<string, string, string>;
+
+  textsearch: ColumnType<string, never, never>;
+
   data: ColumnType<unknown, unknown, unknown>;
 }
 

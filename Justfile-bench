@@ -1,0 +1,20 @@
+# Vitest benchmarks (*.bench.ts).
+#
+# Why `just bench` looked bad:
+# - `bun run --filter` defaults to --elide-lines=10, so each workspace’s log is cut to ~10 lines.
+# - The default Foreman-style runner interleaves packages unless you pass --sequential.
+#
+# Recipes:
+# - bench          — all workspaces, full lines, one package after another (readable).
+# - bench-server   — only tachi-server (skip no-op packages; best for DB/search benches).
+# - bench-json     — server benches only; writes Vitest’s JSON to typescript/server/bench-results.json
+#                    (open it or jq it; use with --compare later for regressions).
+
+bench:
+	bun run --filter '*' --sequential --elide-lines=0 bench
+
+bench-server:
+	bun run --filter tachi-server --elide-lines=0 bench
+
+bench-json:
+	bun run --filter tachi-server bench -- --outputJson bench-results.json
