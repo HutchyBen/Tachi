@@ -84,7 +84,7 @@ for (const [game, playtype, impl] of [
 		t.test("Percent", (t) => {
 			const f = (modifant: Partial<typeof baseMetrics>, expected: any, msg: string) =>
 				t.equal(
-					impl.derivers.percent(dmf(baseMetrics, modifant), chart as any),
+					impl.scoreDeriver(dmf(baseMetrics, modifant) as any, chart as any).percent,
 					expected,
 					msg,
 				);
@@ -105,10 +105,10 @@ for (const [game, playtype, impl] of [
 		t.test("Grade", (t) => {
 			const f = (percent: number, expected: any) =>
 				t.equal(
-					impl.derivers.grade(
-						dmf(baseMetrics, { score: percentToScore(percent) }),
+					impl.scoreDeriver(
+						dmf(baseMetrics, { score: percentToScore(percent) }) as any,
 						chart as any,
-					),
+					).grade,
 					expected,
 					`A percent of ${percent}% should result in grade=${expected}.`,
 				);

@@ -63,12 +63,7 @@ export const ONGEKI_IMPL: GPTServerImplementation<"ongeki:Single"> = {
 			return true;
 		},
 	},
-	derivers: {
-		grade: ({ score }) => GetGrade(ONGEKI_GBOUNDARIES, score),
-		platinumStars: ({ platinumScore }, chart) =>
-			starCount(platinumScore, chart.data.maxPlatScore),
-	},
-	newDeriver: (scoreData, chart) => ({
+	scoreDeriver: (scoreData, chart) => ({
 		grade: GetGrade(ONGEKI_GBOUNDARIES, scoreData.score),
 		platinumStars: starCount(scoreData.platinumScore, chart.data.maxPlatScore),
 	}),

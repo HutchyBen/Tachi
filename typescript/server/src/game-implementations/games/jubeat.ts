@@ -162,10 +162,7 @@ export const JUBEAT_IMPL: GPTServerImplementation<"jubeat:Single"> = {
 			}
 		},
 	},
-	derivers: {
-		grade: ({ score }) => GetGrade(JUBEAT_GBOUNDARIES, score),
-	},
-	newDeriver: (scoreData, _chart) => ({
+	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(JUBEAT_GBOUNDARIES, scoreData.score),
 	}),
 	newCalcs: (scoreData, _derivedData, chart) => ({

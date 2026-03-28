@@ -41,7 +41,7 @@ t.test("WACCA Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {
 		const f = (score: number, expected: any) =>
 			t.equal(
-				WACCA_IMPL.derivers.grade(dmf(baseMetrics, { score }), TestingWaccaPupaExp),
+				WACCA_IMPL.scoreDeriver(dmf(baseMetrics, { score }) as any, TestingWaccaPupaExp).grade,
 				expected,
 				`A score of ${score.toLocaleString()} should result in grade=${expected}.`,
 			);

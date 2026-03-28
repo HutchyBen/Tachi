@@ -20,8 +20,7 @@ import {
 	GoalFmtPercent,
 	GoalOutOfFmtPercent,
 	GradeGoalFormatter,
-	IIDXLIKE_DERIVERS,
-	IIDXLIKE_NEW_DERIVER,
+	IIDXLIKE_SCORE_DERIVER,
 	IIDXLIKE_PB_RANKING_VALUES,
 	IIDXLIKE_SCORE_VALIDATORS,
 	IIDXLIKE_VALIDATORS,
@@ -135,8 +134,7 @@ const IIDX_GOAL_PG_FMT: GPTGoalProgressFormatters<"iidx:DP" | "iidx:SP"> = {
 };
 
 export const IIDX_SP_IMPL: GPTServerImplementation<"iidx:SP"> = {
-	derivers: IIDXLIKE_DERIVERS,
-	newDeriver: IIDXLIKE_NEW_DERIVER,
+	scoreDeriver: IIDXLIKE_SCORE_DERIVER,
 	chartSpecificValidators: IIDXLIKE_VALIDATORS,
 	pbRankingValues: IIDXLIKE_PB_RANKING_VALUES,
 	newCalcs: (scoreData, _derivedData, chart) => {
@@ -219,8 +217,7 @@ export const IIDX_SP_IMPL: GPTServerImplementation<"iidx:SP"> = {
 };
 
 export const IIDX_DP_IMPL: GPTServerImplementation<"iidx:DP"> = {
-	derivers: IIDXLIKE_DERIVERS,
-	newDeriver: IIDXLIKE_NEW_DERIVER,
+	scoreDeriver: IIDXLIKE_SCORE_DERIVER,
 	chartSpecificValidators: IIDXLIKE_VALIDATORS,
 	pbRankingValues: IIDXLIKE_PB_RANKING_VALUES,
 	newCalcs: (scoreData, _derivedData, chart) => {

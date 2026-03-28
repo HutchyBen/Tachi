@@ -11,10 +11,7 @@ import { GoalFmtPercent, GoalOutOfFmtPercent, GradeGoalFormatter } from "./_comm
 
 export const MAIMAIDX_IMPL: GPTServerImplementation<"maimaidx:Single"> = {
 	chartSpecificValidators: {},
-	derivers: {
-		grade: ({ percent }) => GetGrade(MAIMAIDX_GBOUNDARIES, percent),
-	},
-	newDeriver: (scoreData, _chart) => ({
+	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(MAIMAIDX_GBOUNDARIES, scoreData.percent),
 	}),
 	newCalcs: (scoreData, _derivedData, chart) => ({

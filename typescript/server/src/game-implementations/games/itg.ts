@@ -11,27 +11,7 @@ import { GoalFmtPercent, GradeGoalFormatter } from "./_common";
 
 export const ITG_STAMINA_IMPL: GPTServerImplementation<"itg:Stamina"> = {
 	chartSpecificValidators: {},
-	derivers: {
-		finalPercent: (metrics) => {
-			// *important*
-			// don't check if metrics.survivedPercent === 100, as due to floating
-			// point inaccuracies, it's possible to have a 100% fail
-			// (on extremely long charts, for example)
-			if (metrics.lamp === "FAILED") {
-				return metrics.survivedPercent;
-			}
-
-			return 100 + metrics.scorePercent;
-		},
-		grade: ({ scorePercent, lamp }) => {
-			if (lamp === "FAILED") {
-				return "F";
-			}
-
-			return GetGrade(ITG_GBOUNDARIES, scorePercent);
-		},
-	},
-	newDeriver: (scoreData, _chart) => ({
+	scoreDeriver: (scoreData, _chart) => ({
 		// *important*: don't check survivedPercent === 100 — floating point can
 		// produce a 100% survived-percent on a fail for very long charts.
 		finalPercent:

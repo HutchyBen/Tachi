@@ -41,7 +41,7 @@ t.test("Pop'n Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {
 		const f = (score: number, expected: any) =>
 			t.equal(
-				POPN_9B_IMPL.derivers.grade(dmf(baseMetrics, { score }), TestingPopnChart),
+				POPN_9B_IMPL.scoreDeriver(dmf(baseMetrics, { score }) as any, TestingPopnChart).grade,
 				expected,
 				`A score of ${score.toLocaleString()} should result in grade=${expected}.`,
 			);
@@ -61,7 +61,8 @@ t.test("Pop'n Implementation", (t) => {
 	t.test("Lamp Deriver", (t) => {
 		const f = (clearMedal: ProvidedMetrics["popn:9B"]["clearMedal"], expected: any) =>
 			t.equal(
-				POPN_9B_IMPL.derivers.lamp(dmf(baseMetrics, { clearMedal }), TestingPopnChart),
+				POPN_9B_IMPL.scoreDeriver(dmf(baseMetrics, { clearMedal }) as any, TestingPopnChart)
+					.lamp,
 				expected,
 				`A clear medal of ${clearMedal} should result in lamp=${expected}.`,
 			);

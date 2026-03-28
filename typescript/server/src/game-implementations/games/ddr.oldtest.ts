@@ -25,7 +25,7 @@ t.test("DDR Implementation", (t) => {
 		t.test("Grade", (t) => {
 			const f = (score: number, expected: any) =>
 				t.equal(
-					impl.derivers.grade(dmf(baseMetrics, { score }), TestingDDRSP as any),
+					impl.scoreDeriver(dmf(baseMetrics, { score }) as any, TestingDDRSP as any).grade,
 					expected,
 					`A score of ${score} should result in grade=${expected}.`,
 				);

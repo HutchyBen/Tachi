@@ -58,7 +58,7 @@ t.test("maimai Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {
 		const f = (percent: number, expected: string) =>
 			t.equal(
-				MAIMAI_IMPL.derivers.grade(dmf(baseMetrics, { percent }), TestingMaimaiChart),
+				MAIMAI_IMPL.scoreDeriver(dmf(baseMetrics, { percent }) as any, TestingMaimaiChart).grade,
 				expected,
 				`A percent of ${percent} should result in grade=${expected}.`,
 			);

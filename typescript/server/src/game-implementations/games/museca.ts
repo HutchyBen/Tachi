@@ -10,10 +10,7 @@ import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
 export const MUSECA_IMPL: GPTServerImplementation<"museca:Single"> = {
 	chartSpecificValidators: {},
-	derivers: {
-		grade: ({ score }) => GetGrade(MUSECA_GBOUNDARIES, score),
-	},
-	newDeriver: (scoreData, _chart) => ({
+	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(MUSECA_GBOUNDARIES, scoreData.score),
 	}),
 	newCalcs: (scoreData, _derivedData, chart) => ({

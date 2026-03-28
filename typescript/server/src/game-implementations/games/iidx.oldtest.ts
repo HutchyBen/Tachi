@@ -39,7 +39,7 @@ t.test("IIDX Implementation", (t) => {
 			t.test("Percent", (t) => {
 				const f = (modifant: Partial<typeof baseMetrics>, expected: any, msg: string) =>
 					t.equal(
-						impl.derivers.percent(dmf(baseMetrics, modifant), Testing511SPA as any),
+						impl.scoreDeriver(dmf(baseMetrics, modifant) as any, Testing511SPA as any).percent,
 						expected,
 						msg,
 					);
@@ -64,10 +64,10 @@ t.test("IIDX Implementation", (t) => {
 			t.test("Grade", (t) => {
 				const f = (percent: number, expected: any) =>
 					t.equal(
-						impl.derivers.grade(
-							dmf(baseMetrics, { score: percentToScore(percent) }),
+						impl.scoreDeriver(
+							dmf(baseMetrics, { score: percentToScore(percent) }) as any,
 							Testing511SPA as any,
-						),
+						).grade,
 						expected,
 						`A percent of ${percent}% should result in grade=${expected}.`,
 					);

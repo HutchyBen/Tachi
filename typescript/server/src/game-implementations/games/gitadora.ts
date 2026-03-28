@@ -11,10 +11,7 @@ import { GoalFmtPercent, GoalOutOfFmtPercent, GradeGoalFormatter } from "./_comm
 
 const GITADORA_IMPL: GPTServerImplementation<"gitadora:Dora" | "gitadora:Gita"> = {
 	chartSpecificValidators: {},
-	derivers: {
-		grade: ({ percent }) => GetGrade(GITADORA_GBOUNDARIES, percent),
-	},
-	newDeriver: (scoreData, _chart) => ({
+	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(GITADORA_GBOUNDARIES, scoreData.percent),
 	}),
 	newCalcs: (scoreData, _derivedData, chart) => ({

@@ -1,12 +1,11 @@
 import type {
-	__OLD_KILL_GPTDerivers,
 	ChartSpecificMetricValidator,
 	GPTChartSpecificMetricValidators,
 	GPTClassDerivers,
 	GPTGoalFormatters,
 	GPTGoalProgressFormatters,
 	GPTNewCalcs,
-	GPTNewDeriver,
+	GPTScoreDeriver,
 	GPTNewProfileCalcs,
 	GPTNewSessionCalcs,
 	GPTProfileCalculators,
@@ -58,21 +57,7 @@ function calculateIIDXLikePercent(exScore: integer, notecount: integer) {
 
 type IIDXLikes = GPTStrings["bms" | "iidx" | "pms"];
 
-/**
- * Derivers for both IIDX SP and DP.
- *
- * and BMS. and PMS. They use the same things.
- */
-export const IIDXLIKE_DERIVERS: __OLD_KILL_GPTDerivers<IIDXLikes> = {
-	percent: ({ score }, chart) => calculateIIDXLikePercent(score, chart.data.notecount),
-	grade: ({ score }, chart) => {
-		const percent = calculateIIDXLikePercent(score, chart.data.notecount);
-
-		return GetGrade(IIDXLIKE_GBOUNDARIES, percent);
-	},
-};
-
-export const IIDXLIKE_NEW_DERIVER: GPTNewDeriver<IIDXLikes> = (scoreData, chart) => ({
+export const IIDXLIKE_SCORE_DERIVER: GPTScoreDeriver<IIDXLikes> = (scoreData, chart) => ({
 	percent: calculateIIDXLikePercent(scoreData.score, chart.data.notecount),
 	grade: IIDXLikeGetGrade(scoreData.score, chart.data.notecount),
 });
@@ -97,11 +82,7 @@ export const IIDXLIKE_SCORE_VALIDATORS: Array<ScoreValidator<IIDXLikes>> = [
 
 type SDVXLikes = GPTStrings["sdvx" | "usc"];
 
-export const SDVXLIKE_DERIVERS: __OLD_KILL_GPTDerivers<SDVXLikes> = {
-	grade: ({ score }) => GetGrade(SDVXLIKE_GBOUNDARIES, score),
-};
-
-export const SDVXLIKE_NEW_DERIVER: GPTNewDeriver<SDVXLikes> = (scoreData, _chart) => ({
+export const SDVXLIKE_SCORE_DERIVER: GPTScoreDeriver<SDVXLikes> = (scoreData, _chart) => ({
 	grade: GetGrade(SDVXLIKE_GBOUNDARIES, scoreData.score),
 });
 

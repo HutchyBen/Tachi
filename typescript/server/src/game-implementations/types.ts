@@ -2,7 +2,6 @@ import type { DryScoreData } from "#lib/score-import/framework/common/types";
 import type { MONGO_PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
 import type {
 	ClassConfigs,
-	ConfDerivedMetrics,
 	ConfScoreMetrics,
 	GPTString,
 	GPTStringToGame,
@@ -20,11 +19,7 @@ import type {
 	SessionRatingAlgorithms,
 } from "tachi-common";
 import type { DerivedClassConfig } from "tachi-common/types/game-config-utils";
-import type {
-	__OLD_KILL_ScoreMetricDeriver,
-	AllConfMetrics,
-	ConfEnumScoreMetric,
-} from "tachi-common/types/metrics";
+import type { AllConfMetrics, ConfEnumScoreMetric } from "tachi-common/types/metrics";
 
 /**
  * Validate this chart-specific metric. This should return a string representing an
@@ -117,22 +112,8 @@ export type GPTChartSpecificMetricValidators<GPT extends GPTString> = {
 		: never]: ChartSpecificMetricValidator<GPT>;
 };
 
-export type __OLD_KILL_GPTDerivers<GPT extends GPTString> = {
-	[K in keyof ConfDerivedMetrics[GPT]]: __OLD_KILL_ScoreMetricDeriver<
-		// @ts-expect-error This *might* be a bug in the typescript compiler
-		// as this works for all GPT inputs normally.
-		// Possibly some generic nonsense but like...
-
-		// can you really blame them for this not working?
-		// can you? LOOK at what we're doing.
-		ConfDerivedMetrics[GPT][K],
-		GPT
-	>;
-};
-
-// New-style deriver; just f(scoreData, chart) -> derivedMetrics
-// instead of the overly complex shit above.
-export type GPTNewDeriver<GPT extends GPTString> = (
+/** Derives chart-dependent score metrics (grade, percent, …) from provided score data. */
+export type GPTScoreDeriver<GPT extends GPTString> = (
 	scoreData: MONGO_ScoreData<GPT>,
 	chart: MONGO_ChartDocument<GPT>,
 ) => MongoDerivedMetrics[GPT];
@@ -241,14 +222,7 @@ export interface GPTServerImplementation<GPT extends GPTString> {
 	/**
 	 * How should we derive the derived metrics for this game?
 	 */
-	derivers: __OLD_KILL_GPTDerivers<GPT>;
-
-	/**
-	 * How should we derive the derived metrics for this game?
-	 *
-	 * New style, simpler function.
-	 */
-	newDeriver: GPTNewDeriver<GPT>;
+	scoreDeriver: GPTScoreDeriver<GPT>;
 
 	/**
 	 * How should we compute the score rating algorithms for this game?

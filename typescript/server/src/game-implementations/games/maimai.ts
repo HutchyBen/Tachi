@@ -23,16 +23,7 @@ export const MAIMAI_IMPL: GPTServerImplementation<"maimai:Single"> = {
 			return true;
 		},
 	},
-	derivers: {
-		grade: ({ percent }, chart) => {
-			if (percent === chart.data.maxPercent) {
-				return "SSS+";
-			}
-
-			return GetGrade(MAIMAI_GBOUNDARIES, percent);
-		},
-	},
-	newDeriver: (scoreData, chart) => ({
+	scoreDeriver: (scoreData, chart) => ({
 		grade:
 			scoreData.percent === chart.data.maxPercent
 				? "SSS+"

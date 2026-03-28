@@ -23,10 +23,7 @@ export const ARCAEA_IMPL: GPTServerImplementation<GPTStrings["arcaea"]> = {
 			return true;
 		},
 	},
-	derivers: {
-		grade: ({ score }) => GetGrade(ARCAEA_GBOUNDARIES, score),
-	},
-	newDeriver: (scoreData, _chart) => ({
+	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(ARCAEA_GBOUNDARIES, scoreData.score),
 	}),
 	newCalcs: (scoreData, _derivedData, chart) => ({

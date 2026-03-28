@@ -35,23 +35,7 @@ export function PopnClearMedalToLamp(
 
 export const POPN_9B_IMPL: GPTServerImplementation<"popn:9B"> = {
 	chartSpecificValidators: {},
-	derivers: {
-		lamp: ({ clearMedal }) => PopnClearMedalToLamp(clearMedal),
-		grade: ({ score, clearMedal }) => {
-			const gradeString = GetGrade(POPN_GBOUNDARIES, score);
-
-			// lol double-calc
-			const lamp = PopnClearMedalToLamp(clearMedal);
-
-			// grades are kneecapped at "A" if you failed.
-			if (score >= 90_000 && lamp === "FAILED") {
-				return "A";
-			}
-
-			return gradeString;
-		},
-	},
-	newDeriver: (scoreData, _chart) => {
+	scoreDeriver: (scoreData, _chart) => {
 		const lamp = PopnClearMedalToLamp(scoreData.clearMedal);
 
 		return {

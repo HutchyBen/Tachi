@@ -11,10 +11,7 @@ import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
 export const CHUNITHM_IMPL: GPTServerImplementation<"chunithm:Single"> = {
 	chartSpecificValidators: {},
-	derivers: {
-		grade: ({ score }) => GetGrade(CHUNITHM_GBOUNDARIES, score),
-	},
-	newDeriver: (scoreData, _chart) => ({
+	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(CHUNITHM_GBOUNDARIES, scoreData.score),
 	}),
 	newCalcs: (scoreData, _derivedData, chart) => ({

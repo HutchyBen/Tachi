@@ -312,16 +312,7 @@ export const DDR_IMPL: GPTServerImplementation<"ddr:DP" | "ddr:SP"> = {
 		return { flare: IsNullish(flarePoints) ? null : DeriveFlareClass(flarePoints) };
 	},
 	defaultMergeRefName: "Best Score",
-	derivers: {
-		grade: ({ score, lamp }) => {
-			if (lamp === "FAILED") {
-				return "E";
-			}
-
-			return GetGrade(DDR_GBOUNDARIES, score);
-		},
-	},
-	newDeriver: (scoreData, _chart) => ({
+	scoreDeriver: (scoreData, _chart) => ({
 		grade: scoreData.lamp === "FAILED" ? "E" : GetGrade(DDR_GBOUNDARIES, scoreData.score),
 	}),
 	newCalcs: (scoreData, _derivedData, chart) => {

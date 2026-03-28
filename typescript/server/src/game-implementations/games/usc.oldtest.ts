@@ -44,7 +44,7 @@ for (const [playtype, impl] of [
 		t.test("Grade Deriver", (t) => {
 			const f = (score: number, expected: any) =>
 				t.equal(
-					impl.derivers.grade(dmf(baseMetrics, { score }), TestingUSCChart as any),
+					impl.scoreDeriver(dmf(baseMetrics, { score }) as any, TestingUSCChart as any).grade,
 					expected,
 					`A score of ${score.toLocaleString()} should result in grade=${expected}.`,
 				);

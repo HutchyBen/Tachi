@@ -48,7 +48,7 @@ t.test("ONGEKI Implementation", (t: any) => {
 	t.test("Grade Deriver", (t: any) => {
 		const f = (score: number, expected: string) =>
 			t.equal(
-				ONGEKI_IMPL.derivers.grade(dmf(baseMetrics, { score }), TestingOngekiChart),
+				ONGEKI_IMPL.scoreDeriver(dmf(baseMetrics, { score }) as any, TestingOngekiChart).grade,
 				expected,
 				`A score of ${score.toLocaleString()} should result in grade=${expected}.`,
 			);
@@ -73,10 +73,10 @@ t.test("ONGEKI Implementation", (t: any) => {
 	t.test("Star Deriver", (t: any) => {
 		const f = (platinumScore: number, expected: number) =>
 			t.equal(
-				ONGEKI_IMPL.derivers.platinumStars(
-					dmf(baseMetrics, { platinumScore }),
+				ONGEKI_IMPL.scoreDeriver(
+					dmf(baseMetrics, { platinumScore }) as any,
 					TestingOngekiChart,
-				),
+				).platinumStars,
 				expected,
 				`A score of ${platinumScore.toLocaleString()} should result in stars=${expected}.`,
 			);

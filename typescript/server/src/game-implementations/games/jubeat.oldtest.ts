@@ -41,7 +41,7 @@ t.test("Jubeat Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {
 		const f = (score: number, expected: any) =>
 			t.equal(
-				JUBEAT_IMPL.derivers.grade(dmf(baseMetrics, { score }), TestingJubeatChart),
+				JUBEAT_IMPL.scoreDeriver(dmf(baseMetrics, { score }) as any, TestingJubeatChart).grade,
 				expected,
 				`A score of ${score.toLocaleString()} should result in grade=${expected}.`,
 			);

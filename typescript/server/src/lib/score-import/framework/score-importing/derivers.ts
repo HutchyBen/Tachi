@@ -1,7 +1,4 @@
-import type { __OLD_KILL_GPTDerivers } from "#game-implementations/types";
 import type { KtLogger } from "#lib/log/log";
-import type { MetricValue } from "tachi-common/types/metrics";
-
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import {
 	GetGPTConfig,
@@ -27,28 +24,10 @@ function DeriveMetrics<GPT extends GPTString>(
 	metrics: DryScoreData<GPT>,
 	chart: MONGO_ChartDocument<GPT>,
 ) {
-	const deriverImplementation: __OLD_KILL_GPTDerivers<GPT> =
-		GPT_SERVER_IMPLEMENTATIONS[gpt].derivers;
-
-	const derivedMetrics: Record<string, MetricValue> = {};
-
-	const gptConfig = GetGPTConfig(gpt);
-
-	for (const [key, fn] of Object.entries(deriverImplementation)) {
-		const metricConfig = gptConfig.derivedMetrics[key];
-
-		if (!metricConfig) {
-			throw new InternalFailure(
-				`${gpt} has a deriver defined for '${key}', but no such field exists in the config?`,
-			);
-		}
-
-		const value = fn(metrics, chart);
-
-		derivedMetrics[key] = value;
-	}
-
-	return derivedMetrics as MongoDerivedMetrics[GPT];
+	return GPT_SERVER_IMPLEMENTATIONS[gpt].scoreDeriver(
+		metrics as MONGO_ScoreData<GPT>,
+		chart,
+	) as MongoDerivedMetrics[GPT];
 }
 
 export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any, log: KtLogger) {

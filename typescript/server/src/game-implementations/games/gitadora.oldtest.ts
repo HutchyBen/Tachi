@@ -46,7 +46,8 @@ for (const [playtype, impl] of [
 		t.test("Grade Deriver", (t) => {
 			const f = (percent: number, expected: any) =>
 				t.equal(
-					impl.derivers.grade(dmf(baseMetrics, { percent }), TestingGitadoraChart as any),
+					impl.scoreDeriver(dmf(baseMetrics, { percent }) as any, TestingGitadoraChart as any)
+						.grade,
 					expected,
 					`A percent of ${percent}% should result in grade=${expected}.`,
 				);

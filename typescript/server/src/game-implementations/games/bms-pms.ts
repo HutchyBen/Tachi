@@ -9,8 +9,7 @@ import {
 	GoalFmtPercent,
 	GoalOutOfFmtPercent,
 	GradeGoalFormatter,
-	IIDXLIKE_DERIVERS,
-	IIDXLIKE_NEW_DERIVER,
+	IIDXLIKE_SCORE_DERIVER,
 	IIDXLIKE_PB_RANKING_VALUES,
 	IIDXLIKE_SCORE_VALIDATORS,
 	IIDXLIKE_VALIDATORS,
@@ -41,8 +40,7 @@ const BMS_PMS_MERGERS: Array<PBMergeFunction<GPTStrings["bms" | "pms"]>> = [
 // implementations. Nice.
 
 const BMS_IMPL: GPTServerImplementation<GPTStrings["bms" | "pms"]> = {
-	derivers: IIDXLIKE_DERIVERS,
-	newDeriver: IIDXLIKE_NEW_DERIVER,
+	scoreDeriver: IIDXLIKE_SCORE_DERIVER,
 	newCalcs: SGL_NEW_CALCS,
 	newSessionCalcs: SGL_NEW_SESSION_CALCS,
 	newProfileCalcs: SGL_NEW_PROFILE_CALCS,

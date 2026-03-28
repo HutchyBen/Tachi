@@ -48,7 +48,8 @@ t.test("Arcaea Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {
 		const f = (score: number, expected: string) =>
 			t.equal(
-				ARCAEA_IMPL.derivers.grade(dmf(baseMetrics, { score }), TestingArcaeaSheriruthFTR),
+				ARCAEA_IMPL.scoreDeriver(dmf(baseMetrics, { score }) as any, TestingArcaeaSheriruthFTR)
+					.grade,
 				expected,
 				`A score of ${score.toLocaleString()} should result in grade=${expected}.`,
 			);
