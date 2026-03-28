@@ -1,4 +1,4 @@
-import { mergeScoreDataFromPg } from "#lib/v3/migration-tools";
+import { pgScoreDataToMongo } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import { ISO8601ToUnixMilliseconds } from "#utils/time";
 import {
@@ -17,6 +17,7 @@ export const SELECT_SCORE_DOCUMENT = [
 	"score.game",
 	"score.data",
 	"score.derived_data",
+	"score.judgements",
 	"score.calculated_data",
 	"score.meta",
 	"score.time_achieved",
@@ -37,6 +38,7 @@ export interface ScoreDocumentJoinRow {
 	game: Game;
 	data: unknown;
 	derived_data: unknown;
+	judgements: unknown;
 	calculated_data: unknown;
 	meta: unknown;
 	time_achieved: string | null;
@@ -52,9 +54,12 @@ export interface ScoreDocumentJoinRow {
 
 export function ToScoreDocument(row: ScoreDocumentJoinRow): ScoreDocument {
 	const { game, playtype } = V3ToGamePT(row.game);
-	const gpt = GetGPTString(game, playtype) as GPTString;
 
-	const scoreData = mergeScoreDataFromPg(gpt, row.data, row.derived_data);
+	const scoreData = pgScoreDataToMongo(row.game, {
+		data: row.data as any,
+		derived: row.derived_data as any,
+		judgements: row.judgements as any,
+	});
 
 	const scoreMeta = row.meta as ScoreDocument["scoreMeta"];
 

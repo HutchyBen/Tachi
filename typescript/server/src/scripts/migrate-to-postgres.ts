@@ -1278,7 +1278,7 @@ async function main(): Promise<void> {
 				// }
 
 				const gpt = GetGPTString(s.game, s.playtype);
-				const { data, derived } = mongoScoreDataToPg(gpt, s.scoreData);
+				const { data, derived, judgements } = mongoScoreDataToPg(gpt, s.scoreData);
 
 				rows.push({
 					id: s.scoreID,
@@ -1289,6 +1289,7 @@ async function main(): Promise<void> {
 					import_id: importId,
 					data: JSON.stringify(data),
 					derived_data: JSON.stringify(derived),
+					judgements: JSON.stringify(judgements),
 					calculated_data: JSON.stringify(s.calculatedData),
 					meta: JSON.stringify(s.scoreMeta),
 					time_achieved: ts(s.timeAchieved),

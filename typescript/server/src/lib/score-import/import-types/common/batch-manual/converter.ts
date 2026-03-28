@@ -20,7 +20,7 @@ import {
 	type GPTString,
 	type MatchTypeResolver,
 	type MatchTypeResolverWithDifficulty,
-	type ProvidedMetrics,
+	type MongoProvidedMetrics,
 	type SongDocument,
 	type Versions,
 } from "tachi-common";
@@ -99,7 +99,7 @@ export const ConverterBatchManual: ConverterFunction<BatchManualScore, BatchManu
 
 	// create the metrics for this score.
 	// @ts-expect-error this is filled out in a second, promise!
-	const metrics: ProvidedMetrics[GPTString] = {};
+	const metrics: MongoProvidedMetrics[GPTString] = {};
 
 	const config = GetGamePTConfig(game, playtype);
 

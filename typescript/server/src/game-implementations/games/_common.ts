@@ -2,7 +2,7 @@ import type {
 	ChartSpecificMetricValidator,
 	GPTChartSpecificMetricValidators,
 	GPTClassDerivers,
-	GPTDerivers,
+	__OLD_KILL_GPTDerivers,
 	GPTGoalFormatters,
 	GPTGoalProgressFormatters,
 	GPTNewCalcs,
@@ -64,7 +64,7 @@ type IIDXLikes = GPTStrings["bms" | "iidx" | "pms"];
  *
  * and BMS. and PMS. They use the same things.
  */
-export const IIDXLIKE_DERIVERS: GPTDerivers<IIDXLikes> = {
+export const IIDXLIKE_DERIVERS: __OLD_KILL_GPTDerivers<IIDXLikes> = {
 	percent: ({ score }, chart) => calculateIIDXLikePercent(score, chart.data.notecount),
 	grade: ({ score }, chart) => {
 		const percent = calculateIIDXLikePercent(score, chart.data.notecount);
@@ -98,7 +98,7 @@ export const IIDXLIKE_SCORE_VALIDATORS: Array<ScoreValidator<IIDXLikes>> = [
 
 type SDVXLikes = GPTStrings["sdvx" | "usc"];
 
-export const SDVXLIKE_DERIVERS: GPTDerivers<SDVXLikes> = {
+export const SDVXLIKE_DERIVERS: __OLD_KILL_GPTDerivers<SDVXLikes> = {
 	grade: ({ score }) => GetGrade(SDVXLIKE_GBOUNDARIES, score),
 };
 

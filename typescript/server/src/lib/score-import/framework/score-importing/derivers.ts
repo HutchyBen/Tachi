@@ -1,11 +1,11 @@
-import type { GPTDerivers } from "#game-implementations/types";
+import type { __OLD_KILL_GPTDerivers } from "#game-implementations/types";
 import type { KtLogger } from "#lib/log/log";
 import type { MetricValue } from "tachi-common/types/metrics";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import {
 	type ChartDocument,
-	type DerivedMetrics,
+	type MongoDerivedMetrics,
 	GetGPTConfig,
 	type GPTString,
 	type integer,
@@ -27,7 +27,8 @@ function DeriveMetrics<GPT extends GPTString>(
 	metrics: DryScoreData<GPT>,
 	chart: ChartDocument<GPT>,
 ) {
-	const deriverImplementation: GPTDerivers<GPT> = GPT_SERVER_IMPLEMENTATIONS[gpt].derivers;
+	const deriverImplementation: __OLD_KILL_GPTDerivers<GPT> =
+		GPT_SERVER_IMPLEMENTATIONS[gpt].derivers;
 
 	const derivedMetrics: Record<string, MetricValue> = {};
 
@@ -47,7 +48,7 @@ function DeriveMetrics<GPT extends GPTString>(
 		derivedMetrics[key] = value;
 	}
 
-	return derivedMetrics as DerivedMetrics[GPT];
+	return derivedMetrics as MongoDerivedMetrics[GPT];
 }
 
 export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any, log: KtLogger) {

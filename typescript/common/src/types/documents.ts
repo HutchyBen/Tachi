@@ -4,7 +4,7 @@ import type {
 	AnyClasses,
 	ChartDocumentData,
 	Classes,
-	DerivedMetrics,
+	MongoDerivedMetrics as MongoDerivedMetrics,
 	Difficulties,
 	ExtractedClasses,
 	GameGroup,
@@ -15,12 +15,12 @@ import type {
 	integer,
 	Judgements,
 	OptionalEnumIndexes,
-	OptionalMetrics,
+	MongoOptionalMetrics as MongoOptionalMetrics,
 	Playtype,
 	Playtypes,
 	Preferences,
 	ProfileRatingAlgorithms,
-	ProvidedMetrics,
+	MongoProvidedMetrics as MongoProvidedMetrics,
 	ScoreEnumIndexes,
 	ScoreMeta,
 	ScoreRatingAlgorithms,
@@ -30,6 +30,9 @@ import type {
 	V3Game,
 	V3GameToGPTString,
 	Versions,
+	PgProvidedMetrics,
+	PgDerivedMetrics,
+	PgOptionalMetrics,
 } from "../types";
 import type { APIPermissions } from "./api";
 import type { ImportTypes } from "./import-types";
@@ -444,17 +447,30 @@ export type QuestSubscriptionDocument = {
 	  }
 );
 
-export type PgScoreData<Game extends V3Game = V3Game> = ProvidedMetrics[V3GameToGPTString[Game]] &
-	DerivedMetrics[V3GameToGPTString[Game]];
+export type PgScoreData<Game extends V3Game = V3Game> = {
+	data: PgScoreProvidedData<Game>;
+	derived: PgScoreDerivedData<Game>;
+	judgements: PgScoreJudgements<Game>;
+};
+
+export type PgScoreProvidedData<Game extends V3Game = V3Game> =
+	PgProvidedMetrics[V3GameToGPTString[Game]] & PgOptionalMetrics[V3GameToGPTString[Game]];
+
+export type PgScoreDerivedData<Game extends V3Game = V3Game> =
+	PgDerivedMetrics[V3GameToGPTString[Game]];
+
+export type PgScoreJudgements<Game extends V3Game = V3Game> = Partial<
+	Record<Judgements[V3GameToGPTString[Game]], integer | null>
+>;
 
 export type MongoScoreData<GPT extends GPTString = GPTString> = {
 	enumIndexes: ScoreEnumIndexes<GPT>;
 	judgements: Partial<Record<Judgements[GPT], integer | null>>;
 	optional: {
 		enumIndexes: OptionalEnumIndexes<GPT>;
-	} & OptionalMetrics[GPT];
-} & DerivedMetrics[GPT] &
-	ProvidedMetrics[GPT];
+	} & MongoOptionalMetrics[GPT];
+} & MongoDerivedMetrics[GPT] &
+	MongoProvidedMetrics[GPT];
 
 export interface ScoreDocument<GPT extends GPTString = GPTString> {
 	service: string;

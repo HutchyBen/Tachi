@@ -10,7 +10,11 @@ import type {
 	RatingAlgorithmConfig,
 } from "./game-config-utils";
 import type { INTERNAL_GAME_PT_CONFIG } from "./internals";
-import type { ExtractEnumMetricNames, ExtractMetrics } from "./metrics";
+import type {
+	ExtractEnumMetricNames,
+	MongoExtractMetrics as MongoExtractMetrics,
+	PgExtractMetrics,
+} from "./metrics";
 import type { AllFieldsNullableOptional, ExtractArrayElementType } from "./utils";
 
 /**
@@ -255,24 +259,34 @@ export type ScoreMeta = {
 	[G in GPTString]: z.infer<(typeof GAME_PT_CONFIGS)[G]["scoreMeta"]>;
 };
 
-export type ProvidedMetrics = {
-	[G in GPTString]: ExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["providedMetrics"]>;
+export type MongoProvidedMetrics = {
+	[G in GPTString]: MongoExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["providedMetrics"]>;
 };
 
-export type DerivedMetrics = {
-	[G in GPTString]: ExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["derivedMetrics"]>;
+export type MongoDerivedMetrics = {
+	[G in GPTString]: MongoExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["derivedMetrics"]>;
+};
+
+export type PgProvidedMetrics = {
+	[G in GPTString]: PgExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["providedMetrics"]>;
+};
+export type PgOptionalMetrics = {
+	[G in GPTString]: PgExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["optionalMetrics"]>;
+};
+export type PgDerivedMetrics = {
+	[G in GPTString]: PgExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["derivedMetrics"]>;
 };
 
 /**
  * Top level metrics on a score.
  */
-export type ScoreMetrics = {
-	[G in GPTString]: DerivedMetrics[G] & ProvidedMetrics[G];
+export type MongoScoreMetrics = {
+	[G in GPTString]: MongoDerivedMetrics[G] & MongoProvidedMetrics[G];
 };
 
-export type OptionalMetrics = {
+export type MongoOptionalMetrics = {
 	[G in GPTString]: AllFieldsNullableOptional<
-		ExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["optionalMetrics"]>
+		MongoExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["optionalMetrics"]>
 	>;
 };
 

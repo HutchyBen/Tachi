@@ -123,12 +123,27 @@ export type ConfScoreMetric = {
  * Given a Metric Type, turn it into its evaluated form. An IntegerScoreMetric
  * becomes an integer and an enum becomes a string union, etc.
  */
-export type ExtractMetricValue<M extends ConfScoreMetric> = M extends ConfDecimalScoreMetric
+export type MongoExtractMetricValue<M extends ConfScoreMetric> = M extends ConfDecimalScoreMetric
 	? number
 	: M extends ConfIntegerScoreMetric
 		? integer
 		: M extends ConfEnumScoreMetric<infer V>
 			? V
+			: M extends ConfGraphScoreMetric
+				? Array<number>
+				: M extends ConfNullableGraphScoreMetric
+					? Array<number | null>
+					: never;
+
+/**
+ * Postgres equivalent of MongoExtractMetricValue
+ */
+export type PgExtractMetricValue<M extends ConfScoreMetric> = M extends ConfDecimalScoreMetric
+	? number
+	: M extends ConfIntegerScoreMetric
+		? integer
+		: M extends ConfEnumScoreMetric<infer _Val>
+			? integer
 			: M extends ConfGraphScoreMetric
 				? Array<number>
 				: M extends ConfNullableGraphScoreMetric
@@ -181,14 +196,18 @@ export type GetEnumValue<
 /**
  * Turn a record of ConfigScoreMetrics into their actual literal values.
  *
- * @example ExtractMetrics<{
+ * @example MongoExtractMetrics<{
  *     score: ConfIntegerScoreMetric; lamp: ConfEnumScoreMetric<"FAILED"|"CLEAR">
  * }>
  * will equal
  * { score: integer; lamp: { string: "FAILED" | "CLEAR "..., index: number } }
  */
-export type ExtractMetrics<R extends Record<string, ConfScoreMetric>> = {
-	-readonly [K in keyof R]: ExtractMetricValue<R[K]>;
+export type MongoExtractMetrics<R extends Record<string, ConfScoreMetric>> = {
+	-readonly [K in keyof R]: MongoExtractMetricValue<R[K]>;
+};
+
+export type PgExtractMetrics<R extends Record<string, ConfScoreMetric>> = {
+	-readonly [K in keyof R]: PgExtractMetricValue<R[K]>;
 };
 
 // We want some signatures for implementing metric "derivers".
@@ -198,20 +217,23 @@ export type ExtractMetrics<R extends Record<string, ConfScoreMetric>> = {
 
 export type DerivedMetricValue = number | string | Array<number> | Array<number | null> | integer;
 
-export type MetricValue = ExtractMetricValue<ConfScoreMetric>;
+export type MetricValue = MongoExtractMetricValue<ConfScoreMetric>;
 
 export type MetricDeriver<
 	GPT extends GPTString,
 	// possible return values
 	// from a derived fn
 	V extends DerivedMetricValue = DerivedMetricValue,
-> = (mandatoryMetrics: ExtractMetrics<ConfProvidedMetrics[GPT]>, chart: ChartDocument<GPT>) => V;
+> = (
+	mandatoryMetrics: MongoExtractMetrics<ConfProvidedMetrics[GPT]>,
+	chart: ChartDocument<GPT>,
+) => V;
 
 /**
  * A function that will derive this metric, given a function of other metrics and
  * a chart for this GPT.
  */
-export type ScoreMetricDeriver<M extends ConfScoreMetric, GPT extends GPTString> =
+export type __OLD_KILL_ScoreMetricDeriver<M extends ConfScoreMetric, GPT extends GPTString> =
 	// graph score metrics correspond to Array<number>
 	M extends ConfGraphScoreMetric
 		? MetricDeriver<GPT, Array<number>>

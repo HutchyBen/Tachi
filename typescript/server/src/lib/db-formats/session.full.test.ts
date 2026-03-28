@@ -69,6 +69,7 @@ describe("LoadSessionDocumentById", () => {
 				import_id: null,
 				data: JSON.stringify({}),
 				derived_data: JSON.stringify({}),
+				judgements: JSON.stringify({}),
 				calculated_data: JSON.stringify({}),
 				meta: JSON.stringify({}),
 				time_achieved: null,

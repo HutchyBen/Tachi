@@ -4,19 +4,19 @@ import type {
 	GPTString,
 	integer,
 	Judgements,
-	OptionalMetrics,
+	MongoOptionalMetrics,
 	Playtype,
 	ScoreDocument,
 } from "tachi-common";
-import type { ExtractMetrics } from "tachi-common/types/metrics";
+import type { MongoExtractMetrics } from "tachi-common/types/metrics";
 
 /**
  * ScoreData, but it's just the provided metrics (and enumIndexes don't exist).
  */
 export type DryScoreData<GPT extends GPTString> = {
 	judgements: Partial<Record<Judgements[GPT], integer | null>>;
-	optional: Mutable<OptionalMetrics[GPT]>;
-} & ExtractMetrics<ConfProvidedMetrics[GPT]>;
+	optional: Mutable<MongoOptionalMetrics[GPT]>;
+} & MongoExtractMetrics<ConfProvidedMetrics[GPT]>;
 
 /**
  * An intermediate score format that will be fully filled out by

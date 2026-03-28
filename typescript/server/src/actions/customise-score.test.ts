@@ -1,4 +1,4 @@
-import { mergeScoreDataFromPg, mongoScoreDataToPg } from "#lib/v3/migration-tools";
+import { pgScoreDataToMongo, mongoScoreDataToPg } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { type MongoScoreData, type ScoreDocument } from "tachi-common";
@@ -18,8 +18,8 @@ describe("mergeScoreDataFromPg", () => {
 			optional: {},
 		} as MongoScoreData<"iidx:SP">;
 
-		const { data, derived } = mongoScoreDataToPg("iidx:SP", original);
-		const back = mergeScoreDataFromPg("iidx:SP", data, derived);
+		const { data, derived, judgements } = mongoScoreDataToPg("iidx:SP", original);
+		const back = pgScoreDataToMongo("iidx:SP", data, derived, judgements);
 
 		expect(back).toMatchObject({
 			grade: "F",
@@ -67,7 +67,7 @@ describe("ACTION_CustomiseScore", () => {
 			})
 			.execute();
 
-		const { data, derived } = mongoScoreDataToPg("iidx:SP", {
+		const { data, derived, judgements } = mongoScoreDataToPg("iidx:SP", {
 			grade: "F",
 			lamp: "FAILED",
 			percent: 0,
@@ -85,6 +85,7 @@ describe("ACTION_CustomiseScore", () => {
 				import_id: null,
 				data: JSON.stringify(data),
 				derived_data: JSON.stringify(derived),
+				judgements: JSON.stringify(judgements),
 				calculated_data: JSON.stringify({}),
 				meta: JSON.stringify({}),
 				time_achieved: null,

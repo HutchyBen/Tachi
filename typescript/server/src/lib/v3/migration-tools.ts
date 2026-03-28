@@ -1,20 +1,22 @@
-import { DeleteUndefinedProps, staticAssertUnreachable } from "#utils/misc.js";
-import { Mongos } from "mongodb";
+import { DeleteUndefinedProps } from "#utils/misc.js";
 import {
-	type DerivedMetrics,
 	GetGPTConfig,
 	type GPTString,
-	type OptionalMetrics,
-	type ProvidedMetrics,
-	type MongoScoreData,
-	PgScoreData,
 	GPTStringToV3Game,
 	integer,
+	type MongoDerivedMetrics,
+	type MongoOptionalMetrics,
+	type MongoProvidedMetrics,
+	type MongoScoreData,
+	PgScoreData,
+	V3Game,
+	V3GameToGPTString,
+	V3GetGameConfig,
 } from "tachi-common";
 
 interface RetVal<GPT extends GPTString> {
-	derived: DerivedMetrics[GPT];
-	data: OptionalMetrics[GPT] & ProvidedMetrics[GPT];
+	derived: MongoDerivedMetrics[GPT];
+	data: MongoOptionalMetrics[GPT] & MongoProvidedMetrics[GPT];
 }
 
 /**
@@ -41,452 +43,112 @@ function applyOrdinals(
 	return result;
 }
 
-function splitScoreData(gpt: GPTString, scoreData: MongoScoreData): RetVal<GPTString> {
-	switch (gpt) {
-		case "iidx:SP": {
-			const { grade, lamp, percent, score, optional } =
-				scoreData as unknown as MongoScoreData<"iidx:SP">;
-
-			const ret: RetVal<"iidx:SP"> = {
-				data: {
-					lamp,
-					score,
-					...optional,
-				},
-				derived: {
-					grade,
-					percent,
-				},
-			};
-
-			return ret;
-		}
-
-		case "iidx:DP": {
-			const { grade, lamp, percent, score, optional } =
-				scoreData as unknown as MongoScoreData<"iidx:DP">;
-
-			const ret: RetVal<"iidx:DP"> = {
-				data: {
-					lamp,
-					score,
-					...optional,
-				},
-				derived: { grade, percent },
-			};
-
-			return ret;
-		}
-
-		case "museca:Single": {
-			const { grade, lamp, score, optional } =
-				scoreData as unknown as MongoScoreData<"museca:Single">;
-
-			const ret: RetVal<"museca:Single"> = {
-				data: {
-					lamp,
-					score,
-					...optional,
-				},
-				derived: { grade },
-			};
-
-			return ret;
-		}
-
-		case "chunithm:Single": {
-			const { grade, score, noteLamp, clearLamp, optional } =
-				scoreData as unknown as MongoScoreData<"chunithm:Single">;
-
-			const ret: RetVal<"chunithm:Single"> = {
-				data: {
-					score,
-					noteLamp,
-					clearLamp,
-					...optional,
-				},
-				derived: { grade },
-			};
-
-			return ret;
-		}
-
-		case "bms:7K": {
-			const { grade, lamp, percent, score, optional } =
-				scoreData as unknown as MongoScoreData<"bms:7K">;
-
-			const ret: RetVal<"bms:7K"> = {
-				data: {
-					lamp,
-					score,
-					...optional,
-				},
-				derived: { grade, percent },
-			};
-
-			return ret;
-		}
-
-		case "bms:14K": {
-			const { grade, lamp, percent, score, optional } =
-				scoreData as unknown as MongoScoreData<"bms:14K">;
-
-			const ret: RetVal<"bms:14K"> = {
-				data: {
-					lamp,
-					score,
-					...optional,
-				},
-				derived: { grade, percent },
-			};
-
-			return ret;
-		}
-
-		case "gitadora:Gita": {
-			const { grade, lamp, percent, optional } =
-				scoreData as unknown as MongoScoreData<"gitadora:Gita">;
-
-			const ret: RetVal<"gitadora:Gita"> = {
-				data: {
-					lamp,
-					percent,
-					...optional,
-				},
-				derived: { grade },
-			};
-
-			return ret;
-		}
-
-		case "gitadora:Dora": {
-			const { grade, lamp, percent, optional } =
-				scoreData as unknown as MongoScoreData<"gitadora:Dora">;
-
-			const ret: RetVal<"gitadora:Dora"> = {
-				data: {
-					lamp,
-					percent,
-					...optional,
-				},
-				derived: { grade },
-			};
-
-			return ret;
-		}
-
-		case "jubeat:Single": {
-			const { grade, score, musicRate, lamp, optional } =
-				scoreData as unknown as MongoScoreData<"jubeat:Single">;
-
-			const ret: RetVal<"jubeat:Single"> = {
-				data: {
-					score,
-					musicRate,
-					lamp,
-					...optional,
-				},
-				derived: { grade },
-			};
-
-			return ret;
-		}
-
-		case "maimai:Single": {
-			const { grade, lamp, percent, optional } =
-				scoreData as unknown as MongoScoreData<"maimai:Single">;
-
-			const ret: RetVal<"maimai:Single"> = {
-				data: {
-					lamp,
-					percent,
-					...optional,
-				},
-				derived: { grade },
-			};
-
-			return ret;
-		}
-
-		case "maimaidx:Single": {
-			const { grade, lamp, percent, optional } =
-				scoreData as unknown as MongoScoreData<"maimaidx:Single">;
-
-			const ret: RetVal<"maimaidx:Single"> = {
-				data: {
-					lamp,
-					percent,
-					...optional,
-				},
-				derived: { grade },
-			};
-
-			return ret;
-		}
-
-		case "popn:9B": {
-			const { grade, lamp, score, clearMedal, optional } =
-				scoreData as unknown as MongoScoreData<"popn:9B">;
-
-			const ret: RetVal<"popn:9B"> = {
-				data: {
-					score,
-					clearMedal,
-					...optional,
-				},
-				derived: { grade, lamp },
-			};
-
-			return ret;
-		}
-
-		case "sdvx:Single": {
-			const { grade, lamp, score, optional } =
-				scoreData as unknown as MongoScoreData<"sdvx:Single">;
-
-			const ret: RetVal<"sdvx:Single"> = {
-				data: {
-					lamp,
-					score,
-					...optional,
-				},
-				derived: { grade },
-			};
-
-			return ret;
-		}
-
-		case "usc:Controller": {
-			const { grade, lamp, score, optional } =
-				scoreData as unknown as MongoScoreData<"usc:Controller">;
-
-			const ret: RetVal<"usc:Controller"> = {
-				data: {
-					lamp,
-					score,
-					...optional,
-				},
-				derived: { grade },
-			};
-
-			return ret;
-		}
-
-		case "usc:Keyboard": {
-			const { grade, lamp, score, optional } =
-				scoreData as unknown as MongoScoreData<"usc:Keyboard">;
-
-			const ret: RetVal<"usc:Keyboard"> = {
-				data: {
-					lamp,
-					score,
-					...optional,
-				},
-				derived: { grade },
-			};
-
-			return ret;
-		}
-
-		case "wacca:Single": {
-			const { grade, lamp, score, optional } =
-				scoreData as unknown as MongoScoreData<"wacca:Single">;
-
-			const ret: RetVal<"wacca:Single"> = {
-				data: {
-					lamp,
-					score,
-					...optional,
-				},
-				derived: { grade },
-			};
-
-			return ret;
-		}
-
-		case "pms:Controller": {
-			const { grade, lamp, percent, score, optional } =
-				scoreData as unknown as MongoScoreData<"pms:Controller">;
-
-			const ret: RetVal<"pms:Controller"> = {
-				data: {
-					lamp,
-					score,
-					...optional,
-				},
-				derived: { grade, percent },
-			};
-
-			return ret;
-		}
-
-		case "pms:Keyboard": {
-			const { grade, lamp, percent, score, optional } =
-				scoreData as unknown as MongoScoreData<"pms:Keyboard">;
-
-			const ret: RetVal<"pms:Keyboard"> = {
-				data: {
-					lamp,
-					score,
-					...optional,
-				},
-				derived: { grade, percent },
-			};
-
-			return ret;
-		}
-
-		case "itg:Stamina": {
-			const { grade, lamp, scorePercent, survivedPercent, finalPercent, optional } =
-				scoreData as unknown as MongoScoreData<"itg:Stamina">;
-
-			const ret: RetVal<"itg:Stamina"> = {
-				data: {
-					lamp,
-					scorePercent,
-					survivedPercent,
-					...optional,
-				},
-				derived: { grade, finalPercent },
-			};
-
-			return ret;
-		}
-
-		case "arcaea:Touch": {
-			const { grade, lamp, score, optional } =
-				scoreData as unknown as MongoScoreData<"arcaea:Touch">;
-
-			const ret: RetVal<"arcaea:Touch"> = {
-				data: {
-					lamp,
-					score,
-					...optional,
-				},
-				derived: { grade },
-			};
-
-			return ret;
-		}
-
-		case "ongeki:Single": {
-			const { grade, score, noteLamp, bellLamp, platinumScore, platinumStars, optional } =
-				scoreData as unknown as MongoScoreData<"ongeki:Single">;
-
-			const ret: RetVal<"ongeki:Single"> = {
-				data: {
-					score,
-					noteLamp,
-					bellLamp,
-					platinumScore,
-					...optional,
-				},
-				derived: { grade, platinumStars },
-			};
-
-			return ret;
-		}
-
-		case "ddr:SP": {
-			const { grade, lamp, score, optional } =
-				scoreData as unknown as MongoScoreData<"ddr:SP">;
-
-			const ret: RetVal<"ddr:SP"> = {
-				data: {
-					lamp,
-					score,
-					...optional,
-				},
-				derived: { grade },
-			};
-
-			return ret;
-		}
-
-		case "ddr:DP": {
-			const { grade, lamp, score, optional } =
-				scoreData as unknown as MongoScoreData<"ddr:DP">;
-
-			const ret: RetVal<"ddr:DP"> = {
-				data: {
-					lamp,
-					score,
-					...optional,
-				},
-				derived: { grade },
-			};
-
-			return ret;
+function splitScoreData<GPT extends GPTString = GPTString>(
+	gpt: GPT,
+	sd: MongoScoreData<GPT>,
+): RetVal<GPT> {
+	const config = GetGPTConfig(gpt);
+
+	const scoreData = sd as any;
+
+	const eventualOut: any = {
+		data: {},
+		derived: {},
+		judgements: scoreData.judgements,
+	};
+
+	for (const [key, value] of Object.entries(config.providedMetrics)) {
+		if (value.type === "ENUM") {
+			eventualOut.data[key] = value.values.indexOf(scoreData[key]);
+		} else {
+			eventualOut.data[key] = scoreData[key];
 		}
 	}
+
+	for (const [key, value] of Object.entries(config.derivedMetrics)) {
+		if (value.type === "ENUM") {
+			eventualOut.derived[key] = value.values.indexOf(scoreData[key]);
+		} else {
+			eventualOut.derived[key] = scoreData[key];
+		}
+	}
+
+	for (const [key, value] of Object.entries(config.optionalMetrics)) {
+		if (value.type === "ENUM") {
+			eventualOut.data[key] = value.values.indexOf(scoreData.optional[key]);
+		} else {
+			eventualOut.data[key] = scoreData.optional[key];
+		}
+	}
+
+	return eventualOut;
 }
 
-export function mongoScoreDataToPg(
-	gpt: GPTString,
+export function mongoScoreDataToPg<GPT extends GPTString = GPTString>(
+	gpt: GPT,
 	scoreData: MongoScoreData,
-): { data: unknown; derived: unknown } {
+): PgScoreData<GPTStringToV3Game[GPT]> {
 	const { data, derived } = splitScoreData(gpt, scoreData);
 
 	const config = GetGPTConfig(gpt);
 
 	return {
-		data: applyOrdinals(data, config.providedMetrics as any),
-		derived: applyOrdinals(derived, config.derivedMetrics as any),
+		data: applyOrdinals(data, config.providedMetrics as any) as any,
+		derived: applyOrdinals(derived, config.derivedMetrics as any) as any,
+		judgements: scoreData.judgements,
 	};
 }
 
 /**
  * Reconstruct API {@link MongoScoreData} from Postgres `data` / `derived_data` JSON blobs
- * (the inverse of {@link mongoScoreDataToPg}).
+ * and the `judgements` column (the inverse of {@link mongoScoreDataToPg}).
  */
-export function mergeScoreDataFromPg<G extends GPTString = GPTString>(
-	gpt: G,
-	dataRaw: any,
-	derivedRaw: any,
-): MongoScoreData<G> {
-	const config = GetGPTConfig(gpt);
+export function pgScoreDataToMongo<G extends V3Game = V3Game>(
+	game: G,
+	scoreData: PgScoreData<G>,
+): MongoScoreData<V3GameToGPTString[G]> {
+	const data = scoreData.data as any;
+	const derived = scoreData.derived as any;
+
+	const config = V3GetGameConfig(game);
 
 	const eventualOut: any = {
 		enumIndexes: {},
 		optional: {
 			enumIndexes: {},
 		},
+		judgements: scoreData.judgements,
 	};
 
 	for (const [key, value] of Object.entries(config.providedMetrics)) {
 		if (value.type === "ENUM") {
-			const index: integer = dataRaw[key];
+			const index: integer = data[key];
 			eventualOut[key] = value.values[index];
 			eventualOut.enumIndexes[key] = index;
 		} else {
-			eventualOut[key] = dataRaw[key];
+			eventualOut[key] = data[key];
 		}
 	}
 
-	console.log(dataRaw);
-	console.log(derivedRaw);
-
 	for (const [key, value] of Object.entries(config.derivedMetrics)) {
 		if (value.type === "ENUM") {
-			const index: integer = derivedRaw[key];
+			const index: integer = derived[key];
 			eventualOut[key] = value.values[index];
 			eventualOut.enumIndexes[key] = index;
 		} else {
-			eventualOut[key] = derivedRaw[key];
+			eventualOut[key] = derived[key];
 		}
 	}
 
 	for (const [key, value] of Object.entries(config.optionalMetrics)) {
 		if (value.type === "ENUM") {
-			const index: integer = dataRaw[key];
+			const index: integer = data[key];
 			eventualOut.optional[key] = value.values[index];
 			eventualOut.optional.enumIndexes[key] = index;
 		} else {
-			eventualOut.optional[key] = dataRaw[key];
+			eventualOut.optional[key] = data[key];
 		}
 	}
-
-	console.log(eventualOut);
 
 	DeleteUndefinedProps(eventualOut.optional);
 	DeleteUndefinedProps(eventualOut);
