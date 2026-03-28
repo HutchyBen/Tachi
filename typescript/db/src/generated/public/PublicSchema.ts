@@ -54,6 +54,7 @@ import type { default as PrivApiClientTable } from './PrivApiClient';
 import type { default as PrivApiTokenTable } from './PrivApiToken';
 import type { default as SvcKshookSv6cSettingsTable } from './SvcKshookSv6cSettings';
 import type { default as ImportErrorTable } from './ImportError';
+import type { default as FolderChartLookupTable } from './FolderChartLookup';
 import type { default as QuestTable } from './Quest';
 import type { default as AccountSettingsTable } from './AccountSettings';
 import type { default as PbTable } from './Pb';
@@ -171,6 +172,8 @@ export default interface PublicSchema {
   svc_kshook_sv6c_settings: SvcKshookSv6cSettingsTable;
 
   import_error: ImportErrorTable;
+
+  folder_chart_lookup: FolderChartLookupTable;
 
   quest: QuestTable;
 

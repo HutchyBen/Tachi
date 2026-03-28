@@ -1,7 +1,9 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
-LOAD 'auto_explain';
+-- Query stats (requires shared_preload_libraries=pg_stat_statements; see docker-compose-dev.yml).
+CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+-- auto_explain is loaded via shared_preload_libraries in dev (same docker-compose).
 
 -- Tables starting with "priv_" are private and should never ever be exposed
 -- everything else is assumed to be sound, public information.
@@ -427,14 +429,13 @@ CREATE TABLE "folder" (
 	-- Used in URLs. should be short, but must be unique per game!
 	slug TEXT,
 
-	-- TODO(zk) unsure what format this data should take
-	-- I think this should genuinely just be the WHERE $x$ part
-	-- of a sql query on a joined song/charts table.
-	query TEXT NOT NULL,
+	-- SQL predicate (no leading WHERE) for charts in this folder; matches seeds `where`.
+	-- Quoted: "where" is a reserved word in SQL.
+	"where" TEXT NOT NULL,
 
 	-- NULL means no version restriction.
 	version_filter TEXT[],
-	search_terms TEXT[]
+	search_terms TEXT[] NOT NULL
 );
 CREATE UNIQUE INDEX folder_unique_slug_game ON "folder" (game, slug) WHERE slug IS NOT NULL;
 
@@ -523,6 +524,16 @@ CREATE TABLE "chart" (
 
 	data JSONB NOT NULL -- game specific payload
 );
+
+-- Denormalized chart → folders cache (rebuilt by app; see rebuildFolderChartLookup).
+CREATE TABLE "folder_chart_lookup" (
+	folder_id TEXT NOT NULL REFERENCES folder(id) ON DELETE CASCADE,
+	chart_id TEXT NOT NULL REFERENCES chart(id) ON DELETE CASCADE,
+
+	PRIMARY KEY (folder_id, chart_id)
+);
+CREATE INDEX ON "folder_chart_lookup" (folder_id);
+CREATE INDEX ON "folder_chart_lookup" (chart_id);
 
 CREATE TABLE "game_settings" (
 	user_id BIGINT REFERENCES account(id) NOT NULL,
@@ -1052,6 +1063,12 @@ CREATE INDEX game_stats_snapshot_game_idx ON game_stats_snapshot (game, timestam
 -- "All charts for song X" — song pages, chart listing. Postgres does NOT
 -- auto-index FK columns, so this needs to be explicit.
 CREATE INDEX chart_song_idx ON chart (song_id);
+
+-- Folder membership (`BuildFolderQuery`): seeds often use `chart.level` / `chart.level_num`
+-- without `chart.game`. Folder rows are per-game, so the app ANDs `chart.game = folder.game`;
+-- these indexes avoid scanning all games' charts (~260k rows).
+CREATE INDEX chart_game_level_idx ON chart (game, level);
+CREATE INDEX chart_game_level_num_idx ON chart (game, level_num);
 
 -- Primary chart lookup by (song, difficulty): score import and routing.
 -- Partial: only index primary charts since those are what's looked up 99% of the time.

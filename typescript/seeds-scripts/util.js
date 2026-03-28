@@ -6,7 +6,9 @@ const path = require("path");
 const DeterministicCollectionSort = require("./sort-seeds");
 
 function IterateCollections(cb) {
-	for (const collection of fs.readdirSync(COLLECTIONS_DIR)) {
+	for (const collection of fs
+		.readdirSync(COLLECTIONS_DIR)
+		.filter((name) => name.endsWith(".json"))) {
 		const data = cb(
 			JSON.parse(fs.readFileSync(path.join(COLLECTIONS_DIR, collection))),
 			collection,
@@ -18,7 +20,8 @@ function IterateCollections(cb) {
 	DeterministicCollectionSort();
 }
 
-const COLLECTIONS_DIR = path.join(__dirname, "../collections");
+// Seed JSON lives at repo root: db/seeds/ (was typescript/collections).
+const COLLECTIONS_DIR = path.join(__dirname, "../../db/seeds");
 
 function ReadCollection(name, throwIfNotFound = false) {
 	const p = path.join(COLLECTIONS_DIR, name);

@@ -21,11 +21,11 @@ export default interface FolderTable {
 
   slug: ColumnType<string | null, string | null, string | null>;
 
-  query: ColumnType<string, string, string>;
+  where: ColumnType<string, string, string>;
 
   version_filter: ColumnType<string[] | null, string[] | null, string[] | null>;
 
-  search_terms: ColumnType<string[] | null, string[] | null, string[] | null>;
+  search_terms: ColumnType<string[], string[], string[]>;
 }
 
 export type Folder = Selectable<FolderTable>;

@@ -69,10 +69,11 @@ function BMSCourseSort(a, b) {
 }
 
 function SortSeeds() {
-	const collections = fs.readdirSync(path.join(__dirname, "../collections"));
+	const collectionsDir = path.join(__dirname, "../../db/seeds");
+	const collections = fs.readdirSync(collectionsDir).filter((name) => name.endsWith(".json"));
 
 	for (const collection of collections) {
-		const collPath = path.join(__dirname, "../collections", collection);
+		const collPath = path.join(collectionsDir, collection);
 		let content = JSON.parse(fs.readFileSync(collPath));
 
 		if (collection.startsWith("charts-")) {

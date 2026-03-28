@@ -290,6 +290,15 @@ export const ActionSignatures = {
 			createdOn: z.number().int(),
 		}),
 	},
+	REBUILD_FOLDER_CHART_LOOKUP: {
+		input: z.object({
+			folderId: z.string().optional(),
+		}),
+		output: z.object({
+			folderCount: z.number().int(),
+			rowCount: z.number().int(),
+		}),
+	},
 } satisfies Record<string, ActionSignature>;
 
 export const AnonActionSignatures = {

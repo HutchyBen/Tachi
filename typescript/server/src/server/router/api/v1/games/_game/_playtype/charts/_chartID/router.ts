@@ -1,6 +1,6 @@
-import type { FilterQuery } from "mongodb";
-
+import { LoadFolderDocumentsByIds } from "#lib/db-formats/folders";
 import { GetSongByLegacyID } from "#lib/db-formats/song";
+import { GetFolderIDsForChartId } from "#lib/folders/folders";
 import { log } from "#lib/log/log";
 import { SearchUsersRegExp } from "#lib/search/search";
 import MONGODB_KILL from "#services/mongo/db";
@@ -68,26 +68,15 @@ router.get("/", async (req, res) => {
 router.get("/folders", async (req, res) => {
 	const chart = GetTachiData(req, "chartDoc");
 
-	const folderIDs = await MONGODB_KILL["folder-chart-lookup"].find(
-		{
-			chartID: MongoChartLegacyId(chart),
-		},
-		{
-			projection: {
-				folderID: 1,
-			},
-		},
-	);
-
-	const query: FilterQuery<MONGO_FolderDocument> = {
-		folderID: { $in: folderIDs.map((e) => e.folderID) },
-	};
+	const folderIds = await GetFolderIDsForChartId(chart.chartID);
+	const byId = await LoadFolderDocumentsByIds(folderIds);
+	let folders = folderIds
+		.map((id) => byId.get(id))
+		.filter((f): f is MONGO_FolderDocument => f !== undefined);
 
 	if (req.query.inactive === undefined) {
-		query.inactive = false;
+		folders = folders.filter((f) => !f.inactive);
 	}
-
-	const folders = await MONGODB_KILL.folders.find(query);
 
 	return res.status(200).json({
 		success: true,

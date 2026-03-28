@@ -1,4 +1,6 @@
-import { ReadCollection, WriteCollection } from "../../util";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -15,10 +17,8 @@ const RANGE_OPS: Record<string, string> = {
 };
 
 /**
- * Given a SQL expression and an operator object like { "~gte": 7, "~lt": 7.5 },
- * produce an array of SQL conditions (e.g. ["expr >= 7", "expr < 7.5"]).
- * The expression is cast to ::numeric when the values are numbers.
- * Also handles { "~in": [...] } → expr IN (...) and { "~not": {...} } → NOT (...).
+ * Range / inequality on `chart.data->>'field'` or `song.data->>'field'`.
+ * `->>` returns text; compare to numbers with `::numeric` or Postgres errors (e.g. text >= int).
  */
 function rangeConditions(expr: string, ops: Record<string, unknown>): Array<string> {
 	const conds: Array<string> = [];
@@ -58,6 +58,65 @@ function rangeConditions(expr: string, ops: Record<string, unknown>): Array<stri
 			conds.push(`${expr} ${sqlOp} ${val}`);
 		} else {
 			conds.push(`${expr} ${sqlOp} ${sqlStr(String(val))}`);
+		}
+	}
+
+	return conds;
+}
+
+/**
+ * JSONB `data->>'field'` is text. For numeric comparisons, use `::numeric` on the LHS.
+ * `~in` stays as text equality to string literals.
+ */
+function rangeConditionsJsonField(
+	tableAlias: "chart" | "song",
+	field: string,
+	ops: Record<string, unknown>,
+): Array<string> {
+	const alias = tableAlias === "chart" ? "chart" : "s";
+	const textExpr = `${alias}.data->>'${field}'`;
+	const numExpr = `(${alias}.data->>'${field}')::numeric`;
+	const conds: Array<string> = [];
+
+	for (const [op, val] of Object.entries(ops)) {
+		if (op === "~in") {
+			if (!Array.isArray(val)) {
+				throw new Error(`~in value must be an array, got: ${JSON.stringify(val)}`);
+			}
+
+			const list = val.map((v: unknown) => sqlStr(String(v))).join(", ");
+
+			conds.push(`${textExpr} IN (${list})`);
+			continue;
+		}
+
+		if (op === "~not") {
+			if (typeof val !== "object" || val === null) {
+				throw new Error(
+					`~not value must be an operator object, got: ${JSON.stringify(val)}`,
+				);
+			}
+
+			const inner = rangeConditionsJsonField(
+				tableAlias,
+				field,
+				val as Record<string, unknown>,
+			);
+
+			conds.push(`NOT (${inner.join(" AND ")})`);
+			continue;
+		}
+
+		const sqlOp = RANGE_OPS[op];
+
+		if (!sqlOp) {
+			throw new Error(`Unknown operator: ${op}`);
+		}
+
+		if (typeof val === "number") {
+			conds.push(`${numExpr} ${sqlOp} ${val}`);
+		} else {
+			conds.push(`${numExpr} ${sqlOp} ${sqlStr(String(val))}`);
 		}
 	}
 
@@ -126,15 +185,15 @@ function convertChartFilter(data: Record<string, unknown>): ChartFilterResult {
 				continue;
 			}
 
-			// Range / equality on a JSONB scalar
-			const expr = `chart.data->>'${field}'`;
-
+			// Range / equality on a JSONB scalar (text extract → cast for numeric compares)
 			if (typeof val === "object" && val !== null) {
-				conds.push(...rangeConditions(expr, val as Record<string, unknown>));
+				conds.push(
+					...rangeConditionsJsonField("chart", field, val as Record<string, unknown>),
+				);
 			} else if (typeof val === "number") {
-				conds.push(`${expr} = ${val}`);
+				conds.push(`(chart.data->>'${field}')::numeric = ${val}`);
 			} else {
-				conds.push(`${expr} = ${sqlStr(String(val))}`);
+				conds.push(`chart.data->>'${field}' = ${sqlStr(String(val))}`);
 			}
 
 			continue;
@@ -181,13 +240,16 @@ function convertSongFilter(data: Record<string, unknown>): string {
 			for (const [field, fieldVal] of Object.entries(val as Record<string, unknown>)) {
 				if (typeof fieldVal === "object" && fieldVal !== null) {
 					conds.push(
-						...rangeConditions(
-							`s.data->>'${field}'`,
+						...rangeConditionsJsonField(
+							"song",
+							field,
 							fieldVal as Record<string, unknown>,
 						),
 					);
+				} else if (typeof fieldVal === "number") {
+					conds.push(`(song.data->>'${field}')::numeric = ${fieldVal}`);
 				} else {
-					conds.push(`s.data->>'${field}' = ${sqlStr(String(fieldVal))}`);
+					conds.push(`song.data->>'${field}' = ${sqlStr(String(fieldVal))}`);
 				}
 			}
 
@@ -200,31 +262,74 @@ function convertSongFilter(data: Record<string, unknown>): string {
 	return conds.join(" AND ");
 }
 
+/** When `type` is omitted, song filters are the only shape whose sole top-level key is `data`. */
+function inferFolderKindFromFilterData(data: Record<string, unknown>): "charts" | "songs" {
+	const keys = Object.keys(data);
+
+	if (keys.length === 1 && keys[0] === "data") {
+		return "songs";
+	}
+
+	return "charts";
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-const folders = ReadCollection("folders.json");
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const FOLDERS_JSON = path.join(__dirname, "../../../../db/seeds/folders.json");
+
+const folders = JSON.parse(fs.readFileSync(FOLDERS_JSON, "utf-8")) as Array<
+	Record<string, unknown>
+>;
 
 for (const entry of folders) {
-	// if (entry.where) {
-	// continue;
-	// }
-	//
-	if (entry.type === "charts") {
-		const { where, versionFilter } = convertChartFilter(entry.data as Record<string, unknown>);
+	const filterData = entry.data as Record<string, unknown> | undefined;
+
+	if (filterData === undefined) {
+		if (typeof entry.where !== "string" || entry.where.trim() === "") {
+			throw new Error(
+				`Folder ${String(entry.id ?? "?")} has no "data" and no non-empty "where".`,
+			);
+		}
+
+		delete entry.type;
+		continue;
+	}
+
+	if (Array.isArray(filterData)) {
+		throw new Error("Static folders are no longer used.");
+	}
+
+	const dataObj = filterData as Record<string, unknown>;
+	const explicitType = entry.type as string | undefined;
+
+	let kind: "charts" | "songs";
+
+	if (explicitType === "charts" || explicitType === "songs") {
+		kind = explicitType;
+	} else if (explicitType === "static") {
+		throw new Error("Static folders are no longer used.");
+	} else if (explicitType === undefined) {
+		kind = inferFolderKindFromFilterData(dataObj);
+	} else {
+		throw new Error(`Unknown folder type: ${String(explicitType)}`);
+	}
+
+	if (kind === "charts") {
+		const { where, versionFilter } = convertChartFilter(dataObj);
 
 		entry.where = where;
 
 		if (versionFilter !== undefined) {
 			entry.versionFilter = versionFilter;
 		}
-	} else if (entry.type === "songs") {
-		entry.where = convertSongFilter(entry.data as Record<string, unknown>);
-	} else if (entry.type === "static") {
-		throw new Error("Static folders are no longer used.");
 	} else {
-		throw new Error(`Unknown folder type: ${entry.type}`);
+		entry.where = convertSongFilter(dataObj);
 	}
+
+	delete entry.data;
+	delete entry.type;
 }
 
-WriteCollection("folders.json", folders);
-console.log(`folders.json: added "where" to ${folders.length} entries`);
+fs.writeFileSync(FOLDERS_JSON, `${JSON.stringify(folders, null, "\t")}\n`);
+console.log(`Wrote ${FOLDERS_JSON} (${folders.length} folders).`);

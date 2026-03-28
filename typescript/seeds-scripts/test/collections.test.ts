@@ -21,7 +21,8 @@ let exitCode = 0;
 const suites: Array<{ good: boolean; name: string; report: unknown }> = [];
 
 const collections = fs
-	.readdirSync(path.join(__dirname, "../../collections"))
+	.readdirSync(path.join(__dirname, "../../../db/seeds"))
+	.filter((e) => e.endsWith(".json"))
 	.map((e) => path.basename(e)) as Array<AllCollections>;
 
 for (const collection of collections) {

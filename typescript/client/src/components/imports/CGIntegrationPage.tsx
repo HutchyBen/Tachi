@@ -12,7 +12,7 @@ import { type SetState } from "#types/react";
 import { APIFetchV1 } from "#util/api";
 import React, { useContext, useMemo, useReducer, useState } from "react";
 import { Button, Form } from "react-bootstrap";
-import { type APIImportTypes, type MONGO_CGCardInfo, GetGameGroupConfig } from "tachi-common";
+import { type APIImportTypes, GetGameGroupConfig, type MONGO_CGCardInfo } from "tachi-common";
 
 import ImportStateRenderer from "./ImportStateRenderer";
 

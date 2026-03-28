@@ -77,7 +77,7 @@ async function EvaluateShowcaseFolderStat(
 	let chartIDs;
 
 	if (Array.isArray(details.folderID)) {
-		chartIDs = (await Promise.all(details.folderID.map(GetFolderChartIDs))).flat(1);
+		chartIDs = (await Promise.all(details.folderID.map((id) => GetFolderChartIDs(id)))).flat(1);
 	} else {
 		chartIDs = await GetFolderChartIDs(details.folderID);
 	}

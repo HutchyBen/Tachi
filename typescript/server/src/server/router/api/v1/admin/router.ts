@@ -1,3 +1,4 @@
+import { ACTION_RebuildFolderChartLookup } from "#actions/rebuild-folder-chart-lookup.js";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log";
 import { SendSiteAnnouncementNotification } from "#lib/notifications/notification-wrappers";
@@ -12,7 +13,7 @@ import { RecalcSessions } from "#utils/calculations/recalc-sessions";
 import { IsValidPlaytype } from "#utils/misc";
 import DestroyUserGamePlaytypeData from "#utils/reset-state/destroy-ugpt";
 import { GetScoresFromSession } from "#utils/session";
-import { GetUserWithID, ResolveUser } from "#utils/user";
+import { GetUserWithID, GetUserWithIDGuaranteed, ResolveUser } from "#utils/user";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
 import {
@@ -363,6 +364,44 @@ router.delete("/supporter/:userID", async (req, res) => {
 		body: {},
 	});
 });
+
+/**
+ * Rebuilds the Postgres `folder_chart_lookup` table (chart → folders cache).
+ *
+ * @param folderId - If set, only rebuild that folder's rows.
+ *
+ * @name POST /api/v1/admin/rebuild-folder-chart-lookup
+ */
+router.post(
+	"/rebuild-folder-chart-lookup",
+	prValidate({
+		folderId: p.optional("string"),
+	}),
+	async (req, res) => {
+		const userID = req[SYMBOL_TACHI_API_AUTH].userID;
+
+		if (userID === null) {
+			return res.status(401).json({
+				success: false,
+				description: `You are not authenticated.`,
+			});
+		}
+
+		const user = await GetUserWithIDGuaranteed(userID);
+		const body = req.safeBody as { folderId?: string };
+		const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
+
+		const result = await ACTION_RebuildFolderChartLookup(taker, {
+			folderId: body.folderId,
+		});
+
+		return res.status(200).json({
+			success: true,
+			description: `Rebuilt folder_chart_lookup (${result.folderCount} folders, ${result.rowCount} rows).`,
+			body: result,
+		});
+	},
+);
 
 /**
  * Reprocess all goals for every user. This should be used to un-screw the site

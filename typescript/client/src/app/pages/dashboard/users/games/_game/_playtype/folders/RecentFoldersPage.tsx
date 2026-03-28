@@ -9,8 +9,8 @@ import { Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
 	type MONGO_FolderDocument,
-	type MONGO_UserDocument,
 	type MONGO_RecentlyViewedFolderDocument,
+	type MONGO_UserDocument,
 } from "tachi-common";
 
 import { FolderInfoComponent } from "./FolderSelectPage";

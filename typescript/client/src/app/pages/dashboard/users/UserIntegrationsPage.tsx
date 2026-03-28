@@ -20,12 +20,12 @@ import { Alert, Button, Col, Form, Modal, Row } from "react-bootstrap";
 import { Link, Route, Switch } from "react-router-dom";
 import {
 	type APIPermissions,
+	type integer,
 	type MONGO_APITokenDocument,
 	type MONGO_CGCardInfo,
-	type integer,
+	type MONGO_MytCardInfo,
 	type MONGO_TachiAPIClientDocument,
 	type MONGO_UserDocument,
-	type MONGO_MytCardInfo,
 } from "tachi-common";
 
 import FervidexIntegrationPage from "./FervidexIntegrationPage";

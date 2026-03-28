@@ -10,7 +10,7 @@ export const SELECT_FOLDER = [
 	"folder.inactive",
 	"folder.title",
 	"folder.slug",
-	"folder.query",
+	"folder.where",
 	"folder.search_terms",
 ] as const;
 

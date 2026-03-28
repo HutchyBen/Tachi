@@ -4,10 +4,10 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
 /**
- * `BuildFolderQuery` loads `folder.query` and splices it into
- * `SELECT chart.id FROM chart WHERE <query>`, optionally AND-ing overlap on
- * `chart.versions` when `version_filter` is set. The column must hold a SQL
- * predicate (no leading `WHERE`), e.g. `chart.level_num = 10`.
+ * `BuildFolderQuery` loads `folder.where` and splices it into
+ * `SELECT chart.id FROM chart INNER JOIN song s … WHERE <query>`, optionally
+ * AND-ing overlap on `chart.versions` when `version_filter` is set. The column
+ * must hold a SQL predicate (no leading `WHERE`), e.g. `chart.level_num = 10`.
  */
 describe("BuildFolderQuery", () => {
 	function ids(prefix: string) {
@@ -28,7 +28,7 @@ describe("BuildFolderQuery", () => {
 		);
 	});
 
-	it("fails at execute time when folder.query is not valid SQL (e.g. JSON, as in seeds.ts today)", async () => {
+	it("fails at execute time when folder.where is not valid SQL (e.g. JSON)", async () => {
 		const { folderId, folderLegacy } = ids("bfq0");
 
 		await DB.insertInto("folder")
@@ -39,7 +39,7 @@ describe("BuildFolderQuery", () => {
 				inactive: false,
 				title: "JSON query column",
 				slug: null,
-				query: JSON.stringify({ type: "charts", data: { level: "10" } }),
+				where: JSON.stringify({ type: "charts", data: { level: "10" } }),
 				version_filter: null,
 				search_terms: [],
 			})
@@ -104,7 +104,7 @@ describe("BuildFolderQuery", () => {
 				inactive: false,
 				title: "BFQ level 10 only",
 				slug: null,
-				query: "chart.level_num = 10",
+				where: "chart.level_num = 10",
 				version_filter: null,
 				search_terms: [],
 			})
@@ -172,7 +172,7 @@ describe("BuildFolderQuery", () => {
 				inactive: false,
 				title: "Level 10 (EPOLIS)",
 				slug: null,
-				query: "chart.level_num = 10",
+				where: "chart.level_num = 10",
 				version_filter: ["epolis"],
 				search_terms: [],
 			})

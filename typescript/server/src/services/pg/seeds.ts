@@ -25,6 +25,7 @@ import type {
 	Game as PgGame,
 } from "tachi-db";
 
+import { rebuildFolderChartLookup } from "#lib/folders/rebuild-folder-chart-lookup.js";
 import fs from "fs";
 import { type Insertable, type Kysely, sql } from "kysely";
 import path from "path";
@@ -39,13 +40,16 @@ type SeedChart = {
 	songID: string;
 } & Omit<MONGO_ChartDocument, "songID">;
 // After 3-migrate-folders-tables.ts: folderID → legacyFolderID + id, game+playtype → game.
+// After 4-folders-to-sql-queries.ts: `where` is the SQL predicate (no leading WHERE).
 type SeedFolder = {
 	game: string;
 	id: string;
 	legacyFolderID?: string;
-	/** Denormalized from chart `data.versions` in folders.json; preferred when set. */
+	/** Chart version filter; becomes `folder.version_filter`. */
 	versionFilter?: Array<string>;
-} & Omit<MONGO_FolderDocument, "folderID" | "game" | "playtype">;
+	/** SQL WHERE body from `4-folders-to-sql-queries.ts`; becomes `folder.where`. */
+	where: string;
+} & Omit<MONGO_FolderDocument, "data" | "folderID" | "game" | "playtype" | "type">;
 // After 3-migrate-folders-tables.ts: tableID → legacyTableID + id, game+playtype → game,
 // folders array now contains new hex ids.
 type SeedTable = {
@@ -57,28 +61,10 @@ type SeedTable = {
 
 const INSERT_CHUNK = 500;
 
-/** Resolves chart version filter from seed `versionFilter` or `data.versions`. */
+/** Resolves chart version filter from seed `versionFilter`. */
 function seedFolderVersionFilter(f: SeedFolder): Array<string> | null {
 	if (f.versionFilter && f.versionFilter.length > 0) {
 		return f.versionFilter;
-	}
-
-	if (f.type !== "charts" || f.data === null || typeof f.data !== "object") {
-		return null;
-	}
-
-	const versions = (f.data as Record<string, unknown>).versions;
-
-	if (versions === undefined) {
-		return null;
-	}
-
-	if (typeof versions === "string") {
-		return [versions];
-	}
-
-	if (Array.isArray(versions)) {
-		return versions.map(String);
 	}
 
 	return null;
@@ -399,22 +385,31 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 		console.log("[folder]");
 		const folders = readCollection<SeedFolder>("folders.json");
 
-		const folderRows: Array<NewFolder> = folders.map((f) => ({
-			id: f.id,
-			legacy_id:
-				f.legacyFolderID ??
-				(() => {
-					throw new Error(
-						`Folder "${f.title}" is missing legacyFolderID. Run 3-migrate-folders-tables.ts first.`,
-					);
-				})(),
-			game: f.game as PgGame,
-			inactive: f.inactive,
-			title: f.title,
-			query: JSON.stringify({ type: f.type, data: f.data }),
-			version_filter: seedFolderVersionFilter(f),
-			search_terms: f.searchTerms ?? [],
-		}));
+		const folderRows: Array<NewFolder> = folders.map((f) => {
+			if (typeof f.where !== "string" || f.where.trim() === "") {
+				throw new Error(
+					`Folder "${f.title}" (${f.id}) has no non-empty "where" SQL string. ` +
+						`Run seeds-scripts/rerunners/v3/4-folders-to-sql-queries.ts on folders.json.`,
+				);
+			}
+
+			return {
+				id: f.id,
+				legacy_id:
+					f.legacyFolderID ??
+					(() => {
+						throw new Error(
+							`Folder "${f.title}" is missing legacyFolderID. Run 3-migrate-folders-tables.ts first.`,
+						);
+					})(),
+				game: f.game as PgGame,
+				inactive: f.inactive,
+				title: f.title,
+				where: f.where,
+				version_filter: seedFolderVersionFilter(f),
+				search_terms: f.searchTerms ?? [],
+			};
+		});
 
 		for (let i = 0; i < folderRows.length; i = i + INSERT_CHUNK) {
 			const chunk = folderRows.slice(i, i + INSERT_CHUNK);
@@ -426,7 +421,7 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 					oc.column("id").doUpdateSet({
 						inactive: sql`excluded.inactive`,
 						title: sql`excluded.title`,
-						query: sql`excluded.query`,
+						where: sql`excluded.where`,
 						version_filter: sql`excluded.version_filter`,
 						search_terms: sql`excluded.search_terms`,
 					}),
@@ -597,4 +592,10 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 		await batchIgnorePg(pg, "questline_quest", qlqRows);
 		console.log(`  ${questlines.length} questlines, ${qlqRows.length} questline-quest rows\n`);
 	}
+
+	// ── folder_chart_lookup (chart → folders cache; see rebuildFolderChartLookup) ──
+	console.log("[folder_chart_lookup]");
+	const lookupStats = await rebuildFolderChartLookup(pg);
+
+	console.log(`  ${lookupStats.folderCount} folders, ${lookupStats.rowCount} lookup rows\n`);
 }

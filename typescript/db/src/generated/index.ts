@@ -54,6 +54,7 @@ export { type priv_api_client_client_id, type default as PrivApiClientTable, typ
 export { type priv_api_token_token, type default as PrivApiTokenTable, type PrivApiToken, type NewPrivApiToken, type PrivApiTokenUpdate } from './public/PrivApiToken';
 export { type default as SvcKshookSv6cSettingsTable, type SvcKshookSv6cSettings, type NewSvcKshookSv6cSettings, type SvcKshookSv6cSettingsUpdate } from './public/SvcKshookSv6cSettings';
 export { type import_error_row_id, type default as ImportErrorTable, type ImportError, type NewImportError, type ImportErrorUpdate } from './public/ImportError';
+export { type default as FolderChartLookupTable, type FolderChartLookup, type NewFolderChartLookup, type FolderChartLookupUpdate } from './public/FolderChartLookup';
 export { type quest_id, type default as QuestTable, type Quest, type NewQuest, type QuestUpdate } from './public/Quest';
 export { type default as AccountSettingsTable, type AccountSettings, type NewAccountSettings, type AccountSettingsUpdate } from './public/AccountSettings';
 export { type pb_row_id, type default as PbTable, type Pb, type NewPb, type PbUpdate } from './public/Pb';

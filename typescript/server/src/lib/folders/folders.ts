@@ -1,13 +1,13 @@
+import type { Kysely } from "kysely";
 import type { FilterQuery } from "mongodb";
+import type { Database } from "tachi-db";
 
 import { SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart";
 import { log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
 import DB from "#services/pg/db.js";
 import { GetFolderForIDGuaranteed } from "#utils/db";
-import deepmerge from "deepmerge";
 import fjsh from "fast-json-stable-hash";
-import { sql } from "kysely";
 import {
 	FormatGameGroup,
 	type GameGroup,
@@ -22,6 +22,11 @@ import {
 	type MONGO_TableDocument,
 	type Playtype,
 } from "tachi-common";
+
+import {
+	BuildFolderQuery as BuildFolderQueryImpl,
+	GetFolderChartIDs as GetFolderChartIDsImpl,
+} from "./folder-query.js";
 export async function GetFolderCharts(
 	folder: MONGO_FolderDocument,
 	_filter: FilterQuery<MONGO_ChartDocument> = {},
@@ -56,54 +61,26 @@ export async function GetFolderChartsAndSongs(
 	return { songs, charts };
 }
 
-export async function BuildFolderQuery(folderID: string) {
-	const folder = await DB.selectFrom("folder")
-		.select(["folder.game", "folder.query", "folder.version_filter"])
-		.where("folder.id", "=", folderID)
-		.executeTakeFirst();
-
-	if (!folder) {
-		throw new Error(`Folder with ID '${folderID}' not found.`);
-	}
-
-	const interpolateQueryRaw = sql.raw(folder.query);
-
-	if (folder.version_filter) {
-		const vf = folder.version_filter;
-
-		return {
-			folderQuery: sql`
-				SELECT
-					chart.id
-				FROM
-					chart
-				WHERE
-					${interpolateQueryRaw}
-
-				AND chart.versions && ARRAY[${sql.join(vf.map((v) => sql`${v}`))}]::text[]
-			`,
-		};
-	}
-
-	return {
-		folderQuery: sql`
-			SELECT
-				chart.id
-			FROM
-				chart
-			WHERE
-				${interpolateQueryRaw}
-		`,
-	};
+export async function BuildFolderQuery(folderID: string, db: Kysely<Database> = DB) {
+	return BuildFolderQueryImpl(folderID, db);
 }
 
-export async function GetFolderChartIDs(folderID: string) {
-	const { folderQuery } = await BuildFolderQuery(folderID);
+export async function GetFolderChartIDs(folderID: string, db: Kysely<Database> = DB) {
+	return GetFolderChartIDsImpl(folderID, db);
+}
 
-	const res = await folderQuery.execute(DB);
-	const rows = res.rows as Array<{ id: string }>;
+/**
+ * Folders that contain this chart (from `folder_chart_lookup`). Run
+ * {@link rebuildFolderChartLookup} to keep the table populated.
+ */
+export async function GetFolderIDsForChartId(chartId: string, db: Kysely<Database> = DB) {
+	const rows = await db
+		.selectFrom("folder_chart_lookup")
+		.select("folder_chart_lookup.folder_id")
+		.where("folder_chart_lookup.chart_id", "=", chartId)
+		.execute();
 
-	return rows.map((e) => e.id);
+	return rows.map((r) => r.folder_id);
 }
 
 export async function GetFoldersFromTable(table: MONGO_TableDocument) {
