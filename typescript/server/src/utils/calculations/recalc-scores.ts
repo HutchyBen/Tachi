@@ -12,8 +12,8 @@ import {
 	type GameGroup,
 	GetGameGroupConfig,
 	type integer,
+	type MONGO_UserDocument,
 	type Playtype,
-	type UserDocument,
 } from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import deepmerge from "deepmerge";
@@ -90,7 +90,7 @@ export async function RecalcAllScores(filter = {}) {
 }
 
 export async function UpdateAllPBs(userIDs?: Array<integer>, filter = {}) {
-	let allUsers: Array<UserDocument>;
+	let allUsers: Array<MONGO_UserDocument>;
 
 	if (!userIDs) {
 		allUsers = await MONGODB_KILL.users.find({});

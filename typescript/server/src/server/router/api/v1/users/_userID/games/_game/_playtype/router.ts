@@ -23,9 +23,9 @@ import {
 	GetGamePTConfig,
 	type GPTString,
 	type integer,
-	type PBScoreDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_UserGameStatsSnapshotDocument,
 	type ProfileRatingAlgorithms,
-	type UserGameStatsSnapshotDocument,
 } from "tachi-common";
 
 import { RequireAuthedAsUser, RequireSelfRequestFromUser } from "../../../middleware";
@@ -182,18 +182,20 @@ router.get(
 					playtype: 0,
 				},
 			},
-		)) as Array<Omit<UserGameStatsSnapshotDocument, "game" | "playtype" | "userID">>;
+		)) as Array<Omit<MONGO_UserGameStatsSnapshotDocument, "game" | "playtype" | "userID">>;
 
-		const currentSnapshot: Omit<UserGameStatsSnapshotDocument, "game" | "playtype" | "userID"> =
-			{
-				classes: stats.classes,
-				ratings: stats.ratings,
+		const currentSnapshot: Omit<
+			MONGO_UserGameStatsSnapshotDocument,
+			"game" | "playtype" | "userID"
+		> = {
+			classes: stats.classes,
+			ratings: stats.ratings,
 
-				// lazy, should probably be this midnight
-				timestamp: Date.now(),
-				playcount: await GetUGPTPlaycount(user.id, game, playtype),
-				rankings: await GetAllRankings(stats),
-			};
+			// lazy, should probably be this midnight
+			timestamp: Date.now(),
+			playcount: await GetUGPTPlaycount(user.id, game, playtype),
+			rankings: await GetAllRankings(stats),
+		};
 
 		return res.status(200).json({
 			success: true,
@@ -255,7 +257,7 @@ router.get("/most-played", async (req, res) => {
 	}
 
 	// @ts-expect-error monkeypatching
-	const playcountPBs = pbs as Array<{ __playcount: integer } & PBScoreDocument>;
+	const playcountPBs = pbs as Array<{ __playcount: integer } & MONGO_PBScoreDocument>;
 
 	// monkey patch __playcount on
 	for (const pb of playcountPBs) {

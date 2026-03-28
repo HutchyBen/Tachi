@@ -4,15 +4,15 @@ import { AppendLogCtx, type KtLogger } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
 import { ClassToObject } from "#utils/misc";
 import {
-	type ChartDocument,
 	type GameGroup,
 	GetGPTString,
 	type ImportProcessingInfo,
 	type ImportTypes,
 	type integer,
+	type MONGO_ChartDocument,
+	type MONGO_ScoreDocument,
+	type MONGO_SongDocument,
 	MongoChartLegacyId,
-	type ScoreDocument,
-	type SongDocument,
 } from "tachi-common";
 
 import type { ConverterFnSuccessReturn, ConverterFunction } from "../../import-types/common/types";
@@ -328,15 +328,21 @@ export async function ProcessSuccessfulConverterReturn(
 async function HydrateCheckAndInsertScore(
 	userID: integer,
 	dryScore: DryScore,
-	chart: ChartDocument,
-	song: SongDocument,
+	chart: MONGO_ChartDocument,
+	song: MONGO_SongDocument,
 	blacklist: Array<string>,
 	importLog: KtLogger,
 	force = false,
-): Promise<ScoreDocument | null> {
+): Promise<MONGO_ScoreDocument | null> {
 	const gptString = GetGPTString(dryScore.game, chart.playtype);
 
-	const scoreID = CreateScoreID(gptString, userID, dryScore, MongoChartLegacyId(chart), importLog);
+	const scoreID = CreateScoreID(
+		gptString,
+		userID,
+		dryScore,
+		MongoChartLegacyId(chart),
+		importLog,
+	);
 
 	// sub-context thelog so the below logs are more accurate
 	const log = AppendLogCtx(scoreID, importLog);

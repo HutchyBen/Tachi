@@ -1,5 +1,5 @@
 import type { Job } from "bullmq";
-import type { ImportDocument, ImportTypes, integer } from "tachi-common";
+import type { ImportTypes, integer, MONGO_ImportDocument } from "tachi-common";
 
 import type { Parsers } from "../import-types/parsers";
 
@@ -50,6 +50,6 @@ export type ScoreImportWorkerReturns =
 			success: false;
 	  }
 	| {
-			importDocument: ImportDocument;
+			importDocument: MONGO_ImportDocument;
 			success: true;
 	  };

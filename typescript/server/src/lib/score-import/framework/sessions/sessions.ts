@@ -11,9 +11,9 @@ import {
 	GetScoreMetricConf,
 	GetScoreMetrics,
 	type integer,
+	type MONGO_ScoreDocument,
+	type MONGO_SessionDocument,
 	type Playtype,
-	type ScoreDocument,
-	type SessionDocument,
 	type SessionInfoReturn,
 	type SessionScoreInfo,
 } from "tachi-common";
@@ -56,7 +56,7 @@ export async function CreateSessions(
  * as a SessionScoreInfo object.
  */
 function ScoreToSessionScoreInfo(
-	score: ScoreDocument,
+	score: MONGO_ScoreDocument,
 	previousPB: PBScoreDocumentNoRank | undefined,
 ): SessionScoreInfo {
 	if (!previousPB) {
@@ -97,7 +97,7 @@ function ScoreToSessionScoreInfo(
  * time.
  */
 export async function GetSessionScoreInfo(
-	session: SessionDocument,
+	session: MONGO_SessionDocument,
 ): Promise<Array<SessionScoreInfo>> {
 	const scores = await MONGODB_KILL.scores.find({
 		scoreID: { $in: session.scoreIDs },
@@ -127,10 +127,10 @@ export function CreateSessionID() {
 }
 
 function UpdateExistingSession(
-	existingSession: SessionDocument,
+	existingSession: MONGO_SessionDocument,
 	newScoreIDs: Array<string>,
-	oldScores: Array<ScoreDocument>,
-	newScores: Array<ScoreDocument>,
+	oldScores: Array<MONGO_ScoreDocument>,
+	newScores: Array<MONGO_ScoreDocument>,
 ) {
 	const allScores = [...oldScores, ...newScores];
 
@@ -156,10 +156,10 @@ function UpdateExistingSession(
 function CreateSession(
 	userID: integer,
 	scoreIDs: Array<string>,
-	groupScores: Array<ScoreDocument>,
+	groupScores: Array<MONGO_ScoreDocument>,
 	game: GameGroup,
 	playtype: Playtype,
-): SessionDocument {
+): MONGO_SessionDocument {
 	const name = GenerateRandomSessionName();
 
 	const calculatedData = CreateSessionCalcData(GetGPTString(game, playtype), groupScores);
@@ -182,7 +182,7 @@ function CreateSession(
 
 export async function LoadScoresIntoSessions(
 	userID: integer,
-	importScores: Array<ScoreDocument>,
+	importScores: Array<MONGO_ScoreDocument>,
 	game: GameGroup,
 	playtype: Playtype,
 	baseLog: KtLogger,
@@ -214,8 +214,8 @@ export async function LoadScoresIntoSessions(
 	// The "Score Groups" for the array of scores provided.
 	// This contains scores split on 2hr margins, which allows for more optimised
 	// session db requests.
-	const sessionScoreGroups: Array<Array<ScoreDocument>> = [];
-	let curGroup: Array<ScoreDocument> = [];
+	const sessionScoreGroups: Array<Array<MONGO_ScoreDocument>> = [];
+	let curGroup: Array<MONGO_ScoreDocument> = [];
 	let lastTimestamp = 0;
 
 	for (const score of timestampedScores) {

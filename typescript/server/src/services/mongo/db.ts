@@ -4,45 +4,45 @@ import type { MigrationDocument, PrivateUserInfoDocument } from "#utils/types";
 import monk, { type ICollection, type TMiddleware } from "monk";
 import {
 	allSupportedGameGroups,
-	type APITokenDocument,
-	type BMSCourseDocument,
-	type CGCardInfo,
-	type ChartDocument,
-	type ClassAchievementDocument,
-	type CounterDocument,
-	type FervidexSettingsDocument,
 	type FolderChartLookup,
-	type FolderDocument,
 	type GameGroup,
-	type GoalDocument,
-	type GoalSubscriptionDocument,
 	type GPTStrings,
-	type ImportDocument,
-	type ImportTimingsDocument,
-	type ImportTrackerDocument as ImportTrackerDocument,
 	type integer,
-	type InviteCodeDocument,
-	type KaiAuthDocument,
-	type KsHookSettingsDocument,
-	type MytCardInfo,
-	type NotificationDocument,
-	type OrphanChartDocument,
-	type PBScoreDocument,
-	type QuestDocument,
-	type QuestlineDocument,
-	type QuestSubscriptionDocument,
-	type RecentlyViewedFolderDocument,
-	type ScoreDocument,
-	type SessionDocument,
-	type SongDocument,
-	type TableDocument,
-	type TachiAPIClientDocument,
-	type UGPTSettingsDocument,
-	type UserDocument,
-	type UserGameStats,
-	type UserGameStatsSnapshotDocument,
-	type UserNameChangeDocument,
-	type UserSettingsDocument,
+	type MONGO_APITokenDocument,
+	type MONGO_BMSCourseDocument,
+	type MONGO_CGCardInfo,
+	type MONGO_ChartDocument,
+	type MONGO_ClassAchievementDocument,
+	type MONGO_CounterDocument,
+	type MONGO_FervidexSettingsDocument,
+	type MONGO_FolderDocument,
+	type MONGO_GoalDocument,
+	type MONGO_GoalSubscriptionDocument,
+	type MONGO_ImportDocument,
+	type MONGO_ImportTimingsDocument,
+	type MONGO_ImportTrackerDocument as MONGO_ImportTrackerDocument,
+	type MONGO_InviteCodeDocument,
+	type MONGO_KaiAuthDocument,
+	type MONGO_KsHookSettingsDocument,
+	type MONGO_MytCardInfo,
+	type MONGO_NotificationDocument,
+	type MONGO_OrphanChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_QuestDocument,
+	type MONGO_QuestlineDocument,
+	type MONGO_QuestSubscriptionDocument,
+	type MONGO_RecentlyViewedFolderDocument,
+	type MONGO_ScoreDocument,
+	type MONGO_SessionDocument,
+	type MONGO_SongDocument,
+	type MONGO_TableDocument,
+	type MONGO_TachiAPIClientDocument,
+	type MONGO_UGPTSettingsDocument,
+	type MONGO_UserDocument,
+	type MONGO_UserGameStats,
+	type MONGO_UserGameStatsSnapshotDocument,
+	type MONGO_UserNameChangeDocument,
+	type MONGO_UserSettingsDocument,
 } from "tachi-common";
 
 // ^ These rules are disabled for good reason. We have to deal with some very nonsensical types here
@@ -132,15 +132,15 @@ export async function CloseMongoConnection() {
 // Typescript incorrectly casts this into songs[string] => songdocument,
 // Force cast it out.
 const songs = Object.fromEntries(
-	allSupportedGameGroups.map((e) => [e, monkDB.get<SongDocument>(`songs-${e}`)]),
+	allSupportedGameGroups.map((e) => [e, monkDB.get<MONGO_SongDocument>(`songs-${e}`)]),
 ) as unknown as {
-	[G in GameGroup]: ICollection<SongDocument<G>>;
+	[G in GameGroup]: ICollection<MONGO_SongDocument<G>>;
 };
 
 const charts = Object.fromEntries(
-	allSupportedGameGroups.map((e) => [e, monkDB.get<ChartDocument>(`charts-${e}`)]),
+	allSupportedGameGroups.map((e) => [e, monkDB.get<MONGO_ChartDocument>(`charts-${e}`)]),
 ) as unknown as {
-	[G in GameGroup]: ICollection<ChartDocument<GPTStrings[G]>>;
+	[G in GameGroup]: ICollection<MONGO_ChartDocument<GPTStrings[G]>>;
 };
 
 const MONGODB_KILL = {
@@ -150,68 +150,68 @@ const MONGODB_KILL = {
 	charts,
 
 	// intended for when you want to query arbitrary chart/song documents.
-	anyCharts: charts as Record<GameGroup, ICollection<ChartDocument>>,
-	anySongs: songs as Record<GameGroup, ICollection<SongDocument>>,
+	anyCharts: charts as Record<GameGroup, ICollection<MONGO_ChartDocument>>,
+	anySongs: songs as Record<GameGroup, ICollection<MONGO_SongDocument>>,
 
-	scores: monkDB.get<ScoreDocument>("scores"),
-	"personal-bests": monkDB.get<PBScoreDocument>("personal-bests"),
-	folders: monkDB.get<FolderDocument>("folders"),
+	scores: monkDB.get<MONGO_ScoreDocument>("scores"),
+	"personal-bests": monkDB.get<MONGO_PBScoreDocument>("personal-bests"),
+	folders: monkDB.get<MONGO_FolderDocument>("folders"),
 	"folder-chart-lookup": monkDB.get<FolderChartLookup>("folder-chart-lookup"),
-	goals: monkDB.get<GoalDocument>("goals"),
-	"goal-subs": monkDB.get<GoalSubscriptionDocument>("goal-subs"),
-	quests: monkDB.get<QuestDocument>("quests"),
-	"quest-subs": monkDB.get<QuestSubscriptionDocument>("quest-subs"),
-	users: monkDB.get<UserDocument>("users"),
-	imports: monkDB.get<ImportDocument>("imports"),
-	"import-timings": monkDB.get<ImportTimingsDocument>("import-timings"),
-	sessions: monkDB.get<SessionDocument>("sessions"),
-	invites: monkDB.get<InviteCodeDocument>("invites"),
-	counters: monkDB.get<CounterDocument>("counters"),
-	"game-stats": monkDB.get<UserGameStats>("game-stats"),
-	"kai-auth-tokens": monkDB.get<KaiAuthDocument>("kai-auth-tokens"),
-	"cg-card-info": monkDB.get<CGCardInfo>("cg-card-info"),
-	"myt-card-info": monkDB.get<MytCardInfo>("myt-card-info"),
+	goals: monkDB.get<MONGO_GoalDocument>("goals"),
+	"goal-subs": monkDB.get<MONGO_GoalSubscriptionDocument>("goal-subs"),
+	quests: monkDB.get<MONGO_QuestDocument>("quests"),
+	"quest-subs": monkDB.get<MONGO_QuestSubscriptionDocument>("quest-subs"),
+	users: monkDB.get<MONGO_UserDocument>("users"),
+	imports: monkDB.get<MONGO_ImportDocument>("imports"),
+	"import-timings": monkDB.get<MONGO_ImportTimingsDocument>("import-timings"),
+	sessions: monkDB.get<MONGO_SessionDocument>("sessions"),
+	invites: monkDB.get<MONGO_InviteCodeDocument>("invites"),
+	counters: monkDB.get<MONGO_CounterDocument>("counters"),
+	"game-stats": monkDB.get<MONGO_UserGameStats>("game-stats"),
+	"kai-auth-tokens": monkDB.get<MONGO_KaiAuthDocument>("kai-auth-tokens"),
+	"cg-card-info": monkDB.get<MONGO_CGCardInfo>("cg-card-info"),
+	"myt-card-info": monkDB.get<MONGO_MytCardInfo>("myt-card-info"),
 
-	"bms-course-lookup": monkDB.get<BMSCourseDocument>("bms-course-lookup"),
-	"api-tokens": monkDB.get<APITokenDocument>("api-tokens"),
+	"bms-course-lookup": monkDB.get<MONGO_BMSCourseDocument>("bms-course-lookup"),
+	"api-tokens": monkDB.get<MONGO_APITokenDocument>("api-tokens"),
 	"orphan-scores": monkDB.get<OrphanScoreDocument>("orphan-scores"),
 	"import-locks": monkDB.get<{ locked: boolean; lockedAt: integer | null; userID: integer }>(
 		"import-locks",
 	),
-	tables: monkDB.get<TableDocument>("tables"),
+	tables: monkDB.get<MONGO_TableDocument>("tables"),
 	"invite-locks": monkDB.get<{ locked: boolean; userID: integer }>("invite-locks"),
-	"game-settings": monkDB.get<UGPTSettingsDocument>("game-settings"),
-	"game-stats-snapshots": monkDB.get<UserGameStatsSnapshotDocument>("game-stats-snapshots"),
-	"user-settings": monkDB.get<UserSettingsDocument>("user-settings"),
+	"game-settings": monkDB.get<MONGO_UGPTSettingsDocument>("game-settings"),
+	"game-stats-snapshots": monkDB.get<MONGO_UserGameStatsSnapshotDocument>("game-stats-snapshots"),
+	"user-settings": monkDB.get<MONGO_UserSettingsDocument>("user-settings"),
 	"user-private-information": monkDB.get<PrivateUserInfoDocument>("user-private-information"),
-	"api-clients": monkDB.get<TachiAPIClientDocument>("api-clients"),
+	"api-clients": monkDB.get<MONGO_TachiAPIClientDocument>("api-clients"),
 
 	// i've inlined this one because i don't see it appearing anywhere else.
 	"oauth2-auth-codes": monkDB.get<{ code: string; createdOn: number; userID: integer }>(
 		"oauth2-auth-codes",
 	),
 
-	"fer-settings": monkDB.get<FervidexSettingsDocument>("fer-settings"),
-	"kshook-sv6c-settings": monkDB.get<KsHookSettingsDocument>("kshook-sv6c-settings"),
-	"orphan-chart-queue": monkDB.get<OrphanChartDocument>("orphan-chart-queue"),
+	"fer-settings": monkDB.get<MONGO_FervidexSettingsDocument>("fer-settings"),
+	"kshook-sv6c-settings": monkDB.get<MONGO_KsHookSettingsDocument>("kshook-sv6c-settings"),
+	"orphan-chart-queue": monkDB.get<MONGO_OrphanChartDocument>("orphan-chart-queue"),
 	"password-reset-codes": monkDB.get<{
 		code: string;
 		createdOn: number;
 		userID: integer;
 	}>("password-reset-codes"),
-	"class-achievements": monkDB.get<ClassAchievementDocument>("class-achievements"),
-	"score-blacklist": monkDB.get<{ score: ScoreDocument; scoreID: string; userID: integer }>(
+	"class-achievements": monkDB.get<MONGO_ClassAchievementDocument>("class-achievements"),
+	"score-blacklist": monkDB.get<{ score: MONGO_ScoreDocument; scoreID: string; userID: integer }>(
 		"score-blacklist",
 	),
 	"verify-email-codes": monkDB.get<{ code: string; email: string; userID: integer }>(
 		"verify-email-codes",
 	),
-	"recent-folder-views": monkDB.get<RecentlyViewedFolderDocument>("recent-folder-views"),
-	questlines: monkDB.get<QuestlineDocument>("questlines"),
+	"recent-folder-views": monkDB.get<MONGO_RecentlyViewedFolderDocument>("recent-folder-views"),
+	questlines: monkDB.get<MONGO_QuestlineDocument>("questlines"),
 	migrations: monkDB.get<MigrationDocument>("migrations"),
-	notifications: monkDB.get<NotificationDocument>("notifications"),
-	"import-trackers": monkDB.get<ImportTrackerDocument>("import-trackers"),
-	"user-name-changes": monkDB.get<UserNameChangeDocument>("user-name-changes"),
+	notifications: monkDB.get<MONGO_NotificationDocument>("notifications"),
+	"import-trackers": monkDB.get<MONGO_ImportTrackerDocument>("import-trackers"),
+	"user-name-changes": monkDB.get<MONGO_UserNameChangeDocument>("user-name-changes"),
 };
 
 export type StaticDatabases = Exclude<

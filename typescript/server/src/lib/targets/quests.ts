@@ -1,11 +1,11 @@
 import type {
 	GameGroup,
-	GoalDocument,
-	GoalSubscriptionDocument,
 	integer,
+	MONGO_GoalDocument,
+	MONGO_GoalSubscriptionDocument,
+	MONGO_QuestDocument,
+	MONGO_QuestSubscriptionDocument,
 	Playtype,
-	QuestDocument,
-	QuestSubscriptionDocument,
 } from "tachi-common";
 
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
@@ -25,7 +25,7 @@ import {
  * Retrieves the goalID documents in a single array from the
  * nested structure of quests.
  */
-export function GetGoalIDsFromQuest(quest: QuestDocument) {
+export function GetGoalIDsFromQuest(quest: MONGO_QuestDocument) {
 	// this sucks - maybe a nicer way to do this, because nested
 	// maps are just ugly
 	return quest.questData.map((e) => e.goals.map((e) => e.goalID)).flat(1);
@@ -34,7 +34,7 @@ export function GetGoalIDsFromQuest(quest: QuestDocument) {
 /**
  * Return all the goals inside this quest.
  */
-export async function GetGoalsInQuest(quest: QuestDocument) {
+export async function GetGoalsInQuest(quest: MONGO_QuestDocument) {
 	const goalIDs = GetGoalIDsFromQuest(quest);
 
 	const goals = await MONGODB_KILL.goals.find({
@@ -65,7 +65,7 @@ export async function GetGoalsInQuest(quest: QuestDocument) {
 /**
  * Return all the goals inside these quests
  */
-export async function GetGoalsInQuests(quests: Array<QuestDocument>) {
+export async function GetGoalsInQuests(quests: Array<MONGO_QuestDocument>) {
 	const goalIDs = quests.flatMap((quest) => GetGoalIDsFromQuest(quest));
 
 	const goals = await MONGODB_KILL.goals.find({
@@ -79,7 +79,7 @@ export async function GetGoalsInQuests(quests: Array<QuestDocument>) {
  * Work out how many goals need to be achieved for this
  * quest to be considered completed.
  */
-export function CalculateQuestOutOf(quest: QuestDocument) {
+export function CalculateQuestOutOf(quest: MONGO_QuestDocument) {
 	const goalIDs = GetGoalIDsFromQuest(quest);
 
 	return goalIDs.length;
@@ -95,7 +95,7 @@ type EvaluatedGoalResult = { goalID: string } & EvaluatedGoalReturn;
  * their overall progress, what the quest was outOf, and whether they achieved it or
  * not.
  */
-export async function EvaluateQuestProgress(userID: integer, quest: QuestDocument) {
+export async function EvaluateQuestProgress(userID: integer, quest: MONGO_QuestDocument) {
 	const goals = await GetGoalsInQuest(quest);
 
 	const isSubscribedToQuest = await MONGODB_KILL["quest-subs"].findOne({
@@ -105,7 +105,7 @@ export async function EvaluateQuestProgress(userID: integer, quest: QuestDocumen
 
 	// If the user is subscribed the quest, we don't need to calculate
 	// their progress on each goal.
-	const goalSubMap = new Map<string, GoalSubscriptionDocument>();
+	const goalSubMap = new Map<string, MONGO_GoalSubscriptionDocument>();
 
 	if (isSubscribedToQuest) {
 		const goalSubs = await MONGODB_KILL["goal-subs"].find({
@@ -202,8 +202,8 @@ export async function EvaluateQuestProgress(userID: integer, quest: QuestDocumen
 }
 
 interface QuestSubscriptionReturns {
-	questSub: QuestSubscriptionDocument;
-	goals: Array<GoalDocument>;
+	questSub: MONGO_QuestSubscriptionDocument;
+	goals: Array<MONGO_GoalDocument>;
 	goalResults: Array<EvaluatedGoalResult>;
 }
 
@@ -216,12 +216,12 @@ interface QuestSubscriptionReturns {
  */
 export async function SubscribeToQuest(
 	userID: integer,
-	quest: QuestDocument,
+	quest: MONGO_QuestDocument,
 	denyInstantAchievement: false,
 ): Promise<QuestSubscriptionReturns | SubscribeFailReasons.ALREADY_SUBSCRIBED>;
 export async function SubscribeToQuest(
 	userID: integer,
-	quest: QuestDocument,
+	quest: MONGO_QuestDocument,
 	denyInstantAchievement = true,
 ): Promise<
 	| QuestSubscriptionReturns
@@ -245,7 +245,7 @@ export async function SubscribeToQuest(
 
 	// @ts-expect-error TS can't resolve this.
 	// because it can't explode out the types.
-	const questSub: QuestSubscriptionDocument = {
+	const questSub: MONGO_QuestSubscriptionDocument = {
 		progress: result.progress,
 		userID,
 		questID: quest.questID,
@@ -335,8 +335,8 @@ export async function UpdateQuestSubscriptions(questID: string) {
  * Returns nothing.
  */
 export async function UnsubscribeFromQuest(
-	questSub: QuestSubscriptionDocument,
-	quest: QuestDocument,
+	questSub: MONGO_QuestSubscriptionDocument,
+	quest: MONGO_QuestDocument,
 ) {
 	const goalIDs = GetGoalIDsFromQuest(quest);
 
@@ -365,7 +365,7 @@ export async function GetParentQuests(
 	userID: integer,
 	game: GameGroup,
 	playtype: Playtype,
-	goalSubs: Array<GoalSubscriptionDocument>,
+	goalSubs: Array<MONGO_GoalSubscriptionDocument>,
 ) {
 	const questSubs: Array<{ questID: string }> = await MONGODB_KILL["quest-subs"].find(
 		{
@@ -394,7 +394,7 @@ export async function GetParentQuests(
  * Find all quests not in any questlines.
  */
 export async function FindStandaloneQuests(game: GameGroup, playtype: Playtype) {
-	const res: Array<QuestDocument> = await MONGODB_KILL.quests.aggregate([
+	const res: Array<MONGO_QuestDocument> = await MONGODB_KILL.quests.aggregate([
 		{
 			$match: {
 				game,

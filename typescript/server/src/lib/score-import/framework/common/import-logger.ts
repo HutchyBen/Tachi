@@ -1,10 +1,10 @@
-import type { ImportTypes, UserDocument } from "tachi-common";
+import type { ImportTypes, MONGO_UserDocument } from "tachi-common";
 
 import { type KtLogger, log } from "#lib/log/log";
 import { FormatUserDoc } from "#utils/user";
 
 export function CreateScoreLogger(
-	user: UserDocument,
+	user: MONGO_UserDocument,
 	importID: string,
 	importType: ImportTypes,
 ): KtLogger {

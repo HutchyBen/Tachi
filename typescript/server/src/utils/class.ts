@@ -9,8 +9,8 @@ import {
 	GetGPTString,
 	type GPTString,
 	type integer,
+	type MONGO_UserGameStats,
 	type Playtype,
-	type UserGameStats,
 } from "tachi-common";
 
 /**
@@ -22,7 +22,7 @@ export function ReturnClassIfGreater(
 	gptString: GPTString,
 	classSet: Classes[GPTString],
 	classVal: string,
-	userGameStats?: UserGameStats | null,
+	userGameStats?: MONGO_UserGameStats | null,
 ): boolean | null {
 	const gptConfig = GetGPTConfig(gptString);
 

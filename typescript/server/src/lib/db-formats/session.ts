@@ -1,7 +1,7 @@
 import DB from "#services/pg/db";
 import { ISO8601ToUnixMilliseconds } from "#utils/time";
 import { type Selection } from "kysely";
-import { type SessionDocument, V3ToGamePT } from "tachi-common";
+import { type MONGO_SessionDocument, V3ToGamePT } from "tachi-common";
 import { type Database } from "tachi-db";
 
 export const SELECT_SESSION_DOCUMENT = [
@@ -20,13 +20,13 @@ export const SELECT_SESSION_DOCUMENT = [
 export function ToSessionDocument(
 	row: Selection<Database, "session", (typeof SELECT_SESSION_DOCUMENT)[number]>,
 	scoreIDs: Array<string>,
-): SessionDocument {
+): MONGO_SessionDocument {
 	const { game, playtype } = V3ToGamePT(row.game);
 
 	const calculatedData =
 		typeof row.calculated_data === "string"
-			? (JSON.parse(row.calculated_data) as SessionDocument["calculatedData"])
-			: (row.calculated_data as SessionDocument["calculatedData"]);
+			? (JSON.parse(row.calculated_data) as MONGO_SessionDocument["calculatedData"])
+			: (row.calculated_data as MONGO_SessionDocument["calculatedData"]);
 
 	return {
 		userID: row.user_id,
@@ -46,7 +46,7 @@ export function ToSessionDocument(
 
 export async function LoadSessionDocumentById(
 	sessionID: string,
-): Promise<SessionDocument | undefined> {
+): Promise<MONGO_SessionDocument | undefined> {
 	const row = await DB.selectFrom("session")
 		.select(SELECT_SESSION_DOCUMENT)
 		.where("id", "=", sessionID)
@@ -78,7 +78,7 @@ export const SELECT_SESSION_CALENDAR = [
 ] as const;
 
 export type SessionCalendarDocument = Pick<
-	SessionDocument,
+	MONGO_SessionDocument,
 	"desc" | "game" | "highlight" | "name" | "playtype" | "sessionID" | "timeEnded" | "timeStarted"
 >;
 

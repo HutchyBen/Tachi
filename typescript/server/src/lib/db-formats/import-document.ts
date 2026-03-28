@@ -4,18 +4,18 @@ import {
 	type ClassDelta,
 	GetGPTString,
 	type GPTString,
-	type ImportDocument,
 	type ImportTypes,
+	type MONGO_ImportDocument,
 	V3ToGamePT,
 } from "tachi-common";
 
 /**
- * Build a full {@link ImportDocument} from normalized Postgres import tables.
+ * Build a full {@link MONGO_ImportDocument} from normalized Postgres import tables.
  * `goalInfo` / `questInfo` are always empty (historical import_goal / import_quest were not migrated).
  */
 export async function LoadImportDocumentById(
 	importID: string,
-): Promise<ImportDocument | undefined> {
+): Promise<MONGO_ImportDocument | undefined> {
 	const base = await DB.selectFrom("import")
 		.selectAll()
 		.where("id", "=", importID)
@@ -91,7 +91,7 @@ export async function LoadImportDocumentById(
 		importID: base.id,
 		scoreIDs: scoreIds.map((s) => s.id),
 		game: base.game_group,
-		playtypes: [...playtypeSet] as ImportDocument["playtypes"],
+		playtypes: [...playtypeSet] as MONGO_ImportDocument["playtypes"],
 		errors: errors.map((e) => ({ type: e.type, message: e.message })),
 		createdSessions,
 		importType: base.import_type as ImportTypes,
@@ -102,4 +102,4 @@ export async function LoadImportDocumentById(
 	};
 }
 
-type SessionInfoType = ImportDocument["createdSessions"][number]["type"];
+type SessionInfoType = MONGO_ImportDocument["createdSessions"][number]["type"];

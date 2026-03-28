@@ -1,9 +1,9 @@
-import { type MongoScoreData, type PgScoreData, SDVX_GRADES, SDVX_LAMPS } from "tachi-common";
+import { type MONGO_ScoreData, type PgScoreData, SDVX_GRADES, SDVX_LAMPS } from "tachi-common";
 import { describe, expect, it } from "vitest";
 
 import { mongoScoreDataToPg, pgScoreDataToMongo } from "./migration-tools.js";
 
-const sdvxScoreData: MongoScoreData<"sdvx:Single"> = {
+const sdvxScoreData: MONGO_ScoreData<"sdvx:Single"> = {
 	score: 9_876_543,
 	lamp: "EXCESSIVE CLEAR",
 	grade: "S",

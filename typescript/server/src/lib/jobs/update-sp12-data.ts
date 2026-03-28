@@ -1,4 +1,4 @@
-import type { ChartDocument, Difficulties, integer } from "tachi-common";
+import type { Difficulties, integer, MONGO_ChartDocument } from "tachi-common";
 
 /* eslint-disable no-await-in-loop */
 
@@ -59,7 +59,7 @@ async function FetchSP12Data() {
 	const updatedChartIDs: Array<string> = [];
 
 	for (const sh of rj.sheets) {
-		let chart: ChartDocument<"iidx:SP"> | null;
+		let chart: MONGO_ChartDocument<"iidx:SP"> | null;
 
 		try {
 			chart = await HumanisedTitleLookup(sh.title);
@@ -248,7 +248,7 @@ async function HumanisedTitleLookup(originalTitle: string) {
 		);
 	}
 
-	return chart as ChartDocument<"iidx:SP">;
+	return chart as MONGO_ChartDocument<"iidx:SP">;
 }
 
 if (require.main === module) {

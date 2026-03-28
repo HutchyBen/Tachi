@@ -4,9 +4,9 @@ import type {
 	GPTString,
 	integer,
 	Judgements,
+	MONGO_ScoreDocument,
 	MongoOptionalMetrics,
 	Playtype,
-	ScoreDocument,
 } from "tachi-common";
 import type { MongoExtractMetrics } from "tachi-common/types/metrics";
 
@@ -25,9 +25,9 @@ export type DryScoreData<GPT extends GPTString> = {
 export type DryScore<GPT extends GPTString = GPTString> = {
 	scoreData: DryScoreData<GPT>;
 } & Pick<
-	ScoreDocument<GPT>,
+	MONGO_ScoreDocument<GPT>,
 	"comment" | "game" | "importType" | "scoreMeta" | "service" | "timeAchieved"
 >;
 
-export type ScorePlaytypeMap = Partial<Record<Playtype, Array<ScoreDocument>>>;
+export type ScorePlaytypeMap = Partial<Record<Playtype, Array<MONGO_ScoreDocument>>>;
 export type ChartIDPlaytypeMap = Partial<Record<Playtype, Set<string>>>;

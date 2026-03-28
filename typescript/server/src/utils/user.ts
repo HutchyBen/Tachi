@@ -7,18 +7,18 @@ import DB from "#services/pg/db";
 import { ISO8601ToUnixMilliseconds } from "#utils/time";
 import { type Kysely, sql, type Transaction } from "kysely";
 import {
-	type APITokenDocument,
 	type GameGroup,
 	GamePTToV3,
 	GetGamePTConfig,
 	type GPTString,
 	type integer,
+	type MONGO_APITokenDocument,
+	type MONGO_UserDocument,
+	type MONGO_UserGameStats,
+	type MONGO_UserSettingsDocument,
 	type Playtype,
 	type ProfileRatingAlgorithms,
 	UserAuthLevels,
-	type UserDocument,
-	type UserGameStats,
-	type UserSettingsDocument,
 	V3ToGamePT,
 } from "tachi-common";
 import { type Database } from "tachi-db";
@@ -44,7 +44,7 @@ export async function GetUsernameFromUserID(userID: integer): Promise<string> {
 /**
  * Gets a user based on their username case-insensitively.
  */
-export function GetUserCaseInsensitive(username: string): Promise<UserDocument | null> {
+export function GetUserCaseInsensitive(username: string): Promise<MONGO_UserDocument | null> {
 	return DB.selectFrom("account")
 		.select(SELECT_USER)
 		.where("normalized_username", "=", username.toLowerCase())
@@ -71,7 +71,7 @@ export function GetUserPrivateInfo(userID: integer) {
 /**
  * Gets a user from their userID.
  */
-export function GetUserWithID(userID: integer): Promise<UserDocument | null> {
+export function GetUserWithID(userID: integer): Promise<MONGO_UserDocument | null> {
 	return DB.selectFrom("account")
 		.select(SELECT_USER)
 		.where("id", "=", userID)
@@ -79,7 +79,7 @@ export function GetUserWithID(userID: integer): Promise<UserDocument | null> {
 		.then((res) => (res ? ToUserDocument(res) : null));
 }
 
-export async function GetSettingsForUser(userID: integer): Promise<UserSettingsDocument> {
+export async function GetSettingsForUser(userID: integer): Promise<MONGO_UserSettingsDocument> {
 	const following = await GetFollowingForUser(userID);
 
 	return DB.selectFrom("account_settings")
@@ -123,7 +123,7 @@ export async function GetUsersWithIDs(userIDs: Array<integer>) {
  * If the user document is not found, a severe error is logged, and this
  * function throws.
  */
-export async function GetUserWithIDGuaranteed(userID: integer): Promise<UserDocument> {
+export async function GetUserWithIDGuaranteed(userID: integer): Promise<MONGO_UserDocument> {
 	const userDoc = await GetUserWithID(userID);
 
 	if (!userDoc) {
@@ -156,11 +156,11 @@ export function ResolveUser(usernameOrID: string) {
 /**
  * Returns a formatted string indicating the user. This is used for logging.
  */
-export function FormatUserDoc(userdoc: UserDocument) {
+export function FormatUserDoc(userdoc: MONGO_UserDocument) {
 	return `${userdoc.username} (#${userdoc.id})`;
 }
 
-export async function GetUsersRanking(stats: UserGameStats) {
+export async function GetUsersRanking(stats: MONGO_UserGameStats) {
 	const gptConfig = GetGamePTConfig(stats.game, stats.playtype);
 
 	const aggRes: [{ _id: null; ranking: integer }] = await MONGODB_KILL["game-stats"].aggregate([
@@ -205,7 +205,7 @@ export function GetUGPTPlaycount(userID: integer, game: GameGroup, playtype: Pla
 		.then((res) => Number(res?.playcount ?? 0));
 }
 
-export async function GetAllRankings(stats: UserGameStats) {
+export async function GetAllRankings(stats: MONGO_UserGameStats) {
 	const gptConfig = GetGamePTConfig(stats.game, stats.playtype);
 
 	const entries = await Promise.all(
@@ -224,7 +224,7 @@ export async function GetAllRankings(stats: UserGameStats) {
 }
 
 export async function GetUsersRankingAndOutOf(
-	stats: UserGameStats,
+	stats: MONGO_UserGameStats,
 	alg?: ProfileRatingAlgorithms[GPTString],
 ) {
 	const gptConfig = GetGamePTConfig(stats.game, stats.playtype);
@@ -261,7 +261,7 @@ export function GetOnlineCutoff() {
 /**
  * Returns whether a given userID is an administrator or not.
  */
-export async function IsRequesterAdmin(request: APITokenDocument) {
+export async function IsRequesterAdmin(request: MONGO_APITokenDocument) {
 	// API Tokens created on the behalf of an admin do NOT inherit admin permissions.
 	if (request.token !== null) {
 		return false;
@@ -357,7 +357,7 @@ export async function GetNextAvailableUsernameChange(
  *
  * In practice, that's how these things work anyway.
  */
-export async function GetFirstAdmin(): Promise<UserDocument> {
+export async function GetFirstAdmin(): Promise<MONGO_UserDocument> {
 	const admin = await DB.selectFrom("account")
 		.select(SELECT_USER)
 		.where("auth_level", "=", "admin")

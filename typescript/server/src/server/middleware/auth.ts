@@ -8,9 +8,9 @@ import { TachiConfig } from "#lib/setup/config";
 import DB from "#services/pg/db.js";
 import { IsNullishOrEmptyStr, SplitAuthorizationHeader } from "#utils/misc";
 import { IsUserBanned } from "#utils/user.js";
-import { ALL_PERMISSIONS, type APIPermissions, type APITokenDocument } from "tachi-common";
+import { ALL_PERMISSIONS, type APIPermissions, type MONGO_APITokenDocument } from "tachi-common";
 
-const GuestToken: APITokenDocument = {
+const GuestToken: MONGO_APITokenDocument = {
 	token: null,
 	userID: null,
 	identifier: "Guest Token",
@@ -20,7 +20,7 @@ const GuestToken: APITokenDocument = {
 
 export const RejectIfBanned: RequestHandler = async (req, res, next) => {
 	// auth might not be defined.
-	const auth = req[SYMBOL_TACHI_API_AUTH] as APITokenDocument | undefined;
+	const auth = req[SYMBOL_TACHI_API_AUTH] as MONGO_APITokenDocument | undefined;
 
 	// this is deliberately not auth?.userID !== null, as that isn't correct.
 	// we need to ignore this if auth doesn't exist and if auth is null.

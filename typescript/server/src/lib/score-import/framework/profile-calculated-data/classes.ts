@@ -14,8 +14,8 @@ import {
 	GetGPTString,
 	type GPTString,
 	type integer,
+	type MONGO_UserGameStats,
 	type Playtype,
-	type UserGameStats,
 } from "tachi-common";
 
 import type { ClassProvider } from "../calculated-data/types";
@@ -84,7 +84,7 @@ export async function ProcessClassDeltas(
 	game: GameGroup,
 	playtype: Playtype,
 	classes: AnyClasses,
-	userGameStats: UserGameStats | null,
+	userGameStats: MONGO_UserGameStats | null,
 	userID: integer,
 	log: KtLogger,
 ): Promise<Array<ClassDelta>> {

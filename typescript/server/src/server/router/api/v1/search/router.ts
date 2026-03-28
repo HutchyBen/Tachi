@@ -12,14 +12,14 @@ import { IsString } from "#utils/misc";
 import { GetAllUserRivals, GetUserPlayedGPTs } from "#utils/user";
 import { Router } from "express";
 import {
-	type FolderDocument,
 	GameGroup,
 	GetGameGroupConfig,
 	GetGPTString,
 	type GPTString,
 	type integer,
-	type SongDocument,
-	type UserDocument,
+	type MONGO_FolderDocument,
+	type MONGO_SongDocument,
+	type MONGO_UserDocument,
 } from "tachi-common";
 
 const router: Router = Router({ mergeParams: true });
@@ -41,7 +41,7 @@ router.get("/", async (req, res) => {
 
 	const userID = req[SYMBOL_TACHI_API_AUTH].userID;
 
-	let filter: FilterQuery<FolderDocument & SongDocument & UserDocument> = {};
+	let filter: FilterQuery<MONGO_FolderDocument & MONGO_SongDocument & MONGO_UserDocument> = {};
 
 	let relevantGPTs: Array<GPTString> = TachiConfig.GAMES.flatMap((g) =>
 		GetGameGroupConfig(g).playtypes.map((pt) => GetGPTString(g, pt)),
@@ -71,7 +71,7 @@ router.get("/", async (req, res) => {
 	]);
 
 	// @ts-expect-error Handled below -- the field is added by the below for loop.
-	const usersWithRivalTag: Array<{ __isRival: boolean } & UserDocument> = users;
+	const usersWithRivalTag: Array<{ __isRival: boolean } & MONGO_UserDocument> = users;
 
 	let rivals: Array<integer> = [];
 

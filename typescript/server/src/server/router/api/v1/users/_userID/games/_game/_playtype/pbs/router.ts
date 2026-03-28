@@ -1,12 +1,11 @@
 import { log } from "#lib/log/log";
-import { ResolveLegacyChartIdForMongo } from "#utils/chart-mongo-id";
-import { MongoChartLegacyId } from "tachi-common";
 import { GetRivalUsers } from "#lib/rivals/rivals";
 import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch-manual/converter";
 import { SearchSpecificGameSongsAndCharts } from "#lib/search/search";
 import prValidate from "#server/middleware/prudence-validate";
 import { AggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
 import MONGODB_KILL from "#services/mongo/db";
+import { ResolveLegacyChartIdForMongo } from "#utils/chart-mongo-id";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { IsValidScoreAlg } from "#utils/misc";
 import { GetAdjacentAbove, GetAdjacentBelow } from "#utils/queries/pbs";
@@ -14,7 +13,7 @@ import { GetUGPT } from "#utils/req-tachi-data";
 import { FilterChartsAndSongs, GetPBOnChart, GetScoreIDsFromComposed } from "#utils/scores";
 import { GetUsersWithIDs } from "#utils/user";
 import { Router } from "express";
-import { GetGamePTConfig, type MatchTypeResolver } from "tachi-common";
+import { GetGamePTConfig, type MatchTypeResolver, MongoChartLegacyId } from "tachi-common";
 import { PR_RESOLVER } from "tachi-common/lib/schemas";
 
 const router: Router = Router({ mergeParams: true });

@@ -1,4 +1,4 @@
-import type { UserGameStats, UserGameStatsSnapshotDocument } from "tachi-common";
+import type { MONGO_UserGameStats, MONGO_UserGameStatsSnapshotDocument } from "tachi-common";
 
 import { log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
@@ -9,7 +9,7 @@ import { GetAllRankings } from "#utils/user";
 // nonsense happens. we'll have to see.
 const currentTime = new Date().setUTCHours(0, 0, 0, 0);
 
-let batchWrite: Array<UserGameStatsSnapshotDocument> = [];
+let batchWrite: Array<MONGO_UserGameStatsSnapshotDocument> = [];
 
 // This code is intentionally *very* robust, and handles a lot of unanticipated failures
 // because if it breaks, we brick the database.
@@ -37,7 +37,7 @@ export async function UGSSnapshot() {
 			.find({})
 
 			// @ts-expect-error faulty TS types
-			.each(async (ugs: UserGameStats, { pause, resume }) => {
+			.each(async (ugs: MONGO_UserGameStats, { pause, resume }) => {
 				pause();
 
 				log.debug(`Snapshotting ${ugs.userID} ${ugs.playtype} ${ugs.game}.`);
@@ -51,7 +51,7 @@ export async function UGSSnapshot() {
 					GetAllRankings(ugs),
 				]);
 
-				const ugsSnapshot: UserGameStatsSnapshotDocument = {
+				const ugsSnapshot: MONGO_UserGameStatsSnapshotDocument = {
 					...ugs,
 					playcount,
 					rankings,

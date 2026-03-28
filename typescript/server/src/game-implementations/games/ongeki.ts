@@ -6,20 +6,20 @@ import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
 import { IsNullish } from "#utils/misc";
 import { ONGEKIRating } from "rg-stats";
 import {
-	type ChartDocument,
 	FmtNum,
 	FmtStars,
 	FmtStarsCompact,
 	type GameGroup,
 	GetGrade,
 	type integer,
+	type MONGO_ChartDocument,
 	ONGEKI_GBOUNDARIES,
 	type Playtype,
 } from "tachi-common";
 
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
-const isUnranked = (chart: ChartDocument<"ongeki:Single">) =>
+const isUnranked = (chart: MONGO_ChartDocument<"ongeki:Single">) =>
 	(chart.data.inGameID >= 7000 && chart.data.inGameID < 8000) || chart.levelNum === 0.0;
 
 const starCount = (platinumScore: number, maxPlatinumScore: number) => {

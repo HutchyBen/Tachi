@@ -8,12 +8,12 @@ import {
 	type GameGroup,
 	GetGameGroupConfig,
 	type GPTString,
-	type ImportDocument,
 	type ImportProcessingInfo,
 	type ImportTypes,
 	type integer,
+	type MONGO_ImportDocument,
+	type MONGO_UserDocument,
 	type Playtype,
-	type UserDocument,
 } from "tachi-common";
 
 import type { ConverterFunction, ImportInputParser } from "../../import-types/common/types";
@@ -189,7 +189,7 @@ export default async function ScoreImportMain<D, C>(
 
 		// --- 9. Finalise Import Document ---
 		// Create and Save an import document to the database, and finish everything up!
-		const ImportDocument: ImportDocument = {
+		const ImportDocument: MONGO_ImportDocument = {
 			importType,
 			gptStrings: playtypes.map((e) => `${game}:${e}`) as Array<GPTString>,
 			scoreIDs,
@@ -261,7 +261,7 @@ export default async function ScoreImportMain<D, C>(
  */
 export async function HandlePostImportSteps(
 	importInfo: Array<ImportProcessingInfo>,
-	user: UserDocument,
+	user: MONGO_UserDocument,
 	importType: ImportTypes,
 	game: GameGroup,
 	classProvider: ClassProvider | null,

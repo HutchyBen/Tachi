@@ -1,4 +1,4 @@
-import type { GameGroup, integer, SongDocument, SongDocumentData } from "tachi-common";
+import type { GameGroup, integer, MONGO_SongDocument, SongDocumentData } from "tachi-common";
 
 import DB from "#services/pg/db";
 
@@ -10,7 +10,7 @@ import DB from "#services/pg/db";
 export async function GetSongByLegacyID(
 	game: GameGroup,
 	legacyId: number,
-): Promise<{ doc: SongDocument; pgId: string } | undefined> {
+): Promise<{ doc: MONGO_SongDocument; pgId: string } | undefined> {
 	const row = await DB.selectFrom("song")
 		.select(["id", "legacy_id", "title", "artist", "data"])
 		.where("legacy_id", "=", legacyId)
@@ -29,7 +29,7 @@ export async function GetSongByLegacyID(
 		DB.selectFrom("song_alt_title").select("alt_title").where("song_id", "=", row.id).execute(),
 	]);
 
-	const doc: SongDocument = {
+	const doc: MONGO_SongDocument = {
 		id: row.legacy_id,
 		title: row.title,
 		artist: row.artist,
@@ -47,7 +47,7 @@ export async function GetSongByLegacyID(
 export async function GetSongsByLegacyIDs(
 	game: GameGroup,
 	legacyIds: Array<integer>,
-): Promise<Array<SongDocument>> {
+): Promise<Array<MONGO_SongDocument>> {
 	if (legacyIds.length === 0) {
 		return [];
 	}
@@ -102,7 +102,7 @@ export async function GetSongsByLegacyIDs(
 		list.push(r.alt_title);
 	}
 
-	const byLegacy = new Map<integer, SongDocument>();
+	const byLegacy = new Map<integer, MONGO_SongDocument>();
 
 	for (const row of songRows) {
 		byLegacy.set(row.legacy_id, {
@@ -115,7 +115,7 @@ export async function GetSongsByLegacyIDs(
 		});
 	}
 
-	const out: Array<SongDocument> = [];
+	const out: Array<MONGO_SongDocument> = [];
 
 	for (const id of legacyIds) {
 		const doc = byLegacy.get(id);

@@ -6,7 +6,7 @@ import { apiSuccess } from "#utils/response";
 import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { GetOnlineCutoff } from "#utils/user";
 import { Router } from "express";
-import { type UserDocument } from "tachi-common";
+import { type MONGO_UserDocument } from "tachi-common";
 
 import userIDRouter from "./_userID/router";
 
@@ -57,7 +57,7 @@ router.get("/", async (req, res) => {
 
 	return res
 		.status(200)
-		.json(apiSuccess<Array<UserDocument>>(`Returned ${users.length} users.`, users));
+		.json(apiSuccess<Array<MONGO_UserDocument>>(`Returned ${users.length} users.`, users));
 });
 
 router.use("/:userID", userIDRouter);

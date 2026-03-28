@@ -43,17 +43,17 @@ export interface IObjectID {
 	readonly toString: () => string;
 }
 
-export interface CounterDocument {
+export interface MONGO_CounterDocument {
 	counterName: string;
 	value: integer;
 }
 
-export interface ChartFolderLookupDocument {
+export interface MONGO_ChartFolderLookupDocument {
 	chartID: string;
 	folderID: string;
 }
 
-export interface BaseGoalDocument<GPT extends GPTString> {
+export interface MONGO_BaseGoalDocument<GPT extends GPTString> {
 	game: GameGroup;
 	playtype: Playtype;
 	name: string;
@@ -61,7 +61,7 @@ export interface BaseGoalDocument<GPT extends GPTString> {
 	criteria: GoalCountCriteria<GPT> | GoalSingleCriteria<GPT>;
 }
 
-interface GoalCriteria<GPT extends GPTString> {
+interface GoalCriteria<_GPT extends GPTString> {
 	// vvv this basically doesn't work as it starts thinking this might be a symbol
 	// causing a myriad of annoying errors.
 	// key: keyof DerivedMetrics[GPT] | keyof ProvidedMetrics[GPT];
@@ -88,8 +88,8 @@ export interface GoalCountCriteria<GPT extends GPTString> extends GoalCriteria<G
 /**
  * Goal Document - Single. A goal document that is only for one specific chart.
  */
-export interface GoalDocumentSingle<GPT extends GPTString = GPTString>
-	extends BaseGoalDocument<GPT> {
+export interface MONGO_GoalDocumentSingle<GPT extends GPTString = GPTString>
+	extends MONGO_BaseGoalDocument<GPT> {
 	charts: {
 		data: string;
 		type: "single";
@@ -100,8 +100,8 @@ export interface GoalDocumentSingle<GPT extends GPTString = GPTString>
  * Goal Document - Multi. A goal document whos set of charts is the array of
  * chartIDs inside "charts".
  */
-export interface GoalDocumentMulti<GPT extends GPTString = GPTString>
-	extends BaseGoalDocument<GPT> {
+export interface MONGO_GoalDocumentMulti<GPT extends GPTString = GPTString>
+	extends MONGO_BaseGoalDocument<GPT> {
 	charts: {
 		data: Array<string>;
 		type: "multi";
@@ -112,18 +112,18 @@ export interface GoalDocumentMulti<GPT extends GPTString = GPTString>
  * Goal Document - Folder. A goal document whos set of charts is derived from
  * the folderID inside "charts".
  */
-export interface GoalDocumentFolder<GPT extends GPTString = GPTString>
-	extends BaseGoalDocument<GPT> {
+export interface MONGO_GoalDocumentFolder<GPT extends GPTString = GPTString>
+	extends MONGO_BaseGoalDocument<GPT> {
 	charts: {
 		data: string;
 		type: "folder";
 	};
 }
 
-export type GoalDocument<GPT extends GPTString = GPTString> =
-	| GoalDocumentFolder<GPT>
-	| GoalDocumentMulti<GPT>
-	| GoalDocumentSingle<GPT>;
+export type MONGO_GoalDocument<GPT extends GPTString = GPTString> =
+	| MONGO_GoalDocumentFolder<GPT>
+	| MONGO_GoalDocumentMulti<GPT>
+	| MONGO_GoalDocumentSingle<GPT>;
 
 interface BaseInviteCodeDocument {
 	createdBy: integer;
@@ -131,7 +131,7 @@ interface BaseInviteCodeDocument {
 	createdAt: number;
 }
 
-export type InviteCodeDocument = (
+export type MONGO_InviteCodeDocument = (
 	| { consumed: false; consumedAt: null; consumedBy: null }
 	| { consumed: true; consumedAt: number; consumedBy: integer }
 ) &
@@ -157,7 +157,7 @@ interface SessionScoreNewInfo {
 
 export type SessionScoreInfo = SessionScoreNewInfo | SessionScorePBInfo;
 
-export interface SessionDocument<GPT extends GPTString = GPTString> {
+export interface MONGO_SessionDocument<GPT extends GPTString = GPTString> {
 	userID: integer;
 	sessionID: string;
 	scoreIDs: Array<string>;
@@ -178,7 +178,7 @@ interface ImportErrContent {
 	message: string;
 }
 
-export interface ImportDocument {
+export interface MONGO_ImportDocument {
 	userID: integer;
 	timeStarted: number;
 	timeFinished: number;
@@ -207,7 +207,7 @@ export interface ImportDocument {
 	userIntent: boolean;
 }
 
-export interface ImportTimingsDocument {
+export interface MONGO_ImportTimingsDocument {
 	importID: string;
 	timestamp: number;
 	total: number;
@@ -236,7 +236,7 @@ interface ImportTimingSections {
 }
 
 export type GoalImportStat = Pick<
-	GoalSubscriptionDocument,
+	MONGO_GoalSubscriptionDocument,
 	"achieved" | "outOf" | "outOfHuman" | "progress" | "progressHuman"
 >;
 
@@ -246,7 +246,7 @@ export interface GoalImportInfo {
 	new: GoalImportStat;
 }
 
-export type QuestImportStat = Pick<QuestSubscriptionDocument, "achieved" | "progress">;
+export type QuestImportStat = Pick<MONGO_QuestSubscriptionDocument, "achieved" | "progress">;
 
 export interface QuestImportInfo {
 	questID: string;
@@ -254,7 +254,7 @@ export interface QuestImportInfo {
 	new: QuestImportStat;
 }
 
-export type GoalSubscriptionDocument = {
+export type MONGO_GoalSubscriptionDocument = {
 	game: GameGroup;
 	goalID: string;
 	lastInteraction: integer | null;
@@ -291,7 +291,7 @@ export interface QuestSection {
 	goals: Array<QuestGoalReference>;
 }
 
-export interface QuestDocument {
+export interface MONGO_QuestDocument {
 	game: GameGroup;
 	playtype: Playtype;
 	name: string;
@@ -300,7 +300,7 @@ export interface QuestDocument {
 	questID: string;
 }
 
-export interface QuestlineDocument {
+export interface MONGO_QuestlineDocument {
 	questlineID: string;
 	name: string;
 	desc: string;
@@ -311,7 +311,7 @@ export interface QuestlineDocument {
 
 export type UserBadges = "alpha" | "beta" | "contributor" | "dev-team" | "significant-contributor";
 
-export interface UserDocument {
+export interface MONGO_UserDocument {
 	username: string;
 	usernameLowercase: string;
 	id: integer;
@@ -334,7 +334,7 @@ export interface UserDocument {
 	isSupporter?: boolean;
 }
 
-export interface SpecificUserGameStats<GPT extends GPTString> {
+export interface MONGO_SpecificUserGameStats<GPT extends GPTString> {
 	userID: integer;
 	game: GPTStringToGame[GPT];
 	playtype: GPTStringToPlaytype[GPT];
@@ -346,7 +346,7 @@ export interface SpecificUserGameStats<GPT extends GPTString> {
  * GPT agnostic stats for a game. This type is easier to work with than the
  * specificUserGameStats one for general cases.
  */
-export interface UserGameStats {
+export interface MONGO_UserGameStats {
 	userID: integer;
 	game: GameGroup;
 	playtype: Playtype;
@@ -360,7 +360,7 @@ export interface ChartTierlistInfo {
 	individualDifference?: boolean;
 }
 
-export interface ChartDocument<GPT extends GPTString = GPTString> {
+export interface MONGO_ChartDocument<GPT extends GPTString = GPTString> {
 	/** Postgres `chart.id` — canonical in API URLs and JSON. */
 	chartID: string;
 	/** Legacy Mongo-era chart id (`chart.legacy_id` in Postgres). Required when loaded from PG; omit on raw Mongo chart docs. */
@@ -375,7 +375,7 @@ export interface ChartDocument<GPT extends GPTString = GPTString> {
 	versions: Array<Versions[GPT]>;
 }
 
-export interface SongDocument<G extends GameGroup = GameGroup> {
+export interface MONGO_SongDocument<G extends GameGroup = GameGroup> {
 	id: integer;
 	title: string;
 	artist: string;
@@ -384,7 +384,7 @@ export interface SongDocument<G extends GameGroup = GameGroup> {
 	data: SongDocumentData[G];
 }
 
-export interface TableDocument {
+export interface MONGO_TableDocument {
 	tableID: string;
 	game: GameGroup;
 	playtype: Playtype;
@@ -395,7 +395,7 @@ export interface TableDocument {
 	default: boolean;
 }
 
-export interface BaseFolderDocument {
+export interface MONGO_BaseFolderDocument {
 	title: string;
 	game: GameGroup;
 	playtype: Playtype;
@@ -409,29 +409,32 @@ export interface BaseFolderDocument {
 	searchTerms: Array<string>;
 }
 
-export interface FolderSongsDocument extends BaseFolderDocument {
+export interface MONGO_FolderSongsDocument extends MONGO_BaseFolderDocument {
 	type: "songs";
-	data: FilterQuery<SongDocument>;
+	data: FilterQuery<MONGO_SongDocument>;
 }
 
-export interface FolderChartsDocument extends BaseFolderDocument {
+export interface MONGO_FolderChartsDocument extends MONGO_BaseFolderDocument {
 	type: "charts";
-	data: FilterQuery<ChartDocument>;
+	data: FilterQuery<MONGO_ChartDocument>;
 }
 
-export interface FolderStaticDocument extends BaseFolderDocument {
+export interface MONGO_FolderStaticDocument extends MONGO_BaseFolderDocument {
 	type: "static";
 	data: Array<string>;
 }
 
-export type FolderDocument = FolderChartsDocument | FolderSongsDocument | FolderStaticDocument;
+export type MONGO_FolderDocument =
+	| MONGO_FolderChartsDocument
+	| MONGO_FolderSongsDocument
+	| MONGO_FolderStaticDocument;
 
 export interface FolderChartLookup {
 	chartID: string;
 	folderID: string;
 }
 
-export type QuestSubscriptionDocument = {
+export type MONGO_QuestSubscriptionDocument = {
 	game: GameGroup;
 	lastInteraction: integer | null;
 	playtype: Playtype;
@@ -466,7 +469,7 @@ export type PgScoreJudgements<Game extends V3Game = V3Game> = Partial<
 	Record<Judgements[V3GameToGPTString[Game]], integer | null>
 >;
 
-export type MongoScoreData<GPT extends GPTString = GPTString> = {
+export type MONGO_ScoreData<GPT extends GPTString = GPTString> = {
 	enumIndexes: ScoreEnumIndexes<GPT>;
 	judgements: Partial<Record<Judgements[GPT], integer | null>>;
 	optional: {
@@ -475,12 +478,12 @@ export type MongoScoreData<GPT extends GPTString = GPTString> = {
 } & MongoDerivedMetrics[GPT] &
 	MongoProvidedMetrics[GPT];
 
-export interface ScoreDocument<GPT extends GPTString = GPTString> {
+export interface MONGO_ScoreDocument<GPT extends GPTString = GPTString> {
 	service: string;
 	game: GPTStringToGame[GPT];
 	playtype: GPTStringToPlaytype[GPT];
 	userID: integer;
-	scoreData: MongoScoreData<GPT>;
+	scoreData: MONGO_ScoreData<GPT>;
 	scoreMeta: Partial<ScoreMeta[GPT]>;
 	calculatedData: Partial<Record<ScoreRatingAlgorithms[GPT], number | null>>;
 	timeAchieved: integer | null;
@@ -499,7 +502,7 @@ export interface PBReference {
 	scoreID: string;
 }
 
-export interface PBScoreDocument<GPT extends GPTString = GPTString> {
+export interface MONGO_PBScoreDocument<GPT extends GPTString = GPTString> {
 	// guaranteed to atleast have one element.
 	composedFrom: [PBReference, ...Array<PBReference>];
 	rankingData: {
@@ -520,7 +523,7 @@ export interface PBScoreDocument<GPT extends GPTString = GPTString> {
 	highlight: boolean;
 	isPrimary: boolean;
 	timeAchieved: number | null;
-	scoreData: MongoScoreData<GPT>;
+	scoreData: MONGO_ScoreData<GPT>;
 	calculatedData: Partial<Record<ScoreRatingAlgorithms[GPT], number | null>>;
 }
 
@@ -554,7 +557,7 @@ export interface ImportProcessInfoScoreImported<GPT extends GPTString = GPTStrin
 	type: "ScoreImported";
 	message: string;
 	content: {
-		score: ScoreDocument<GPT>;
+		score: MONGO_ScoreDocument<GPT>;
 	};
 }
 
@@ -594,14 +597,14 @@ export interface ImportStatistics {
 	importID: string;
 }
 
-export interface KaiAuthDocument {
+export interface MONGO_KaiAuthDocument {
 	userID: integer;
 	token: string;
 	refreshToken: string;
 	service: "EAG" | "FLO" | "MIN";
 }
 
-export interface CGCardInfo {
+export interface MONGO_CGCardInfo {
 	userID: integer;
 	service: "dev" | "gan" | "nag";
 	cardID: string;
@@ -610,7 +613,7 @@ export interface CGCardInfo {
 	pin: string;
 }
 
-export interface MytCardInfo {
+export interface MONGO_MytCardInfo {
 	userID: integer;
 	cardAccessCode: string; // matches /^[0-9]{20}$/
 }
@@ -624,7 +627,7 @@ interface BMSCourseInner<GPT extends GPTStrings["bms"], Set extends keyof Extrac
 /**
  * Used to resolve beatoraja IR courses.
  */
-export interface BMSCourseDocument
+export interface MONGO_BMSCourseDocument
 	extends BMSCourseInner<GPTStrings["bms"], keyof ExtractedClasses[GPTStrings["bms"]]> {
 	title: string;
 	md5sums: string;
@@ -633,7 +636,7 @@ export interface BMSCourseDocument
 /**
  * Information about the API Token used to make this request.
  */
-export interface APITokenDocument {
+export interface MONGO_APITokenDocument {
 	userID: integer | null;
 	token: string | null;
 	identifier: string;
@@ -644,7 +647,7 @@ export interface APITokenDocument {
 	fromAPIClient: string | null;
 }
 
-export interface ImportLockDocument {
+export interface MONGO_ImportLockDocument {
 	userID: integer;
 }
 
@@ -669,7 +672,7 @@ export interface ShowcaseStatChart {
 	metric: string;
 }
 
-export interface UGPTSettingsDocument<GPT extends GPTString = GPTString> {
+export interface MONGO_UGPTSettingsDocument<GPT extends GPTString = GPTString> {
 	userID: integer;
 	game: GPTStringToGame[GPT];
 	playtype: GPTStringToPlaytype[GPT];
@@ -686,14 +689,14 @@ export interface UGPTSettingsDocument<GPT extends GPTString = GPTString> {
 	rivals: Array<integer>;
 }
 
-export interface UserGameStatsSnapshotDocument<GPT extends GPTString = GPTString>
-	extends SpecificUserGameStats<GPT> {
+export interface MONGO_UserGameStatsSnapshotDocument<GPT extends GPTString = GPTString>
+	extends MONGO_SpecificUserGameStats<GPT> {
 	rankings: Record<ProfileRatingAlgorithms[GPT], { outOf: integer; ranking: integer | null }>;
 	playcount: integer;
 	timestamp: integer;
 }
 
-export interface UserSettingsDocument {
+export interface MONGO_UserSettingsDocument {
 	userID: integer;
 	following: Array<integer>;
 	preferences: {
@@ -705,7 +708,7 @@ export interface UserSettingsDocument {
 	};
 }
 
-export interface TachiAPIClientDocument {
+export interface MONGO_TachiAPIClientDocument {
 	clientID: string;
 	clientSecret: string;
 	name: string;
@@ -717,21 +720,21 @@ export interface TachiAPIClientDocument {
 	apiKeyFilename: string | null;
 }
 
-export interface FervidexSettingsDocument {
+export interface MONGO_FervidexSettingsDocument {
 	userID: integer;
 	cards: Array<string> | null;
 	forceStaticImport: boolean;
 }
 
-export interface KsHookSettingsDocument {
+export interface MONGO_KsHookSettingsDocument {
 	userID: integer;
 	forceStaticImport: boolean;
 }
 
-export interface OrphanChartDocument<GPT extends GPTString = GPTString> {
+export interface MONGO_OrphanChartDocument<GPT extends GPTString = GPTString> {
 	gptString: GPT;
-	chartDoc: ChartDocument<GPT>;
-	songDoc: SongDocument<GPTStringToGame[GPT]>;
+	chartDoc: MONGO_ChartDocument<GPT>;
+	songDoc: MONGO_SongDocument<GPTStringToGame[GPT]>;
 	userIDs: Array<integer>;
 }
 
@@ -743,7 +746,7 @@ export interface ClassDelta {
 	new: string;
 }
 
-export interface ClassAchievementDocument<GPT extends GPTString = GPTString> {
+export interface MONGO_ClassAchievementDocument<GPT extends GPTString = GPTString> {
 	game: GPTStringToGame[GPT];
 	playtype: GPTStringToPlaytype[GPT];
 	classSet: Classes[GPT];
@@ -753,7 +756,7 @@ export interface ClassAchievementDocument<GPT extends GPTString = GPTString> {
 	userID: integer;
 }
 
-export interface RecentlyViewedFolderDocument {
+export interface MONGO_RecentlyViewedFolderDocument {
 	userID: integer;
 	game: GameGroup;
 	playtype: Playtypes[GameGroup];
@@ -761,11 +764,11 @@ export interface RecentlyViewedFolderDocument {
 	lastViewed: number;
 }
 
-export type NotificationDocument = {
+export type MONGO_NotificationDocument = {
 	body: NotificationBody;
 } & BaseNotification;
 
-export interface ChallengeSubscriptionDocument {
+export interface MONGO_ChallengeSubscriptionDocument {
 	chartID: string;
 	authorID: integer;
 	type: "lamp" | "score";
@@ -799,11 +802,11 @@ export interface ImportTrackerFailed extends BaseImportTracker {
  * Tracks the status of an import while it goes through the pipeline or if it fails.
  *
  * Successful imports are removed from the tracking database, and their existence
- * is kept track of via { @see ImportDocument }.
+ * is kept track of via { @see MONGO_ImportDocument }.
  */
-export type ImportTrackerDocument = ImportTrackerFailed | ImportTrackerOngoing;
+export type MONGO_ImportTrackerDocument = ImportTrackerFailed | ImportTrackerOngoing;
 
-export interface UserNameChangeDocument {
+export interface MONGO_UserNameChangeDocument {
 	userID: integer;
 	username: string;
 	timestamp: integer;

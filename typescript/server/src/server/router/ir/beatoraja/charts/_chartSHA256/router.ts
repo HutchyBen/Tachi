@@ -1,4 +1,9 @@
-import type { ChartDocument, integer, PBScoreDocument, UserDocument } from "tachi-common";
+import type {
+	integer,
+	MONGO_ChartDocument,
+	MONGO_PBScoreDocument,
+	MONGO_UserDocument,
+} from "tachi-common";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log";
@@ -11,17 +16,18 @@ import { TachiScoreDataToBeatorajaFormat } from "./convert-scores";
 const router: Router = Router({ mergeParams: true });
 
 const GetChartDocument: RequestHandler = async (req, res, next) => {
-	let chart: ChartDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"> | null =
-		(await MONGODB_KILL.charts.bms.findOne({
-			"data.hashSHA256": req.params.chartSHA256,
-		})) as ChartDocument<"bms:7K" | "bms:14K"> | null;
+	let chart: MONGO_ChartDocument<
+		"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"
+	> | null = (await MONGODB_KILL.charts.bms.findOne({
+		"data.hashSHA256": req.params.chartSHA256,
+	})) as MONGO_ChartDocument<"bms:7K" | "bms:14K"> | null;
 
 	// if we dont find the chart in bms,
 	// it's probably a pms chart.
 	if (!chart) {
 		chart = (await MONGODB_KILL.charts.pms.findOne({
 			"data.hashSHA256": req.params.chartSHA256,
-		})) as ChartDocument<"pms:Controller" | "pms:Keyboard"> | null;
+		})) as MONGO_ChartDocument<"pms:Controller" | "pms:Keyboard"> | null;
 	}
 
 	// if we still haven't found it, we've got nothin.
@@ -50,7 +56,7 @@ router.get("/scores", async (req, res) => {
 
 	const scores = (await MONGODB_KILL["personal-bests"].find({
 		chartID: chart.chartID,
-	})) as Array<PBScoreDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard">>;
+	})) as Array<MONGO_PBScoreDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard">>;
 
 	const userDocs = await MONGODB_KILL.users.find(
 		{
@@ -63,7 +69,7 @@ router.get("/scores", async (req, res) => {
 			},
 		},
 	);
-	const userMap = new Map<integer, UserDocument>();
+	const userMap = new Map<integer, MONGO_UserDocument>();
 
 	for (const user of userDocs) {
 		userMap.set(user.id, user);

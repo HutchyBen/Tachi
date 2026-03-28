@@ -1,8 +1,8 @@
 import GPTChartPage from "#app/pages/dashboard/games/_game/_playtype/GPTChartPage";
+import GPTChartsPage from "#app/pages/dashboard/games/_game/_playtype/GPTChartsPage";
 import GPTDevInfo from "#app/pages/dashboard/games/_game/_playtype/GPTDevInfo";
 import GPTLeaderboardsPage from "#app/pages/dashboard/games/_game/_playtype/GPTLeaderboardsPage";
 import GPTMainPage from "#app/pages/dashboard/games/_game/_playtype/GPTMainPage";
-import GPTChartsPage from "#app/pages/dashboard/games/_game/_playtype/GPTChartsPage";
 import PlaytypeSelect from "#app/pages/dashboard/games/_game/PlaytypeSelect";
 import { ErrorPage } from "#app/pages/ErrorPage";
 import ChartInfoFormat from "#components/game/charts/ChartInfoFormat";

@@ -1,24 +1,24 @@
 import type { TachiBMSTable } from "#lib/game-specific/custom-bms-tables";
 import type {
-	ChartDocument,
-	FolderDocument,
 	GameGroup,
-	GoalDocument,
-	GoalSubscriptionDocument,
-	ImportDocument,
 	integer,
+	MONGO_ChartDocument,
+	MONGO_FolderDocument,
+	MONGO_GoalDocument,
+	MONGO_GoalSubscriptionDocument,
+	MONGO_ImportDocument,
+	MONGO_QuestDocument,
+	MONGO_QuestlineDocument,
+	MONGO_QuestSubscriptionDocument,
+	MONGO_ScoreDocument,
+	MONGO_SessionDocument,
+	MONGO_SongDocument,
+	MONGO_TableDocument,
+	MONGO_TachiAPIClientDocument,
+	MONGO_UserDocument,
+	MONGO_UserGameStats,
+	MONGO_UserSettingsDocument,
 	Playtype,
-	QuestDocument,
-	QuestlineDocument,
-	QuestSubscriptionDocument,
-	ScoreDocument,
-	SessionDocument,
-	SongDocument,
-	TableDocument,
-	TachiAPIClientDocument,
-	UserDocument,
-	UserGameStats,
-	UserSettingsDocument,
 } from "tachi-common";
 
 // Inject additional properties on express-session
@@ -41,8 +41,8 @@ declare module "express-serve-static-core" {
 }
 
 export interface TachiSessionData {
-	user: UserDocument;
-	settings: UserSettingsDocument;
+	user: MONGO_UserDocument;
+	settings: MONGO_UserSettingsDocument;
 }
 
 export interface TachiAPIFailResponse {
@@ -67,32 +67,34 @@ export type EmptyObject = Record<string, never>;
  * Data that may be monkey-patched onto req.tachi. This holds things such as middleware results.
  */
 export interface TachiRequestData {
-	uscChartDoc?: ChartDocument<"usc:Controller" | "usc:Keyboard">;
+	uscChartDoc?: MONGO_ChartDocument<"usc:Controller" | "usc:Keyboard">;
 
-	beatorajaChartDoc?: ChartDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard">;
+	beatorajaChartDoc?: MONGO_ChartDocument<
+		"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"
+	>;
 
-	requestedUser?: UserDocument;
-	requestedUserGameStats?: UserGameStats;
+	requestedUser?: MONGO_UserDocument;
+	requestedUserGameStats?: MONGO_UserGameStats;
 	game?: GameGroup;
 	playtype?: Playtype;
 
-	chartDoc?: ChartDocument;
-	songDoc?: SongDocument;
+	chartDoc?: MONGO_ChartDocument;
+	songDoc?: MONGO_SongDocument;
 	songPgId?: string;
-	scoreDoc?: ScoreDocument;
-	sessionDoc?: SessionDocument;
-	tableDoc?: TableDocument;
-	folderDoc?: FolderDocument;
-	goalDoc?: GoalDocument;
-	questDoc?: QuestDocument;
-	goalSubDoc?: GoalSubscriptionDocument;
-	questSubDoc?: QuestSubscriptionDocument;
-	questlineDoc?: QuestlineDocument;
-	importDoc?: ImportDocument;
+	scoreDoc?: MONGO_ScoreDocument;
+	sessionDoc?: MONGO_SessionDocument;
+	tableDoc?: MONGO_TableDocument;
+	folderDoc?: MONGO_FolderDocument;
+	goalDoc?: MONGO_GoalDocument;
+	questDoc?: MONGO_QuestDocument;
+	goalSubDoc?: MONGO_GoalSubscriptionDocument;
+	questSubDoc?: MONGO_QuestSubscriptionDocument;
+	questlineDoc?: MONGO_QuestlineDocument;
+	importDoc?: MONGO_ImportDocument;
 
 	customBMSTable?: TachiBMSTable;
 
-	apiClientDoc: Omit<TachiAPIClientDocument, "clientSecret">;
+	apiClientDoc: Omit<MONGO_TachiAPIClientDocument, "clientSecret">;
 }
 
 // This is only used on tachi-server, and isn't exposed -- so shouldn't be a part

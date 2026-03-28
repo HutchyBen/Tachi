@@ -1,11 +1,11 @@
 import type { FilterQuery } from "mongodb";
 import type {
-	ChartDocument,
 	GPTString,
 	GPTStringToGame,
 	integer,
-	OrphanChartDocument,
-	SongDocument,
+	MONGO_ChartDocument,
+	MONGO_OrphanChartDocument,
+	MONGO_SongDocument,
 } from "tachi-common";
 
 import { log } from "#lib/log/log";
@@ -28,9 +28,9 @@ import { DedupeArr } from "#utils/misc";
 export async function HandleOrphanQueue<GPT extends GPTString>(
 	gptString: GPT,
 	game: GPTStringToGame[GPT],
-	chartDoc: ChartDocument<GPT>,
-	songDoc: SongDocument<GPTStringToGame[GPT]>,
-	orphanMatchCriteria: FilterQuery<OrphanChartDocument<GPT>>,
+	chartDoc: MONGO_ChartDocument<GPT>,
+	songDoc: MONGO_SongDocument<GPTStringToGame[GPT]>,
+	orphanMatchCriteria: FilterQuery<MONGO_OrphanChartDocument<GPT>>,
 	queueSize: integer,
 	userID: integer,
 	chartName: string,
@@ -84,7 +84,7 @@ export async function HandleOrphanQueue<GPT extends GPTString>(
 			_id: orphanChart._id,
 		});
 
-		return chartDoc as ChartDocument<GPT>;
+		return chartDoc as MONGO_ChartDocument<GPT>;
 	}
 
 	// otherwise, update the state of this orphan.
@@ -113,8 +113,8 @@ export async function HandleOrphanQueue<GPT extends GPTString>(
 export async function DeorphanIfInQueue<GPT extends GPTString>(
 	gptString: GPT,
 	game: GPTStringToGame[GPT],
-	orphanMatchCriteria: FilterQuery<OrphanChartDocument<GPT>>,
-): Promise<ChartDocument<GPT> | null> {
+	orphanMatchCriteria: FilterQuery<MONGO_OrphanChartDocument<GPT>>,
+): Promise<MONGO_ChartDocument<GPT> | null> {
 	const orphanChart = await MONGODB_KILL["orphan-chart-queue"].findOne(
 		{ gptString, ...orphanMatchCriteria },
 		{
@@ -142,5 +142,5 @@ export async function DeorphanIfInQueue<GPT extends GPTString>(
 		_id: orphanChart._id,
 	});
 
-	return chartDoc as ChartDocument<GPT>;
+	return chartDoc as MONGO_ChartDocument<GPT>;
 }

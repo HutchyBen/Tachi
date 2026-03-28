@@ -10,10 +10,10 @@ import { FindChartsOnPopularity } from "#utils/queries/charts";
 import { GetGPT } from "#utils/req-tachi-data";
 import { Router } from "express";
 import {
-	type ChartDocument,
 	type integer,
 	type MatchTypeResolver,
-	type UGPTSettingsDocument,
+	type MONGO_ChartDocument,
+	type MONGO_UGPTSettingsDocument,
 } from "tachi-common";
 import { PR_RESOLVER } from "tachi-common/lib/schemas";
 
@@ -81,7 +81,7 @@ router.get("/", async (req, res) => {
 		skip,
 		limit,
 		"personal-bests",
-	)) as Array<ChartDocument>;
+	)) as Array<MONGO_ChartDocument>;
 
 	// @optimisable
 	// could use songIDs from above instead of refetching
@@ -101,18 +101,20 @@ router.get("/", async (req, res) => {
 	if (game === "iidx" && req.query.noIntelligentOmit === undefined) {
 		if (req[SYMBOL_TACHI_API_AUTH].userID === null) {
 			charts = charts.filter(
-				(e) => (e as ChartDocument<"iidx:DP" | "iidx:SP">).data["2dxtraSet"] === null,
+				(e) => (e as MONGO_ChartDocument<"iidx:DP" | "iidx:SP">).data["2dxtraSet"] === null,
 			);
 		} else {
 			const iidxSettings = (await MONGODB_KILL["game-settings"].findOne({
 				userID: req[SYMBOL_TACHI_API_AUTH].userID,
 				game,
 				playtype,
-			})) as UGPTSettingsDocument<"iidx:DP" | "iidx:SP"> | null;
+			})) as MONGO_UGPTSettingsDocument<"iidx:DP" | "iidx:SP"> | null;
 
 			if (!iidxSettings?.preferences.gameSpecific.display2DXTra) {
 				charts = charts.filter(
-					(e) => (e as ChartDocument<"iidx:DP" | "iidx:SP">).data["2dxtraSet"] === null,
+					(e) =>
+						(e as MONGO_ChartDocument<"iidx:DP" | "iidx:SP">).data["2dxtraSet"] ===
+						null,
 				);
 			}
 		}

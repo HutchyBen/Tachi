@@ -1,5 +1,5 @@
 import { type Selection } from "kysely";
-import { type CGCardInfo } from "tachi-common";
+import { type MONGO_CGCardInfo } from "tachi-common";
 import { type Database } from "tachi-db";
 
 export const SELECT_CG_CARD_INFO = [
@@ -11,10 +11,10 @@ export const SELECT_CG_CARD_INFO = [
 
 export function ToCGCardInfo(
 	row: Selection<Database, "priv_svc_cg_card_info", (typeof SELECT_CG_CARD_INFO)[number]>,
-): CGCardInfo {
+): MONGO_CGCardInfo {
 	return {
 		userID: row.user_id,
-		service: row.service as CGCardInfo["service"],
+		service: row.service as MONGO_CGCardInfo["service"],
 		cardID: row.card_id,
 		pin: row.pin,
 	};

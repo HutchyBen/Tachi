@@ -1,4 +1,4 @@
-import type { integer, NotificationBody, NotificationDocument } from "tachi-common";
+import type { integer, MONGO_NotificationDocument, NotificationBody } from "tachi-common";
 
 import MONGODB_KILL from "#services/mongo/db";
 import { Random20Hex } from "#utils/misc";
@@ -7,7 +7,7 @@ function ConstructNotificationDoc(
 	title: string,
 	toUserID: integer,
 	body: NotificationBody,
-): NotificationDocument {
+): MONGO_NotificationDocument {
 	return {
 		title,
 		sentTo: toUserID,

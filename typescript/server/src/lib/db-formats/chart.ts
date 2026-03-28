@@ -3,31 +3,31 @@ import type { Game } from "tachi-db";
 import DB from "#services/pg/db";
 import { sql, type SqlBool } from "kysely";
 import {
-	type ChartDocument,
 	type ChartDocumentData,
 	type Difficulties,
 	type GPTString,
+	type MONGO_ChartDocument,
 	V3ToGameGroup,
 	V3ToGamePT,
 	type Versions,
 } from "tachi-common";
 
 type ChartRow = {
-	id: string;
-	legacy_id: string;
+	data: unknown;
+	difficulty: string;
 	game: Game;
+	id: string;
+	is_primary: boolean;
+	legacy_id: string;
 	level: string;
 	level_num: number;
-	is_primary: boolean;
-	difficulty: string;
-	data: unknown;
 };
 
 function mapRowToChartDocument(
 	row: ChartRow,
 	songLegacyId: number,
 	versions: string[],
-): ChartDocument {
+): MONGO_ChartDocument {
 	const { playtype } = V3ToGamePT(row.game);
 
 	return {
@@ -41,7 +41,7 @@ function mapRowToChartDocument(
 		playtype,
 		data: row.data as ChartDocumentData[GPTString],
 		versions: versions as Versions[GPTString][],
-	} as ChartDocument;
+	} as MONGO_ChartDocument;
 }
 
 /**
@@ -54,7 +54,7 @@ export async function GetChartsBySongPgId(
 	songPgId: string,
 	songLegacyId: number,
 	opts?: { omit2dxtraCharts?: boolean },
-): Promise<ChartDocument[]> {
+): Promise<MONGO_ChartDocument[]> {
 	let q = DB.selectFrom("chart")
 		.select([
 			"id",
@@ -102,11 +102,7 @@ export async function GetChartsBySongPgId(
 	}
 
 	return rows.map((row) =>
-		mapRowToChartDocument(
-			row,
-			songLegacyId,
-			versionsByChartId.get(row.id) ?? [],
-		),
+		mapRowToChartDocument(row, songLegacyId, versionsByChartId.get(row.id) ?? []),
 	);
 }
 
@@ -116,7 +112,7 @@ export async function GetChartsBySongPgId(
 export async function GetChartByPgIdOrLegacyId(
 	v3Game: Game,
 	chartIdParam: string,
-): Promise<ChartDocument | undefined> {
+): Promise<MONGO_ChartDocument | undefined> {
 	const chartRow = await DB.selectFrom("chart")
 		.select([
 			"id",

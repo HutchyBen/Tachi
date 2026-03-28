@@ -22,22 +22,22 @@ import { ApplyNTimes, RFA } from "#utils/misc";
 import fs from "fs";
 import path from "path";
 import {
-	type ChartDocument,
 	CHUNITHM_CLEAR_LAMPS,
 	CHUNITHM_GRADES,
 	CHUNITHM_NOTE_LAMPS,
-	type FolderDocument,
-	type GoalDocument,
-	type GoalSubscriptionDocument,
-	type ImportDocument,
-	type NotificationDocument,
-	type PBScoreDocument,
-	type QuestDocument,
-	type QuestSubscriptionDocument,
-	type ScoreDocument,
-	type SongDocument,
-	type UGPTSettingsDocument,
-	type UserDocument,
+	type MONGO_ChartDocument,
+	type MONGO_FolderDocument,
+	type MONGO_GoalDocument,
+	type MONGO_GoalSubscriptionDocument,
+	type MONGO_ImportDocument,
+	type MONGO_NotificationDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_QuestDocument,
+	type MONGO_QuestSubscriptionDocument,
+	type MONGO_ScoreDocument,
+	type MONGO_SongDocument,
+	type MONGO_UGPTSettingsDocument,
+	type MONGO_UserDocument,
 } from "tachi-common";
 
 import { dmf } from "./misc";
@@ -67,7 +67,7 @@ export const TestingIIDXSPDryScore: DryScore<"iidx:SP"> = {
 	importType: "file/eamusement-iidx-csv",
 };
 
-export const TestingIIDXSPScorePB: PBScoreDocument<"iidx:SP"> = {
+export const TestingIIDXSPScorePB: MONGO_PBScoreDocument<"iidx:SP"> = {
 	chartID: "c2311194e3897ddb5745b1760d2c0141f933e683",
 	userID: 1,
 	calculatedData: {
@@ -106,7 +106,7 @@ export const TestingIIDXSPScorePB: PBScoreDocument<"iidx:SP"> = {
 	timeAchieved: 10000,
 };
 
-export const TestingDDRSPScorePB: PBScoreDocument<"ddr:SP"> = {
+export const TestingDDRSPScorePB: MONGO_PBScoreDocument<"ddr:SP"> = {
 	calculatedData: {
 		flareSkill: 545,
 	},
@@ -144,7 +144,7 @@ export const TestingDDRSPScorePB: PBScoreDocument<"ddr:SP"> = {
 	userID: 1,
 };
 
-export const TestingJubeatPB: PBScoreDocument<"jubeat:Single"> = {
+export const TestingJubeatPB: MONGO_PBScoreDocument<"jubeat:Single"> = {
 	chartID: "b90a319f18d1a746b330b8f4cd6f74874f664421",
 	userID: 1,
 	calculatedData: {
@@ -178,7 +178,7 @@ export const TestingJubeatPB: PBScoreDocument<"jubeat:Single"> = {
 	timeAchieved: 10000,
 };
 
-export const TestingIIDXSPScore: ScoreDocument<"iidx:SP"> = {
+export const TestingIIDXSPScore: MONGO_ScoreDocument<"iidx:SP"> = {
 	service: "foo (DIRECT-MANUAL)",
 	game: "iidx",
 	playtype: "SP",
@@ -215,7 +215,7 @@ export const TestingIIDXSPScore: ScoreDocument<"iidx:SP"> = {
 	importType: "ir/direct-manual",
 };
 
-export const TestingDDRSPScore: ScoreDocument<"ddr:SP"> = {
+export const TestingDDRSPScore: MONGO_ScoreDocument<"ddr:SP"> = {
 	calculatedData: {
 		flareSkill: 545,
 	},
@@ -248,7 +248,7 @@ export const TestingDDRSPScore: ScoreDocument<"ddr:SP"> = {
 	userID: 1,
 };
 
-export const TestingSDVXScore: ScoreDocument<"sdvx:Single"> = {
+export const TestingSDVXScore: MONGO_ScoreDocument<"sdvx:Single"> = {
 	service: "foo (DIRECT-MANUAL)",
 	game: "sdvx",
 	playtype: "Single",
@@ -281,7 +281,7 @@ export const TestingSDVXScore: ScoreDocument<"sdvx:Single"> = {
 	importType: "ir/direct-manual",
 };
 
-export const TestingSDVXPB: PBScoreDocument<"sdvx:Single"> = {
+export const TestingSDVXPB: MONGO_PBScoreDocument<"sdvx:Single"> = {
 	game: "sdvx",
 	playtype: "Single",
 	userID: 1,
@@ -314,7 +314,7 @@ export const TestingSDVXPB: PBScoreDocument<"sdvx:Single"> = {
 	},
 };
 
-export const TestingSDVXAlbidaChart: ChartDocument<"sdvx:Single"> = {
+export const TestingSDVXAlbidaChart: MONGO_ChartDocument<"sdvx:Single"> = {
 	chartID: "5088a4d0e1ee9d0cc2f625934306e45b1a60699b",
 	legacyChartId: "5088a4d0e1ee9d0cc2f625934306e45b1a60699b",
 	difficulty: "ADV",
@@ -358,7 +358,7 @@ export const TestingKsHookSV6CStaticScore: KsHookSV6CStaticScore = {
 	timestamp: 1000,
 };
 
-export const TestingBMS7KScore: ScoreDocument<"bms:7K"> = {
+export const TestingBMS7KScore: MONGO_ScoreDocument<"bms:7K"> = {
 	calculatedData: {
 		sieglinde: 20,
 	},
@@ -420,7 +420,7 @@ export const TestingLR2HookScore: LR2HookScore = {
 	unixTimestamp: undefined,
 };
 
-export const TestingJubeatChart: ChartDocument<"jubeat:Single"> = {
+export const TestingJubeatChart: MONGO_ChartDocument<"jubeat:Single"> = {
 	chartID: "b90a319f18d1a746b330b8f4cd6f74874f664421",
 	legacyChartId: "b90a319f18d1a746b330b8f4cd6f74874f664421",
 	songID: 1,
@@ -437,7 +437,7 @@ export const TestingJubeatChart: ChartDocument<"jubeat:Single"> = {
 	versions: ["festo"],
 };
 
-export const TestingGitadoraChart: ChartDocument<"gitadora:Dora" | "gitadora:Gita"> = {
+export const TestingGitadoraChart: MONGO_ChartDocument<"gitadora:Dora" | "gitadora:Gita"> = {
 	chartID: "bf62dd6c78afaf6b4f95cce70b5b08af193c0c57",
 	legacyChartId: "bf62dd6c78afaf6b4f95cce70b5b08af193c0c57",
 	data: {
@@ -452,7 +452,7 @@ export const TestingGitadoraChart: ChartDocument<"gitadora:Dora" | "gitadora:Git
 	versions: ["konaste"],
 };
 
-export const TestingMaimaiChart: ChartDocument<"maimai:Single"> = {
+export const TestingMaimaiChart: MONGO_ChartDocument<"maimai:Single"> = {
 	chartID: "6e087e5f58519a2697374b9bff776a004046e952",
 	legacyChartId: "6e087e5f58519a2697374b9bff776a004046e952",
 	data: {
@@ -469,7 +469,7 @@ export const TestingMaimaiChart: ChartDocument<"maimai:Single"> = {
 	versions: ["finale"],
 };
 
-export const TestingMaimaiDXChart: ChartDocument<"maimaidx:Single"> = {
+export const TestingMaimaiDXChart: MONGO_ChartDocument<"maimaidx:Single"> = {
 	chartID: "fbde73d543f93cbad9ec67052a7165700c5c8df6",
 	legacyChartId: "fbde73d543f93cbad9ec67052a7165700c5c8df6",
 	data: {
@@ -485,7 +485,7 @@ export const TestingMaimaiDXChart: ChartDocument<"maimaidx:Single"> = {
 	versions: ["universeplus", "festival"],
 };
 
-export const TestingMusecaChart: ChartDocument<"museca:Single"> = {
+export const TestingMusecaChart: MONGO_ChartDocument<"museca:Single"> = {
 	chartID: "4f3a7bf907f7be54a0c531dd9077e58fd7b6bb9c",
 	legacyChartId: "4f3a7bf907f7be54a0c531dd9077e58fd7b6bb9c",
 	data: {
@@ -500,7 +500,7 @@ export const TestingMusecaChart: ChartDocument<"museca:Single"> = {
 	versions: ["1.5", "1.5-b"],
 };
 
-export const TestingPopnChart: ChartDocument<"popn:9B"> = {
+export const TestingPopnChart: MONGO_ChartDocument<"popn:9B"> = {
 	chartID: "7489166ddfb6ec780249823d5bda255611fbc528",
 	legacyChartId: "7489166ddfb6ec780249823d5bda255611fbc528",
 	data: {
@@ -516,7 +516,7 @@ export const TestingPopnChart: ChartDocument<"popn:9B"> = {
 	versions: ["peace", "kaimei"],
 };
 
-export const Testing511SPA: ChartDocument<"iidx:SP"> = {
+export const Testing511SPA: MONGO_ChartDocument<"iidx:SP"> = {
 	chartID: "c2311194e3897ddb5745b1760d2c0141f933e683",
 	legacyChartId: "c2311194e3897ddb5745b1760d2c0141f933e683",
 	difficulty: "ANOTHER",
@@ -552,7 +552,7 @@ export const Testing511SPA: ChartDocument<"iidx:SP"> = {
 	],
 };
 
-export const Testing511Song: SongDocument<"iidx"> = {
+export const Testing511Song: MONGO_SongDocument<"iidx"> = {
 	title: "5.1.1.",
 	artist: "dj nagureo",
 	id: 1,
@@ -564,7 +564,7 @@ export const Testing511Song: SongDocument<"iidx"> = {
 	},
 };
 
-export const TestingDDRSP: ChartDocument<"ddr:SP"> = {
+export const TestingDDRSP: MONGO_ChartDocument<"ddr:SP"> = {
 	chartID: "2fc2e0cfdda42addb7840b58be1df1f545310d66",
 	legacyChartId: "2fc2e0cfdda42addb7840b58be1df1f545310d66",
 	data: {
@@ -579,7 +579,7 @@ export const TestingDDRSP: ChartDocument<"ddr:SP"> = {
 	versions: ["a3"],
 };
 
-export const TestingDDRSong: SongDocument<"ddr"> = {
+export const TestingDDRSong: MONGO_SongDocument<"ddr"> = {
 	altTitles: [],
 	artist: "UZI-LAY",
 	data: {
@@ -591,7 +591,7 @@ export const TestingDDRSong: SongDocument<"ddr"> = {
 	title: "PUT YOUR FAITH IN ME",
 };
 
-export const TestingAlbidaADV: ChartDocument<"sdvx:Single"> = {
+export const TestingAlbidaADV: MONGO_ChartDocument<"sdvx:Single"> = {
 	chartID: "5088a4d0e1ee9d0cc2f625934306e45b1a60699b",
 	legacyChartId: "5088a4d0e1ee9d0cc2f625934306e45b1a60699b",
 	difficulty: "ADV",
@@ -607,7 +607,7 @@ export const TestingAlbidaADV: ChartDocument<"sdvx:Single"> = {
 	versions: ["booth", "inf", "gw", "heaven", "vivid", "exceed", "konaste"],
 };
 
-export const TestingSDVXAlbidaSong: SongDocument<"sdvx"> = {
+export const TestingSDVXAlbidaSong: MONGO_SongDocument<"sdvx"> = {
 	title: "ALBIDA Powerless Mix",
 	artist: "無力P",
 	id: 1,
@@ -618,7 +618,7 @@ export const TestingSDVXAlbidaSong: SongDocument<"sdvx"> = {
 	},
 };
 
-export const BMSGazerChart: ChartDocument<"bms:7K"> = {
+export const BMSGazerChart: MONGO_ChartDocument<"bms:7K"> = {
 	songID: 27339,
 	chartID: "88eb6cc5683e2740cbd07f588a5f3db1db8d467b",
 	legacyChartId: "88eb6cc5683e2740cbd07f588a5f3db1db8d467b",
@@ -644,7 +644,7 @@ export const BMSGazerChart: ChartDocument<"bms:7K"> = {
 	versions: [],
 };
 
-export const BMSGazerSong: SongDocument<"bms"> = {
+export const BMSGazerSong: MONGO_SongDocument<"bms"> = {
 	id: 27339,
 	title: "gazer [MANIAQ]",
 	artist: "scytheleg / obj.siokaze",
@@ -658,7 +658,7 @@ export const BMSGazerSong: SongDocument<"bms"> = {
 	altTitles: [],
 };
 
-export const CHUNITHMBBKKChart: ChartDocument<"chunithm:Single"> = {
+export const CHUNITHMBBKKChart: MONGO_ChartDocument<"chunithm:Single"> = {
 	chartID: "192b96bdb6150f80ba6412ce02df1249e16c0cb0",
 	legacyChartId: "192b96bdb6150f80ba6412ce02df1249e16c0cb0",
 	difficulty: "BASIC",
@@ -673,7 +673,7 @@ export const CHUNITHMBBKKChart: ChartDocument<"chunithm:Single"> = {
 	versions: ["paradiselost"],
 };
 
-export const TestingChunithmScorePB: PBScoreDocument<"chunithm:Single"> = {
+export const TestingChunithmScorePB: MONGO_PBScoreDocument<"chunithm:Single"> = {
 	chartID: "192b96bdb6150f80ba6412ce02df1249e16c0cb0",
 	userID: 1,
 	calculatedData: {
@@ -708,7 +708,7 @@ export const TestingChunithmScorePB: PBScoreDocument<"chunithm:Single"> = {
 	timeAchieved: 10000,
 };
 
-export const TestingDoraChart: ChartDocument<"gitadora:Dora"> = {
+export const TestingDoraChart: MONGO_ChartDocument<"gitadora:Dora"> = {
 	songID: 0,
 	chartID: "29f0bfab357ba54e3fd0176fb3cbc578c9ec8df5",
 	legacyChartId: "29f0bfab357ba54e3fd0176fb3cbc578c9ec8df5",
@@ -723,7 +723,7 @@ export const TestingDoraChart: ChartDocument<"gitadora:Dora"> = {
 	versions: ["konaste"],
 };
 
-export const TestingWaccaPupaExp: ChartDocument<"wacca:Single"> = {
+export const TestingWaccaPupaExp: MONGO_ChartDocument<"wacca:Single"> = {
 	songID: 77,
 	chartID: "2abcf2da86f3d968dbe07695ab7ebf6b79cb0841",
 	legacyChartId: "2abcf2da86f3d968dbe07695ab7ebf6b79cb0841",
@@ -738,7 +738,7 @@ export const TestingWaccaPupaExp: ChartDocument<"wacca:Single"> = {
 	versions: ["reverse"],
 };
 
-export const TestingWaccaPupaSong: SongDocument<"wacca"> = {
+export const TestingWaccaPupaSong: MONGO_SongDocument<"wacca"> = {
 	id: 77,
 	title: "PUPA",
 	artist: "モリモリあつし",
@@ -813,7 +813,7 @@ export const TestingBarbatosScore: BarbatosScore = {
 	is_skill_analyzer: false,
 };
 
-export const HC511Goal: GoalDocument = {
+export const HC511Goal: MONGO_GoalDocument = {
 	charts: {
 		type: "single",
 		data: Testing511SPA.chartID,
@@ -829,7 +829,7 @@ export const HC511Goal: GoalDocument = {
 	},
 };
 
-export const HC511UserGoal: GoalSubscriptionDocument = {
+export const HC511UserGoal: MONGO_GoalSubscriptionDocument = {
 	achieved: false,
 	wasInstantlyAchieved: false,
 	timeAchieved: null,
@@ -845,7 +845,7 @@ export const HC511UserGoal: GoalSubscriptionDocument = {
 	wasAssignedStandalone: false,
 };
 
-export const TestingIIDXFolderSP10: FolderDocument = {
+export const TestingIIDXFolderSP10: MONGO_FolderDocument = {
 	title: "Level 10",
 	game: "iidx",
 	playtype: "SP",
@@ -858,7 +858,7 @@ export const TestingIIDXFolderSP10: FolderDocument = {
 	inactive: false,
 };
 
-export const TestingIIDXSPQuest: QuestDocument = {
+export const TestingIIDXSPQuest: MONGO_QuestDocument = {
 	desc: "testing quest",
 	game: "iidx",
 	playtype: "SP",
@@ -892,21 +892,21 @@ export const TestingIIDXSPQuest: QuestDocument = {
 	],
 };
 
-export const IIDXSPQuestGoals: Array<GoalDocument> = [
-	dmf(HC511Goal, { goalID: "eg_goal_1" }) as GoalDocument,
+export const IIDXSPQuestGoals: Array<MONGO_GoalDocument> = [
+	dmf(HC511Goal, { goalID: "eg_goal_1" }) as MONGO_GoalDocument,
 	dmf(HC511Goal, { goalID: "eg_goal_2", criteria: { value: 2 } }),
 	dmf(HC511Goal, { goalID: "eg_goal_3", criteria: { key: "score", value: 300 } }),
 	dmf(HC511Goal, { goalID: "eg_goal_4", criteria: { key: "score", value: 1100 } }),
 ];
 
-export const IIDXSPQuestGoalSubs: Array<GoalSubscriptionDocument> = [
-	dmf(HC511UserGoal, { goalID: "eg_goal_1" }) as GoalSubscriptionDocument,
-	dmf(HC511UserGoal, { goalID: "eg_goal_2" }) as GoalSubscriptionDocument,
-	dmf(HC511UserGoal, { goalID: "eg_goal_3" }) as GoalSubscriptionDocument,
-	dmf(HC511UserGoal, { goalID: "eg_goal_4" }) as GoalSubscriptionDocument,
+export const IIDXSPQuestGoalSubs: Array<MONGO_GoalSubscriptionDocument> = [
+	dmf(HC511UserGoal, { goalID: "eg_goal_1" }) as MONGO_GoalSubscriptionDocument,
+	dmf(HC511UserGoal, { goalID: "eg_goal_2" }) as MONGO_GoalSubscriptionDocument,
+	dmf(HC511UserGoal, { goalID: "eg_goal_3" }) as MONGO_GoalSubscriptionDocument,
+	dmf(HC511UserGoal, { goalID: "eg_goal_4" }) as MONGO_GoalSubscriptionDocument,
 ];
 
-export const TestingIIDXSPQuestSub: QuestSubscriptionDocument = {
+export const TestingIIDXSPQuestSub: MONGO_QuestSubscriptionDocument = {
 	userID: 1,
 	achieved: false,
 	game: "iidx",
@@ -919,7 +919,10 @@ export const TestingIIDXSPQuestSub: QuestSubscriptionDocument = {
 };
 
 let KTDATA_CACHE:
-	| { charts: Array<ChartDocument<"iidx:DP" | "iidx:SP">>; songs: Array<SongDocument<"iidx">> }
+	| {
+			charts: Array<MONGO_ChartDocument<"iidx:DP" | "iidx:SP">>;
+			songs: Array<MONGO_SongDocument<"iidx">>;
+	  }
 	| undefined;
 
 export async function LoadTachiIIDXData() {
@@ -930,9 +933,9 @@ export async function LoadTachiIIDXData() {
 		songs = KTDATA_CACHE.songs;
 		charts = KTDATA_CACHE.charts;
 	} else {
-		songs = GetKTDataJSON("./tachi/tachi-songs-iidx.json") as Array<SongDocument<"iidx">>;
+		songs = GetKTDataJSON("./tachi/tachi-songs-iidx.json") as Array<MONGO_SongDocument<"iidx">>;
 		charts = GetKTDataJSON("./tachi/tachi-charts-iidx.json") as Array<
-			ChartDocument<"iidx:DP" | "iidx:SP">
+			MONGO_ChartDocument<"iidx:DP" | "iidx:SP">
 		>;
 
 		KTDATA_CACHE = { songs, charts };
@@ -998,7 +1001,7 @@ export const MockBarbatosSDVX6Score: BarbatosSDVX6Score = {
 	vol_error: 15,
 };
 
-export const TestingUSCChart: ChartDocument<"usc:Controller" | "usc:Keyboard"> = {
+export const TestingUSCChart: MONGO_ChartDocument<"usc:Controller" | "usc:Keyboard"> = {
 	chartID: "USC_CHART_ID",
 	legacyChartId: "USC_CHART_ID",
 	difficulty: "NOV",
@@ -1042,7 +1045,7 @@ export const uscScore: USCClientScore = {
 	},
 };
 
-export const FakeOtherUser: UserDocument = {
+export const FakeOtherUser: MONGO_UserDocument = {
 	id: 2,
 	username: "other_user",
 	about: "",
@@ -1057,7 +1060,7 @@ export const FakeOtherUser: UserDocument = {
 	usernameLowercase: "other_user",
 };
 
-export const FakeGameSettings: UGPTSettingsDocument = {
+export const FakeGameSettings: MONGO_UGPTSettingsDocument = {
 	game: "iidx",
 	playtype: "SP",
 	preferences: {
@@ -1077,7 +1080,7 @@ export const FakeGameSettings: UGPTSettingsDocument = {
 	userID: 1,
 };
 
-export const FakeImport: ImportDocument = {
+export const FakeImport: MONGO_ImportDocument = {
 	classDeltas: [],
 	createdSessions: [],
 	errors: [],
@@ -1095,7 +1098,7 @@ export const FakeImport: ImportDocument = {
 	userIntent: false,
 };
 
-export const FakeNotification: NotificationDocument = {
+export const FakeNotification: MONGO_NotificationDocument = {
 	title: "fake notif",
 	notifID: "fake_notif",
 	read: false,
@@ -1389,7 +1392,7 @@ export const FakeChunitachiBatchManual = {
 	],
 };
 
-export const TestingArcaeaSheriruthSong: SongDocument<"arcaea"> = {
+export const TestingArcaeaSheriruthSong: MONGO_SongDocument<"arcaea"> = {
 	altTitles: [],
 	artist: "Team Grimoire",
 	data: {
@@ -1410,7 +1413,7 @@ export const TestingArcaeaSheriruthSong: SongDocument<"arcaea"> = {
 	title: "Sheriruth",
 };
 
-export const TestingArcaeaSheriruthFTR: ChartDocument<"arcaea:Touch"> = {
+export const TestingArcaeaSheriruthFTR: MONGO_ChartDocument<"arcaea:Touch"> = {
 	chartID: "48de13e0be17a282eed6ef97e6e1478eb59bc55e",
 	legacyChartId: "48de13e0be17a282eed6ef97e6e1478eb59bc55e",
 	data: {
@@ -1426,7 +1429,7 @@ export const TestingArcaeaSheriruthFTR: ChartDocument<"arcaea:Touch"> = {
 	versions: ["mobile"],
 };
 
-export const TestingOngekiChart: ChartDocument<"ongeki:Single"> = {
+export const TestingOngekiChart: MONGO_ChartDocument<"ongeki:Single"> = {
 	chartID: "213796bdb6150f80ba6412ce69df1249e16c0cb0",
 	legacyChartId: "213796bdb6150f80ba6412ce69df1249e16c0cb0",
 	data: {
@@ -1443,7 +1446,7 @@ export const TestingOngekiChart: ChartDocument<"ongeki:Single"> = {
 	versions: ["brightMemory3", "brightMemory3Omni"],
 };
 
-export const TestingOngekiScorePB: PBScoreDocument<"ongeki:Single"> = {
+export const TestingOngekiScorePB: MONGO_PBScoreDocument<"ongeki:Single"> = {
 	chartID: "213796bdb6150f80ba6412ce69df1249e16c0cb0",
 	userID: 1,
 	calculatedData: {
@@ -1480,7 +1483,7 @@ export const TestingOngekiScorePB: PBScoreDocument<"ongeki:Single"> = {
 	timeAchieved: 10000,
 };
 
-export const TestingOngekiChartConverter: ChartDocument<"ongeki:Single"> = {
+export const TestingOngekiChartConverter: MONGO_ChartDocument<"ongeki:Single"> = {
 	chartID: "e5e4ee3d4feb233c399751b3ba3daf8ba149c9e6",
 	legacyChartId: "e5e4ee3d4feb233c399751b3ba3daf8ba149c9e6",
 	data: {
@@ -1497,7 +1500,7 @@ export const TestingOngekiChartConverter: ChartDocument<"ongeki:Single"> = {
 	versions: ["brightMemory3Omni", "brightMemory3"],
 };
 
-export const TestingOngekiSongConverter: SongDocument<"ongeki"> = {
+export const TestingOngekiSongConverter: MONGO_SongDocument<"ongeki"> = {
 	altTitles: ["SENOTETOHETSUTEITSUTENNO"],
 	artist: "本城香澄（CV：岩橋由佳）「Re:ステージ！プリズムステップ」",
 	data: {
@@ -1509,7 +1512,7 @@ export const TestingOngekiSongConverter: SongDocument<"ongeki"> = {
 	title: "せーので跳べって言ってんの！",
 };
 
-export const TestingChunithmChartConverter: ChartDocument<"chunithm:Single"> = {
+export const TestingChunithmChartConverter: MONGO_ChartDocument<"chunithm:Single"> = {
 	chartID: "fbba26a6a223b1dd0bf8ef139cfee83114b91086",
 	legacyChartId: "fbba26a6a223b1dd0bf8ef139cfee83114b91086",
 	data: {
@@ -1524,7 +1527,7 @@ export const TestingChunithmChartConverter: ChartDocument<"chunithm:Single"> = {
 	versions: ["paradiselost", "sun", "sun-omni", "sunplus-omni", "luminous-omni"],
 };
 
-export const TestingChunithmSongConverter: SongDocument<"chunithm"> = {
+export const TestingChunithmSongConverter: MONGO_SongDocument<"chunithm"> = {
 	altTitles: [],
 	artist: "分島花音「selector infected WIXOSS」",
 	data: {
@@ -1537,7 +1540,7 @@ export const TestingChunithmSongConverter: SongDocument<"chunithm"> = {
 	title: "killy killy JOKER",
 };
 
-export const TestingMaimaiDXSongConverter: SongDocument<"maimaidx"> = {
+export const TestingMaimaiDXSongConverter: MONGO_SongDocument<"maimaidx"> = {
 	altTitles: [],
 	artist: "suzu",
 	data: {
@@ -1548,7 +1551,7 @@ export const TestingMaimaiDXSongConverter: SongDocument<"maimaidx"> = {
 	title: "宿星審判",
 };
 
-export const TestingMaimaiDXChartConverter: ChartDocument<"maimaidx:Single"> = {
+export const TestingMaimaiDXChartConverter: MONGO_ChartDocument<"maimaidx:Single"> = {
 	chartID: "fab3d632610b9b98ee1e4f68e9ecf0161f9cb8cd",
 	legacyChartId: "fab3d632610b9b98ee1e4f68e9ecf0161f9cb8cd",
 	data: {

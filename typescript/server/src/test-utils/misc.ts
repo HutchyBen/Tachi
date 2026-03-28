@@ -1,24 +1,24 @@
 import type { DeepPartial } from "#utils/types";
-import { MongoChartLegacyId } from "tachi-common";
-import type {
-	ChartDocument,
-	GameGroup,
-	GoalDocument,
-	GoalSubscriptionDocument,
-	GPTString,
-	ImportDocument,
-	integer,
-	MongoScoreData,
-	NotificationDocument,
-	PBScoreDocument,
-	Playtype,
-	ScoreDocument,
-	UGPTSettingsDocument,
-	UserDocument,
-	UserGameStats,
-} from "tachi-common";
 
 import deepmerge from "deepmerge";
+import {
+	type GameGroup,
+	type GPTString,
+	type integer,
+	type MONGO_ChartDocument,
+	type MONGO_GoalDocument,
+	type MONGO_GoalSubscriptionDocument,
+	type MONGO_ImportDocument,
+	type MONGO_NotificationDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreData,
+	type MONGO_ScoreDocument,
+	type MONGO_UGPTSettingsDocument,
+	type MONGO_UserDocument,
+	type MONGO_UserGameStats,
+	MongoChartLegacyId,
+	type Playtype,
+} from "tachi-common";
 
 import {
 	FakeGameSettings,
@@ -66,7 +66,7 @@ export function dmf<T extends object>(base: T, modifant: DeepPartial<T>): T {
  *
  * @param userID - The userID this fake user should have.
  */
-export function mkFakeUser(userID: integer, modifant: DeepPartial<UserDocument> = {}) {
+export function mkFakeUser(userID: integer, modifant: DeepPartial<MONGO_UserDocument> = {}) {
 	return dmf(FakeOtherUser, {
 		id: userID,
 		username: `user${userID}`,
@@ -79,7 +79,7 @@ export function mkFakeGameSettings(
 	userID: integer,
 	game: GameGroup,
 	playtype: Playtype,
-	modifant: DeepPartial<UGPTSettingsDocument> = {},
+	modifant: DeepPartial<MONGO_UGPTSettingsDocument> = {},
 ) {
 	return dmf(FakeGameSettings, {
 		userID,
@@ -89,46 +89,46 @@ export function mkFakeGameSettings(
 	});
 }
 
-export function mkFakeImport(modifant: DeepPartial<ImportDocument> = {}) {
+export function mkFakeImport(modifant: DeepPartial<MONGO_ImportDocument> = {}) {
 	return dmf(FakeImport, modifant);
 }
 
-export function mkFakeScoreIIDXSP(modifant: DeepPartial<ScoreDocument<"iidx:SP">> = {}) {
+export function mkFakeScoreIIDXSP(modifant: DeepPartial<MONGO_ScoreDocument<"iidx:SP">> = {}) {
 	return dmf(TestingIIDXSPScore, modifant);
 }
 
-export function mkFakeScoreSDVX(modifant: DeepPartial<ScoreDocument<"sdvx:Single">> = {}) {
+export function mkFakeScoreSDVX(modifant: DeepPartial<MONGO_ScoreDocument<"sdvx:Single">> = {}) {
 	return dmf(TestingSDVXScore, modifant);
 }
 
-export function mkFakePBIIDXSP(modifant: DeepPartial<PBScoreDocument<"iidx:SP">> = {}) {
+export function mkFakePBIIDXSP(modifant: DeepPartial<MONGO_PBScoreDocument<"iidx:SP">> = {}) {
 	return dmf(TestingIIDXSPScorePB, modifant);
 }
 
-export function mkFakePBDDRSP(modifant: DeepPartial<PBScoreDocument<"ddr:SP">> = {}) {
+export function mkFakePBDDRSP(modifant: DeepPartial<MONGO_PBScoreDocument<"ddr:SP">> = {}) {
 	return dmf(TestingDDRSPScorePB, modifant);
 }
 
-export function mkFakePBJubeat(modifant: DeepPartial<PBScoreDocument<"jubeat:Single">> = {}) {
+export function mkFakePBJubeat(modifant: DeepPartial<MONGO_PBScoreDocument<"jubeat:Single">> = {}) {
 	return dmf(TestingJubeatPB, modifant);
 }
 
-export function mkFakeNotification(modifant: DeepPartial<NotificationDocument> = {}) {
+export function mkFakeNotification(modifant: DeepPartial<MONGO_NotificationDocument> = {}) {
 	return dmf(FakeNotification, modifant);
 }
 
-export function mkFakeGoal(modifant: DeepPartial<GoalDocument> = {}) {
+export function mkFakeGoal(modifant: DeepPartial<MONGO_GoalDocument> = {}) {
 	return dmf(HC511Goal, modifant);
 }
 
-export function mkFakeGoalSub(modifant: DeepPartial<GoalSubscriptionDocument> = {}) {
+export function mkFakeGoalSub(modifant: DeepPartial<MONGO_GoalSubscriptionDocument> = {}) {
 	return dmf(HC511UserGoal, modifant);
 }
 
 export function mkFakeGameStats(
 	userID: integer,
-	modifant: DeepPartial<UserGameStats> = {},
-): UserGameStats {
+	modifant: DeepPartial<MONGO_UserGameStats> = {},
+): MONGO_UserGameStats {
 	return dmf(
 		{
 			userID,
@@ -144,7 +144,7 @@ export function mkFakeGameStats(
 
 export function mkFakeSDVXChart(
 	chartID: string,
-	modifant: DeepPartial<ChartDocument<"sdvx:Single">> = {},
+	modifant: DeepPartial<MONGO_ChartDocument<"sdvx:Single">> = {},
 ) {
 	return dmf(TestingSDVXAlbidaChart, {
 		chartID,
@@ -152,16 +152,16 @@ export function mkFakeSDVXChart(
 	});
 }
 
-export function mkFakeSDVXPB(modifant: DeepPartial<PBScoreDocument<"sdvx:Single">> = {}) {
+export function mkFakeSDVXPB(modifant: DeepPartial<MONGO_PBScoreDocument<"sdvx:Single">> = {}) {
 	return dmf(TestingSDVXPB, modifant);
 }
 
 export function mkMockPB<GPT extends GPTString>(
 	game: GameGroup,
 	playtype: Playtype,
-	chart: ChartDocument<GPT>,
-	scoreData: MongoScoreData<GPT>,
-): PBScoreDocument<GPT> {
+	chart: MONGO_ChartDocument<GPT>,
+	scoreData: MONGO_ScoreData<GPT>,
+): MONGO_PBScoreDocument<GPT> {
 	return {
 		userID: 1,
 		composedFrom: [{ name: "Best Percent", scoreID: `TEST_${game}:${playtype}_SCORE` }],
@@ -181,9 +181,9 @@ export function mkMockPB<GPT extends GPTString>(
 export function mkMockScore<GPT extends GPTString>(
 	game: GameGroup,
 	playtype: Playtype,
-	chart: ChartDocument<GPT>,
-	scoreData: MongoScoreData<GPT>,
-): ScoreDocument<GPT> {
+	chart: MONGO_ChartDocument<GPT>,
+	scoreData: MONGO_ScoreData<GPT>,
+): MONGO_ScoreDocument<GPT> {
 	// @ts-expect-error whatever lol
 	return {
 		userID: 1,

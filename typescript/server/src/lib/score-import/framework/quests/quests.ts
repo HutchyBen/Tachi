@@ -4,10 +4,10 @@ import type {
 	GameGroup,
 	GoalImportInfo,
 	integer,
+	MONGO_QuestDocument,
+	MONGO_QuestSubscriptionDocument,
 	Playtype,
-	QuestDocument,
 	QuestImportInfo,
-	QuestSubscriptionDocument,
 } from "tachi-common";
 
 import { EvaluateQuestProgress } from "#lib/targets/quests";
@@ -29,8 +29,8 @@ export async function UpdateUsersQuests(
 }
 
 export async function UpdateQuestsForUser(
-	quests: Array<QuestDocument>,
-	questSubs: Array<QuestSubscriptionDocument>,
+	quests: Array<MONGO_QuestDocument>,
+	questSubs: Array<MONGO_QuestSubscriptionDocument>,
 
 	game: GameGroup,
 	userID: integer,
@@ -38,13 +38,13 @@ export async function UpdateQuestsForUser(
 ) {
 	// create a map here to avoid linear searching when
 	// co-iterating
-	const questSubMap = new Map<string, QuestSubscriptionDocument>();
+	const questSubMap = new Map<string, MONGO_QuestSubscriptionDocument>();
 
 	for (const um of questSubs) {
 		questSubMap.set(um.questID, um);
 	}
 
-	const bwrite: Array<BulkWriteUpdateOneOperation<QuestSubscriptionDocument>> = [];
+	const bwrite: Array<BulkWriteUpdateOneOperation<MONGO_QuestSubscriptionDocument>> = [];
 
 	const importQuestInfo: Array<QuestImportInfo> = [];
 
@@ -62,7 +62,7 @@ export async function UpdateQuestsForUser(
 				return;
 			}
 
-			const bwriteOp: BulkWriteUpdateOneOperation<QuestSubscriptionDocument> = {
+			const bwriteOp: BulkWriteUpdateOneOperation<MONGO_QuestSubscriptionDocument> = {
 				updateOne: {
 					filter: { questID: quest.questID, userID },
 					update: {

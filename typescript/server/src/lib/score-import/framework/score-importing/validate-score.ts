@@ -4,11 +4,11 @@ import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implement
 import { RunValidators } from "#game-implementations/games/_common";
 import { ONE_HOUR } from "#lib/constants/time";
 import {
-	type ChartDocument,
 	GetGPTConfig,
 	GetGPTString,
 	type GPTString,
-	type ScoreDocument,
+	type MONGO_ChartDocument,
+	type MONGO_ScoreDocument,
 } from "tachi-common";
 
 import { InvalidScoreFailure } from "../common/converter-failures";
@@ -18,7 +18,7 @@ import { InvalidScoreFailure } from "../common/converter-failures";
  *
  * @returns nothing. This will throw an InvalidScoreFailure on error.
  */
-export function ValidateScore(score: ScoreDocument, chart: ChartDocument): void {
+export function ValidateScore(score: MONGO_ScoreDocument, chart: MONGO_ChartDocument): void {
 	const leniency = ONE_HOUR * 24;
 
 	if (score.timeAchieved !== null && score.timeAchieved > Date.now() + leniency) {
@@ -28,7 +28,7 @@ export function ValidateScore(score: ScoreDocument, chart: ChartDocument): void 
 	ValidateScoreGameSpecific(score, chart);
 }
 
-function ValidateScoreGameSpecific(score: ScoreDocument, chart: ChartDocument): void {
+function ValidateScoreGameSpecific(score: MONGO_ScoreDocument, chart: MONGO_ChartDocument): void {
 	const gptString = GetGPTString(score.game, score.playtype);
 	const gptConfig = GetGPTConfig(gptString);
 	const gptImpl = GPT_SERVER_IMPLEMENTATIONS[gptString];
@@ -83,9 +83,9 @@ function ValidateMetrics(
 	errs: Array<string>,
 	metrics: Record<string, ConfScoreMetric>,
 	gptString: GPTString,
-	score: ScoreDocument,
-	chart: ChartDocument,
-	valueGetter: (s: ScoreDocument, metric: string) => any,
+	score: MONGO_ScoreDocument,
+	chart: MONGO_ChartDocument,
+	valueGetter: (s: MONGO_ScoreDocument, metric: string) => any,
 	optional?: boolean,
 ) {
 	const gptImpl = GPT_SERVER_IMPLEMENTATIONS[gptString];

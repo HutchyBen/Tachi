@@ -6,15 +6,15 @@ import { CreateSessionCalcData } from "#lib/score-import/framework/calculated-da
 import { UpdateChartRanking } from "#lib/score-import/framework/pb/create-pb-doc";
 import { CreateFullScoreData } from "#lib/score-import/framework/score-importing/derivers";
 import { CreateScoreID } from "#lib/score-import/framework/score-importing/score-id";
-import { GetGPTString, type GPTString, type ScoreDocument } from "tachi-common";
+import { GetGPTString, type GPTString, type MONGO_ScoreDocument } from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import MONGODB_KILL from "#services/mongo/db";
 import { UpdateAllPBs } from "#utils/calculations/recalc-scores";
 import { FormatUserDoc, GetUserWithID } from "#utils/user";
 
 type NewScore =
-	| ({ scoreData: DryScoreData<GPTString> } & Omit<ScoreDocument, "scoreData">)
-	| ScoreDocument;
+	| ({ scoreData: DryScoreData<GPTString> } & Omit<MONGO_ScoreDocument, "scoreData">)
+	| MONGO_ScoreDocument;
 
 /**
  * Updates a score from oldScore to newScore, applying all necessary state
@@ -26,7 +26,7 @@ type NewScore =
  * @note You don't need to recalc the scoreID for newScore, it's done for you.
  */
 export default async function UpdateScore(
-	oldScore: ScoreDocument,
+	oldScore: MONGO_ScoreDocument,
 	newScore: NewScore,
 	updateOldChart = true,
 	skipUpdatingPBs = false,
@@ -109,7 +109,7 @@ export default async function UpdateScore(
 			{
 				scoreID: oldScoreID,
 			},
-			{ $set: newScore as ScoreDocument },
+			{ $set: newScore as MONGO_ScoreDocument },
 		);
 	} catch (err) {
 		log.error(err);

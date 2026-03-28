@@ -2,7 +2,7 @@ import type {
 	GameGroup,
 	GPTString,
 	integer,
-	PBScoreDocument,
+	MONGO_PBScoreDocument,
 	Playtype,
 	ScoreRatingAlgorithms,
 } from "tachi-common";
@@ -99,39 +99,41 @@ export async function GetBestRatingOnSongs(
 	playtype: Playtype,
 	ratingProp: "skill",
 	limit: integer,
-): Promise<Array<PBScoreDocument>> {
-	const r: Array<{ doc: PBScoreDocument }> = await MONGODB_KILL["personal-bests"].aggregate([
-		{
-			$match: {
-				game,
-				playtype,
-				userID,
-				songID: { $in: songIDs },
+): Promise<Array<MONGO_PBScoreDocument>> {
+	const r: Array<{ doc: MONGO_PBScoreDocument }> = await MONGODB_KILL["personal-bests"].aggregate(
+		[
+			{
+				$match: {
+					game,
+					playtype,
+					userID,
+					songID: { $in: songIDs },
+				},
 			},
-		},
-		{
-			$sort: {
-				[`calculatedData.${ratingProp}`]: -1,
+			{
+				$sort: {
+					[`calculatedData.${ratingProp}`]: -1,
+				},
 			},
-		},
-		{
-			$group: {
-				_id: "$songID",
-				doc: { $first: "$$ROOT" },
+			{
+				$group: {
+					_id: "$songID",
+					doc: { $first: "$$ROOT" },
+				},
 			},
-		},
 
-		// for some godforsaken reason you have to sort twice. after a grouping
-		// the sort order becomes nondeterministic
-		{
-			$sort: {
-				[`doc.calculatedData.${ratingProp}`]: -1,
+			// for some godforsaken reason you have to sort twice. after a grouping
+			// the sort order becomes nondeterministic
+			{
+				$sort: {
+					[`doc.calculatedData.${ratingProp}`]: -1,
+				},
 			},
-		},
-		{
-			$limit: limit,
-		},
-	]);
+			{
+				$limit: limit,
+			},
+		],
+	);
 
 	return r.map((e) => e.doc);
 }

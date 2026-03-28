@@ -2,17 +2,18 @@ import type { FilterQuery } from "mongodb";
 
 import { log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db.js";
 import {
 	FormatChart,
 	type GameGroup,
-	type GoalDocument,
-	type GoalSubscriptionDocument,
 	type integer,
-	type PBScoreDocument,
-	type QuestDocument,
-	type QuestlineDocument,
-	type QuestSubscriptionDocument,
-	type ScoreDocument,
+	type MONGO_GoalDocument,
+	type MONGO_GoalSubscriptionDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_QuestDocument,
+	type MONGO_QuestlineDocument,
+	type MONGO_QuestSubscriptionDocument,
+	type MONGO_ScoreDocument,
 } from "tachi-common";
 
 export async function GetNextCounterValue(counterName: string): Promise<integer> {
@@ -66,7 +67,7 @@ export async function DecrementCounterValue(counterName: string): Promise<intege
 }
 
 export async function GetRelevantSongsAndCharts(
-	scores: Array<PBScoreDocument | ScoreDocument>,
+	scores: Array<MONGO_PBScoreDocument | MONGO_ScoreDocument>,
 	game: GameGroup,
 ) {
 	const [songs, charts] = await Promise.all([
@@ -130,8 +131,16 @@ export async function GetSongForIDGuaranteed(game: GameGroup, songID: integer) {
 	return song;
 }
 
+export async function GetFolder(folderID: string) {
+	return DB.selectFrom("folder")
+		.select(SELECT_FOLDER)
+		.where("id", "=", folderID)
+		.executeTakeFirst()
+		.then((res) => (res ? ToFolderDocument(res) : null));
+}
+
 export async function GetFolderForIDGuaranteed(folderID: string) {
-	const folder = await MONGODB_KILL.folders.findOne({ folderID });
+	const folder = await GetFolder(folderID);
 
 	if (!folder) {
 		throw new Error(`Couldn't find folder with ID ${folderID}.`);
@@ -175,10 +184,10 @@ export async function HumaniseChartID(game: GameGroup, chartID: string) {
  * @returns - The goals and their subs.
  */
 export async function GetRecentlyAchievedGoals(
-	baseQuery: Omit<FilterQuery<GoalSubscriptionDocument>, "achieved">,
+	baseQuery: Omit<FilterQuery<MONGO_GoalSubscriptionDocument>, "achieved">,
 	limit = 100,
 ) {
-	const query: FilterQuery<GoalSubscriptionDocument> = {
+	const query: FilterQuery<MONGO_GoalSubscriptionDocument> = {
 		...baseQuery,
 		wasInstantlyAchieved: false,
 		achieved: true,
@@ -206,10 +215,10 @@ export async function GetRecentlyAchievedGoals(
  * @returns - The goals and their subs.
  */
 export async function GetRecentlyInteractedGoals(
-	baseQuery: Omit<FilterQuery<GoalSubscriptionDocument>, "achieved">,
+	baseQuery: Omit<FilterQuery<MONGO_GoalSubscriptionDocument>, "achieved">,
 	limit = 100,
 ) {
-	const query: FilterQuery<GoalSubscriptionDocument> = {
+	const query: FilterQuery<MONGO_GoalSubscriptionDocument> = {
 		...baseQuery,
 		wasInstantlyAchieved: false,
 		achieved: false,
@@ -238,10 +247,10 @@ export async function GetRecentlyInteractedGoals(
  * @returns - The quests and their subs.
  */
 export async function GetRecentlyAchievedQuests(
-	baseQuery: Omit<FilterQuery<QuestSubscriptionDocument>, "achieved">,
+	baseQuery: Omit<FilterQuery<MONGO_QuestSubscriptionDocument>, "achieved">,
 	limit = 100,
 ) {
-	const query: FilterQuery<QuestSubscriptionDocument> = {
+	const query: FilterQuery<MONGO_QuestSubscriptionDocument> = {
 		...baseQuery,
 		wasInstantlyAchieved: false,
 		achieved: true,
@@ -269,10 +278,10 @@ export async function GetRecentlyAchievedQuests(
  * @returns - The quests and their subs.
  */
 export async function GetRecentlyInteractedQuests(
-	baseQuery: Omit<FilterQuery<QuestSubscriptionDocument>, "achieved">,
+	baseQuery: Omit<FilterQuery<MONGO_QuestSubscriptionDocument>, "achieved">,
 	limit = 100,
 ) {
-	const query: FilterQuery<QuestSubscriptionDocument> = {
+	const query: FilterQuery<MONGO_QuestSubscriptionDocument> = {
 		...baseQuery,
 		lastInteraction: { $ne: null },
 		achieved: false,
@@ -294,10 +303,10 @@ export async function GetRecentlyInteractedQuests(
 }
 
 export async function GetMostSubscribedGoals(
-	query: FilterQuery<GoalSubscriptionDocument>,
+	query: FilterQuery<MONGO_GoalSubscriptionDocument>,
 	limit = 100,
-): Promise<Array<{ __subscriptions: integer } & GoalDocument>> {
-	const mostSubscribedGoals: Array<{ goal: GoalDocument; subscriptions: integer }> =
+): Promise<Array<{ __subscriptions: integer } & MONGO_GoalDocument>> {
+	const mostSubscribedGoals: Array<{ goal: MONGO_GoalDocument; subscriptions: integer }> =
 		await MONGODB_KILL["goal-subs"].aggregate([
 			{
 				$match: query,
@@ -341,10 +350,10 @@ export async function GetMostSubscribedGoals(
 }
 
 export async function GetMostSubscribedQuests(
-	query: FilterQuery<QuestSubscriptionDocument>,
+	query: FilterQuery<MONGO_QuestSubscriptionDocument>,
 	limit = 100,
-): Promise<Array<{ __subscriptions: integer } & QuestDocument>> {
-	const mostSubscribedQuests: Array<{ subscriptions: integer } & QuestDocument> =
+): Promise<Array<{ __subscriptions: integer } & MONGO_QuestDocument>> {
+	const mostSubscribedQuests: Array<{ subscriptions: integer } & MONGO_QuestDocument> =
 		await MONGODB_KILL.quests.aggregate([
 			{
 				$match: query,
@@ -381,7 +390,7 @@ export async function GetMostSubscribedQuests(
 	}));
 }
 
-export async function GetChildQuests(questline: QuestlineDocument) {
+export async function GetChildQuests(questline: MONGO_QuestlineDocument) {
 	const quests = await MONGODB_KILL.quests.find({
 		questID: { $in: questline.quests },
 	});

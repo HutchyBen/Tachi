@@ -3,8 +3,8 @@ import {
 	type GameGroup,
 	GetGPTString,
 	type integer,
+	type MONGO_UserGameStats,
 	type Playtype,
-	type UserGameStats,
 } from "tachi-common";
 
 /**
@@ -28,5 +28,5 @@ export async function CalculateProfileRatings(
 		),
 	);
 
-	return calculatedData as UserGameStats["ratings"];
+	return calculatedData as MONGO_UserGameStats["ratings"];
 }

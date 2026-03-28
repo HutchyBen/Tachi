@@ -38,9 +38,7 @@ async function seedChart() {
 		})
 		.execute();
 
-	await DB.insertInto("chart_version")
-		.values({ chart_id: CHART_PG_ID, version: "27" })
-		.execute();
+	await DB.insertInto("chart_version").values({ chart_id: CHART_PG_ID, version: "27" }).execute();
 }
 
 describe("GET /api/v1/games/iidx/SP/charts/:chartID", () => {

@@ -9,12 +9,12 @@ import { GetUserWithID } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
 import {
-	type FolderDocument,
 	GetGamePTConfig,
 	GetScoreEnumConfs,
 	GetScoreMetrics,
 	type integer,
-	type ScoreDocument,
+	type MONGO_FolderDocument,
+	type MONGO_ScoreDocument,
 } from "tachi-common";
 import { optNull } from "tachi-common/lib/schemas";
 
@@ -129,7 +129,7 @@ router.get("/folder-raises", async (req, res) => {
 		inactive: false,
 	});
 
-	const bestEnumMap = new Map<string, ScoreDocument>();
+	const bestEnumMap = new Map<string, MONGO_ScoreDocument>();
 
 	for (const score of relevantScores) {
 		for (const [metric, conf] of Object.entries(enumScoreMetrics)) {
@@ -158,7 +158,7 @@ router.get("/folder-raises", async (req, res) => {
 	}
 
 	const raiseInfo: Array<{
-		folder: FolderDocument;
+		folder: MONGO_FolderDocument;
 		previousCount: integer; // how many AAAs/HARD CLEARs/whatevers was on this
 		raisedCharts: Array<string>; // Array<chartID>;
 		totalCharts: integer;

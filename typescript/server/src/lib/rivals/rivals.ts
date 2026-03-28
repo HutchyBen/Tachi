@@ -12,7 +12,7 @@ import {
 	type GameGroup,
 	GetGamePTConfig,
 	type integer,
-	type PBScoreDocument,
+	type MONGO_PBScoreDocument,
 	type Playtype,
 } from "tachi-common";
 
@@ -257,7 +257,7 @@ export async function UpdatePlayersRivalRankings(
 		{ projection: { chartID: 1, [`scoreData.${gptConfig.defaultMetric}`]: 1 } },
 	)) as Array<{ chartID: string; scoreData: { percent: number } }>;
 
-	const bwrite: Array<BulkWriteUpdateOneOperation<PBScoreDocument>> = [];
+	const bwrite: Array<BulkWriteUpdateOneOperation<MONGO_PBScoreDocument>> = [];
 
 	await Promise.all(
 		userPBs.map(async (pb) => {

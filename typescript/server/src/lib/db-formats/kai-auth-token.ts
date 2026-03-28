@@ -1,5 +1,5 @@
 import { type Selection } from "kysely";
-import { type KaiAuthDocument } from "tachi-common";
+import { type MONGO_KaiAuthDocument } from "tachi-common";
 import { type Database } from "tachi-db";
 
 export const SELECT_KAI_AUTH_TOKEN = [
@@ -11,10 +11,10 @@ export const SELECT_KAI_AUTH_TOKEN = [
 
 export function ToKaiAuthDocument(
 	row: Selection<Database, "priv_svc_kai_auth_token", (typeof SELECT_KAI_AUTH_TOKEN)[number]>,
-): KaiAuthDocument {
+): MONGO_KaiAuthDocument {
 	return {
 		userID: row.user_id,
-		service: row.service as KaiAuthDocument["service"],
+		service: row.service as MONGO_KaiAuthDocument["service"],
 		token: row.token,
 		refreshToken: row.refresh_token,
 	};

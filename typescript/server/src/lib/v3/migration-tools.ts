@@ -4,10 +4,10 @@ import {
 	type GPTString,
 	type GPTStringToV3Game,
 	type integer,
+	type MONGO_ScoreData,
 	type MongoDerivedMetrics,
 	type MongoOptionalMetrics,
 	type MongoProvidedMetrics,
-	type MongoScoreData,
 	type PgScoreData,
 	type V3Game,
 	type V3GameToGPTString,
@@ -45,7 +45,7 @@ function applyOrdinals(
 
 function splitScoreData<GPT extends GPTString = GPTString>(
 	gpt: GPT,
-	sd: MongoScoreData<GPT>,
+	sd: MONGO_ScoreData<GPT>,
 ): RetVal<GPT> {
 	const config = GetGPTConfig(gpt);
 
@@ -86,7 +86,7 @@ function splitScoreData<GPT extends GPTString = GPTString>(
 
 export function mongoScoreDataToPg<GPT extends GPTString = GPTString>(
 	gpt: GPT,
-	scoreData: MongoScoreData,
+	scoreData: MONGO_ScoreData,
 ): PgScoreData<GPTStringToV3Game[GPT]> {
 	const { data, derived } = splitScoreData(gpt, scoreData);
 
@@ -100,13 +100,13 @@ export function mongoScoreDataToPg<GPT extends GPTString = GPTString>(
 }
 
 /**
- * Reconstruct API {@link MongoScoreData} from Postgres `data` / `derived_data` JSON blobs
+ * Reconstruct API {@link MONGO_ScoreData} from Postgres `data` / `derived_data` JSON blobs
  * and the `judgements` column (the inverse of {@link mongoScoreDataToPg}).
  */
 export function pgScoreDataToMongo<G extends V3Game = V3Game>(
 	game: G,
 	scoreData: PgScoreData<G>,
-): MongoScoreData<V3GameToGPTString[G]> {
+): MONGO_ScoreData<V3GameToGPTString[G]> {
 	const data = scoreData.data as any;
 	const derived = scoreData.derived as any;
 

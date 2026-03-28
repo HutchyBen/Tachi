@@ -1,6 +1,6 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
 import type { EmptyObject } from "#utils/types";
-import type { MongoScoreData } from "tachi-common";
+import type { MONGO_ScoreData } from "tachi-common";
 
 import {
 	InternalFailure,
@@ -32,7 +32,7 @@ function getNoteLamp(
 	comboStatus: number,
 	clearStatus: number,
 	techScore: number,
-): MongoScoreData<"ongeki:Single">["noteLamp"] | undefined {
+): MONGO_ScoreData<"ongeki:Single">["noteLamp"] | undefined {
 	if (
 		comboStatus === OngekiComboStatus.UNSPECIFIED ||
 		clearStatus === OngekiClearStatus.UNSPECIFIED

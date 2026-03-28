@@ -25,7 +25,6 @@ import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
 import { IsNullish, NumToDP } from "#utils/misc";
 import { Volforce } from "rg-stats";
 import {
-	type ChartDocument,
 	FmtNum,
 	FmtNumCompact,
 	GetGrade,
@@ -36,9 +35,10 @@ import {
 	IIDXLIKE_GBOUNDARIES,
 	IIDXLikeGetGrade,
 	type integer,
-	type ScoreDocument,
+	type MONGO_ChartDocument,
+	type MONGO_ScoreDocument,
+	type MONGO_SpecificUserGameStats,
 	SDVXLIKE_GBOUNDARIES,
-	type SpecificUserGameStats,
 } from "tachi-common";
 
 export const EX_SCORE_CHECK: ChartSpecificMetricValidator<IIDXLikes> = (exScore, chart) => {
@@ -118,7 +118,9 @@ export const IIDXLIKE_PB_RANKING_VALUES: PBRankingValuesFunction<IIDXLikes> = (p
 export const VF6Calc: ScoreCalculator<GPTStrings["sdvx" | "usc"]> = (scoreData, chart) =>
 	Volforce.calculateVF6(scoreData.score, scoreData.lamp, chart.levelNum);
 
-export function VF6ToClass(vf: number): SpecificUserGameStats<"sdvx:Single">["classes"]["vfClass"] {
+export function VF6ToClass(
+	vf: number,
+): MONGO_SpecificUserGameStats<"sdvx:Single">["classes"]["vfClass"] {
 	// jesus christ man
 	if (vf >= 23) {
 		return "IMPERIAL_IV";
@@ -415,8 +417,8 @@ export function GradeGoalFormatter<G extends string>(
  */
 export function RunValidators<GPT extends GPTString>(
 	validators: Array<ScoreValidator<GPT>>,
-	score: ScoreDocument<GPT>,
-	chart: ChartDocument<GPT>,
+	score: MONGO_ScoreDocument<GPT>,
+	chart: MONGO_ChartDocument<GPT>,
 ) {
 	const errs = [];
 

@@ -1,12 +1,12 @@
 import type {
-	BMSCourseDocument,
-	ChartDocument,
-	FolderDocument,
-	GoalDocument,
-	QuestDocument,
-	QuestlineDocument,
-	SongDocument,
-	TableDocument,
+	MONGO_BMSCourseDocument,
+	MONGO_ChartDocument,
+	MONGO_FolderDocument,
+	MONGO_GoalDocument,
+	MONGO_QuestDocument,
+	MONGO_QuestlineDocument,
+	MONGO_SongDocument,
+	MONGO_TableDocument,
 } from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import type {
@@ -35,19 +35,19 @@ import path from "path";
 
 // ── Seed types ─────────────────────────────────────────────────────────────
 
-type SeedSong = { id: string; legacySongID?: number } & Omit<SongDocument, "id">;
+type SeedSong = { id: string; legacySongID?: number } & Omit<MONGO_SongDocument, "id">;
 // songID is now a hex string (migrated from the old integer FK).
 type SeedChart = {
 	id: string;
 	legacyChartID?: string;
 	songID: string;
-} & Omit<ChartDocument, "songID">;
+} & Omit<MONGO_ChartDocument, "songID">;
 // After 3-migrate-folders-tables.ts: folderID → legacyFolderID + id, game+playtype → game.
 type SeedFolder = {
 	game: string;
 	id: string;
 	legacyFolderID?: string;
-} & Omit<FolderDocument, "folderID" | "game" | "playtype">;
+} & Omit<MONGO_FolderDocument, "folderID" | "game" | "playtype">;
 // After 3-migrate-folders-tables.ts: tableID → legacyTableID + id, game+playtype → game,
 // folders array now contains new hex ids.
 type SeedTable = {
@@ -55,7 +55,7 @@ type SeedTable = {
 	game: string;
 	id: string;
 	legacyTableID?: string;
-} & Omit<TableDocument, "folders" | "game" | "playtype" | "tableID">;
+} & Omit<MONGO_TableDocument, "folders" | "game" | "playtype" | "tableID">;
 
 const INSERT_CHUNK = 500;
 
@@ -487,7 +487,7 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 	// ── bms_course_lookup ──────────────────────────────────────────────────
 	if (files.has("bms-course-lookup.json")) {
 		console.log("[bms_course_lookup]");
-		const courses = readCollection<BMSCourseDocument>("bms-course-lookup.json");
+		const courses = readCollection<MONGO_BMSCourseDocument>("bms-course-lookup.json");
 
 		const courseRows: Array<NewBmsCourseLookup> = courses.map((c) => ({
 			md5sums: c.md5sums,
@@ -504,7 +504,7 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 	// ── goals ──────────────────────────────────────────────────────────────
 	if (files.has("goals.json")) {
 		console.log("[goal]");
-		const goals = readCollection<GoalDocument>("goals.json");
+		const goals = readCollection<MONGO_GoalDocument>("goals.json");
 
 		const goalRows: Array<NewGoal> = goals.map((g) => ({
 			id: g.goalID,
@@ -522,7 +522,7 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 	// ── quests ─────────────────────────────────────────────────────────────
 	if (files.has("quests.json")) {
 		console.log("[quest]");
-		const quests = readCollection<QuestDocument>("quests.json");
+		const quests = readCollection<MONGO_QuestDocument>("quests.json");
 
 		const questRows: Array<NewQuest> = quests.map((q) => ({
 			id: q.questID,
@@ -554,7 +554,7 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 	// ── questlines ─────────────────────────────────────────────────────────
 	if (files.has("questlines.json")) {
 		console.log("[questline / questline_quest]");
-		const questlines = readCollection<QuestlineDocument>("questlines.json");
+		const questlines = readCollection<MONGO_QuestlineDocument>("questlines.json");
 
 		const qlRows: Array<NewQuestline> = questlines.map((ql) => ({
 			id: ql.questlineID,

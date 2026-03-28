@@ -1,7 +1,7 @@
 import { AuthLevelToInt } from "#utils/conversion";
 import { ISO8601ToUnixMilliseconds } from "#utils/time";
 import { type Selection } from "kysely";
-import { type UserBadges, type UserDocument } from "tachi-common";
+import { type MONGO_UserDocument, type UserBadges } from "tachi-common";
 import { type Database } from "tachi-db";
 
 export const SELECT_USER = [
@@ -29,7 +29,7 @@ export const SELECT_USER = [
 
 export function ToUserDocument(
 	row: Selection<Database, "account", (typeof SELECT_USER)[number]>,
-): UserDocument {
+): MONGO_UserDocument {
 	const badges: Array<UserBadges> = [];
 
 	if (row.bd_alpha) {

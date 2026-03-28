@@ -5,12 +5,12 @@ import {
 	GetGPTString,
 	type GPTString,
 	type ImportTypes,
-	type ScoreDocument,
+	type MONGO_ScoreDocument,
 	V3ToGamePT,
 } from "tachi-common";
 import { type Game } from "tachi-db";
 
-/** Columns from `score` joined with chart/song for a full {@link ScoreDocument}. */
+/** Columns from `score` joined with chart/song for a full {@link MONGO_ScoreDocument}. */
 export const SELECT_SCORE_DOCUMENT = [
 	"score.id",
 	"score.user_id",
@@ -52,7 +52,7 @@ export interface ScoreDocumentJoinRow {
 	import_import_type: string | null;
 }
 
-export function ToScoreDocument(row: ScoreDocumentJoinRow): ScoreDocument {
+export function ToScoreDocument(row: ScoreDocumentJoinRow): MONGO_ScoreDocument {
 	const { game, playtype } = V3ToGamePT(row.game);
 
 	const scoreData = pgScoreDataToMongo(row.game, {
@@ -61,9 +61,9 @@ export function ToScoreDocument(row: ScoreDocumentJoinRow): ScoreDocument {
 		judgements: row.judgements as any,
 	});
 
-	const scoreMeta = row.meta as ScoreDocument["scoreMeta"];
+	const scoreMeta = row.meta as MONGO_ScoreDocument["scoreMeta"];
 
-	const calculatedData = row.calculated_data as ScoreDocument["calculatedData"];
+	const calculatedData = row.calculated_data as MONGO_ScoreDocument["calculatedData"];
 
 	const service =
 		row.import_service !== null &&
@@ -92,7 +92,9 @@ export function ToScoreDocument(row: ScoreDocumentJoinRow): ScoreDocument {
 	};
 }
 
-export async function LoadScoreDocumentById(scoreID: string): Promise<ScoreDocument | undefined> {
+export async function LoadScoreDocumentById(
+	scoreID: string,
+): Promise<MONGO_ScoreDocument | undefined> {
 	const row = await DB.selectFrom("score")
 		.innerJoin("chart", "chart.id", "score.chart_id")
 		.innerJoin("song", "song.id", "chart.song_id")

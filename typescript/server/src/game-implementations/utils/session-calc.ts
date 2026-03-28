@@ -1,5 +1,5 @@
 import type { SessionCalculator } from "#game-implementations/types";
-import type { GPTString, integer, ScoreDocument } from "tachi-common";
+import type { GPTString, integer, MONGO_ScoreDocument } from "tachi-common";
 
 export function SessionAverageBestN(vals: Array<number | null | undefined>, n = 10) {
 	const numbers = vals.filter((e) => typeof e === "number") as Array<number>;
@@ -17,7 +17,7 @@ export function SessionAverageBestN(vals: Array<number | null | undefined>, n = 
 }
 
 export function SessionAvgBest10For<GPT extends GPTString>(
-	prop: keyof ScoreDocument<GPT>["calculatedData"],
+	prop: keyof MONGO_ScoreDocument<GPT>["calculatedData"],
 ): SessionCalculator<GPT> {
 	return (arr) =>
 		SessionAverageBestN(
@@ -27,7 +27,7 @@ export function SessionAvgBest10For<GPT extends GPTString>(
 }
 
 export function SessionAvgBestNFor<GPT extends GPTString>(
-	prop: keyof ScoreDocument<GPT>["calculatedData"],
+	prop: keyof MONGO_ScoreDocument<GPT>["calculatedData"],
 	n: integer,
 ): SessionCalculator<GPT> {
 	return (arr) =>

@@ -1,5 +1,5 @@
 import { type Selection } from "kysely";
-import { type APIPermissions, type APITokenDocument } from "tachi-common";
+import { type APIPermissions, type MONGO_APITokenDocument } from "tachi-common";
 import { type Database } from "tachi-db";
 
 export const SELECT_API_TOKEN = [
@@ -19,7 +19,7 @@ export const SELECT_API_TOKEN = [
 
 export function ToAPITokenDocument(
 	row: Selection<Database, "priv_api_token", (typeof SELECT_API_TOKEN)[number]>,
-): APITokenDocument {
+): MONGO_APITokenDocument {
 	const permissions: Partial<Record<APIPermissions, boolean>> = {};
 
 	if (row.pm_customise_profile) {

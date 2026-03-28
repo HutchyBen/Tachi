@@ -9,8 +9,8 @@ import { p } from "prudence";
 import {
 	GetGamePTConfig,
 	GetScoreMetrics,
+	type MONGO_UGPTSettingsDocument,
 	PrudenceZodShim,
-	type UGPTSettingsDocument,
 } from "tachi-common";
 
 import { RequireAuthedAsUser } from "../../../../middleware";
@@ -59,7 +59,7 @@ router.patch(
 			});
 		}
 
-		const body = req.safeBody as Partial<UGPTSettingsDocument["preferences"]>;
+		const body = req.safeBody as Partial<MONGO_UGPTSettingsDocument["preferences"]>;
 
 		if (typeof body.defaultTable === "string") {
 			const table = await MONGODB_KILL.tables.findOne({

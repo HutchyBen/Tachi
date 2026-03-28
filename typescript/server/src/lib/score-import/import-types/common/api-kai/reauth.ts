@@ -1,5 +1,5 @@
 import type { KtLogger } from "#lib/log/log";
-import type { KaiAuthDocument } from "tachi-common";
+import type { MONGO_KaiAuthDocument } from "tachi-common";
 
 import { updateKaiAuthTokensInDb } from "#lib/kai-auth-token/persist";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
@@ -17,7 +17,7 @@ const REAUTH_SCHEMA = {
 
 export function CreateKaiReauthFunction(
 	kaiType: "EAG" | "FLO" | "MIN",
-	authDoc: KaiAuthDocument,
+	authDoc: MONGO_KaiAuthDocument,
 	log: KtLogger,
 	fetch = nodeFetch,
 ) {

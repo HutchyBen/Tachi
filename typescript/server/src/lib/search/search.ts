@@ -17,20 +17,20 @@ import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { GetOnlineCutoff } from "#utils/user";
 import { sql } from "kysely";
 import {
-	type ChartDocument,
-	type FolderDocument,
 	type GameGroup,
 	GamePTToV3,
 	type GPTString,
 	type GPTStrings,
 	type integer,
+	type MONGO_ChartDocument,
+	type MONGO_FolderDocument,
+	type MONGO_SessionDocument,
+	type MONGO_SongDocument,
+	type MONGO_UserDocument,
 	MongoChartLegacyId,
 	type Playtype,
-	type SessionDocument,
-	type SongDocument,
 	type SongDocumentData,
 	SplitGPT,
-	type UserDocument,
 } from "tachi-common";
 
 import { AsyncFzf } from "./fzf/main";
@@ -163,7 +163,7 @@ export async function SearchCollection<T extends object>(
 
 export type SongSearchReturn = {
 	__textScore: number;
-} & SongDocument;
+} & MONGO_SongDocument;
 
 /**
  * Fuzzy song search over Postgres `song` metadata (same behaviour as legacy Mongo SearchCollection).
@@ -235,7 +235,7 @@ export async function SearchSpecificGameSongsAndCharts(
 			const pgId = pgIdByLegacyId.get(song.id);
 
 			if (!pgId) {
-				return Promise.resolve([] as Array<ChartDocument>);
+				return Promise.resolve([] as Array<MONGO_ChartDocument>);
 			}
 
 			return GetChartsBySongPgId(v3Game, pgId, song.id, {
@@ -260,7 +260,7 @@ export async function SearchGlobalGameSongsAndCharts(
 	search: string,
 	playtype?: Playtype,
 	limit = MAX_SONG_SEARCH_RESULTS_PER_GAME,
-): Promise<Array<{ chart: ChartDocument; playcount: integer; song: SongDocument }>> {
+): Promise<Array<{ chart: MONGO_ChartDocument; playcount: integer; song: MONGO_SongDocument }>> {
 	const { songs, pgIdByLegacyId } = await searchSpecificGameSongsWithPgIds(game, search, limit);
 
 	if (!playtype) {
@@ -269,7 +269,11 @@ export async function SearchGlobalGameSongsAndCharts(
 
 	const v3Game = GamePTToV3(game, playtype);
 
-	const output: Array<{ chart: ChartDocument; playcount: integer; song: SongDocument }> = [];
+	const output: Array<{
+		chart: MONGO_ChartDocument;
+		playcount: integer;
+		song: MONGO_SongDocument;
+	}> = [];
 
 	for (const song of songs) {
 		if (output.length >= limit) {
@@ -331,7 +335,7 @@ export function SearchSessions(
 	userID?: integer,
 	limit = 100,
 ) {
-	const baseMatch: FilterQuery<SessionDocument> = {};
+	const baseMatch: FilterQuery<MONGO_SessionDocument> = {};
 
 	if (game) {
 		baseMatch.game = game;
@@ -359,7 +363,7 @@ export function SearchSessions(
 export function SearchUsersRegExp(
 	search: string,
 	matchOnline = false,
-): Promise<Array<UserDocument>> {
+): Promise<Array<MONGO_UserDocument>> {
 	const likeEsc = EscapeForILIKE(search.toLowerCase());
 
 	const onlineCutoff = UnixMillisecondsToISO8601(GetOnlineCutoff());
@@ -419,7 +423,10 @@ export async function SearchGamesSongsCharts(search: string, gpts: Array<GPTStri
 	const promises = [];
 
 	const results: Partial<
-		Record<GPTString, Array<{ chart: ChartDocument; playcount: integer; song: SongDocument }>>
+		Record<
+			GPTString,
+			Array<{ chart: MONGO_ChartDocument; playcount: integer; song: MONGO_SongDocument }>
+		>
 	> = {};
 
 	for (const gpt of gpts) {
@@ -454,9 +461,9 @@ export async function SearchForChartHash(search: string) {
 	const output: Record<
 		GPTStrings["bms" | "itg" | "pms" | "usc"],
 		Array<{
-			chart: ChartDocument;
+			chart: MONGO_ChartDocument;
 			playcount: null;
-			song: SongDocument;
+			song: MONGO_SongDocument;
 		}>
 	> = {
 		"bms:7K": [],
@@ -476,7 +483,7 @@ export async function SearchForChartHash(search: string) {
 	] as const;
 
 	for (const [game, charts] of zip) {
-		for (const chart of charts as Array<ChartDocument>) {
+		for (const chart of charts as Array<MONGO_ChartDocument>) {
 			const song = await GetSongForIDGuaranteed(game, chart.songID);
 
 			// @ts-expect-error ts doesn't like this hack but it'll work.
@@ -493,7 +500,7 @@ export async function SearchForChartHash(search: string) {
 
 export function SearchFolders(
 	search: string,
-	existingMatch?: FilterQuery<FolderDocument>,
+	existingMatch?: FilterQuery<MONGO_FolderDocument>,
 	limit?: integer,
 ) {
 	return SearchCollection(MONGODB_KILL.folders, search, "folders", existingMatch, limit);

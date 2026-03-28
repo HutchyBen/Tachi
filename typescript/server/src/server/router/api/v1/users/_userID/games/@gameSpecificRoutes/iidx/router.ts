@@ -1,9 +1,9 @@
 import type {
-	ChartDocument,
 	integer,
-	PBScoreDocument,
+	MONGO_ChartDocument,
+	MONGO_PBScoreDocument,
+	MONGO_SongDocument,
 	Playtypes,
-	SongDocument,
 } from "tachi-common";
 import type { GetEnumValue } from "tachi-common/types/metrics";
 
@@ -57,8 +57,8 @@ router.get(
 
 		const pbData: Array<{
 			_id: integer;
-			pbs: Array<PBScoreDocument<"iidx:DP" | "iidx:SP">>;
-			song: SongDocument<"iidx">;
+			pbs: Array<MONGO_PBScoreDocument<"iidx:DP" | "iidx:SP">>;
+			song: MONGO_SongDocument<"iidx">;
 		}> = await MONGODB_KILL["personal-bests"].aggregate([
 			{
 				$match: {
@@ -97,7 +97,7 @@ router.get(
 		});
 
 		// get a lookup table for songID + difficulty -> chart.
-		const chartMap = new Map<string, ChartDocument>();
+		const chartMap = new Map<string, MONGO_ChartDocument>();
 
 		for (const chart of charts) {
 			chartMap.set(`${chart.songID}-${chart.difficulty}`, chart);

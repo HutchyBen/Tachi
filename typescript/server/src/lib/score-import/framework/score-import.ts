@@ -1,4 +1,4 @@
-import type { ImportDocument, ImportTypes, integer } from "tachi-common";
+import type { ImportTypes, integer, MONGO_ImportDocument } from "tachi-common";
 
 import { JOB_RETRY_COUNT } from "#lib/constants/tachi";
 import { log } from "#lib/log/log";
@@ -32,7 +32,7 @@ import {
  */
 export async function MakeScoreImport<I extends ImportTypes>(
 	jobData: ScoreImportJobData<I>,
-): Promise<ImportDocument> {
+): Promise<MONGO_ImportDocument> {
 	await StartTrackingImport(jobData);
 
 	try {
@@ -56,7 +56,7 @@ export async function MakeScoreImport<I extends ImportTypes>(
  */
 async function MakeScoreImportInner<I extends ImportTypes>(
 	jobData: ScoreImportJobData<I>,
-): Promise<ImportDocument> {
+): Promise<MONGO_ImportDocument> {
 	if (ServerConfig.USE_EXTERNAL_SCORE_IMPORT_WORKER && process.env.IS_JOB === undefined) {
 		let timesAttempted = 1;
 

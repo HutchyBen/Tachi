@@ -1,12 +1,12 @@
 import { SearchSpecificGameSongsAndCharts } from "#lib/search/search";
-import { ResolveLegacyChartIdForMongo } from "#utils/chart-mongo-id";
 import { HyperAggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
 import MONGODB_KILL from "#services/mongo/db";
+import { ResolveLegacyChartIdForMongo } from "#utils/chart-mongo-id";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { GetUGPT } from "#utils/req-tachi-data";
-import { MongoChartLegacyId } from "tachi-common";
 import { FilterChartsAndSongs } from "#utils/scores";
 import { Router } from "express";
+import { MongoChartLegacyId } from "tachi-common";
 
 const router: Router = Router({ mergeParams: true });
 

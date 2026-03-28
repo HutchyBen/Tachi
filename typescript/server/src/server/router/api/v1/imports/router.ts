@@ -1,6 +1,6 @@
 import type { ScoreImportWorkerReturns } from "#lib/score-import/worker/types";
 import type { FilterQuery } from "mongodb";
-import type { ImportTrackerDocument, ImportTypes } from "tachi-common";
+import type { ImportTypes, MONGO_ImportTrackerDocument } from "tachi-common";
 
 import { JOB_RETRY_COUNT } from "#lib/constants/tachi";
 import { RevertImport } from "#lib/imports/imports";
@@ -95,7 +95,7 @@ router.get(
 		const userIntent =
 			req.query.userIntent === undefined ? undefined : req.query.userIntent === "true";
 
-		const query: FilterQuery<ImportTrackerDocument> = {
+		const query: FilterQuery<MONGO_ImportTrackerDocument> = {
 			userIntent,
 			importType,
 			type: "FAILED",

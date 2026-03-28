@@ -1,6 +1,6 @@
 import { ISO8601ToUnixMilliseconds } from "#utils/time";
 import { type Selection } from "kysely";
-import { type InviteCodeDocument } from "tachi-common";
+import { type MONGO_InviteCodeDocument } from "tachi-common";
 import { type Database } from "tachi-db";
 
 export const SELECT_INVITE = [
@@ -14,7 +14,7 @@ export const SELECT_INVITE = [
 
 export function ToInviteDocument(
 	row: Selection<Database, "priv_invite", (typeof SELECT_INVITE)[number]>,
-): InviteCodeDocument {
+): MONGO_InviteCodeDocument {
 	const base = {
 		code: row.code,
 		createdBy: row.created_by,

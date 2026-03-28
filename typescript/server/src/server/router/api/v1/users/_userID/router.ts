@@ -1,4 +1,4 @@
-import type { AnyProfileRatingAlg, GPTString, integer, UserGameStats } from "tachi-common";
+import type { AnyProfileRatingAlg, GPTString, integer, MONGO_UserGameStats } from "tachi-common";
 
 import { ACTION_ChangeEmail } from "#actions/change-email.js";
 import { ACTION_ChangePassword } from "#actions/change-password.js";
@@ -152,7 +152,7 @@ router.get("/game-stats", async (req, res) => {
 	const stats: Array<
 		{
 			__rankingData?: Record<AnyProfileRatingAlg, { outOf: number; ranking: number }>;
-		} & UserGameStats
+		} & MONGO_UserGameStats
 	> = await DB.selectFrom("game_profile")
 		.select(SELECT_GAME_PROFILE)
 		.where("user_id", "=", user.id)

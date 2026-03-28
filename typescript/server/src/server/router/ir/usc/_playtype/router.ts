@@ -15,10 +15,10 @@ import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
 import {
-	type ChartDocument,
 	GetGamePTConfig,
-	type ImportDocument,
-	type PBScoreDocument,
+	type MONGO_ChartDocument,
+	type MONGO_ImportDocument,
+	type MONGO_PBScoreDocument,
 	type Playtypes,
 	type SuccessfulAPIResponse,
 } from "tachi-common";
@@ -131,7 +131,7 @@ const RetrieveChart: RequestHandler = async (req, res, next) => {
 	}
 
 	AssignToReqTachiData(req, {
-		uscChartDoc: chart as ChartDocument<"usc:Controller" | "usc:Keyboard">,
+		uscChartDoc: chart as MONGO_ChartDocument<"usc:Controller" | "usc:Keyboard">,
 	});
 
 	next();
@@ -161,7 +161,7 @@ router.get("/charts/:chartHash/record", RetrieveChart, async (req, res) => {
 	const serverRecord = (await MONGODB_KILL["personal-bests"].findOne({
 		chartID: chart.chartID,
 		"rankingData.rank": 1,
-	})) as PBScoreDocument<"usc:Controller" | "usc:Keyboard"> | null;
+	})) as MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard"> | null;
 
 	if (!serverRecord) {
 		return res.status(200).json({
@@ -237,7 +237,7 @@ router.get("/charts/:chartHash/leaderboard", RetrieveChart, async (req, res) => 
 			},
 			limit: n,
 		},
-	)) as Array<PBScoreDocument<"usc:Controller" | "usc:Keyboard">>;
+	)) as Array<MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard">>;
 
 	const serverScores = await Promise.all(bestScores.map(TachiScoreToServerScore));
 
@@ -289,7 +289,7 @@ router.post("/scores", RequirePermissions("submit_score"), async (req, res) => {
 	const chartDoc = (await MONGODB_KILL.charts.usc.findOne({
 		"data.hashSHA1": uscChart.chartHash,
 		playtype,
-	})) as ChartDocument<"usc:Controller" | "usc:Keyboard"> | null;
+	})) as MONGO_ChartDocument<"usc:Controller" | "usc:Keyboard"> | null;
 
 	const userID = req[SYMBOL_TACHI_API_AUTH].userID!;
 
@@ -311,7 +311,7 @@ router.post("/scores", RequirePermissions("submit_score"), async (req, res) => {
 		});
 	}
 
-	const importDoc = (importRes.body as SuccessfulAPIResponse).body as ImportDocument;
+	const importDoc = (importRes.body as SuccessfulAPIResponse).body as MONGO_ImportDocument;
 
 	// If the import failed, AND the import failure WAS NOT that the chart didnt exist
 	// report that error instead.

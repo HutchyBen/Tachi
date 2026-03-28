@@ -1,5 +1,5 @@
 import { type Selection } from "kysely";
-import { type APIPermissions, type TachiAPIClientDocument } from "tachi-common";
+import { type APIPermissions, type MONGO_TachiAPIClientDocument } from "tachi-common";
 import { type Database } from "tachi-db";
 
 export const SELECT_API_CLIENT = [
@@ -23,7 +23,7 @@ export const SELECT_API_CLIENT = [
 
 export function ToAPIClientDocument(
 	row: Selection<Database, "priv_api_client", (typeof SELECT_API_CLIENT)[number]>,
-): TachiAPIClientDocument {
+): MONGO_TachiAPIClientDocument {
 	const requestedPermissions: Array<APIPermissions> = [];
 	if (row.pm_customise_profile) {
 		requestedPermissions.push("customise_profile");

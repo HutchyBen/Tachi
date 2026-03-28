@@ -1,9 +1,9 @@
 import type {
-	ChartDocument,
 	integer,
-	PBScoreDocument,
-	ScoreDocument,
-	SongDocument,
+	MONGO_ChartDocument,
+	MONGO_PBScoreDocument,
+	MONGO_ScoreDocument,
+	MONGO_SongDocument,
 } from "tachi-common";
 
 import MONGODB_KILL from "#services/mongo/db";
@@ -25,9 +25,9 @@ export function GetServerRecordOnChart(chartID: string) {
 }
 
 export function FilterChartsAndSongs(
-	scores: Array<PBScoreDocument | ScoreDocument>,
-	charts: Array<ChartDocument>,
-	songs: Array<SongDocument>,
+	scores: Array<MONGO_PBScoreDocument | MONGO_ScoreDocument>,
+	charts: Array<MONGO_ChartDocument>,
+	songs: Array<MONGO_SongDocument>,
 ) {
 	const chartIDs = new Set();
 	const songIDs = new Set();
@@ -44,7 +44,7 @@ export function FilterChartsAndSongs(
 	};
 }
 
-export function GetScoreIDsFromComposed(pb: PBScoreDocument) {
+export function GetScoreIDsFromComposed(pb: MONGO_PBScoreDocument) {
 	const arr = pb.composedFrom.map((e) => e.scoreID);
 
 	return DedupeArr(arr);

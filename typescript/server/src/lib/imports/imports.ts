@@ -1,4 +1,4 @@
-import type { ImportDocument } from "tachi-common";
+import type { MONGO_ImportDocument } from "tachi-common";
 
 import { log } from "#lib/log/log";
 import {
@@ -19,7 +19,9 @@ interface OngoingImportError {
  *
  * If this results in sessions being deleted, it will delete them.
  */
-export async function RevertImport(importDoc: ImportDocument): Promise<OngoingImportError | null> {
+export async function RevertImport(
+	importDoc: MONGO_ImportDocument,
+): Promise<OngoingImportError | null> {
 	log.info({ importDoc }, `Received revert-import request for import '${importDoc.importID}'`);
 
 	const scores = await GetImportScores(importDoc);
@@ -62,6 +64,6 @@ export async function RevertImport(importDoc: ImportDocument): Promise<OngoingIm
 /**
  * Retrieve the scores inside this import.
  */
-export function GetImportScores(importDoc: ImportDocument) {
+export function GetImportScores(importDoc: MONGO_ImportDocument) {
 	return MONGODB_KILL.scores.find({ scoreID: { $in: importDoc.scoreIDs } });
 }

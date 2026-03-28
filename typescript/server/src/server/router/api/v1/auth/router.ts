@@ -27,7 +27,7 @@ import {
 } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-import { type UserDocument } from "tachi-common";
+import { type MONGO_UserDocument } from "tachi-common";
 
 const router: Router = Router({ mergeParams: true });
 
@@ -218,7 +218,12 @@ router.post(
 
 		return res
 			.status(200)
-			.json(apiSuccess<UserDocument>(`Successfully created account ${body.username}!`, user));
+			.json(
+				apiSuccess<MONGO_UserDocument>(
+					`Successfully created account ${body.username}!`,
+					user,
+				),
+			);
 	},
 );
 

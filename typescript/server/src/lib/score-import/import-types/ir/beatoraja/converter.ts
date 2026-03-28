@@ -1,6 +1,6 @@
 import type { KtLogger } from "#lib/log/log";
 import type { Mutable } from "#utils/types";
-import type { ChartDocument, Playtypes, SongDocument } from "tachi-common";
+import type { MONGO_ChartDocument, MONGO_SongDocument, Playtypes } from "tachi-common";
 
 import { HandleOrphanQueue } from "#lib/orphan-queue/orphan-queue";
 import { DeorphanScores } from "#lib/score-import/framework/orphans/orphans";
@@ -165,10 +165,10 @@ export const ConverterIRBeatoraja: ConverterFunction<BeatorajaScore, BeatorajaCo
 
 	const game = context.chart.mode === "POPN_9K" ? "pms" : "bms";
 
-	let chart: ChartDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"> | null;
+	let chart: MONGO_ChartDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"> | null;
 
 	if (game === "bms") {
-		chart = (await FindChartOnSHA256(game, data.sha256)) as ChartDocument<
+		chart = (await FindChartOnSHA256(game, data.sha256)) as MONGO_ChartDocument<
 			"bms:7K" | "bms:14K"
 		> | null;
 	} else {
@@ -183,9 +183,11 @@ export const ConverterIRBeatoraja: ConverterFunction<BeatorajaScore, BeatorajaCo
 			throw new InvalidScoreFailure("MIDI is not allowed for PMS scores.");
 		}
 
-		chart = (await FindChartOnSHA256Playtype(game, data.sha256, playtype)) as ChartDocument<
-			"pms:Controller" | "pms:Keyboard"
-		> | null;
+		chart = (await FindChartOnSHA256Playtype(
+			game,
+			data.sha256,
+			playtype,
+		)) as MONGO_ChartDocument<"pms:Controller" | "pms:Keyboard"> | null;
 	}
 
 	if (!chart) {
@@ -280,28 +282,29 @@ export const ConverterIRBeatoraja: ConverterFunction<BeatorajaScore, BeatorajaCo
 
 function ConvertBeatorajaChartToTachi(chart: BeatorajaChart, playtype: Playtypes["bms" | "pms"]) {
 	const legacyId = Random20Hex();
-	const chartDoc: ChartDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"> = {
-		chartID: legacyId,
-		legacyChartId: legacyId,
-		difficulty: "CHART",
-		isPrimary: true,
-		level: "?",
-		levelNum: 0,
-		playtype,
-		songID: 0,
-		versions: [],
-		data: {
-			hashMD5: chart.md5,
-			hashSHA256: chart.sha256,
-			notecount: chart.notes,
-			tableFolders: [],
-			aiLevel: null,
-			sglEC: null,
-			sglHC: null,
-		},
-	};
+	const chartDoc: MONGO_ChartDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"> =
+		{
+			chartID: legacyId,
+			legacyChartId: legacyId,
+			difficulty: "CHART",
+			isPrimary: true,
+			level: "?",
+			levelNum: 0,
+			playtype,
+			songID: 0,
+			versions: [],
+			data: {
+				hashMD5: chart.md5,
+				hashSHA256: chart.sha256,
+				notecount: chart.notes,
+				tableFolders: [],
+				aiLevel: null,
+				sglEC: null,
+				sglHC: null,
+			},
+		};
 
-	const songDoc: SongDocument<"bms" | "pms"> = {
+	const songDoc: MONGO_SongDocument<"bms" | "pms"> = {
 		artist: chart.artist,
 		title: chart.title,
 		id: 0,

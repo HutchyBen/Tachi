@@ -1,4 +1,4 @@
-import type { ChartDocument } from "tachi-common";
+import type { MONGO_ChartDocument } from "tachi-common";
 import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import { FindChartWithPTDFVersion } from "#utils/queries/charts";
@@ -83,7 +83,7 @@ const ConvertEamIIDXCSV: ConverterFunction<
 		context.playtype,
 		eamScore.difficulty,
 		context.importVersion,
-	)) as ChartDocument<"iidx:DP" | "iidx:SP"> | null;
+	)) as MONGO_ChartDocument<"iidx:DP" | "iidx:SP"> | null;
 
 	if (!tachiChart) {
 		throw new SongOrChartNotFoundFailure(

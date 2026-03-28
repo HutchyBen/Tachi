@@ -1,5 +1,5 @@
 import type { KtLogger } from "#lib/log/log";
-import type { ClassDelta, GameGroup, integer, Playtype, UserGameStats } from "tachi-common";
+import type { ClassDelta, GameGroup, integer, MONGO_UserGameStats, Playtype } from "tachi-common";
 
 import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
 import MONGODB_KILL from "#services/mongo/db";
@@ -81,7 +81,7 @@ export async function UpdateUsersGamePlaytypeStats(
 			return deltas;
 		}
 
-		const newStats: UserGameStats = {
+		const newStats: MONGO_UserGameStats = {
 			game,
 			playtype,
 			userID,

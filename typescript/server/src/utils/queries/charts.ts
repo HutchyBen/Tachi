@@ -4,13 +4,13 @@ import MONGODB_KILL from "#services/mongo/db";
 import DB from "#services/pg/db";
 import { sql, type SqlBool } from "kysely";
 import {
-	type ChartDocument,
 	type ChartDocumentData,
 	type Difficulties,
 	type GameGroup,
 	GamePTToV3,
 	type GPTString,
 	type integer,
+	type MONGO_ChartDocument,
 	type Playtype,
 	type Playtypes,
 	V3ToGamePT,
@@ -69,7 +69,7 @@ export function FindITGChartOnHash(hash: string) {
 export function FindBMSChartOnHash(hash: string) {
 	return MONGODB_KILL.charts.bms.findOne({
 		$or: [{ "data.hashMD5": hash }, { "data.hashSHA256": hash }],
-	}) as Promise<ChartDocument<"bms:7K" | "bms:14K"> | null>;
+	}) as Promise<MONGO_ChartDocument<"bms:7K" | "bms:14K"> | null>;
 }
 
 /**
@@ -246,7 +246,7 @@ export async function FindChartsOnPopularity(
 	skip = 0,
 	limit = 100,
 	_scoreCollection: "personal-bests" | "scores" = "personal-bests",
-): Promise<Array<{ __playcount: integer } & ChartDocument>> {
+): Promise<Array<{ __playcount: integer } & MONGO_ChartDocument>> {
 	const v3Game = GamePTToV3(game, playtype);
 
 	let q = DB.selectFrom("chart")
@@ -318,6 +318,6 @@ export async function FindChartsOnPopularity(
 			data: row.data as ChartDocumentData[GPTString],
 			versions: (versionsByChartId.get(row.id) ?? []) as Versions[GPTString][],
 			__playcount: row.playcount,
-		} as { __playcount: integer } & ChartDocument;
+		} as { __playcount: integer } & MONGO_ChartDocument;
 	});
 }

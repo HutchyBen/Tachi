@@ -10,10 +10,10 @@ import { type Transaction } from "kysely";
 import { p } from "prudence";
 import {
 	type integer,
-	type InviteCodeDocument,
+	type MONGO_InviteCodeDocument,
+	type MONGO_UserDocument,
+	type MONGO_UserSettingsDocument,
 	UserAuthLevels,
-	type UserDocument,
-	type UserSettingsDocument,
 } from "tachi-common";
 import { type Database } from "tachi-db";
 
@@ -48,7 +48,7 @@ export function ReinstateInvite(code: string) {
 		.execute();
 }
 
-export async function AddNewInvite(user: UserDocument): Promise<InviteCodeDocument> {
+export async function AddNewInvite(user: MONGO_UserDocument): Promise<MONGO_InviteCodeDocument> {
 	const code = Random20Hex();
 
 	await DB.insertInto("priv_invite")
@@ -74,7 +74,7 @@ export async function AddNewInvite(user: UserDocument): Promise<InviteCodeDocume
 	};
 }
 
-export const DEFAULT_USER_SETTINGS: UserSettingsDocument["preferences"] = {
+export const DEFAULT_USER_SETTINGS: MONGO_UserSettingsDocument["preferences"] = {
 	developerMode: false,
 	advancedMode: false,
 	invisible: false,
@@ -92,7 +92,7 @@ export async function AddNewUser(
 	username: string,
 	plaintext: string,
 	email: string,
-): Promise<{ newSettings: UserSettingsDocument; newUser: UserDocument }> {
+): Promise<{ newSettings: MONGO_UserSettingsDocument; newUser: MONGO_UserDocument }> {
 	const hashedPassword = await HashPassword(plaintext);
 
 	log.debug(`Hashed password for ${username}.`);
@@ -118,7 +118,7 @@ export async function AddNewUser(
 		.executeTakeFirstOrThrow()
 		.then((res) => res.id);
 
-	const userDoc: UserDocument = {
+	const userDoc: MONGO_UserDocument = {
 		id: userID,
 		username,
 		usernameLowercase: username.toLowerCase(),
@@ -159,7 +159,7 @@ export function InsertPrivateUserInfo(
 export async function InsertDefaultUserSettings(
 	txn: Transaction<Database>,
 	userID: integer,
-): Promise<UserSettingsDocument> {
+): Promise<MONGO_UserSettingsDocument> {
 	log.debug(`Inserting default settings for ${userID}.`);
 
 	await txn
@@ -223,8 +223,8 @@ export async function ValidateCaptcha(
 
 export function MountAuthCookie(
 	req: Express.Request,
-	user: UserDocument,
-	settings: UserSettingsDocument,
+	user: MONGO_UserDocument,
+	settings: MONGO_UserSettingsDocument,
 ) {
 	req.session.tachi = {
 		user,

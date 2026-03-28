@@ -1,5 +1,5 @@
 import type { integer } from "../types";
-import type { ChartDocument } from "./documents";
+import type { MONGO_ChartDocument } from "./documents";
 import type {
 	ConfDerivedMetrics,
 	ConfOptionalMetrics,
@@ -226,7 +226,7 @@ export type MetricDeriver<
 	V extends DerivedMetricValue = DerivedMetricValue,
 > = (
 	mandatoryMetrics: MongoExtractMetrics<ConfProvidedMetrics[GPT]>,
-	chart: ChartDocument<GPT>,
+	chart: MONGO_ChartDocument<GPT>,
 ) => V;
 
 /**

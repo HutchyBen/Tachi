@@ -7,7 +7,7 @@ import { Router } from "express";
 import {
 	type AnySessionRatingAlg,
 	GetGamePTConfig,
-	type SessionDocument,
+	type MONGO_SessionDocument,
 	type SessionScoreInfo,
 } from "tachi-common";
 
@@ -82,8 +82,9 @@ router.get("/best", async (req, res) => {
 		},
 	);
 
-	const sessionsWithScoreInfo: Array<{ __scoreInfo: Array<SessionScoreInfo> } & SessionDocument> =
-		[];
+	const sessionsWithScoreInfo: Array<
+		{ __scoreInfo: Array<SessionScoreInfo> } & MONGO_SessionDocument
+	> = [];
 
 	await Promise.all(
 		sessions.map((session) =>
@@ -120,8 +121,9 @@ router.get("/highlighted", async (req, res) => {
 		{ sort: { timeEnded: -1 }, limit: 100 },
 	);
 
-	const sessionsWithScoreInfo: Array<{ __scoreInfo: Array<SessionScoreInfo> } & SessionDocument> =
-		[];
+	const sessionsWithScoreInfo: Array<
+		{ __scoreInfo: Array<SessionScoreInfo> } & MONGO_SessionDocument
+	> = [];
 
 	await Promise.all(
 		sessions.map((session) =>
@@ -154,8 +156,9 @@ router.get("/recent", async (req, res) => {
 		{ sort: { timeEnded: -1 }, limit: 100 },
 	);
 
-	const sessionsWithScoreInfo: Array<{ __scoreInfo: Array<SessionScoreInfo> } & SessionDocument> =
-		[];
+	const sessionsWithScoreInfo: Array<
+		{ __scoreInfo: Array<SessionScoreInfo> } & MONGO_SessionDocument
+	> = [];
 
 	await Promise.all(
 		sessions.map((session) =>

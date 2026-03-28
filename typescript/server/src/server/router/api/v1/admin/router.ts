@@ -17,8 +17,8 @@ import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
 import {
 	type GameGroup,
-	type GoalSubscriptionDocument,
 	type integer,
+	type MONGO_GoalSubscriptionDocument,
 	type Playtype,
 	UserAuthLevels,
 } from "tachi-common";
@@ -384,7 +384,7 @@ router.post("/reprocess-all-goals", async (req, res) => {
 				userID: ugpt.userID,
 			});
 
-			const goalSubsMap = new Map<string, GoalSubscriptionDocument>();
+			const goalSubsMap = new Map<string, MONGO_GoalSubscriptionDocument>();
 
 			for (const gSub of goalSubs) {
 				goalSubsMap.set(gSub.goalID, gSub);

@@ -1,4 +1,4 @@
-import type { GameGroup, Playtype, ScoreDocument } from "tachi-common";
+import type { GameGroup, MONGO_ScoreDocument, Playtype } from "tachi-common";
 
 import { log } from "#lib/log/log";
 import { UpdateUsersGamePlaytypeStats } from "#lib/score-import/framework/ugpt-stats/update-ugpt-stats";
@@ -11,7 +11,7 @@ export async function RecalcGameProfiles() {
 	const users = await MONGODB_KILL.users.find({});
 
 	for (const user of users) {
-		const gpts: Array<{ _id: { game: GameGroup; playtype: Playtype } } & ScoreDocument> =
+		const gpts: Array<{ _id: { game: GameGroup; playtype: Playtype } } & MONGO_ScoreDocument> =
 			await MONGODB_KILL.scores.aggregate([
 				{
 					$match: {

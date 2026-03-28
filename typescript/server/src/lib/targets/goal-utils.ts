@@ -12,14 +12,14 @@ import {
 	GetGPTString,
 	GetScoreMetricConf,
 	GetSpecificGPTConfig,
-	type GoalDocument,
 	type GPTString,
+	type MONGO_GoalDocument,
 	type Playtype,
 } from "tachi-common";
 
 export async function CreateGoalTitle(
-	charts: GoalDocument["charts"],
-	criteria: GoalDocument["criteria"],
+	charts: MONGO_GoalDocument["charts"],
+	criteria: MONGO_GoalDocument["criteria"],
 	game: GameGroup,
 	playtype: Playtype,
 ) {
@@ -92,8 +92,8 @@ export async function CreateGoalTitle(
 }
 
 async function FormatCharts(
-	charts: GoalDocument["charts"],
-	criteria: GoalDocument["criteria"],
+	charts: MONGO_GoalDocument["charts"],
+	criteria: MONGO_GoalDocument["criteria"],
 	game: GameGroup,
 ) {
 	switch (charts.type) {
@@ -126,14 +126,14 @@ async function FormatCharts(
 		default:
 			throw new Error(
 				`Invalid goal charts.type -- got ${
-					(charts as GoalDocument["charts"]).type
+					(charts as MONGO_GoalDocument["charts"]).type
 				}, which we don't support?`,
 			);
 	}
 }
 
 function FormatCriteria<GPT extends GPTString>(
-	criteria: GoalDocument<GPT>["criteria"],
+	criteria: MONGO_GoalDocument<GPT>["criteria"],
 	gptString: GPT,
 ) {
 	const gptConfig = GetSpecificGPTConfig(gptString);
@@ -175,8 +175,8 @@ function FormatCriteria<GPT extends GPTString>(
  * @warn This function is disgusting. This should have never happened.
  */
 export async function ValidateGoalChartsAndCriteria(
-	charts: GoalDocument["charts"],
-	criteria: GoalDocument["criteria"],
+	charts: MONGO_GoalDocument["charts"],
+	criteria: MONGO_GoalDocument["criteria"],
 	game: GameGroup,
 	playtype: Playtype,
 ) {

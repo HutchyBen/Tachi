@@ -15,13 +15,13 @@ import { GetRecentUGPTScores } from "#utils/queries/scores";
 import { GetUser } from "#utils/req-tachi-data";
 import path from "path";
 import {
-	type ChartDocument,
 	CreateSongMap,
-	type FolderDocument,
 	type integer,
+	type MONGO_ChartDocument,
+	type MONGO_FolderDocument,
+	type MONGO_SongDocument,
+	type MONGO_TableDocument,
 	type Playtypes,
-	type SongDocument,
-	type TableDocument,
 } from "tachi-common";
 
 // Instead of just supporting existing tables, Tachi should also be able
@@ -29,8 +29,8 @@ import {
 
 function AppendAndConvertChartsToBMSBody(
 	body: Array<RawBMSTableEntry>,
-	charts: Array<ChartDocument<"bms:7K" | "bms:14K">>,
-	songMap: Map<integer, SongDocument>,
+	charts: Array<MONGO_ChartDocument<"bms:7K" | "bms:14K">>,
+	songMap: Map<integer, MONGO_SongDocument>,
 	level: string,
 ) {
 	for (const chart of charts) {
@@ -58,7 +58,7 @@ function AppendAndConvertChartsToBMSBody(
  * Convert a table in Tachi into a bms header.json and body.json.
  */
 export async function TachiTableToBMSTableJSON(
-	table: TableDocument,
+	table: MONGO_TableDocument,
 ): Promise<Array<RawBMSTableEntry>> {
 	const body: Array<RawBMSTableEntry> = [];
 
@@ -67,7 +67,7 @@ export async function TachiTableToBMSTableJSON(
 	// we have to iterate over these folders in the order the table document says
 	// to
 	// as bms tables are somewhat sensitive to being placed in the correct order.
-	const folderMap = new Map<string, FolderDocument>();
+	const folderMap = new Map<string, MONGO_FolderDocument>();
 
 	for (const folder of folders) {
 		folderMap.set(folder.folderID, folder);
@@ -87,7 +87,7 @@ export async function TachiTableToBMSTableJSON(
 		// order.
 		// eslint-disable-next-line no-await-in-loop
 		const data = await GetFolderCharts(folder, {}, true);
-		const charts = data.charts as Array<ChartDocument<"bms:7K">>;
+		const charts = data.charts as Array<MONGO_ChartDocument<"bms:7K">>;
 		const songMap = CreateSongMap(data.songs);
 
 		AppendAndConvertChartsToBMSBody(body, charts, songMap, folder.title);
@@ -332,7 +332,7 @@ export const CUSTOM_TACHI_BMS_TABLES: Array<TachiBMSTable> = [
 
 						const data = await GetRelevantSongsAndCharts(scores, "bms");
 						const charts = data.charts as unknown as Array<
-							ChartDocument<"bms:7K" | "bms:14K">
+							MONGO_ChartDocument<"bms:7K" | "bms:14K">
 						>;
 
 						const songMap = CreateSongMap(data.songs);
@@ -352,7 +352,7 @@ export const CUSTOM_TACHI_BMS_TABLES: Array<TachiBMSTable> = [
 
 						const data = await GetRelevantSongsAndCharts(scores, "bms");
 						const charts = data.charts as unknown as Array<
-							ChartDocument<"bms:7K" | "bms:14K">
+							MONGO_ChartDocument<"bms:7K" | "bms:14K">
 						>;
 
 						const songMap = CreateSongMap(data.songs);

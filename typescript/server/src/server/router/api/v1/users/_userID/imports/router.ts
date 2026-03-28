@@ -1,5 +1,5 @@
 import type { FilterQuery } from "mongodb";
-import type { ImportTrackerDocument, ImportTypes } from "tachi-common";
+import type { ImportTypes, MONGO_ImportTrackerDocument } from "tachi-common";
 
 import { TachiConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
@@ -79,7 +79,7 @@ router.get(
 		const userIntent =
 			req.query.userIntent === undefined ? undefined : req.query.userIntent === "true";
 
-		const query: FilterQuery<ImportTrackerDocument> = {
+		const query: FilterQuery<MONGO_ImportTrackerDocument> = {
 			type: "FAILED",
 			userIntent,
 			userID,

@@ -1,4 +1,4 @@
-import type { GoalDocument } from "tachi-common";
+import type { MONGO_GoalDocument } from "tachi-common";
 
 import { log } from "#lib/log/log";
 import { CreateGoalTitle, ValidateGoalChartsAndCriteria } from "#lib/targets/goal-utils";
@@ -102,8 +102,8 @@ router.post(
 		const { game, playtype } = GetGPT(req);
 
 		const { charts, criteria } = req.safeBody as {
-			charts: GoalDocument["charts"];
-			criteria: GoalDocument["criteria"];
+			charts: MONGO_GoalDocument["charts"];
+			criteria: MONGO_GoalDocument["criteria"];
 		};
 
 		try {

@@ -6,7 +6,12 @@ import { DeorphanIfInQueue } from "#lib/orphan-queue/orphan-queue";
 import MONGODB_KILL from "#services/mongo/db";
 import { FormatBMSTables, WrapScriptPromise } from "#utils/misc";
 import { type BMSTableEntry, LoadBMSTable } from "bms-table-loader";
-import { BMS_TABLES, type BMSTableInfo, type ChartDocument, type Playtypes } from "tachi-common";
+import {
+	BMS_TABLES,
+	type BMSTableInfo,
+	type MONGO_ChartDocument,
+	type Playtypes,
+} from "tachi-common";
 
 /**
  * Tables might have updates that remove charts from their table.
@@ -36,7 +41,7 @@ async function HandleTableRemovals(
 	const existingCharts = (await MONGODB_KILL.charts.bms.find({
 		playtype,
 		"data.tableFolders.table": prefix,
-	})) as unknown as Array<ChartDocument<"bms:7K" | "bms:14K">>;
+	})) as unknown as Array<MONGO_ChartDocument<"bms:7K" | "bms:14K">>;
 
 	log.info(
 		`Found ${existingCharts.length} existing chart(s) in the database for table ${prefix}.`,
@@ -139,7 +144,7 @@ async function ImportTableLevels(
 	);
 
 	for (const td of tableEntries) {
-		let query: FilterQuery<ChartDocument<"bms:7K" | "bms:14K">>;
+		let query: FilterQuery<MONGO_ChartDocument<"bms:7K" | "bms:14K">>;
 
 		switch (td.checksum.type) {
 			case "md5": {
@@ -153,7 +158,7 @@ async function ImportTableLevels(
 			}
 		}
 
-		let chart: ChartDocument<"bms:7K" | "bms:14K"> | null =
+		let chart: MONGO_ChartDocument<"bms:7K" | "bms:14K"> | null =
 			await MONGODB_KILL.charts.bms.findOne(query);
 
 		if (!chart) {

@@ -1,5 +1,5 @@
 import type { RequestHandler, Response } from "express-serve-static-core";
-import type { APITokenDocument } from "tachi-common";
+import type { MONGO_APITokenDocument } from "tachi-common";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log";
@@ -50,7 +50,8 @@ export const RequestLoggerMiddleware: RequestHandler = (req, res, next) => {
 			requestBody: safeBody,
 
 			// This might actually be undefined, as it could be called in some weird scenarios?
-			from: (req[SYMBOL_TACHI_API_AUTH] as APITokenDocument | undefined)?.userID ?? null,
+			from:
+				(req[SYMBOL_TACHI_API_AUTH] as MONGO_APITokenDocument | undefined)?.userID ?? null,
 			fromIp: req.ip,
 		};
 

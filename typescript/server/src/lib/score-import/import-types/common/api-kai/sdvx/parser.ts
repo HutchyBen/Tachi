@@ -1,5 +1,5 @@
 import type { KtLogger } from "#lib/log/log";
-import type { KaiAuthDocument } from "tachi-common";
+import type { MONGO_KaiAuthDocument } from "tachi-common";
 
 import nodeFetch from "#utils/fetch";
 
@@ -13,7 +13,7 @@ import { CreateKaiSDVXClassProvider } from "./class-handler";
 
 export async function ParseKaiSDVX(
 	service: "EAG" | "FLO" | "MIN",
-	authDoc: KaiAuthDocument,
+	authDoc: MONGO_KaiAuthDocument,
 	log: KtLogger,
 	fetch = nodeFetch,
 	reauthFn: KaiAPIReauthFunction | null = null,

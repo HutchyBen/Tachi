@@ -1,5 +1,10 @@
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
-import { type ChartDocument, type GameGroup, GetGPTString, type GPTString } from "tachi-common";
+import {
+	type GameGroup,
+	GetGPTString,
+	type GPTString,
+	type MONGO_ChartDocument,
+} from "tachi-common";
 
 import type { DryScoreData } from "../common/types";
 
@@ -10,7 +15,7 @@ import type { DryScoreData } from "../common/types";
 export function CreateScoreCalcData<GPT extends GPTString>(
 	game: GameGroup,
 	dryScoreData: DryScoreData<GPT>,
-	chart: ChartDocument<GPT>,
+	chart: MONGO_ChartDocument<GPT>,
 ) {
 	const gptString = GetGPTString(game, chart.playtype);
 

@@ -9,7 +9,7 @@ import { Router } from "express";
 import {
 	GetGamePTConfig,
 	GetScoreMetricConf,
-	type ScoreDocument,
+	type MONGO_ScoreDocument,
 	ValidateMetric,
 } from "tachi-common";
 
@@ -155,7 +155,7 @@ router.get(
 			});
 		}
 
-		const matchCriteria: FilterQuery<ScoreDocument> = {
+		const matchCriteria: FilterQuery<MONGO_ScoreDocument> = {
 			userID: user.id,
 			game,
 			playtype,
@@ -166,7 +166,7 @@ router.get(
 
 		// Returns a unique score per-chart that was the first score to achieve
 		// this criteria on that chart.
-		const scoresAgg: Array<{ doc: ScoreDocument }> = await MONGODB_KILL.scores.aggregate([
+		const scoresAgg: Array<{ doc: MONGO_ScoreDocument }> = await MONGODB_KILL.scores.aggregate([
 			{
 				$match: matchCriteria,
 			},

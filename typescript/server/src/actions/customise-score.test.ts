@@ -1,7 +1,7 @@
 import { mongoScoreDataToPg, pgScoreDataToMongo } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
-import { type MongoScoreData, type ScoreDocument } from "tachi-common";
+import { type MONGO_ScoreData, type MONGO_ScoreDocument } from "tachi-common";
 import { describe, expect, it } from "vitest";
 
 import { ACTION_CustomiseScore } from "./customise-score";
@@ -16,7 +16,7 @@ describe("mergeScoreDataFromPg", () => {
 			percent: 50,
 			score: 200,
 			optional: {},
-		} as MongoScoreData<"iidx:SP">;
+		} as MONGO_ScoreData<"iidx:SP">;
 
 		const pg = mongoScoreDataToPg("iidx:SP", { ...original, judgements: {} });
 		const back = pgScoreDataToMongo("iidx-sp", pg);
@@ -75,7 +75,7 @@ describe("ACTION_CustomiseScore", () => {
 			score: 100,
 			optional: {},
 			judgements: {},
-		} as MongoScoreData<"iidx:SP">);
+		} as MONGO_ScoreData<"iidx:SP">);
 
 		await DB.insertInto("score")
 			.values({
@@ -111,7 +111,7 @@ describe("ACTION_CustomiseScore", () => {
 			comment: "nice",
 		});
 
-		expect((result.score as ScoreDocument).comment).toBe("nice");
+		expect((result.score as MONGO_ScoreDocument).comment).toBe("nice");
 
 		const row = await DB.selectFrom("score")
 			.select("comment")

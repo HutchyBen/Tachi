@@ -15,7 +15,7 @@ import { GetGoalForIDGuaranteed } from "#utils/db";
 import { AssignToReqTachiData, GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
-import { GetGamePTConfig, type GoalDocument, type QuestDocument } from "tachi-common";
+import { GetGamePTConfig, type MONGO_GoalDocument, type MONGO_QuestDocument } from "tachi-common";
 
 import { RequireAuthedAsUser } from "../../../../../middleware";
 
@@ -60,7 +60,7 @@ router.get("/", async (req, res) => {
 	});
 });
 
-type GoalCreationBody = Pick<GoalDocument, "charts" | "criteria">;
+type GoalCreationBody = Pick<MONGO_GoalDocument, "charts" | "criteria">;
 
 /**
  * Add a goal to your account. If the goal document already exists, it is subscribed to.
@@ -241,7 +241,7 @@ router.get("/:goalID", GetGoalSubscription, async (req, res) => {
 
 	const goalSub = GetTachiData(req, "goalSubDoc");
 
-	const quests: Array<QuestDocument> = await GetQuestsThatContainGoal(goalSub.goalID);
+	const quests: Array<MONGO_QuestDocument> = await GetQuestsThatContainGoal(goalSub.goalID);
 
 	const goal = await GetGoalForIDGuaranteed(goalSub.goalID);
 

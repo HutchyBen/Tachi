@@ -332,7 +332,10 @@ CREATE TABLE "priv_svc_myt_card_info" (
 	--
 	-- n.g.
 	card_access_code TEXT PRIMARY KEY,
-	user_id BIGINT REFERENCES account(id) NOT NULL
+	user_id BIGINT REFERENCES account(id) NOT NULL,
+
+	-- One MYT card integration row per account (upsert target for UPDATE_MYT_CARD_INFO).
+	CONSTRAINT priv_svc_myt_card_info_user_id_key UNIQUE (user_id)
 );
 
 CREATE TABLE "priv_svc_cg_card_info" (
@@ -541,7 +544,7 @@ CREATE TABLE "chart" (
 );
 
 CREATE TABLE "chart_version" (
-	chart_id TEXT REFERENCES chart(id) NOT NULL,
+	chart_id TEXT NOT NULL REFERENCES chart(id) ON DELETE CASCADE,
 	version TEXT NOT NULL,
 
 	PRIMARY KEY (chart_id, version)

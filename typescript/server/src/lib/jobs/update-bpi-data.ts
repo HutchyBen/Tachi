@@ -1,9 +1,9 @@
 import type {
-	ChartDocument,
 	Difficulties,
 	integer,
+	MONGO_ChartDocument,
+	MONGO_SongDocument,
 	Playtypes,
-	SongDocument,
 	Versions,
 } from "tachi-common";
 
@@ -61,8 +61,8 @@ export async function UpdatePoyashiData() {
 
 	log.info("Fetched data.");
 
-	const iidxSongs: Array<SongDocument<"iidx">> = await repo.ReadCollection("songs-iidx");
-	const iidxCharts: Array<ChartDocument<"iidx:DP" | "iidx:SP">> =
+	const iidxSongs: Array<MONGO_SongDocument<"iidx">> = await repo.ReadCollection("songs-iidx");
+	const iidxCharts: Array<MONGO_ChartDocument<"iidx:DP" | "iidx:SP">> =
 		await repo.ReadCollection("charts-iidx");
 
 	// Utility functions for finding matching charts.

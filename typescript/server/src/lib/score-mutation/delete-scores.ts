@@ -1,4 +1,4 @@
-import type { GameGroup, Playtype, ScoreDocument } from "tachi-common";
+import type { GameGroup, MONGO_ScoreDocument, Playtype } from "tachi-common";
 
 import { log } from "#lib/log/log";
 import { GetAndUpdateUsersGoals } from "#lib/score-import/framework/goals/goals";
@@ -15,7 +15,7 @@ import { RecalcSessions } from "#utils/calculations/recalc-sessions";
  * needing to unset things like sessions and recalcs.
  */
 export async function DeleteScore(
-	score: ScoreDocument,
+	score: MONGO_ScoreDocument,
 	blacklist = false,
 	attemptPBReprocess = true,
 ) {
@@ -114,7 +114,7 @@ export async function DeleteScore(
 	}
 }
 
-export async function DeleteMultipleScores(scores: Array<ScoreDocument>, blacklist = false) {
+export async function DeleteMultipleScores(scores: Array<MONGO_ScoreDocument>, blacklist = false) {
 	log.info(`Received request to delete ${scores.length} score(s) (Blacklist: ${blacklist}).`);
 
 	const scoreIDs = scores.map((e) => e.scoreID);

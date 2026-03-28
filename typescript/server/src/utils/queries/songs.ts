@@ -1,6 +1,6 @@
 import type { KtLogger } from "#lib/log/log";
 import type { FindOneResult } from "monk";
-import type { GameGroup, integer, SongDocument } from "tachi-common";
+import type { GameGroup, integer, MONGO_SongDocument } from "tachi-common";
 
 import {
 	AmbiguousTitleFailure,
@@ -21,7 +21,7 @@ import { EscapeStringRegexp } from "../misc";
 export async function FindSongOnTitle(
 	game: GameGroup,
 	title: string,
-): Promise<SongDocument | null> {
+): Promise<MONGO_SongDocument | null> {
 	// @optimisable: Performance should be tested here by having a utility field for all-titles.
 	const res = await MONGODB_KILL.anySongs[game].find(
 		{
@@ -57,7 +57,7 @@ export async function FindSongOnTitleInsensitive(
 	game: GameGroup,
 	title: string,
 	artist?: string | null,
-): Promise<SongDocument | null> {
+): Promise<MONGO_SongDocument | null> {
 	// @optimisable: Performance should be tested here by having a utility field for all-titles.
 
 	const regexTitle = new RegExp(`^${EscapeStringRegexp(title)}$`, "iu");
@@ -110,7 +110,7 @@ export async function FindSongOnTitleInsensitive(
 export function FindSongOnID(
 	game: GameGroup,
 	songID: integer,
-): Promise<FindOneResult<SongDocument>> {
+): Promise<FindOneResult<MONGO_SongDocument>> {
 	return MONGODB_KILL.anySongs[game].findOne({
 		id: songID,
 	});

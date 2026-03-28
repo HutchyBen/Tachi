@@ -1,12 +1,12 @@
 import DB from "#services/pg/db";
 import { toPgGame } from "#services/pg/seeds";
 import { type Selectable } from "kysely";
-import { type GameGroup, type Playtype, type TableDocument, V3ToGamePT } from "tachi-common";
+import { type GameGroup, type MONGO_TableDocument, type Playtype, V3ToGamePT } from "tachi-common";
 import { type Database } from "tachi-db";
 
 export type TableRow = Selectable<Database["table"]>;
 
-export function ToTableDocument(row: TableRow, folderIds: Array<string>): TableDocument {
+export function ToTableDocument(row: TableRow, folderIds: Array<string>): MONGO_TableDocument {
 	const { game, playtype } = V3ToGamePT(row.game);
 
 	return {
@@ -28,7 +28,7 @@ export async function GetTableDocumentsForGamePlaytype(
 	game: GameGroup,
 	playtype: Playtype,
 	includeInactive: boolean,
-): Promise<Array<TableDocument>> {
+): Promise<Array<MONGO_TableDocument>> {
 	const pgGame = toPgGame(game, playtype);
 
 	let q = DB.selectFrom("table").selectAll().where("game", "=", pgGame);

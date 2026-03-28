@@ -7,7 +7,7 @@ import DB from "#services/pg/db";
 import { Random20Hex } from "#utils/misc";
 import { CheckIfEmailInUse, GetUserCaseInsensitive } from "#utils/user";
 import { ExpectedErr, log } from "bliss";
-import { type UserDocument } from "tachi-common";
+import { type MONGO_UserDocument } from "tachi-common";
 
 export const ANON_ACTION_Register = MakeAnonAction(
 	"REGISTER",
@@ -43,7 +43,7 @@ export const ANON_ACTION_Register = MakeAnonAction(
 			throw new ExpectedErr(409, `This email is already in use.`);
 		}
 
-		const newUser = await DB.transaction().execute(async (txn): Promise<UserDocument> => {
+		const newUser = await DB.transaction().execute(async (txn): Promise<MONGO_UserDocument> => {
 			// if we get to this point, We're good to create the user.
 
 			const { newUser, newSettings: _ } = await AddNewUser(txn, username, password, email);

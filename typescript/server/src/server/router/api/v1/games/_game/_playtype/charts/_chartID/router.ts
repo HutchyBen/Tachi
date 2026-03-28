@@ -11,11 +11,11 @@ import { ParseStrPositiveNonZeroInt } from "#utils/string-checks";
 import { GetUsersWithIDs } from "#utils/user";
 import { Router } from "express";
 import {
-	type FolderDocument,
 	FormatChart,
+	type MONGO_FolderDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_UserDocument,
 	MongoChartLegacyId,
-	type PBScoreDocument,
-	type UserDocument,
 } from "tachi-common";
 
 import { ValidateAndGetChart } from "./middleware";
@@ -79,7 +79,7 @@ router.get("/folders", async (req, res) => {
 		},
 	);
 
-	const query: FilterQuery<FolderDocument> = {
+	const query: FilterQuery<MONGO_FolderDocument> = {
 		folderID: { $in: folderIDs.map((e) => e.folderID) },
 	};
 
@@ -104,7 +104,9 @@ router.get("/folders", async (req, res) => {
 router.get("/playcount", async (req, res) => {
 	const chart = GetTachiData(req, "chartDoc");
 
-	const count = await MONGODB_KILL["personal-bests"].count({ chartID: MongoChartLegacyId(chart) });
+	const count = await MONGODB_KILL["personal-bests"].count({
+		chartID: MongoChartLegacyId(chart),
+	});
 
 	return res.status(200).json({
 		success: true,
@@ -178,7 +180,7 @@ router.get("/pbs/search", async (req, res) => {
 	});
 
 	return res.status(200).json(
-		apiSuccess<{ pbs: Array<PBScoreDocument>; users: Array<UserDocument> }>(
+		apiSuccess<{ pbs: Array<MONGO_PBScoreDocument>; users: Array<MONGO_UserDocument> }>(
 			`Returned ${pbs.length} scores.`,
 			{
 				pbs,

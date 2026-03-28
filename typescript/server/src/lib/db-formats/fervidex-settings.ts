@@ -1,5 +1,5 @@
 import { type Selection } from "kysely";
-import { type FervidexSettingsDocument } from "tachi-common";
+import { type MONGO_FervidexSettingsDocument } from "tachi-common";
 import { type Database } from "tachi-db";
 
 export const SELECT_FER_SETTINGS = [
@@ -10,7 +10,7 @@ export const SELECT_FER_SETTINGS = [
 export function ToFervidexSettingsDocument(
 	row: Selection<Database, "svc_fer_settings", (typeof SELECT_FER_SETTINGS)[number]>,
 	cards: Array<string> | null,
-): FervidexSettingsDocument {
+): MONGO_FervidexSettingsDocument {
 	return {
 		userID: row.user_id,
 		cards,

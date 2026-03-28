@@ -3,8 +3,8 @@ import {
 	FormatGameGroup,
 	type GameGroup,
 	type integer,
+	type MONGO_UserDocument,
 	type Playtype,
-	type UserDocument,
 } from "tachi-common";
 
 import { BulkSendNotification, SendNotification } from "./notifications";
@@ -19,7 +19,7 @@ import { BulkSendNotification, SendNotification } from "./notifications";
  */
 export async function SendSetRivalNotification(
 	toUserID: integer,
-	fromUser: UserDocument,
+	fromUser: MONGO_UserDocument,
 	game: GameGroup,
 	playtype: Playtype,
 ) {

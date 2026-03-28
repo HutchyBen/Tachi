@@ -21,8 +21,8 @@ import {
 	type GameGroup,
 	GetGamePTConfig,
 	type integer,
+	type MONGO_UserGameStats,
 	type Playtype,
-	type UserGameStats,
 } from "tachi-common";
 
 import chartsRouter from "./charts/router";
@@ -126,7 +126,7 @@ router.get("/leaderboard", async (req, res) => {
 		alg = temp;
 	}
 
-	const options: FindOptions<UserGameStats> = {
+	const options: FindOptions<MONGO_UserGameStats> = {
 		sort: {
 			[`ratings.${alg}`]: -1,
 		},

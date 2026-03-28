@@ -1,9 +1,8 @@
 import { GetChartByPgIdOrLegacyId } from "#lib/db-formats/chart";
 import DB from "#services/pg/db";
+import { CloseServerConnection } from "#test-utils/mock-api";
 import { GamePTToV3 } from "tachi-common";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
-
-import { CloseServerConnection } from "#test-utils/mock-api";
 
 afterAll(() => CloseServerConnection());
 
@@ -41,9 +40,7 @@ async function seedChart() {
 		})
 		.execute();
 
-	await DB.insertInto("chart_version")
-		.values({ chart_id: CHART_PG_ID, version: "27" })
-		.execute();
+	await DB.insertInto("chart_version").values({ chart_id: CHART_PG_ID, version: "27" }).execute();
 }
 
 async function cleanup() {

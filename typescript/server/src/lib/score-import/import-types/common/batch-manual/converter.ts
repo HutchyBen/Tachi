@@ -13,15 +13,15 @@ import {
 import { FindSongOnID, FindSongOnTitleInsensitive } from "#utils/queries/songs";
 import {
 	type BatchManualScore,
-	type ChartDocument,
 	type Difficulties,
 	FormatGameGroup,
 	GetGamePTConfig,
 	type GPTString,
 	type MatchTypeResolver,
 	type MatchTypeResolverWithDifficulty,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
 	type MongoProvidedMetrics,
-	type SongDocument,
 	type Versions,
 } from "tachi-common";
 
@@ -137,7 +137,7 @@ export const ConverterBatchManual: ConverterFunction<BatchManualScore, BatchManu
 export async function ResolveSongAndChart(
 	resolver: MatchTypeResolver,
 	log: KtLogger,
-): Promise<{ chart: ChartDocument; song: SongDocument } | null> {
+): Promise<{ chart: MONGO_ChartDocument; song: MONGO_SongDocument } | null> {
 	const { game, playtype } = resolver;
 
 	const config = GetGamePTConfig(game, playtype);
@@ -274,7 +274,7 @@ export async function ResolveSongAndChart(
 		}
 
 		case "sdvxInGameID": {
-			let chart: ChartDocument | null;
+			let chart: MONGO_ChartDocument | null;
 
 			const identifier = Number(resolver.identifier);
 
@@ -343,7 +343,7 @@ export async function ResolveSongAndChart(
 
 			const difficulty = AssertStrAsDifficulty(resolver.difficulty, game, resolver.playtype);
 
-			let chart: ChartDocument | null | undefined;
+			let chart: MONGO_ChartDocument | null | undefined;
 
 			if (resolver.version) {
 				chart = await MONGODB_KILL.anyCharts[game].findOne({
@@ -502,7 +502,7 @@ export async function ResolveSongAndChart(
 }
 
 export async function ResolveChartFromSong(
-	song: SongDocument,
+	song: MONGO_SongDocument,
 	resolver: MatchTypeResolverWithDifficulty,
 ) {
 	const game = resolver.game;
