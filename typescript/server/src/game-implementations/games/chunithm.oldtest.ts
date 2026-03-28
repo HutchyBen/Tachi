@@ -117,7 +117,7 @@ t.test("CHUNITHM Implementation", (t) => {
 	t.test("Colour Deriver", (t) => {
 		const f = (v: number | null, expected: any) =>
 			t.equal(
-				CHUNITHM_IMPL.classDerivers.colour({ naiveRating: v }),
+				CHUNITHM_IMPL.classDerivers({ naiveRating: v }).colour,
 				expected,
 				`A naiveRating of ${v} should result in ${expected}.`,
 			);

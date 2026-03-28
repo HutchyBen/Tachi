@@ -114,7 +114,7 @@ export const ITG_STAMINA_IMPL: GPTServerImplementation<"itg:Stamina"> = {
 
 		return { highestBlock, fastest32 };
 	},
-	newClassDerivers: (_ratings) => ({}),
+	classDerivers: (_ratings) => ({}),
 	sessionCalcs: { blockRating: SessionAvgBestNFor("blockRating", 5) },
 	profileCalcs: {
 		// the sum of your 1 best blockrating/fastest32 is basically just
@@ -122,7 +122,6 @@ export const ITG_STAMINA_IMPL: GPTServerImplementation<"itg:Stamina"> = {
 		highestBlock: ProfileSumBestN("blockRating", 1, true),
 		fastest32: ProfileSumBestN("fastest32", 1, true),
 	},
-	classDerivers: {},
 	goalCriteriaFormatters: {
 		survivedPercent: (val) => `Survive ${NumToDP(val)}% through`,
 

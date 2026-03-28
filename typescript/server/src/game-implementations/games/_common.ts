@@ -6,7 +6,6 @@ import type {
 	GPTGoalFormatters,
 	GPTGoalProgressFormatters,
 	GPTNewCalcs,
-	GPTNewClassDerivers,
 	GPTNewDeriver,
 	GPTNewProfileCalcs,
 	GPTNewSessionCalcs,
@@ -227,18 +226,6 @@ export const SDVXLIKE_PROFILE_CALCS: GPTProfileCalculators<SDVXLikes> = {
 	VF6: ProfileSumBestN("VF6", 50),
 };
 
-export const SDVXLIKE_CLASS_DERIVERS: GPTClassDerivers<SDVXLikes> = {
-	vfClass: (ratings) => {
-		const vf6 = ratings.VF6;
-
-		if (IsNullish(vf6)) {
-			return null;
-		}
-
-		return VF6ToClass(vf6);
-	},
-};
-
 export const SDVXLIKE_NEW_SESSION_CALCS: GPTNewSessionCalcs<SDVXLikes> = (arr) => {
 	const v = SessionAvgBest10For("VF6")(arr);
 
@@ -253,7 +240,7 @@ export const SDVXLIKE_NEW_PROFILE_CALCS: GPTNewProfileCalcs<SDVXLikes> = async (
 	VF6: await ProfileSumBestN("VF6", 50)(game, playtype, userID),
 });
 
-export const SDVXLIKE_NEW_CLASS_DERIVERS: GPTNewClassDerivers<SDVXLikes> = (ratings) => ({
+export const SDVXLIKE_CLASS_DERIVERS: GPTClassDerivers<SDVXLikes> = (ratings) => ({
 	vfClass: IsNullish(ratings.VF6) ? null : VF6ToClass(ratings.VF6),
 });
 

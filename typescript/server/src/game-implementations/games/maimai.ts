@@ -59,7 +59,7 @@ export const MAIMAI_IMPL: GPTServerImplementation<"maimai:Single"> = {
 	newProfileCalcs: async (game, playtype, userID) => ({
 		naiveRate: await ProfileAvgBestN("rate", 30)(game, playtype, userID),
 	}),
-	newClassDerivers: (ratings) => {
+	classDerivers: (ratings) => {
 		const rate = ratings.naiveRate;
 
 		if (IsNullish(rate)) {
@@ -91,37 +91,6 @@ export const MAIMAI_IMPL: GPTServerImplementation<"maimai:Single"> = {
 	sessionCalcs: { rate: SessionAvgBest10For("rate") },
 	profileCalcs: {
 		naiveRate: ProfileAvgBestN("rate", 30),
-	},
-	classDerivers: {
-		colour: (ratings) => {
-			const rate = ratings.naiveRate;
-
-			if (IsNullish(rate)) {
-				return null;
-			}
-
-			if (rate >= 15) {
-				return "RAINBOW";
-			} else if (rate >= 14.5) {
-				return "GOLD";
-			} else if (rate >= 14) {
-				return "SILVER";
-			} else if (rate >= 13) {
-				return "BRONZE";
-			} else if (rate >= 12) {
-				return "PURPLE";
-			} else if (rate >= 10) {
-				return "RED";
-			} else if (rate >= 7) {
-				return "YELLOW";
-			} else if (rate >= 4) {
-				return "GREEN";
-			} else if (rate >= 2) {
-				return "BLUE";
-			}
-
-			return "WHITE";
-		},
 	},
 	goalCriteriaFormatters: {
 		percent: GoalFmtPercent,

@@ -97,7 +97,7 @@ t.test("maimai Implementation", (t) => {
 	t.test("Colour Deriver", (t) => {
 		const f = (v: number | null, expected: string | null) =>
 			t.equal(
-				MAIMAI_IMPL.classDerivers.colour({ naiveRate: v }),
+				MAIMAI_IMPL.classDerivers({ naiveRate: v }).colour,
 				expected,
 				`A rate of ${v} should result in ${expected}.`,
 			);

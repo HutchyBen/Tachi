@@ -306,21 +306,10 @@ function DeriveFlareClass(flarePoints: number) {
 
 export const DDR_IMPL: GPTServerImplementation<"ddr:DP" | "ddr:SP"> = {
 	chartSpecificValidators: {},
-	newClassDerivers: (ratings) => {
+	classDerivers: (ratings) => {
 		const flarePoints = ratings.flareSkill;
 
 		return { flare: IsNullish(flarePoints) ? null : DeriveFlareClass(flarePoints) };
-	},
-	classDerivers: {
-		flare: (ratings) => {
-			const flarePoints = ratings.flareSkill;
-
-			if (IsNullish(flarePoints)) {
-				return null;
-			}
-
-			return DeriveFlareClass(flarePoints);
-		},
 	},
 	defaultMergeRefName: "Best Score",
 	derivers: {

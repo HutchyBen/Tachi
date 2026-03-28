@@ -202,7 +202,7 @@ t.test("ONGEKI Implementation", (t: any) => {
 	t.test("Colour Deriver", (t: any) => {
 		const f = (v: number | null, expected: string | null) =>
 			t.equal(
-				ONGEKI_IMPL.classDerivers.colour({ naiveRatingRefresh: v }),
+				ONGEKI_IMPL.classDerivers({ naiveRatingRefresh: v }).colour,
 				expected,
 				`A naiveRatingRefresh of ${v} should result in ${expected}.`,
 			);

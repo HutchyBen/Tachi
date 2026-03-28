@@ -130,7 +130,7 @@ t.test("Jubeat Implementation", (t) => {
 	t.test("Colour Deriver", (t) => {
 		const f = (v: number | null, expected: any) =>
 			t.equal(
-				JUBEAT_IMPL.classDerivers.colour({ jubility: v }),
+				JUBEAT_IMPL.classDerivers({ jubility: v }).colour,
 				expected,
 				`A jubility of ${v} should result in ${expected}.`,
 			);

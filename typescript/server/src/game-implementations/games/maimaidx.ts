@@ -38,7 +38,7 @@ export const MAIMAIDX_IMPL: GPTServerImplementation<"maimaidx:Single"> = {
 	newProfileCalcs: async (game, playtype, userID) => ({
 		naiveRate: await ProfileSumBestN("rate", 50)(game, playtype, userID),
 	}),
-	newClassDerivers: (ratings) => {
+	classDerivers: (ratings) => {
 		const rate = ratings.naiveRate;
 
 		if (IsNullish(rate)) {
@@ -72,39 +72,6 @@ export const MAIMAIDX_IMPL: GPTServerImplementation<"maimaidx:Single"> = {
 	sessionCalcs: { rate: SessionAvgBest10For("rate") },
 	profileCalcs: {
 		naiveRate: ProfileSumBestN("rate", 50),
-	},
-	classDerivers: {
-		colour: (ratings) => {
-			const rate = ratings.naiveRate;
-
-			if (IsNullish(rate)) {
-				return null;
-			}
-
-			if (rate >= 15000) {
-				return "RAINBOW";
-			} else if (rate >= 14500) {
-				return "PLATINUM";
-			} else if (rate >= 14000) {
-				return "GOLD";
-			} else if (rate >= 13000) {
-				return "SILVER";
-			} else if (rate >= 12000) {
-				return "BRONZE";
-			} else if (rate >= 10000) {
-				return "PURPLE";
-			} else if (rate >= 7000) {
-				return "RED";
-			} else if (rate >= 4000) {
-				return "YELLOW";
-			} else if (rate >= 2000) {
-				return "GREEN";
-			} else if (rate >= 1000) {
-				return "BLUE";
-			}
-
-			return "WHITE";
-		},
 	},
 	goalCriteriaFormatters: {
 		percent: (v) => GoalFmtPercent(v, 4),

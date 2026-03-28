@@ -66,7 +66,7 @@ for (const [playtype, impl] of [
 		t.test("VF Class Deriver", (t) => {
 			const f = (v: number | null, expected: any) =>
 				t.equal(
-					impl.classDerivers.vfClass({ VF6: v }),
+					impl.classDerivers({ VF6: v }).vfClass,
 					expected,
 					`A profile VF6 of ${v} should result in ${expected}.`,
 				);

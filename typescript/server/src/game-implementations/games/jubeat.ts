@@ -194,7 +194,7 @@ export const JUBEAT_IMPL: GPTServerImplementation<"jubeat:Single"> = {
 
 		return { jubility, naiveJubility };
 	},
-	newClassDerivers: (ratings) => {
+	classDerivers: (ratings) => {
 		const jubility = ratings.jubility;
 
 		if (IsNullish(jubility)) {
@@ -227,37 +227,6 @@ export const JUBEAT_IMPL: GPTServerImplementation<"jubeat:Single"> = {
 	profileCalcs: {
 		jubility: CalculateJubility,
 		naiveJubility: ProfileSumBestN("jubility", 60),
-	},
-	classDerivers: {
-		colour: (ratings) => {
-			const jubility = ratings.jubility;
-
-			if (IsNullish(jubility)) {
-				return null;
-			}
-
-			if (jubility >= 9500) {
-				return "GOLD";
-			} else if (jubility >= 8500) {
-				return "ORANGE";
-			} else if (jubility >= 7000) {
-				return "PINK";
-			} else if (jubility >= 5500) {
-				return "PURPLE";
-			} else if (jubility >= 4000) {
-				return "VIOLET";
-			} else if (jubility >= 2500) {
-				return "BLUE";
-			} else if (jubility >= 1500) {
-				return "LIGHT_BLUE";
-			} else if (jubility >= 750) {
-				return "GREEN";
-			} else if (jubility >= 250) {
-				return "YELLOW_GREEN";
-			}
-
-			return "BLACK";
-		},
 	},
 	goalCriteriaFormatters: {
 		musicRate: (v) => `Get a music rate of ${v.toFixed(1)}% on`,

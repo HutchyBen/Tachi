@@ -80,7 +80,7 @@ t.test("Arcaea Implementation", (t) => {
 	t.test("Colour Deriver", (t) => {
 		const f = (v: number | null, expected: any) =>
 			t.equal(
-				ARCAEA_IMPL.classDerivers.badge({ naivePotential: v }),
+				ARCAEA_IMPL.classDerivers({ naivePotential: v }).badge,
 				expected,
 				`A naivePotential of ${v} should result in ${expected}.`,
 			);

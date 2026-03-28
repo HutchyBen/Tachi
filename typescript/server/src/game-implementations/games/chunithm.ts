@@ -37,7 +37,7 @@ export const CHUNITHM_IMPL: GPTServerImplementation<"chunithm:Single"> = {
 	newProfileCalcs: async (game, playtype, userID) => ({
 		naiveRating: await ProfileAvgBestN("rating", 50, false, 100)(game, playtype, userID),
 	}),
-	newClassDerivers: (ratings) => {
+	classDerivers: (ratings) => {
 		const rating = ratings.naiveRating;
 
 		if (IsNullish(rating)) {
@@ -80,49 +80,6 @@ export const CHUNITHM_IMPL: GPTServerImplementation<"chunithm:Single"> = {
 	},
 	sessionCalcs: { naiveRating: SessionAvgBest10For("rating") },
 	profileCalcs: { naiveRating: ProfileAvgBestN("rating", 50, false, 100) },
-	classDerivers: {
-		colour: (ratings) => {
-			const rating = ratings.naiveRating;
-
-			if (IsNullish(rating)) {
-				return null;
-			}
-
-			if (rating >= 17.5) {
-				return "RAINBOW_EX_III";
-			} else if (rating >= 17.25) {
-				return "RAINBOW_EX_II";
-			} else if (rating >= 17) {
-				return "RAINBOW_EX_I";
-			} else if (rating >= 16.75) {
-				return "RAINBOW_IV";
-			} else if (rating >= 16.5) {
-				return "RAINBOW_III";
-			} else if (rating >= 16.25) {
-				return "RAINBOW_II";
-			} else if (rating >= 16) {
-				return "RAINBOW";
-			} else if (rating >= 15.25) {
-				return "PLATINUM";
-			} else if (rating >= 14.5) {
-				return "GOLD";
-			} else if (rating >= 13.25) {
-				return "SILVER";
-			} else if (rating >= 12) {
-				return "COPPER";
-			} else if (rating >= 10) {
-				return "PURPLE";
-			} else if (rating >= 7) {
-				return "RED";
-			} else if (rating >= 4) {
-				return "ORANGE";
-			} else if (rating >= 2) {
-				return "GREEN";
-			}
-
-			return "BLUE";
-		},
-	},
 	goalCriteriaFormatters: {
 		score: GoalFmtScore,
 	},

@@ -37,7 +37,7 @@ const GITADORA_IMPL: GPTServerImplementation<"gitadora:Dora" | "gitadora:Gita"> 
 	newProfileCalcs: async (game, playtype, userID) => ({
 		naiveSkill: await ProfileSumBestN("skill", 50)(game, playtype, userID),
 	}),
-	newClassDerivers: (ratings) => {
+	classDerivers: (ratings) => {
 		const sk = ratings.naiveSkill;
 
 		if (IsNullish(sk)) {
@@ -82,51 +82,6 @@ const GITADORA_IMPL: GPTServerImplementation<"gitadora:Dora" | "gitadora:Gita"> 
 	},
 	sessionCalcs: { skill: SessionAvgBest10For("skill") },
 	profileCalcs: { naiveSkill: ProfileSumBestN("skill", 50) },
-	classDerivers: {
-		colour: (ratings) => {
-			const sk = ratings.naiveSkill;
-
-			if (IsNullish(sk)) {
-				return null;
-			}
-
-			if (sk >= 8500) {
-				return "RAINBOW";
-			} else if (sk >= 8000) {
-				return "GOLD";
-			} else if (sk >= 7500) {
-				return "SILVER";
-			} else if (sk >= 7000) {
-				return "BRONZE";
-			} else if (sk >= 6500) {
-				return "RED_GRD";
-			} else if (sk >= 6000) {
-				return "RED";
-			} else if (sk >= 5500) {
-				return "PURPLE_GRD";
-			} else if (sk >= 5000) {
-				return "PURPLE";
-			} else if (sk >= 4500) {
-				return "BLUE_GRD";
-			} else if (sk >= 4000) {
-				return "BLUE";
-			} else if (sk >= 3500) {
-				return "GREEN_GRD";
-			} else if (sk >= 3000) {
-				return "GREEN";
-			} else if (sk >= 2500) {
-				return "YELLOW_GRD";
-			} else if (sk >= 2000) {
-				return "YELLOW";
-			} else if (sk >= 1500) {
-				return "ORANGE_GRD";
-			} else if (sk >= 1000) {
-				return "ORANGE";
-			}
-
-			return "WHITE";
-		},
-	},
 	goalCriteriaFormatters: {
 		percent: GoalFmtPercent,
 	},

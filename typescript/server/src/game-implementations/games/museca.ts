@@ -36,12 +36,11 @@ export const MUSECA_IMPL: GPTServerImplementation<"museca:Single"> = {
 	newProfileCalcs: async (game, playtype, userID) => ({
 		curatorSkill: await ProfileSumBestN("curatorSkill", 20)(game, playtype, userID),
 	}),
-	newClassDerivers: (_ratings) => ({}),
+	classDerivers: (_ratings) => ({}),
 	sessionCalcs: { curatorSkill: SessionAvgBest10For("curatorSkill") },
 	profileCalcs: {
 		curatorSkill: ProfileSumBestN("curatorSkill", 20),
 	},
-	classDerivers: {},
 	goalCriteriaFormatters: {
 		score: GoalFmtScore,
 	},

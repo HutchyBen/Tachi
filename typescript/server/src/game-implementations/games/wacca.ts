@@ -37,7 +37,7 @@ export const WACCA_IMPL: GPTServerImplementation<"wacca:Single"> = {
 	newProfileCalcs: async (game, playtype, userID) => ({
 		naiveRate: await ProfileSumBestN("rate", 50)(game, playtype, userID),
 	}),
-	newClassDerivers: (ratings) => {
+	classDerivers: (ratings) => {
 		const rate = ratings.naiveRate;
 
 		if (IsNullish(rate)) {
@@ -67,35 +67,6 @@ export const WACCA_IMPL: GPTServerImplementation<"wacca:Single"> = {
 	sessionCalcs: { rate: SessionAvgBest10For("rate") },
 	profileCalcs: {
 		naiveRate: ProfileSumBestN("rate", 50),
-	},
-	classDerivers: {
-		colour: (ratings) => {
-			const rate = ratings.naiveRate;
-
-			if (IsNullish(rate)) {
-				return null;
-			}
-
-			if (rate >= 2500) {
-				return "RAINBOW";
-			} else if (rate >= 2200) {
-				return "GOLD";
-			} else if (rate >= 1900) {
-				return "SILVER";
-			} else if (rate >= 1600) {
-				return "BLUE";
-			} else if (rate >= 1300) {
-				return "PURPLE";
-			} else if (rate >= 1000) {
-				return "RED";
-			} else if (rate >= 600) {
-				return "YELLOW";
-			} else if (rate >= 300) {
-				return "NAVY";
-			}
-
-			return "ASH";
-		},
 	},
 	goalCriteriaFormatters: {
 		score: GoalFmtScore,

@@ -134,7 +134,7 @@ export const ONGEKI_IMPL: GPTServerImplementation<"ongeki:Single"> = {
 
 		return { naiveRating, naiveRatingRefresh };
 	},
-	newClassDerivers: (ratings) => {
+	classDerivers: (ratings) => {
 		const rating = ratings.naiveRatingRefresh;
 
 		if (IsNullish(rating)) {
@@ -184,41 +184,6 @@ export const ONGEKI_IMPL: GPTServerImplementation<"ongeki:Single"> = {
 			const star1k = Math.round((star ?? 0) * 1000);
 
 			return (Math.floor(score1k * 1.2) + star1k) / 1000.0;
-		},
-	},
-	classDerivers: {
-		colour: (ratings) => {
-			const rating = ratings.naiveRatingRefresh;
-
-			if (IsNullish(rating)) {
-				return null;
-			}
-
-			if (rating >= 21) {
-				return "RAINBOW_EX";
-			} else if (rating >= 20) {
-				return "RAINBOW_SHINY";
-			} else if (rating >= 19) {
-				return "RAINBOW";
-			} else if (rating >= 18) {
-				return "PLATINUM";
-			} else if (rating >= 17) {
-				return "GOLD";
-			} else if (rating >= 15) {
-				return "SILVER";
-			} else if (rating >= 13) {
-				return "COPPER";
-			} else if (rating >= 11) {
-				return "PURPLE";
-			} else if (rating >= 9) {
-				return "RED";
-			} else if (rating >= 7) {
-				return "ORANGE";
-			} else if (rating >= 4) {
-				return "GREEN";
-			}
-
-			return "BLUE";
 		},
 	},
 	goalCriteriaFormatters: {

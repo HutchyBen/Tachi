@@ -92,7 +92,7 @@ t.test("Pop'n Implementation", (t) => {
 	t.test("Class Deriver", (t) => {
 		const f = (v: number | null, expected: any) =>
 			t.equal(
-				POPN_9B_IMPL.classDerivers.class({ naiveClassPoints: v }),
+				POPN_9B_IMPL.classDerivers({ naiveClassPoints: v }).class,
 				expected,
 				`Naive Class Points of ${v} should result in ${expected}.`,
 			);

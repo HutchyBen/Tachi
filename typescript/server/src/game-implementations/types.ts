@@ -82,7 +82,7 @@ export type ClassDeriver<GPT extends GPTString, V extends string> = (
 // {
 //     colour: ClassDeriver<"YELLOW" | "asdf" ...>
 // }
-export type GPTClassDerivers<GPT extends GPTString> = {
+export type GPTClassDeriverFuncs<GPT extends GPTString> = {
 	[C in keyof ClassConfigs[GPT] as ClassConfigs[GPT][C] extends DerivedClassConfig
 		? C
 		: never]: ClassConfigs[GPT][C] extends DerivedClassConfig<infer V>
@@ -159,11 +159,10 @@ export type GPTNewProfileCalcs<GPT extends GPTString> = (
 	userID: integer,
 ) => Promise<Record<ProfileRatingAlgorithms[GPT], number | null>>;
 
-// New-style class deriver; just f(profileRatings) -> derivedClasses
-// instead of the per-class record above.
-export type GPTNewClassDerivers<GPT extends GPTString> = (
+// Class deriver: f(profileRatings) -> derivedClasses (one object with all derived class values).
+export type GPTClassDerivers<GPT extends GPTString> = (
 	profileRatings: MONGO_SpecificUserGameStats<GPT>["ratings"],
-) => { [C in keyof GPTClassDerivers<GPT>]: ReturnType<GPTClassDerivers<GPT>[C]> };
+) => { [C in keyof GPTClassDeriverFuncs<GPT>]: ReturnType<GPTClassDeriverFuncs<GPT>[C]> };
 
 /**
  * The float values used to rank this PB against others on the same chart.
@@ -276,14 +275,6 @@ export interface GPTServerImplementation<GPT extends GPTString> {
 	 */
 	newProfileCalcs: GPTNewProfileCalcs<GPT>;
 	profileCalcs: GPTProfileCalculators<GPT>;
-
-	/**
-	 * For any "derived" classes for this game (i.e. classes that are the function
-	 * of the user's state), how should they work?
-	 *
-	 * New style, simpler function.
-	 */
-	newClassDerivers: GPTNewClassDerivers<GPT>;
 
 	/**
 	 * For any "derived" classes for this game (i.e. classes that are the function

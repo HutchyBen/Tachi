@@ -87,7 +87,7 @@ export const POPN_9B_IMPL: GPTServerImplementation<"popn:9B"> = {
 	newProfileCalcs: async (game, playtype, userID) => ({
 		naiveClassPoints: await ProfileAvgBestN("classPoints", 20)(game, playtype, userID),
 	}),
-	newClassDerivers: (ratings) => {
+	classDerivers: (ratings) => {
 		const points = ratings.naiveClassPoints;
 
 		if (IsNullish(points)) {
@@ -115,33 +115,6 @@ export const POPN_9B_IMPL: GPTServerImplementation<"popn:9B"> = {
 	sessionCalcs: { classPoints: SessionAvgBest10For("classPoints") },
 	profileCalcs: {
 		naiveClassPoints: ProfileAvgBestN("classPoints", 20),
-	},
-	classDerivers: {
-		class: (ratings) => {
-			const points = ratings.naiveClassPoints;
-
-			if (IsNullish(points)) {
-				return null;
-			}
-
-			if (points < 21) {
-				return "KITTY";
-			} else if (points < 34) {
-				return "STUDENT";
-			} else if (points < 46) {
-				return "DELINQUENT";
-			} else if (points < 59) {
-				return "DETECTIVE";
-			} else if (points < 68) {
-				return "IDOL";
-			} else if (points < 79) {
-				return "GENERAL";
-			} else if (points < 91) {
-				return "HERMIT";
-			}
-
-			return "GOD";
-		},
 	},
 	goalCriteriaFormatters: {
 		score: GoalFmtScore,

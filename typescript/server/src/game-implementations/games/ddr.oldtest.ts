@@ -57,7 +57,7 @@ t.test("DDR Implementation", (t) => {
 		t.test("Flare", (t) => {
 			const f = (ratings: number, expected: any) =>
 				t.equal(
-					impl.classDerivers.flare({ flareSkill: ratings }),
+					impl.classDerivers({ flareSkill: ratings }).flare,
 					expected,
 					`A flare skill of ${ratings} should result in grade=${expected}.`,
 				);
