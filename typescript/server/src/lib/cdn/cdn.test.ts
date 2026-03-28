@@ -1,6 +1,6 @@
 /**
  * Integration tests for the CDN layer (MinIO/S3). Requires the same setup as the rest of the
- * server suite: `test.conf.json5` CDN settings, and MinIO reachable at that endpoint (see
+ * server suite: `.env.test` CDN settings, and MinIO reachable at that endpoint (see
  * `vitest.globalSetup.ts` + `ensure-test-cdn-bucket`). Object keys use random UUIDs so workers can
  * run in parallel without sharing keys.
  */

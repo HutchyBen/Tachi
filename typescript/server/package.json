@@ -66,6 +66,7 @@
 		"connect-redis": "catalog:",
 		"csv-parse": "catalog:",
 		"deepmerge": "catalog:",
+		"dotenv": "catalog:",
 		"express": "catalog:",
 		"express-async-errors": "catalog:",
 		"express-prom-bundle": "catalog:",

@@ -4,7 +4,7 @@ import { CDNRetrieve } from "#lib/cdn/cdn";
 import MONGODB_KILL from "#services/mongo/db";
 import { dmf } from "#test-utils/misc.js";
 import mockApi from "#test-utils/mock-api";
-import ResetDBState, { ResetCDN } from "#test-utils/resets";
+import ResetDBState from "#test-utils/resets";
 import { GetKTDataBuffer } from "#test-utils/test-data";
 import t from "tap";
 
@@ -397,9 +397,6 @@ t.test("GET /charts/:chartHash/leaderboard", (t) => {
 
 t.test("POST /replays", (t) => {
 	t.beforeEach(ResetDBState);
-	t.beforeEach(async () => {
-		await ResetCDN();
-	});
 	t.beforeEach(InsertFakeUSCAuth);
 
 	t.test("Should successfully upload a file where an identifier matches", async (t) => {

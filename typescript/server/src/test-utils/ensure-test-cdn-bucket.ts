@@ -4,12 +4,8 @@ import {
 	PutBucketPolicyCommand,
 	S3Client,
 } from "@aws-sdk/client-s3";
-import JSON5 from "json5";
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { loadServerEnvFile } from "../lib/setup/load-server-env";
 
 /** MinIO buckets for dev/CI (matches docker-compose / bootstrap). */
 const MINIO_BUCKETS = ["tachi-public", "tachi-private", "tachi-backups"] as const;
@@ -32,49 +28,53 @@ function anonymousGetObjectPolicy(bucket: string): string {
  * Ensures MinIO buckets exist and tachi-public allows anonymous reads for seeded CDN assets (CI + local test runs).
  */
 export async function ensureTestCdnBucket() {
-	const raw = fs.readFileSync(path.join(__dirname, "../../test.conf.json5"), "utf-8");
-	const config = JSON5.parse(raw) as {
-		CDN_CONFIG: {
-			SAVE_LOCATION: {
-				ACCESS_KEY_ID: string;
-				BUCKET: string;
-				ENDPOINT: string;
-				REGION?: string;
-				SECRET_ACCESS_KEY: string;
-			};
-		};
-	};
+	loadServerEnvFile(".env.test");
 
-	const loc = config.CDN_CONFIG.SAVE_LOCATION;
+	const endpoint = process.env.TACHI_CDN_SAVE_LOCATION_ENDPOINT;
+	const accessKeyId = process.env.TACHI_CDN_SAVE_LOCATION_ACCESS_KEY_ID;
+	const secretAccessKey = process.env.TACHI_CDN_SAVE_LOCATION_SECRET_ACCESS_KEY;
+	const bucket = process.env.TACHI_CDN_SAVE_LOCATION_BUCKET;
+	const region = process.env.TACHI_CDN_SAVE_LOCATION_REGION;
 
-	if (loc.BUCKET !== "tachi-public") {
+	if (
+		endpoint === undefined ||
+		accessKeyId === undefined ||
+		secretAccessKey === undefined ||
+		bucket === undefined
+	) {
 		throw new Error(
-			`test.conf.json5 CDN_CONFIG.SAVE_LOCATION.BUCKET must be "tachi-public"; got "${loc.BUCKET}".`,
+			"Missing TACHI_CDN_SAVE_LOCATION_* env vars (see .env.test). Required: ENDPOINT, ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET.",
+		);
+	}
+
+	if (bucket !== "tachi-public") {
+		throw new Error(
+			`TACHI_CDN_SAVE_LOCATION_BUCKET must be "tachi-public"; got "${bucket}".`,
 		);
 	}
 
 	const client = new S3Client({
-		endpoint: loc.ENDPOINT,
-		region: loc.REGION ?? "us-east-1",
+		endpoint,
+		region: region ?? "us-east-1",
 		credentials: {
-			accessKeyId: loc.ACCESS_KEY_ID,
-			secretAccessKey: loc.SECRET_ACCESS_KEY,
+			accessKeyId,
+			secretAccessKey,
 		},
 		forcePathStyle: true,
 	});
 
-	async function ensureBucketExists(bucket: string): Promise<void> {
+	async function ensureBucketExists(bucketName: string): Promise<void> {
 		/* eslint-disable no-await-in-loop -- retry Head/Create until MinIO accepts connections */
 		for (let attempt = 0; attempt < 60; attempt++) {
 			try {
-				await client.send(new HeadBucketCommand({ Bucket: bucket }));
+				await client.send(new HeadBucketCommand({ Bucket: bucketName }));
 				return;
 			} catch {
 				// bucket missing or service not ready
 			}
 
 			try {
-				await client.send(new CreateBucketCommand({ Bucket: bucket }));
+				await client.send(new CreateBucketCommand({ Bucket: bucketName }));
 				return;
 			} catch {
 				await new Promise((r) => setTimeout(r, 1000));
@@ -83,13 +83,15 @@ export async function ensureTestCdnBucket() {
 		/* eslint-enable no-await-in-loop */
 
 		throw new Error(
-			`Could not reach or create S3 bucket "${bucket}" at ${loc.ENDPOINT}. Is MinIO running?`,
+			`Could not reach or create S3 bucket "${bucketName}" at ${endpoint}. Is MinIO running?`,
 		);
 	}
 
-	for (const bucket of MINIO_BUCKETS) {
-		await ensureBucketExists(bucket);
+	/* eslint-disable no-await-in-loop -- sequential bucket setup */
+	for (const b of MINIO_BUCKETS) {
+		await ensureBucketExists(b);
 	}
+	/* eslint-enable no-await-in-loop */
 
 	await client.send(
 		new PutBucketPolicyCommand({

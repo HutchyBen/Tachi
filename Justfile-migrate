@@ -11,7 +11,7 @@ migrate-v3:
 mongo-to-pg POSTGRES_DB_NAME MONGO_DB_NAME:
 	just db-reset "{{ POSTGRES_DB_NAME }}"
 
-	cd typescript/server && TACHI_CONFIG=$(cat conf.json5) VERSION=$(jq -r .version package.json) COMMIT_HASH=$(git rev-parse --short HEAD) POSTGRES_URL="{{POSTGRES_URL}}/{{POSTGRES_DB_NAME}}" MONGO_URL="mongodb://tachi-mongo/{{MONGO_DB_NAME}}" \
+	cd typescript/server && VERSION=$(jq -r .version package.json) COMMIT_HASH=$(git rev-parse --short HEAD) POSTGRES_URL="{{POSTGRES_URL}}/{{POSTGRES_DB_NAME}}" MONGO_URL="mongodb://tachi-mongo/{{MONGO_DB_NAME}}" \
 		bun run src/scripts/migrate-to-postgres.ts
 
 # Rollback the seeds to the state stored somewhere (v2 keeps seeds in seeds/collections, v3 in db/seeds).

@@ -12,5 +12,4 @@ scripts/validate-database-errs/*
 local-cdn
 test-cdn
 
-!test.conf.json5
 !example/**

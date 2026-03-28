@@ -1,12 +1,8 @@
-import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig, type Plugin } from "vitest/config";
+import { defineConfig } from "vitest/config";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// Read the test server config as a raw string — config.ts will JSON5-parse it at load time.
-const tachiConfig = fs.readFileSync(path.join(__dirname, "test.conf.json5"), "utf-8");
 
 /** When set (e.g. `test:coverage:set-user-supporter`), enforce 100% coverage on that file only. */
 const coverageSupporterActionOnly = process.env.VITEST_COVERAGE_SUPPORTER_ACTION === "1";
@@ -27,18 +23,17 @@ export default defineConfig({
 		// Use for API / DB performance work as well as microbenches (*.bench.ts).
 		//
 		// Static env vars. POSTGRES_URL is set dynamically per-worker in vitest.setup.ts
-		// so each worker gets its own isolated database.
+		// so each worker gets its own isolated database. App config (`TACHI_*`) comes from `.env.test`
+		// loaded in `config.ts` (NODE_ENV must be `test` before that import).
 		env: {
 			NODE_ENV: "test",
 			PORT: "8080",
-			// Still required by config.ts validation; unused by new Postgres-based tests.
 			MONGO_URL: "tachi-mongo",
 			REDIS_URL: "tachi-redis",
 			MIGRATIONS_DIR: "/tachi/db/migrations",
 			LOG_LEVEL: "warn",
 			VERSION: "test",
 			COMMIT_HASH: "test",
-			TACHI_CONFIG: tachiConfig,
 		},
 
 		// Parallel test execution — each worker gets its own isolated Postgres database.

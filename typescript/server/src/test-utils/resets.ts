@@ -1,14 +1,9 @@
-import { DeleteAllCdnObjects } from "#lib/cdn/s3";
 import { log } from "#lib/log/log";
 import { Env } from "#lib/setup/config";
 import { SetIndexes } from "#services/mongo/indexes";
 
 export default async function ResetDBState() {
 	// not used
-}
-
-export async function ResetCDN() {
-	await DeleteAllCdnObjects();
 }
 
 export async function SetIndexesForDB() {

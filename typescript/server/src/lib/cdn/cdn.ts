@@ -3,7 +3,7 @@ import type { Response } from "express";
 import { log } from "#lib/log/log";
 import { ServerConfig } from "#lib/setup/config";
 
-import { DeleteFromS3, GetObjectFromS3, PushToS3 } from "./s3";
+import { DeleteFromS3_PUBLIC, GetObjectFromS3_PUBLIC, PushToS3_PUBLIC } from "./s3";
 
 /**
  * Retrieves the bytes at the given CDN location from S3.
@@ -11,7 +11,7 @@ import { DeleteFromS3, GetObjectFromS3, PushToS3 } from "./s3";
 export function CDNRetrieve(fileLoc: string) {
 	log.debug(`Retrieving path ${fileLoc} from S3.`);
 
-	return GetObjectFromS3(fileLoc);
+	return GetObjectFromS3_PUBLIC(fileLoc);
 }
 
 /**
@@ -33,7 +33,7 @@ export function CDNRedirect(res: Response, fileLoc: string) {
 export async function CDNStoreOrOverwrite(fileLoc: string, data: string | Buffer): Promise<void> {
 	log.debug(`Storing or overwriting path ${fileLoc}.`);
 
-	await PushToS3(fileLoc, data);
+	await PushToS3_PUBLIC(fileLoc, data);
 }
 
 /**
@@ -42,5 +42,5 @@ export async function CDNStoreOrOverwrite(fileLoc: string, data: string | Buffer
 export async function CDNDelete(fileLoc: string) {
 	log.debug(`Deleting path ${fileLoc}.`);
 
-	await DeleteFromS3(fileLoc);
+	await DeleteFromS3_PUBLIC(fileLoc);
 }
