@@ -10,7 +10,6 @@ import { SELECT_GAME_STATS, ToGameStatsDocument } from "#lib/db-formats/game-sta
 import { log } from "#lib/log/log";
 import { GetRivalIDs } from "#lib/rivals/rivals";
 import prValidate from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
 import DB from "#services/pg/db.js";
 import { optNullFluffStrField } from "#utils/prudence";
 import {
@@ -25,6 +24,7 @@ import {
 	FormatUserDoc,
 	GetAllRankings,
 	GetNextAvailableUsernameChange,
+	GetSettingsForUser,
 	GetUserWithIDGuaranteed,
 } from "#utils/user";
 import { Router } from "express";
@@ -567,21 +567,16 @@ router.get(
 
 		const user = GetUser(req);
 
-		const gpts = await MONGODB_KILL["game-stats"].find({
-			userID: user.id,
-		});
+		const gameStatRows = await DB.selectFrom("game_stats")
+			.select(SELECT_GAME_STATS)
+			.where("user_id", "=", user.id)
+			.execute();
+
+		const gpts = gameStatRows.map(ToGameStatsDocument);
 
 		const data: Partial<Record<GPTString, unknown>> = {};
 
-		const settings = await MONGODB_KILL["user-settings"].findOne({ userID: user.id });
-
-		if (!settings) {
-			log.error(`User ${FormatUserDoc(user)} doesn't have any settings?`);
-			return res.status(500).json({
-				success: false,
-				description: `This user has no settings.`,
-			});
-		}
+		const settings = await GetSettingsForUser(user.id);
 
 		await Promise.all(
 			gpts.map(async (e) => {

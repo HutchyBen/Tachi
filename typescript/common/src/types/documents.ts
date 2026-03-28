@@ -27,6 +27,8 @@ import type {
 	SessionRatingAlgorithms,
 	SongDocumentData,
 	UserAuthLevels,
+	V3Game,
+	V3GameToGPTString,
 	Versions,
 } from "../types";
 import type { APIPermissions } from "./api";
@@ -442,7 +444,10 @@ export type QuestSubscriptionDocument = {
 	  }
 );
 
-export type ScoreData<GPT extends GPTString = GPTString> = {
+export type PgScoreData<Game extends V3Game = V3Game> = ProvidedMetrics[V3GameToGPTString[Game]] &
+	DerivedMetrics[V3GameToGPTString[Game]];
+
+export type MongoScoreData<GPT extends GPTString = GPTString> = {
 	enumIndexes: ScoreEnumIndexes<GPT>;
 	judgements: Partial<Record<Judgements[GPT], integer | null>>;
 	optional: {
@@ -456,7 +461,7 @@ export interface ScoreDocument<GPT extends GPTString = GPTString> {
 	game: GPTStringToGame[GPT];
 	playtype: GPTStringToPlaytype[GPT];
 	userID: integer;
-	scoreData: ScoreData<GPT>;
+	scoreData: MongoScoreData<GPT>;
 	scoreMeta: Partial<ScoreMeta[GPT]>;
 	calculatedData: Partial<Record<ScoreRatingAlgorithms[GPT], number | null>>;
 	timeAchieved: integer | null;
@@ -496,7 +501,7 @@ export interface PBScoreDocument<GPT extends GPTString = GPTString> {
 	highlight: boolean;
 	isPrimary: boolean;
 	timeAchieved: number | null;
-	scoreData: ScoreData<GPT>;
+	scoreData: MongoScoreData<GPT>;
 	calculatedData: Partial<Record<ScoreRatingAlgorithms[GPT], number | null>>;
 }
 

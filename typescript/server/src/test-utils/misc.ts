@@ -10,7 +10,7 @@ import type {
 	NotificationDocument,
 	PBScoreDocument,
 	Playtype,
-	ScoreData,
+	MongoScoreData,
 	ScoreDocument,
 	UGPTSettingsDocument,
 	UserDocument,
@@ -159,7 +159,7 @@ export function mkMockPB<GPT extends GPTString>(
 	game: GameGroup,
 	playtype: Playtype,
 	chart: ChartDocument<GPT>,
-	scoreData: ScoreData<GPT>,
+	scoreData: MongoScoreData<GPT>,
 ): PBScoreDocument<GPT> {
 	return {
 		userID: 1,
@@ -181,7 +181,7 @@ export function mkMockScore<GPT extends GPTString>(
 	game: GameGroup,
 	playtype: Playtype,
 	chart: ChartDocument<GPT>,
-	scoreData: ScoreData<GPT>,
+	scoreData: MongoScoreData<GPT>,
 ): ScoreDocument<GPT> {
 	// @ts-expect-error whatever lol
 	return {

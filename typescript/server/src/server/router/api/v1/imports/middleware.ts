@@ -2,12 +2,12 @@ import type { RequestHandler } from "express";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log";
-import MONGODB_KILL from "#services/mongo/db";
+import { LoadImportDocumentById } from "#lib/db-formats/import-document";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { IsRequesterAdmin } from "#utils/user";
 
 export const GetImportFromParam: RequestHandler = async (req, res, next) => {
-	const importDoc = await MONGODB_KILL.imports.findOne({ importID: req.params.importID });
+	const importDoc = await LoadImportDocumentById(req.params.importID);
 
 	if (!importDoc) {
 		return res.status(404).json({

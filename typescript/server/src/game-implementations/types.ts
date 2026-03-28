@@ -13,7 +13,7 @@ import type {
 	PBReference,
 	PBScoreDocument,
 	ProfileRatingAlgorithms,
-	ScoreData,
+	MongoScoreData,
 	ScoreDocument,
 	ScoreRatingAlgorithms,
 	SessionRatingAlgorithms,
@@ -130,14 +130,14 @@ export type GPTDerivers<GPT extends GPTString> = {
 // New-style deriver; just f(scoreData, chart) -> derivedMetrics
 // instead of the overly complex shit above.
 export type GPTNewDeriver<GPT extends GPTString> = (
-	scoreData: ScoreData<GPT>,
+	scoreData: MongoScoreData<GPT>,
 	chart: ChartDocument<GPT>,
 ) => DerivedMetrics[GPT];
 
 // New-style score calc; just f(scoreData, derivedData, chart) -> calculatedData
 // instead of the per-algorithm record above.
 export type GPTNewCalcs<GPT extends GPTString> = (
-	scoreData: ScoreData<GPT>,
+	scoreData: MongoScoreData<GPT>,
 	derivedData: DerivedMetrics[GPT],
 	chart: ChartDocument<GPT>,
 ) => Record<ScoreRatingAlgorithms[GPT], number | null>;

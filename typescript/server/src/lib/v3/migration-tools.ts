@@ -1,10 +1,15 @@
+import { DeleteUndefinedProps, staticAssertUnreachable } from "#utils/misc.js";
+import { Mongos } from "mongodb";
 import {
 	type DerivedMetrics,
 	GetGPTConfig,
 	type GPTString,
 	type OptionalMetrics,
 	type ProvidedMetrics,
-	type ScoreData,
+	type MongoScoreData,
+	PgScoreData,
+	GPTStringToV3Game,
+	integer,
 } from "tachi-common";
 
 interface RetVal<GPT extends GPTString> {
@@ -36,11 +41,11 @@ function applyOrdinals(
 	return result;
 }
 
-function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString> {
+function splitScoreData(gpt: GPTString, scoreData: MongoScoreData): RetVal<GPTString> {
 	switch (gpt) {
 		case "iidx:SP": {
 			const { grade, lamp, percent, score, optional } =
-				scoreData as unknown as ScoreData<"iidx:SP">;
+				scoreData as unknown as MongoScoreData<"iidx:SP">;
 
 			const ret: RetVal<"iidx:SP"> = {
 				data: {
@@ -59,7 +64,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "iidx:DP": {
 			const { grade, lamp, percent, score, optional } =
-				scoreData as unknown as ScoreData<"iidx:DP">;
+				scoreData as unknown as MongoScoreData<"iidx:DP">;
 
 			const ret: RetVal<"iidx:DP"> = {
 				data: {
@@ -75,7 +80,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "museca:Single": {
 			const { grade, lamp, score, optional } =
-				scoreData as unknown as ScoreData<"museca:Single">;
+				scoreData as unknown as MongoScoreData<"museca:Single">;
 
 			const ret: RetVal<"museca:Single"> = {
 				data: {
@@ -91,7 +96,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "chunithm:Single": {
 			const { grade, score, noteLamp, clearLamp, optional } =
-				scoreData as unknown as ScoreData<"chunithm:Single">;
+				scoreData as unknown as MongoScoreData<"chunithm:Single">;
 
 			const ret: RetVal<"chunithm:Single"> = {
 				data: {
@@ -108,7 +113,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "bms:7K": {
 			const { grade, lamp, percent, score, optional } =
-				scoreData as unknown as ScoreData<"bms:7K">;
+				scoreData as unknown as MongoScoreData<"bms:7K">;
 
 			const ret: RetVal<"bms:7K"> = {
 				data: {
@@ -124,7 +129,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "bms:14K": {
 			const { grade, lamp, percent, score, optional } =
-				scoreData as unknown as ScoreData<"bms:14K">;
+				scoreData as unknown as MongoScoreData<"bms:14K">;
 
 			const ret: RetVal<"bms:14K"> = {
 				data: {
@@ -140,7 +145,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "gitadora:Gita": {
 			const { grade, lamp, percent, optional } =
-				scoreData as unknown as ScoreData<"gitadora:Gita">;
+				scoreData as unknown as MongoScoreData<"gitadora:Gita">;
 
 			const ret: RetVal<"gitadora:Gita"> = {
 				data: {
@@ -156,7 +161,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "gitadora:Dora": {
 			const { grade, lamp, percent, optional } =
-				scoreData as unknown as ScoreData<"gitadora:Dora">;
+				scoreData as unknown as MongoScoreData<"gitadora:Dora">;
 
 			const ret: RetVal<"gitadora:Dora"> = {
 				data: {
@@ -172,7 +177,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "jubeat:Single": {
 			const { grade, score, musicRate, lamp, optional } =
-				scoreData as unknown as ScoreData<"jubeat:Single">;
+				scoreData as unknown as MongoScoreData<"jubeat:Single">;
 
 			const ret: RetVal<"jubeat:Single"> = {
 				data: {
@@ -189,7 +194,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "maimai:Single": {
 			const { grade, lamp, percent, optional } =
-				scoreData as unknown as ScoreData<"maimai:Single">;
+				scoreData as unknown as MongoScoreData<"maimai:Single">;
 
 			const ret: RetVal<"maimai:Single"> = {
 				data: {
@@ -205,7 +210,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "maimaidx:Single": {
 			const { grade, lamp, percent, optional } =
-				scoreData as unknown as ScoreData<"maimaidx:Single">;
+				scoreData as unknown as MongoScoreData<"maimaidx:Single">;
 
 			const ret: RetVal<"maimaidx:Single"> = {
 				data: {
@@ -221,7 +226,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "popn:9B": {
 			const { grade, lamp, score, clearMedal, optional } =
-				scoreData as unknown as ScoreData<"popn:9B">;
+				scoreData as unknown as MongoScoreData<"popn:9B">;
 
 			const ret: RetVal<"popn:9B"> = {
 				data: {
@@ -237,7 +242,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "sdvx:Single": {
 			const { grade, lamp, score, optional } =
-				scoreData as unknown as ScoreData<"sdvx:Single">;
+				scoreData as unknown as MongoScoreData<"sdvx:Single">;
 
 			const ret: RetVal<"sdvx:Single"> = {
 				data: {
@@ -253,7 +258,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "usc:Controller": {
 			const { grade, lamp, score, optional } =
-				scoreData as unknown as ScoreData<"usc:Controller">;
+				scoreData as unknown as MongoScoreData<"usc:Controller">;
 
 			const ret: RetVal<"usc:Controller"> = {
 				data: {
@@ -269,7 +274,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "usc:Keyboard": {
 			const { grade, lamp, score, optional } =
-				scoreData as unknown as ScoreData<"usc:Keyboard">;
+				scoreData as unknown as MongoScoreData<"usc:Keyboard">;
 
 			const ret: RetVal<"usc:Keyboard"> = {
 				data: {
@@ -285,7 +290,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "wacca:Single": {
 			const { grade, lamp, score, optional } =
-				scoreData as unknown as ScoreData<"wacca:Single">;
+				scoreData as unknown as MongoScoreData<"wacca:Single">;
 
 			const ret: RetVal<"wacca:Single"> = {
 				data: {
@@ -301,7 +306,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "pms:Controller": {
 			const { grade, lamp, percent, score, optional } =
-				scoreData as unknown as ScoreData<"pms:Controller">;
+				scoreData as unknown as MongoScoreData<"pms:Controller">;
 
 			const ret: RetVal<"pms:Controller"> = {
 				data: {
@@ -317,7 +322,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "pms:Keyboard": {
 			const { grade, lamp, percent, score, optional } =
-				scoreData as unknown as ScoreData<"pms:Keyboard">;
+				scoreData as unknown as MongoScoreData<"pms:Keyboard">;
 
 			const ret: RetVal<"pms:Keyboard"> = {
 				data: {
@@ -333,7 +338,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "itg:Stamina": {
 			const { grade, lamp, scorePercent, survivedPercent, finalPercent, optional } =
-				scoreData as unknown as ScoreData<"itg:Stamina">;
+				scoreData as unknown as MongoScoreData<"itg:Stamina">;
 
 			const ret: RetVal<"itg:Stamina"> = {
 				data: {
@@ -350,7 +355,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "arcaea:Touch": {
 			const { grade, lamp, score, optional } =
-				scoreData as unknown as ScoreData<"arcaea:Touch">;
+				scoreData as unknown as MongoScoreData<"arcaea:Touch">;
 
 			const ret: RetVal<"arcaea:Touch"> = {
 				data: {
@@ -366,7 +371,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 		case "ongeki:Single": {
 			const { grade, score, noteLamp, bellLamp, platinumScore, platinumStars, optional } =
-				scoreData as unknown as ScoreData<"ongeki:Single">;
+				scoreData as unknown as MongoScoreData<"ongeki:Single">;
 
 			const ret: RetVal<"ongeki:Single"> = {
 				data: {
@@ -383,7 +388,8 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 		}
 
 		case "ddr:SP": {
-			const { grade, lamp, score, optional } = scoreData as unknown as ScoreData<"ddr:SP">;
+			const { grade, lamp, score, optional } =
+				scoreData as unknown as MongoScoreData<"ddr:SP">;
 
 			const ret: RetVal<"ddr:SP"> = {
 				data: {
@@ -398,7 +404,8 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 		}
 
 		case "ddr:DP": {
-			const { grade, lamp, score, optional } = scoreData as unknown as ScoreData<"ddr:DP">;
+			const { grade, lamp, score, optional } =
+				scoreData as unknown as MongoScoreData<"ddr:DP">;
 
 			const ret: RetVal<"ddr:DP"> = {
 				data: {
@@ -416,7 +423,7 @@ function splitScoreData(gpt: GPTString, scoreData: ScoreData): RetVal<GPTString>
 
 export function mongoScoreDataToPg(
 	gpt: GPTString,
-	scoreData: ScoreData,
+	scoreData: MongoScoreData,
 ): { data: unknown; derived: unknown } {
 	const { data, derived } = splitScoreData(gpt, scoreData);
 
@@ -426,4 +433,63 @@ export function mongoScoreDataToPg(
 		data: applyOrdinals(data, config.providedMetrics as any),
 		derived: applyOrdinals(derived, config.derivedMetrics as any),
 	};
+}
+
+/**
+ * Reconstruct API {@link MongoScoreData} from Postgres `data` / `derived_data` JSON blobs
+ * (the inverse of {@link mongoScoreDataToPg}).
+ */
+export function mergeScoreDataFromPg<G extends GPTString = GPTString>(
+	gpt: G,
+	dataRaw: any,
+	derivedRaw: any,
+): MongoScoreData<G> {
+	const config = GetGPTConfig(gpt);
+
+	const eventualOut: any = {
+		enumIndexes: {},
+		optional: {
+			enumIndexes: {},
+		},
+	};
+
+	for (const [key, value] of Object.entries(config.providedMetrics)) {
+		if (value.type === "ENUM") {
+			const index: integer = dataRaw[key];
+			eventualOut[key] = value.values[index];
+			eventualOut.enumIndexes[key] = index;
+		} else {
+			eventualOut[key] = dataRaw[key];
+		}
+	}
+
+	console.log(dataRaw);
+	console.log(derivedRaw);
+
+	for (const [key, value] of Object.entries(config.derivedMetrics)) {
+		if (value.type === "ENUM") {
+			const index: integer = derivedRaw[key];
+			eventualOut[key] = value.values[index];
+			eventualOut.enumIndexes[key] = index;
+		} else {
+			eventualOut[key] = derivedRaw[key];
+		}
+	}
+
+	for (const [key, value] of Object.entries(config.optionalMetrics)) {
+		if (value.type === "ENUM") {
+			const index: integer = dataRaw[key];
+			eventualOut.optional[key] = value.values[index];
+			eventualOut.optional.enumIndexes[key] = index;
+		} else {
+			eventualOut.optional[key] = dataRaw[key];
+		}
+	}
+
+	console.log(eventualOut);
+
+	DeleteUndefinedProps(eventualOut.optional);
+	DeleteUndefinedProps(eventualOut);
+
+	return eventualOut as any;
 }

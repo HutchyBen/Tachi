@@ -1,5 +1,11 @@
 import DB from "#services/pg/db";
-import type { ChartDocument, ChartDocumentData, Difficulties, GPTString, Versions } from "tachi-common";
+import type {
+	ChartDocument,
+	ChartDocumentData,
+	Difficulties,
+	GPTString,
+	Versions,
+} from "tachi-common";
 import { V3ToGamePT } from "tachi-common";
 import type { Game } from "tachi-db";
 
@@ -14,7 +20,16 @@ export async function GetChartsBySongPgId(
 	songLegacyId: number,
 ): Promise<ChartDocument[]> {
 	const rows = await DB.selectFrom("chart")
-		.select(["id", "legacy_id", "game", "level", "level_num", "is_primary", "difficulty", "data"])
+		.select([
+			"id",
+			"legacy_id",
+			"game",
+			"level",
+			"level_num",
+			"is_primary",
+			"difficulty",
+			"data",
+		])
 		.where("song_id", "=", songPgId)
 		.where("game", "=", gamePt)
 		.execute();

@@ -99,6 +99,58 @@ export type V3Game =
 	| "usc-keyboard"
 	| "wacca";
 
+export type V3GameToGPTString = {
+	"iidx-sp": "iidx:SP";
+	"iidx-dp": "iidx:DP";
+	museca: "museca:Single";
+	sdvx: "sdvx:Single";
+	"bms-14k": "bms:14K";
+	"bms-7k": "bms:7K";
+	"gitadora-dora": "gitadora:Dora";
+	"gitadora-gita": "gitadora:Gita";
+	chunithm: "chunithm:Single";
+	wacca: "wacca:Single";
+	jubeat: "jubeat:Single";
+	popn: "popn:9B";
+	maimai: "maimai:Single";
+	maimaidx: "maimaidx:Single";
+	"pms-controller": "pms:Controller";
+	"pms-keyboard": "pms:Keyboard";
+	"usc-controller": "usc:Controller";
+	"usc-keyboard": "usc:Keyboard";
+	"itg-stamina": "itg:Stamina";
+	arcaea: "arcaea:Touch";
+	ongeki: "ongeki:Single";
+	"ddr-sp": "ddr:SP";
+	"ddr-dp": "ddr:DP";
+};
+
+export type GPTStringToV3Game = {
+	"iidx:SP": "iidx-sp";
+	"iidx:DP": "iidx-dp";
+	"museca:Single": "museca";
+	"sdvx:Single": "sdvx";
+	"bms:14K": "bms-14k";
+	"bms:7K": "bms-7k";
+	"gitadora:Dora": "gitadora-dora";
+	"gitadora:Gita": "gitadora-gita";
+	"chunithm:Single": "chunithm";
+	"wacca:Single": "wacca";
+	"jubeat:Single": "jubeat";
+	"popn:9B": "popn";
+	"maimai:Single": "maimai";
+	"maimaidx:Single": "maimaidx";
+	"pms:Controller": "pms-controller";
+	"pms:Keyboard": "pms-keyboard";
+	"usc:Controller": "usc-controller";
+	"usc:Keyboard": "usc-keyboard";
+	"itg:Stamina": "itg-stamina";
+	"arcaea:Touch": "arcaea";
+	"ongeki:Single": "ongeki";
+	"ddr:SP": "ddr-sp";
+	"ddr:DP": "ddr-dp";
+};
+
 export type GPTStrings = {
 	[G in GameGroup]: `${G}:${Playtypes[G]}`;
 };

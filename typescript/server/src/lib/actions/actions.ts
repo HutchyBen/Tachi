@@ -258,6 +258,16 @@ export const ActionSignatures = {
 			consumedBy: z.null(),
 		}),
 	},
+	CUSTOMISE_SCORE: {
+		input: z.object({
+			scoreID: z.string(),
+			comment: z.union([z.string().min(1).max(120), z.null()]).optional(),
+			highlight: z.boolean().optional(),
+		}),
+		output: z.object({
+			score: z.unknown(),
+		}),
+	},
 	UPSERT_KAI_AUTH_TOKEN: {
 		input: z.object({
 			service: z.enum(["EAG", "FLO", "MIN"]),

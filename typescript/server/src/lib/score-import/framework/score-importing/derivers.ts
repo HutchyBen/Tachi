@@ -10,7 +10,7 @@ import {
 	type GPTString,
 	type integer,
 	type OptionalEnumIndexes,
-	type ScoreData,
+	type MongoScoreData,
 	type ScoreEnumIndexes,
 } from "tachi-common";
 
@@ -129,7 +129,7 @@ export function CreateFullScoreData<GPT extends GPTString>(
 	const scoreData = {
 		...dryScoreData,
 		...derivedMetrics,
-	} as unknown as ScoreData<GPT>;
+	} as unknown as MongoScoreData<GPT>;
 	// ^ hacky force-cast because these types are *really* unstable.
 
 	const { indexes, optionalIndexes } = CreateEnumIndexes(gpt, scoreData, log);

@@ -63,7 +63,6 @@ describe("ACTION_FollowUser", () => {
 		const originalMax = ServerConfig.MAX_FOLLOWING_AMOUNT;
 
 		try {
-			// @ts-expect-error deliberate mutation for test isolation
 			ServerConfig.MAX_FOLLOWING_AMOUNT = 1;
 
 			// Seed one real follow so the count equals the new cap.
@@ -78,7 +77,6 @@ describe("ACTION_FollowUser", () => {
 				code: 400,
 			});
 		} finally {
-			// @ts-expect-error deliberate mutation for test isolation
 			ServerConfig.MAX_FOLLOWING_AMOUNT = originalMax;
 		}
 	});

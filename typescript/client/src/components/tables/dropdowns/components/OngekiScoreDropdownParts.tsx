@@ -7,7 +7,7 @@ import { Nav } from "react-bootstrap";
 import {
 	type ChartDocument,
 	type PBScoreDocument,
-	type ScoreData,
+	type MongoScoreData,
 	type ScoreDocument,
 	type SongDocument,
 } from "tachi-common";
@@ -128,7 +128,7 @@ function GraphComponent({
 	chart,
 }: {
 	chart: ChartDocument<"ongeki:Single">;
-	scoreData: ScoreData<"ongeki:Single">;
+	scoreData: MongoScoreData<"ongeki:Single">;
 	song: SongDocument<"ongeki">;
 	type: ChartType;
 }) {

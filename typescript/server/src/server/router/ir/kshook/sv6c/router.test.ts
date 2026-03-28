@@ -12,10 +12,7 @@ import DB from "#services/pg/db";
 import mockApi, { CloseServerConnection } from "#test-utils/mock-api";
 import { seedUser } from "#test-utils/pg-fixtures";
 import ResetDBState from "#test-utils/resets";
-import {
-	TestingKsHookSV6CScore,
-	TestingKsHookSV6CStaticScore,
-} from "#test-utils/test-data";
+import { TestingKsHookSV6CScore, TestingKsHookSV6CStaticScore } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
@@ -192,7 +189,9 @@ describe("POST /ir/kshook/sv6c/score/export", () => {
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
-		expect(res.body.description).toBe("Static importing is disabled. Ignoring static import request.");
+		expect(res.body.description).toBe(
+			"Static importing is disabled. Ignoring static import request.",
+		);
 	});
 
 	it("rejects invalid software models and missing header", async () => {

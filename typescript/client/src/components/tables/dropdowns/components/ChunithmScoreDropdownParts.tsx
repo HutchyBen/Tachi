@@ -8,7 +8,7 @@ import {
 	type ChartDocument,
 	type Difficulties,
 	type PBScoreDocument,
-	type ScoreData,
+	type MongoScoreData,
 	type ScoreDocument,
 	type SongDocument,
 } from "tachi-common";
@@ -106,7 +106,7 @@ function GraphComponent({
 	type,
 }: {
 	difficulty: Difficulties["chunithm:Single"];
-	scoreData: ScoreData<"chunithm:Single">;
+	scoreData: MongoScoreData<"chunithm:Single">;
 	song: SongDocument<"chunithm">;
 	type: ChartType;
 }) {

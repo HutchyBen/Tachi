@@ -1,6 +1,6 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
 import type { EmptyObject } from "#utils/types";
-import type { ScoreData } from "tachi-common";
+import type { MongoScoreData } from "tachi-common";
 
 import {
 	InternalFailure,
@@ -29,7 +29,7 @@ const DIFFICULTIES = {
 function getLamp(
 	comboStatus: number,
 	isClear: boolean,
-): ScoreData<"maimaidx:Single">["lamp"] | undefined {
+): MongoScoreData<"maimaidx:Single">["lamp"] | undefined {
 	if (comboStatus === MaimaiComboStatus.UNSPECIFIED) {
 		return undefined;
 	}

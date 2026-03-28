@@ -29,6 +29,8 @@ export default interface ScoreTable {
 
   calculated_data: ColumnType<unknown, unknown, unknown>;
 
+  judgements: ColumnType<unknown, unknown, unknown>;
+
   meta: ColumnType<unknown, unknown, unknown>;
 
   time_achieved: ColumnType<string | null, string | null, string | null>;

@@ -2,13 +2,11 @@ import type { RequestHandler } from "express";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log";
-import MONGODB_KILL from "#services/mongo/db";
+import { LoadSessionDocumentById } from "#lib/db-formats/session";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 
 export const GetSessionFromParam: RequestHandler = async (req, res, next) => {
-	const session = await MONGODB_KILL.sessions.findOne({
-		sessionID: req.params.sessionID,
-	});
+	const session = await LoadSessionDocumentById(req.params.sessionID);
 
 	if (!session) {
 		return res.status(404).json({

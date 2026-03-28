@@ -25,10 +25,7 @@ export async function GetSongByLegacyID(
 			.select("search_term")
 			.where("song_id", "=", row.id)
 			.execute(),
-		DB.selectFrom("song_alt_title")
-			.select("alt_title")
-			.where("song_id", "=", row.id)
-			.execute(),
+		DB.selectFrom("song_alt_title").select("alt_title").where("song_id", "=", row.id).execute(),
 	]);
 
 	const doc: SongDocument = {

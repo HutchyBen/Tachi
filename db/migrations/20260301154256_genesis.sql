@@ -707,6 +707,8 @@ CREATE TABLE "score" (
 	derived_data JSONB NOT NULL,
 	-- f(chart, score.data) => score.calculated_data
 	calculated_data JSONB NOT NULL,
+	-- What was "judgements" in Mongo
+	judgements JSONB NOT NULL,
 
 	meta JSONB NOT NULL,
 	

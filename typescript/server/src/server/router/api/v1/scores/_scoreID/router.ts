@@ -1,8 +1,12 @@
+import { ACTION_CustomiseScore } from "#actions/customise-score";
+import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
+import { GetChartsBySongPgId } from "#lib/db-formats/chart";
+import { GetSongByLegacyID } from "#lib/db-formats/song";
 import { log } from "#lib/log/log";
 import { DeleteScore } from "#lib/score-mutation/delete-scores";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
+import { toPgGame } from "#services/pg/seeds";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { GetUserWithID } from "#utils/user";
 import { Router } from "express";
@@ -25,11 +29,21 @@ router.get("/", async (req, res) => {
 	const score = GetTachiData(req, "scoreDoc");
 
 	if (req.query.getRelated !== undefined) {
-		const [user, chart, song] = await Promise.all([
-			GetUserWithID(score.userID),
-			MONGODB_KILL.anyCharts[score.game].findOne({ chartID: score.chartID }),
-			MONGODB_KILL.anySongs[score.game].findOne({ id: score.songID }),
-		]);
+		const user = await GetUserWithID(score.userID);
+
+		const songRes = await GetSongByLegacyID(score.game, score.songID);
+
+		const charts =
+			songRes === undefined
+				? []
+				: await GetChartsBySongPgId(
+						toPgGame(score.game, score.playtype),
+						songRes.pgId,
+						score.songID,
+					);
+
+		const chart = charts.find((c) => c.chartID === score.chartID);
+		const song = songRes?.doc;
 
 		if (!user || !chart || !song) {
 			log.error(
@@ -110,29 +124,35 @@ router.patch(
 			});
 		}
 
-		const newScore = await MONGODB_KILL.scores.findOneAndUpdate(
-			{ scoreID: score.scoreID },
-			{ $set: modifyOption },
-		);
+		const auth = req[SYMBOL_TACHI_API_AUTH];
 
-		if (modifyOption.highlight === true || modifyOption.highlight === false) {
-			await MONGODB_KILL["personal-bests"].findOneAndUpdate(
-				{
-					chartID: score.chartID,
-					userID: score.userID,
-				},
-				{
-					$set: {
-						highlight: modifyOption.highlight,
-					},
-				},
-			);
+		if (auth.userID === null) {
+			return res.status(401).json({
+				success: false,
+				description: `You are not authorised as anyone, and this endpoint requires us to know who you are.`,
+			});
 		}
+
+		const user = await GetUserWithID(auth.userID);
+
+		if (!user) {
+			return res.status(401).json({
+				success: false,
+				description: `You are not authorised as anyone, and this endpoint requires us to know who you are.`,
+			});
+		}
+
+		const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
+
+		const result = await ACTION_CustomiseScore(taker, {
+			scoreID: score.scoreID,
+			...modifyOption,
+		});
 
 		return res.status(200).json({
 			success: true,
 			description: `Updated score.`,
-			body: newScore,
+			body: result.score,
 		});
 	},
 );
