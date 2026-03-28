@@ -279,8 +279,10 @@ export const ConverterIRBeatoraja: ConverterFunction<BeatorajaScore, BeatorajaCo
 };
 
 function ConvertBeatorajaChartToTachi(chart: BeatorajaChart, playtype: Playtypes["bms" | "pms"]) {
+	const legacyId = Random20Hex();
 	const chartDoc: ChartDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"> = {
-		chartID: Random20Hex(),
+		chartID: legacyId,
+		legacyChartId: legacyId,
 		difficulty: "CHART",
 		isPrimary: true,
 		level: "?",

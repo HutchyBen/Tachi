@@ -1,8 +1,8 @@
 import type { RequestHandler } from "express";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/log/log";
 import { LoadSessionDocumentById } from "#lib/db-formats/session";
+import { log } from "#lib/log/log";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 
 export const GetSessionFromParam: RequestHandler = async (req, res, next) => {

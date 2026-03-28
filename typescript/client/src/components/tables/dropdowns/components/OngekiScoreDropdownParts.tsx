@@ -6,8 +6,8 @@ import React, { useState } from "react";
 import { Nav } from "react-bootstrap";
 import {
 	type ChartDocument,
-	type PBScoreDocument,
 	type MongoScoreData,
+	type PBScoreDocument,
 	type ScoreDocument,
 	type SongDocument,
 } from "tachi-common";

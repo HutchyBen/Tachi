@@ -4,7 +4,6 @@ import type {
 	AnyClasses,
 	ChartDocumentData,
 	Classes,
-	MongoDerivedMetrics as MongoDerivedMetrics,
 	Difficulties,
 	ExtractedClasses,
 	GameGroup,
@@ -14,13 +13,17 @@ import type {
 	GPTStringToPlaytype,
 	integer,
 	Judgements,
-	OptionalEnumIndexes,
+	MongoDerivedMetrics as MongoDerivedMetrics,
 	MongoOptionalMetrics as MongoOptionalMetrics,
+	MongoProvidedMetrics as MongoProvidedMetrics,
+	OptionalEnumIndexes,
+	PgDerivedMetrics,
+	PgOptionalMetrics,
+	PgProvidedMetrics,
 	Playtype,
 	Playtypes,
 	Preferences,
 	ProfileRatingAlgorithms,
-	MongoProvidedMetrics as MongoProvidedMetrics,
 	ScoreEnumIndexes,
 	ScoreMeta,
 	ScoreRatingAlgorithms,
@@ -30,9 +33,6 @@ import type {
 	V3Game,
 	V3GameToGPTString,
 	Versions,
-	PgProvidedMetrics,
-	PgDerivedMetrics,
-	PgOptionalMetrics,
 } from "../types";
 import type { APIPermissions } from "./api";
 import type { ImportTypes } from "./import-types";
@@ -361,7 +361,10 @@ export interface ChartTierlistInfo {
 }
 
 export interface ChartDocument<GPT extends GPTString = GPTString> {
+	/** Postgres `chart.id` — canonical in API URLs and JSON. */
 	chartID: string;
+	/** Legacy Mongo-era chart id (`chart.legacy_id` in Postgres). Required when loaded from PG; omit on raw Mongo chart docs. */
+	legacyChartId?: string;
 	songID: integer;
 	level: string;
 	levelNum: number;
@@ -454,7 +457,7 @@ export type PgScoreData<Game extends V3Game = V3Game> = {
 };
 
 export type PgScoreProvidedData<Game extends V3Game = V3Game> =
-	PgProvidedMetrics[V3GameToGPTString[Game]] & PgOptionalMetrics[V3GameToGPTString[Game]];
+	PgOptionalMetrics[V3GameToGPTString[Game]] & PgProvidedMetrics[V3GameToGPTString[Game]];
 
 export type PgScoreDerivedData<Game extends V3Game = V3Game> =
 	PgDerivedMetrics[V3GameToGPTString[Game]];

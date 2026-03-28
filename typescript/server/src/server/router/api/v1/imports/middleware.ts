@@ -1,8 +1,8 @@
 import type { RequestHandler } from "express";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/log/log";
 import { LoadImportDocumentById } from "#lib/db-formats/import-document";
+import { log } from "#lib/log/log";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { IsRequesterAdmin } from "#utils/user";
 

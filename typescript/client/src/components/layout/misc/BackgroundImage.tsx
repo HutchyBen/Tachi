@@ -16,7 +16,9 @@ export default function BackgroundImage({ styles }: { styles: LayoutStyles }) {
 	const rafRef = useRef<number | null>(null);
 
 	useEffect(() => {
-		if (resolvedBg === committedBg) return;
+		if (resolvedBg === committedBg) {
+			return;
+		}
 
 		setIncomingBg(resolvedBg);
 		setIncomingVisible(false);
@@ -30,7 +32,9 @@ export default function BackgroundImage({ styles }: { styles: LayoutStyles }) {
 		});
 
 		return () => {
-			if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+			if (rafRef.current !== null) {
+				cancelAnimationFrame(rafRef.current);
+			}
 		};
 	}, [resolvedBg]);
 
@@ -57,6 +61,7 @@ export default function BackgroundImage({ styles }: { styles: LayoutStyles }) {
 			<div style={{ ...baseStyle, backgroundImage: committedBg, zIndex: -2 }} />
 			{incomingBg !== null && (
 				<div
+					onTransitionEnd={handleTransitionEnd}
 					style={{
 						...baseStyle,
 						backgroundImage: incomingBg,
@@ -64,7 +69,6 @@ export default function BackgroundImage({ styles }: { styles: LayoutStyles }) {
 						transition: "opacity 0.3s ease-in-out",
 						zIndex: -1,
 					}}
-					onTransitionEnd={handleTransitionEnd}
 				/>
 			)}
 		</>

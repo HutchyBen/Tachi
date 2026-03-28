@@ -1,3 +1,4 @@
+import { GetChartByPgIdOrLegacyId } from "#lib/db-formats/chart";
 import { log } from "#lib/log/log";
 import { GetRelevantGoals } from "#lib/targets/goals";
 import { GetParentQuests } from "#lib/targets/quests";
@@ -11,6 +12,7 @@ import {
 import { GetFolderChartIDs } from "#utils/folder";
 import { GetUGPT } from "#utils/req-tachi-data";
 import { Router } from "express";
+import { GamePTToV3, MongoChartLegacyId } from "tachi-common";
 
 import goalsRouter from "./goals/router";
 import questsRouter from "./quests/router";
@@ -82,21 +84,21 @@ router.get("/recently-raised", async (req, res) => {
 router.get("/on-chart/:chartID", async (req, res) => {
 	const { game, playtype, user } = GetUGPT(req);
 
-	const chartID = req.params.chartID;
+	const chartIDParam = req.params.chartID;
 
-	const chart = await MONGODB_KILL.anyCharts[game].findOne({ chartID, playtype });
+	const chart = await GetChartByPgIdOrLegacyId(GamePTToV3(game, playtype), chartIDParam);
 
 	if (!chart) {
 		return res.status(404).json({
 			success: false,
-			description: `Failed to find a chart with chartID '${chartID}'.`,
+			description: `Failed to find a chart with chartID '${chartIDParam}'.`,
 		});
 	}
 
 	const { goals, goalSubsMap } = await GetRelevantGoals(
 		game,
 		user.id,
-		new Set([chartID]),
+		new Set([MongoChartLegacyId(chart)]),
 		log,
 		false,
 	);

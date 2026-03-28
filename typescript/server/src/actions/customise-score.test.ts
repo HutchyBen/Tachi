@@ -1,4 +1,4 @@
-import { pgScoreDataToMongo, mongoScoreDataToPg } from "#lib/v3/migration-tools";
+import { mongoScoreDataToPg, pgScoreDataToMongo } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { type MongoScoreData, type ScoreDocument } from "tachi-common";

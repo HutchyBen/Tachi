@@ -1,9 +1,10 @@
+import type { KaiAuthDocument } from "tachi-common";
+
 import { log } from "#lib/log/log";
 import { ServerConfig } from "#lib/setup/config";
 import DB from "#services/pg/db";
 import { MockJSONFetch } from "#test-utils/mock-fetch";
 import { seedUser } from "#test-utils/pg-fixtures";
-import type { KaiAuthDocument } from "tachi-common";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { CreateKaiReauthFunction } from "./reauth";

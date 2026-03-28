@@ -10,6 +10,7 @@ import {
 	type ImportProcessingInfo,
 	type ImportTypes,
 	type integer,
+	MongoChartLegacyId,
 	type ScoreDocument,
 	type SongDocument,
 } from "tachi-common";
@@ -335,7 +336,7 @@ async function HydrateCheckAndInsertScore(
 ): Promise<ScoreDocument | null> {
 	const gptString = GetGPTString(dryScore.game, chart.playtype);
 
-	const scoreID = CreateScoreID(gptString, userID, dryScore, chart.chartID, importLog);
+	const scoreID = CreateScoreID(gptString, userID, dryScore, MongoChartLegacyId(chart), importLog);
 
 	// sub-context thelog so the below logs are more accurate
 	const log = AppendLogCtx(scoreID, importLog);

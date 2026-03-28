@@ -7,9 +7,42 @@ import {
 	type ChartDocumentData,
 	type Difficulties,
 	type GPTString,
+	V3ToGameGroup,
 	V3ToGamePT,
 	type Versions,
 } from "tachi-common";
+
+type ChartRow = {
+	id: string;
+	legacy_id: string;
+	game: Game;
+	level: string;
+	level_num: number;
+	is_primary: boolean;
+	difficulty: string;
+	data: unknown;
+};
+
+function mapRowToChartDocument(
+	row: ChartRow,
+	songLegacyId: number,
+	versions: string[],
+): ChartDocument {
+	const { playtype } = V3ToGamePT(row.game);
+
+	return {
+		chartID: row.id,
+		legacyChartId: row.legacy_id,
+		songID: songLegacyId,
+		level: row.level,
+		levelNum: row.level_num,
+		isPrimary: row.is_primary,
+		difficulty: row.difficulty as Difficulties[GPTString],
+		playtype,
+		data: row.data as ChartDocumentData[GPTString],
+		versions: versions as Versions[GPTString][],
+	} as ChartDocument;
+}
 
 /**
  * Fetches all charts for a given PG game string (e.g. "iidx-sp") and song PG UUID,
@@ -17,7 +50,7 @@ import {
  * ChartDocuments using the provided legacy song ID for the `songID` field.
  */
 export async function GetChartsBySongPgId(
-	gamePt: Game,
+	v3Game: Game,
 	songPgId: string,
 	songLegacyId: number,
 	opts?: { omit2dxtraCharts?: boolean },
@@ -34,9 +67,11 @@ export async function GetChartsBySongPgId(
 			"data",
 		])
 		.where("song_id", "=", songPgId)
-		.where("game", "=", gamePt);
+		.where("game", "=", v3Game);
 
-	if (opts?.omit2dxtraCharts && String(gamePt).startsWith("iidx-")) {
+	const gameGroup = V3ToGameGroup(v3Game);
+
+	if (opts?.omit2dxtraCharts && gameGroup === "iidx") {
 		q = q.where(sql<SqlBool>`(data->>'2dxtraSet') IS NULL`);
 	}
 
@@ -66,19 +101,70 @@ export async function GetChartsBySongPgId(
 		list.push(v.version);
 	}
 
-	return rows.map((row) => {
-		const { playtype } = V3ToGamePT(row.game);
+	return rows.map((row) =>
+		mapRowToChartDocument(
+			row,
+			songLegacyId,
+			versionsByChartId.get(row.id) ?? [],
+		),
+	);
+}
 
-		return {
-			chartID: row.legacy_id,
-			songID: songLegacyId,
-			level: row.level,
-			levelNum: row.level_num,
-			isPrimary: row.is_primary,
-			difficulty: row.difficulty as Difficulties[GPTString],
-			playtype,
-			data: row.data as ChartDocumentData[GPTString],
-			versions: (versionsByChartId.get(row.id) ?? []) as Versions[GPTString][],
-		} as ChartDocument;
-	});
+/**
+ * Loads a single chart by Postgres `chart.id` or `legacy_id`, scoped to `v3Game`.
+ */
+export async function GetChartByPgIdOrLegacyId(
+	v3Game: Game,
+	chartIdParam: string,
+): Promise<ChartDocument | undefined> {
+	const chartRow = await DB.selectFrom("chart")
+		.select([
+			"id",
+			"legacy_id",
+			"game",
+			"song_id",
+			"level",
+			"level_num",
+			"is_primary",
+			"difficulty",
+			"data",
+		])
+		.where("game", "=", v3Game)
+		.where((eb) => eb.or([eb("id", "=", chartIdParam), eb("legacy_id", "=", chartIdParam)]))
+		.executeTakeFirst();
+
+	if (!chartRow) {
+		return undefined;
+	}
+
+	const songRow = await DB.selectFrom("song")
+		.select("legacy_id")
+		.where("id", "=", chartRow.song_id)
+		.executeTakeFirst();
+
+	if (!songRow) {
+		return undefined;
+	}
+
+	const versionRows = await DB.selectFrom("chart_version")
+		.select("version")
+		.where("chart_id", "=", chartRow.id)
+		.execute();
+
+	const versions = versionRows.map((v) => v.version);
+
+	return mapRowToChartDocument(
+		{
+			id: chartRow.id,
+			legacy_id: chartRow.legacy_id,
+			game: chartRow.game,
+			level: chartRow.level,
+			level_num: chartRow.level_num,
+			is_primary: chartRow.is_primary,
+			difficulty: chartRow.difficulty,
+			data: chartRow.data,
+		},
+		songRow.legacy_id,
+		versions,
+	);
 }

@@ -1,4 +1,5 @@
 import type { DeepPartial } from "#utils/types";
+import { MongoChartLegacyId } from "tachi-common";
 import type {
 	ChartDocument,
 	GameGroup,
@@ -7,10 +8,10 @@ import type {
 	GPTString,
 	ImportDocument,
 	integer,
+	MongoScoreData,
 	NotificationDocument,
 	PBScoreDocument,
 	Playtype,
-	MongoScoreData,
 	ScoreDocument,
 	UGPTSettingsDocument,
 	UserDocument,
@@ -170,7 +171,7 @@ export function mkMockPB<GPT extends GPTString>(
 		isPrimary: true,
 		rankingData: { outOf: 1, rank: 1, rivalRank: null },
 		songID: chart.songID,
-		chartID: chart.chartID,
+		chartID: MongoChartLegacyId(chart),
 		calculatedData: {},
 		scoreData,
 		timeAchieved: null,
@@ -191,7 +192,7 @@ export function mkMockScore<GPT extends GPTString>(
 		highlight: false,
 		isPrimary: true,
 		songID: chart.songID,
-		chartID: chart.chartID,
+		chartID: MongoChartLegacyId(chart),
 		calculatedData: {},
 		scoreData,
 		timeAchieved: null,

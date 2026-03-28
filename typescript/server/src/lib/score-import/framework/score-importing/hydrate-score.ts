@@ -4,6 +4,7 @@ import {
 	type ChartDocument,
 	GetGPTString,
 	type integer,
+	MongoChartLegacyId,
 	type ScoreDocument,
 	type SongDocument,
 } from "tachi-common";
@@ -44,7 +45,7 @@ export function HydrateScore(
 		userID,
 		calculatedData,
 		songID: song.id,
-		chartID: chart.chartID,
+		chartID: MongoChartLegacyId(chart),
 		scoreID,
 		playtype: chart.playtype,
 		isPrimary: chart.isPrimary,

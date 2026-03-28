@@ -191,7 +191,7 @@ export function SelectRightChart(
 			return chart;
 		}
 
-		if (chartID === chart.chartID) {
+		if (chartID === chart.chartID || chartID === chart.legacyChartId) {
 			return chart;
 		}
 	}

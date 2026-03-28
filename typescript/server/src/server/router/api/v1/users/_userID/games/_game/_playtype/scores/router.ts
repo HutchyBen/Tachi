@@ -1,8 +1,10 @@
 import { SearchSpecificGameSongsAndCharts } from "#lib/search/search";
+import { ResolveLegacyChartIdForMongo } from "#utils/chart-mongo-id";
 import { HyperAggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
 import MONGODB_KILL from "#services/mongo/db";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { GetUGPT } from "#utils/req-tachi-data";
+import { MongoChartLegacyId } from "tachi-common";
 import { FilterChartsAndSongs } from "#utils/scores";
 import { Router } from "express";
 
@@ -31,7 +33,7 @@ router.get("/", async (req, res) => {
 
 	const scores = await MONGODB_KILL.scores.find(
 		{
-			chartID: { $in: allCharts.map((e) => e.chartID) },
+			chartID: { $in: allCharts.map((e) => MongoChartLegacyId(e)) },
 			userID: user.id,
 		},
 		{
@@ -124,8 +126,17 @@ router.get("/recent", async (req, res) => {
 router.get("/:chartID", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
+	const legacyMongoId = await ResolveLegacyChartIdForMongo(game, playtype, req.params.chartID);
+
+	if (!legacyMongoId) {
+		return res.status(404).json({
+			success: false,
+			description: `This chart does not exist.`,
+		});
+	}
+
 	const chart = await MONGODB_KILL.anyCharts[game].findOne({
-		chartID: req.params.chartID,
+		chartID: legacyMongoId,
 		playtype,
 	});
 
@@ -138,7 +149,7 @@ router.get("/:chartID", async (req, res) => {
 
 	const scores = await MONGODB_KILL.scores.find({
 		userID: user.id,
-		chartID: chart.chartID,
+		chartID: legacyMongoId,
 	});
 
 	return res.status(200).json({

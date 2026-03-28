@@ -645,7 +645,9 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 
 		expect(charts.length).toBe(1);
 		expect(charts[0]?.difficulty).toBe("HYPER");
-		expect((charts[0]?.data as { "2dxtraSet"?: string | null })["2dxtraSet"] ?? null).toBeNull();
+		expect(
+			(charts[0]?.data as { "2dxtraSet"?: string | null })["2dxtraSet"] ?? null,
+		).toBeNull();
 	});
 
 	it("does not apply the iidx 2dxtra song rule to other game groups", async () => {

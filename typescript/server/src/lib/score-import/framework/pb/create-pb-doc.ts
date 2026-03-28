@@ -12,6 +12,7 @@ import {
 	GetGPTConfig,
 	type GPTString,
 	type integer,
+	MongoChartLegacyId,
 	type PBScoreDocument,
 	type Playtype,
 	type ScoreDocument,
@@ -36,7 +37,7 @@ export async function CreatePBDoc(
 	log: KtLogger,
 	asOfTimestamp?: number,
 ) {
-	const chartID = chart.chartID;
+	const chartID = MongoChartLegacyId(chart);
 
 	const query: FilterQuery<ScoreDocument> = {
 		userID,

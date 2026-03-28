@@ -7,8 +7,8 @@ import { Nav } from "react-bootstrap";
 import {
 	type ChartDocument,
 	type Difficulties,
-	type PBScoreDocument,
 	type MongoScoreData,
+	type PBScoreDocument,
 	type ScoreDocument,
 	type SongDocument,
 } from "tachi-common";

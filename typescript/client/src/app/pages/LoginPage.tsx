@@ -22,9 +22,9 @@ export default function LoginPage() {
 	const recaptchaRef = useRef<any>(null);
 
 	const performLogin = async (values: {
-		username: string;
 		"!password": string;
 		captcha: string;
+		username: string;
 	}) => {
 		setErr("");
 
@@ -90,7 +90,7 @@ export default function LoginPage() {
 		<LoginPageLayout description={<Description />} heading="Log In">
 			<Form className="d-flex flex-column gap-4 w-100" onSubmit={formik.handleSubmit}>
 				{import.meta.env.VITE_IS_LOCAL_DEV && (
-					<Alert variant="info" className="mb-0">
+					<Alert className="mb-0" variant="info">
 						<div className="d-flex flex-column gap-2">
 							<span>
 								You are in local development mode. You can login as the admin

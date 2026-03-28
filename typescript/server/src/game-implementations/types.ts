@@ -5,15 +5,15 @@ import type {
 	ClassConfigs,
 	ConfDerivedMetrics,
 	ConfScoreMetrics,
-	MongoDerivedMetrics,
 	GPTString,
 	GPTStringToGame,
 	GPTStringToPlaytype,
 	integer,
+	MongoDerivedMetrics,
+	MongoScoreData,
 	PBReference,
 	PBScoreDocument,
 	ProfileRatingAlgorithms,
-	MongoScoreData,
 	ScoreDocument,
 	ScoreRatingAlgorithms,
 	SessionRatingAlgorithms,
@@ -21,9 +21,9 @@ import type {
 } from "tachi-common";
 import type { DerivedClassConfig } from "tachi-common/types/game-config-utils";
 import type {
+	__OLD_KILL_ScoreMetricDeriver,
 	AllConfMetrics,
 	ConfEnumScoreMetric,
-	__OLD_KILL_ScoreMetricDeriver,
 } from "tachi-common/types/metrics";
 
 /**

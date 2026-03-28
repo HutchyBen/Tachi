@@ -2,15 +2,15 @@ import { DeleteUndefinedProps } from "#utils/misc.js";
 import {
 	GetGPTConfig,
 	type GPTString,
-	GPTStringToV3Game,
-	integer,
+	type GPTStringToV3Game,
+	type integer,
 	type MongoDerivedMetrics,
 	type MongoOptionalMetrics,
 	type MongoProvidedMetrics,
 	type MongoScoreData,
-	PgScoreData,
-	V3Game,
-	V3GameToGPTString,
+	type PgScoreData,
+	type V3Game,
+	type V3GameToGPTString,
 	V3GetGameConfig,
 } from "tachi-common";
 

@@ -3,7 +3,7 @@ import MONGODB_KILL from "#services/mongo/db";
 import { DeleteUndefinedProps, IsNullishOrEmptyStr } from "#utils/misc";
 import { FindIIDXChartOnInGameIDVersion, FindIIDXChartWith2DXtraHash } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
-import { type Difficulties, GetGPTString, type Playtypes } from "tachi-common";
+import { type Difficulties, GetGPTString, MongoChartLegacyId, type Playtypes } from "tachi-common";
 
 import type { DryScore } from "../../../framework/common/types";
 import type { ConverterFunction } from "../../common/types";
@@ -266,7 +266,7 @@ export const ConverterIRFervidex: ConverterFunction<FervidexScore, FervidexConte
 			GetGPTString("iidx", chart.playtype),
 			context.userID,
 			dryScore,
-			chart.chartID,
+			MongoChartLegacyId(chart),
 		);
 
 		await MONGODB_KILL.scores.update({ scoreID }, { $set: { highlight: true } });

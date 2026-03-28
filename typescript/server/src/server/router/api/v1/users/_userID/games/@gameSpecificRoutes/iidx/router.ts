@@ -137,7 +137,7 @@ router.get(
 				// this song might not have a beginner/normal/hyper/another/legg
 				if (chart) {
 					// try and find the user's PB
-					pb = pbs.find((e) => e.chartID === chart.chartID);
+					pb = pbs.find((e) => e.chartID === chart.legacyChartId);
 				}
 
 				if (pb) {

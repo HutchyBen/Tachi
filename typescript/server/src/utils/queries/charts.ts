@@ -307,7 +307,8 @@ export async function FindChartsOnPopularity(
 		const { playtype: chartPlaytype } = V3ToGamePT(row.game);
 
 		return {
-			chartID: row.legacy_id,
+			chartID: row.id,
+			legacyChartId: row.legacy_id,
 			songID: row.song_legacy_id,
 			level: row.level,
 			levelNum: row.level_num,

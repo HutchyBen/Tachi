@@ -1,9 +1,8 @@
-import ChartRedirector from "#app/pages/dashboard/games/_game/_playtype/ChartRedirector";
 import GPTChartPage from "#app/pages/dashboard/games/_game/_playtype/GPTChartPage";
 import GPTDevInfo from "#app/pages/dashboard/games/_game/_playtype/GPTDevInfo";
 import GPTLeaderboardsPage from "#app/pages/dashboard/games/_game/_playtype/GPTLeaderboardsPage";
 import GPTMainPage from "#app/pages/dashboard/games/_game/_playtype/GPTMainPage";
-import GPTSongsPage from "#app/pages/dashboard/games/_game/_playtype/GPTSongsPage";
+import GPTChartsPage from "#app/pages/dashboard/games/_game/_playtype/GPTChartsPage";
 import PlaytypeSelect from "#app/pages/dashboard/games/_game/PlaytypeSelect";
 import { ErrorPage } from "#app/pages/ErrorPage";
 import ChartInfoFormat from "#components/game/charts/ChartInfoFormat";
@@ -32,6 +31,7 @@ import { ToCDNURL } from "#util/api";
 import { IsSupportedGame, IsSupportedPlaytype } from "#util/asserts";
 import { ChangeOpacity } from "#util/color-opacity";
 import { CreateChartLink } from "#util/data";
+import { SelectRightChart } from "#util/misc";
 import { NumericSOV, StrSOV } from "#util/sorts";
 import React, { useContext, useEffect, useState } from "react";
 import { Col, Row } from "react-bootstrap";
@@ -115,20 +115,20 @@ function GamePlaytypeRoutes({ game }: { game: GameGroup }) {
 					<GPTMainPage game={game} playtype={playtype} />
 				</Route>
 
-				<Route exact path="/games/:game/:playtype/charts">
-					<Redirect to={`/games/${game}/${playtype}/songs`} />
-				</Route>
-
-				<Route exact path="/games/:game/:playtype/charts/:chartID">
-					<ChartRedirector game={game} playtype={playtype} />
-				</Route>
-
 				<Route exact path="/games/:game/:playtype/songs">
-					<GPTSongsPage game={game} playtype={playtype} />
+					<Redirect to={`/games/${game}/${playtype}/charts`} />
+				</Route>
+
+				<Route exact path="/games/:game/:playtype/charts">
+					<GPTChartsPage game={game} playtype={playtype} />
+				</Route>
+
+				<Route path="/games/:game/:playtype/charts/:chartID">
+					<ChartPageRoutes game={game} playtype={playtype} />
 				</Route>
 
 				<Route path="/games/:game/:playtype/songs/:songID">
-					<SongChartRoutes game={game} playtype={playtype} />
+					<SongChartRedirectRoutes game={game} playtype={playtype} />
 				</Route>
 
 				<Route path="/games/:game/:playtype/(quests|questlines|goals)">
@@ -178,18 +178,83 @@ function GPTQuestRoutes({ game, playtype }: GamePT) {
 	);
 }
 
-function SongChartRoutes({ game, playtype }: GamePT) {
-	const { songID } = useParams<{ songID: string }>();
+function ChartPageRoutes({ game, playtype }: GamePT) {
+	const { chartID } = useParams<{ chartID: string }>();
 
-	const { data, error } = useApiQuery<SongsReturn>(`/games/${game}/${playtype}/songs/${songID}`);
+	const { data: singleData, error: chartErr } = useApiQuery<{
+		chart: ChartDocument;
+		song: SongDocument;
+	}>(`/games/${game}/${playtype}/charts/${chartID}`);
+
+	const songLegacyId = singleData?.song.id;
+
+	const { data: songsData, error: songsErr } = useApiQuery<SongsReturn>(
+		songLegacyId !== undefined ? `/games/${game}/${playtype}/songs/${songLegacyId}` : "",
+		undefined,
+		undefined,
+		songLegacyId === undefined,
+	);
 
 	const { settings } = useContext(UserSettingsContext);
 
 	const [activeChart, setActiveChart] = useState<ChartDocument | null>(null);
 
 	useEffect(() => {
-		setActiveChart(null);
-	}, [game, playtype]);
+		const c = songsData?.charts.find((x) => x.chartID === chartID);
+		setActiveChart(c ?? singleData?.chart ?? null);
+	}, [chartID, songsData, singleData]);
+
+	const error = chartErr ?? songsErr;
+
+	if (error) {
+		return <ErrorPage customMessage={error.description} statusCode={error.statusCode} />;
+	}
+
+	if (!singleData || !songsData) {
+		return <Loading />;
+	}
+
+	if (songsData.charts.length === 0) {
+		return (
+			<ErrorPage
+				customMessage={"This song has no charts for this playtype."}
+				statusCode={404}
+			/>
+		);
+	}
+
+	return (
+		<>
+			<SongInfoHeader
+				game={game}
+				playtype={playtype}
+				{...songsData}
+				activeChart={activeChart}
+				setActiveChart={setActiveChart}
+			/>
+			<Divider />
+			<GPTChartPage
+				chart={activeChart}
+				game={game}
+				playtype={playtype}
+				song={songsData.song}
+			/>
+			{settings?.preferences.developerMode && (
+				<>
+					<Divider />
+					<Card header="Dev Info">
+						<DebugContent data={songsData} />
+					</Card>
+				</>
+			)}
+		</>
+	);
+}
+
+function SongChartRedirectRoutes({ game, playtype }: GamePT) {
+	const { songID } = useParams<{ songID: string }>();
+
+	const { data, error } = useApiQuery<SongsReturn>(`/games/${game}/${playtype}/songs/${songID}`);
 
 	if (error) {
 		return <ErrorPage customMessage={error.description} statusCode={error.statusCode} />;
@@ -209,55 +274,64 @@ function SongChartRoutes({ game, playtype }: GamePT) {
 	}
 
 	if (data.charts.every((c) => c.playtype !== playtype)) {
-		return <Redirect to={`/games/${game}/${data.charts[0].playtype}/songs/${data.song.id}`} />;
+		const c = data.charts[0];
+
+		if (!c.chartID) {
+			return (
+				<ErrorPage
+					customMessage={"This song has no chart IDs for navigation."}
+					statusCode={500}
+				/>
+			);
+		}
+
+		return <Redirect to={`/games/${game}/${c.playtype}/charts/${c.chartID}`} />;
 	}
 
 	return (
-		<>
-			<SongInfoHeader
-				game={game}
-				playtype={playtype}
-				{...data}
-				activeChart={activeChart}
-				setActiveChart={setActiveChart}
-			/>
-			<Divider />
-			<Switch>
-				<Route exact path="/games/:game/:playtype/songs/:songID">
-					{/* Select the hardest chart for this. */}
-					<Redirect
-						to={`/games/${game}/${playtype}/songs/${data.song.id}/${
-							data.charts.slice(0).sort(NumericSOV((x) => x.levelNum, true))[0]
-								.difficulty
-						}`}
-					/>
-				</Route>
+		<Switch>
+			<Route exact path="/games/:game/:playtype/songs/:songID">
+				<SongSongIdOnlyRedirect charts={data.charts} game={game} playtype={playtype} />
+			</Route>
 
-				<Route path="/games/:game/:playtype/songs/:songID/:difficulty">
-					<GPTChartPage
-						allCharts={data.charts}
-						chart={activeChart}
-						game={game}
-						playtype={playtype}
-						setActiveChart={setActiveChart}
-						song={data.song}
-					/>
-				</Route>
+			<Route path="/games/:game/:playtype/songs/:songID/:difficulty">
+				<SongDifficultyRedirect data={data} game={game} playtype={playtype} />
+			</Route>
 
-				<Route path="*">
-					<ErrorPage statusCode={404} />
-				</Route>
-			</Switch>
-			{settings?.preferences.developerMode && (
-				<>
-					<Divider />
-					<Card header="Dev Info">
-						<DebugContent data={data} />
-					</Card>
-				</>
-			)}
-		</>
+			<Route path="*">
+				<ErrorPage statusCode={404} />
+			</Route>
+		</Switch>
 	);
+}
+
+function SongSongIdOnlyRedirect({ charts, game, playtype }: { charts: ChartDocument[] } & GamePT) {
+	const hardest = charts.slice(0).sort(NumericSOV((x) => x.levelNum, true))[0];
+
+	if (!hardest.chartID) {
+		return (
+			<ErrorPage
+				customMessage={"This song has no chart IDs for navigation."}
+				statusCode={500}
+			/>
+		);
+	}
+
+	return <Redirect to={`/games/${game}/${playtype}/charts/${hardest.chartID}`} />;
+}
+
+function SongDifficultyRedirect({ data, game, playtype }: { data: SongsReturn } & GamePT) {
+	const { difficulty: d } = useParams<{ difficulty: string }>();
+	const difficulty = decodeURIComponent(d);
+
+	const gptConfig = GetGamePTConfig(game, playtype);
+	const chart = SelectRightChart(gptConfig, difficulty, data.charts);
+
+	if (!chart?.chartID) {
+		return <ErrorPage customMessage={"Could not resolve this chart."} statusCode={404} />;
+	}
+
+	return <Redirect to={`/games/${game}/${chart.playtype}/charts/${chart.chartID}`} />;
 }
 
 function SongInfoHeader({

@@ -89,13 +89,7 @@ export function CreateScoreIDMap<GPT extends GPTString = GPTString>(scores: Scor
 }
 
 export function CreateChartLink(chart: ChartDocument, game: GameGroup) {
-	if (chart.isPrimary) {
-		return `/games/${game}/${chart.playtype}/songs/${chart.songID}/${encodeURIComponent(
-			chart.difficulty,
-		)}`;
-	}
-
-	return `/games/${game}/${chart.playtype}/songs/${chart.songID}/${chart.chartID}`;
+	return `/games/${game}/${chart.playtype}/charts/${chart.chartID}`;
 }
 
 // stolen from server

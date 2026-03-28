@@ -1,9 +1,9 @@
+import type { GameGroup } from "tachi-common";
+
+import DB from "#services/pg/db";
+import { importSeeds } from "#services/pg/seeds";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
-import { importSeeds } from "#services/pg/seeds";
-import DB from "#services/pg/db";
-import type { GameGroup } from "tachi-common";
 import { beforeAll, bench, describe } from "vitest";
 
 import { LoadSongChildrenForPgIds, SearchSongsForGameFtsAndTrgm } from "./song-search";

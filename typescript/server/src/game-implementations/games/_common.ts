@@ -1,8 +1,8 @@
 import type {
+	__OLD_KILL_GPTDerivers,
 	ChartSpecificMetricValidator,
 	GPTChartSpecificMetricValidators,
 	GPTClassDerivers,
-	__OLD_KILL_GPTDerivers,
 	GPTGoalFormatters,
 	GPTGoalProgressFormatters,
 	GPTNewCalcs,

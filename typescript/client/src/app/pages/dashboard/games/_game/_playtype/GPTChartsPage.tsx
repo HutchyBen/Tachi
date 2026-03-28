@@ -21,7 +21,7 @@ import {
 	type SongDocument,
 } from "tachi-common";
 
-export default function GPTSongsPage({ game, playtype }: GamePT) {
+export default function GPTChartsPage({ game, playtype }: GamePT) {
 	useSetSubheader(
 		["Games", GetGameGroupConfig(game).name, playtype, "Songs"],
 		[game, playtype],

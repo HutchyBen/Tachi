@@ -448,9 +448,17 @@ export function CreateChartMap<GPT extends GPTString = GPTString>(
 
 	for (const chart of charts) {
 		chartMap.set(chart.chartID, chart);
+		if (chart.legacyChartId) {
+			chartMap.set(chart.legacyChartId, chart);
+		}
 	}
 
 	return chartMap;
+}
+
+/** Mongo `chartID` field (`personal-bests`, `scores`, etc.): legacy string, or same as `chartID` on raw Mongo chart docs. */
+export function MongoChartLegacyId(chart: ChartDocument): string {
+	return chart.legacyChartId ?? chart.chartID;
 }
 
 /**

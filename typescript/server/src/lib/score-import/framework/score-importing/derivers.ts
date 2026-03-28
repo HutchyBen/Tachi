@@ -5,12 +5,12 @@ import type { MetricValue } from "tachi-common/types/metrics";
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import {
 	type ChartDocument,
-	type MongoDerivedMetrics,
 	GetGPTConfig,
 	type GPTString,
 	type integer,
-	type OptionalEnumIndexes,
+	type MongoDerivedMetrics,
 	type MongoScoreData,
+	type OptionalEnumIndexes,
 	type ScoreEnumIndexes,
 } from "tachi-common";
 

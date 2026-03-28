@@ -86,7 +86,10 @@ router.get("/", async (req, res) => {
 	// @optimisable
 	// could use songIDs from above instead of refetching
 	// but this is not very expensive.
-	const songs = await GetSongsByLegacyIDs(game, charts.map((e) => e.songID));
+	const songs = await GetSongsByLegacyIDs(
+		game,
+		charts.map((e) => e.songID),
+	);
 
 	// Edge case.
 	// If the game is IIDX and the player does not want

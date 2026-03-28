@@ -24,6 +24,7 @@ import {
 	type GPTString,
 	type GPTStrings,
 	type integer,
+	MongoChartLegacyId,
 	type Playtype,
 	type SessionDocument,
 	type SongDocument,
@@ -33,7 +34,6 @@ import {
 } from "tachi-common";
 
 import { AsyncFzf } from "./fzf/main";
-
 
 interface SearchControls {
 	keys: Array<string>;
@@ -304,7 +304,7 @@ export async function SearchGlobalGameSongsAndCharts(
 		return [];
 	}
 
-	const chartLegacyIds = output.map((o) => o.chart.chartID);
+	const chartLegacyIds = output.map((o) => MongoChartLegacyId(o.chart));
 
 	const playcountRows = await DB.selectFrom("score")
 		.innerJoin("chart", "chart.id", "score.chart_id")
@@ -313,10 +313,12 @@ export async function SearchGlobalGameSongsAndCharts(
 		.groupBy("chart.legacy_id")
 		.execute();
 
-	const playcountLookup = Object.fromEntries(playcountRows.map((r) => [r.legacy_id, r.playcount]));
+	const playcountLookup = Object.fromEntries(
+		playcountRows.map((r) => [r.legacy_id, r.playcount]),
+	);
 
 	for (const row of output) {
-		row.playcount = playcountLookup[row.chart.chartID] ?? 0;
+		row.playcount = playcountLookup[MongoChartLegacyId(row.chart)] ?? 0;
 	}
 
 	return output;

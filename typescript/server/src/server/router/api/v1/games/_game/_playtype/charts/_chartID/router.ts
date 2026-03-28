@@ -1,5 +1,6 @@
 import type { FilterQuery } from "mongodb";
 
+import { GetSongByLegacyID } from "#lib/db-formats/song";
 import { log } from "#lib/log/log";
 import { SearchUsersRegExp } from "#lib/search/search";
 import MONGODB_KILL from "#services/mongo/db";
@@ -12,6 +13,7 @@ import { Router } from "express";
 import {
 	type FolderDocument,
 	FormatChart,
+	MongoChartLegacyId,
 	type PBScoreDocument,
 	type UserDocument,
 } from "tachi-common";
@@ -31,13 +33,11 @@ router.get("/", async (req, res) => {
 	const chart = GetTachiData(req, "chartDoc");
 	const game = GetTachiData(req, "game");
 
-	const song = await MONGODB_KILL.anySongs[game].findOne({
-		id: chart.songID,
-	});
+	const songRes = await GetSongByLegacyID(game, chart.songID);
 
-	if (!song) {
+	if (!songRes) {
 		log.error(
-			`Song ${chart.songID} does not exist, yet chart ${chart.chartID} has it as a parent?`,
+			`Song ${chart.songID} does not exist, yet chart ${chart.chartID} (${chart.legacyChartId}) has it as a parent?`,
 		);
 
 		return res.status(500).json({
@@ -45,6 +45,8 @@ router.get("/", async (req, res) => {
 			description: `An internal server error has occured.`,
 		});
 	}
+
+	const song = songRes.doc;
 
 	return res.status(200).json({
 		success: true,
@@ -68,7 +70,7 @@ router.get("/folders", async (req, res) => {
 
 	const folderIDs = await MONGODB_KILL["folder-chart-lookup"].find(
 		{
-			chartID: chart.chartID,
+			chartID: MongoChartLegacyId(chart),
 		},
 		{
 			projection: {
@@ -102,7 +104,7 @@ router.get("/folders", async (req, res) => {
 router.get("/playcount", async (req, res) => {
 	const chart = GetTachiData(req, "chartDoc");
 
-	const count = await MONGODB_KILL["personal-bests"].count({ chartID: chart.chartID });
+	const count = await MONGODB_KILL["personal-bests"].count({ chartID: MongoChartLegacyId(chart) });
 
 	return res.status(200).json({
 		success: true,
@@ -128,7 +130,7 @@ router.get("/pbs", async (req, res) => {
 
 	const pbs = await MONGODB_KILL["personal-bests"].find(
 		{
-			chartID: chart.chartID,
+			chartID: MongoChartLegacyId(chart),
 			"rankingData.rank": { $gte: startRanking },
 		},
 		{
@@ -171,7 +173,7 @@ router.get("/pbs/search", async (req, res) => {
 	const users = await SearchUsersRegExp(req.query.search);
 
 	const pbs = await MONGODB_KILL["personal-bests"].find({
-		chartID: chart.chartID,
+		chartID: MongoChartLegacyId(chart),
 		userID: { $in: users.map((e) => e.id) },
 	});
 
