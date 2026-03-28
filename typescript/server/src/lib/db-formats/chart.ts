@@ -1,13 +1,15 @@
-import DB from "#services/pg/db";
-import type {
-	ChartDocument,
-	ChartDocumentData,
-	Difficulties,
-	GPTString,
-	Versions,
-} from "tachi-common";
-import { V3ToGamePT } from "tachi-common";
 import type { Game } from "tachi-db";
+
+import DB from "#services/pg/db";
+import { sql, type SqlBool } from "kysely";
+import {
+	type ChartDocument,
+	type ChartDocumentData,
+	type Difficulties,
+	type GPTString,
+	V3ToGamePT,
+	type Versions,
+} from "tachi-common";
 
 /**
  * Fetches all charts for a given PG game string (e.g. "iidx-sp") and song PG UUID,
@@ -18,8 +20,9 @@ export async function GetChartsBySongPgId(
 	gamePt: Game,
 	songPgId: string,
 	songLegacyId: number,
+	opts?: { omit2dxtraCharts?: boolean },
 ): Promise<ChartDocument[]> {
-	const rows = await DB.selectFrom("chart")
+	let q = DB.selectFrom("chart")
 		.select([
 			"id",
 			"legacy_id",
@@ -31,8 +34,13 @@ export async function GetChartsBySongPgId(
 			"data",
 		])
 		.where("song_id", "=", songPgId)
-		.where("game", "=", gamePt)
-		.execute();
+		.where("game", "=", gamePt);
+
+	if (opts?.omit2dxtraCharts && String(gamePt).startsWith("iidx-")) {
+		q = q.where(sql<SqlBool>`(data->>'2dxtraSet') IS NULL`);
+	}
+
+	const rows = await q.execute();
 
 	if (rows.length === 0) {
 		return [];

@@ -2,9 +2,12 @@ import type { FilterQuery } from "mongodb";
 import type { ICollection } from "monk";
 
 import { GetChartsBySongPgId } from "#lib/db-formats/chart";
-import { LoadSongChildrenForPgIds, SearchSongsForGameFtsAndTrgm } from "#lib/db-formats/song-search";
+import {
+	LoadSongChildrenForPgIds,
+	MAX_SONG_SEARCH_RESULTS_PER_GAME,
+	SearchSongsForGameFtsAndTrgm,
+} from "#lib/db-formats/song-search";
 import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user";
-import { log } from "#lib/log/log";
 import { TachiConfig } from "#lib/setup/config";
 import MONGODB_KILL from "#services/mongo/db";
 import DB from "#services/pg/db";
@@ -15,7 +18,6 @@ import { GetOnlineCutoff } from "#utils/user";
 import { sql } from "kysely";
 import {
 	type ChartDocument,
-	CreateSongMap,
 	type FolderDocument,
 	type GameGroup,
 	GamePTToV3,
@@ -236,7 +238,9 @@ export async function SearchSpecificGameSongsAndCharts(
 				return Promise.resolve([] as Array<ChartDocument>);
 			}
 
-			return GetChartsBySongPgId(v3Game, pgId, song.id);
+			return GetChartsBySongPgId(v3Game, pgId, song.id, {
+				omit2dxtraCharts: game === "iidx",
+			});
 		}),
 	);
 
@@ -247,12 +251,15 @@ export async function SearchSpecificGameSongsAndCharts(
 
 /**
  * Search this Game/GPTs songs and charts, but globally.
+ *
+ * Returns at most `limit` **chart** rows per GPT (same cap as song search). Without this,
+ * N matched songs × charts per song could return a huge payload from `/api/v1/search`.
  */
 export async function SearchGlobalGameSongsAndCharts(
 	game: GameGroup,
 	search: string,
 	playtype?: Playtype,
-	limit = 100,
+	limit = MAX_SONG_SEARCH_RESULTS_PER_GAME,
 ): Promise<Array<{ chart: ChartDocument; playcount: integer; song: SongDocument }>> {
 	const { songs, pgIdByLegacyId } = await searchSpecificGameSongsWithPgIds(game, search, limit);
 
@@ -262,25 +269,42 @@ export async function SearchGlobalGameSongsAndCharts(
 
 	const v3Game = GamePTToV3(game, playtype);
 
-	const chartLists = await Promise.all(
-		songs.map((song) => {
-			const pgId = pgIdByLegacyId.get(song.id);
+	const output: Array<{ chart: ChartDocument; playcount: integer; song: SongDocument }> = [];
 
-			if (!pgId) {
-				return Promise.resolve([] as Array<ChartDocument>);
+	for (const song of songs) {
+		if (output.length >= limit) {
+			break;
+		}
+
+		const pgId = pgIdByLegacyId.get(song.id);
+
+		if (!pgId) {
+			continue;
+		}
+
+		// eslint-disable-next-line no-await-in-loop -- stop after enough charts; avoids loading every song's charts when the cap is already reached.
+		const songCharts = await GetChartsBySongPgId(v3Game, pgId, song.id, {
+			omit2dxtraCharts: game === "iidx",
+		});
+
+		for (const chart of songCharts) {
+			if (output.length >= limit) {
+				break;
 			}
 
-			return GetChartsBySongPgId(v3Game, pgId, song.id);
-		}),
-	);
+			output.push({
+				song,
+				chart,
+				playcount: 0,
+			});
+		}
+	}
 
-	const charts = chartLists.flat();
-
-	if (charts.length === 0) {
+	if (output.length === 0) {
 		return [];
 	}
 
-	const chartLegacyIds = charts.map((c) => c.chartID);
+	const chartLegacyIds = output.map((o) => o.chart.chartID);
 
 	const playcountRows = await DB.selectFrom("score")
 		.innerJoin("chart", "chart.id", "score.chart_id")
@@ -291,24 +315,8 @@ export async function SearchGlobalGameSongsAndCharts(
 
 	const playcountLookup = Object.fromEntries(playcountRows.map((r) => [r.legacy_id, r.playcount]));
 
-	const songMap = CreateSongMap(songs);
-
-	const output = [];
-
-	for (const chart of charts) {
-		const song = songMap.get(chart.songID);
-
-		if (!song) {
-			log.warn(`Failed to find parent song for ${chart.songID} (${game})? Skipping.`);
-
-			continue;
-		}
-
-		output.push({
-			song,
-			chart,
-			playcount: playcountLookup[chart.chartID] ?? 0,
-		});
+	for (const row of output) {
+		row.playcount = playcountLookup[row.chart.chartID] ?? 0;
 	}
 
 	return output;

@@ -10,6 +10,37 @@ export const MAX_SONG_SEARCH_RESULTS_PER_GAME = 100;
 /** Use trigram / ILIKE supplement when the query is this short or FTS returns nothing. */
 const SHORT_QUERY_LEN = 3;
 
+/**
+ * Queries this short match almost every row if we use substring `ILIKE '%q%'` / trgm.
+ * For `len <=` this value we only add **exact** matches (title, artist, search_term, alt_title)
+ * and skip substring trgm; FTS still runs first.
+ */
+export const SHORT_QUERY_STRICT_MAX_LEN = 2;
+
+/**
+ * IIDX-only: exclude songs whose **only** IIDX charts are 2dxtra (`data.2dxtraSet` set).
+ * Songs with no `chart` rows yet, or with at least one non-2dxtra IIDX chart, stay searchable.
+ */
+function iidxSongSearchableWith2dxtraRuleSql(game: GameGroup) {
+	if (game !== "iidx") {
+		return sql`true`;
+	}
+
+	return sql`(
+		NOT EXISTS (
+			SELECT 1 FROM chart c
+			WHERE c.song_id = song.id
+				AND (c.game)::text LIKE 'iidx-%'
+		)
+		OR EXISTS (
+			SELECT 1 FROM chart c
+			WHERE c.song_id = song.id
+				AND (c.game)::text LIKE 'iidx-%'
+				AND (c.data->>'2dxtraSet') IS NULL
+		)
+	)`;
+}
+
 export type SongSearchRow = {
 	artist: string;
 	data: unknown;
@@ -22,6 +53,10 @@ export type SongSearchRow = {
 /**
  * Indexed song search: PostgreSQL FTS (tsvector) plus optional pg_trgm / ILIKE fallback
  * (Zenith-style — no full-table load, no huge IN lists).
+ *
+ * Queries with length ≤ {@link SHORT_QUERY_STRICT_MAX_LEN} also run an **exact** match pass
+ * (title, artist, `song_search_term`, `song_alt_title`) with a boosted rank; substring
+ * `ILIKE '%q%'` trgm is skipped so single-letter titles like “A” are findable without noise.
  */
 export async function SearchSongsForGameFtsAndTrgm(
 	game: GameGroup,
@@ -46,20 +81,73 @@ export async function SearchSongsForGameFtsAndTrgm(
 			(ts_rank_cd(textsearch, websearch_to_tsquery('simple', ${q})))::float8 AS rank
 		FROM song
 		WHERE game_group = ${game}
+			AND ${iidxSongSearchableWith2dxtraRuleSql(game)}
 			AND textsearch @@ websearch_to_tsquery('simple', ${q})
 		ORDER BY rank DESC
 		LIMIT ${cap}
 	`.execute(DB);
 
-	const needTrgm =
-		ftsRows.length < cap && (q.length <= SHORT_QUERY_LEN || ftsRows.length === 0);
+	const strictShort = q.length <= SHORT_QUERY_STRICT_MAX_LEN;
 
-	if (!needTrgm) {
-		return ftsRows;
+	const exactRows = strictShort
+		? (
+				await sql<SongSearchRow>`
+				SELECT
+					song.id,
+					song.legacy_id,
+					song.title,
+					song.artist,
+					song.data,
+					10.0::float8 AS rank
+				FROM song
+				WHERE song.game_group = ${game}
+					AND ${iidxSongSearchableWith2dxtraRuleSql(game)}
+					AND (
+						lower(song.title) = lower(${q})
+						OR lower(song.artist) = lower(${q})
+						OR EXISTS (
+							SELECT 1
+							FROM song_search_term st
+							WHERE st.song_id = song.id AND lower(st.search_term) = lower(${q})
+						)
+						OR EXISTS (
+							SELECT 1
+							FROM song_alt_title at
+							WHERE at.song_id = song.id AND lower(at.alt_title) = lower(${q})
+						)
+					)
+				LIMIT ${cap}
+			`.execute(DB)
+			).rows
+		: [];
+
+	const mergedBeforeTrgm = new Map<string, SongSearchRow>();
+
+	for (const r of ftsRows) {
+		mergedBeforeTrgm.set(r.id, r);
 	}
 
-	const excludeIds = ftsRows.map((r) => r.id);
-	const trgmLimit = cap - ftsRows.length;
+	for (const r of exactRows) {
+		const existing = mergedBeforeTrgm.get(r.id);
+
+		if (!existing || r.rank > existing.rank) {
+			mergedBeforeTrgm.set(r.id, r);
+		}
+	}
+
+	const mergedList = [...mergedBeforeTrgm.values()].sort((a, b) => b.rank - a.rank);
+
+	const needTrgm =
+		mergedList.length < cap &&
+		!strictShort &&
+		(q.length <= SHORT_QUERY_LEN || ftsRows.length === 0);
+
+	if (!needTrgm) {
+		return mergedList.slice(0, cap);
+	}
+
+	const excludeIds = mergedList.map((r) => r.id);
+	const trgmLimit = cap - mergedList.length;
 	const likeEsc = EscapeForILIKE(q.toLowerCase());
 	const pat = `%${likeEsc}%`;
 
@@ -79,6 +167,7 @@ export async function SearchSongsForGameFtsAndTrgm(
 					)::float8 AS rank
 				FROM song
 				WHERE game_group = ${game}
+					AND ${iidxSongSearchableWith2dxtraRuleSql(game)}
 					AND (
 						title ILIKE ${pat}
 						OR artist ILIKE ${pat}
@@ -101,6 +190,7 @@ export async function SearchSongsForGameFtsAndTrgm(
 					)::float8 AS rank
 				FROM song
 				WHERE game_group = ${game}
+					AND ${iidxSongSearchableWith2dxtraRuleSql(game)}
 					AND id NOT IN (${sql.join(excludeIds)})
 					AND (
 						title ILIKE ${pat}
@@ -113,7 +203,7 @@ export async function SearchSongsForGameFtsAndTrgm(
 
 	const byId = new Map<string, SongSearchRow>();
 
-	for (const r of ftsRows) {
+	for (const r of mergedList) {
 		byId.set(r.id, r);
 	}
 

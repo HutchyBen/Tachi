@@ -1,18 +1,26 @@
-import { SearchSpecificGameSongs } from "#lib/search/search";
+import { GetChartsBySongPgId } from "#lib/db-formats/chart";
+import { SearchGlobalGameSongsAndCharts, SearchSpecificGameSongs } from "#lib/search/search";
 import DB from "#services/pg/db";
 import { importSeedsSubset } from "#services/pg/seeds";
 import { resolveSeedsDir, seedsJsonAvailable } from "#test-utils/seed-paths";
+import { FindChartsOnPopularity } from "#utils/queries/charts";
 import { sql } from "kysely";
+import { GamePTToV3 } from "tachi-common";
 import { describe, expect, it } from "vitest";
 
 import {
 	LoadSongChildrenForPgIds,
 	MAX_SONG_SEARCH_RESULTS_PER_GAME,
 	SearchSongsForGameFtsAndTrgm,
+	SHORT_QUERY_STRICT_MAX_LEN,
 } from "./song-search";
 
 function makeSongId(n: number): string {
 	return `S${n.toString(16).padStart(20, "0")}`;
+}
+
+function makeChartId(n: number): string {
+	return `C${n.toString(16).padStart(20, "0")}`;
 }
 
 async function countSongRows(): Promise<number> {
@@ -134,7 +142,7 @@ describe("SearchSongsForGameFtsAndTrgm (synthetic rows)", () => {
 		expect(res.length).toBe(MAX_SONG_SEARCH_RESULTS_PER_GAME);
 	});
 
-	it("uses trgm / short-query path for very short queries", async () => {
+	it("finds a two-letter title via exact match (strict short query, not substring trgm)", async () => {
 		await DB.insertInto("song")
 			.values({
 				id: makeSongId(300),
@@ -150,6 +158,127 @@ describe("SearchSongsForGameFtsAndTrgm (synthetic rows)", () => {
 		const res = await SearchSongsForGameFtsAndTrgm("iidx", "Qx", 10);
 
 		expect(res.some((r) => r.legacy_id === 9_000_300)).toBe(true);
+	});
+});
+
+describe("SearchSongsForGameFtsAndTrgm (very short titles / strict query)", () => {
+	it("does not flood results for a single-letter search: only exact title/artist (and terms)", async () => {
+		await DB.insertInto("song")
+			.values([
+				{
+					id: makeSongId(700),
+					legacy_id: 9_000_700,
+					game_group: "iidx",
+					title: "A",
+					artist: "Some Artist",
+					fts_document: "",
+					data: JSON.stringify({}),
+				},
+				{
+					id: makeSongId(701),
+					legacy_id: 9_000_701,
+					game_group: "iidx",
+					title: "About Something",
+					artist: "B",
+					fts_document: "",
+					data: JSON.stringify({}),
+				},
+				{
+					id: makeSongId(702),
+					legacy_id: 9_000_702,
+					game_group: "iidx",
+					title: "Many Letters",
+					artist: "Alpha",
+					fts_document: "",
+					data: JSON.stringify({}),
+				},
+			])
+			.execute();
+
+		const res = await SearchSongsForGameFtsAndTrgm("iidx", "A", 20);
+		const legacyIds = res.map((r) => r.legacy_id);
+
+		expect(legacyIds).toContain(9_000_700);
+		expect(legacyIds).not.toContain(9_000_701);
+		expect(legacyIds).not.toContain(9_000_702);
+	});
+
+	it("distinguishes one-letter title from two-letter title when searching one letter", async () => {
+		await DB.insertInto("song")
+			.values([
+				{
+					id: makeSongId(710),
+					legacy_id: 9_000_710,
+					game_group: "iidx",
+					title: "A",
+					artist: "X",
+					fts_document: "",
+					data: JSON.stringify({}),
+				},
+				{
+					id: makeSongId(711),
+					legacy_id: 9_000_711,
+					game_group: "iidx",
+					title: "AA",
+					artist: "Y",
+					fts_document: "",
+					data: JSON.stringify({}),
+				},
+			])
+			.execute();
+
+		const one = await SearchSongsForGameFtsAndTrgm("iidx", "A", 20);
+
+		expect(one.map((r) => r.legacy_id)).toContain(9_000_710);
+		expect(one.map((r) => r.legacy_id)).not.toContain(9_000_711);
+
+		const two = await SearchSongsForGameFtsAndTrgm("iidx", "AA", 20);
+
+		expect(two.map((r) => r.legacy_id)).toContain(9_000_711);
+		expect(two.map((r) => r.legacy_id)).not.toContain(9_000_710);
+	});
+
+	it("matches exact search_term when query is within strict length", async () => {
+		const sid = makeSongId(720);
+
+		await DB.insertInto("song")
+			.values({
+				id: sid,
+				legacy_id: 9_000_720,
+				game_group: "iidx",
+				title: "Long Title",
+				artist: "Z",
+				fts_document: "",
+				data: JSON.stringify({}),
+			})
+			.execute();
+		await DB.insertInto("song_search_term")
+			.values({ song_id: sid, search_term: "V" })
+			.execute();
+
+		const res = await SearchSongsForGameFtsAndTrgm("iidx", "V", 10);
+
+		expect(res.some((r) => r.id === sid)).toBe(true);
+	});
+
+	it("still uses substring trgm for three-character queries when FTS is weak", async () => {
+		expect(SHORT_QUERY_STRICT_MAX_LEN).toBe(2);
+
+		await DB.insertInto("song")
+			.values({
+				id: makeSongId(730),
+				legacy_id: 9_000_730,
+				game_group: "iidx",
+				title: "ZzzUniqueToken",
+				artist: "Z",
+				fts_document: "",
+				data: JSON.stringify({}),
+			})
+			.execute();
+
+		const res = await SearchSongsForGameFtsAndTrgm("iidx", "Zzz", 10);
+
+		expect(res.some((r) => r.legacy_id === 9_000_730)).toBe(true);
 	});
 });
 
@@ -273,6 +402,284 @@ describe("SearchSpecificGameSongs", () => {
 		expect(songs).toHaveLength(1);
 		expect(songs[0]?.title).toBe("ScoreFieldTest");
 		expect(typeof songs[0]?.__textScore).toBe("number");
+	});
+});
+
+describe("IIDX 2dxtraSet exclusion from search", () => {
+	it("excludes songs that only have charts with 2dxtraSet set", async () => {
+		const sid = makeSongId(860);
+
+		await DB.insertInto("song")
+			.values({
+				id: sid,
+				legacy_id: 9_000_860,
+				game_group: "iidx",
+				title: "Only2dxtraSearchToken",
+				artist: "X",
+				fts_document: "",
+				data: JSON.stringify({}),
+			})
+			.execute();
+
+		await DB.insertInto("chart")
+			.values({
+				id: makeChartId(860),
+				legacy_id: "a".repeat(40),
+				game: "iidx-sp",
+				song_id: sid,
+				level: "12",
+				level_num: 12,
+				is_primary: true,
+				difficulty: "ANOTHER",
+				data: JSON.stringify({ "2dxtraSet": "test-set", notecount: 100 }),
+			})
+			.execute();
+
+		const res = await SearchSongsForGameFtsAndTrgm("iidx", "Only2dxtraSearchToken", 20);
+
+		expect(res.some((r) => r.legacy_id === 9_000_860)).toBe(false);
+	});
+
+	it("includes iidx songs with at least one non-2dxtra chart", async () => {
+		const sid = makeSongId(861);
+
+		await DB.insertInto("song")
+			.values({
+				id: sid,
+				legacy_id: 9_000_861,
+				game_group: "iidx",
+				title: "Mixed2dxtraSearchToken",
+				artist: "X",
+				fts_document: "",
+				data: JSON.stringify({}),
+			})
+			.execute();
+
+		await DB.insertInto("chart")
+			.values([
+				{
+					id: makeChartId(861),
+					legacy_id: "b".repeat(40),
+					game: "iidx-sp",
+					song_id: sid,
+					level: "12",
+					level_num: 12,
+					is_primary: true,
+					difficulty: "ANOTHER",
+					data: JSON.stringify({ "2dxtraSet": "x", notecount: 100 }),
+				},
+				{
+					id: makeChartId(862),
+					legacy_id: "c".repeat(40),
+					game: "iidx-sp",
+					song_id: sid,
+					level: "11",
+					level_num: 11,
+					is_primary: false,
+					difficulty: "HYPER",
+					data: JSON.stringify({ "2dxtraSet": null, notecount: 80 }),
+				},
+			])
+			.execute();
+
+		const res = await SearchSongsForGameFtsAndTrgm("iidx", "Mixed2dxtraSearchToken", 20);
+
+		expect(res.some((r) => r.legacy_id === 9_000_861)).toBe(true);
+	});
+
+	it("GetChartsBySongPgId omits 2dxtra charts when omit2dxtraCharts is true", async () => {
+		const sid = makeSongId(870);
+
+		await DB.insertInto("song")
+			.values({
+				id: sid,
+				legacy_id: 9_000_870,
+				game_group: "iidx",
+				title: "ChartFilter",
+				artist: "X",
+				fts_document: "",
+				data: JSON.stringify({}),
+			})
+			.execute();
+
+		await DB.insertInto("chart")
+			.values([
+				{
+					id: makeChartId(871),
+					legacy_id: "d".repeat(40),
+					game: "iidx-sp",
+					song_id: sid,
+					level: "12",
+					level_num: 12,
+					is_primary: true,
+					difficulty: "ANOTHER",
+					data: JSON.stringify({ "2dxtraSet": "x", notecount: 100 }),
+				},
+				{
+					id: makeChartId(872),
+					legacy_id: "e".repeat(40),
+					game: "iidx-sp",
+					song_id: sid,
+					level: "11",
+					level_num: 11,
+					is_primary: false,
+					difficulty: "HYPER",
+					data: JSON.stringify({ notecount: 80 }),
+				},
+			])
+			.execute();
+
+		const all = await GetChartsBySongPgId(GamePTToV3("iidx", "SP"), sid, 9_000_870);
+		const filtered = await GetChartsBySongPgId(GamePTToV3("iidx", "SP"), sid, 9_000_870, {
+			omit2dxtraCharts: true,
+		});
+
+		expect(all).toHaveLength(2);
+		expect(filtered).toHaveLength(1);
+		expect(filtered[0]?.difficulty).toBe("HYPER");
+	});
+
+	it("SearchGlobalGameSongsAndCharts never returns 2dxtra charts for iidx", async () => {
+		const sid = makeSongId(880);
+
+		await DB.insertInto("song")
+			.values({
+				id: sid,
+				legacy_id: 9_000_880,
+				game_group: "iidx",
+				title: "GlobalSearch2dxtraToken",
+				artist: "X",
+				fts_document: "",
+				data: JSON.stringify({}),
+			})
+			.execute();
+
+		await DB.insertInto("chart")
+			.values([
+				{
+					id: makeChartId(880),
+					legacy_id: "f".repeat(40),
+					game: "iidx-sp",
+					song_id: sid,
+					level: "12",
+					level_num: 12,
+					is_primary: true,
+					difficulty: "ANOTHER",
+					data: JSON.stringify({ "2dxtraSet": "set-a", notecount: 100 }),
+				},
+				{
+					id: makeChartId(881),
+					legacy_id: "0".repeat(40),
+					game: "iidx-sp",
+					song_id: sid,
+					level: "11",
+					level_num: 11,
+					is_primary: false,
+					difficulty: "HYPER",
+					data: JSON.stringify({ notecount: 80 }),
+				},
+			])
+			.execute();
+
+		const rows = await SearchGlobalGameSongsAndCharts(
+			"iidx",
+			"GlobalSearch2dxtraToken",
+			"SP",
+			20,
+		);
+
+		expect(rows.length).toBeGreaterThan(0);
+		expect(
+			rows.every((r) => {
+				const v = (r.chart.data as Record<string, unknown>)["2dxtraSet"];
+
+				return v === null || v === undefined;
+			}),
+		).toBe(true);
+		expect(rows.some((r) => r.chart.difficulty === "HYPER")).toBe(true);
+	});
+
+	it("FindChartsOnPopularity excludes 2dxtra charts for iidx", async () => {
+		const sid = makeSongId(890);
+
+		await DB.insertInto("song")
+			.values({
+				id: sid,
+				legacy_id: 9_000_890,
+				game_group: "iidx",
+				title: "Pop2dxtraToken",
+				artist: "X",
+				fts_document: "",
+				data: JSON.stringify({}),
+			})
+			.execute();
+
+		await DB.insertInto("chart")
+			.values([
+				{
+					id: makeChartId(890),
+					legacy_id: "1".repeat(40),
+					game: "iidx-sp",
+					song_id: sid,
+					level: "12",
+					level_num: 12,
+					is_primary: true,
+					difficulty: "ANOTHER",
+					data: JSON.stringify({ "2dxtraSet": "x", notecount: 100 }),
+				},
+				{
+					id: makeChartId(891),
+					legacy_id: "2".repeat(40),
+					game: "iidx-sp",
+					song_id: sid,
+					level: "11",
+					level_num: 11,
+					is_primary: false,
+					difficulty: "HYPER",
+					data: JSON.stringify({ notecount: 80 }),
+				},
+			])
+			.execute();
+
+		const charts = await FindChartsOnPopularity("iidx", "SP", [9_000_890], 0, 100);
+
+		expect(charts.length).toBe(1);
+		expect(charts[0]?.difficulty).toBe("HYPER");
+		expect((charts[0]?.data as { "2dxtraSet"?: string | null })["2dxtraSet"] ?? null).toBeNull();
+	});
+
+	it("does not apply the iidx 2dxtra song rule to other game groups", async () => {
+		const sid = makeSongId(900);
+
+		await DB.insertInto("song")
+			.values({
+				id: sid,
+				legacy_id: 9_000_900,
+				game_group: "sdvx",
+				title: "Sdvx2dxtraKeyInJson",
+				artist: "X",
+				fts_document: "",
+				data: JSON.stringify({}),
+			})
+			.execute();
+
+		await DB.insertInto("chart")
+			.values({
+				id: makeChartId(900),
+				legacy_id: "3".repeat(40),
+				game: "sdvx",
+				song_id: sid,
+				level: "18",
+				level_num: 18,
+				is_primary: true,
+				difficulty: "EXHAUST",
+				data: JSON.stringify({ "2dxtraSet": "ignored-for-sdvx", notecount: 100 }),
+			})
+			.execute();
+
+		const res = await SearchSongsForGameFtsAndTrgm("sdvx", "Sdvx2dxtraKeyInJson", 20);
+
+		expect(res.some((r) => r.legacy_id === 9_000_900)).toBe(true);
 	});
 });
 

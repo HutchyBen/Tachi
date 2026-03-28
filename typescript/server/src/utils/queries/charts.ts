@@ -2,7 +2,7 @@ import type { Game } from "tachi-db";
 
 import MONGODB_KILL from "#services/mongo/db";
 import DB from "#services/pg/db";
-import { sql } from "kysely";
+import { sql, type SqlBool } from "kysely";
 import {
 	type ChartDocument,
 	type ChartDocumentData,
@@ -252,7 +252,8 @@ export async function FindChartsOnPopularity(
 	let q = DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.leftJoin("score", "score.chart_id", "chart.id")
-		.where("chart.game", "=", v3Game as Game);
+		.where("chart.game", "=", v3Game as Game)
+		.where(sql<SqlBool>`(chart.data->>'2dxtraSet') IS NULL`);
 
 	if (songIDs && songIDs.length > 0) {
 		q = q.where("song.legacy_id", "in", songIDs);
