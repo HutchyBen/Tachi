@@ -56,10 +56,6 @@ export type GPTScoreCalculators<GPT extends GPTString> = {
 	[S in ScoreRatingAlgorithms[GPT]]: ScoreCalculator<GPT>;
 };
 
-export type GPTSessionCalculators<GPT extends GPTString> = {
-	[S in SessionRatingAlgorithms[GPT]]: SessionCalculator<GPT>;
-};
-
 export type GPTProfileCalculators<GPT extends GPTString> = {
 	[S in ProfileRatingAlgorithms[GPT]]: ProfileCalculator<GPT>;
 };
@@ -126,9 +122,8 @@ export type GPTNewCalcs<GPT extends GPTString> = (
 	chart: MONGO_ChartDocument<GPT>,
 ) => Record<ScoreRatingAlgorithms[GPT], number | null>;
 
-// New-style session calc; just f(scoreCalcData) -> sessionCalcData
-// instead of the per-algorithm record above.
-export type GPTNewSessionCalcs<GPT extends GPTString> = (
+/** Session ratings from the session's score calculated-data: f(scoreCalcData) -> sessionCalcData. */
+export type GPTSessionCalcs<GPT extends GPTString> = (
 	scoreCalcData: Array<MONGO_ScoreDocument<GPT>["calculatedData"]>,
 ) => Record<SessionRatingAlgorithms[GPT], number | null>;
 
@@ -236,11 +231,8 @@ export interface GPTServerImplementation<GPT extends GPTString> {
 
 	/**
 	 * How should we compute session ratings for this game?
-	 *
-	 * New style, simpler function.
 	 */
-	newSessionCalcs: GPTNewSessionCalcs<GPT>;
-	sessionCalcs: GPTSessionCalculators<GPT>;
+	sessionCalcs: GPTSessionCalcs<GPT>;
 
 	/**
 	 * How should we compute profile ratings for this game?

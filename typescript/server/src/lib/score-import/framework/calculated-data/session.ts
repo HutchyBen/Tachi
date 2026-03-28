@@ -6,5 +6,5 @@ import { type GPTString, type MONGO_ScoreDocument } from "tachi-common";
  * @param scores - All of the scores in this session.
  */
 export function CreateSessionCalcData(gpt: GPTString, scores: Array<MONGO_ScoreDocument>) {
-	return GPT_SERVER_IMPLEMENTATIONS[gpt].newSessionCalcs(scores.map((e) => e.calculatedData));
+	return GPT_SERVER_IMPLEMENTATIONS[gpt].sessionCalcs(scores.map((e) => e.calculatedData));
 }

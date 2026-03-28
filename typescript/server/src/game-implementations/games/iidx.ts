@@ -2,8 +2,8 @@ import type {
 	GPTGoalFormatters,
 	GPTGoalProgressFormatters,
 	GPTNewProfileCalcs,
-	GPTNewSessionCalcs,
 	GPTServerImplementation,
+	GPTSessionCalcs,
 	PBMergeFunction,
 	ScoreCalculator,
 	ScoreValidator,
@@ -20,8 +20,8 @@ import {
 	GoalFmtPercent,
 	GoalOutOfFmtPercent,
 	GradeGoalFormatter,
-	IIDXLIKE_SCORE_DERIVER,
 	IIDXLIKE_PB_RANKING_VALUES,
+	IIDXLIKE_SCORE_DERIVER,
 	IIDXLIKE_SCORE_VALIDATORS,
 	IIDXLIKE_VALIDATORS,
 } from "./_common";
@@ -40,12 +40,7 @@ const BPICalc: ScoreCalculator<GPTStrings["iidx"]> = (scoreData, chart) => {
 	);
 };
 
-const IIDX_SESSION_CALCS: GPTServerImplementation<"iidx:DP" | "iidx:SP">["sessionCalcs"] = {
-	BPI: SessionAvgBest10For("BPI"),
-	ktLampRating: SessionAvgBest10For("ktLampRating"),
-};
-
-const IIDX_NEW_SESSION_CALCS: GPTNewSessionCalcs<"iidx:DP" | "iidx:SP"> = (arr) => ({
+const IIDX_SESSION_CALCS: GPTSessionCalcs<"iidx:DP" | "iidx:SP"> = (arr) => ({
 	BPI: SessionAvgBest10For("BPI")(arr),
 	ktLampRating: SessionAvgBest10For("ktLampRating")(arr),
 });
@@ -203,10 +198,9 @@ export const IIDX_SP_IMPL: GPTServerImplementation<"iidx:SP"> = {
 			}
 		},
 	},
-	newSessionCalcs: IIDX_NEW_SESSION_CALCS,
+	sessionCalcs: IIDX_SESSION_CALCS,
 	newProfileCalcs: IIDX_NEW_PROFILE_CALCS,
 	classDerivers: (_ratings) => ({}),
-	sessionCalcs: IIDX_SESSION_CALCS,
 	profileCalcs: IIDX_PROFILE_CALCS,
 	goalCriteriaFormatters: IIDX_GOAL_FMT,
 	goalProgressFormatters: IIDX_GOAL_PG_FMT,
@@ -270,10 +264,9 @@ export const IIDX_DP_IMPL: GPTServerImplementation<"iidx:DP"> = {
 			}
 		},
 	},
-	newSessionCalcs: IIDX_NEW_SESSION_CALCS,
+	sessionCalcs: IIDX_SESSION_CALCS,
 	newProfileCalcs: IIDX_NEW_PROFILE_CALCS,
 	classDerivers: (_ratings) => ({}),
-	sessionCalcs: IIDX_SESSION_CALCS,
 	profileCalcs: IIDX_PROFILE_CALCS,
 	goalCriteriaFormatters: IIDX_GOAL_FMT,
 	goalProgressFormatters: IIDX_GOAL_PG_FMT,

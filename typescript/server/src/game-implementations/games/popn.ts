@@ -65,7 +65,7 @@ export const POPN_9B_IMPL: GPTServerImplementation<"popn:9B"> = {
 				chart.levelNum,
 			),
 	},
-	newSessionCalcs: (arr) => ({
+	sessionCalcs: (arr) => ({
 		classPoints: SessionAvgBest10For("classPoints")(arr),
 	}),
 	newProfileCalcs: async (game, playtype, userID) => ({
@@ -96,7 +96,6 @@ export const POPN_9B_IMPL: GPTServerImplementation<"popn:9B"> = {
 
 		return { class: "GOD" };
 	},
-	sessionCalcs: { classPoints: SessionAvgBest10For("classPoints") },
 	profileCalcs: {
 		naiveClassPoints: ProfileAvgBestN("classPoints", 20),
 	},

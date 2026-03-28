@@ -351,7 +351,7 @@ export const DDR_IMPL: GPTServerImplementation<"ddr:DP" | "ddr:SP"> = {
 			base.scoreData.optional.exScore = score.scoreData.optional.exScore;
 		}),
 	],
-	newSessionCalcs: (arr) => ({
+	sessionCalcs: (arr) => ({
 		flareSkill: SessionAvgBest10For("flareSkill")(arr),
 	}),
 	newProfileCalcs: DDR_CALCULATE_FLARE_SKILL,
@@ -377,7 +377,4 @@ export const DDR_IMPL: GPTServerImplementation<"ddr:DP" | "ddr:SP"> = {
 		},
 	},
 	scoreValidators: DDR_SCORE_VALIDATORS,
-	sessionCalcs: {
-		flareSkill: SessionAvgBest10For("flareSkill"),
-	},
 };

@@ -11,7 +11,6 @@ import {
 	SDVXLIKE_NEW_CALCS,
 	SDVXLIKE_SCORE_DERIVER,
 	SDVXLIKE_NEW_PROFILE_CALCS,
-	SDVXLIKE_NEW_SESSION_CALCS,
 	SDVXLIKE_PROFILE_CALCS,
 	SDVXLIKE_SCORE_CALCS,
 	SDVXLIKE_SCORE_VALIDATORS,
@@ -21,7 +20,7 @@ import {
 export const SDVX_IMPL: GPTServerImplementation<"sdvx:Single"> = {
 	scoreDeriver: SDVXLIKE_SCORE_DERIVER,
 	newCalcs: SDVXLIKE_NEW_CALCS,
-	newSessionCalcs: SDVXLIKE_NEW_SESSION_CALCS,
+	sessionCalcs: SDVXLIKE_SESSION_CALCS,
 	newProfileCalcs: SDVXLIKE_NEW_PROFILE_CALCS,
 	classDerivers: SDVXLIKE_CLASS_DERIVERS,
 	pbRankingValues: (pb) => ({
@@ -47,7 +46,6 @@ export const SDVX_IMPL: GPTServerImplementation<"sdvx:Single"> = {
 		},
 	},
 	scoreCalcs: SDVXLIKE_SCORE_CALCS,
-	sessionCalcs: SDVXLIKE_SESSION_CALCS,
 	profileCalcs: SDVXLIKE_PROFILE_CALCS,
 	goalCriteriaFormatters: SDVXLIKE_GOAL_FMT,
 	goalProgressFormatters: SDVXLIKE_GOAL_PG_FMT,

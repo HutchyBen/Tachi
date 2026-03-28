@@ -27,14 +27,13 @@ export const MUSECA_IMPL: GPTServerImplementation<"museca:Single"> = {
 	scoreCalcs: {
 		curatorSkill: (scoreData, chart) => CuratorSkill.calculate(scoreData.score, chart.levelNum),
 	},
-	newSessionCalcs: (arr) => ({
+	sessionCalcs: (arr) => ({
 		curatorSkill: SessionAvgBest10For("curatorSkill")(arr),
 	}),
 	newProfileCalcs: async (game, playtype, userID) => ({
 		curatorSkill: await ProfileSumBestN("curatorSkill", 20)(game, playtype, userID),
 	}),
 	classDerivers: (_ratings) => ({}),
-	sessionCalcs: { curatorSkill: SessionAvgBest10For("curatorSkill") },
 	profileCalcs: {
 		curatorSkill: ProfileSumBestN("curatorSkill", 20),
 	},

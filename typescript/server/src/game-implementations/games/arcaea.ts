@@ -40,7 +40,7 @@ export const ARCAEA_IMPL: GPTServerImplementation<GPTStrings["arcaea"]> = {
 	scoreCalcs: {
 		potential: (scoreData, chart) => Potential.calculate(scoreData.score, chart.levelNum),
 	},
-	newSessionCalcs: (arr) => ({
+	sessionCalcs: (arr) => ({
 		naivePotential: SessionAvgBest10For("potential")(arr),
 	}),
 	newProfileCalcs: async (game, playtype, userID) => ({
@@ -70,9 +70,6 @@ export const ARCAEA_IMPL: GPTServerImplementation<GPTStrings["arcaea"]> = {
 		}
 
 		return { badge: "BLUE" };
-	},
-	sessionCalcs: {
-		naivePotential: SessionAvgBest10For("potential"),
 	},
 	profileCalcs: {
 		naivePotential: ProfileAvgBestN("potential", 30),

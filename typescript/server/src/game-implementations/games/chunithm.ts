@@ -28,7 +28,7 @@ export const CHUNITHM_IMPL: GPTServerImplementation<"chunithm:Single"> = {
 	scoreCalcs: {
 		rating: (scoreData, chart) => CHUNITHMRating.calculate(scoreData.score, chart.levelNum),
 	},
-	newSessionCalcs: (arr) => ({
+	sessionCalcs: (arr) => ({
 		naiveRating: SessionAvgBest10For("rating")(arr),
 	}),
 	newProfileCalcs: async (game, playtype, userID) => ({
@@ -75,7 +75,6 @@ export const CHUNITHM_IMPL: GPTServerImplementation<"chunithm:Single"> = {
 
 		return { colour: "BLUE" };
 	},
-	sessionCalcs: { naiveRating: SessionAvgBest10For("rating") },
 	profileCalcs: { naiveRating: ProfileAvgBestN("rating", 50, false, 100) },
 	goalCriteriaFormatters: {
 		score: GoalFmtScore,

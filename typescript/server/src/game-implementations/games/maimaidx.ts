@@ -29,7 +29,7 @@ export const MAIMAIDX_IMPL: GPTServerImplementation<"maimaidx:Single"> = {
 		rate: (scoreData, chart) =>
 			MaimaiDXRate.calculate(scoreData.percent, chart.levelNum, scoreData.lamp),
 	},
-	newSessionCalcs: (arr) => ({
+	sessionCalcs: (arr) => ({
 		rate: SessionAvgBest10For("rate")(arr),
 	}),
 	newProfileCalcs: async (game, playtype, userID) => ({
@@ -66,7 +66,6 @@ export const MAIMAIDX_IMPL: GPTServerImplementation<"maimaidx:Single"> = {
 
 		return { colour: "WHITE" };
 	},
-	sessionCalcs: { rate: SessionAvgBest10For("rate") },
 	profileCalcs: {
 		naiveRate: ProfileSumBestN("rate", 50),
 	},

@@ -5,12 +5,11 @@ import type {
 	GPTGoalFormatters,
 	GPTGoalProgressFormatters,
 	GPTNewCalcs,
-	GPTScoreDeriver,
 	GPTNewProfileCalcs,
-	GPTNewSessionCalcs,
 	GPTProfileCalculators,
 	GPTScoreCalculators,
-	GPTSessionCalculators,
+	GPTScoreDeriver,
+	GPTSessionCalcs,
 	PBMergeFunction,
 	PBRankingValuesFunction,
 	ScoreCalculator,
@@ -191,23 +190,11 @@ export const SDVXLIKE_NEW_CALCS: GPTNewCalcs<SDVXLikes> = (scoreData, _derivedDa
 	VF6: Volforce.calculateVF6(scoreData.score, scoreData.lamp, chart.levelNum),
 });
 
-export const SDVXLIKE_SESSION_CALCS: GPTSessionCalculators<SDVXLikes> = {
-	ProfileVF6: (arr) => {
-		const v = SessionAvgBest10For("VF6")(arr);
-
-		if (v !== null) {
-			return v * 50;
-		}
-
-		return null;
-	},
-};
-
 export const SDVXLIKE_PROFILE_CALCS: GPTProfileCalculators<SDVXLikes> = {
 	VF6: ProfileSumBestN("VF6", 50),
 };
 
-export const SDVXLIKE_NEW_SESSION_CALCS: GPTNewSessionCalcs<SDVXLikes> = (arr) => {
+export const SDVXLIKE_SESSION_CALCS: GPTSessionCalcs<SDVXLikes> = (arr) => {
 	const v = SessionAvgBest10For("VF6")(arr);
 
 	return { ProfileVF6: v !== null ? v * 50 : null };
@@ -292,7 +279,7 @@ export const SGLCalc: ScoreCalculator<GPTStrings["bms" | "pms"]> = (scoreData, c
 	}
 };
 
-export const SGL_NEW_SESSION_CALCS: GPTNewSessionCalcs<GPTStrings["bms" | "pms"]> = (arr) => ({
+export const SGL_SESSION_CALCS: GPTSessionCalcs<GPTStrings["bms" | "pms"]> = (arr) => ({
 	sieglinde: SessionAvgBest10For("sieglinde")(arr),
 });
 

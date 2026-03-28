@@ -28,7 +28,7 @@ export const WACCA_IMPL: GPTServerImplementation<"wacca:Single"> = {
 	scoreCalcs: {
 		rate: (scoreData, chart) => WACCARate.calculate(scoreData.score, chart.levelNum),
 	},
-	newSessionCalcs: (arr) => ({
+	sessionCalcs: (arr) => ({
 		rate: SessionAvgBest10For("rate")(arr),
 	}),
 	newProfileCalcs: async (game, playtype, userID) => ({
@@ -61,7 +61,6 @@ export const WACCA_IMPL: GPTServerImplementation<"wacca:Single"> = {
 
 		return { colour: "ASH" };
 	},
-	sessionCalcs: { rate: SessionAvgBest10For("rate") },
 	profileCalcs: {
 		naiveRate: ProfileSumBestN("rate", 50),
 	},

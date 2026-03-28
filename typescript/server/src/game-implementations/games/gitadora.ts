@@ -28,7 +28,7 @@ const GITADORA_IMPL: GPTServerImplementation<"gitadora:Dora" | "gitadora:Gita"> 
 	scoreCalcs: {
 		skill: (scoreData, chart) => GITADORASkill.calculate(scoreData.percent, chart.levelNum),
 	},
-	newSessionCalcs: (arr) => ({
+	sessionCalcs: (arr) => ({
 		skill: SessionAvgBest10For("skill")(arr),
 	}),
 	newProfileCalcs: async (game, playtype, userID) => ({
@@ -77,7 +77,6 @@ const GITADORA_IMPL: GPTServerImplementation<"gitadora:Dora" | "gitadora:Gita"> 
 
 		return { colour: "WHITE" };
 	},
-	sessionCalcs: { skill: SessionAvgBest10For("skill") },
 	profileCalcs: { naiveSkill: ProfileSumBestN("skill", 50) },
 	goalCriteriaFormatters: {
 		percent: GoalFmtPercent,

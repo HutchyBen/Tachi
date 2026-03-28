@@ -83,7 +83,7 @@ export const ITG_STAMINA_IMPL: GPTServerImplementation<"itg:Stamina"> = {
 			return fastest32;
 		},
 	},
-	newSessionCalcs: (arr) => ({
+	sessionCalcs: (arr) => ({
 		blockRating: SessionAvgBestNFor("blockRating", 5)(arr),
 	}),
 	newProfileCalcs: async (game, playtype, userID) => {
@@ -95,7 +95,6 @@ export const ITG_STAMINA_IMPL: GPTServerImplementation<"itg:Stamina"> = {
 		return { highestBlock, fastest32 };
 	},
 	classDerivers: (_ratings) => ({}),
-	sessionCalcs: { blockRating: SessionAvgBestNFor("blockRating", 5) },
 	profileCalcs: {
 		// the sum of your 1 best blockrating/fastest32 is basically just
 		// picking your best blockrating/fastest32. neat.

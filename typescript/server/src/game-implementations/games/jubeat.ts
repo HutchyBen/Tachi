@@ -180,7 +180,7 @@ export const JUBEAT_IMPL: GPTServerImplementation<"jubeat:Single"> = {
 		jubility: (scoreData, chart) =>
 			Jubility.calculate(scoreData.score, scoreData.musicRate, chart.levelNum),
 	},
-	newSessionCalcs: (arr) => ({
+	sessionCalcs: (arr) => ({
 		jubility: SessionAvgBest10For("jubility")(arr),
 	}),
 	newProfileCalcs: async (game, playtype, userID) => {
@@ -220,7 +220,6 @@ export const JUBEAT_IMPL: GPTServerImplementation<"jubeat:Single"> = {
 
 		return { colour: "BLACK" };
 	},
-	sessionCalcs: { jubility: SessionAvgBest10For("jubility") },
 	profileCalcs: {
 		jubility: CalculateJubility,
 		naiveJubility: ProfileSumBestN("jubility", 60),

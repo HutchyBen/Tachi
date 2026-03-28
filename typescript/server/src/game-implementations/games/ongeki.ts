@@ -111,7 +111,7 @@ export const ONGEKI_IMPL: GPTServerImplementation<"ongeki:Single"> = {
 						starCount(scoreData.platinumScore, chart.data.maxPlatScore),
 					),
 	},
-	newSessionCalcs: (arr) => ({
+	sessionCalcs: (arr) => ({
 		naiveRating: SessionAvgBest10For("rating")(arr),
 		naiveScoreRating: SessionAvgBest10For("scoreRating")(arr),
 		starRating: SessionAvgBest10For("starRating")(arr),
@@ -161,11 +161,6 @@ export const ONGEKI_IMPL: GPTServerImplementation<"ongeki:Single"> = {
 		}
 
 		return { colour: "BLUE" };
-	},
-	sessionCalcs: {
-		naiveRating: SessionAvgBest10For("rating"),
-		naiveScoreRating: SessionAvgBest10For("scoreRating"),
-		starRating: SessionAvgBest10For("starRating"),
 	},
 	profileCalcs: {
 		naiveRating: ProfileAvgBestN("rating", 45, false, 100),
