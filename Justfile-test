@@ -70,3 +70,25 @@ test-typescript FILTER="*":
 # Run all parity suites, or a single one if a name is given.
 test-parity suite="":
 	TACHI_SERVER=https://127.0.0.1:8080 bun vitest run {{ if suite != "" { "tests/" + suite + ".test.ts" } else { "" } }}
+
+# ==> Orchestration of parallel db tests
+
+# Create (or recreate) the bot test template database with all migrations applied.
+# Workers clone from this template rather than re-running migrations each time.
+bot-db-test-template-reset:
+	#!/bin/bash
+	export POSTGRES_URL="{{POSTGRES_URL}}/tachi_bot_test_template"
+	tachidb database drop || true
+	tachidb database create
+	tachidb migrate run
+
+# Create (or recreate) the server test template database with all migrations applied.
+# Workers clone from this template rather than re-running migrations each time.
+server-db-test-template-reset:
+	#!/bin/bash
+	export POSTGRES_URL="{{POSTGRES_URL}}/tachi_server_test_template"
+	tachidb database drop || true
+	tachidb database create
+	tachidb migrate run
+
+# <== End of parallel db test justscripts

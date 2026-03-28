@@ -6,7 +6,7 @@ import { ACTION_ChangeUsername } from "#actions/change-username.js";
 import { ACTION_UpdateUser } from "#actions/update-user.js";
 import { GetRecentActivity } from "#lib/activity/activity";
 import { ONE_MONTH } from "#lib/constants/time";
-import { SELECT_GAME_STATS, ToGameStatsDocument } from "#lib/db-formats/game-stats.js";
+import { SELECT_GAME_PROFILE, ToGameStatsDocument } from "#lib/db-formats/game-profiles.js";
 import { log } from "#lib/log/log";
 import { GetRivalIDs } from "#lib/rivals/rivals";
 import prValidate from "#server/middleware/prudence-validate";
@@ -153,8 +153,8 @@ router.get("/game-stats", async (req, res) => {
 		{
 			__rankingData?: Record<AnyProfileRatingAlg, { outOf: number; ranking: number }>;
 		} & UserGameStats
-	> = await DB.selectFrom("game_stats")
-		.select(SELECT_GAME_STATS)
+	> = await DB.selectFrom("game_profile")
+		.select(SELECT_GAME_PROFILE)
 		.where("user_id", "=", user.id)
 		.execute()
 		.then((res) => res.map(ToGameStatsDocument));
@@ -567,12 +567,12 @@ router.get(
 
 		const user = GetUser(req);
 
-		const gameStatRows = await DB.selectFrom("game_stats")
-			.select(SELECT_GAME_STATS)
+		const gameProfileRows = await DB.selectFrom("game_profile")
+			.select(SELECT_GAME_PROFILE)
 			.where("user_id", "=", user.id)
 			.execute();
 
-		const gpts = gameStatRows.map(ToGameStatsDocument);
+		const gpts = gameProfileRows.map(ToGameStatsDocument);
 
 		const data: Partial<Record<GPTString, unknown>> = {};
 

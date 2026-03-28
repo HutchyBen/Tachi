@@ -549,7 +549,7 @@ CREATE TABLE "game_settings_showcase" (
 	data JSONB NOT NULL
 );
 
-CREATE TABLE "game_stats" (
+CREATE TABLE "game_profile" (
 	user_id BIGINT REFERENCES account(id) NOT NULL,
 	game GAME NOT NULL,
 

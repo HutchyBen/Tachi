@@ -18,13 +18,13 @@ export { type default as ImportLockTable, type ImportLock, type NewImportLock, t
 export { type score_blacklist_row_id, type default as ScoreBlacklistTable, type ScoreBlacklist, type NewScoreBlacklist, type ScoreBlacklistUpdate } from './public/ScoreBlacklist';
 export { type default as PrivDiscordUserMapTable, type PrivDiscordUserMap, type NewPrivDiscordUserMap, type PrivDiscordUserMapUpdate } from './public/PrivDiscordUserMap';
 export { type default as TableFolderTable, type TableFolder, type NewTableFolder, type TableFolderUpdate } from './public/TableFolder';
-export { type game_stats_game, type default as GameStatsTable, type GameStats, type NewGameStats, type GameStatsUpdate } from './public/GameStats';
 export { type priv_oauth2_auth_token_token, type default as PrivOauth2AuthTokenTable, type PrivOauth2AuthToken, type NewPrivOauth2AuthToken, type PrivOauth2AuthTokenUpdate } from './public/PrivOauth2AuthToken';
 export { type import_session_row_id, type default as ImportSessionTable, type ImportSession, type NewImportSession, type ImportSessionUpdate } from './public/ImportSession';
 export { type priv_svc_fer_card_card_id, type default as PrivSvcFerCardTable, type PrivSvcFerCard, type NewPrivSvcFerCard, type PrivSvcFerCardUpdate } from './public/PrivSvcFerCard';
 export { type default as PbComposedFromTable, type PbComposedFrom, type NewPbComposedFrom, type PbComposedFromUpdate } from './public/PbComposedFrom';
 export { type bms_course_lookup_md5sums, type default as BmsCourseLookupTable, type BmsCourseLookup, type NewBmsCourseLookup, type BmsCourseLookupUpdate } from './public/BmsCourseLookup';
 export { type song_search_term_search_term, type default as SongSearchTermTable, type SongSearchTerm, type NewSongSearchTerm, type SongSearchTermUpdate } from './public/SongSearchTerm';
+export { type game_profile_game, type default as GameProfileTable, type GameProfile, type NewGameProfile, type GameProfileUpdate } from './public/GameProfile';
 export { type import_game_game, type default as ImportGameTable, type ImportGame, type NewImportGame, type ImportGameUpdate } from './public/ImportGame';
 export { type import_goal_row_id, type default as ImportGoalTable, type ImportGoal, type NewImportGoal, type ImportGoalUpdate } from './public/ImportGoal';
 export { type default as OrphanChartUserTable, type OrphanChartUser, type NewOrphanChartUser, type OrphanChartUserUpdate } from './public/OrphanChartUser';

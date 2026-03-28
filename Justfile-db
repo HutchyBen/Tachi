@@ -14,30 +14,14 @@ db-reset POSTGRES_DB=DEFAULT_DB:
 	tachidb database create
 	tachidb migrate run
 
+	just db-load-seeds "{{POSTGRES_DB}}"
+
 # Show the status of all applied (and failed) migrations.
 db-migrate-status POSTGRES_DB=DEFAULT_DB:
 	psql "{{POSTGRES_URL}}/{{POSTGRES_DB}}" -c \
 		"SELECT version, description, success, installed_on, execution_time || 'µs' AS execution_time \
 		 FROM \"_migration\" \
 		 ORDER BY version"
-
-# Create (or recreate) the bot test template database with all migrations applied.
-# Workers clone from this template rather than re-running migrations each time.
-bot-db-test-template-reset:
-	#!/bin/bash
-	export POSTGRES_URL="{{POSTGRES_URL}}/tachi_bot_test_template"
-	tachidb database drop || true
-	tachidb database create
-	tachidb migrate run
-
-# Create (or recreate) the server test template database with all migrations applied.
-# Workers clone from this template rather than re-running migrations each time.
-server-db-test-template-reset:
-	#!/bin/bash
-	export POSTGRES_URL="{{POSTGRES_URL}}/tachi_server_test_template"
-	tachidb database drop || true
-	tachidb database create
-	tachidb migrate run
 
 # Load the seeds into the database.
 db-load-seeds POSTGRES_DB=DEFAULT_DB:

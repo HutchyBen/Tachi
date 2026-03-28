@@ -8,15 +8,15 @@ import {
 } from "tachi-common";
 import { type Database } from "tachi-db";
 
-export const SELECT_GAME_STATS = [
-	"game_stats.user_id",
-	"game_stats.game",
-	"game_stats.ratings",
-	"game_stats.classes",
+export const SELECT_GAME_PROFILE = [
+	"game_profile.user_id",
+	"game_profile.game",
+	"game_profile.ratings",
+	"game_profile.classes",
 ] as const;
 
 export function ToGameStatsDocument(
-	row: Selection<Database, "game_stats", (typeof SELECT_GAME_STATS)[number]>,
+	row: Selection<Database, "game_profile", (typeof SELECT_GAME_PROFILE)[number]>,
 ): UserGameStats {
 	const { game, playtype } = V3ToGamePT(row.game);
 

@@ -11,7 +11,7 @@ async function seedGameStats(
 	ktLampRating: number | null,
 	game: "iidx-sp" = "iidx-sp",
 ) {
-	await DB.insertInto("game_stats")
+	await DB.insertInto("game_profile")
 		.values({
 			user_id: userId,
 			game,
@@ -96,7 +96,7 @@ describe("GetUsersRankingAndOutOf", () => {
 		const user1 = await seedUser({ username: "bpi_high" });
 		const user2 = await seedUser({ username: "bpi_low" });
 
-		await DB.insertInto("game_stats")
+		await DB.insertInto("game_profile")
 			.values({
 				user_id: user1.id,
 				game: "iidx-sp",
@@ -104,7 +104,7 @@ describe("GetUsersRankingAndOutOf", () => {
 				classes: JSON.stringify({}),
 			})
 			.execute();
-		await DB.insertInto("game_stats")
+		await DB.insertInto("game_profile")
 			.values({
 				user_id: user2.id,
 				game: "iidx-sp",
@@ -139,7 +139,7 @@ describe("GetUsersRankingAndOutOf", () => {
 		const sdvxUser = await seedUser({ username: "sdvx_player" });
 
 		await seedGameStats(iidxUser.id, 10, "iidx-sp");
-		await DB.insertInto("game_stats")
+		await DB.insertInto("game_profile")
 			.values({
 				user_id: sdvxUser.id,
 				game: "sdvx",
@@ -162,7 +162,7 @@ describe("GetAllRankings", () => {
 		const user1 = await seedUser({ username: "top_player" });
 		const user2 = await seedUser({ username: "bot_player" });
 
-		await DB.insertInto("game_stats")
+		await DB.insertInto("game_profile")
 			.values({
 				user_id: user1.id,
 				game: "iidx-sp",
@@ -170,7 +170,7 @@ describe("GetAllRankings", () => {
 				classes: JSON.stringify({}),
 			})
 			.execute();
-		await DB.insertInto("game_stats")
+		await DB.insertInto("game_profile")
 			.values({
 				user_id: user2.id,
 				game: "iidx-sp",

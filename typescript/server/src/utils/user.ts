@@ -231,7 +231,7 @@ export async function GetUsersRankingAndOutOf(
 	const v3Game = GamePTToV3(stats.game, stats.playtype);
 	const userRating = stats.ratings[ratingAlg] ?? null;
 
-	const result = await DB.selectFrom("game_stats")
+	const result = await DB.selectFrom("game_profile")
 		.select([
 			(eb) => eb.fn.countAll().as("out_of"),
 			sql<number>`COUNT(*) FILTER (WHERE (ratings->>${ratingAlg})::numeric > ${userRating})`.as(

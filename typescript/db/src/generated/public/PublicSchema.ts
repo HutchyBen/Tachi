@@ -18,13 +18,13 @@ import type { default as ImportLockTable } from './ImportLock';
 import type { default as ScoreBlacklistTable } from './ScoreBlacklist';
 import type { default as PrivDiscordUserMapTable } from './PrivDiscordUserMap';
 import type { default as TableFolderTable } from './TableFolder';
-import type { default as GameStatsTable } from './GameStats';
 import type { default as PrivOauth2AuthTokenTable } from './PrivOauth2AuthToken';
 import type { default as ImportSessionTable } from './ImportSession';
 import type { default as PrivSvcFerCardTable } from './PrivSvcFerCard';
 import type { default as PbComposedFromTable } from './PbComposedFrom';
 import type { default as BmsCourseLookupTable } from './BmsCourseLookup';
 import type { default as SongSearchTermTable } from './SongSearchTerm';
+import type { default as GameProfileTable } from './GameProfile';
 import type { default as ImportGameTable } from './ImportGame';
 import type { default as ImportGoalTable } from './ImportGoal';
 import type { default as OrphanChartUserTable } from './OrphanChartUser';
@@ -104,8 +104,6 @@ export default interface PublicSchema {
 
   table_folder: TableFolderTable;
 
-  game_stats: GameStatsTable;
-
   priv_oauth2_auth_token: PrivOauth2AuthTokenTable;
 
   import_session: ImportSessionTable;
@@ -117,6 +115,8 @@ export default interface PublicSchema {
   bms_course_lookup: BmsCourseLookupTable;
 
   song_search_term: SongSearchTermTable;
+
+  game_profile: GameProfileTable;
 
   import_game: ImportGameTable;
 
