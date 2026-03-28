@@ -1,4 +1,3 @@
-import type { DryScoreData } from "#lib/score-import/framework/common/types";
 import type { MONGO_PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
 import type {
 	ClassConfigs,
@@ -34,31 +33,9 @@ interface ChartDependentMax {
 	chartDependentMax: true;
 }
 
-export type ScoreCalculator<GPT extends GPTString> = (
-	scoreData: DryScoreData<GPT>,
-	chart: MONGO_ChartDocument<GPT>,
-) => number | null;
-
 export type SessionCalculator<GPT extends GPTString> = (
 	scoreCalcData: Array<MONGO_ScoreDocument<GPT>["calculatedData"]>,
 ) => number | null;
-
-/**
- * Return a number/null from this players UGPT info. This will involve database queries.
- */
-export type ProfileCalculator<GPT extends GPTString> = (
-	game: GPTStringToGame[GPT],
-	playtype: GPTStringToPlaytype[GPT],
-	userID: integer,
-) => Promise<number | null>;
-
-export type GPTScoreCalculators<GPT extends GPTString> = {
-	[S in ScoreRatingAlgorithms[GPT]]: ScoreCalculator<GPT>;
-};
-
-export type GPTProfileCalculators<GPT extends GPTString> = {
-	[S in ProfileRatingAlgorithms[GPT]]: ProfileCalculator<GPT>;
-};
 
 export type ClassDeriver<GPT extends GPTString, V extends string> = (
 	profileRatings: MONGO_SpecificUserGameStats<GPT>["ratings"],
@@ -114,9 +91,7 @@ export type GPTScoreDeriver<GPT extends GPTString> = (
 	chart: MONGO_ChartDocument<GPT>,
 ) => MongoDerivedMetrics[GPT];
 
-// New-style score calc; just f(scoreData, derivedData, chart) -> calculatedData
-// instead of the per-algorithm record above.
-export type GPTNewCalcs<GPT extends GPTString> = (
+export type GPTScoreCalcs<GPT extends GPTString> = (
 	scoreData: MONGO_ScoreData<GPT>,
 	derivedData: MongoDerivedMetrics[GPT],
 	chart: MONGO_ChartDocument<GPT>,
@@ -127,9 +102,8 @@ export type GPTSessionCalcs<GPT extends GPTString> = (
 	scoreCalcData: Array<MONGO_ScoreDocument<GPT>["calculatedData"]>,
 ) => Record<SessionRatingAlgorithms[GPT], number | null>;
 
-// New-style profile calc; just f(game, playtype, userID) -> profileCalcData
-// instead of the per-algorithm record above.
-export type GPTNewProfileCalcs<GPT extends GPTString> = (
+/** Profile ratings from UGPT: async f(game, playtype, userID) -> profile ratings record. */
+export type GPTProfileCalcs<GPT extends GPTString> = (
 	game: GPTStringToGame[GPT],
 	playtype: GPTStringToPlaytype[GPT],
 	userID: integer,
@@ -221,13 +195,8 @@ export interface GPTServerImplementation<GPT extends GPTString> {
 
 	/**
 	 * How should we compute the score rating algorithms for this game?
-	 *
-	 * New style, simpler function.
 	 */
-	newCalcs: GPTNewCalcs<GPT>;
-
-	// assorted calculator functions
-	scoreCalcs: GPTScoreCalculators<GPT>;
+	scoreCalcs: GPTScoreCalcs<GPT>;
 
 	/**
 	 * How should we compute session ratings for this game?
@@ -236,11 +205,8 @@ export interface GPTServerImplementation<GPT extends GPTString> {
 
 	/**
 	 * How should we compute profile ratings for this game?
-	 *
-	 * New style, simpler function.
 	 */
-	newProfileCalcs: GPTNewProfileCalcs<GPT>;
-	profileCalcs: GPTProfileCalculators<GPT>;
+	profileCalcs: GPTProfileCalcs<GPT>;
 
 	/**
 	 * For any "derived" classes for this game (i.e. classes that are the function

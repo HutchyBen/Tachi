@@ -46,7 +46,7 @@ export const POPN_9B_IMPL: GPTServerImplementation<"popn:9B"> = {
 					: GetGrade(POPN_GBOUNDARIES, scoreData.score),
 		};
 	},
-	newCalcs: (scoreData, derivedData, chart) => ({
+	scoreCalcs: (scoreData, derivedData, chart) => ({
 		classPoints: PopnClassPoints.calculate(scoreData.score, derivedData.lamp, chart.levelNum),
 	}),
 	pbRankingValues: (pb) => ({
@@ -57,18 +57,10 @@ export const POPN_9B_IMPL: GPTServerImplementation<"popn:9B"> = {
 		tb4: null,
 		tb5: null,
 	}),
-	scoreCalcs: {
-		classPoints: (scoreData, chart) =>
-			PopnClassPoints.calculate(
-				scoreData.score,
-				PopnClearMedalToLamp(scoreData.clearMedal),
-				chart.levelNum,
-			),
-	},
 	sessionCalcs: (arr) => ({
 		classPoints: SessionAvgBest10For("classPoints")(arr),
 	}),
-	newProfileCalcs: async (game, playtype, userID) => ({
+	profileCalcs: async (game, playtype, userID) => ({
 		naiveClassPoints: await ProfileAvgBestN("classPoints", 20)(game, playtype, userID),
 	}),
 	classDerivers: (ratings) => {
@@ -95,9 +87,6 @@ export const POPN_9B_IMPL: GPTServerImplementation<"popn:9B"> = {
 		}
 
 		return { class: "GOD" };
-	},
-	profileCalcs: {
-		naiveClassPoints: ProfileAvgBestN("classPoints", 20),
 	},
 	goalCriteriaFormatters: {
 		score: GoalFmtScore,

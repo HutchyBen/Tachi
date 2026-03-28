@@ -13,7 +13,7 @@ export const MUSECA_IMPL: GPTServerImplementation<"museca:Single"> = {
 	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(MUSECA_GBOUNDARIES, scoreData.score),
 	}),
-	newCalcs: (scoreData, _derivedData, chart) => ({
+	scoreCalcs: (scoreData, _derivedData, chart) => ({
 		curatorSkill: CuratorSkill.calculate(scoreData.score, chart.levelNum),
 	}),
 	pbRankingValues: (pb) => ({
@@ -24,19 +24,13 @@ export const MUSECA_IMPL: GPTServerImplementation<"museca:Single"> = {
 		tb4: null,
 		tb5: null,
 	}),
-	scoreCalcs: {
-		curatorSkill: (scoreData, chart) => CuratorSkill.calculate(scoreData.score, chart.levelNum),
-	},
 	sessionCalcs: (arr) => ({
 		curatorSkill: SessionAvgBest10For("curatorSkill")(arr),
 	}),
-	newProfileCalcs: async (game, playtype, userID) => ({
+	profileCalcs: async (game, playtype, userID) => ({
 		curatorSkill: await ProfileSumBestN("curatorSkill", 20)(game, playtype, userID),
 	}),
 	classDerivers: (_ratings) => ({}),
-	profileCalcs: {
-		curatorSkill: ProfileSumBestN("curatorSkill", 20),
-	},
 	goalCriteriaFormatters: {
 		score: GoalFmtScore,
 	},

@@ -14,7 +14,7 @@ export const MAIMAIDX_IMPL: GPTServerImplementation<"maimaidx:Single"> = {
 	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(MAIMAIDX_GBOUNDARIES, scoreData.percent),
 	}),
-	newCalcs: (scoreData, _derivedData, chart) => ({
+	scoreCalcs: (scoreData, _derivedData, chart) => ({
 		rate: MaimaiDXRate.calculate(scoreData.percent, chart.levelNum, scoreData.lamp),
 	}),
 	pbRankingValues: (pb) => ({
@@ -25,14 +25,10 @@ export const MAIMAIDX_IMPL: GPTServerImplementation<"maimaidx:Single"> = {
 		tb4: null,
 		tb5: null,
 	}),
-	scoreCalcs: {
-		rate: (scoreData, chart) =>
-			MaimaiDXRate.calculate(scoreData.percent, chart.levelNum, scoreData.lamp),
-	},
 	sessionCalcs: (arr) => ({
 		rate: SessionAvgBest10For("rate")(arr),
 	}),
-	newProfileCalcs: async (game, playtype, userID) => ({
+	profileCalcs: async (game, playtype, userID) => ({
 		naiveRate: await ProfileSumBestN("rate", 50)(game, playtype, userID),
 	}),
 	classDerivers: (ratings) => {
@@ -65,9 +61,6 @@ export const MAIMAIDX_IMPL: GPTServerImplementation<"maimaidx:Single"> = {
 		}
 
 		return { colour: "WHITE" };
-	},
-	profileCalcs: {
-		naiveRate: ProfileSumBestN("rate", 50),
 	},
 	goalCriteriaFormatters: {
 		percent: (v) => GoalFmtPercent(v, 4),

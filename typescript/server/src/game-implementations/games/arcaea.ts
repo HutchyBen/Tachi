@@ -26,7 +26,7 @@ export const ARCAEA_IMPL: GPTServerImplementation<GPTStrings["arcaea"]> = {
 	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(ARCAEA_GBOUNDARIES, scoreData.score),
 	}),
-	newCalcs: (scoreData, _derivedData, chart) => ({
+	scoreCalcs: (scoreData, _derivedData, chart) => ({
 		potential: Potential.calculate(scoreData.score, chart.levelNum),
 	}),
 	pbRankingValues: (pb) => ({
@@ -37,13 +37,10 @@ export const ARCAEA_IMPL: GPTServerImplementation<GPTStrings["arcaea"]> = {
 		tb4: null,
 		tb5: null,
 	}),
-	scoreCalcs: {
-		potential: (scoreData, chart) => Potential.calculate(scoreData.score, chart.levelNum),
-	},
 	sessionCalcs: (arr) => ({
 		naivePotential: SessionAvgBest10For("potential")(arr),
 	}),
-	newProfileCalcs: async (game, playtype, userID) => ({
+	profileCalcs: async (game, playtype, userID) => ({
 		naivePotential: await ProfileAvgBestN("potential", 30)(game, playtype, userID),
 	}),
 	classDerivers: (ratings) => {
@@ -70,9 +67,6 @@ export const ARCAEA_IMPL: GPTServerImplementation<GPTStrings["arcaea"]> = {
 		}
 
 		return { badge: "BLUE" };
-	},
-	profileCalcs: {
-		naivePotential: ProfileAvgBestN("potential", 30),
 	},
 	goalCriteriaFormatters: {
 		score: GoalFmtScore,

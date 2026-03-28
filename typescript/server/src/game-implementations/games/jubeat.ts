@@ -165,7 +165,7 @@ export const JUBEAT_IMPL: GPTServerImplementation<"jubeat:Single"> = {
 	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(JUBEAT_GBOUNDARIES, scoreData.score),
 	}),
-	newCalcs: (scoreData, _derivedData, chart) => ({
+	scoreCalcs: (scoreData, _derivedData, chart) => ({
 		jubility: Jubility.calculate(scoreData.score, scoreData.musicRate, chart.levelNum),
 	}),
 	pbRankingValues: (pb) => ({
@@ -176,14 +176,10 @@ export const JUBEAT_IMPL: GPTServerImplementation<"jubeat:Single"> = {
 		tb4: null,
 		tb5: null,
 	}),
-	scoreCalcs: {
-		jubility: (scoreData, chart) =>
-			Jubility.calculate(scoreData.score, scoreData.musicRate, chart.levelNum),
-	},
 	sessionCalcs: (arr) => ({
 		jubility: SessionAvgBest10For("jubility")(arr),
 	}),
-	newProfileCalcs: async (game, playtype, userID) => {
+	profileCalcs: async (game, playtype, userID) => {
 		const [jubility, naiveJubility] = await Promise.all([
 			CalculateJubility(game, playtype, userID),
 			ProfileSumBestN("jubility", 60)(game, playtype, userID),
@@ -219,10 +215,6 @@ export const JUBEAT_IMPL: GPTServerImplementation<"jubeat:Single"> = {
 		}
 
 		return { colour: "BLACK" };
-	},
-	profileCalcs: {
-		jubility: CalculateJubility,
-		naiveJubility: ProfileSumBestN("jubility", 60),
 	},
 	goalCriteriaFormatters: {
 		musicRate: (v) => `Get a music rate of ${v.toFixed(1)}% on`,

@@ -14,8 +14,8 @@ export default function AdminDestructivePage() {
 	const [ugptUserId, setUgptUserId] = useState("");
 	const [ugptGame, setUgptGame] = useState<GameGroup>(TachiConfig.GAMES[0]);
 	const ugptGameConfig = useMemo(() => GetGameGroupConfig(ugptGame), [ugptGame]);
-	const [ugptPlaytype, setUgptPlaytype] = useState<string>(() =>
-		GetGameGroupConfig(TachiConfig.GAMES[0]).playtypes[0],
+	const [ugptPlaytype, setUgptPlaytype] = useState<string>(
+		() => GetGameGroupConfig(TachiConfig.GAMES[0]).playtypes[0],
 	);
 
 	const [destroyChartId, setDestroyChartId] = useState("");
@@ -29,7 +29,9 @@ export default function AdminDestructivePage() {
 		<Row className="g-4">
 			<Col lg={6}>
 				<Card className="border-danger">
-					<Card.Header className="bg-danger bg-opacity-10 text-danger">Delete score</Card.Header>
+					<Card.Header className="bg-danger bg-opacity-10 text-danger">
+						Delete score
+					</Card.Header>
 					<Card.Body>
 						<Form.Group className="mb-3" controlId="delete-score">
 							<Form.Label>Score ID</Form.Label>
@@ -70,7 +72,9 @@ export default function AdminDestructivePage() {
 
 			<Col lg={6}>
 				<Card className="border-danger">
-					<Card.Header className="bg-danger bg-opacity-10 text-danger">Delete session</Card.Header>
+					<Card.Header className="bg-danger bg-opacity-10 text-danger">
+						Delete session
+					</Card.Header>
 					<Card.Body>
 						<Form.Group className="mb-3" controlId="delete-session">
 							<Form.Label>Session ID</Form.Label>
@@ -194,7 +198,9 @@ export default function AdminDestructivePage() {
 
 			<Col lg={6}>
 				<Card className="border-danger">
-					<Card.Header className="bg-danger bg-opacity-10 text-danger">Destroy chart</Card.Header>
+					<Card.Header className="bg-danger bg-opacity-10 text-danger">
+						Destroy chart
+					</Card.Header>
 					<Card.Body>
 						<Form.Group className="mb-3" controlId="destroy-chart-game">
 							<Form.Label>Game</Form.Label>

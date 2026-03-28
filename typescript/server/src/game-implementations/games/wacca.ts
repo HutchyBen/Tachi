@@ -14,7 +14,7 @@ export const WACCA_IMPL: GPTServerImplementation<"wacca:Single"> = {
 	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(WACCA_GBOUNDARIES, scoreData.score),
 	}),
-	newCalcs: (scoreData, _derivedData, chart) => ({
+	scoreCalcs: (scoreData, _derivedData, chart) => ({
 		rate: WACCARate.calculate(scoreData.score, chart.levelNum),
 	}),
 	pbRankingValues: (pb) => ({
@@ -25,13 +25,10 @@ export const WACCA_IMPL: GPTServerImplementation<"wacca:Single"> = {
 		tb4: null,
 		tb5: null,
 	}),
-	scoreCalcs: {
-		rate: (scoreData, chart) => WACCARate.calculate(scoreData.score, chart.levelNum),
-	},
 	sessionCalcs: (arr) => ({
 		rate: SessionAvgBest10For("rate")(arr),
 	}),
-	newProfileCalcs: async (game, playtype, userID) => ({
+	profileCalcs: async (game, playtype, userID) => ({
 		naiveRate: await ProfileSumBestN("rate", 50)(game, playtype, userID),
 	}),
 	classDerivers: (ratings) => {
@@ -60,9 +57,6 @@ export const WACCA_IMPL: GPTServerImplementation<"wacca:Single"> = {
 		}
 
 		return { colour: "ASH" };
-	},
-	profileCalcs: {
-		naiveRate: ProfileSumBestN("rate", 50),
 	},
 	goalCriteriaFormatters: {
 		score: GoalFmtScore,

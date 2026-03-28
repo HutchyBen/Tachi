@@ -1,4 +1,5 @@
 import type { KtLogger } from "#lib/log/log";
+
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import {
 	GetGPTConfig,

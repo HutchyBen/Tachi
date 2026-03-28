@@ -41,7 +41,8 @@ t.test("Pop'n Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {
 		const f = (score: number, expected: any) =>
 			t.equal(
-				POPN_9B_IMPL.scoreDeriver(dmf(baseMetrics, { score }) as any, TestingPopnChart).grade,
+				POPN_9B_IMPL.scoreDeriver(dmf(baseMetrics, { score }) as any, TestingPopnChart)
+					.grade,
 				expected,
 				`A score of ${score.toLocaleString()} should result in grade=${expected}.`,
 			);

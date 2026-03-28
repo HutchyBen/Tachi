@@ -2,7 +2,12 @@ import type { Readable } from "node:stream";
 
 import { log } from "#lib/log/log";
 import { ServerConfig } from "#lib/setup/config";
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+	DeleteObjectCommand,
+	GetObjectCommand,
+	PutObjectCommand,
+	S3Client,
+} from "@aws-sdk/client-s3";
 import { buffer as streamToBuffer } from "node:stream/consumers";
 
 const saveLoc = ServerConfig.CDN_CONFIG.SAVE_LOCATION;

@@ -9,12 +9,9 @@ import {
 	FmtNum,
 	FmtStars,
 	FmtStarsCompact,
-	type GameGroup,
 	GetGrade,
-	type integer,
 	type MONGO_ChartDocument,
 	ONGEKI_GBOUNDARIES,
-	type Playtype,
 } from "tachi-common";
 
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
@@ -67,7 +64,7 @@ export const ONGEKI_IMPL: GPTServerImplementation<"ongeki:Single"> = {
 		grade: GetGrade(ONGEKI_GBOUNDARIES, scoreData.score),
 		platinumStars: starCount(scoreData.platinumScore, chart.data.maxPlatScore),
 	}),
-	newCalcs: (scoreData, derivedData, chart) => {
+	scoreCalcs: (scoreData, derivedData, chart) => {
 		if (isUnranked(chart)) {
 			return { rating: 0, scoreRating: 0, starRating: 0 };
 		}
@@ -91,32 +88,12 @@ export const ONGEKI_IMPL: GPTServerImplementation<"ongeki:Single"> = {
 		tb4: null,
 		tb5: null,
 	}),
-	scoreCalcs: {
-		rating: (scoreData, chart) =>
-			isUnranked(chart) ? 0 : ONGEKIRating.calculate(scoreData.score, chart.levelNum),
-		scoreRating: (scoreData, chart) =>
-			isUnranked(chart)
-				? 0
-				: ONGEKIRating.calculateRefresh(
-						chart.levelNum,
-						scoreData.score,
-						scoreData.score === 1010000 ? "ALL BREAK+" : scoreData.noteLamp,
-						scoreData.bellLamp === "FULL BELL",
-					),
-		starRating: (scoreData, chart) =>
-			isUnranked(chart)
-				? 0
-				: ONGEKIRating.calculatePlatinum(
-						chart.levelNum,
-						starCount(scoreData.platinumScore, chart.data.maxPlatScore),
-					),
-	},
 	sessionCalcs: (arr) => ({
 		naiveRating: SessionAvgBest10For("rating")(arr),
 		naiveScoreRating: SessionAvgBest10For("scoreRating")(arr),
 		starRating: SessionAvgBest10For("starRating")(arr),
 	}),
-	newProfileCalcs: async (game, playtype, userID) => {
+	profileCalcs: async (game, playtype, userID) => {
 		const [naiveRating, score, star] = await Promise.all([
 			ProfileAvgBestN("rating", 45, false, 100)(game, playtype, userID),
 			ProfileAvgBestN("scoreRating", 60, false, 1000)(game, playtype, userID),
@@ -161,20 +138,6 @@ export const ONGEKI_IMPL: GPTServerImplementation<"ongeki:Single"> = {
 		}
 
 		return { colour: "BLUE" };
-	},
-	profileCalcs: {
-		naiveRating: ProfileAvgBestN("rating", 45, false, 100),
-		naiveRatingRefresh: async (game: GameGroup, playtype: Playtype, userID: integer) => {
-			const [score, star] = await Promise.all([
-				ProfileAvgBestN("scoreRating", 60, false, 1000)(game, playtype, userID),
-				ProfileAvgBestN("starRating", 50, false, 1000)(game, playtype, userID),
-			]);
-
-			const score1k = Math.round((score ?? 0) * 1000);
-			const star1k = Math.round((star ?? 0) * 1000);
-
-			return (Math.floor(score1k * 1.2) + star1k) / 1000.0;
-		},
 	},
 	goalCriteriaFormatters: {
 		score: GoalFmtScore,

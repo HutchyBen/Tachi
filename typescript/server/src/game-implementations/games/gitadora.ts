@@ -14,7 +14,7 @@ const GITADORA_IMPL: GPTServerImplementation<"gitadora:Dora" | "gitadora:Gita"> 
 	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(GITADORA_GBOUNDARIES, scoreData.percent),
 	}),
-	newCalcs: (scoreData, _derivedData, chart) => ({
+	scoreCalcs: (scoreData, _derivedData, chart) => ({
 		skill: GITADORASkill.calculate(scoreData.percent, chart.levelNum),
 	}),
 	pbRankingValues: (pb) => ({
@@ -25,13 +25,10 @@ const GITADORA_IMPL: GPTServerImplementation<"gitadora:Dora" | "gitadora:Gita"> 
 		tb4: null,
 		tb5: null,
 	}),
-	scoreCalcs: {
-		skill: (scoreData, chart) => GITADORASkill.calculate(scoreData.percent, chart.levelNum),
-	},
 	sessionCalcs: (arr) => ({
 		skill: SessionAvgBest10For("skill")(arr),
 	}),
-	newProfileCalcs: async (game, playtype, userID) => ({
+	profileCalcs: async (game, playtype, userID) => ({
 		naiveSkill: await ProfileSumBestN("skill", 50)(game, playtype, userID),
 	}),
 	classDerivers: (ratings) => {
@@ -77,7 +74,6 @@ const GITADORA_IMPL: GPTServerImplementation<"gitadora:Dora" | "gitadora:Gita"> 
 
 		return { colour: "WHITE" };
 	},
-	profileCalcs: { naiveSkill: ProfileSumBestN("skill", 50) },
 	goalCriteriaFormatters: {
 		percent: GoalFmtPercent,
 	},

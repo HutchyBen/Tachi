@@ -4,15 +4,12 @@ import type {
 	GPTClassDerivers,
 	GPTGoalFormatters,
 	GPTGoalProgressFormatters,
-	GPTNewCalcs,
-	GPTNewProfileCalcs,
-	GPTProfileCalculators,
-	GPTScoreCalculators,
+	GPTProfileCalcs,
+	GPTScoreCalcs,
 	GPTScoreDeriver,
 	GPTSessionCalcs,
 	PBMergeFunction,
 	PBRankingValuesFunction,
-	ScoreCalculator,
 	ScoreValidator,
 } from "#game-implementations/types";
 
@@ -93,9 +90,6 @@ export const IIDXLIKE_PB_RANKING_VALUES: PBRankingValuesFunction<IIDXLikes> = (p
 	tb4: null,
 	tb5: null,
 });
-
-export const VF6Calc: ScoreCalculator<GPTStrings["sdvx" | "usc"]> = (scoreData, chart) =>
-	Volforce.calculateVF6(scoreData.score, scoreData.lamp, chart.levelNum);
 
 export function VF6ToClass(
 	vf: number,
@@ -184,15 +178,9 @@ export function VF6ToClass(
 	return "SIENNA_I";
 }
 
-export const SDVXLIKE_SCORE_CALCS: GPTScoreCalculators<SDVXLikes> = { VF6: VF6Calc };
-
-export const SDVXLIKE_NEW_CALCS: GPTNewCalcs<SDVXLikes> = (scoreData, _derivedData, chart) => ({
+export const SDVXLIKE_SCORE_CALCS: GPTScoreCalcs<SDVXLikes> = (scoreData, _derivedData, chart) => ({
 	VF6: Volforce.calculateVF6(scoreData.score, scoreData.lamp, chart.levelNum),
 });
-
-export const SDVXLIKE_PROFILE_CALCS: GPTProfileCalculators<SDVXLikes> = {
-	VF6: ProfileSumBestN("VF6", 50),
-};
 
 export const SDVXLIKE_SESSION_CALCS: GPTSessionCalcs<SDVXLikes> = (arr) => {
 	const v = SessionAvgBest10For("VF6")(arr);
@@ -200,7 +188,7 @@ export const SDVXLIKE_SESSION_CALCS: GPTSessionCalcs<SDVXLikes> = (arr) => {
 	return { ProfileVF6: v !== null ? v * 50 : null };
 };
 
-export const SDVXLIKE_NEW_PROFILE_CALCS: GPTNewProfileCalcs<SDVXLikes> = async (
+export const SDVXLIKE_PROFILE_CALCS: GPTProfileCalcs<SDVXLikes> = async (
 	game,
 	playtype,
 	userID,
@@ -262,28 +250,11 @@ export const SDVXLIKE_SCORE_VALIDATORS: Array<ScoreValidator<SDVXLikes>> = [
 	},
 ];
 
-export const SGLCalc: ScoreCalculator<GPTStrings["bms" | "pms"]> = (scoreData, chart) => {
-	const ecValue = chart.data.sglEC ?? 0;
-	const hcValue = chart.data.sglHC ?? 0;
-
-	switch (scoreData.lamp) {
-		case "FULL COMBO":
-		case "EX HARD CLEAR":
-		case "HARD CLEAR":
-			return Math.max(hcValue, ecValue);
-		case "CLEAR":
-		case "EASY CLEAR":
-			return ecValue;
-		default:
-			return 0;
-	}
-};
-
 export const SGL_SESSION_CALCS: GPTSessionCalcs<GPTStrings["bms" | "pms"]> = (arr) => ({
 	sieglinde: SessionAvgBest10For("sieglinde")(arr),
 });
 
-export const SGL_NEW_PROFILE_CALCS: GPTNewProfileCalcs<GPTStrings["bms" | "pms"]> = async (
+export const SGL_PROFILE_CALCS: GPTProfileCalcs<GPTStrings["bms" | "pms"]> = async (
 	game,
 	playtype,
 	userID,
@@ -291,7 +262,7 @@ export const SGL_NEW_PROFILE_CALCS: GPTNewProfileCalcs<GPTStrings["bms" | "pms"]
 	sieglinde: await ProfileAvgBestN("sieglinde", 20)(game, playtype, userID),
 });
 
-export const SGL_NEW_CALCS: GPTNewCalcs<GPTStrings["bms" | "pms"]> = (
+export const SGL_SCORE_CALCS: GPTScoreCalcs<GPTStrings["bms" | "pms"]> = (
 	scoreData,
 	_derivedData,
 	chart,

@@ -62,7 +62,10 @@ function JsonCell({ label, value }: { label: string; value: unknown }) {
 	return (
 		<details>
 			<summary className="small text-body-secondary">{label}</summary>
-			<pre className="small mb-0 mt-1 p-2 bg-body-secondary rounded" style={{ maxWidth: "20rem" }}>
+			<pre
+				className="small mb-0 mt-1 p-2 bg-body-secondary rounded"
+				style={{ maxWidth: "20rem" }}
+			>
 				{json}
 			</pre>
 		</details>
@@ -178,11 +181,15 @@ export default function AdminActionsPage() {
 									</td>
 									<td className="small">{action.kind}</td>
 									<td>
-										<Badge bg={resultVariant(action.result)}>{action.result}</Badge>
+										<Badge bg={resultVariant(action.result)}>
+											{action.result}
+										</Badge>
 									</td>
 									<td>
 										{action.username ? (
-											<Link to={`/u/${action.username}`}>{action.username}</Link>
+											<Link to={`/u/${action.username}`}>
+												{action.username}
+											</Link>
 										) : (
 											<span className="text-body-secondary">—</span>
 										)}
@@ -204,7 +211,10 @@ export default function AdminActionsPage() {
 			{totalPages > 1 && (
 				<div className="d-flex align-items-center gap-3">
 					{currentPage > 0 && (
-						<Link className="btn btn-sm btn-outline-primary" to={buildPageUrl(currentPage - 1)}>
+						<Link
+							className="btn btn-sm btn-outline-primary"
+							to={buildPageUrl(currentPage - 1)}
+						>
 							← Prev
 						</Link>
 					)}
@@ -212,7 +222,10 @@ export default function AdminActionsPage() {
 						Page {currentPage + 1} of {totalPages}
 					</span>
 					{currentPage < totalPages - 1 && (
-						<Link className="btn btn-sm btn-outline-primary" to={buildPageUrl(currentPage + 1)}>
+						<Link
+							className="btn btn-sm btn-outline-primary"
+							to={buildPageUrl(currentPage + 1)}
+						>
 							Next →
 						</Link>
 					)}

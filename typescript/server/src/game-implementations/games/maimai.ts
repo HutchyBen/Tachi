@@ -29,7 +29,7 @@ export const MAIMAI_IMPL: GPTServerImplementation<"maimai:Single"> = {
 				? "SSS+"
 				: GetGrade(MAIMAI_GBOUNDARIES, scoreData.percent),
 	}),
-	newCalcs: (scoreData, _derivedData, chart) => ({
+	scoreCalcs: (scoreData, _derivedData, chart) => ({
 		rate: MaimaiRate.calculate(scoreData.percent, chart.data.maxPercent, chart.levelNum),
 	}),
 	pbRankingValues: (pb) => ({
@@ -40,14 +40,10 @@ export const MAIMAI_IMPL: GPTServerImplementation<"maimai:Single"> = {
 		tb4: null,
 		tb5: null,
 	}),
-	scoreCalcs: {
-		rate: (scoreData, chart) =>
-			MaimaiRate.calculate(scoreData.percent, chart.data.maxPercent, chart.levelNum),
-	},
 	sessionCalcs: (arr) => ({
 		rate: SessionAvgBest10For("rate")(arr),
 	}),
-	newProfileCalcs: async (game, playtype, userID) => ({
+	profileCalcs: async (game, playtype, userID) => ({
 		naiveRate: await ProfileAvgBestN("rate", 30)(game, playtype, userID),
 	}),
 	classDerivers: (ratings) => {
@@ -78,9 +74,6 @@ export const MAIMAI_IMPL: GPTServerImplementation<"maimai:Single"> = {
 		}
 
 		return { colour: "WHITE" };
-	},
-	profileCalcs: {
-		naiveRate: ProfileAvgBestN("rate", 30),
 	},
 	goalCriteriaFormatters: {
 		percent: GoalFmtPercent,

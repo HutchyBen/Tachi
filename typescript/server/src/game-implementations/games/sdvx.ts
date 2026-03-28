@@ -8,20 +8,18 @@ import {
 	SDVXLIKE_GOAL_FMT,
 	SDVXLIKE_GOAL_OO_FMT,
 	SDVXLIKE_GOAL_PG_FMT,
-	SDVXLIKE_NEW_CALCS,
-	SDVXLIKE_SCORE_DERIVER,
-	SDVXLIKE_NEW_PROFILE_CALCS,
 	SDVXLIKE_PROFILE_CALCS,
 	SDVXLIKE_SCORE_CALCS,
+	SDVXLIKE_SCORE_DERIVER,
 	SDVXLIKE_SCORE_VALIDATORS,
 	SDVXLIKE_SESSION_CALCS,
 } from "./_common";
 
 export const SDVX_IMPL: GPTServerImplementation<"sdvx:Single"> = {
 	scoreDeriver: SDVXLIKE_SCORE_DERIVER,
-	newCalcs: SDVXLIKE_NEW_CALCS,
+	scoreCalcs: SDVXLIKE_SCORE_CALCS,
 	sessionCalcs: SDVXLIKE_SESSION_CALCS,
-	newProfileCalcs: SDVXLIKE_NEW_PROFILE_CALCS,
+	profileCalcs: SDVXLIKE_PROFILE_CALCS,
 	classDerivers: SDVXLIKE_CLASS_DERIVERS,
 	pbRankingValues: (pb) => ({
 		ranking: pb.scoreData.score,
@@ -45,8 +43,6 @@ export const SDVX_IMPL: GPTServerImplementation<"sdvx:Single"> = {
 			return true;
 		},
 	},
-	scoreCalcs: SDVXLIKE_SCORE_CALCS,
-	profileCalcs: SDVXLIKE_PROFILE_CALCS,
 	goalCriteriaFormatters: SDVXLIKE_GOAL_FMT,
 	goalProgressFormatters: SDVXLIKE_GOAL_PG_FMT,
 	goalOutOfFormatters: SDVXLIKE_GOAL_OO_FMT,

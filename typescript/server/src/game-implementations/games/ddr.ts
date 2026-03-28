@@ -1,7 +1,7 @@
 import type {
 	GPTGoalFormatters,
 	GPTGoalProgressFormatters,
-	GPTNewProfileCalcs,
+	GPTProfileCalcs,
 	GPTServerImplementation,
 	ScoreValidator,
 } from "#game-implementations/types";
@@ -11,15 +11,12 @@ import { DDRFlare } from "rg-stats";
 import {
 	DDR_GBOUNDARIES,
 	FmtNum,
-	type GameGroup,
 	GetGrade,
 	GetSpecificGPTConfig,
-	type integer,
 	type MONGO_ChartDocument,
 	type MONGO_PBScoreDocument,
 	type MONGO_ScoreDocument,
 	type MONGO_SongDocument,
-	type Playtype,
 } from "tachi-common";
 
 import { IsNullish } from "../../utils/misc";
@@ -155,11 +152,7 @@ export const DDR_SCORE_VALIDATORS: Array<ScoreValidator<"ddr:DP" | "ddr:SP">> = 
 	},
 ];
 
-const DDR_CALCULATE_FLARE_SKILL: GPTNewProfileCalcs<"ddr:DP" | "ddr:SP"> = async (
-	game,
-	playtype,
-	userID,
-) => {
+const DDR_PROFILE_CALCS: GPTProfileCalcs<"ddr:DP" | "ddr:SP"> = async (game, playtype, userID) => {
 	const sc: Array<PBScoreDocumentWithSong> = await MONGODB_KILL["personal-bests"].aggregate([
 		{
 			$match: {
@@ -315,7 +308,7 @@ export const DDR_IMPL: GPTServerImplementation<"ddr:DP" | "ddr:SP"> = {
 	scoreDeriver: (scoreData, _chart) => ({
 		grade: scoreData.lamp === "FAILED" ? "E" : GetGrade(DDR_GBOUNDARIES, scoreData.score),
 	}),
-	newCalcs: (scoreData, _derivedData, chart) => {
+	scoreCalcs: (scoreData, _derivedData, chart) => {
 		if (scoreData.lamp === "FAILED") {
 			return { flareSkill: 0 };
 		}
@@ -354,27 +347,6 @@ export const DDR_IMPL: GPTServerImplementation<"ddr:DP" | "ddr:SP"> = {
 	sessionCalcs: (arr) => ({
 		flareSkill: SessionAvgBest10For("flareSkill")(arr),
 	}),
-	newProfileCalcs: DDR_CALCULATE_FLARE_SKILL,
-	profileCalcs: {
-		flareSkill: async (game: GameGroup, playtype: Playtype, userID: integer) =>
-			(await DDR_CALCULATE_FLARE_SKILL(game as "ddr", playtype as "DP" | "SP", userID))
-				.flareSkill,
-	},
-	scoreCalcs: {
-		flareSkill: (scoreData, chart) => {
-			// No flare if the song is failed
-			if (scoreData.lamp === "FAILED") {
-				return 0;
-			}
-
-			const flareLevel = scoreData.optional.flare
-				? GetSpecificGPTConfig("ddr:SP").optionalMetrics.flare.values.indexOf(
-						scoreData.optional.flare,
-					)
-				: 0;
-
-			return DDRFlare.calculate(chart.levelNum, flareLevel);
-		},
-	},
+	profileCalcs: DDR_PROFILE_CALCS,
 	scoreValidators: DDR_SCORE_VALIDATORS,
 };

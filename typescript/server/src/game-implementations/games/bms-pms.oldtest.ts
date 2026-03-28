@@ -169,16 +169,16 @@ for (const [game, playtype, impl] of [
 				chartData: Partial<ChartDocumentData[BMSPMS]>,
 				expected: any,
 				msg: string,
-			) =>
-				t.equal(
-					impl.scoreCalcs.sieglinde(
-						dmf(mockScore.scoreData, scoreData),
-						// @ts-expect-error zzz
-						dmf(chart, { data: chartData as any }),
-					),
+			) => {
+				const sd = dmf(mockScore.scoreData, scoreData);
+				const ch = dmf(chart, { data: chartData as any });
+
+				return t.equal(
+					impl.scoreCalcs(sd, impl.scoreDeriver(sd, ch), ch).sieglinde,
 					expected,
 					msg,
 				);
+			};
 
 			t.test("null sieglinde", (t) => {
 				f({ lamp: "FAILED" }, {}, 0, "fails should be worth 0");

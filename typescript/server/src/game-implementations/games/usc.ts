@@ -7,21 +7,19 @@ import {
 	SDVXLIKE_GOAL_FMT,
 	SDVXLIKE_GOAL_OO_FMT,
 	SDVXLIKE_GOAL_PG_FMT,
-	SDVXLIKE_NEW_CALCS,
-	SDVXLIKE_SCORE_DERIVER,
-	SDVXLIKE_NEW_PROFILE_CALCS,
 	SDVXLIKE_PB_MERGERS,
 	SDVXLIKE_PROFILE_CALCS,
 	SDVXLIKE_SCORE_CALCS,
+	SDVXLIKE_SCORE_DERIVER,
 	SDVXLIKE_SCORE_VALIDATORS,
 	SDVXLIKE_SESSION_CALCS,
 } from "./_common";
 
 const USC_IMPL: GPTServerImplementation<GPTStrings["usc"]> = {
 	scoreDeriver: SDVXLIKE_SCORE_DERIVER,
-	newCalcs: SDVXLIKE_NEW_CALCS,
+	scoreCalcs: SDVXLIKE_SCORE_CALCS,
 	sessionCalcs: SDVXLIKE_SESSION_CALCS,
-	newProfileCalcs: SDVXLIKE_NEW_PROFILE_CALCS,
+	profileCalcs: SDVXLIKE_PROFILE_CALCS,
 	classDerivers: SDVXLIKE_CLASS_DERIVERS,
 	pbRankingValues: (pb) => ({
 		ranking: pb.scoreData.score,
@@ -32,8 +30,6 @@ const USC_IMPL: GPTServerImplementation<GPTStrings["usc"]> = {
 		tb5: null,
 	}),
 	chartSpecificValidators: {},
-	scoreCalcs: SDVXLIKE_SCORE_CALCS,
-	profileCalcs: SDVXLIKE_PROFILE_CALCS,
 	goalCriteriaFormatters: SDVXLIKE_GOAL_FMT,
 	goalProgressFormatters: SDVXLIKE_GOAL_PG_FMT,
 	goalOutOfFormatters: SDVXLIKE_GOAL_OO_FMT,
