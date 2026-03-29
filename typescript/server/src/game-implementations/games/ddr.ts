@@ -6,28 +6,23 @@ import type {
 	ScoreValidator,
 } from "#game-implementations/types";
 
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
+import { sql } from "kysely";
 import { DDRFlare } from "rg-stats";
 import {
 	DDR_GBOUNDARIES,
 	FmtNum,
+	GamePTToV3,
 	GetGrade,
 	GetSpecificGPTConfig,
 	type MONGO_ChartDocument,
-	type MONGO_PBScoreDocument,
 	type MONGO_ScoreDocument,
-	type MONGO_SongDocument,
 } from "tachi-common";
 
 import { IsNullish } from "../../utils/misc";
 import { CreatePBMergeFor } from "../utils/pb-merge";
 import { SessionAvgBest10For } from "../utils/session-calc";
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
-
-interface PBScoreDocumentWithSong extends MONGO_PBScoreDocument<"ddr:DP" | "ddr:SP"> {
-	song: MONGO_SongDocument<"ddr">;
-	top?: number;
-}
 
 const DDR_GOAL_FMT: GPTGoalFormatters<"ddr:DP" | "ddr:SP"> = {
 	score: GoalFmtScore,
@@ -153,37 +148,27 @@ export const DDR_SCORE_VALIDATORS: Array<ScoreValidator<"ddr:DP" | "ddr:SP">> = 
 ];
 
 const DDR_PROFILE_CALCS: GPTProfileCalcs<"ddr:DP" | "ddr:SP"> = async (game, playtype, userID) => {
-	const sc: Array<PBScoreDocumentWithSong> = await MONGODB_KILL["personal-bests"].aggregate([
-		{
-			$match: {
-				userID,
-				game,
-				playtype,
-				isPrimary: true,
-				[`calculatedData.flareSkill`]: { $type: "number" },
-			},
-		},
-		{
-			$lookup: {
-				from: "songs-ddr",
-				localField: "songID",
-				foreignField: "id",
-				as: "song",
-			},
-		},
-		{
-			$unwind: {
-				path: "$song",
-			},
-		},
-		{
-			$sort: {
-				[`calculatedData.flareSkill`]: -1,
-			},
-		},
-	]);
+	const v3Game = GamePTToV3(game, playtype);
 
-	if (sc.length === 0) {
+	const rows = await DB.selectFrom("pb")
+		.innerJoin("chart", "chart.id", "pb.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select([
+			sql<number>`(pb.calculated_data::jsonb->>'flareSkill')::double precision`.as(
+				"flare_skill",
+			),
+			sql<string | null>`song.data::jsonb->>'flareCategory'`.as("flare_category"),
+		])
+		.where("pb.user_id", "=", userID)
+		.where("chart.game", "=", v3Game)
+		.where("chart.is_primary", "=", true)
+		.where((eb) =>
+			eb(sql`jsonb_typeof(pb.calculated_data::jsonb -> 'flareSkill')`, "=", sql`'number'`),
+		)
+		.orderBy(sql`(pb.calculated_data::jsonb->>'flareSkill')::double precision`, "desc")
+		.execute();
+
+	if (rows.length === 0) {
 		return { flareSkill: null };
 	}
 
@@ -191,21 +176,23 @@ const DDR_PROFILE_CALCS: GPTProfileCalcs<"ddr:DP" | "ddr:SP"> = async (game, pla
 	let goldIndex = 0;
 	let whiteIndex = 0;
 
-	for (const score of sc) {
-		if (score.song.data.flareCategory === "CLASSIC") {
-			score.top = classicIndex++;
-		} else if (score.song.data.flareCategory === "WHITE") {
-			score.top = whiteIndex++;
-		} else if (score.song.data.flareCategory === "GOLD") {
-			score.top = goldIndex++;
-		} else {
-			score.top = 99; // Score will be filtered out
-		}
-	}
+	const scored = rows.map((row) => {
+		let top: number;
 
-	const flareSkill = sc
-		.filter((score: PBScoreDocumentWithSong) => score.top! < 30)
-		.reduce((a: number, e: PBScoreDocumentWithSong) => a + e.calculatedData.flareSkill!, 0);
+		if (row.flare_category === "CLASSIC") {
+			top = classicIndex++;
+		} else if (row.flare_category === "WHITE") {
+			top = whiteIndex++;
+		} else if (row.flare_category === "GOLD") {
+			top = goldIndex++;
+		} else {
+			top = 99; // Score will be filtered out
+		}
+
+		return { flareSkill: row.flare_skill, top };
+	});
+
+	const flareSkill = scored.filter((e) => e.top < 30).reduce((a, e) => a + e.flareSkill, 0);
 
 	return { flareSkill };
 };
