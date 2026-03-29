@@ -36,16 +36,18 @@ return p.isBetween(0, 100)(rate);
     },
     ```
 
-## `derivers`
+## `scoreDeriver`
 
-Any derived metrics you declared need derivers implemented here. This is a function
-that takes in the provided metrics and the chart for this score and should return
-the metric value we expect.
+Any derived metrics you declared are produced by a single function
+`(scoreData, chart) => derivedMetrics` that returns all derived fields at once.
 
 !!! example
-`ts
-	percent: (metrics, chart) => (100 * metrics.score) / (chart.data.notecount * 2);
-	`
+```ts
+(scoreData, chart) => ({
+	percent: (100 * scoreData.score) / (chart.data.notecount * 2),
+	grade: GetGrade(G, scoreData.score),
+});
+```
 
 ## `scoreCalcs`, `sessionCalcs`, `profileCalcs`
 

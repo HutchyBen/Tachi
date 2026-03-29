@@ -1,8 +1,6 @@
-import type { DryScoreData } from "#lib/score-import/framework/common/types";
 import type { MONGO_PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
 import type {
 	ClassConfigs,
-	ConfDerivedMetrics,
 	ConfScoreMetrics,
 	GPTString,
 	GPTStringToGame,
@@ -20,11 +18,7 @@ import type {
 	SessionRatingAlgorithms,
 } from "tachi-common";
 import type { DerivedClassConfig } from "tachi-common/types/game-config-utils";
-import type {
-	__OLD_KILL_ScoreMetricDeriver,
-	AllConfMetrics,
-	ConfEnumScoreMetric,
-} from "tachi-common/types/metrics";
+import type { AllConfMetrics, ConfEnumScoreMetric } from "tachi-common/types/metrics";
 
 /**
  * Validate this chart-specific metric. This should return a string representing an
@@ -39,35 +33,9 @@ interface ChartDependentMax {
 	chartDependentMax: true;
 }
 
-export type ScoreCalculator<GPT extends GPTString> = (
-	scoreData: DryScoreData<GPT>,
-	chart: MONGO_ChartDocument<GPT>,
-) => number | null;
-
 export type SessionCalculator<GPT extends GPTString> = (
 	scoreCalcData: Array<MONGO_ScoreDocument<GPT>["calculatedData"]>,
 ) => number | null;
-
-/**
- * Return a number/null from this players UGPT info. This will involve database queries.
- */
-export type ProfileCalculator<GPT extends GPTString> = (
-	game: GPTStringToGame[GPT],
-	playtype: GPTStringToPlaytype[GPT],
-	userID: integer,
-) => Promise<number | null>;
-
-export type GPTScoreCalculators<GPT extends GPTString> = {
-	[S in ScoreRatingAlgorithms[GPT]]: ScoreCalculator<GPT>;
-};
-
-export type GPTSessionCalculators<GPT extends GPTString> = {
-	[S in SessionRatingAlgorithms[GPT]]: SessionCalculator<GPT>;
-};
-
-export type GPTProfileCalculators<GPT extends GPTString> = {
-	[S in ProfileRatingAlgorithms[GPT]]: ProfileCalculator<GPT>;
-};
 
 export type ClassDeriver<GPT extends GPTString, V extends string> = (
 	profileRatings: MONGO_SpecificUserGameStats<GPT>["ratings"],
@@ -82,7 +50,7 @@ export type ClassDeriver<GPT extends GPTString, V extends string> = (
 // {
 //     colour: ClassDeriver<"YELLOW" | "asdf" ...>
 // }
-export type GPTClassDerivers<GPT extends GPTString> = {
+export type GPTClassDeriverFuncs<GPT extends GPTString> = {
 	[C in keyof ClassConfigs[GPT] as ClassConfigs[GPT][C] extends DerivedClassConfig
 		? C
 		: never]: ClassConfigs[GPT][C] extends DerivedClassConfig<infer V>
@@ -117,53 +85,34 @@ export type GPTChartSpecificMetricValidators<GPT extends GPTString> = {
 		: never]: ChartSpecificMetricValidator<GPT>;
 };
 
-export type __OLD_KILL_GPTDerivers<GPT extends GPTString> = {
-	[K in keyof ConfDerivedMetrics[GPT]]: __OLD_KILL_ScoreMetricDeriver<
-		// @ts-expect-error This *might* be a bug in the typescript compiler
-		// as this works for all GPT inputs normally.
-		// Possibly some generic nonsense but like...
-
-		// can you really blame them for this not working?
-		// can you? LOOK at what we're doing.
-		ConfDerivedMetrics[GPT][K],
-		GPT
-	>;
-};
-
-// New-style deriver; just f(scoreData, chart) -> derivedMetrics
-// instead of the overly complex shit above.
-export type GPTNewDeriver<GPT extends GPTString> = (
+/** Derives chart-dependent score metrics (grade, percent, …) from provided score data. */
+export type GPTScoreDeriver<GPT extends GPTString> = (
 	scoreData: MONGO_ScoreData<GPT>,
 	chart: MONGO_ChartDocument<GPT>,
 ) => MongoDerivedMetrics[GPT];
 
-// New-style score calc; just f(scoreData, derivedData, chart) -> calculatedData
-// instead of the per-algorithm record above.
-export type GPTNewCalcs<GPT extends GPTString> = (
+export type GPTScoreCalcs<GPT extends GPTString> = (
 	scoreData: MONGO_ScoreData<GPT>,
 	derivedData: MongoDerivedMetrics[GPT],
 	chart: MONGO_ChartDocument<GPT>,
 ) => Record<ScoreRatingAlgorithms[GPT], number | null>;
 
-// New-style session calc; just f(scoreCalcData) -> sessionCalcData
-// instead of the per-algorithm record above.
-export type GPTNewSessionCalcs<GPT extends GPTString> = (
+/** Session ratings from the session's score calculated-data: f(scoreCalcData) -> sessionCalcData. */
+export type GPTSessionCalcs<GPT extends GPTString> = (
 	scoreCalcData: Array<MONGO_ScoreDocument<GPT>["calculatedData"]>,
 ) => Record<SessionRatingAlgorithms[GPT], number | null>;
 
-// New-style profile calc; just f(game, playtype, userID) -> profileCalcData
-// instead of the per-algorithm record above.
-export type GPTNewProfileCalcs<GPT extends GPTString> = (
+/** Profile ratings from UGPT: async f(game, playtype, userID) -> profile ratings record. */
+export type GPTProfileCalcs<GPT extends GPTString> = (
 	game: GPTStringToGame[GPT],
 	playtype: GPTStringToPlaytype[GPT],
 	userID: integer,
 ) => Promise<Record<ProfileRatingAlgorithms[GPT], number | null>>;
 
-// New-style class deriver; just f(profileRatings) -> derivedClasses
-// instead of the per-class record above.
-export type GPTNewClassDerivers<GPT extends GPTString> = (
+// Class deriver: f(profileRatings) -> derivedClasses (one object with all derived class values).
+export type GPTClassDerivers<GPT extends GPTString> = (
 	profileRatings: MONGO_SpecificUserGameStats<GPT>["ratings"],
-) => { [C in keyof GPTClassDerivers<GPT>]: ReturnType<GPTClassDerivers<GPT>[C]> };
+) => { [C in keyof GPTClassDeriverFuncs<GPT>]: ReturnType<GPTClassDeriverFuncs<GPT>[C]> };
 
 /**
  * The float values used to rank this PB against others on the same chart.
@@ -242,48 +191,22 @@ export interface GPTServerImplementation<GPT extends GPTString> {
 	/**
 	 * How should we derive the derived metrics for this game?
 	 */
-	derivers: __OLD_KILL_GPTDerivers<GPT>;
-
-	/**
-	 * How should we derive the derived metrics for this game?
-	 *
-	 * New style, simpler function.
-	 */
-	newDeriver: GPTNewDeriver<GPT>;
+	scoreDeriver: GPTScoreDeriver<GPT>;
 
 	/**
 	 * How should we compute the score rating algorithms for this game?
-	 *
-	 * New style, simpler function.
 	 */
-	newCalcs: GPTNewCalcs<GPT>;
-
-	// assorted calculator functions
-	scoreCalcs: GPTScoreCalculators<GPT>;
+	scoreCalcs: GPTScoreCalcs<GPT>;
 
 	/**
 	 * How should we compute session ratings for this game?
-	 *
-	 * New style, simpler function.
 	 */
-	newSessionCalcs: GPTNewSessionCalcs<GPT>;
-	sessionCalcs: GPTSessionCalculators<GPT>;
+	sessionCalcs: GPTSessionCalcs<GPT>;
 
 	/**
 	 * How should we compute profile ratings for this game?
-	 *
-	 * New style, simpler function.
 	 */
-	newProfileCalcs: GPTNewProfileCalcs<GPT>;
-	profileCalcs: GPTProfileCalculators<GPT>;
-
-	/**
-	 * For any "derived" classes for this game (i.e. classes that are the function
-	 * of the user's state), how should they work?
-	 *
-	 * New style, simpler function.
-	 */
-	newClassDerivers: GPTNewClassDerivers<GPT>;
+	profileCalcs: GPTProfileCalcs<GPT>;
 
 	/**
 	 * For any "derived" classes for this game (i.e. classes that are the function

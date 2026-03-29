@@ -1,4 +1,3 @@
-import type { ClassDeriver } from "#game-implementations/types";
 import type { ExtractedClasses, GPTString, MONGO_UserGameStats } from "tachi-common";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
@@ -7,13 +6,7 @@ export function CalculateDerivedClasses<GPT extends GPTString>(
 	gptString: GPT,
 	profileRatings: MONGO_UserGameStats["ratings"],
 ) {
-	const derivedClasses: Record<string, string> = {};
-
-	for (const [key, fn] of Object.entries(GPT_SERVER_IMPLEMENTATIONS[gptString].classDerivers)) {
-		const deriver = fn as ClassDeriver<GPT, any>;
-
-		derivedClasses[key] = deriver(profileRatings);
-	}
-
-	return derivedClasses as Partial<ExtractedClasses[GPT]>;
+	return GPT_SERVER_IMPLEMENTATIONS[gptString].classDerivers(profileRatings) as Partial<
+		ExtractedClasses[GPT]
+	>;
 }

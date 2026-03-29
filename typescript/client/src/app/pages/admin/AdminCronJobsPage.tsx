@@ -97,7 +97,9 @@ export default function AdminCronJobsPage() {
 						<div className="mb-2">
 							<code className="me-2">{task.id}</code>
 							<code className="text-body-secondary">{task.schedule}</code>
-							{task.description && <p className="small mb-1 mt-1">{task.description}</p>}
+							{task.description && (
+								<p className="small mb-1 mt-1">{task.description}</p>
+							)}
 							<div className="small text-body-secondary d-flex flex-wrap gap-3">
 								<span>
 									Last scheduled:{" "}
@@ -110,7 +112,8 @@ export default function AdminCronJobsPage() {
 						</div>
 
 						<h3 className="h6">
-							Recent executions <span className="badge bg-secondary">{execs.length}</span>
+							Recent executions{" "}
+							<span className="badge bg-secondary">{execs.length}</span>
 						</h3>
 						{execs.length === 0 ? (
 							<p className="small text-body-secondary">No executions yet.</p>
@@ -140,19 +143,25 @@ export default function AdminCronJobsPage() {
 													{exec.completed_at ? (
 														MillisToSince(Date.parse(exec.completed_at))
 													) : (
-														<span className="text-warning">In progress</span>
+														<span className="text-warning">
+															In progress
+														</span>
 													)}
 												</td>
 												<td className="font-monospace small">
 													{durationMs(exec.started_at, exec.completed_at)}
 												</td>
 												<td>
-													<Badge bg={execStatusVariant(exec.status)}>{exec.status}</Badge>
+													<Badge bg={execStatusVariant(exec.status)}>
+														{exec.status}
+													</Badge>
 												</td>
 												<td className="small">
 													{exec.error ? (
 														<details>
-															<summary className="text-danger">Error</summary>
+															<summary className="text-danger">
+																Error
+															</summary>
 															<pre className="small mb-0 mt-1 p-2 bg-danger bg-opacity-10 rounded">
 																{exec.error}
 															</pre>
@@ -165,7 +174,9 @@ export default function AdminCronJobsPage() {
 															</pre>
 														</details>
 													) : (
-														<span className="text-body-secondary">—</span>
+														<span className="text-body-secondary">
+															—
+														</span>
 													)}
 												</td>
 											</tr>

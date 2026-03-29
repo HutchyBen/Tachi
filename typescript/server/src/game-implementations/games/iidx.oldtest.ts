@@ -39,7 +39,8 @@ t.test("IIDX Implementation", (t) => {
 			t.test("Percent", (t) => {
 				const f = (modifant: Partial<typeof baseMetrics>, expected: any, msg: string) =>
 					t.equal(
-						impl.derivers.percent(dmf(baseMetrics, modifant), Testing511SPA as any),
+						impl.scoreDeriver(dmf(baseMetrics, modifant) as any, Testing511SPA as any)
+							.percent,
 						expected,
 						msg,
 					);
@@ -64,10 +65,10 @@ t.test("IIDX Implementation", (t) => {
 			t.test("Grade", (t) => {
 				const f = (percent: number, expected: any) =>
 					t.equal(
-						impl.derivers.grade(
-							dmf(baseMetrics, { score: percentToScore(percent) }),
+						impl.scoreDeriver(
+							dmf(baseMetrics, { score: percentToScore(percent) }) as any,
 							Testing511SPA as any,
-						),
+						).grade,
 						expected,
 						`A percent of ${percent}% should result in grade=${expected}.`,
 					);
@@ -144,15 +145,16 @@ t.test("IIDX Implementation", (t) => {
 					chartData: Partial<ChartDocumentData["iidx:DP" | "iidx:DP"]>,
 					expected: any,
 					msg: string,
-				) =>
-					t.equal(
-						impl.scoreCalcs.BPI(
-							dmf(TestingIIDXSPScore.scoreData, scoreData),
-							dmf(Testing511SPA, { data: chartData as any }) as any,
-						),
+				) => {
+					const sd = dmf(TestingIIDXSPScore.scoreData, scoreData);
+					const ch = dmf(Testing511SPA, { data: chartData as any }) as any;
+
+					return t.equal(
+						impl.scoreCalcs(sd, impl.scoreDeriver(sd, ch), ch).BPI,
 						expected,
 						msg,
 					);
+				};
 
 				f(
 					{ score: 123 },
@@ -190,15 +192,16 @@ t.test("IIDX Implementation", (t) => {
 				chartData: Partial<ChartDocumentData["iidx:SP"]>,
 				expected: any,
 				msg: string,
-			) =>
-				t.equal(
-					IIDX_SP_IMPL.scoreCalcs.ktLampRating(
-						dmf(TestingIIDXSPScore.scoreData, scoreData),
-						dmf(Testing511SPA, { data: chartData as any }),
-					),
+			) => {
+				const sd = dmf(TestingIIDXSPScore.scoreData, scoreData);
+				const ch = dmf(Testing511SPA, { data: chartData as any });
+
+				return t.equal(
+					IIDX_SP_IMPL.scoreCalcs(sd, IIDX_SP_IMPL.scoreDeriver(sd, ch), ch).ktLampRating,
 					expected,
 					msg,
 				);
+			};
 
 			f({ lamp: "FAILED" }, {}, 0, "fails should be worth 0");
 			f({ lamp: "ASSIST CLEAR" }, {}, 0, "ac should be worth 0");
@@ -260,15 +263,16 @@ t.test("IIDX Implementation", (t) => {
 				chartData: Partial<ChartDocumentData["iidx:DP"]>,
 				expected: any,
 				msg: string,
-			) =>
-				t.equal(
-					IIDX_DP_IMPL.scoreCalcs.ktLampRating(
-						dmf(TestingIIDXSPScore.scoreData, scoreData),
-						dmf(Testing511SPA as any, { data: chartData as any }),
-					),
+			) => {
+				const sd = dmf(TestingIIDXSPScore.scoreData, scoreData);
+				const ch = dmf(Testing511SPA as any, { data: chartData as any });
+
+				return t.equal(
+					IIDX_DP_IMPL.scoreCalcs(sd, IIDX_DP_IMPL.scoreDeriver(sd, ch), ch).ktLampRating,
 					expected,
 					msg,
 				);
+			};
 
 			f({ lamp: "FAILED" }, {}, 0, "fails should be worth 0");
 			f({ lamp: "ASSIST CLEAR" }, {}, 0, "ac should be worth 0");

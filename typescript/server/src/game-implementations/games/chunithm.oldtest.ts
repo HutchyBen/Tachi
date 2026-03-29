@@ -42,7 +42,8 @@ t.test("CHUNITHM Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {
 		const f = (score: number, expected: any) =>
 			t.equal(
-				CHUNITHM_IMPL.derivers.grade(dmf(baseMetrics, { score }), CHUNITHMBBKKChart),
+				CHUNITHM_IMPL.scoreDeriver(dmf(baseMetrics, { score }) as any, CHUNITHMBBKKChart)
+					.grade,
 				expected,
 				`A score of ${score.toLocaleString()} should result in grade=${expected}.`,
 			);
@@ -67,7 +68,11 @@ t.test("CHUNITHM Implementation", (t) => {
 
 	t.test("Rating Calc", (t) => {
 		t.equal(
-			CHUNITHM_IMPL.scoreCalcs.rating(scoreData, CHUNITHMBBKKChart),
+			CHUNITHM_IMPL.scoreCalcs(
+				scoreData,
+				CHUNITHM_IMPL.scoreDeriver(scoreData, CHUNITHMBBKKChart),
+				CHUNITHMBBKKChart,
+			).rating,
 			4.3,
 			"Basic rating check",
 		);
@@ -98,7 +103,7 @@ t.test("CHUNITHM Implementation", (t) => {
 		t.test("Floating-point edge case", async (t) => {
 			await mockPBs(Array(50).fill(17.15));
 
-			t.equal(await CHUNITHM_IMPL.profileCalcs.naiveRating("chunithm", "Single", 1), 17.15);
+			t.equal((await CHUNITHM_IMPL.profileCalcs("chunithm", "Single", 1)).naiveRating, 17.15);
 
 			t.end();
 		});
@@ -106,7 +111,7 @@ t.test("CHUNITHM Implementation", (t) => {
 		t.test("Profile with fewer than 50 scores", async (t) => {
 			await mockPBs([16, 16, 16, 16]);
 
-			t.equal(await CHUNITHM_IMPL.profileCalcs.naiveRating("chunithm", "Single", 1), 1.28);
+			t.equal((await CHUNITHM_IMPL.profileCalcs("chunithm", "Single", 1)).naiveRating, 1.28);
 
 			t.end();
 		});
@@ -117,7 +122,7 @@ t.test("CHUNITHM Implementation", (t) => {
 	t.test("Colour Deriver", (t) => {
 		const f = (v: number | null, expected: any) =>
 			t.equal(
-				CHUNITHM_IMPL.classDerivers.colour({ naiveRating: v }),
+				CHUNITHM_IMPL.classDerivers({ naiveRating: v }).colour,
 				expected,
 				`A naiveRating of ${v} should result in ${expected}.`,
 			);

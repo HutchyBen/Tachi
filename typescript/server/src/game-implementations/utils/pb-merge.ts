@@ -1,6 +1,5 @@
 import type { PBMergeFunction } from "#game-implementations/types";
 import type { MONGO_PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
-import type { FilterQuery } from "mongodb";
 import type {
 	ConfDerivedMetrics,
 	ConfOptionalMetrics,
@@ -8,36 +7,41 @@ import type {
 	GPTString,
 	MONGO_ScoreDocument,
 } from "tachi-common";
-import type { ExtractEnumMetricNames } from "tachi-common/types/metrics";
 
-import MONGODB_KILL from "#services/mongo/db";
+import {
+	type ScoreDocumentJoinRow,
+	SELECT_SCORE_DOCUMENT,
+	ToScoreDocument,
+} from "#lib/db-formats/score";
+import DB from "#services/pg/db";
+import { UnixMillisecondsToISO8601 } from "#utils/time.js";
+import { sql } from "kysely";
 
 // insane typemagic to get mongodb-safe names for this GPT's metrics.
-type MetricKeys<GPT extends GPTString> = Exclude<
-	| `enumIndexes.${ExtractEnumMetricNames<ConfDerivedMetrics[GPT] & ConfProvidedMetrics[GPT]>}`
-	| `optional.${keyof ConfOptionalMetrics[GPT] & string}`
-	| `optional.enumIndexes.${ExtractEnumMetricNames<ConfOptionalMetrics[GPT]>}`
-	| keyof ConfDerivedMetrics[GPT]
-	| keyof ConfProvidedMetrics[GPT],
-	// --- exclude these ---
-	// Don't allow bare enums, you should use `enumIndexes.ENUMNAME` instead, as those
-	// can be sorted on.
-	| `optional.${ExtractEnumMetricNames<ConfOptionalMetrics[GPT]>}`
-	| ExtractEnumMetricNames<ConfDerivedMetrics[GPT] & ConfProvidedMetrics[GPT]>
->;
+type MetricKeys<GPT extends GPTString> =
+	| {
+			metric: keyof ConfDerivedMetrics[GPT];
+			type: "DERIVED";
+	  }
+	| {
+			metric: keyof ConfOptionalMetrics[GPT] | keyof ConfProvidedMetrics[GPT];
+			type: "REGULAR";
+	  };
 
-export function HandleAsOf(
-	query: FilterQuery<MONGO_ScoreDocument>,
-	asOfTimestamp: number | null,
-): FilterQuery<MONGO_ScoreDocument> {
-	if (asOfTimestamp === null) {
-		return query;
+function metricSortValueSql<GPT extends GPTString>(metric: MetricKeys<GPT>) {
+	if (metric.type === "DERIVED") {
+		return sql`(score.derived_data::jsonb->>${sql.lit(metric.metric)})::double precision`;
 	}
 
-	return {
-		...query,
-		timeAchieved: { $lt: asOfTimestamp },
-	};
+	return sql`(score.data::jsonb->>${sql.lit(metric.metric)})::double precision`;
+}
+
+function metricIsNumericSql<GPT extends GPTString>(metric: MetricKeys<GPT>) {
+	if (metric.type === "DERIVED") {
+		return sql<boolean>`jsonb_typeof(score.derived_data::jsonb -> ${sql.lit(metric.metric)}) = ${sql.lit("number")}`;
+	}
+
+	return sql<boolean>`jsonb_typeof(score.data::jsonb -> ${sql.lit(metric.metric)}) = ${sql.lit("number")}`;
 }
 
 /**
@@ -45,8 +49,6 @@ export function HandleAsOf(
  * on this chart for the stated metric, then run the applicator if a score was found.
  *
  * @param direction - Whether to pick the largest value or smallest value for this metric.
- *
- * @note Don't worry about updating enumIndexes. Those are updated for you,.
  */
 export function CreatePBMergeFor<GPT extends GPTString>(
 	direction: "largest" | "smallest",
@@ -55,38 +57,45 @@ export function CreatePBMergeFor<GPT extends GPTString>(
 	applicator: (base: MONGO_PBScoreDocumentNoRank<GPT>, score: MONGO_ScoreDocument<GPT>) => void,
 ): PBMergeFunction<GPT> {
 	return async (userID, chartID, asOfTimestamp, base) => {
-		const bestScoreFor = (await MONGODB_KILL.scores.findOne(
-			HandleAsOf(
-				{
-					userID,
-					chartID,
-					[`scoreData.${metric as string}`]: { $type: "number" },
-				},
-				asOfTimestamp,
-			),
-			{
-				sort: {
-					[`scoreData.${metric as string}`]: direction === "largest" ? -1 : 1,
-					// always grab the oldest possible score
-					timeAchieved: 1,
-				},
-			},
-		)) as MONGO_ScoreDocument<GPT> | null;
+		let q = DB.selectFrom("score")
+			.innerJoin("chart", "chart.id", "score.chart_id")
+			.innerJoin("song", "song.id", "chart.song_id")
+			.leftJoin("import", "import.id", "score.import_id")
+			.select(SELECT_SCORE_DOCUMENT)
+			.where("score.user_id", "=", userID)
+			.where("chart.legacy_id", "=", chartID)
+			.where(metricIsNumericSql(metric));
 
-		if (bestScoreFor === null) {
+		if (asOfTimestamp !== null) {
+			q = q.where(
+				sql<boolean>`(score.time_achieved IS NOT NULL AND score.time_achieved < ${UnixMillisecondsToISO8601(asOfTimestamp)})`,
+			);
+		}
+
+		const sortVal = metricSortValueSql(metric);
+
+		const row = await q
+			.orderBy(
+				direction === "largest"
+					? sql`${sortVal} DESC NULLS LAST`
+					: sql`${sortVal} ASC NULLS LAST`,
+			)
+			.orderBy(sql`score.time_achieved ASC NULLS LAST`)
+			.limit(1)
+			.executeTakeFirst();
+
+		if (row === undefined) {
 			return null;
 		}
 
+		const bestScoreFor = ToScoreDocument(
+			row as ScoreDocumentJoinRow,
+		) as unknown as MONGO_ScoreDocument<GPT>;
+
 		applicator(base, bestScoreFor);
 
-		// also gotta apply this
-		// if bestScoreFor is a highlight, base becomes a highlight.
-		// this operator is equivalent to = base.highlight || bestScoreFor.highlight
-		// and now that i've had to write that out
-		// i wonder if it was worth the lack of clarity.
 		base.highlight ||= bestScoreFor.highlight;
 
-		// if this timestamp is newer than the most recent one
 		if (
 			base.timeAchieved !== null &&
 			bestScoreFor.timeAchieved !== null &&

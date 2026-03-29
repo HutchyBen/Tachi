@@ -11,13 +11,10 @@ import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
 export const WACCA_IMPL: GPTServerImplementation<"wacca:Single"> = {
 	chartSpecificValidators: {},
-	derivers: {
-		grade: ({ score }) => GetGrade(WACCA_GBOUNDARIES, score),
-	},
-	newDeriver: (scoreData, _chart) => ({
+	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(WACCA_GBOUNDARIES, scoreData.score),
 	}),
-	newCalcs: (scoreData, _derivedData, chart) => ({
+	scoreCalcs: (scoreData, _derivedData, chart) => ({
 		rate: WACCARate.calculate(scoreData.score, chart.levelNum),
 	}),
 	pbRankingValues: (pb) => ({
@@ -28,16 +25,13 @@ export const WACCA_IMPL: GPTServerImplementation<"wacca:Single"> = {
 		tb4: null,
 		tb5: null,
 	}),
-	scoreCalcs: {
-		rate: (scoreData, chart) => WACCARate.calculate(scoreData.score, chart.levelNum),
-	},
-	newSessionCalcs: (arr) => ({
+	sessionCalcs: (arr) => ({
 		rate: SessionAvgBest10For("rate")(arr),
 	}),
-	newProfileCalcs: async (game, playtype, userID) => ({
+	profileCalcs: async (game, playtype, userID) => ({
 		naiveRate: await ProfileSumBestN("rate", 50)(game, playtype, userID),
 	}),
-	newClassDerivers: (ratings) => {
+	classDerivers: (ratings) => {
 		const rate = ratings.naiveRate;
 
 		if (IsNullish(rate)) {
@@ -63,39 +57,6 @@ export const WACCA_IMPL: GPTServerImplementation<"wacca:Single"> = {
 		}
 
 		return { colour: "ASH" };
-	},
-	sessionCalcs: { rate: SessionAvgBest10For("rate") },
-	profileCalcs: {
-		naiveRate: ProfileSumBestN("rate", 50),
-	},
-	classDerivers: {
-		colour: (ratings) => {
-			const rate = ratings.naiveRate;
-
-			if (IsNullish(rate)) {
-				return null;
-			}
-
-			if (rate >= 2500) {
-				return "RAINBOW";
-			} else if (rate >= 2200) {
-				return "GOLD";
-			} else if (rate >= 1900) {
-				return "SILVER";
-			} else if (rate >= 1600) {
-				return "BLUE";
-			} else if (rate >= 1300) {
-				return "PURPLE";
-			} else if (rate >= 1000) {
-				return "RED";
-			} else if (rate >= 600) {
-				return "YELLOW";
-			} else if (rate >= 300) {
-				return "NAVY";
-			}
-
-			return "ASH";
-		},
 	},
 	goalCriteriaFormatters: {
 		score: GoalFmtScore,

@@ -2,7 +2,12 @@ import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { describe, expect, it } from "vitest";
 
-import { GetAllRankings, GetUsersRankingAndOutOf } from "./user";
+import {
+	GetAllRankings,
+	GetAllUserRivals,
+	GetUsersRanking,
+	GetUsersRankingAndOutOf,
+} from "./user";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -152,6 +157,41 @@ describe("GetUsersRankingAndOutOf", () => {
 
 		// outOf should only count iidx-sp players
 		expect(result).toEqual({ ranking: 1, outOf: 1 });
+	});
+});
+
+describe("GetUsersRanking", () => {
+	it("matches GetUsersRankingAndOutOf().ranking", async () => {
+		const { id } = await seedUser({ username: `gr_${Date.now()}` });
+		await seedGameStats(id, 12);
+
+		const stats = makeStats(id, 12);
+		const r = await GetUsersRanking(stats);
+		const full = await GetUsersRankingAndOutOf(stats);
+
+		expect(r).toBe(full.ranking);
+	});
+});
+
+describe("GetAllUserRivals", () => {
+	it("returns distinct rival ids from game_rival", async () => {
+		const t = Date.now();
+		const { id: me } = await seedUser({ username: `me_${t}` });
+		const { id: rivalA } = await seedUser({ username: `rv_a_${t}` });
+		const { id: rivalB } = await seedUser({ username: `rv_b_${t}` });
+
+		await DB.insertInto("game_rival")
+			.values({ game: "iidx-sp", rival: rivalA, user_id: me })
+			.execute();
+		await DB.insertInto("game_rival")
+			.values({ game: "sdvx", rival: rivalB, user_id: me })
+			.execute();
+		await DB.insertInto("game_rival")
+			.values({ game: "sdvx", rival: rivalA, user_id: me })
+			.execute();
+
+		const rivals = await GetAllUserRivals(me);
+		expect(rivals.sort((a, b) => a - b)).toEqual([rivalA, rivalB].sort((a, b) => a - b));
 	});
 });
 

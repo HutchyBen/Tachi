@@ -1,11 +1,10 @@
 import type {
 	GPTGoalFormatters,
 	GPTGoalProgressFormatters,
-	GPTNewProfileCalcs,
-	GPTNewSessionCalcs,
+	GPTProfileCalcs,
 	GPTServerImplementation,
+	GPTSessionCalcs,
 	PBMergeFunction,
-	ScoreCalculator,
 	ScoreValidator,
 } from "#game-implementations/types";
 
@@ -20,43 +19,18 @@ import {
 	GoalFmtPercent,
 	GoalOutOfFmtPercent,
 	GradeGoalFormatter,
-	IIDXLIKE_DERIVERS,
-	IIDXLIKE_NEW_DERIVER,
 	IIDXLIKE_PB_RANKING_VALUES,
+	IIDXLIKE_SCORE_DERIVER,
 	IIDXLIKE_SCORE_VALIDATORS,
 	IIDXLIKE_VALIDATORS,
 } from "./_common";
 
-const BPICalc: ScoreCalculator<GPTStrings["iidx"]> = (scoreData, chart) => {
-	if (chart.data.kaidenAverage === null || chart.data.worldRecord === null) {
-		return null;
-	}
-
-	return PoyashiBPI.calculate(
-		scoreData.score,
-		chart.data.kaidenAverage,
-		chart.data.worldRecord,
-		chart.data.notecount * 2,
-		chart.data.bpiCoefficient,
-	);
-};
-
-const IIDX_SESSION_CALCS: GPTServerImplementation<"iidx:DP" | "iidx:SP">["sessionCalcs"] = {
-	BPI: SessionAvgBest10For("BPI"),
-	ktLampRating: SessionAvgBest10For("ktLampRating"),
-};
-
-const IIDX_NEW_SESSION_CALCS: GPTNewSessionCalcs<"iidx:DP" | "iidx:SP"> = (arr) => ({
+const IIDX_SESSION_CALCS: GPTSessionCalcs<"iidx:DP" | "iidx:SP"> = (arr) => ({
 	BPI: SessionAvgBest10For("BPI")(arr),
 	ktLampRating: SessionAvgBest10For("ktLampRating")(arr),
 });
 
-const IIDX_PROFILE_CALCS: GPTServerImplementation<"iidx:DP" | "iidx:SP">["profileCalcs"] = {
-	BPI: ProfileAvgBestN("BPI", 20, true),
-	ktLampRating: ProfileAvgBestN("ktLampRating", 20),
-};
-
-const IIDX_NEW_PROFILE_CALCS: GPTNewProfileCalcs<"iidx:DP" | "iidx:SP"> = async (
+const IIDX_PROFILE_CALCS: GPTProfileCalcs<"iidx:DP" | "iidx:SP"> = async (
 	game,
 	playtype,
 	userID,
@@ -135,11 +109,10 @@ const IIDX_GOAL_PG_FMT: GPTGoalProgressFormatters<"iidx:DP" | "iidx:SP"> = {
 };
 
 export const IIDX_SP_IMPL: GPTServerImplementation<"iidx:SP"> = {
-	derivers: IIDXLIKE_DERIVERS,
-	newDeriver: IIDXLIKE_NEW_DERIVER,
+	scoreDeriver: IIDXLIKE_SCORE_DERIVER,
 	chartSpecificValidators: IIDXLIKE_VALIDATORS,
 	pbRankingValues: IIDXLIKE_PB_RANKING_VALUES,
-	newCalcs: (scoreData, _derivedData, chart) => {
+	scoreCalcs: (scoreData, _derivedData, chart) => {
 		const bpi =
 			chart.data.kaidenAverage === null || chart.data.worldRecord === null
 				? null
@@ -180,37 +153,9 @@ export const IIDX_SP_IMPL: GPTServerImplementation<"iidx:SP"> = {
 
 		return { BPI: bpi, ktLampRating };
 	},
-	scoreCalcs: {
-		BPI: BPICalc,
-		ktLampRating: (scoreData, chart) => {
-			// if chart has no ncValue, use the rating of the chart instead.
-			const ncValue = chart.data.ncTier?.value ?? chart.levelNum;
-
-			// if hc < nc, hcValue = ncValue
-			// this means you can't lose score from getting a better clear.
-			// same for exhc < hc.
-			const hcValue = Math.max(chart.data.hcTier?.value ?? 0, ncValue);
-			const exhcValue = Math.max(chart.data.exhcTier?.value ?? 0, hcValue);
-
-			switch (scoreData.lamp) {
-				case "FULL COMBO":
-				case "EX HARD CLEAR":
-					return exhcValue;
-				case "HARD CLEAR":
-					return hcValue;
-				case "CLEAR":
-					return ncValue;
-				default:
-					return 0;
-			}
-		},
-	},
-	newSessionCalcs: IIDX_NEW_SESSION_CALCS,
-	newProfileCalcs: IIDX_NEW_PROFILE_CALCS,
-	newClassDerivers: (_ratings) => ({}),
 	sessionCalcs: IIDX_SESSION_CALCS,
 	profileCalcs: IIDX_PROFILE_CALCS,
-	classDerivers: {},
+	classDerivers: (_ratings) => ({}),
 	goalCriteriaFormatters: IIDX_GOAL_FMT,
 	goalProgressFormatters: IIDX_GOAL_PG_FMT,
 	goalOutOfFormatters: IIDX_GOAL_OO_FMT,
@@ -220,11 +165,10 @@ export const IIDX_SP_IMPL: GPTServerImplementation<"iidx:SP"> = {
 };
 
 export const IIDX_DP_IMPL: GPTServerImplementation<"iidx:DP"> = {
-	derivers: IIDXLIKE_DERIVERS,
-	newDeriver: IIDXLIKE_NEW_DERIVER,
+	scoreDeriver: IIDXLIKE_SCORE_DERIVER,
 	chartSpecificValidators: IIDXLIKE_VALIDATORS,
 	pbRankingValues: IIDXLIKE_PB_RANKING_VALUES,
-	newCalcs: (scoreData, _derivedData, chart) => {
+	scoreCalcs: (scoreData, _derivedData, chart) => {
 		const bpi =
 			chart.data.kaidenAverage === null || chart.data.worldRecord === null
 				? null
@@ -256,30 +200,9 @@ export const IIDX_DP_IMPL: GPTServerImplementation<"iidx:DP"> = {
 
 		return { BPI: bpi, ktLampRating };
 	},
-	scoreCalcs: {
-		BPI: BPICalc,
-		ktLampRating: (scoreData, chart) => {
-			// if chart has no tier, use the rating of the chart instead.
-			const ecValue = chart.data.dpTier?.value ?? chart.levelNum;
-
-			switch (scoreData.lamp) {
-				case "FULL COMBO":
-				case "EX HARD CLEAR":
-				case "HARD CLEAR":
-				case "CLEAR":
-				case "EASY CLEAR":
-					return ecValue;
-				default:
-					return 0;
-			}
-		},
-	},
-	newSessionCalcs: IIDX_NEW_SESSION_CALCS,
-	newProfileCalcs: IIDX_NEW_PROFILE_CALCS,
-	newClassDerivers: (_ratings) => ({}),
 	sessionCalcs: IIDX_SESSION_CALCS,
 	profileCalcs: IIDX_PROFILE_CALCS,
-	classDerivers: {},
+	classDerivers: (_ratings) => ({}),
 	goalCriteriaFormatters: IIDX_GOAL_FMT,
 	goalProgressFormatters: IIDX_GOAL_PG_FMT,
 	goalOutOfFormatters: IIDX_GOAL_OO_FMT,

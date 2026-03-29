@@ -48,9 +48,7 @@ export async function ensureTestCdnBucket() {
 	}
 
 	if (bucket !== "tachi-public") {
-		throw new Error(
-			`TACHI_CDN_SAVE_LOCATION_BUCKET must be "tachi-public"; got "${bucket}".`,
-		);
+		throw new Error(`TACHI_CDN_SAVE_LOCATION_BUCKET must be "tachi-public"; got "${bucket}".`);
 	}
 
 	const client = new S3Client({

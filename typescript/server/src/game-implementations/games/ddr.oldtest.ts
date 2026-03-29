@@ -25,7 +25,8 @@ t.test("DDR Implementation", (t) => {
 		t.test("Grade", (t) => {
 			const f = (score: number, expected: any) =>
 				t.equal(
-					impl.derivers.grade(dmf(baseMetrics, { score }), TestingDDRSP as any),
+					impl.scoreDeriver(dmf(baseMetrics, { score }) as any, TestingDDRSP as any)
+						.grade,
 					expected,
 					`A score of ${score} should result in grade=${expected}.`,
 				);
@@ -57,7 +58,7 @@ t.test("DDR Implementation", (t) => {
 		t.test("Flare", (t) => {
 			const f = (ratings: number, expected: any) =>
 				t.equal(
-					impl.classDerivers.flare({ flareSkill: ratings }),
+					impl.classDerivers({ flareSkill: ratings }).flare,
 					expected,
 					`A flare skill of ${ratings} should result in grade=${expected}.`,
 				);
@@ -119,15 +120,16 @@ t.test("DDR Implementation", (t) => {
 				chartData: Partial<ChartDocumentData["ddr:DP" | "ddr:SP"]>,
 				expected: any,
 				msg: string,
-			) =>
-				t.equal(
-					impl.scoreCalcs.flareSkill(
-						dmf(TestingDDRSPScore.scoreData, scoreData),
-						dmf(TestingDDRSP, { data: chartData as any }) as any,
-					),
+			) => {
+				const sd = dmf(TestingDDRSPScore.scoreData, scoreData);
+				const ch = dmf(TestingDDRSP, { data: chartData as any }) as any;
+
+				return t.equal(
+					impl.scoreCalcs(sd, impl.scoreDeriver(sd, ch), ch).flareSkill,
 					expected,
 					msg,
 				);
+			};
 
 			f(
 				{ grade: "AA", lamp: "CLEAR", optional: { flare: "II", enumIndexes: {} } },

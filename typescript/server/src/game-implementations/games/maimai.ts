@@ -23,22 +23,13 @@ export const MAIMAI_IMPL: GPTServerImplementation<"maimai:Single"> = {
 			return true;
 		},
 	},
-	derivers: {
-		grade: ({ percent }, chart) => {
-			if (percent === chart.data.maxPercent) {
-				return "SSS+";
-			}
-
-			return GetGrade(MAIMAI_GBOUNDARIES, percent);
-		},
-	},
-	newDeriver: (scoreData, chart) => ({
+	scoreDeriver: (scoreData, chart) => ({
 		grade:
 			scoreData.percent === chart.data.maxPercent
 				? "SSS+"
 				: GetGrade(MAIMAI_GBOUNDARIES, scoreData.percent),
 	}),
-	newCalcs: (scoreData, _derivedData, chart) => ({
+	scoreCalcs: (scoreData, _derivedData, chart) => ({
 		rate: MaimaiRate.calculate(scoreData.percent, chart.data.maxPercent, chart.levelNum),
 	}),
 	pbRankingValues: (pb) => ({
@@ -49,17 +40,13 @@ export const MAIMAI_IMPL: GPTServerImplementation<"maimai:Single"> = {
 		tb4: null,
 		tb5: null,
 	}),
-	scoreCalcs: {
-		rate: (scoreData, chart) =>
-			MaimaiRate.calculate(scoreData.percent, chart.data.maxPercent, chart.levelNum),
-	},
-	newSessionCalcs: (arr) => ({
+	sessionCalcs: (arr) => ({
 		rate: SessionAvgBest10For("rate")(arr),
 	}),
-	newProfileCalcs: async (game, playtype, userID) => ({
+	profileCalcs: async (game, playtype, userID) => ({
 		naiveRate: await ProfileAvgBestN("rate", 30)(game, playtype, userID),
 	}),
-	newClassDerivers: (ratings) => {
+	classDerivers: (ratings) => {
 		const rate = ratings.naiveRate;
 
 		if (IsNullish(rate)) {
@@ -87,41 +74,6 @@ export const MAIMAI_IMPL: GPTServerImplementation<"maimai:Single"> = {
 		}
 
 		return { colour: "WHITE" };
-	},
-	sessionCalcs: { rate: SessionAvgBest10For("rate") },
-	profileCalcs: {
-		naiveRate: ProfileAvgBestN("rate", 30),
-	},
-	classDerivers: {
-		colour: (ratings) => {
-			const rate = ratings.naiveRate;
-
-			if (IsNullish(rate)) {
-				return null;
-			}
-
-			if (rate >= 15) {
-				return "RAINBOW";
-			} else if (rate >= 14.5) {
-				return "GOLD";
-			} else if (rate >= 14) {
-				return "SILVER";
-			} else if (rate >= 13) {
-				return "BRONZE";
-			} else if (rate >= 12) {
-				return "PURPLE";
-			} else if (rate >= 10) {
-				return "RED";
-			} else if (rate >= 7) {
-				return "YELLOW";
-			} else if (rate >= 4) {
-				return "GREEN";
-			} else if (rate >= 2) {
-				return "BLUE";
-			}
-
-			return "WHITE";
-		},
 	},
 	goalCriteriaFormatters: {
 		percent: GoalFmtPercent,

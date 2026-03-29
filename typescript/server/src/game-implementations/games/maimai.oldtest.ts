@@ -58,7 +58,8 @@ t.test("maimai Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {
 		const f = (percent: number, expected: string) =>
 			t.equal(
-				MAIMAI_IMPL.derivers.grade(dmf(baseMetrics, { percent }), TestingMaimaiChart),
+				MAIMAI_IMPL.scoreDeriver(dmf(baseMetrics, { percent }) as any, TestingMaimaiChart)
+					.grade,
 				expected,
 				`A percent of ${percent} should result in grade=${expected}.`,
 			);
@@ -83,7 +84,11 @@ t.test("maimai Implementation", (t) => {
 
 	t.test("Score Calcs", (t) => {
 		t.equal(
-			MAIMAI_IMPL.scoreCalcs.rate(scoreData, TestingMaimaiChart),
+			MAIMAI_IMPL.scoreCalcs(
+				scoreData,
+				MAIMAI_IMPL.scoreDeriver(scoreData, TestingMaimaiChart),
+				TestingMaimaiChart,
+			).rate,
 			14.85,
 			"Basic rate check",
 		);
@@ -97,7 +102,7 @@ t.test("maimai Implementation", (t) => {
 	t.test("Colour Deriver", (t) => {
 		const f = (v: number | null, expected: string | null) =>
 			t.equal(
-				MAIMAI_IMPL.classDerivers.colour({ naiveRate: v }),
+				MAIMAI_IMPL.classDerivers({ naiveRate: v }).colour,
 				expected,
 				`A rate of ${v} should result in ${expected}.`,
 			);

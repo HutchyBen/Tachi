@@ -46,7 +46,10 @@ for (const [playtype, impl] of [
 		t.test("Grade Deriver", (t) => {
 			const f = (percent: number, expected: any) =>
 				t.equal(
-					impl.derivers.grade(dmf(baseMetrics, { percent }), TestingGitadoraChart as any),
+					impl.scoreDeriver(
+						dmf(baseMetrics, { percent }) as any,
+						TestingGitadoraChart as any,
+					).grade,
 					expected,
 					`A percent of ${percent}% should result in grade=${expected}.`,
 				);
@@ -75,12 +78,16 @@ for (const [playtype, impl] of [
 				modifant: Partial<ScoreData<GPTStrings["gitadora"]>>,
 				expected: any,
 				msg: string,
-			) =>
-				t.equal(
-					impl.scoreCalcs.skill(dmf(scoreData, modifant), TestingGitadoraChart as any),
+			) => {
+				const sd = dmf(scoreData, modifant);
+				const ch = TestingGitadoraChart as any;
+
+				return t.equal(
+					impl.scoreCalcs(sd, impl.scoreDeriver(sd, ch), ch).skill,
 					expected,
 					msg,
 				);
+			};
 
 			f({ percent: 76.57 }, 72.74, "Basic Skill Check");
 
@@ -92,7 +99,7 @@ for (const [playtype, impl] of [
 		t.test("Colour Class", (t) => {
 			const f = (v: number | null, expected: any) =>
 				t.equal(
-					impl.classDerivers.colour({ naiveSkill: v }),
+					impl.classDerivers({ naiveSkill: v }).colour,
 					expected,
 					`A skill level of ${v} should result in ${expected}.`,
 				);

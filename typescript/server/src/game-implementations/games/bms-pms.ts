@@ -1,23 +1,19 @@
 import type { GPTServerImplementation, PBMergeFunction } from "#game-implementations/types";
 
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
-import { ProfileAvgBestN } from "#game-implementations/utils/profile-calc";
-import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
 import { type GPTStrings, IIDXLIKE_GBOUNDARIES } from "tachi-common";
 
 import {
 	GoalFmtPercent,
 	GoalOutOfFmtPercent,
 	GradeGoalFormatter,
-	IIDXLIKE_DERIVERS,
-	IIDXLIKE_NEW_DERIVER,
 	IIDXLIKE_PB_RANKING_VALUES,
+	IIDXLIKE_SCORE_DERIVER,
 	IIDXLIKE_SCORE_VALIDATORS,
 	IIDXLIKE_VALIDATORS,
-	SGL_NEW_CALCS,
-	SGL_NEW_PROFILE_CALCS,
-	SGL_NEW_SESSION_CALCS,
-	SGLCalc,
+	SGL_PROFILE_CALCS,
+	SGL_SCORE_CALCS,
+	SGL_SESSION_CALCS,
 } from "./_common";
 
 const BMS_PMS_MERGERS: Array<PBMergeFunction<GPTStrings["bms" | "pms"]>> = [
@@ -41,18 +37,13 @@ const BMS_PMS_MERGERS: Array<PBMergeFunction<GPTStrings["bms" | "pms"]>> = [
 // implementations. Nice.
 
 const BMS_IMPL: GPTServerImplementation<GPTStrings["bms" | "pms"]> = {
-	derivers: IIDXLIKE_DERIVERS,
-	newDeriver: IIDXLIKE_NEW_DERIVER,
-	newCalcs: SGL_NEW_CALCS,
-	newSessionCalcs: SGL_NEW_SESSION_CALCS,
-	newProfileCalcs: SGL_NEW_PROFILE_CALCS,
-	newClassDerivers: (_ratings) => ({}),
+	scoreDeriver: IIDXLIKE_SCORE_DERIVER,
+	scoreCalcs: SGL_SCORE_CALCS,
+	sessionCalcs: SGL_SESSION_CALCS,
+	profileCalcs: SGL_PROFILE_CALCS,
+	classDerivers: (_ratings) => ({}),
 	chartSpecificValidators: IIDXLIKE_VALIDATORS,
 	pbRankingValues: IIDXLIKE_PB_RANKING_VALUES,
-	scoreCalcs: { sieglinde: SGLCalc },
-	sessionCalcs: { sieglinde: SessionAvgBest10For("sieglinde") },
-	profileCalcs: { sieglinde: ProfileAvgBestN("sieglinde", 20) },
-	classDerivers: {},
 	goalCriteriaFormatters: {
 		percent: GoalFmtPercent,
 		score: (v) => `Get a score of ${v} on`,

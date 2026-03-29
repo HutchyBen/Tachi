@@ -2,7 +2,6 @@ import { ONE_DAY } from "#lib/constants/time";
 import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user";
 import { SELECT_USER_SETTINGS, ToUserSettingsDocument } from "#lib/db-formats/user-settings";
 import { log } from "#lib/log/log";
-import MONGODB_KILL from "#services/mongo/db";
 import DB from "#services/pg/db";
 import { ISO8601ToUnixMilliseconds } from "#utils/time";
 import { type Kysely, sql, type Transaction } from "kysely";
@@ -161,37 +160,8 @@ export function FormatUserDoc(userdoc: MONGO_UserDocument) {
 }
 
 export async function GetUsersRanking(stats: MONGO_UserGameStats) {
-	const gptConfig = GetGamePTConfig(stats.game, stats.playtype);
-
-	const aggRes: [{ _id: null; ranking: integer }] = await MONGODB_KILL["game-stats"].aggregate([
-		{
-			$match: {
-				game: stats.game,
-				playtype: stats.playtype,
-			},
-		},
-		{
-			$group: {
-				_id: null,
-				ranking: {
-					$sum: {
-						$cond: {
-							if: {
-								$gt: [
-									`$ratings.${gptConfig.defaultProfileRatingAlg}`,
-									stats.ratings[gptConfig.defaultProfileRatingAlg],
-								],
-							},
-							then: 1,
-							else: 0,
-						},
-					},
-				},
-			},
-		},
-	]);
-
-	return aggRes[0].ranking + 1;
+	const { ranking } = await GetUsersRankingAndOutOf(stats);
+	return ranking;
 }
 
 export function GetUGPTPlaycount(userID: integer, game: GameGroup, playtype: Playtype) {
@@ -309,13 +279,12 @@ export async function GetUserPlayedGPTs(userID: integer) {
 }
 
 export async function GetAllUserRivals(userID: integer) {
-	const rivals = (
-		await MONGODB_KILL["game-settings"].find({ userID }, { projection: { rivals: 1 } })
-	)
-		.map((e) => e.rivals)
-		.flat();
+	const rows = await DB.selectFrom("game_rival")
+		.select("rival")
+		.where("user_id", "=", userID)
+		.execute();
 
-	return rivals;
+	return [...new Set(rows.map((r) => r.rival))];
 }
 
 const USERNAME_CHANGE_COOLDOWN = ONE_DAY * 180; // 6 months

@@ -49,7 +49,8 @@ t.test("SDVX Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {
 		const f = (score: number, expected: any) =>
 			t.equal(
-				SDVX_IMPL.derivers.grade(dmf(baseMetrics, { score }), TestingSDVXAlbidaChart),
+				SDVX_IMPL.scoreDeriver(dmf(baseMetrics, { score }) as any, TestingSDVXAlbidaChart)
+					.grade,
 				expected,
 				`A score of ${score.toLocaleString()} should result in grade=${expected}.`,
 			);
@@ -72,7 +73,7 @@ t.test("SDVX Implementation", (t) => {
 	t.test("VF Class Deriver", (t) => {
 		const f = (v: number | null, expected: any) =>
 			t.equal(
-				SDVX_IMPL.classDerivers.vfClass({ VF6: v }),
+				SDVX_IMPL.classDerivers({ VF6: v }).vfClass,
 				expected,
 				`A profile VF6 of ${v} should result in ${expected}.`,
 			);

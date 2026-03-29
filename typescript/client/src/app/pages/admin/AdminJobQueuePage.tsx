@@ -38,7 +38,10 @@ function PayloadCell({ payload }: { payload: unknown }) {
 	return (
 		<details>
 			<summary className="small text-body-secondary">View payload</summary>
-			<pre className="small mb-0 mt-1 p-2 bg-body-secondary rounded" style={{ maxWidth: "28rem" }}>
+			<pre
+				className="small mb-0 mt-1 p-2 bg-body-secondary rounded"
+				style={{ maxWidth: "28rem" }}
+			>
 				{json}
 			</pre>
 		</details>
@@ -115,8 +118,7 @@ export default function AdminJobQueuePage() {
 			{activeJobs.length > 0 && (
 				<section>
 					<h2 className="h5">
-						Active jobs{" "}
-						<span className="badge bg-primary">{activeJobs.length}</span>
+						Active jobs <span className="badge bg-primary">{activeJobs.length}</span>
 					</h2>
 					<div className="table-responsive">
 						<Table hover size="sm" striped>
@@ -144,10 +146,14 @@ export default function AdminJobQueuePage() {
 
 			<section>
 				<h2 className="h5">
-					All jobs <span className="badge bg-secondary">{jobQueue.total.toLocaleString()}</span>
+					All jobs{" "}
+					<span className="badge bg-secondary">{jobQueue.total.toLocaleString()}</span>
 				</h2>
 
-				<Form className="d-flex flex-wrap align-items-end gap-3 mb-3" onSubmit={onFilterSubmit}>
+				<Form
+					className="d-flex flex-wrap align-items-end gap-3 mb-3"
+					onSubmit={onFilterSubmit}
+				>
 					<Form.Group>
 						<Form.Label className="small mb-0">Status</Form.Label>
 						<Form.Select
@@ -223,7 +229,10 @@ export default function AdminJobQueuePage() {
 				{totalPages > 1 && (
 					<div className="d-flex align-items-center gap-3 mt-2">
 						{currentPage > 0 && (
-							<Link className="btn btn-sm btn-outline-primary" to={buildPageUrl(currentPage - 1)}>
+							<Link
+								className="btn btn-sm btn-outline-primary"
+								to={buildPageUrl(currentPage - 1)}
+							>
 								← Prev
 							</Link>
 						)}
@@ -231,7 +240,10 @@ export default function AdminJobQueuePage() {
 							Page {currentPage + 1} of {totalPages}
 						</span>
 						{currentPage < totalPages - 1 && (
-							<Link className="btn btn-sm btn-outline-primary" to={buildPageUrl(currentPage + 1)}>
+							<Link
+								className="btn btn-sm btn-outline-primary"
+								to={buildPageUrl(currentPage + 1)}
+							>
 								Next →
 							</Link>
 						)}

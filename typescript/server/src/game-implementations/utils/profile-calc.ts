@@ -1,13 +1,15 @@
-import type {
-	GameGroup,
-	GPTString,
-	integer,
-	MONGO_PBScoreDocument,
-	Playtype,
-	ScoreRatingAlgorithms,
+import { type PbDocumentJoinRow, ToPbScoreDocument } from "#lib/db-formats/pb";
+import DB from "#services/pg/db";
+import { sql } from "kysely";
+import {
+	type GameGroup,
+	GamePTToV3,
+	type GPTString,
+	type integer,
+	type MONGO_PBScoreDocument,
+	type Playtype,
+	type ScoreRatingAlgorithms,
 } from "tachi-common";
-
-import MONGODB_KILL from "#services/mongo/db";
 
 /**
  * Curries a function that returns the sum of N best ratings on `key`.
@@ -29,33 +31,40 @@ function CalcN<GPT extends GPTString>(
 	multiplier = 1,
 ) {
 	return async (game: GameGroup, playtype: Playtype, userID: integer) => {
-		const sc = await MONGODB_KILL["personal-bests"].find(
-			{
-				game,
-				playtype,
-				userID,
-				isPrimary: true,
-				[`calculatedData.${key}`]: { $type: "number" },
-			},
-			{
-				limit: n,
-				sort: { [`calculatedData.${key}`]: -1 },
-			},
-		);
+		const v3Game = GamePTToV3(game, playtype);
 
-		if (sc.length === 0) {
+		const rows = await DB.selectFrom("pb")
+			.innerJoin("chart", "chart.id", "pb.chart_id")
+			.select("pb.calculated_data")
+			.where("pb.user_id", "=", userID)
+			.where("chart.game", "=", v3Game)
+			.where("chart.is_primary", "=", true)
+			.where((eb) =>
+				eb(
+					sql`jsonb_typeof(pb.calculated_data::jsonb -> ${sql.lit(key)})`,
+					"=",
+					sql`'number'`,
+				),
+			)
+			.orderBy(sql`(pb.calculated_data::jsonb->>${sql.lit(key)})::double precision`, "desc")
+			.limit(n)
+			.execute();
+
+		if (rows.length === 0) {
 			return null;
 		}
 
-		if (nullIfNotEnoughScores && sc.length < n) {
+		if (nullIfNotEnoughScores && rows.length < n) {
 			return null;
 		}
+
+		const sc = rows.map((r) => {
+			const cd = r.calculated_data as Record<string, number | null | undefined>;
+			return cd[key]!;
+		});
 
 		if (multiplier !== 1) {
-			const result = sc.reduce(
-				(a, e) => a + Math.round((e.calculatedData[key] ?? 0) * multiplier),
-				0,
-			);
+			const result = sc.reduce((a, e) => a + Math.round((e ?? 0) * multiplier), 0);
 
 			if (returnMean) {
 				return Math.floor(result / n) / multiplier;
@@ -64,7 +73,7 @@ function CalcN<GPT extends GPTString>(
 			return result / multiplier;
 		}
 
-		let result = sc.reduce((a, e) => a + e.calculatedData[key]!, 0);
+		let result = sc.reduce((a, e) => a + e, 0);
 
 		if (returnMean) {
 			result = result / n;
@@ -100,40 +109,53 @@ export async function GetBestRatingOnSongs(
 	ratingProp: "skill",
 	limit: integer,
 ): Promise<Array<MONGO_PBScoreDocument>> {
-	const r: Array<{ doc: MONGO_PBScoreDocument }> = await MONGODB_KILL["personal-bests"].aggregate(
-		[
-			{
-				$match: {
-					game,
-					playtype,
-					userID,
-					songID: { $in: songIDs },
-				},
-			},
-			{
-				$sort: {
-					[`calculatedData.${ratingProp}`]: -1,
-				},
-			},
-			{
-				$group: {
-					_id: "$songID",
-					doc: { $first: "$$ROOT" },
-				},
-			},
+	if (songIDs.length === 0) {
+		return [];
+	}
 
-			// for some godforsaken reason you have to sort twice. after a grouping
-			// the sort order becomes nondeterministic
-			{
-				$sort: {
-					[`doc.calculatedData.${ratingProp}`]: -1,
-				},
-			},
-			{
-				$limit: limit,
-			},
-		],
-	);
+	const v3Game = GamePTToV3(game, playtype);
 
-	return r.map((e) => e.doc);
+	const rows = await sql<PbDocumentJoinRow>`
+		WITH filtered AS (
+			SELECT pb.row_id,
+				row_number() OVER (
+					PARTITION BY chart.song_id
+					ORDER BY (pb.calculated_data::jsonb->>${sql.lit(ratingProp)})::double precision DESC NULLS LAST
+				) AS rn
+			FROM pb
+			INNER JOIN chart ON chart.id = pb.chart_id
+			INNER JOIN song ON song.id = chart.song_id
+			WHERE pb.user_id = ${userID}
+				AND chart.game = ${v3Game}
+				AND song.legacy_id in (${sql.join(songIDs)})
+		)
+		SELECT
+			pb.row_id,
+			pb.user_id,
+			pb.chart_id,
+			pb.lens,
+			pb.data,
+			pb.derived_data,
+			pb.calculated_data,
+			pb.ranking_value,
+			pb.ranking_value_tb1,
+			pb.ranking_value_tb2,
+			pb.ranking_value_tb3,
+			pb.ranking_value_tb4,
+			pb.ranking_value_tb5,
+			pb.highlight,
+			pb.time_achieved,
+			chart.legacy_id as chart_legacy_id,
+			song.legacy_id as song_legacy_id,
+			chart.game as chart_game,
+			chart.is_primary as is_primary
+		FROM pb
+		INNER JOIN chart ON chart.id = pb.chart_id
+		INNER JOIN song ON song.id = chart.song_id
+		INNER JOIN filtered f ON f.row_id = pb.row_id AND f.rn = 1
+		ORDER BY (pb.calculated_data::jsonb->>${sql.lit(ratingProp)})::double precision DESC NULLS LAST
+		LIMIT ${limit}
+	`.execute(DB);
+
+	return Promise.all(rows.rows.map((row) => ToPbScoreDocument(row)));
 }

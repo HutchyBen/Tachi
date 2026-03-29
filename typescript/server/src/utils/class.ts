@@ -1,7 +1,7 @@
 import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
 import { log } from "#lib/log/log";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import {
 	type Classes,
 	type GameGroup,
@@ -11,7 +11,41 @@ import {
 	type integer,
 	type MONGO_UserGameStats,
 	type Playtype,
+	GamePTToV3,
 } from "tachi-common";
+
+function parseProfileJson<T>(v: unknown): T {
+	if (typeof v === "string") {
+		return JSON.parse(v) as T;
+	}
+
+	return v as T;
+}
+
+async function loadUserGameStats(
+	userID: integer,
+	game: GameGroup,
+	playtype: Playtype,
+): Promise<MONGO_UserGameStats | null> {
+	const v3Game = GamePTToV3(game, playtype);
+	const row = await DB.selectFrom("game_profile")
+		.select(["ratings", "classes"])
+		.where("user_id", "=", userID)
+		.where("game", "=", v3Game)
+		.executeTakeFirst();
+
+	if (!row) {
+		return null;
+	}
+
+	return {
+		userID,
+		game,
+		playtype,
+		ratings: parseProfileJson(row.ratings),
+		classes: parseProfileJson(row.classes),
+	};
+}
 
 /**
  * Returns the provided class if it is greater than the one in userGameStats
@@ -100,8 +134,9 @@ export async function UpdateClassIfGreater(
 	classVal: string,
 ) {
 	const gptString = GetGPTString(game, playtype);
+	const v3Game = GamePTToV3(game, playtype);
 
-	const userGameStats = await MONGODB_KILL["game-stats"].findOne({ userID, game, playtype });
+	const userGameStats = await loadUserGameStats(userID, game, playtype);
 	const isGreater = ReturnClassIfGreater(gptString, classSet, classVal, userGameStats);
 
 	if (isGreater === false) {
@@ -109,37 +144,46 @@ export async function UpdateClassIfGreater(
 	}
 
 	if (userGameStats) {
-		await MONGODB_KILL["game-stats"].update(
-			{ userID, game, playtype },
-			{ $set: { [`classes.${classSet}`]: classVal } },
-		);
+		const nextClasses = {
+			...userGameStats.classes,
+			[classSet]: classVal,
+		};
+
+		await DB.updateTable("game_profile")
+			.set({ classes: JSON.stringify(nextClasses) })
+			.where("user_id", "=", userID)
+			.where("game", "=", v3Game)
+			.execute();
 	} else {
-		// insert new game stats for this user - this is an awkward place
-		// to call this - maybe we should call it elsewhere.
-		await MONGODB_KILL["game-stats"].insert({
-			userID,
-			game,
-			playtype,
-			ratings: {},
-			classes: {
-				[classSet]: classVal,
-			},
-		});
+		await DB.insertInto("game_profile")
+			.values({
+				classes: JSON.stringify({ [classSet]: classVal }),
+				game: v3Game,
+				ratings: JSON.stringify({}),
+				user_id: userID,
+			})
+			.execute();
 
 		log.info(`Created new player gamestats for ${userID} (${game} ${playtype})`);
 
 		await CreateGameSettings(userID, game, playtype);
 	}
 
-	await MONGODB_KILL["class-achievements"].insert({
-		game,
-		playtype,
-		userID,
-		classOldValue: isGreater === null ? null : userGameStats!.classes[classSet]!,
-		classSet,
-		classValue: classVal,
-		timeAchieved: Date.now(),
-	});
+	const prevForAchievement =
+		isGreater === null
+			? ""
+			: String(userGameStats?.classes[classSet as keyof typeof userGameStats.classes] ?? "");
+
+	await DB.insertInto("class_achievement")
+		.values({
+			class_prev_value: prevForAchievement,
+			class_set: classSet,
+			class_value: classVal,
+			game: v3Game,
+			timestamp: new Date().toISOString(),
+			user_id: userID,
+		})
+		.execute();
 
 	if (isGreater === null) {
 		void EmitWebhookEvent({

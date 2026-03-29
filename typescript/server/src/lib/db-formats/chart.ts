@@ -4,6 +4,7 @@ import DB from "#services/pg/db";
 import { type Selection, sql, type SqlBool } from "kysely";
 import {
 	type Difficulties,
+	type GameGroup,
 	type GPTString,
 	type MONGO_ChartDocument,
 	type MONGO_ChartDocumentData,
@@ -98,4 +99,26 @@ export async function GetChartByPgIdOrLegacyId(
 	}
 
 	return ToChartDocument(chartRow, songRow.legacy_id);
+}
+
+/** Loads charts for a game by canonical `chart.id` and/or legacy `chart.legacy_id` keys (score/PB `chartID`). */
+export async function GetChartsByLegacyIds(
+	game: GameGroup,
+	chartKeys: Array<string>,
+): Promise<Array<MONGO_ChartDocument>> {
+	if (chartKeys.length === 0) {
+		return [];
+	}
+
+	const unique = [...new Set(chartKeys)];
+
+	const rows = await DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_CHART)
+		.select("song.legacy_id as song_legacy_id")
+		.where("song.game_group", "=", game)
+		.where((eb) => eb.or([eb("chart.id", "in", unique), eb("chart.legacy_id", "in", unique)]))
+		.execute();
+
+	return rows.map((r) => ToChartDocument(r, r.song_legacy_id));
 }

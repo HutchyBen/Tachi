@@ -1,8 +1,17 @@
-import type { Classes, GameGroup, GPTString, integer, Playtype } from "tachi-common";
+import type { Game } from "tachi-db";
 
 import { ONE_HOUR } from "#lib/constants/time";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
+import { sql } from "kysely";
 import NodeCache from "node-cache";
+import {
+	type Classes,
+	type GameGroup,
+	GamePTToV3,
+	type GPTString,
+	type integer,
+	type Playtype,
+} from "tachi-common";
 
 const classDistCache = new NodeCache();
 
@@ -15,26 +24,19 @@ export async function GetClassDistribution(
 	const cache = classDistCache.get<Record<string, integer>>(cacheKey);
 
 	if (!cache) {
-		const distribution: Array<{
-			_id: string;
-			count: integer;
-		}> = await MONGODB_KILL["game-stats"].aggregate([
-			{
-				$match: {
-					game,
-					playtype,
-				},
-			},
-			{
-				$group: {
-					_id: `$classes.${className}`,
-					count: { $sum: 1 },
-				},
-			},
-		]);
+		const v3Game = GamePTToV3(game, playtype) as Game;
 
-		// Converts {_id: "kaiden", count: 3} to {"kaiden": 3}, more or less.
-		const convert = Object.fromEntries(distribution.map((e) => [e._id, e.count]));
+		const rows = await sql<{ cls: string | null; count: number }>`
+			SELECT jsonb_extract_path_text(game_profile.classes::jsonb, ${sql.lit(className)}) AS cls,
+				count(*)::int AS count
+			FROM game_profile
+			WHERE game_profile.game = ${v3Game}
+			GROUP BY jsonb_extract_path_text(game_profile.classes::jsonb, ${sql.lit(className)})
+		`.execute(DB);
+
+		const convert = Object.fromEntries(
+			rows.rows.map((e) => [e.cls ?? "null", e.count]),
+		) as Record<string, integer>;
 
 		classDistCache.set(cacheKey, convert, ONE_HOUR);
 

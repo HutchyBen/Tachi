@@ -14,4 +14,5 @@ defnew fj="git status"
 defnew gaa="git add :/"
 defnew gca="git commit --amend"
 defnew gcaa="git commit --amend --all"
+defnew gst="git status" # are we in two kay?
 defnew rr="exec fish"

@@ -46,10 +46,7 @@ describe("cdn (S3 integration)", () => {
 	it("handles concurrent writes to different keys", async () => {
 		const a = testKey("concurrent-a.txt");
 		const b = testKey("concurrent-b.txt");
-		await Promise.all([
-			CDNStoreOrOverwrite(a, "alpha"),
-			CDNStoreOrOverwrite(b, "beta"),
-		]);
+		await Promise.all([CDNStoreOrOverwrite(a, "alpha"), CDNStoreOrOverwrite(b, "beta")]);
 		expect((await CDNRetrieve(a)).toString("utf8")).toBe("alpha");
 		expect((await CDNRetrieve(b)).toString("utf8")).toBe("beta");
 		await CDNDelete(a);

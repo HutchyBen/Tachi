@@ -19,9 +19,7 @@ export default function AdminOperationsPage() {
 
 	const [supporterUser, setSupporterUser] = useState("");
 
-	const announcementGameConfig = announcementGame
-		? GetGameGroupConfig(announcementGame)
-		: null;
+	const announcementGameConfig = announcementGame ? GetGameGroupConfig(announcementGame) : null;
 
 	return (
 		<Row className="g-4">
@@ -74,7 +72,9 @@ export default function AdminOperationsPage() {
 						<Button
 							disabled={!announcementTitle.trim()}
 							onClick={() => {
-								const body: Record<string, unknown> = { title: announcementTitle.trim() };
+								const body: Record<string, unknown> = {
+									title: announcementTitle.trim(),
+								};
 								if (announcementGame) {
 									body.game = announcementGame;
 								}
@@ -190,7 +190,8 @@ export default function AdminOperationsPage() {
 					<Card.Header>Reprocess all goals</Card.Header>
 					<Card.Body>
 						<p className="text-body-secondary small">
-							Re-runs goal and quest processing for every user game profile. Heavy operation.
+							Re-runs goal and quest processing for every user game profile. Heavy
+							operation.
 						</p>
 						<Button
 							onClick={() =>

@@ -23,13 +23,10 @@ export const ARCAEA_IMPL: GPTServerImplementation<GPTStrings["arcaea"]> = {
 			return true;
 		},
 	},
-	derivers: {
-		grade: ({ score }) => GetGrade(ARCAEA_GBOUNDARIES, score),
-	},
-	newDeriver: (scoreData, _chart) => ({
+	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(ARCAEA_GBOUNDARIES, scoreData.score),
 	}),
-	newCalcs: (scoreData, _derivedData, chart) => ({
+	scoreCalcs: (scoreData, _derivedData, chart) => ({
 		potential: Potential.calculate(scoreData.score, chart.levelNum),
 	}),
 	pbRankingValues: (pb) => ({
@@ -40,16 +37,13 @@ export const ARCAEA_IMPL: GPTServerImplementation<GPTStrings["arcaea"]> = {
 		tb4: null,
 		tb5: null,
 	}),
-	scoreCalcs: {
-		potential: (scoreData, chart) => Potential.calculate(scoreData.score, chart.levelNum),
-	},
-	newSessionCalcs: (arr) => ({
+	sessionCalcs: (arr) => ({
 		naivePotential: SessionAvgBest10For("potential")(arr),
 	}),
-	newProfileCalcs: async (game, playtype, userID) => ({
+	profileCalcs: async (game, playtype, userID) => ({
 		naivePotential: await ProfileAvgBestN("potential", 30)(game, playtype, userID),
 	}),
-	newClassDerivers: (ratings) => {
+	classDerivers: (ratings) => {
 		const potential = ratings.naivePotential;
 
 		if (IsNullish(potential)) {
@@ -73,39 +67,6 @@ export const ARCAEA_IMPL: GPTServerImplementation<GPTStrings["arcaea"]> = {
 		}
 
 		return { badge: "BLUE" };
-	},
-	sessionCalcs: {
-		naivePotential: SessionAvgBest10For("potential"),
-	},
-	profileCalcs: {
-		naivePotential: ProfileAvgBestN("potential", 30),
-	},
-	classDerivers: {
-		badge: (ratings) => {
-			const potential = ratings.naivePotential;
-
-			if (IsNullish(potential)) {
-				return null;
-			}
-
-			if (potential >= 13.0) {
-				return "THREE_STARS";
-			} else if (potential >= 12.5) {
-				return "TWO_STARS";
-			} else if (potential >= 12.0) {
-				return "ONE_STAR";
-			} else if (potential >= 11.0) {
-				return "RED";
-			} else if (potential >= 10.0) {
-				return "PURPLE";
-			} else if (potential >= 7.0) {
-				return "ASH_PURPLE";
-			} else if (potential >= 3.5) {
-				return "GREEN";
-			}
-
-			return "BLUE";
-		},
 	},
 	goalCriteriaFormatters: {
 		score: GoalFmtScore,

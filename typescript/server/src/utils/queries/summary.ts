@@ -1,75 +1,122 @@
 import type { integer } from "tachi-common";
+import type { Game } from "tachi-db";
 
-import MONGODB_KILL from "#services/mongo/db";
+import { SELECT_FOLDER, ToFolderDocument } from "#lib/db-formats/folders.js";
+import { SELECT_SESSION_DOCUMENT, ToSessionDocument } from "#lib/db-formats/session";
+import { ToGoalDocument, ToGoalSubscriptionDocument } from "#lib/db-formats/target-documents";
+import DB from "#services/pg/db";
 import { GetEnumDistForFolders } from "#utils/folder";
 import { GetTimeXHoursAgo } from "#utils/misc";
+import { UnixMillisecondsToISO8601 } from "#utils/time";
+import { sql } from "kysely";
 
-// Various utils related to the player summary endpoint.
 const REASONABLE_HOURS_AGO = 16;
 
-export function GetRecentPlaycount(userID: integer) {
+export async function GetRecentPlaycount(userID: integer) {
 	const time = GetTimeXHoursAgo(REASONABLE_HOURS_AGO);
 
-	return MONGODB_KILL.scores.count({ userID, timeAchieved: { $gte: time } });
+	const row = await DB.selectFrom("score")
+		.select(sql<number>`count(*)::int`.as("c"))
+		.where("user_id", "=", userID)
+		.where("time_achieved", ">=", UnixMillisecondsToISO8601(time))
+		.executeTakeFirst();
+
+	return Number(row?.c ?? 0);
 }
 
-export function GetRecentSessions(userID: integer) {
+export async function GetRecentSessions(userID: integer) {
 	const time = GetTimeXHoursAgo(REASONABLE_HOURS_AGO);
 
-	return MONGODB_KILL.sessions.find({
-		userID,
-		timeEnded: { $gte: time },
-	});
+	const sessionRows = await DB.selectFrom("session")
+		.select(SELECT_SESSION_DOCUMENT)
+		.where("user_id", "=", userID)
+		.where("time_ended", ">=", UnixMillisecondsToISO8601(time))
+		.execute();
+
+	if (sessionRows.length === 0) {
+		return [];
+	}
+
+	const sessionIds = sessionRows.map((s) => s.id);
+
+	const scoreRows = await DB.selectFrom("score")
+		.select(["session_id", "id"])
+		.where("session_id", "in", sessionIds)
+		.execute();
+
+	const scoresBySession = new Map<string, Array<string>>();
+
+	for (const s of scoreRows) {
+		if (!s.session_id) {
+			continue;
+		}
+
+		const arr = scoresBySession.get(s.session_id) ?? [];
+
+		arr.push(s.id);
+		scoresBySession.set(s.session_id, arr);
+	}
+
+	return sessionRows.map((row) => ToSessionDocument(row, scoresBySession.get(row.id) ?? []));
 }
 
 export async function GetRecentlyViewedFoldersAnyGPT(userID: integer) {
 	const time = GetTimeXHoursAgo(REASONABLE_HOURS_AGO);
 
-	const views = await MONGODB_KILL["recent-folder-views"].find(
-		{
-			userID,
-			lastViewed: { $gte: time },
-		},
-		{
-			sort: {
-				lastViewed: -1,
-			},
-			limit: 4,
-		},
-	);
+	const rows = await DB.selectFrom("folder_view")
+		.innerJoin("folder", "folder.id", "folder_view.folder_id")
+		.select(SELECT_FOLDER)
+		.where("folder_view.user_id", "=", userID)
+		.where("folder_view.last_viewed", ">=", UnixMillisecondsToISO8601(time))
+		.orderBy("folder_view.last_viewed", "desc")
+		.limit(4)
+		.execute();
 
-	const folders = await MONGODB_KILL.folders.find({
-		folderID: { $in: views.map((e) => e.folderID) },
-	});
+	const folders = rows.map(ToFolderDocument);
 
 	const stats = await GetEnumDistForFolders(userID, folders);
-
-	// TODO: Sort recently viewed folders based on how recently viewed
-	// they were.
 
 	return { folders, stats };
 }
 
 export async function GetGoalSummary(userID: integer) {
 	const time = GetTimeXHoursAgo(REASONABLE_HOURS_AGO);
+	const timeIso = UnixMillisecondsToISO8601(time);
 
-	const achievedGoals = await MONGODB_KILL["goal-subs"].find({
-		timeAchieved: { $gte: time },
-		wasInstantlyAchieved: false,
-		userID,
-	});
+	const achievedRows = await DB.selectFrom("goal_sub")
+		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+		.selectAll("goal_sub")
+		.select("goal.game as goal_game")
+		.where("goal_sub.user_id", "=", userID)
+		.where("goal_sub.time_achieved", ">=", timeIso)
+		.where("goal_sub.was_instantly_achieved", "=", false)
+		.execute();
 
-	const improvedGoals = await MONGODB_KILL["goal-subs"].find({
-		lastInteraction: { $gte: time },
-		achieved: false,
-		userID,
-	});
+	const improvedRows = await DB.selectFrom("goal_sub")
+		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+		.selectAll("goal_sub")
+		.select("goal.game as goal_game")
+		.where("goal_sub.user_id", "=", userID)
+		.where("goal_sub.last_interaction", ">=", timeIso)
+		.where("goal_sub.achieved", "=", false)
+		.execute();
 
-	const goals = await MONGODB_KILL.goals.find({
-		goalID: {
-			$in: [...achievedGoals.map((e) => e.goalID), ...improvedGoals.map((e) => e.goalID)],
-		},
-	});
+	const achievedGoals = achievedRows.map((r) =>
+		ToGoalSubscriptionDocument({ ...r, goal_game: r.goal_game as Game }),
+	);
+
+	const improvedGoals = improvedRows.map((r) =>
+		ToGoalSubscriptionDocument({ ...r, goal_game: r.goal_game as Game }),
+	);
+
+	const goalIds = [...new Set([...achievedGoals, ...improvedGoals].map((e) => e.goalID))];
+
+	const goalRows =
+		goalIds.length === 0
+			? []
+			: await DB.selectFrom("goal").selectAll().where("id", "in", goalIds).execute();
+
+	const goals = goalRows.map(ToGoalDocument);
 
 	return { achievedGoals, improvedGoals, goals };
 }

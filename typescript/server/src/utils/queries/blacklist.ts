@@ -1,7 +1,7 @@
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 
 export async function GetBlacklist() {
-	return (await MONGODB_KILL["score-blacklist"].find({}, { projection: { scoreID: 1 } })).map(
-		(e) => e.scoreID,
-	);
+	const rows = await DB.selectFrom("score_blacklist").select("score_id").execute();
+
+	return rows.map((e) => e.score_id);
 }

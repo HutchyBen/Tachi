@@ -31,7 +31,7 @@ export function HydrateScore(
 
 	const scoreData = CreateFullScoreData(gpt, dryScore.scoreData, chart, log);
 
-	const calculatedData = CreateScoreCalcData(dryScore.game, dryScore.scoreData, chart);
+	const calculatedData = CreateScoreCalcData(dryScore.game, scoreData, chart);
 
 	const score: MONGO_ScoreDocument = {
 		...dryScore,

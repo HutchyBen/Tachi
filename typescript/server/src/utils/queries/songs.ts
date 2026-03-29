@@ -1,14 +1,26 @@
 import type { KtLogger } from "#lib/log/log";
-import type { FindOneResult } from "monk";
 import type { GameGroup, integer, MONGO_SongDocument } from "tachi-common";
+import type { Song } from "tachi-db";
 
 import {
 	AmbiguousTitleFailure,
 	InternalFailure,
 } from "#lib/score-import/framework/common/converter-failures";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
+import { sql } from "kysely";
 
 import { EscapeStringRegexp } from "../misc";
+
+function rowToSongDoc(row: Song): MONGO_SongDocument {
+	return {
+		id: row.legacy_id,
+		title: row.title,
+		artist: row.artist,
+		searchTerms: row.search_terms,
+		altTitles: row.alt_titles,
+		data: row.data as MONGO_SongDocument["data"],
+	};
+}
 
 /**
  * Finds a song document for the given game with the given title (or alt-title).
@@ -22,22 +34,14 @@ export async function FindSongOnTitle(
 	game: GameGroup,
 	title: string,
 ): Promise<MONGO_SongDocument | null> {
-	// @optimisable: Performance should be tested here by having a utility field for all-titles.
-	const res = await MONGODB_KILL.anySongs[game].find(
-		{
-			$or: [
-				{
-					title,
-				},
-				{
-					altTitles: title,
-				},
-			],
-		},
-		{
-			limit: 2,
-		},
-	);
+	const res = await DB.selectFrom("song")
+		.selectAll()
+		.where("game_group", "=", game)
+		.where((eb) =>
+			eb.or([eb("title", "=", title), sql<boolean>`${title} = ANY(song.alt_titles)`]),
+		)
+		.limit(2)
+		.execute();
 
 	if (res.length === 2) {
 		throw new AmbiguousTitleFailure(
@@ -46,7 +50,7 @@ export async function FindSongOnTitle(
 		);
 	}
 
-	return res[0] ?? null;
+	return res[0] ? rowToSongDoc(res[0]) : null;
 }
 
 /**
@@ -58,35 +62,25 @@ export async function FindSongOnTitleInsensitive(
 	title: string,
 	artist?: string | null,
 ): Promise<MONGO_SongDocument | null> {
-	// @optimisable: Performance should be tested here by having a utility field for all-titles.
+	const titlePat = `^${EscapeStringRegexp(title)}$`;
+	const artistPat = `^${EscapeStringRegexp(artist ?? "")}$`;
 
-	const regexTitle = new RegExp(`^${EscapeStringRegexp(title)}$`, "iu");
-	const regexArtist = new RegExp(`^${EscapeStringRegexp(artist ?? "")}$`, "iu");
+	let q = DB.selectFrom("song")
+		.selectAll()
+		.where("game_group", "=", game)
+		.where((eb) =>
+			eb.or([
+				sql<boolean>`song.title ~* ${titlePat}`,
+				sql<boolean>`EXISTS (SELECT 1 FROM unnest(song.alt_titles) AS a WHERE a ~* ${titlePat})`,
+			]),
+		)
+		.limit(2);
 
-	const res = await MONGODB_KILL.anySongs[game].find(
-		{
-			$and: [
-				{
-					$or: [
-						{
-							title: { $regex: regexTitle },
-						},
-						{
-							altTitles: { $regex: regexTitle },
-						},
-					],
-				},
-				artist
-					? {
-							artist: { $regex: regexArtist },
-						}
-					: {},
-			],
-		},
-		{
-			limit: 2,
-		},
-	);
+	if (artist) {
+		q = q.where(sql<boolean>`song.artist ~* ${artistPat}`);
+	}
+
+	const res = await q.execute();
 
 	if (res.length === 2) {
 		throw new AmbiguousTitleFailure(
@@ -97,7 +91,7 @@ export async function FindSongOnTitleInsensitive(
 		);
 	}
 
-	return res[0] ?? null;
+	return res[0] ? rowToSongDoc(res[0]) : null;
 }
 
 /**
@@ -107,13 +101,14 @@ export async function FindSongOnTitleInsensitive(
  * @param songID - The song ID to match.
  * @returns MONGO_SongDocument
  */
-export function FindSongOnID(
-	game: GameGroup,
-	songID: integer,
-): Promise<FindOneResult<MONGO_SongDocument>> {
-	return MONGODB_KILL.anySongs[game].findOne({
-		id: songID,
-	});
+export async function FindSongOnID(game: GameGroup, songID: integer) {
+	const row = await DB.selectFrom("song")
+		.selectAll()
+		.where("game_group", "=", game)
+		.where("legacy_id", "=", songID)
+		.executeTakeFirst();
+
+	return row ? rowToSongDoc(row) : null;
 }
 
 export async function FindSongOnIDGuaranteed(game: GameGroup, songID: integer, log: KtLogger) {

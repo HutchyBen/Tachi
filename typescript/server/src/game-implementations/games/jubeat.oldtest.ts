@@ -41,7 +41,8 @@ t.test("Jubeat Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {
 		const f = (score: number, expected: any) =>
 			t.equal(
-				JUBEAT_IMPL.derivers.grade(dmf(baseMetrics, { score }), TestingJubeatChart),
+				JUBEAT_IMPL.scoreDeriver(dmf(baseMetrics, { score }) as any, TestingJubeatChart)
+					.grade,
 				expected,
 				`A score of ${score.toLocaleString()} should result in grade=${expected}.`,
 			);
@@ -116,7 +117,11 @@ t.test("Jubeat Implementation", (t) => {
 
 	t.test("Jubility Calc", (t) => {
 		t.equal(
-			JUBEAT_IMPL.scoreCalcs.jubility(scoreData, TestingJubeatChart),
+			JUBEAT_IMPL.scoreCalcs(
+				scoreData,
+				JUBEAT_IMPL.scoreDeriver(scoreData, TestingJubeatChart),
+				TestingJubeatChart,
+			).jubility,
 			63.7,
 			"Basic Jubility Test",
 		);
@@ -130,7 +135,7 @@ t.test("Jubeat Implementation", (t) => {
 	t.test("Colour Deriver", (t) => {
 		const f = (v: number | null, expected: any) =>
 			t.equal(
-				JUBEAT_IMPL.classDerivers.colour({ jubility: v }),
+				JUBEAT_IMPL.classDerivers({ jubility: v }).colour,
 				expected,
 				`A jubility of ${v} should result in ${expected}.`,
 			);

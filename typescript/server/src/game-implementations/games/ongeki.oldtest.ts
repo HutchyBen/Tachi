@@ -48,7 +48,8 @@ t.test("ONGEKI Implementation", (t: any) => {
 	t.test("Grade Deriver", (t: any) => {
 		const f = (score: number, expected: string) =>
 			t.equal(
-				ONGEKI_IMPL.derivers.grade(dmf(baseMetrics, { score }), TestingOngekiChart),
+				ONGEKI_IMPL.scoreDeriver(dmf(baseMetrics, { score }) as any, TestingOngekiChart)
+					.grade,
 				expected,
 				`A score of ${score.toLocaleString()} should result in grade=${expected}.`,
 			);
@@ -73,10 +74,10 @@ t.test("ONGEKI Implementation", (t: any) => {
 	t.test("Star Deriver", (t: any) => {
 		const f = (platinumScore: number, expected: number) =>
 			t.equal(
-				ONGEKI_IMPL.derivers.platinumStars(
-					dmf(baseMetrics, { platinumScore }),
+				ONGEKI_IMPL.scoreDeriver(
+					dmf(baseMetrics, { platinumScore }) as any,
 					TestingOngekiChart,
-				),
+				).platinumStars,
 				expected,
 				`A score of ${platinumScore.toLocaleString()} should result in stars=${expected}.`,
 			);
@@ -94,20 +95,15 @@ t.test("ONGEKI Implementation", (t: any) => {
 	});
 
 	t.test("Rating Calc", (t: any) => {
-		t.equal(
-			ONGEKI_IMPL.scoreCalcs.rating(scoreData, TestingOngekiChart),
-			12.1,
-			"Basic classic rating check",
-		);
+		const derived = ONGEKI_IMPL.scoreDeriver(scoreData, TestingOngekiChart);
+		const calcs = ONGEKI_IMPL.scoreCalcs(scoreData, derived, TestingOngekiChart);
+
+		t.equal(calcs.rating, 12.1, "Basic classic rating check");
+
+		t.equal(calcs.scoreRating, 12.1, "Basic score rating check");
 
 		t.equal(
-			ONGEKI_IMPL.scoreCalcs.scoreRating(scoreData, TestingOngekiChart),
-			12.1,
-			"Basic score rating check",
-		);
-
-		t.equal(
-			ONGEKI_IMPL.scoreCalcs.starRating(scoreData, TestingOngekiChart),
+			calcs.starRating,
 			Math.floor(scoreData.platinumStars * (TestingOngekiChart.levelNum * 10) ** 2) /
 				100000.0,
 			"Basic star rating check",
@@ -152,16 +148,16 @@ t.test("ONGEKI Implementation", (t: any) => {
 			await mockPBs(Array(45).fill(16.27), "rating");
 			await mockPBs(Array(60).fill(16.271), "scoreRating");
 
-			t.equal(await ONGEKI_IMPL.profileCalcs.naiveRating("ongeki", "Single", 1), 16.27);
+			t.equal((await ONGEKI_IMPL.profileCalcs("ongeki", "Single", 1)).naiveRating, 16.27);
 			t.equal(
-				await ONGEKI_IMPL.profileCalcs.naiveRatingRefresh("ongeki", "Single", 1),
+				(await ONGEKI_IMPL.profileCalcs("ongeki", "Single", 1)).naiveRatingRefresh,
 				19.525,
 			);
 
 			await mockPBs([1, 1, 0, 0], "starRating");
 
 			t.equal(
-				await ONGEKI_IMPL.profileCalcs.naiveRatingRefresh("ongeki", "Single", 1),
+				(await ONGEKI_IMPL.profileCalcs("ongeki", "Single", 1)).naiveRatingRefresh,
 				19.565,
 			);
 
@@ -172,16 +168,16 @@ t.test("ONGEKI Implementation", (t: any) => {
 			await mockPBs([16, 16, 16, 16], "rating");
 			await mockPBs([16, 16, 16, 16], "scoreRating");
 
-			t.equal(await ONGEKI_IMPL.profileCalcs.naiveRating("ongeki", "Single", 1), 1.42);
+			t.equal((await ONGEKI_IMPL.profileCalcs("ongeki", "Single", 1)).naiveRating, 1.42);
 			t.equal(
-				await ONGEKI_IMPL.profileCalcs.naiveRatingRefresh("ongeki", "Single", 1),
+				(await ONGEKI_IMPL.profileCalcs("ongeki", "Single", 1)).naiveRatingRefresh,
 				1.279,
 			);
 
 			await mockPBs([1, 1, 0, 0], "starRating");
 
 			t.equal(
-				await ONGEKI_IMPL.profileCalcs.naiveRatingRefresh("ongeki", "Single", 1),
+				(await ONGEKI_IMPL.profileCalcs("ongeki", "Single", 1)).naiveRatingRefresh,
 				1.319,
 			);
 
@@ -191,7 +187,10 @@ t.test("ONGEKI Implementation", (t: any) => {
 		t.test("Profile with few scores #2", async (t: any) => {
 			await mockPBs([1, 1, 0, 0], "starRating");
 
-			t.equal(await ONGEKI_IMPL.profileCalcs.naiveRatingRefresh("ongeki", "Single", 1), 0.04);
+			t.equal(
+				(await ONGEKI_IMPL.profileCalcs("ongeki", "Single", 1)).naiveRatingRefresh,
+				0.04,
+			);
 
 			t.end();
 		});
@@ -202,7 +201,7 @@ t.test("ONGEKI Implementation", (t: any) => {
 	t.test("Colour Deriver", (t: any) => {
 		const f = (v: number | null, expected: string | null) =>
 			t.equal(
-				ONGEKI_IMPL.classDerivers.colour({ naiveRatingRefresh: v }),
+				ONGEKI_IMPL.classDerivers({ naiveRatingRefresh: v }).colour,
 				expected,
 				`A naiveRatingRefresh of ${v} should result in ${expected}.`,
 			);

@@ -48,7 +48,10 @@ t.test("Arcaea Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {
 		const f = (score: number, expected: string) =>
 			t.equal(
-				ARCAEA_IMPL.derivers.grade(dmf(baseMetrics, { score }), TestingArcaeaSheriruthFTR),
+				ARCAEA_IMPL.scoreDeriver(
+					dmf(baseMetrics, { score }) as any,
+					TestingArcaeaSheriruthFTR,
+				).grade,
 				expected,
 				`A score of ${score.toLocaleString()} should result in grade=${expected}.`,
 			);
@@ -66,7 +69,11 @@ t.test("Arcaea Implementation", (t) => {
 
 	t.test("Rating Calc", (t) => {
 		t.equal(
-			ARCAEA_IMPL.scoreCalcs.potential(scoreData, TestingArcaeaSheriruthFTR),
+			ARCAEA_IMPL.scoreCalcs(
+				scoreData,
+				ARCAEA_IMPL.scoreDeriver(scoreData, TestingArcaeaSheriruthFTR),
+				TestingArcaeaSheriruthFTR,
+			).potential,
 			11.99,
 			"Basic potential check",
 		);
@@ -80,7 +87,7 @@ t.test("Arcaea Implementation", (t) => {
 	t.test("Colour Deriver", (t) => {
 		const f = (v: number | null, expected: any) =>
 			t.equal(
-				ARCAEA_IMPL.classDerivers.badge({ naivePotential: v }),
+				ARCAEA_IMPL.classDerivers({ naivePotential: v }).badge,
 				expected,
 				`A naivePotential of ${v} should result in ${expected}.`,
 			);

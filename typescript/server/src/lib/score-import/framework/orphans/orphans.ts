@@ -197,6 +197,7 @@ export async function DeorphanScores(query: FilterQuery<OrphanScoreDocument>, lo
 	const orphans = await MONGODB_KILL["orphan-scores"].find(query);
 
 	// ScoreIDs are essentially userID dependent, so this is fine.
+	// TODO(zk): Gooood the performance of this is shit, what the fuck man.
 	const blacklist = await GetBlacklist();
 
 	log.info({ query }, `Found ${orphans.length} orphans.`);

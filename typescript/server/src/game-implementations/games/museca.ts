@@ -10,13 +10,10 @@ import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
 export const MUSECA_IMPL: GPTServerImplementation<"museca:Single"> = {
 	chartSpecificValidators: {},
-	derivers: {
-		grade: ({ score }) => GetGrade(MUSECA_GBOUNDARIES, score),
-	},
-	newDeriver: (scoreData, _chart) => ({
+	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(MUSECA_GBOUNDARIES, scoreData.score),
 	}),
-	newCalcs: (scoreData, _derivedData, chart) => ({
+	scoreCalcs: (scoreData, _derivedData, chart) => ({
 		curatorSkill: CuratorSkill.calculate(scoreData.score, chart.levelNum),
 	}),
 	pbRankingValues: (pb) => ({
@@ -27,21 +24,13 @@ export const MUSECA_IMPL: GPTServerImplementation<"museca:Single"> = {
 		tb4: null,
 		tb5: null,
 	}),
-	scoreCalcs: {
-		curatorSkill: (scoreData, chart) => CuratorSkill.calculate(scoreData.score, chart.levelNum),
-	},
-	newSessionCalcs: (arr) => ({
+	sessionCalcs: (arr) => ({
 		curatorSkill: SessionAvgBest10For("curatorSkill")(arr),
 	}),
-	newProfileCalcs: async (game, playtype, userID) => ({
+	profileCalcs: async (game, playtype, userID) => ({
 		curatorSkill: await ProfileSumBestN("curatorSkill", 20)(game, playtype, userID),
 	}),
-	newClassDerivers: (_ratings) => ({}),
-	sessionCalcs: { curatorSkill: SessionAvgBest10For("curatorSkill") },
-	profileCalcs: {
-		curatorSkill: ProfileSumBestN("curatorSkill", 20),
-	},
-	classDerivers: {},
+	classDerivers: (_ratings) => ({}),
 	goalCriteriaFormatters: {
 		score: GoalFmtScore,
 	},

@@ -11,27 +11,7 @@ import { GoalFmtPercent, GradeGoalFormatter } from "./_common";
 
 export const ITG_STAMINA_IMPL: GPTServerImplementation<"itg:Stamina"> = {
 	chartSpecificValidators: {},
-	derivers: {
-		finalPercent: (metrics) => {
-			// *important*
-			// don't check if metrics.survivedPercent === 100, as due to floating
-			// point inaccuracies, it's possible to have a 100% fail
-			// (on extremely long charts, for example)
-			if (metrics.lamp === "FAILED") {
-				return metrics.survivedPercent;
-			}
-
-			return 100 + metrics.scorePercent;
-		},
-		grade: ({ scorePercent, lamp }) => {
-			if (lamp === "FAILED") {
-				return "F";
-			}
-
-			return GetGrade(ITG_GBOUNDARIES, scorePercent);
-		},
-	},
-	newDeriver: (scoreData, _chart) => ({
+	scoreDeriver: (scoreData, _chart) => ({
 		// *important*: don't check survivedPercent === 100 — floating point can
 		// produce a 100% survived-percent on a fail for very long charts.
 		finalPercent:
@@ -39,7 +19,7 @@ export const ITG_STAMINA_IMPL: GPTServerImplementation<"itg:Stamina"> = {
 		grade:
 			scoreData.lamp === "FAILED" ? "F" : GetGrade(ITG_GBOUNDARIES, scoreData.scorePercent),
 	}),
-	newCalcs: (scoreData, _derivedData, chart) => {
+	scoreCalcs: (scoreData, _derivedData, chart) => {
 		const blockRating = scoreData.lamp === "FAILED" ? null : chart.data.rankedLevel;
 
 		const diedAtMeasure =
@@ -66,47 +46,10 @@ export const ITG_STAMINA_IMPL: GPTServerImplementation<"itg:Stamina"> = {
 		tb4: null,
 		tb5: null,
 	}),
-	scoreCalcs: {
-		blockRating: (scoreData, chart) => {
-			if (scoreData.lamp === "FAILED") {
-				return null;
-			}
-
-			return chart.data.rankedLevel;
-		},
-		fastest32: (scoreData, chart) => {
-			const diedAtMeasure =
-				scoreData.lamp === "FAILED"
-					? (scoreData.survivedPercent / 100) * chart.data.notesPerMeasure.length
-					: null;
-
-			const fastest32 = ITGHighestUnbroken.calculateFromNPSPerMeasure(
-				chart.data.npsPerMeasure,
-				chart.data.notesPerMeasure,
-				diedAtMeasure,
-				32, // 32 measures is generally peoples go-to.
-			);
-
-			if (fastest32 === null) {
-				return null;
-			}
-
-			// To avoid confusing players, we reject highest 32s less than
-			// 100bpm. Due to how highest32 is calculated, it correctly comes
-			// to the confusing conclusion that sometimes you technically just hit
-			// 32 unbroken measures at like 14 BPM. This is confusing to end users,
-			// so we should hide it.
-			if (fastest32 < 100) {
-				return null;
-			}
-
-			return fastest32;
-		},
-	},
-	newSessionCalcs: (arr) => ({
+	sessionCalcs: (arr) => ({
 		blockRating: SessionAvgBestNFor("blockRating", 5)(arr),
 	}),
-	newProfileCalcs: async (game, playtype, userID) => {
+	profileCalcs: async (game, playtype, userID) => {
 		const [highestBlock, fastest32] = await Promise.all([
 			ProfileSumBestN("blockRating", 1, true)(game, playtype, userID),
 			ProfileSumBestN("fastest32", 1, true)(game, playtype, userID),
@@ -114,15 +57,7 @@ export const ITG_STAMINA_IMPL: GPTServerImplementation<"itg:Stamina"> = {
 
 		return { highestBlock, fastest32 };
 	},
-	newClassDerivers: (_ratings) => ({}),
-	sessionCalcs: { blockRating: SessionAvgBestNFor("blockRating", 5) },
-	profileCalcs: {
-		// the sum of your 1 best blockrating/fastest32 is basically just
-		// picking your best blockrating/fastest32. neat.
-		highestBlock: ProfileSumBestN("blockRating", 1, true),
-		fastest32: ProfileSumBestN("fastest32", 1, true),
-	},
-	classDerivers: {},
+	classDerivers: (_ratings) => ({}),
 	goalCriteriaFormatters: {
 		survivedPercent: (val) => `Survive ${NumToDP(val)}% through`,
 

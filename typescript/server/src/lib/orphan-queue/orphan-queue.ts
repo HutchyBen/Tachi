@@ -10,7 +10,7 @@ import type {
 
 import { log } from "#lib/log/log";
 import MONGODB_KILL from "#services/mongo/db";
-import { GetNextCounterValue } from "#utils/db";
+import { GetNextBmsPmsSongLegacyId } from "#utils/db";
 import { DedupeArr } from "#utils/misc";
 
 /**
@@ -68,7 +68,7 @@ export async function HandleOrphanQueue<GPT extends GPTString>(
 
 	if (playcount >= queueSize) {
 		log.info(`Song ${chartName} was unorphaned by userIDs ${uniqueUsersArr.join(", ")}.`);
-		const songID = await GetNextCounterValue(`${game}-song-id`);
+		const songID = await GetNextBmsPmsSongLegacyId(game as "bms" | "pms");
 
 		log.debug(`${chartName} has been assigned songID ${songID}.`);
 
@@ -129,7 +129,7 @@ export async function DeorphanIfInQueue<GPT extends GPTString>(
 	const { songDoc, chartDoc } = orphanChart;
 
 	log.info(`Song ${songDoc.title} was unorphaned forcefully.`);
-	const songID = await GetNextCounterValue(`${game}-song-id`);
+	const songID = await GetNextBmsPmsSongLegacyId(game as "bms" | "pms");
 
 	log.debug(`${songDoc.title} has been assigned songID ${songID}.`);
 

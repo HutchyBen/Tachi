@@ -41,7 +41,8 @@ t.test("WACCA Implementation", (t) => {
 	t.test("Grade Deriver", (t) => {
 		const f = (score: number, expected: any) =>
 			t.equal(
-				WACCA_IMPL.derivers.grade(dmf(baseMetrics, { score }), TestingWaccaPupaExp),
+				WACCA_IMPL.scoreDeriver(dmf(baseMetrics, { score }) as any, TestingWaccaPupaExp)
+					.grade,
 				expected,
 				`A score of ${score.toLocaleString()} should result in grade=${expected}.`,
 			);
@@ -65,7 +66,11 @@ t.test("WACCA Implementation", (t) => {
 
 	t.test("Rating Calc", (t) => {
 		t.equal(
-			WACCA_IMPL.scoreCalcs.rate(scoreData, TestingWaccaPupaExp),
+			WACCA_IMPL.scoreCalcs(
+				scoreData,
+				WACCA_IMPL.scoreDeriver(scoreData, TestingWaccaPupaExp),
+				TestingWaccaPupaExp,
+			).rate,
 			41.1,
 			"Basic rating check",
 		);
@@ -79,7 +84,7 @@ t.test("WACCA Implementation", (t) => {
 	t.test("Colour Deriver", (t) => {
 		const f = (v: number | null, expected: any) =>
 			t.equal(
-				WACCA_IMPL.classDerivers.colour({ naiveRate: v }),
+				WACCA_IMPL.classDerivers({ naiveRate: v }).colour,
 				expected,
 				`A rating of ${v} should result in ${expected}.`,
 			);
