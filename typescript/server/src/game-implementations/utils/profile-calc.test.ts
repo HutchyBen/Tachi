@@ -5,10 +5,7 @@ import { describe, expect, it } from "vitest";
 
 let chartCounter = 0;
 
-async function seedChunithmChartsWithPbs(
-	userId: number,
-	ratings: Array<number>,
-): Promise<void> {
+async function seedChunithmChartsWithPbs(userId: number, ratings: Array<number>): Promise<void> {
 	const start = chartCounter;
 	await Promise.all(
 		ratings.map(async (rating, i) => {

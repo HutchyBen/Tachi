@@ -131,13 +131,7 @@ describe("GetBestJubilityOnSongs (Postgres)", () => {
 			jubility: 250,
 		});
 
-		const rows = await GetBestJubilityOnSongs(
-			[legacySongId],
-			userId,
-			"jubeat",
-			"Single",
-			30,
-		);
+		const rows = await GetBestJubilityOnSongs([legacySongId], userId, "jubeat", "Single", 30);
 
 		expect(rows).toHaveLength(1);
 		expect(rows[0]!.calculatedData.jubility).toBe(250);
@@ -160,13 +154,7 @@ describe("GetBestJubilityOnSongs (Postgres)", () => {
 			jubility: 500,
 		});
 
-		const rows = await GetBestJubilityOnSongs(
-			[legacySongId],
-			userId,
-			"jubeat",
-			"Single",
-			30,
-		);
+		const rows = await GetBestJubilityOnSongs([legacySongId], userId, "jubeat", "Single", 30);
 
 		expect(rows).toHaveLength(2);
 		const jubs = rows.map((r) => r.calculatedData.jubility).sort((a, b) => b! - a!);
@@ -207,13 +195,7 @@ describe("GetBestJubilityOnSongs (Postgres)", () => {
 			jubility: 9999,
 		});
 
-		const rows = await GetBestJubilityOnSongs(
-			[legacySongId],
-			userId,
-			"jubeat",
-			"Single",
-			30,
-		);
+		const rows = await GetBestJubilityOnSongs([legacySongId], userId, "jubeat", "Single", 30);
 
 		expect(rows).toEqual([]);
 	});

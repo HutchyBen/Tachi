@@ -12,12 +12,12 @@ let ddrSeedCounter = 0;
 async function seedDdrPbRow(
 	userId: number,
 	args: {
-		flareSkill: number;
+		calculatedDataOverride?: Record<string, unknown>;
 		/** Omit or use a value other than CLASSIC | WHITE | GOLD to model songs excluded from the sum. */
 		flareCategory?: string;
-		game?: "ddr-sp" | "ddr-dp";
+		flareSkill: number;
+		game?: "ddr-dp" | "ddr-sp";
 		isPrimary?: boolean;
-		calculatedDataOverride?: Record<string, unknown>;
 	},
 ): Promise<void> {
 	const n = ++ddrSeedCounter;
@@ -26,8 +26,7 @@ async function seedDdrPbRow(
 	const game = args.game ?? "ddr-sp";
 	const isPrimary = args.isPrimary ?? true;
 
-	const songData =
-		args.flareCategory !== undefined ? { flareCategory: args.flareCategory } : {};
+	const songData = args.flareCategory !== undefined ? { flareCategory: args.flareCategory } : {};
 
 	await DB.insertInto("song")
 		.values({
@@ -58,8 +57,7 @@ async function seedDdrPbRow(
 		})
 		.execute();
 
-	const calculatedData =
-		args.calculatedDataOverride ?? { flareSkill: args.flareSkill };
+	const calculatedData = args.calculatedDataOverride ?? { flareSkill: args.flareSkill };
 
 	await DB.insertInto("pb")
 		.values({
@@ -161,7 +159,10 @@ describe("DDR profileCalcs (flareSkill, Postgres)", () => {
 
 		const result = await DDR_IMPL.profileCalcs("ddr", "SP", userId);
 
-		const expectedSum = Array.from({ length: 30 }, (_, k) => 1031 - k).reduce((a, b) => a + b, 0);
+		const expectedSum = Array.from({ length: 30 }, (_, k) => 1031 - k).reduce(
+			(a, b) => a + b,
+			0,
+		);
 		expect(result.flareSkill).toBe(expectedSum);
 	});
 

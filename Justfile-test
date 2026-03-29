@@ -14,14 +14,14 @@ typecheck:
 	bun run --elide-lines=0 --filter '!tachi-seeds-scripts' typecheck
 
 typecheck-sequential:
-	bun run --elide-lines=0 --sequential --filter '!tachi-seeds-scripts' typecheck
+	bun run --elide-lines=0 --filter '!tachi-seeds-scripts' typecheck
 
 fix:
 	#!/bin/bash
 	set -euo pipefail
 
 	just gen
-	bun run --filter '*' lint-fix
+	bun run --sequential --elide-lines=0 --filter '*' lint-fix
 	.scripts/ts_autoinherit.js
 	just fmt
 

@@ -6,22 +6,19 @@ import type {
 	MONGO_SongDocument,
 } from "tachi-common";
 
-import MONGODB_KILL from "#services/mongo/db";
+import {
+	LoadPbByUserAndChartLegacyId,
+	LoadPbServerRecordForChartLegacyId,
+} from "#lib/db-formats/pb";
 
 import { DedupeArr } from "./misc";
 
 export function GetPBOnChart(userID: integer, chartID: string) {
-	return MONGODB_KILL["personal-bests"].findOne({
-		userID,
-		chartID,
-	});
+	return LoadPbByUserAndChartLegacyId(userID, chartID);
 }
 
 export function GetServerRecordOnChart(chartID: string) {
-	return MONGODB_KILL["personal-bests"].findOne({
-		chartID,
-		"rankingData.rank": 1,
-	});
+	return LoadPbServerRecordForChartLegacyId(chartID);
 }
 
 export function FilterChartsAndSongs(

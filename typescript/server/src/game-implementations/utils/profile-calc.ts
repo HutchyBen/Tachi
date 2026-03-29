@@ -40,7 +40,11 @@ function CalcN<GPT extends GPTString>(
 			.where("chart.game", "=", v3Game)
 			.where("chart.is_primary", "=", true)
 			.where((eb) =>
-				eb(sql`jsonb_typeof(pb.calculated_data::jsonb -> ${sql.lit(key)})`, "=", sql`'number'`),
+				eb(
+					sql`jsonb_typeof(pb.calculated_data::jsonb -> ${sql.lit(key)})`,
+					"=",
+					sql`'number'`,
+				),
 			)
 			.orderBy(sql`(pb.calculated_data::jsonb->>${sql.lit(key)})::double precision`, "desc")
 			.limit(n)

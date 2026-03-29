@@ -1,5 +1,4 @@
 import { GetChartByPgIdOrLegacyId } from "#lib/db-formats/chart";
-import MONGODB_KILL from "#services/mongo/db";
 import { type GameGroup, GamePTToV3, MongoChartLegacyId, type Playtype } from "tachi-common";
 
 /**
@@ -17,10 +16,5 @@ export async function ResolveLegacyChartIdForMongo(
 		return MongoChartLegacyId(fromPg);
 	}
 
-	const mongoChart = await MONGODB_KILL.anyCharts[game].findOne({
-		chartID: chartIdParam,
-		playtype,
-	});
-
-	return mongoChart?.chartID ?? null;
+	return null;
 }
