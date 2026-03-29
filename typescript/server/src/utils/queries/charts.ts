@@ -145,7 +145,7 @@ export async function FindBMSChartOnHash(hash: string) {
 
 	return chartJoinedToDocument(
 		row as { song_legacy_id: number } & ChartJoinedRow,
-	) as Promise<MONGO_ChartDocument<"bms:7K" | "bms:14K"> | null>;
+	) as MONGO_ChartDocument<"bms:7K" | "bms:14K">;
 }
 
 /**
