@@ -1,5 +1,5 @@
+import { GetUGPTSettingsDocument } from "#lib/db-formats/ugpt-settings";
 import { log } from "#lib/log/log";
-import MONGODB_KILL from "#services/mongo/db";
 import {
 	type GameGroup,
 	GetGPTString,
@@ -24,11 +24,7 @@ export async function EvaluateUsersStatsShowcase(
 	projectUserStats?: integer,
 ) {
 	const getSettingsID = projectUserStats ?? userID;
-	const settings = await MONGODB_KILL["game-settings"].findOne({
-		userID: getSettingsID,
-		game,
-		playtype,
-	});
+	const settings = await GetUGPTSettingsDocument(getSettingsID, game, playtype);
 
 	if (!settings) {
 		log.error(

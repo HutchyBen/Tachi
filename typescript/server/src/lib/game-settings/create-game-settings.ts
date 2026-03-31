@@ -1,8 +1,6 @@
-import type { GameGroup, integer, Playtype } from "tachi-common";
-import { GamePTToV3 } from "tachi-common";
-
 import { log } from "#lib/log/log";
 import DB from "#services/pg/db";
+import { type GameGroup, GamePTToV3, type integer, type Playtype } from "tachi-common";
 
 /**
  * Create GameSettings for a UGPT (which contains their preferences).

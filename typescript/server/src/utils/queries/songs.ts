@@ -111,6 +111,19 @@ export async function FindSongOnID(game: GameGroup, songID: integer) {
 	return row ? rowToSongDoc(row) : null;
 }
 
+/**
+ * Find a DDR song by `data.ddrSongHash` (batch-manual `ddrSongHash`).
+ */
+export async function FindDDRSongOnDDRSongHash(hash: string) {
+	const row = await DB.selectFrom("song")
+		.selectAll()
+		.where("game_group", "=", "ddr")
+		.where(sql<boolean>`(song.data::jsonb->>'ddrSongHash') = ${hash}`)
+		.executeTakeFirst();
+
+	return row ? rowToSongDoc(row) : null;
+}
+
 export async function FindSongOnIDGuaranteed(game: GameGroup, songID: integer, log: KtLogger) {
 	const song = await FindSongOnID(game, songID);
 

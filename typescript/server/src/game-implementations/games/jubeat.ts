@@ -93,13 +93,15 @@ export async function GetBestJubilityOnSongs(
 			pb.ranking_value_tb5,
 			pb.highlight,
 			pb.time_achieved,
-			chart.legacy_id as chart_legacy_id,
 			song.legacy_id as song_legacy_id,
 			chart.game as chart_game,
-			chart.is_primary as is_primary
+			chart.is_primary as is_primary,
+			chart_leaderboard.rank AS leaderboard_rank,
+			chart_leaderboard.out_of AS leaderboard_out_of
 		FROM pb
 		INNER JOIN chart ON chart.id = pb.chart_id
 		INNER JOIN song ON song.id = chart.song_id
+		INNER JOIN chart_leaderboard ON chart_leaderboard.row_id = pb.row_id
 		INNER JOIN filtered f ON f.row_id = pb.row_id AND f.rn = 1
 		ORDER BY (pb.calculated_data::jsonb->>'jubility')::double precision DESC NULLS LAST
 		LIMIT ${limit}
@@ -248,13 +250,23 @@ export const JUBEAT_IMPL: GPTServerImplementation<"jubeat:Single"> = {
 	// musicRate is the default prop
 	// but we want the user's best score to count aswell.
 	pbMergeFunctions: [
-		CreatePBMergeFor("largest", "enumIndexes.lamp", "Best Lamp", (base, score) => {
-			base.scoreData.lamp = score.scoreData.lamp;
-		}),
-		CreatePBMergeFor("largest", "score", "Best Score", (base, score) => {
-			base.scoreData.score = score.scoreData.score;
-			base.scoreData.grade = score.scoreData.grade;
-		}),
+		CreatePBMergeFor(
+			"largest",
+			{ type: "REGULAR", metric: "lamp" },
+			"Best Lamp",
+			(base, score) => {
+				base.scoreData.lamp = score.scoreData.lamp;
+			},
+		),
+		CreatePBMergeFor(
+			"largest",
+			{ type: "REGULAR", metric: "score" },
+			"Best Score",
+			(base, score) => {
+				base.scoreData.score = score.scoreData.score;
+				base.scoreData.grade = score.scoreData.grade;
+			},
+		),
 	],
 	defaultMergeRefName: "Best Music Rate",
 	scoreValidators: [

@@ -1,8 +1,11 @@
-import type { integer, MONGO_ChartDocument, Playtypes } from "tachi-common";
+import type { Game } from "tachi-db";
 
+import { SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart";
 import { log } from "#lib/log/log";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
+import { sql, type SqlBool } from "kysely";
 import { PoyashiBPI } from "rg-stats";
+import { GamePTToV3, type integer, type MONGO_ChartDocument, type Playtypes } from "tachi-common";
 
 interface PlaylistEntry {
 	entry_id: integer;
@@ -110,10 +113,20 @@ export const CUSTOM_TACHI_IIDX_PLAYLISTS: Array<TachiIIDXPlaylist> = [
 				bounds.push([cutoffs[i], cutoffs[i + 1]] as [number, number]);
 			}
 
-			const charts = (await MONGODB_KILL.charts.iidx.find({
-				"data.kaidenAverage": { $ne: null },
-				playtype,
-			})) as Array<MONGO_ChartDocument<"iidx:DP" | "iidx:SP">>;
+			const v3Game = GamePTToV3("iidx", playtype) as Game;
+
+			const rows = await DB.selectFrom("chart")
+				.innerJoin("song", "song.id", "chart.song_id")
+				.select(SELECT_CHART)
+				.select("song.legacy_id as song_legacy_id")
+				.where("chart.game", "=", v3Game)
+				.where(sql<SqlBool>`(chart.data->>'kaidenAverage') IS NOT NULL`)
+				.where(sql<SqlBool>`(chart.data->>'2dxtraSet') IS NULL`)
+				.execute();
+
+			const charts = rows.map((r) => ToChartDocument(r, r.song_legacy_id)) as Array<
+				MONGO_ChartDocument<"iidx:DP" | "iidx:SP">
+			>;
 
 			const entries = [];
 

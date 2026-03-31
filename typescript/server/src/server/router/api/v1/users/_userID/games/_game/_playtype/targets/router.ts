@@ -1,4 +1,4 @@
-import { GetChartByPgIdOrLegacyId } from "#lib/db-formats/chart";
+import { GetChartById } from "#lib/db-formats/chart";
 import { log } from "#lib/log/log";
 import { GetRelevantGoals } from "#lib/targets/goals";
 import { GetParentQuests } from "#lib/targets/quests";
@@ -86,7 +86,7 @@ router.get("/on-chart/:chartID", async (req, res) => {
 
 	const chartIDParam = req.params.chartID;
 
-	const chart = await GetChartByPgIdOrLegacyId(GamePTToV3(game, playtype), chartIDParam);
+	const chart = await GetChartById(GamePTToV3(game, playtype), chartIDParam);
 
 	if (!chart) {
 		return res.status(404).json({

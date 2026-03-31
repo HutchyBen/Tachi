@@ -24,6 +24,8 @@ export default interface PbTable {
 
   calculated_data: ColumnType<unknown, unknown, unknown>;
 
+  judgements: ColumnType<unknown, unknown, unknown>;
+
   ranking_value: ColumnType<number, number, number>;
 
   ranking_value_tb1: ColumnType<number | null, number | null, number | null>;

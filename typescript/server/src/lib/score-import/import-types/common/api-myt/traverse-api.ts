@@ -1,9 +1,10 @@
 import type { KtLogger } from "#lib/log/log";
 
+import { SELECT_MYT_CARD_INFO, ToMytCardInfo } from "#lib/db-formats/myt-card-info";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ServerConfig } from "#lib/setup/config";
 import { Cards, LookupRequestSchema } from "#proto/generated/cards/cards_pb";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { create } from "@bufbuild/protobuf";
 import {
 	Code as ConnectCode,
@@ -71,13 +72,16 @@ export async function FetchMytTitleAPIID(
 		throw new ScoreImportFatalError(500, `Unsupported game ${game}`);
 	}
 
-	const cardInfo = await MONGODB_KILL["myt-card-info"].findOne({ userID });
+	const row = await DB.selectFrom("priv_svc_myt_card_info")
+		.select(SELECT_MYT_CARD_INFO)
+		.where("user_id", "=", userID)
+		.executeTakeFirst();
 
-	if (!cardInfo) {
+	if (!row) {
 		throw new ScoreImportFatalError(401, `This user has no card info set up for this service.`);
 	}
 
-	const { cardAccessCode } = cardInfo;
+	const { cardAccessCode } = ToMytCardInfo(row);
 	const client = createClient(Cards, CreateMytTransport());
 	const req = create(LookupRequestSchema, {
 		accessCode: cardAccessCode,

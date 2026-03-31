@@ -67,6 +67,7 @@ async function seedDdrPbRow(
 			data: JSON.stringify({}),
 			derived_data: JSON.stringify({}),
 			calculated_data: JSON.stringify(calculatedData),
+			judgements: JSON.stringify({}),
 			ranking_value: args.flareSkill,
 			ranking_value_tb1: null,
 			ranking_value_tb2: null,

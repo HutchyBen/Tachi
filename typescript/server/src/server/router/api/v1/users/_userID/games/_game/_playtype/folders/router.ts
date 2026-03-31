@@ -1,5 +1,4 @@
-import { SearchCollection } from "#lib/search/search";
-import MONGODB_KILL from "#services/mongo/db";
+import { SearchFoldersForGameFtsAndTrgm } from "#lib/search/folders.js";
 import { GetEnumDistForFolders, GetRecentlyViewedFolders } from "#utils/folder";
 import { IsString } from "#utils/misc";
 import { GetUGPT } from "#utils/req-tachi-data";
@@ -31,18 +30,12 @@ router.get("/", async (req, res) => {
 		});
 	}
 
-	// if inactive is passed, we need this to be undefined so that
-	// mongodb returns both inactive and active folders.
-	// Otherwise, only return active folders.
-	const inactive = req.query.inactive === undefined ? false : undefined;
+	const onlyActiveFolders = req.query.inactive === undefined;
 
-	const folders = await SearchCollection(
-		MONGODB_KILL.folders,
-		req.query.search,
-		"folders",
-		{ game, playtype, inactive },
-		20,
-	);
+	const folders = await SearchFoldersForGameFtsAndTrgm(game, playtype, req.query.search, {
+		limit: 20,
+		onlyActiveFolders,
+	});
 
 	const stats = await GetEnumDistForFolders(user.id, folders);
 

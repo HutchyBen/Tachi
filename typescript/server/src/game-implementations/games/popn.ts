@@ -107,11 +107,16 @@ export const POPN_9B_IMPL: GPTServerImplementation<"popn:9B"> = {
 		score: GoalOutOfFmtScore,
 	},
 	pbMergeFunctions: [
-		CreatePBMergeFor("largest", "enumIndexes.clearMedal", "Best Clear", (base, score) => {
-			base.scoreData.clearMedal = score.scoreData.clearMedal;
-			// these are directly related. pluck both.
-			base.scoreData.lamp = score.scoreData.lamp;
-		}),
+		CreatePBMergeFor(
+			"largest",
+			{ type: "REGULAR", metric: "clearMedal" },
+			"Best Clear",
+			(base, score) => {
+				base.scoreData.clearMedal = score.scoreData.clearMedal;
+				// these are directly related. pluck both.
+				base.scoreData.lamp = score.scoreData.lamp;
+			},
+		),
 	],
 	defaultMergeRefName: "Best Score",
 	scoreValidators: [

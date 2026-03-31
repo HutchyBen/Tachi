@@ -136,6 +136,7 @@ describe("ACTION_CustomiseScore", () => {
 				data: JSON.stringify({}),
 				derived_data: JSON.stringify({}),
 				calculated_data: JSON.stringify({}),
+				judgements: JSON.stringify({}),
 				ranking_value: 0,
 				ranking_value_tb1: null,
 				ranking_value_tb2: null,

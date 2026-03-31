@@ -3,19 +3,22 @@ import { GetUSCIRReplayURL } from "#lib/cdn/url-format";
 import { ONE_MEGABYTE } from "#lib/constants/filesize";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { USCIR_MAX_LEADERBOARD_N } from "#lib/constants/usc-ir";
+import { SELECT_API_TOKEN, ToAPITokenDocument } from "#lib/db-formats/api-token";
+import { LoadPbRankOneOnChartLegacyId, LoadPbsOnChartByRankingValueDesc } from "#lib/db-formats/pb";
+import { LoadScoreDocumentById } from "#lib/db-formats/score";
 import { log } from "#lib/log/log";
 import { AssertStrAsPositiveNonZeroInt } from "#lib/score-import/framework/common/string-asserts";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RejectIfBanned, RequirePermissions } from "#server/middleware/auth";
 import { CreateMulterSingleUploadMiddleware } from "#server/middleware/multer-upload";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { FormatPrError } from "#utils/prudence";
+import { FindUSCChartOnSHA1Playtype } from "#utils/queries/charts";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
 import {
-	GetGamePTConfig,
 	type MONGO_ChartDocument,
 	type MONGO_ImportDocument,
 	type MONGO_PBScoreDocument,
@@ -59,9 +62,11 @@ const ValidateUSCRequest: RequestHandler = async (req, res, next) => {
 		});
 	}
 
-	const uscAuthDoc = await MONGODB_KILL["api-tokens"].findOne({
-		token: splitToken[1],
-	});
+	const uscAuthDoc = await DB.selectFrom("priv_api_token")
+		.select(SELECT_API_TOKEN)
+		.where("token", "=", splitToken[1])
+		.executeTakeFirst()
+		.then((r) => (r ? ToAPITokenDocument(r) : null));
 
 	if (!uscAuthDoc) {
 		return res.status(200).json({
@@ -114,10 +119,10 @@ router.get("/", (req, res) =>
 );
 
 const RetrieveChart: RequestHandler = async (req, res, next) => {
-	const chart = await MONGODB_KILL.charts.usc.findOne({
-		"data.hashSHA1": req.params.chartHash,
-		playtype: req.params.playtype as Playtypes["usc"],
-	});
+	const chart = await FindUSCChartOnSHA1Playtype(
+		req.params.chartHash,
+		req.params.playtype as Playtypes["usc"],
+	);
 
 	if (!chart) {
 		return res.status(200).json({
@@ -158,10 +163,9 @@ router.get("/charts/:chartHash", RetrieveChart, (req, res) =>
 router.get("/charts/:chartHash/record", RetrieveChart, async (req, res) => {
 	const chart = GetTachiData(req, "uscChartDoc");
 
-	const serverRecord = (await MONGODB_KILL["personal-bests"].findOne({
-		chartID: chart.chartID,
-		"rankingData.rank": 1,
-	})) as MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard"> | null;
+	const serverRecord = (await LoadPbRankOneOnChartLegacyId(
+		chart.chartID,
+	)) as MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard"> | null;
 
 	if (!serverRecord) {
 		return res.status(200).json({
@@ -225,19 +229,9 @@ router.get("/charts/:chartHash/leaderboard", RetrieveChart, async (req, res) => 
 		});
 	}
 
-	const gptConfig = GetGamePTConfig("usc", chart.playtype);
-
-	const bestScores = (await MONGODB_KILL["personal-bests"].find(
-		{
-			chartID: chart.chartID,
-		},
-		{
-			sort: {
-				[`scoreData.${gptConfig.defaultMetric}`]: -1,
-			},
-			limit: n,
-		},
-	)) as Array<MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard">>;
+	const bestScores = (await LoadPbsOnChartByRankingValueDesc(chart.chartID, n)) as Array<
+		MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard">
+	>;
 
 	const serverScores = await Promise.all(bestScores.map(TachiScoreToServerScore));
 
@@ -286,10 +280,10 @@ router.post("/scores", RequirePermissions("submit_score"), async (req, res) => {
 
 	const uscChart = req.safeBody.chart as USCClientChart;
 
-	const chartDoc = (await MONGODB_KILL.charts.usc.findOne({
-		"data.hashSHA1": uscChart.chartHash,
+	const chartDoc = (await FindUSCChartOnSHA1Playtype(
+		uscChart.chartHash,
 		playtype,
-	})) as MONGO_ChartDocument<"usc:Controller" | "usc:Keyboard"> | null;
+	)) as MONGO_ChartDocument<"usc:Controller" | "usc:Keyboard"> | null;
 
 	const userID = req[SYMBOL_TACHI_API_AUTH].userID!;
 
@@ -408,13 +402,13 @@ router.post(
 		// MUST also be for USC.
 		// Otherwise, anyone could overwrite anyone elses
 		// score replays!
-		const correspondingScore = await MONGODB_KILL.scores.findOne({
-			userID: req[SYMBOL_TACHI_API_AUTH].userID!,
-			scoreID: req.safeBody.identifier,
-			game: "usc",
-		});
+		const correspondingScore = await LoadScoreDocumentById(req.safeBody.identifier);
 
-		if (!correspondingScore) {
+		if (
+			!correspondingScore ||
+			correspondingScore.userID !== req[SYMBOL_TACHI_API_AUTH].userID ||
+			correspondingScore.game !== "usc"
+		) {
 			return res.status(200).json({
 				statusCode: STATUS_CODES.NOT_FOUND,
 				description: "No score corresponds to this identifier.",

@@ -1,20 +1,15 @@
-import type { integer, MONGO_NotificationDocument, NotificationBody } from "tachi-common";
+import type { integer, NotificationBody } from "tachi-common";
 
-import MONGODB_KILL from "#services/mongo/db";
-import { Random20Hex } from "#utils/misc";
+import DB from "#services/pg/db";
 
-function ConstructNotificationDoc(
-	title: string,
-	toUserID: integer,
-	body: NotificationBody,
-): MONGO_NotificationDocument {
+function notificationBodyToRow(title: string, toUserID: integer, body: NotificationBody) {
 	return {
 		title,
-		sentTo: toUserID,
+		sent_to: toUserID,
 		read: false,
-		sentAt: Date.now(),
-		notifID: `N${Random20Hex()}`,
-		body,
+		sent_at: new Date().toISOString(),
+		kind: body.type.toLowerCase(),
+		payload: { type: body.type, content: body.content } as unknown,
 	};
 }
 
@@ -25,22 +20,30 @@ function ConstructNotificationDoc(
  * @param toUserID - The user to send the notification to.
  * @param body - The body of the notification.
  */
-export function SendNotification(title: string, toUserID: integer, body: NotificationBody) {
-	const notification = ConstructNotificationDoc(title, toUserID, body);
-
-	return MONGODB_KILL.notifications.insert(notification);
+export async function SendNotification(
+	title: string,
+	toUserID: integer,
+	body: NotificationBody,
+): Promise<void> {
+	await DB.insertInto("notification")
+		.values(notificationBodyToRow(title, toUserID, body))
+		.execute();
 }
 
 /**
  * Send notifications to multiple users at once. This is more efficient than calling
  * send notification in parallel.
  */
-export function BulkSendNotification(
+export async function BulkSendNotification(
 	title: string,
 	toUserIDs: Array<integer>,
 	body: NotificationBody,
-) {
-	const notifications = toUserIDs.map((e) => ConstructNotificationDoc(title, e, body));
+): Promise<void> {
+	if (toUserIDs.length === 0) {
+		return;
+	}
 
-	return MONGODB_KILL.notifications.insert(notifications);
+	const rows = toUserIDs.map((id) => notificationBodyToRow(title, id, body));
+
+	await DB.insertInto("notification").values(rows).execute();
 }

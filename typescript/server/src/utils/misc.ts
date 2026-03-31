@@ -250,12 +250,14 @@ export function asyncExec(command: string, cwd?: string) {
 	});
 }
 
-export function FormatBMSTables(bmsTables: Array<{ level: string; table: string }>) {
-	if (bmsTables.length === 0) {
+export function FormatBMSTables(bmsTables: Record<string, string>) {
+	if (Object.keys(bmsTables).length === 0) {
 		return null;
 	}
 
-	return bmsTables.map((e) => `${e.table}${e.level}`).join(", ");
+	return Object.entries(bmsTables)
+		.map(([table, level]) => `${table}${level}`)
+		.join(", ");
 }
 
 export function HumanisedJoinArray(arr: Array<string>, lastJoiner = "or") {

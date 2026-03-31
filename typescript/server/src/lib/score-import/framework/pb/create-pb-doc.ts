@@ -1,30 +1,73 @@
 import type { KtLogger } from "#lib/log/log";
-import type { BulkWriteUpdateOneOperation, FilterQuery, SortOptionObject } from "mongodb";
+import type { Game } from "tachi-db";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
+import {
+	type ScoreDocumentJoinRow,
+	SELECT_SCORE_DOCUMENT,
+	ToScoreDocument,
+} from "#lib/db-formats/score";
 import { GetEveryonesRivalIDs } from "#lib/rivals/rivals";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { DeleteUndefinedProps } from "#utils/misc";
+import { UnixMillisecondsToISO8601 } from "#utils/time";
+import { sql } from "kysely";
 import {
 	type GameGroup,
-	GetGamePTConfig,
+	GamePTToV3,
 	GetGPTConfig,
 	type GPTString,
 	type integer,
 	type MONGO_ChartDocument,
-	type MONGO_PBScoreDocument,
 	type MONGO_ScoreDocument,
 	MongoChartLegacyId,
 	type Playtype,
 } from "tachi-common";
 
+import type { MONGO_PBScoreDocumentNoRank } from "./upsert-pb-pg";
+
 import { CreateScoreCalcData } from "../calculated-data/score";
+import { scoreVisibleSql } from "../pg/score-visibility";
 import { CreateEnumIndexes } from "../score-importing/derivers";
 
-export type MONGO_PBScoreDocumentNoRank<GPT extends GPTString = GPTString> = Omit<
-	MONGO_PBScoreDocument<GPT>,
-	"rankingData"
->;
+export type { MONGO_PBScoreDocumentNoRank };
+
+async function findBestScoreForPb(
+	gpt: GPTString,
+	userID: integer,
+	chart: MONGO_ChartDocument,
+	asOfTimestamp: number | undefined,
+): Promise<MONGO_ScoreDocument | null> {
+	const gptConfig = GetGPTConfig(gpt);
+	const metricKey = String(gptConfig.defaultMetric);
+
+	const sortVal = sql`(score.data::jsonb->>${sql.lit(metricKey)})::double precision`;
+
+	let q = DB.selectFrom("score")
+		.innerJoin("chart", "chart.id", "score.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.leftJoin("import", "import.id", "score.import_id")
+		.select(SELECT_SCORE_DOCUMENT)
+		.where("score.user_id", "=", userID)
+		.where("chart.id", "=", chart.chartID)
+		.where(scoreVisibleSql());
+
+	if (asOfTimestamp !== undefined) {
+		q = q.where("score.time_achieved", "<", UnixMillisecondsToISO8601(asOfTimestamp));
+	}
+
+	const row = await q
+		.orderBy(sortVal, "desc")
+		.orderBy("score.time_achieved", "asc")
+		.limit(1)
+		.executeTakeFirst();
+
+	if (!row) {
+		return null;
+	}
+
+	return ToScoreDocument(row as ScoreDocumentJoinRow);
+}
 
 /**
  * Create a PB document for this user on this chart. Optionally, provide an "As Of"
@@ -39,27 +82,10 @@ export async function CreatePBDoc(
 ) {
 	const chartID = MongoChartLegacyId(chart);
 
-	const query: FilterQuery<MONGO_ScoreDocument> = {
-		userID,
-		chartID,
-	};
-
-	if (asOfTimestamp !== undefined) {
-		query.timeAchieved = { $lt: asOfTimestamp };
-	}
-
-	const gptConfig = GetGPTConfig(gpt);
-
-	const defaultMetricPB = await MONGODB_KILL.scores.findOne(query, {
-		sort: {
-			[`scoreData.${gptConfig.defaultMetric}`]: -1,
-		},
-	});
+	const defaultMetricPB = await findBestScoreForPb(gpt, userID, chart, asOfTimestamp);
 
 	if (!defaultMetricPB) {
 		if (asOfTimestamp !== undefined) {
-			// if we were constraining the PB on a timestamp, this is likely to happen.
-			// ignore it.
 			return;
 		}
 
@@ -95,60 +121,56 @@ export async function CreatePBDoc(
 	};
 
 	for (const mergeFn of gptImpl.pbMergeFunctions) {
-		// these must happen in sync.
-		// eslint-disable-next-line no-await-in-loop
 		const ref = await mergeFn(
 			userID,
 			defaultMetricPB.chartID,
 			asOfTimestamp ?? null,
-			// silly cast because of potential GPT incompatibilities.
-			// sorry!
-			pbDoc as any,
+			pbDoc as never,
 		);
 
-		// if there's a reference to add AND we haven't seen this scoreID before.
 		if (ref && !pbDoc.composedFrom.map((e) => e.scoreID).includes(ref.scoreID)) {
 			pbDoc.composedFrom.push(ref);
 		}
 	}
 
-	// clear up any nonsense
 	DeleteUndefinedProps(pbDoc.scoreData.optional);
 
-	// update any enum indexes that might've been altered
 	const { indexes, optionalIndexes } = CreateEnumIndexes(gpt, pbDoc.scoreData, log);
 
 	pbDoc.scoreData.enumIndexes = indexes;
 	pbDoc.scoreData.optional.enumIndexes = optionalIndexes;
 
-	// Recalc info about this score (incase things have changed).
 	pbDoc.calculatedData = CreateScoreCalcData(pbDoc.game, pbDoc.scoreData, chart);
 
-	// finally, return our full pbDoc, that does NOT have the ranking props.
-	// (We will add those later)
 	return pbDoc;
 }
 
 /**
- * Updates rankings on a given chart.
+ * Persists rival-only ranking hints. Global rank / outOf come from `chart_leaderboard` at read time.
  */
 export async function UpdateChartRanking(game: GameGroup, playtype: Playtype, chartID: string) {
-	const scores = await GetSortedPBs(game, playtype, chartID);
+	const userIds = await getSortedPbUserIdsOnChart(game, playtype, chartID);
 
 	const allRivals = await GetEveryonesRivalIDs(game, playtype);
 
-	const bwrite: Array<BulkWriteUpdateOneOperation<MONGO_PBScoreDocument>> = [];
-
-	let rank = 0;
-
-	// what users have we saw so far? used for rivalRanking calculations
 	const seenUserIDs: Array<integer> = [];
 
-	for (const score of scores) {
-		rank++;
-		seenUserIDs.push(score.userID);
+	const v3Game = GamePTToV3(game, playtype) as Game;
 
-		const thisUsersRivals = allRivals[score.userID];
+	const chartRow = await DB.selectFrom("chart")
+		.select("id")
+		.where("chart.id", "=", chartID)
+		.where("chart.game", "=", v3Game)
+		.executeTakeFirst();
+
+	if (!chartRow) {
+		return;
+	}
+
+	for (const userId of userIds) {
+		seenUserIDs.push(userId);
+
+		const thisUsersRivals = allRivals[userId];
 
 		let rivalRank: integer | null = null;
 
@@ -156,78 +178,56 @@ export async function UpdateChartRanking(game: GameGroup, playtype: Playtype, ch
 			rivalRank = thisUsersRivals.filter((e) => seenUserIDs.includes(e)).length + 1;
 		}
 
-		bwrite.push({
-			updateOne: {
-				filter: { chartID: score.chartID, userID: score.userID },
-				update: {
-					$set: {
-						rankingData: {
-							rank,
-							outOf: scores.length,
-							rivalRank,
-						},
-					},
-				},
-			},
-		});
-	}
+		const pbRow = await DB.selectFrom("pb")
+			.selectAll()
+			.where("user_id", "=", userId)
+			.where("chart_id", "=", chartRow.id)
+			.where("lens", "is", null)
+			.executeTakeFirst();
 
-	// If a score is deleted such that the chart is now empty of
-	// scores, the below statement will crash with no op specified.
-	if (bwrite.length === 0) {
-		return;
-	}
+		if (!pbRow) {
+			continue;
+		}
 
-	await MONGODB_KILL["personal-bests"].bulkWrite(bwrite, { ordered: false });
+		const raw = pbRow.calculated_data;
+		const cd =
+			typeof raw === "string"
+				? (JSON.parse(raw) as Record<string, unknown>)
+				: ((raw ?? {}) as Record<string, unknown>);
+		delete cd.rank;
+		delete cd.outOf;
+
+		await DB.updateTable("pb")
+			.set({
+				calculated_data: JSON.stringify({
+					...cd,
+					rivalRank,
+				}),
+			})
+			.where("row_id", "=", pbRow.row_id)
+			.execute();
+	}
 }
 
-async function GetSortedPBs(game: GameGroup, playtype: Playtype, chartID: string) {
-	const gptConfig = GetGamePTConfig(game, playtype);
-	let sortOptions: SortOptionObject<MONGO_PBScoreDocument> = {
-		[`scoreData.${gptConfig.defaultMetric}`]: -1,
-	};
+async function getSortedPbUserIdsOnChart(game: GameGroup, playtype: Playtype, chartID: string) {
+	const v3Game = GamePTToV3(game, playtype) as Game;
 
-	if (game === "ongeki") {
-		sortOptions = {
-			[`scoreData.score`]: -1,
-			[`scoreData.platinumScore`]: -1,
-		};
-	} else if (game === "chunithm") {
-		sortOptions = {
-			[`scoreData.score`]: -1,
-			[`scoreData.enumIndexes.noteLamp`]: -1,
-			[`scoreData.enumIndexes.clearLamp`]: -1,
-		};
-	}
+	const rows = await DB.selectFrom("pb")
+		.innerJoin("chart", "chart.id", "pb.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select("pb.user_id")
+		.where((eb) => eb.or([eb("chart.id", "=", chartID), eb("chart.legacy_id", "=", chartID)]))
+		.where("chart.game", "=", v3Game)
+		.orderBy("pb.ranking_value", "desc")
+		.orderBy(sql`pb.ranking_value_tb1 DESC NULLS LAST`)
+		.orderBy(sql`pb.ranking_value_tb2 DESC NULLS LAST`)
+		.orderBy(sql`pb.ranking_value_tb3 DESC NULLS LAST`)
+		.orderBy(sql`pb.ranking_value_tb4 DESC NULLS LAST`)
+		.orderBy(sql`pb.ranking_value_tb5 DESC NULLS LAST`)
+		.orderBy("pb.time_achieved", "asc")
+		.execute();
 
-	return MONGODB_KILL["personal-bests"].aggregate([
-		{
-			$match: {
-				chartID,
-			},
-		},
-		{
-			$addFields: {
-				hasTimeAchieved: {
-					$cond: {
-						if: { $eq: ["$timeAchieved", null] },
-						then: false,
-						else: true,
-					},
-				},
-			},
-		},
-		{
-			$sort: {
-				...sortOptions,
-				hasTimeAchieved: -1,
-				timeAchieved: 1,
-			},
-		},
-		{
-			$project: {
-				hasTimeAchieved: 0,
-			},
-		},
-	]);
+	return rows.map((r) => r.user_id);
 }
+
+export { upsertPbFromMongoDoc } from "./upsert-pb-pg";

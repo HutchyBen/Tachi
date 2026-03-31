@@ -1,13 +1,13 @@
 import type { RequestHandler } from "express";
 
-import { GetChartByPgIdOrLegacyId } from "#lib/db-formats/chart";
+import { GetChartById } from "#lib/db-formats/chart";
 import { AssignToReqTachiData, GetGPT } from "#utils/req-tachi-data";
 import { GamePTToV3 } from "tachi-common";
 
 export const ValidateAndGetChart: RequestHandler = async (req, res, next) => {
 	const { game, playtype } = GetGPT(req);
 
-	const chart = await GetChartByPgIdOrLegacyId(GamePTToV3(game, playtype), req.params.chartID);
+	const chart = await GetChartById(GamePTToV3(game, playtype), req.params.chartID);
 
 	if (!chart) {
 		return res.status(404).json({

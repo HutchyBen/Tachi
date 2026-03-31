@@ -1,16 +1,17 @@
+import { ACTION_BacksyncBmsPmsSeeds } from "#actions/backsync-bms-pms-seeds";
+import { ACTION_BMSTableSync } from "#actions/bms-table-sync";
+import { ACTION_UGSSnapshot } from "#actions/ugs-snapshot";
+import { ACTION_UpdateBpiData } from "#actions/update-bpi-data";
+import { ACTION_UpdateDpTiers } from "#actions/update-dp-tiers";
+import { DefaultAdminUser } from "#lib/jobs/default-admin-user";
 import { log } from "#lib/log/log";
 import { TachiConfig } from "#lib/setup/config";
 import { DedupeArr } from "#utils/misc";
 import { Queue, Worker } from "bullmq";
 
-import { BacksyncBMSPMSSongsAndCharts } from "../backsync-bms-pms-data";
 import { UpdateAILevels } from "../bms-ai-table-sync";
-import { SyncBMSTables } from "../bms-table-sync";
 import { DeorphanScoresMain } from "../deorphan-scores";
 import { RebuildFolderChartLookupJob } from "../rebuild-folder-chart-lookup";
-import { UGSSnapshot } from "../ugs-snapshot";
-import { UpdatePoyashiData } from "../update-bpi-data";
-import { UpdateDPTiers } from "../update-dp-tiers";
 
 interface Job {
 	name: string;
@@ -27,7 +28,10 @@ const jobs: Array<Job> = [
 	{
 		name: "Snapshot User Game Stats",
 		cronFormat: "0 0 * * *",
-		run: UGSSnapshot,
+		run: async () => {
+			const taker = await DefaultAdminUser.actionTaker();
+			await ACTION_UGSSnapshot(taker, {});
+		},
 	},
 	{
 		name: "De-Orphan Scores",
@@ -44,13 +48,19 @@ if (TachiConfig.TYPE !== "boku") {
 	jobs.push({
 		name: "Update BPI",
 		cronFormat: "2 0 * * *",
-		run: UpdatePoyashiData,
+		run: async () => {
+			const taker = await DefaultAdminUser.actionTaker();
+			await ACTION_UpdateBpiData(taker, {});
+		},
 	});
 
 	jobs.push({
 		name: "Update DP Tiers",
 		cronFormat: "3 0 * * *",
-		run: UpdateDPTiers,
+		run: async () => {
+			const taker = await DefaultAdminUser.actionTaker();
+			await ACTION_UpdateDpTiers(taker, {});
+		},
 	});
 }
 
@@ -65,13 +75,19 @@ if (TachiConfig.TYPE !== "kamai") {
 	jobs.push({
 		name: "Update Tables",
 		cronFormat: "3 0 * * *",
-		run: SyncBMSTables,
+		run: async () => {
+			const taker = await DefaultAdminUser.actionTaker();
+			await ACTION_BMSTableSync(taker, {});
+		},
 	});
 
 	jobs.push({
 		name: "Backsync BMS + PMS",
 		cronFormat: "4 0 * * *",
-		run: BacksyncBMSPMSSongsAndCharts,
+		run: async () => {
+			const taker = await DefaultAdminUser.actionTaker();
+			await ACTION_BacksyncBmsPmsSeeds(taker, {});
+		},
 	});
 }
 

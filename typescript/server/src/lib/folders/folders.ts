@@ -1,17 +1,21 @@
 import type { Kysely } from "kysely";
-import type { FilterQuery } from "mongodb";
 import type { Database } from "tachi-db";
 
 import { SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart";
+import { LoadFolderDocumentsByIds } from "#lib/db-formats/folders";
+import { LoadPbsForUserOnChartsByPgIds } from "#lib/db-formats/pb";
 import { GetSongsByLegacyIDs } from "#lib/db-formats/song";
+import { LoadTableDocumentByLegacyId } from "#lib/db-formats/table";
 import { log } from "#lib/log/log";
-import MONGODB_KILL from "#services/mongo/db";
+import { pgScoreDataToMongo } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db.js";
 import { GetFolderForIDGuaranteed } from "#utils/db";
+import { ISO8601ToUnixMilliseconds, UnixMillisecondsToISO8601 } from "#utils/time";
 import fjsh from "fast-json-stable-hash";
 import {
 	FormatGameGroup,
 	type GameGroup,
+	GamePTToV3,
 	GetGamePTConfig,
 	GetScoreEnumConfs,
 	GetScoreMetrics,
@@ -19,19 +23,21 @@ import {
 	type MONGO_ChartDocument,
 	type MONGO_FolderDocument,
 	type MONGO_PBScoreDocument,
+	type MONGO_RecentlyViewedFolderDocument,
 	type MONGO_SongDocument,
 	type MONGO_TableDocument,
 	type Playtype,
+	V3ToGamePT,
 } from "tachi-common";
 
 import {
 	BuildFolderQuery as BuildFolderQueryImpl,
 	GetFolderChartIDs as GetFolderChartIDsImpl,
 } from "./folder-query.js";
+
 /** Loads charts for a folder using `folder_chart_lookup` + `chart` / `song` joins. */
 export async function GetFolderCharts(
 	folder: MONGO_FolderDocument,
-	_filter: FilterQuery<MONGO_ChartDocument> = {},
 ): Promise<{ charts: Array<MONGO_ChartDocument> }> {
 	const chartIds = await GetFolderChartIDs(folder.folderID);
 
@@ -52,9 +58,8 @@ export async function GetFolderCharts(
 
 export async function GetFolderChartsAndSongs(
 	folder: MONGO_FolderDocument,
-	filter: FilterQuery<MONGO_ChartDocument> = {},
 ): Promise<{ charts: Array<MONGO_ChartDocument>; songs: Array<MONGO_SongDocument> }> {
-	const { charts } = await GetFolderCharts(folder, filter);
+	const { charts } = await GetFolderCharts(folder);
 
 	const legacyIds = [...new Set(charts.map((e) => e.songID))];
 	const songs = await GetSongsByLegacyIDs(folder.game, legacyIds);
@@ -85,9 +90,16 @@ export async function GetFolderIDsForChartId(chartId: string, db: Kysely<Databas
 }
 
 export async function GetFoldersFromTable(table: MONGO_TableDocument) {
-	const folders = await MONGODB_KILL.folders.find({
-		folderID: { $in: table.folders },
-	});
+	const folderMap = await LoadFolderDocumentsByIds(table.folders);
+	const folders: Array<MONGO_FolderDocument> = [];
+
+	for (const folderID of table.folders) {
+		const doc = folderMap.get(folderID);
+
+		if (doc) {
+			folders.push(doc);
+		}
+	}
 
 	if (folders.length !== table.folders.length) {
 		// this is an error, but we can return anyway.
@@ -95,9 +107,6 @@ export async function GetFoldersFromTable(table: MONGO_TableDocument) {
 			`Table ${table.tableID} has a mismatch of real folders to stored folders. ${table.folders.length} -> ${folders.length}`,
 		);
 	}
-
-	// we also need to sort folders in their indexed order.
-	folders.sort((a, b) => table.folders.indexOf(a.folderID) - table.folders.indexOf(b.folderID));
 
 	return folders;
 }
@@ -136,12 +145,13 @@ export async function GetFolderNamesInOrder(table: MONGO_TableDocument): Promise
 }
 
 export async function GetPBsOnFolder(userID: integer, folder: MONGO_FolderDocument) {
-	const { charts, songs } = await GetFolderChartsAndSongs(folder, {});
+	const { charts, songs } = await GetFolderChartsAndSongs(folder);
+	const chartIds = charts.map((e) => e.chartID);
 
-	const pbs = await MONGODB_KILL["personal-bests"].find({
-		userID,
-		chartID: { $in: charts.map((e) => e.chartID) },
-	});
+	const pbs =
+		chartIds.length === 0
+			? []
+			: await LoadPbsForUserOnChartsByPgIds(userID, chartIds, { limit: chartIds.length });
 
 	return { pbs, charts, songs };
 }
@@ -204,33 +214,51 @@ export async function GetRecentlyViewedFolders(
 	game: GameGroup,
 	playtype: Playtype,
 ) {
-	const views = await MONGODB_KILL["recent-folder-views"].find(
-		{
-			userID,
-			game,
-			playtype,
-		},
-		{
-			sort: {
-				lastViewed: -1,
-			},
-			limit: 6,
-		},
-	);
+	const v3Game = GamePTToV3(game, playtype);
 
-	if (views.length === 0) {
-		return { views, folders: [] };
+	const rows = await DB.selectFrom("folder_view")
+		.innerJoin("folder", "folder.id", "folder_view.folder_id")
+		.select(["folder_view.folder_id", "folder_view.last_viewed", "folder.game"])
+		.where("folder_view.user_id", "=", userID)
+		.where("folder.game", "=", v3Game)
+		.orderBy("folder_view.last_viewed", "desc")
+		.limit(6)
+		.execute();
+
+	if (rows.length === 0) {
+		const emptyViews: Array<MONGO_RecentlyViewedFolderDocument> = [];
+
+		return { views: emptyViews, folders: [] };
 	}
 
-	const folders = await MONGODB_KILL.folders.find({
-		folderID: { $in: views.map((e) => e.folderID) },
+	const views: Array<MONGO_RecentlyViewedFolderDocument> = rows.map((r) => {
+		const { game: g, playtype: pt } = V3ToGamePT(r.game);
+
+		return {
+			userID,
+			game: g,
+			playtype: pt,
+			folderID: r.folder_id,
+			lastViewed: ISO8601ToUnixMilliseconds(r.last_viewed),
+		};
 	});
+
+	const folderMap = await LoadFolderDocumentsByIds(rows.map((r) => r.folder_id));
+	const folders: Array<MONGO_FolderDocument> = [];
+
+	for (const r of rows) {
+		const doc = folderMap.get(r.folder_id);
+
+		if (doc) {
+			folders.push(doc);
+		}
+	}
 
 	return { views, folders };
 }
 
 export async function GetTableForIDGuaranteed(tableID: string): Promise<MONGO_TableDocument> {
-	const table = await MONGODB_KILL.tables.findOne({ tableID });
+	const table = await LoadTableDocumentByLegacyId(tableID);
 
 	if (!table) {
 		throw new Error(`Couldn't find table with ID '${tableID}'.`);
@@ -259,32 +287,63 @@ export async function GetEnumDistForFolderAsOf(
 
 	const gptConfig = GetGamePTConfig(folder.game, folder.playtype);
 
-	const groupOn: any = {};
-
 	const enumMetrics = GetScoreEnumConfs(gptConfig);
+	const v3Game = GamePTToV3(game, playtype);
+	const beforeIso = UnixMillisecondsToISO8601(beforeTime);
 
-	for (const met of Object.keys(enumMetrics)) {
-		groupOn[met] = { $max: `$scoreData.enumIndexes.${met}` };
+	const metricKeys = Object.keys(enumMetrics);
+
+	const bestEnumIndexes: Array<{ _id: string } & Record<string, integer>> = [];
+
+	if (chartIDs.length > 0) {
+		const rows = await DB.selectFrom("score")
+			.select(["score.chart_id", "score.data", "score.derived_data", "score.judgements"])
+			.where("score.user_id", "=", userID)
+			.where("score.game", "=", v3Game)
+			.where("score.chart_id", "in", chartIDs)
+			.where((eb) =>
+				eb.or([eb("score.time_added", "is", null), eb("score.time_added", "<", beforeIso)]),
+			)
+			.execute();
+
+		const maxByChart = new Map<string, Record<string, integer>>();
+
+		for (const row of rows) {
+			const mongoData = pgScoreDataToMongo(v3Game, {
+				data: row.data as any,
+				derived: row.derived_data as any,
+				judgements: row.judgements as any,
+			});
+
+			const enumIndexes = mongoData.enumIndexes as Record<string, integer> | undefined;
+			const optionalEnum = mongoData.optional?.enumIndexes as
+				| Record<string, integer>
+				| undefined;
+
+			const curMax = maxByChart.get(row.chart_id) ?? {};
+
+			for (const metric of metricKeys) {
+				const idx = enumIndexes?.[metric] ?? optionalEnum?.[metric];
+				if (idx === undefined) {
+					continue;
+				}
+
+				const prev = curMax[metric];
+				if (prev === undefined || idx > prev) {
+					curMax[metric] = idx;
+				}
+			}
+
+			maxByChart.set(row.chart_id, curMax);
+		}
+
+		for (const [chartId, metrics] of maxByChart) {
+			bestEnumIndexes.push({ _id: chartId, ...metrics } as { _id: string } & Record<
+				string,
+				integer
+			>);
+		}
 	}
-
-	const bestEnumIndexes: Array<{ _id: string } & Record<string, integer>> =
-		await MONGODB_KILL.scores.aggregate([
-			{
-				$match: {
-					chartID: { $in: chartIDs },
-					userID,
-					// we deliberately use not gte as that includes null
-					// rather than "lt" which skips over null.
-					timeAdded: { $not: { $gte: beforeTime } },
-				},
-			},
-			{
-				$group: {
-					_id: "$chartID",
-					...groupOn,
-				},
-			},
-		]);
 
 	const enumDist: Record<string, Record<string, integer>> = {};
 	const cumulativeEnumDist: Record<string, Record<string, integer>> = {};

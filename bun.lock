@@ -426,6 +426,7 @@
       "devDependencies": {
         "@typescript/native-preview": "catalog:",
         "eslint-config-tachi": "workspace:*",
+        "vitest": "catalog:",
       },
     },
   },

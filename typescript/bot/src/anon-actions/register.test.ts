@@ -31,9 +31,8 @@ describe("ACTION_Register", () => {
 			.where("user_id", "=", userId)
 			.executeTakeFirst();
 
-		// node-pg returns BIGINT columns as strings
 		expect(row).toMatchObject({
-			user_id: String(userId),
+			user_id: userId,
 			discord_id: discordId,
 			api_token: apiToken,
 		});
@@ -80,7 +79,7 @@ describe("ACTION_Register", () => {
 			.executeTakeFirst();
 
 		expect(action).toMatchObject({
-			app: "BOT",
+			app: "TACHI_BOT",
 			kind: "REGISTER",
 			result: "GOOD",
 			user_id: null,

@@ -1,10 +1,20 @@
 import DB from "#services/pg/db";
 import { toPgGame } from "#services/pg/seeds";
-import { type Selectable } from "kysely";
+import { type Selection } from "kysely";
 import { type GameGroup, type MONGO_TableDocument, type Playtype, V3ToGamePT } from "tachi-common";
 import { type Database } from "tachi-db";
 
-export type TableRow = Selectable<Database["table"]>;
+export const SELECT_TABLE = [
+	"table.id",
+	"table.legacy_id",
+	"table.game",
+	"table.inactive",
+	"table.title",
+	"table.default_value",
+	"table.slug",
+] as const;
+
+export type TableRow = Selection<Database, "table", (typeof SELECT_TABLE)[number]>;
 
 export function ToTableDocument(row: TableRow, folderIds: Array<string>): MONGO_TableDocument {
 	const { game, playtype } = V3ToGamePT(row.game);
@@ -21,6 +31,18 @@ export function ToTableDocument(row: TableRow, folderIds: Array<string>): MONGO_
 	};
 }
 
+async function tableRowToDocumentWithFolders(row: TableRow): Promise<MONGO_TableDocument> {
+	const tfRows = await DB.selectFrom("table_folder")
+		.select("folder_id")
+		.where("table_id", "=", row.id)
+		.execute();
+
+	return ToTableDocument(
+		row,
+		tfRows.map((t) => t.folder_id),
+	);
+}
+
 /**
  * Load table documents for a game/playtype (API shape). No folder *documents* — only folder IDs.
  */
@@ -31,7 +53,7 @@ export async function GetTableDocumentsForGamePlaytype(
 ): Promise<Array<MONGO_TableDocument>> {
 	const pgGame = toPgGame(game, playtype);
 
-	let q = DB.selectFrom("table").selectAll().where("game", "=", pgGame);
+	let q = DB.selectFrom("table").select(SELECT_TABLE).where("game", "=", pgGame);
 
 	if (!includeInactive) {
 		q = q.where("inactive", "=", false);
@@ -60,4 +82,47 @@ export async function GetTableDocumentsForGamePlaytype(
 	}
 
 	return rows.map((row) => ToTableDocument(row, foldersByTable.get(row.id) ?? []));
+}
+
+/**
+ * Load one table by API `tableID` (`table.legacy_id`), with folder ids from `table_folder`
+ * (same join pattern as {@link GetTableDocumentsForGamePlaytype}).
+ */
+export async function LoadTableDocumentByLegacyId(
+	legacyId: string,
+): Promise<MONGO_TableDocument | undefined> {
+	const row = await DB.selectFrom("table")
+		.select(SELECT_TABLE)
+		.where("legacy_id", "=", legacyId)
+		.executeTakeFirst();
+
+	if (!row) {
+		return undefined;
+	}
+
+	return tableRowToDocumentWithFolders(row);
+}
+
+/**
+ * Load one table by API `tableID` for a specific game playtype route (matches Mongo
+ * `tables.findOne({ tableID, game, playtype })`).
+ */
+export async function LoadTableDocumentByLegacyIdForGamePlaytype(
+	legacyId: string,
+	game: GameGroup,
+	playtype: Playtype,
+): Promise<MONGO_TableDocument | undefined> {
+	const pgGame = toPgGame(game, playtype);
+
+	const row = await DB.selectFrom("table")
+		.select(SELECT_TABLE)
+		.where("legacy_id", "=", legacyId)
+		.where("game", "=", pgGame)
+		.executeTakeFirst();
+
+	if (!row) {
+		return undefined;
+	}
+
+	return tableRowToDocumentWithFolders(row);
 }

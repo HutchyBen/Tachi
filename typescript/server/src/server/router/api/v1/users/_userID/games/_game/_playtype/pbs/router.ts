@@ -1,19 +1,26 @@
+import { GetChartById } from "#lib/db-formats/chart.js";
+import {
+	LoadPbByUserAndChartPgId,
+	LoadPbDocumentsForUserPrimaryCharts,
+	LoadPbDocumentsForUserPrimaryChartsSortedByAlg,
+	LoadPbsByUserIdsAndChartPgId,
+	LoadPbsForUserOnChartsByPgIds,
+} from "#lib/db-formats/pb";
+import { LoadScoreDocumentById } from "#lib/db-formats/score";
 import { log } from "#lib/log/log";
 import { GetRivalUsers } from "#lib/rivals/rivals";
 import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch-manual/converter";
 import { SearchSpecificGameSongsAndCharts } from "#lib/search/song-charts.js";
 import prValidate from "#server/middleware/prudence-validate";
 import { AggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
-import MONGODB_KILL from "#services/mongo/db";
-import { ResolveLegacyChartIdForMongo } from "#utils/chart-mongo-id";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { IsValidScoreAlg } from "#utils/misc";
 import { GetAdjacentAbove, GetAdjacentBelow } from "#utils/queries/pbs";
 import { GetUGPT } from "#utils/req-tachi-data";
-import { FilterChartsAndSongs, GetPBOnChart, GetScoreIDsFromComposed } from "#utils/scores";
+import { FilterChartsAndSongs, GetScoreIDsFromComposed } from "#utils/scores";
 import { GetUsersWithIDs } from "#utils/user";
 import { Router } from "express";
-import { GetGamePTConfig, type MatchTypeResolver, MongoChartLegacyId } from "tachi-common";
+import { GamePTToV3, GetGamePTConfig, type MatchTypeResolver } from "tachi-common";
 import { PR_RESOLVER } from "tachi-common/lib/schemas";
 
 const router: Router = Router({ mergeParams: true });
@@ -41,18 +48,8 @@ router.get("/", async (req, res) => {
 		playtype,
 	);
 
-	const pbs = await MONGODB_KILL["personal-bests"].find(
-		{
-			chartID: { $in: allCharts.map((e) => MongoChartLegacyId(e)) },
-			userID: user.id,
-		},
-		{
-			sort: {
-				timeAchieved: -1,
-			},
-			limit: 30,
-		},
-	);
+	const chartPgIds = [...new Set(allCharts.map((c) => c.chartID))];
+	const pbs = await LoadPbsForUserOnChartsByPgIds(user.id, chartPgIds, { limit: 30 });
 
 	const { songs, charts } = FilterChartsAndSongs(pbs, allCharts, allSongs);
 
@@ -78,12 +75,8 @@ router.get("/", async (req, res) => {
 router.get("/all", AggressiveRateLimitMiddleware, async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const pbs = await MONGODB_KILL["personal-bests"].find({
-		userID: user.id,
-		game,
-		playtype,
-		isPrimary: true,
-	});
+	const v3Game = GamePTToV3(game, playtype);
+	const pbs = await LoadPbDocumentsForUserPrimaryCharts(user.id, v3Game);
 
 	const { songs, charts } = await GetRelevantSongsAndCharts(pbs, game);
 
@@ -118,20 +111,8 @@ router.get("/best", prValidate({ alg: "*string" }), async (req, res) => {
 
 	const alg = (req.query.alg as string | undefined) ?? gptConfig.defaultScoreRatingAlg;
 
-	const pbs = await MONGODB_KILL["personal-bests"].find(
-		{
-			userID: user.id,
-			game,
-			playtype,
-			isPrimary: true,
-		},
-		{
-			limit: 100,
-			sort: {
-				[`calculatedData.${alg}`]: -1,
-			},
-		},
-	);
+	const v3Game = GamePTToV3(game, playtype);
+	const pbs = await LoadPbDocumentsForUserPrimaryChartsSortedByAlg(user.id, v3Game, alg, 100);
 
 	const { songs, charts } = await GetRelevantSongsAndCharts(pbs, game);
 
@@ -157,19 +138,7 @@ router.get("/best", prValidate({ alg: "*string" }), async (req, res) => {
 router.get("/:chartID", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const legacyMongoId = await ResolveLegacyChartIdForMongo(game, playtype, req.params.chartID);
-
-	if (!legacyMongoId) {
-		return res.status(404).json({
-			success: false,
-			description: `This chart does not exist.`,
-		});
-	}
-
-	const chart = await MONGODB_KILL.anyCharts[game].findOne({
-		chartID: legacyMongoId,
-		playtype,
-	});
+	const chart = await GetChartById(GamePTToV3(game, playtype), req.params.chartID);
 
 	if (!chart) {
 		return res.status(404).json({
@@ -178,10 +147,7 @@ router.get("/:chartID", async (req, res) => {
 		});
 	}
 
-	const pb = await MONGODB_KILL["personal-bests"].findOne({
-		chartID: legacyMongoId,
-		userID: user.id,
-	});
+	const pb = await LoadPbByUserAndChartPgId(user.id, chart.chartID);
 
 	if (!pb) {
 		return res.status(404).json({
@@ -193,9 +159,11 @@ router.get("/:chartID", async (req, res) => {
 	if (req.query.getComposition !== undefined) {
 		const scoreIDs = GetScoreIDsFromComposed(pb);
 
-		const scores = await MONGODB_KILL.scores.find({
-			scoreID: { $in: scoreIDs },
-		});
+		// TODO(zk): No! Nonsense. This should be done
+		// with one query - not N.
+		const scores = (await Promise.all(scoreIDs.map((id) => LoadScoreDocumentById(id)))).filter(
+			(s): s is NonNullable<typeof s> => s !== undefined,
+		);
 
 		return res.status(200).json({
 			success: true,
@@ -226,9 +194,9 @@ router.get("/:chartID", async (req, res) => {
 router.get("/:chartID/rivals", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const legacyMongoId = await ResolveLegacyChartIdForMongo(game, playtype, req.params.chartID);
+	const chart = await GetChartById(GamePTToV3(game, playtype), req.params.chartID);
 
-	if (!legacyMongoId) {
+	if (!chart) {
 		return res.status(404).json({
 			success: false,
 			description: `This chart does not exist.`,
@@ -237,12 +205,12 @@ router.get("/:chartID/rivals", async (req, res) => {
 
 	const rivals = await GetRivalUsers(user.id, game, playtype);
 
-	const pbs = await MONGODB_KILL["personal-bests"].find({
-		userID: { $in: rivals.map((e) => e.id) },
-		chartID: legacyMongoId,
-	});
+	const pbs = await LoadPbsByUserIdsAndChartPgId(
+		rivals.map((e) => e.id),
+		chart.chartID,
+	);
 
-	const usersPB = await GetPBOnChart(user.id, legacyMongoId);
+	const usersPB = await LoadPbByUserAndChartPgId(user.id, chart.chartID);
 
 	if (usersPB) {
 		pbs.push(usersPB);
@@ -267,19 +235,7 @@ router.get("/:chartID/rivals", async (req, res) => {
 router.get("/:chartID/leaderboard-adjacent", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const legacyMongoId = await ResolveLegacyChartIdForMongo(game, playtype, req.params.chartID);
-
-	if (!legacyMongoId) {
-		return res.status(404).json({
-			success: false,
-			description: `This chart does not exist.`,
-		});
-	}
-
-	const chart = await MONGODB_KILL.anyCharts[game].findOne({
-		chartID: legacyMongoId,
-		playtype,
-	});
+	const chart = await GetChartById(GamePTToV3(game, playtype), req.params.chartID);
 
 	if (!chart) {
 		return res.status(404).json({
@@ -288,10 +244,7 @@ router.get("/:chartID/leaderboard-adjacent", async (req, res) => {
 		});
 	}
 
-	const pb = await MONGODB_KILL["personal-bests"].findOne({
-		chartID: legacyMongoId,
-		userID: user.id,
-	});
+	const pb = await LoadPbByUserAndChartPgId(user.id, chart.chartID);
 
 	if (!pb) {
 		return res.status(404).json({
@@ -343,7 +296,7 @@ router.post("/resolve", prValidate(PR_RESOLVER), async (req, res) => {
 		});
 	}
 
-	const pb = await GetPBOnChart(user.id, MongoChartLegacyId(got.chart));
+	const pb = await LoadPbByUserAndChartPgId(user.id, got.chart.chartID);
 
 	if (!pb) {
 		return res.status(404).json({

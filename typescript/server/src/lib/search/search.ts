@@ -7,21 +7,32 @@ import MONGODB_KILL from "#services/mongo/db";
 import DB from "#services/pg/db";
 import { GetSongForIDGuaranteed } from "#utils/db";
 import { EscapeForILIKE } from "#utils/misc";
+import {
+	FindBMSChartsByHashMd5OrSha256,
+	FindITGChartsByHashGSv3,
+	FindPMSChartsByHashMd5OrSha256,
+	FindUSCChartsByHashSHA1,
+} from "#utils/queries/charts";
 import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { GetOnlineCutoff } from "#utils/user";
 import {
 	type GameGroup,
+	GamePTToV3,
 	type GPTStrings,
 	type integer,
 	type MONGO_ChartDocument,
 	type MONGO_FolderDocument,
-	type MONGO_SessionDocument,
 	type MONGO_SongDocument,
 	type MONGO_UserDocument,
 	type Playtype,
 } from "tachi-common";
+import { type Game } from "tachi-db";
 
+import { SearchFoldersFtsAndTrgmGlobal } from "./folders.js";
 import { AsyncFzf } from "./fzf/main";
+import { type SearchSessionHit, SearchSessionsForUserGptFtsAndTrgm } from "./session-search.js";
+
+export type { SearchSessionHit } from "./session-search.js";
 import { SearchSpecificGameSongs, type SongSearchReturn } from "./songs.js";
 
 interface SearchControls {
@@ -38,7 +49,6 @@ const SEARCH_CONTROLS = {
 	goals: { keys: ["name"], primary: "goalID" },
 	quests: { keys: ["name"], primary: "questID" },
 	users: { keys: ["username"], primary: "id" },
-	folders: { keys: ["title", "searchTerms"], primary: "folderID" },
 } satisfies Partial<Record<keyof typeof MONGODB_KILL, SearchControls>>;
 
 interface SearchData {
@@ -156,22 +166,14 @@ export function SearchSessions(
 	playtype?: Playtype,
 	userID?: integer,
 	limit = 100,
-) {
-	const baseMatch: FilterQuery<MONGO_SessionDocument> = {};
-
-	if (game) {
-		baseMatch.game = game;
+): Promise<Array<SearchSessionHit>> {
+	if (game === undefined || playtype === undefined || userID === undefined) {
+		return Promise.resolve([]);
 	}
 
-	if (playtype) {
-		baseMatch.playtype = playtype;
-	}
+	const v3Game = GamePTToV3(game, playtype) as Game;
 
-	if (userID !== undefined) {
-		baseMatch.userID = userID;
-	}
-
-	return SearchCollection(MONGODB_KILL.sessions, search, "sessions", baseMatch, limit);
+	return SearchSessionsForUserGptFtsAndTrgm(userID, v3Game, search, limit);
 }
 
 /**
@@ -242,18 +244,12 @@ export async function SearchGamesSongs(search: string, games: Array<GameGroup>) 
 }
 
 export async function SearchForChartHash(search: string) {
-	const results = await Promise.all([
-		MONGODB_KILL.charts.bms.find({
-			$or: [{ "data.hashMD5": search }, { "data.hashSHA256": search }],
-		}),
-		MONGODB_KILL.charts.pms.find({
-			$or: [{ "data.hashMD5": search }, { "data.hashSHA256": search }],
-		}),
-		MONGODB_KILL.charts.usc.find({ "data.hashSHA1": search }),
-		MONGODB_KILL.charts.itg.find({ "data.hashGSv3": search }),
+	const [bmsCharts, pmsCharts, uscCharts, itgCharts] = await Promise.all([
+		FindBMSChartsByHashMd5OrSha256(search),
+		FindPMSChartsByHashMd5OrSha256(search),
+		FindUSCChartsByHashSHA1(search),
+		FindITGChartsByHashGSv3(search),
 	]);
-
-	const [bmsCharts, pmsCharts, uscCharts, itgCharts] = results;
 
 	const output: Record<
 		GPTStrings["bms" | "itg" | "pms" | "usc"],
@@ -298,7 +294,18 @@ export async function SearchForChartHash(search: string) {
 export function SearchFolders(
 	search: string,
 	existingMatch?: FilterQuery<MONGO_FolderDocument>,
-	limit?: integer,
-) {
-	return SearchCollection(MONGODB_KILL.folders, search, "folders", existingMatch, limit);
+	limit = 500,
+): Promise<Array<{ __textScore: number } & MONGO_FolderDocument>> {
+	const gameIn = existingMatch?.game as { $in?: Array<GameGroup> } | undefined;
+	const playtypeIn = existingMatch?.playtype as { $in?: Array<Playtype> } | undefined;
+
+	if (gameIn?.$in !== undefined && playtypeIn?.$in !== undefined) {
+		return SearchFoldersFtsAndTrgmGlobal(search, {
+			limit,
+			games: gameIn.$in,
+			playtypes: playtypeIn.$in,
+		});
+	}
+
+	return SearchFoldersFtsAndTrgmGlobal(search, { limit });
 }

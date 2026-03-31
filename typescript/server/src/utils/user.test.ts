@@ -2,12 +2,7 @@ import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { describe, expect, it } from "vitest";
 
-import {
-	GetAllRankings,
-	GetAllUserRivals,
-	GetUsersRanking,
-	GetUsersRankingAndOutOf,
-} from "./user";
+import { GetAllRankings, GetAllUserRivals, GetUsersRanking, GetUsersRankingAndOutOf } from "./user";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 

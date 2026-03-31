@@ -2,19 +2,29 @@ import type {
 	BeatorajaChart,
 	BeatorajaScore,
 } from "#lib/score-import/import-types/ir/beatoraja/types";
-import type { integer } from "tachi-common";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
+import { GetChartById } from "#lib/db-formats/chart";
+import { LoadScoreDocumentById } from "#lib/db-formats/score";
+import { GetSongByLegacyID } from "#lib/db-formats/song";
 import { log } from "#lib/log/log";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { ServerConfig } from "#lib/setup/config";
 import { RequireNotGuest } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { UpdateClassIfGreater } from "#utils/class";
 import { IsRecord, NotNullish } from "#utils/misc";
 import { Router } from "express";
+import { sql } from "kysely";
 import { p } from "prudence";
+import {
+	type Classes,
+	GamePTToV3,
+	type GPTString,
+	type integer,
+	type Playtypes,
+} from "tachi-common";
 
 import { ValidateIRClientVersion } from "./auth";
 import chartsRouter from "./charts/_chartSHA256/router";
@@ -48,16 +58,24 @@ router.post("/submit-score", RequireNotGuest, async (req, res) => {
 		if (type === "SongOrChartNotFound") {
 			const { chart } = req.safeBody as { chart: BeatorajaChart };
 
-			const orphanInfo: { userIDs: Array<integer> } | null = await MONGODB_KILL[
-				"orphan-chart-queue"
-			].findOne(
-				{
-					"chartDoc.data.hashSHA256": chart.sha256,
-				},
-				{ projection: { userIDs: 1 } },
-			);
+			const orphanRow = await DB.selectFrom("orphan_chart")
+				.select("orphan_chart.id")
+				.where(sql`orphan_chart.chart_doc->'data'->>'hashSHA256'`, "=", chart.sha256)
+				.executeTakeFirst();
 
-			if (!orphanInfo) {
+			const orphanUserCount =
+				orphanRow === undefined
+					? null
+					: Number(
+							(
+								await DB.selectFrom("orphan_chart_user")
+									.select((eb) => eb.fn.countAll<number>().as("c"))
+									.where("orphan_chart_id", "=", orphanRow.id)
+									.executeTakeFirst()
+							)?.c ?? 0,
+						);
+
+			if (orphanUserCount === null) {
 				log.warn(
 					{
 						body: req.safeBody as unknown,
@@ -73,7 +91,7 @@ router.post("/submit-score", RequireNotGuest, async (req, res) => {
 
 			return res.status(202).json({
 				success: true,
-				description: `Chart and score have been orphaned. This chart will be un-orphaned when ${ServerConfig.BEATORAJA_QUEUE_SIZE} players have played the chart (Currently: ${orphanInfo.userIDs.length}).`,
+				description: `Chart and score have been orphaned. This chart will be un-orphaned when ${ServerConfig.BEATORAJA_QUEUE_SIZE} players have played the chart (Currently: ${orphanUserCount}).`,
 				body: {},
 			});
 		} else if (type === "InternalError") {
@@ -97,13 +115,11 @@ router.post("/submit-score", RequireNotGuest, async (req, res) => {
 		});
 	}
 
-	const scoreDoc = await MONGODB_KILL.scores.findOne({
-		scoreID: importRes.body.body.scoreIDs[0],
-	});
+	const scoreDoc = await LoadScoreDocumentById(importRes.body.body.scoreIDs[0]);
 
 	if (!scoreDoc) {
 		log.error(
-			`MONGO_ScoreDocument ${importRes.body.body.scoreIDs[0]} was claimed to be inserted, but wasn't.`,
+			`Score ${importRes.body.body.scoreIDs[0]} was claimed to be inserted, but wasn't.`,
 		);
 		return res.status(500).json({
 			success: false,
@@ -111,48 +127,35 @@ router.post("/submit-score", RequireNotGuest, async (req, res) => {
 		});
 	}
 
-	let song;
-	let chart;
+	const v3Game = GamePTToV3(scoreDoc.game, scoreDoc.playtype);
 
-	if (importRes.body.body.game === "bms") {
-		chart = await MONGODB_KILL.charts.bms.findOne({
-			chartID: scoreDoc.chartID,
-		});
+	const chart = await GetChartById(v3Game, scoreDoc.chartID);
 
-		if (!chart) {
-			log.error(
-				`Expected to a find a bms chart with chartID ${scoreDoc.chartID}, but found none?`,
-			);
+	if (!chart) {
+		log.error(
+			`Expected to find a chart with chartID ${scoreDoc.chartID} for game ${v3Game}, but found none?`,
+		);
 
-			return res.status(500).json({
-				success: false,
-				description: `Internal Service Error.`,
-			});
-		}
-
-		song = await MONGODB_KILL.songs.bms.findOne({
-			id: chart.songID,
-		});
-	} else {
-		chart = await MONGODB_KILL.charts.pms.findOne({
-			chartID: scoreDoc.chartID,
-		});
-
-		if (!chart) {
-			log.error(
-				`Expected to a find a pms chart with chartID ${scoreDoc.chartID}, but found none?`,
-			);
-
-			return res.status(500).json({
-				success: false,
-				description: `Internal Service Error.`,
-			});
-		}
-
-		song = await MONGODB_KILL.songs.pms.findOne({
-			id: chart.songID,
+		return res.status(500).json({
+			success: false,
+			description: `Internal Service Error.`,
 		});
 	}
+
+	const songRow = await GetSongByLegacyID(scoreDoc.game, scoreDoc.songID);
+
+	if (!songRow) {
+		log.error(
+			`Expected to find a song with legacy id ${scoreDoc.songID} in game ${scoreDoc.game}, but found none?`,
+		);
+
+		return res.status(500).json({
+			success: false,
+			description: `Internal Service Error.`,
+		});
+	}
+
+	const song = songRow.doc;
 
 	return res.status(importRes.statusCode).json({
 		success: true,
@@ -279,9 +282,10 @@ router.post(
 		// Combine the md5s into one string in their order.
 		const combinedMD5s = charts.map((e) => e.md5).join("");
 
-		const course = await MONGODB_KILL["bms-course-lookup"].findOne({
-			md5sums: combinedMD5s,
-		});
+		const course = await DB.selectFrom("bms_course_lookup")
+			.select(["set", "playtype", "value"])
+			.where("md5sums", "=", combinedMD5s)
+			.executeTakeFirst();
 
 		if (!course) {
 			return res.status(404).json({
@@ -295,8 +299,8 @@ router.post(
 		const result = await UpdateClassIfGreater(
 			userID,
 			"bms",
-			course.playtype,
-			course.set,
+			course.playtype as Playtypes["bms"],
+			course.set as Classes[GPTString],
 			course.value,
 		);
 

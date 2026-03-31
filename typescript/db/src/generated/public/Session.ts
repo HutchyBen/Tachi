@@ -20,6 +20,8 @@ export default interface SessionTable {
 
   description: ColumnType<string | null, string | null, string | null>;
 
+  textsearch: ColumnType<string, never, never>;
+
   time_inserted: ColumnType<string, string, string>;
 
   time_started: ColumnType<string, string, string>;

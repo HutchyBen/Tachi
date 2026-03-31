@@ -44,7 +44,7 @@ const IIDX_PROFILE_CALCS: GPTProfileCalcs<"iidx:DP" | "iidx:SP"> = async (
 };
 
 const IIDX_MERGERS: Array<PBMergeFunction<GPTStrings["iidx"]>> = [
-	CreatePBMergeFor("largest", "enumIndexes.lamp", "Best Lamp", (base, lamp) => {
+	CreatePBMergeFor("largest", { type: "REGULAR", metric: "lamp" }, "Best Lamp", (base, lamp) => {
 		base.scoreData.lamp = lamp.scoreData.lamp;
 
 		// Update lamp related iidx-specific info from the lampPB.
@@ -58,7 +58,7 @@ const IIDX_MERGERS: Array<PBMergeFunction<GPTStrings["iidx"]>> = [
 
 		base.scoreData.optional.comboBreak = lamp.scoreData.optional.comboBreak;
 	}),
-	CreatePBMergeFor("smallest", "optional.bp", "Lowest BP", (base, bp) => {
+	CreatePBMergeFor("smallest", { type: "REGULAR", metric: "bp" }, "Lowest BP", (base, bp) => {
 		base.scoreData.optional.bp = bp.scoreData.optional.bp;
 	}),
 ];

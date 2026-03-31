@@ -56,6 +56,8 @@ export function MakeAnonAction<A extends AnonActionName>(
 		db,
 		appName: APP_NAME,
 		kind,
+		inputSchema: AnonActionSignatures[kind].input,
+		outputSchema: AnonActionSignatures[kind].output,
 		// @ts-expect-error we're being creative with the types here
 		fn,
 	}) as AnonActionFn<A>;
@@ -70,6 +72,8 @@ export function MakeAction<A extends ActionName>(kind: A, fn: ActionFn<A>): Acti
 		db,
 		appName: APP_NAME,
 		kind,
+		inputSchema: ActionSignatures[kind].input,
+		outputSchema: ActionSignatures[kind].output,
 		// @ts-expect-error we're being creative with the types here
 		fn,
 	}) as ActionFn<A>;

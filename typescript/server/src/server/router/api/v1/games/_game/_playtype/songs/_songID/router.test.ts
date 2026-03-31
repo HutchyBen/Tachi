@@ -86,7 +86,6 @@ describe("GET /api/v1/games/iidx/SP/songs/:songID", () => {
 		const [chart] = res.body.body.charts;
 
 		expect(chart.chartID).toBe(CHART_PG_ID);
-		expect(chart.legacyChartId).toBe(CHART_LEGACY_ID);
 		expect(chart.songID).toBe(SONG_LEGACY_ID);
 		expect(chart.difficulty).toBe("ANOTHER");
 		expect(chart.level).toBe("10");

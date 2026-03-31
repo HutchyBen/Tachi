@@ -100,9 +100,33 @@ export default function UGPTSettingsPage({ reqUser, game, playtype }: UGPT) {
 				<div className="col-12">
 					<Divider className="mt-4 mb-4" />
 					{page === "preferences" ? (
-						<PreferencesForm {...UGPT} loggedInData={loggedInData} />
+						loggedInData.settings ? (
+							<PreferencesForm
+								{...UGPT}
+								loggedInData={{ ...loggedInData, settings: loggedInData.settings }}
+							/>
+						) : (
+							<div className="text-center">
+								<Muted>
+									No game settings exist yet for this profile. Submit a score or
+									import first, then return here.
+								</Muted>
+							</div>
+						)
 					) : page === "showcase" ? (
-						<ShowcaseForm {...UGPT} loggedInData={loggedInData} />
+						loggedInData.settings ? (
+							<ShowcaseForm
+								{...UGPT}
+								loggedInData={{ ...loggedInData, settings: loggedInData.settings }}
+							/>
+						) : (
+							<div className="text-center">
+								<Muted>
+									No game settings exist yet for this profile. Submit a score or
+									import first, then return here.
+								</Muted>
+							</div>
+						)
 					) : (
 						<ManageAccount {...UGPT} />
 					)}
@@ -117,7 +141,7 @@ function PreferencesForm({
 	game,
 	playtype,
 	loggedInData,
-}: { loggedInData: UGPTData } & UGPT) {
+}: { loggedInData: { settings: MONGO_UGPTSettingsDocument } & UGPTData } & UGPT) {
 	const { setLoggedInData } = useContext(UGPTContext);
 
 	const settings = loggedInData.settings;
@@ -127,17 +151,17 @@ function PreferencesForm({
 	const formik = useFormik({
 		initialValues: {
 			preferredScoreAlg:
-				settings!.preferences.preferredScoreAlg || gptConfig.defaultScoreRatingAlg,
+				settings.preferences.preferredScoreAlg || gptConfig.defaultScoreRatingAlg,
 			preferredProfileAlg:
-				settings!.preferences.preferredProfileAlg || gptConfig.defaultProfileRatingAlg,
+				settings.preferences.preferredProfileAlg || gptConfig.defaultProfileRatingAlg,
 			preferredSessionAlg:
-				settings!.preferences.preferredSessionAlg || gptConfig.defaultSessionRatingAlg,
+				settings.preferences.preferredSessionAlg || gptConfig.defaultSessionRatingAlg,
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			gameSpecific: settings!.preferences.gameSpecific as any,
-			defaultTable: settings!.preferences.defaultTable,
+			gameSpecific: settings.preferences.gameSpecific as any,
+			defaultTable: settings.preferences.defaultTable,
 			preferredDefaultEnum:
-				settings!.preferences.preferredDefaultEnum ?? gptConfig.preferredDefaultEnum,
-			preferredRanking: settings!.preferences.preferredRanking ?? "global",
+				settings.preferences.preferredDefaultEnum ?? gptConfig.preferredDefaultEnum,
+			preferredRanking: settings.preferences.preferredRanking ?? "global",
 		},
 		onSubmit: async (values) => {
 			const rj = await APIFetchV1<MONGO_UserDocument>(
@@ -177,7 +201,7 @@ function PreferencesForm({
 	}
 
 	const displayableTables = tables.filter(
-		(e) => !e.inactive || settings?.preferences.defaultTable === e.tableID,
+		(e) => !e.inactive || settings.preferences.defaultTable === e.tableID,
 	);
 
 	const formGroupClassNames = "d-flex flex-column";
@@ -407,12 +431,12 @@ function ShowcaseForm({
 	game,
 	playtype,
 	loggedInData,
-}: { loggedInData: UGPTData } & UGPT) {
+}: { loggedInData: { settings: MONGO_UGPTSettingsDocument } & UGPTData } & UGPT) {
 	const { setLoggedInData } = useContext(UGPTContext);
 
 	const settings = loggedInData.settings;
 
-	const [stats, setStats] = useState(settings!.preferences.stats);
+	const [stats, setStats] = useState(settings.preferences.stats);
 	const [show, setShow] = useState(false);
 
 	const SaveChanges = async () => {

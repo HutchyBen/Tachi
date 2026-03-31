@@ -31,7 +31,7 @@ router.get("/", async (req, res) => {
 		const playtypes = GetGameGroupConfig(game).playtypes;
 
 		for (const playtype of playtypes) {
-			gpts.push({ game, playtype, query: {} });
+			gpts.push({ game, playtype });
 		}
 	}
 

@@ -306,6 +306,82 @@ export const ActionSignatures = {
 		}),
 		output: z.object({}),
 	},
+	PATCH_UGPT_SETTINGS: {
+		input: z.object({
+			userID: z.number().int(),
+			game: z.string(),
+			playtype: z.string(),
+			preferences: z.any(),
+		}),
+		output: z.object({}),
+	},
+	UPDATE_UGPT_SHOWCASE: {
+		input: z.object({
+			userID: z.number().int(),
+			game: z.string(),
+			playtype: z.string(),
+			stats: z.array(z.any()),
+		}),
+		output: z.object({}),
+	},
+	UPDATE_SESSION: {
+		input: z.object({
+			sessionID: z.string(),
+			name: z.string().min(3).max(80).optional(),
+			desc: z.union([z.string().min(3).max(120), z.null()]).optional(),
+			highlight: z.boolean().optional(),
+		}),
+		output: z.object({}),
+	},
+	DELETE_SCORE: {
+		input: z.object({
+			id: z.string(),
+			blacklist: z.boolean().optional(),
+		}),
+		output: z.object({}),
+	},
+	DELETE_SESSION: {
+		input: z.object({
+			id: z.string(),
+		}),
+		output: z.object({}),
+	},
+	DELETE_IMPORT: {
+		input: z.object({
+			id: z.string(),
+		}),
+		output: z.object({}),
+	},
+	BMS_TABLE_SYNC: {
+		input: z.object({}),
+		output: z.object({}),
+	},
+	UGS_SNAPSHOT: {
+		input: z.object({}),
+		output: z.object({}),
+	},
+	BACKSYNC_BMS_PMS_SEEDS: {
+		input: z.object({}),
+		output: z.object({}),
+	},
+	UPDATE_BPI_DATA: {
+		input: z.object({}),
+		output: z.object({
+			chartsUpdated: z.number().int(),
+		}),
+	},
+	UPDATE_DP_TIERS: {
+		input: z.object({}),
+		output: z.object({
+			songsTouched: z.number().int(),
+		}),
+	},
+	UPDATE_SP12_DATA: {
+		input: z.object({}),
+		output: z.object({
+			chartsUpdated: z.number().int(),
+		}),
+	},
 } satisfies Record<string, ActionSignature>;
 
 export const AnonActionSignatures = {

@@ -1,6 +1,7 @@
 import type { Game } from "tachi-db";
 
 import { SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart";
+import { SELECT_SONG_DOCUMENT, ToSongDocument } from "#lib/db-formats/song";
 import DB from "#services/pg/db";
 import { sql, type SqlBool } from "kysely";
 import {
@@ -11,6 +12,7 @@ import {
 	type integer,
 	type MONGO_ChartDocument,
 	type MONGO_ChartDocumentData,
+	type MONGO_SongDocument,
 	type Playtype,
 	type Playtypes,
 	V3ToGamePT,
@@ -36,7 +38,7 @@ export async function FindChartWithChartID(game: GameGroup, chartID: string) {
 		.select(SELECT_CHART)
 		.select("song.legacy_id as song_legacy_id")
 		.where("song.game_group", "=", game)
-		.where((eb) => eb.or([eb("chart.id", "=", chartID), eb("chart.legacy_id", "=", chartID)]))
+		.where("chart.id", "=", chartID)
 		.executeTakeFirst();
 
 	if (!row) {
@@ -149,6 +151,199 @@ export async function FindBMSChartOnHash(hash: string) {
 }
 
 /**
+ * BMS charts for a playtype whose chart `data` has sieglinde EC or HC &gt; 0 (GPT sieglinde-charts),
+ * with joined song rows (`songs[i]` matches `charts[i]`).
+ */
+export async function FindBMSSieglindeRatedCharts(playtype: Playtypes["bms"]): Promise<{
+	charts: Array<MONGO_ChartDocument<"bms:7K" | "bms:14K">>;
+	songs: Array<MONGO_SongDocument<"bms">>;
+}> {
+	const v3Game = GamePTToV3("bms", playtype) as Game;
+
+	const sglEcPositive = sql<boolean>`(chart.data::jsonb->>'sglEC') IS NOT NULL AND (chart.data::jsonb->>'sglEC') <> '' AND (chart.data::jsonb->>'sglEC')::numeric > 0`;
+	const sglHcPositive = sql<boolean>`(chart.data::jsonb->>'sglHC') IS NOT NULL AND (chart.data::jsonb->>'sglHC') <> '' AND (chart.data::jsonb->>'sglHC')::numeric > 0`;
+
+	const rows = await DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_CHART)
+		.select(SELECT_SONG_DOCUMENT)
+		.where("chart.game", "=", v3Game)
+		.where((eb) => eb.or([sglEcPositive, sglHcPositive]))
+		.orderBy("chart.id")
+		.execute();
+
+	const charts: Array<MONGO_ChartDocument<"bms:7K" | "bms:14K">> = [];
+	const songs: Array<MONGO_SongDocument<"bms">> = [];
+
+	for (const row of rows) {
+		charts.push(
+			chartJoinedToDocument(
+				row as { song_legacy_id: number } & ChartJoinedRow,
+			) as MONGO_ChartDocument<"bms:7K" | "bms:14K">,
+		);
+		songs.push(ToSongDocument(row) as MONGO_SongDocument<"bms">);
+	}
+
+	return { charts, songs };
+}
+
+/** Like {@link FindBMSChartOnHash}, scoped to a single BMS v3 game (`bms-7k` / `bms-14k`). */
+export async function FindBMSChartOnHashInGame(hash: string, v3Game: Game) {
+	const row = await DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_CHART)
+		.select("song.legacy_id as song_legacy_id")
+		.where("chart.game", "=", v3Game)
+		.where((eb) =>
+			eb.or([
+				sql<boolean>`(chart.data::jsonb->>'hashMD5') = ${hash}`,
+				sql<boolean>`(chart.data::jsonb->>'hashSHA256') = ${hash}`,
+			]),
+		)
+		.executeTakeFirst();
+
+	if (!row) {
+		return null;
+	}
+
+	return chartJoinedToDocument(
+		row as { song_legacy_id: number } & ChartJoinedRow,
+	) as MONGO_ChartDocument<"bms:7K" | "bms:14K">;
+}
+
+/** All BMS charts matching MD5 or SHA256 in chart data. Used by global chart-hash search. */
+export async function FindBMSChartsByHashMd5OrSha256(
+	hash: string,
+): Promise<Array<MONGO_ChartDocument>> {
+	const rows = await DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_CHART)
+		.select("song.legacy_id as song_legacy_id")
+		.where("song.game_group", "=", "bms")
+		.where((eb) =>
+			eb.or([
+				sql<boolean>`(chart.data::jsonb->>'hashMD5') = ${hash}`,
+				sql<boolean>`(chart.data::jsonb->>'hashSHA256') = ${hash}`,
+			]),
+		)
+		.execute();
+
+	return rows.map((row) =>
+		chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow),
+	);
+}
+
+/** All PMS charts matching MD5 or SHA256 in chart data. Used by global chart-hash search. */
+export async function FindPMSChartsByHashMd5OrSha256(
+	hash: string,
+): Promise<Array<MONGO_ChartDocument>> {
+	const rows = await DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_CHART)
+		.select("song.legacy_id as song_legacy_id")
+		.where("song.game_group", "=", "pms")
+		.where((eb) =>
+			eb.or([
+				sql<boolean>`(chart.data::jsonb->>'hashMD5') = ${hash}`,
+				sql<boolean>`(chart.data::jsonb->>'hashSHA256') = ${hash}`,
+			]),
+		)
+		.execute();
+
+	return rows.map((row) =>
+		chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow),
+	);
+}
+
+/** All ITG Stamina charts matching hashGSv3. Used by global chart-hash search. */
+export async function FindITGChartsByHashGSv3(hash: string): Promise<Array<MONGO_ChartDocument>> {
+	const rows = await DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_CHART)
+		.select("song.legacy_id as song_legacy_id")
+		.where("chart.game", "=", "itg-stamina" as Game)
+		.where(sql<boolean>`(chart.data::jsonb->>'hashGSv3') = ${hash}`)
+		.execute();
+
+	return rows.map((row) =>
+		chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow),
+	);
+}
+
+/**
+ * Beatoraja IR: chart by `data.hashSHA256` — BMS first, then PMS (SHA256 only; not MD5).
+ */
+export async function FindBeatorajaChartOnHashSHA256(
+	hash: string,
+): Promise<MONGO_ChartDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"> | null> {
+	const bmsRow = await DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_CHART)
+		.select("song.legacy_id as song_legacy_id")
+		.where("song.game_group", "=", "bms")
+		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA256') = ${hash}`)
+		.executeTakeFirst();
+
+	if (bmsRow) {
+		return chartJoinedToDocument(
+			bmsRow as { song_legacy_id: number } & ChartJoinedRow,
+		) as MONGO_ChartDocument<"bms:7K" | "bms:14K">;
+	}
+
+	const pmsRow = await DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_CHART)
+		.select("song.legacy_id as song_legacy_id")
+		.where("song.game_group", "=", "pms")
+		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA256') = ${hash}`)
+		.executeTakeFirst();
+
+	if (!pmsRow) {
+		return null;
+	}
+
+	return chartJoinedToDocument(
+		pmsRow as { song_legacy_id: number } & ChartJoinedRow,
+	) as MONGO_ChartDocument<"pms:Controller" | "pms:Keyboard">;
+}
+
+/**
+ * Find a Pop'n chart by SHA256 hash in chart data (batch-manual `popnChartHash`).
+ */
+export async function FindPopnChartOnHashSHA256(hash: string, playtype: Playtypes["popn"]) {
+	const v3Game = GamePTToV3("popn", playtype) as Game;
+
+	const row = await DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_CHART)
+		.select("song.legacy_id as song_legacy_id")
+		.where("song.game_group", "=", "popn")
+		.where("chart.game", "=", v3Game)
+		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA256') = ${hash}`)
+		.executeTakeFirst();
+
+	if (!row) {
+		return null;
+	}
+
+	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+}
+
+/**
+ * Returns true if at least one chart exists for this song (legacy Tachi song id).
+ */
+export async function SongHasAnyChart(game: GameGroup, songLegacyId: number): Promise<boolean> {
+	const row = await DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select("chart.id")
+		.where("song.game_group", "=", game)
+		.where("song.legacy_id", "=", songLegacyId)
+		.executeTakeFirst();
+
+	return row !== undefined;
+}
+
+/**
  * Find a chart on its in-game-ID, playtype and difficulty.
  */
 export async function FindChartOnInGameID(
@@ -171,6 +366,39 @@ export async function FindChartOnInGameID(
 		.where("chart.game", "=", v3Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
 		.where("chart.difficulty", "=", difficulty as string)
+		.executeTakeFirst();
+
+	if (!row) {
+		return null;
+	}
+
+	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+}
+
+/**
+ * Like {@link FindChartOnInGameID}, but only matches charts with `isPrimary` set (batch-manual / legacy Mongo parity).
+ */
+export async function FindChartOnInGameIDPrimary(
+	game: GameGroup,
+	inGameID: number,
+	playtype: Playtype,
+	difficulty: Difficulties[GPTString],
+) {
+	if (game === "bms" || game === "usc") {
+		throw new Error(`Cannot call FindChartOnInGameIDPrimary for game ${game}.`);
+	}
+
+	const v3Game = GamePTToV3(game, playtype) as Game;
+
+	const row = await DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_CHART)
+		.select("song.legacy_id as song_legacy_id")
+		.where("song.game_group", "=", game)
+		.where("chart.game", "=", v3Game)
+		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
+		.where("chart.difficulty", "=", difficulty as string)
+		.where("chart.is_primary", "=", true)
 		.executeTakeFirst();
 
 	if (!row) {
@@ -258,6 +486,73 @@ export async function FindChartOnInGameIDVersion<GPT extends GPTString = GPTStri
 		.where("song.game_group", "=", game)
 		.where("chart.game", "=", v3Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
+		.where("chart.difficulty", "=", difficulty as string)
+		.where(sql<boolean>`${sql.lit(String(version))} = ANY(chart.versions)`)
+		.executeTakeFirst();
+
+	if (!row) {
+		return null;
+	}
+
+	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+}
+
+/**
+ * Find a chart on its in-game string ID, playtype and difficulty (primary chart only).
+ */
+export async function FindChartOnInGameStrIDPrimary(
+	game: GameGroup,
+	inGameStrID: string,
+	playtype: Playtype,
+	difficulty: Difficulties[GPTString],
+) {
+	if (game === "bms" || game === "usc") {
+		throw new Error(`Cannot call FindChartOnInGameStrIDPrimary for game ${game}.`);
+	}
+
+	const v3Game = GamePTToV3(game, playtype) as Game;
+
+	const row = await DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_CHART)
+		.select("song.legacy_id as song_legacy_id")
+		.where("song.game_group", "=", game)
+		.where("chart.game", "=", v3Game)
+		.where(sql<boolean>`(chart.data::jsonb->>'inGameStrID') = ${inGameStrID}`)
+		.where("chart.difficulty", "=", difficulty as string)
+		.where("chart.is_primary", "=", true)
+		.executeTakeFirst();
+
+	if (!row) {
+		return null;
+	}
+
+	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+}
+
+/**
+ * Find a chart on its in-game string ID, playtype, difficulty and version.
+ */
+export async function FindChartOnInGameStrIDVersion<GPT extends GPTString = GPTString>(
+	game: GameGroup,
+	inGameStrID: string,
+	playtype: Playtype,
+	difficulty: Difficulties[GPT],
+	version: Versions[GPT],
+) {
+	if (game === "bms" || game === "usc") {
+		throw new Error(`Cannot call FindChartOnInGameStrIDVersion for game ${game}.`);
+	}
+
+	const v3Game = GamePTToV3(game, playtype) as Game;
+
+	const row = await DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_CHART)
+		.select("song.legacy_id as song_legacy_id")
+		.where("song.game_group", "=", game)
+		.where("chart.game", "=", v3Game)
+		.where(sql<boolean>`(chart.data::jsonb->>'inGameStrID') = ${inGameStrID}`)
 		.where("chart.difficulty", "=", difficulty as string)
 		.where(sql<boolean>`${sql.lit(String(version))} = ANY(chart.versions)`)
 		.executeTakeFirst();
@@ -418,6 +713,44 @@ export async function FindChartOnSHA256Playtype(game: GameGroup, hash: string, p
 	}
 
 	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+}
+
+/**
+ * Find a USC chart on its SHA1 hash (from chart data) and playtype.
+ * Used by the USC IR and batch-manual uscChartHash matching.
+ */
+export async function FindUSCChartOnSHA1Playtype(hash: string, playtype: Playtypes["usc"]) {
+	const v3Game = GamePTToV3("usc", playtype) as Game;
+
+	const row = await DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_CHART)
+		.select("song.legacy_id as song_legacy_id")
+		.where("song.game_group", "=", "usc")
+		.where("chart.game", "=", v3Game)
+		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA1') = ${hash}`)
+		.executeTakeFirst();
+
+	if (!row) {
+		return null;
+	}
+
+	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+}
+
+/** All USC charts matching a SHA1 hash (any playtype). Used by global chart-hash search. */
+export async function FindUSCChartsByHashSHA1(hash: string): Promise<Array<MONGO_ChartDocument>> {
+	const rows = await DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_CHART)
+		.select("song.legacy_id as song_legacy_id")
+		.where("song.game_group", "=", "usc")
+		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA1') = ${hash}`)
+		.execute();
+
+	return rows.map((row) =>
+		chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow),
+	);
 }
 
 /**

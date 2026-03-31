@@ -1,12 +1,22 @@
+import { GetChartById } from "#lib/db-formats/chart.js";
+import {
+	type ScoreDocumentJoinRow,
+	SELECT_SCORE_DOCUMENT,
+	ToScoreDocument,
+} from "#lib/db-formats/score";
 import { SearchSpecificGameSongsAndCharts } from "#lib/search/song-charts.js";
 import { HyperAggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
-import MONGODB_KILL from "#services/mongo/db";
-import { ResolveLegacyChartIdForMongo } from "#utils/chart-mongo-id";
+import DB from "#services/pg/db";
 import { GetRelevantSongsAndCharts } from "#utils/db";
+import {
+	GetPrimaryScoresForUserUGPT,
+	GetRecentUGPTScoresByTimeAchieved,
+	GetScoresForUserOnChartPgIds,
+} from "#utils/queries/scores";
 import { GetUGPT } from "#utils/req-tachi-data";
 import { FilterChartsAndSongs } from "#utils/scores";
 import { Router } from "express";
-import { MongoChartLegacyId } from "tachi-common";
+import { GamePTToV3 } from "tachi-common";
 
 const router: Router = Router({ mergeParams: true });
 
@@ -31,18 +41,9 @@ router.get("/", async (req, res) => {
 		playtype,
 	);
 
-	const scores = await MONGODB_KILL.scores.find(
-		{
-			chartID: { $in: allCharts.map((e) => MongoChartLegacyId(e)) },
-			userID: user.id,
-		},
-		{
-			sort: {
-				timeAchieved: -1,
-			},
-			limit: 30,
-		},
-	);
+	const v3Game = GamePTToV3(game, playtype);
+	const chartPgIds = [...new Set(allCharts.map((c) => c.chartID))];
+	const scores = await GetScoresForUserOnChartPgIds(user.id, v3Game, chartPgIds, 30);
 
 	const { songs, charts } = FilterChartsAndSongs(scores, allCharts, allSongs);
 
@@ -67,12 +68,7 @@ router.get("/", async (req, res) => {
 router.get("/all", HyperAggressiveRateLimitMiddleware, async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const scores = await MONGODB_KILL.scores.find({
-		userID: user.id,
-		game,
-		playtype,
-		isPrimary: true,
-	});
+	const scores = await GetPrimaryScoresForUserUGPT(user.id, game, playtype);
 
 	const { songs, charts } = await GetRelevantSongsAndCharts(scores, game);
 
@@ -91,19 +87,7 @@ router.get("/all", HyperAggressiveRateLimitMiddleware, async (req, res) => {
 router.get("/recent", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const recentScores = await MONGODB_KILL.scores.find(
-		{
-			userID: user.id,
-			game,
-			playtype,
-		},
-		{
-			limit: 100,
-			sort: {
-				timeAchieved: -1,
-			},
-		},
-	);
+	const recentScores = await GetRecentUGPTScoresByTimeAchieved(user.id, game, playtype, 100);
 
 	const { songs, charts } = await GetRelevantSongsAndCharts(recentScores, game);
 
@@ -126,19 +110,7 @@ router.get("/recent", async (req, res) => {
 router.get("/:chartID", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const legacyMongoId = await ResolveLegacyChartIdForMongo(game, playtype, req.params.chartID);
-
-	if (!legacyMongoId) {
-		return res.status(404).json({
-			success: false,
-			description: `This chart does not exist.`,
-		});
-	}
-
-	const chart = await MONGODB_KILL.anyCharts[game].findOne({
-		chartID: legacyMongoId,
-		playtype,
-	});
+	const chart = await GetChartById(GamePTToV3(game, playtype), req.params.chartID);
 
 	if (!chart) {
 		return res.status(404).json({
@@ -147,15 +119,20 @@ router.get("/:chartID", async (req, res) => {
 		});
 	}
 
-	const scores = await MONGODB_KILL.scores.find({
-		userID: user.id,
-		chartID: legacyMongoId,
-	});
+	const rows = await DB.selectFrom("score")
+		.innerJoin("chart", "chart.id", "score.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.leftJoin("import", "import.id", "score.import_id")
+		.select(SELECT_SCORE_DOCUMENT)
+		.where("score.user_id", "=", user.id)
+		.where("chart.id", "=", chart.chartID)
+		.orderBy("score.time_added", "desc")
+		.execute();
 
 	return res.status(200).json({
 		success: true,
-		description: `Returned ${scores.length} scores.`,
-		body: scores,
+		description: `Returned ${rows.length} scores.`,
+		body: rows.map((r) => ToScoreDocument(r as ScoreDocumentJoinRow)),
 	});
 });
 

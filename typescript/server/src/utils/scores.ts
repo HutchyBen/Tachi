@@ -1,15 +1,15 @@
-import type {
-	integer,
-	MONGO_ChartDocument,
-	MONGO_PBScoreDocument,
-	MONGO_ScoreDocument,
-	MONGO_SongDocument,
-} from "tachi-common";
-
 import {
 	LoadPbByUserAndChartLegacyId,
 	LoadPbServerRecordForChartLegacyId,
 } from "#lib/db-formats/pb";
+import {
+	type integer,
+	type MONGO_ChartDocument,
+	type MONGO_PBScoreDocument,
+	type MONGO_ScoreDocument,
+	type MONGO_SongDocument,
+	MongoChartLegacyId,
+} from "tachi-common";
 
 import { DedupeArr } from "./misc";
 
@@ -37,7 +37,9 @@ export function FilterChartsAndSongs(
 	// filter out irrelevant songs and charts
 	return {
 		songs: songs.filter((e) => songIDs.has(e.id)),
-		charts: charts.filter((e) => chartIDs.has(e.chartID)),
+		charts: charts.filter(
+			(e) => chartIDs.has(e.chartID) || chartIDs.has(MongoChartLegacyId(e)),
+		),
 	};
 }
 

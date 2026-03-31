@@ -5,7 +5,7 @@
 gen: gen-kanel gen-proto
 
 # Generate kanel types from the postgres definitions in Tachi.
-gen-kanel: (db-reset "templatedb")
+gen-kanel: (db-cheap-reset "templatedb")
 	bun run kanel -d "{{ POSTGRES_URL }}/templatedb" -c db/kanel_config.js
 	just fmt
 

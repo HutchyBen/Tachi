@@ -1,9 +1,10 @@
+import { ACTION_UpdateSession } from "#actions/update-session.js";
+import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
+import { LoadScoreDocumentById } from "#lib/db-formats/score";
 import { GetSessionScoreInfo } from "#lib/score-import/framework/sessions/sessions";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
-import { GetEnumDistForFolderAsOf } from "#utils/folder";
-import { AddToSetInRecord } from "#utils/misc";
+import { GetSessionData } from "#utils/queries/sessions.js";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { GetUserWithID } from "#utils/user";
 import { Router } from "express";
@@ -32,34 +33,31 @@ router.use(GetSessionFromParam);
 router.get("/", async (req, res) => {
 	const session = GetTachiData(req, "sessionDoc");
 
-	const scores = await MONGODB_KILL.scores.find({
-		scoreID: { $in: session.scoreIDs },
-	});
-
-	const [songs, charts, user, scoreInfo] = await Promise.all([
-		MONGODB_KILL.anySongs[session.game].find({
-			id: { $in: scores.map((e) => e.songID) },
-		}),
-		MONGODB_KILL.anyCharts[session.game].find({
-			chartID: { $in: scores.map((e) => e.chartID) },
-		}),
-		GetUserWithID(session.userID),
-		GetSessionScoreInfo(session),
-	]);
+	const sessionData = await GetSessionData(session);
 
 	return res.status(200).json({
 		success: true,
 		description: `Successfully returned session ${session.name}.`,
 		body: {
 			session,
-			songs,
-			charts,
-			scores,
-			user,
-			scoreInfo,
+			songs: sessionData.songs,
+			charts: sessionData.charts,
+			scores: sessionData.scores,
+			user: sessionData.user,
+			scoreInfo: sessionData.scoreInfo,
 		},
 	});
 });
+
+interface FolderRaiseInfo {
+	folder: MONGO_FolderDocument;
+	previousCount: integer; // how many AAAs/HARD CLEARs/whatevers was on this
+	raisedCharts: Array<string>; // Array<chartID>;
+	totalCharts: integer;
+	// folder before this session?
+	type: string;
+	value: string;
+}
 
 /**
  * Retrieves additional statistics about folder raises as a result of this session.
@@ -81,6 +79,8 @@ router.get("/folder-raises", async (req, res) => {
 
 	const scoreInfo = await GetSessionScoreInfo(session);
 
+	// create lookup tables for a scoreID to its delta. We use this later to find out
+	// what the "original" score's grade or lamp was prior to this raise.
 	const enumRaises = [];
 
 	for (const metric of GetScoreMetrics(gptConfig, "ENUM")) {
@@ -105,181 +105,184 @@ router.get("/folder-raises", async (req, res) => {
 
 	const enumScoreMetrics = GetScoreEnumConfs(gptConfig);
 
-	const relevantScores = await MONGODB_KILL.scores.find({
-		scoreID: { $in: session.scoreIDs },
-	});
-
-	const chartIDs = relevantScores.map((e) => e.chartID);
-
-	// what folderIDs were involved in this session?
-	const affectedFolderIDs = (
-		await MONGODB_KILL["folder-chart-lookup"].find(
-			{
-				chartID: { $in: chartIDs },
-			},
-			{
-				projection: { folderID: 1 },
-			},
-		)
-	).map((e) => e.folderID);
-
-	// find all the active folder documents raised in this session.
-	const folders = await MONGODB_KILL.folders.find({
-		folderID: { $in: affectedFolderIDs },
-		inactive: false,
-	});
-
-	const bestEnumMap = new Map<string, MONGO_ScoreDocument>();
-
-	for (const score of relevantScores) {
-		for (const [metric, conf] of Object.entries(enumScoreMetrics)) {
-			if (
-				// @ts-expect-error lazy index cheating
-				score.scoreData.enumIndexes[metric]! <
-				conf.values.indexOf(conf.minimumRelevantValue)
-			) {
-				// isn't relevant
-				continue;
-			}
-
-			const mapKey = `${score.chartID}-${metric}`;
-
-			const existing = bestEnumMap.get(mapKey);
-
-			if (!existing) {
-				bestEnumMap.set(mapKey, score);
-			} else if (
-				// @ts-expect-error lazy index cheating
-				score.scoreData.enumIndexes[metric] > existing.scoreData.enumIndexes[metric]
-			) {
-				bestEnumMap.set(mapKey, score);
-			}
-		}
-	}
-
-	const raiseInfo: Array<{
-		folder: MONGO_FolderDocument;
-		previousCount: integer; // how many AAAs/HARD CLEARs/whatevers was on this
-		raisedCharts: Array<string>; // Array<chartID>;
-		totalCharts: integer;
-		// folder before this session?
-		type: string;
-		value: string;
-	}> = [];
-
-	await Promise.all(
-		folders.map(async (folder) => {
-			// what was the grade and lamp distribution on this folder before the session?
-			const { chartIDs, cumulativeEnumDist } = await GetEnumDistForFolderAsOf(
-				session.userID,
-				folder.folderID,
-				session.timeStarted,
-			);
-
-			// what is the distribution of raises on this folder?
-			// NOTE: instead of storing an integer here
-			// i.e. For the Level 12 folder:
-			// AAA: 5 <- 5 new AAAs,
-			// AA: 2 <- 2 new AAs, etc.
-			// we store a Set of chartIDs instead, so
-			// AAA: ["chart1","chart2", ...] with size 5.
-			// This is so we can display *what* charts were raised in the UI.
-			// This type results in looking like:
-			//
-			// {
-			// 	grade: {
-			// 		AAA: [chartID, chartID2],
-			// 		AA: [chartID3]
-			// 	},
-			// 	lamp: {
-			// 		"HARD CLEAR": [chartID2]
-			// 	}
-			// }
-
-			for (const [metric, conf] of Object.entries(enumScoreMetrics)) {
-				const metricDist: Record<string, Set<string>> = {};
-				const previousDist = cumulativeEnumDist[metric]!;
-
-				for (const chartID of chartIDs) {
-					const bestEnumOnThisChart = bestEnumMap.get(`${chartID}-${metric}`);
-
-					if (!bestEnumOnThisChart) {
-						continue;
-					}
-
-					const gradeDeltaSc = scoreInfo.find(
-						(s) => s.scoreID === bestEnumOnThisChart.scoreID,
-					);
-
-					// if no grade delta exists then they raised from 0
-					// @ts-expect-error silly cheaty enum access
-					let gradeDelta = bestEnumOnThisChart.scoreData.enumIndexes[metric]!;
-
-					if (
-						gradeDeltaSc &&
-						!gradeDeltaSc.isNewScore &&
-						gradeDeltaSc.deltas[metric] !== undefined
-					) {
-						gradeDelta = gradeDeltaSc.deltas[metric]!;
-					}
-
-					// get all the enums this counts as a raise for.
-					// that is to say: if you get an AAA, that also counts as a raise
-					// for an AA, etc.
-
-					// however, this should only extend down to whatever the previous
-					// best enum on this chart was.
-					// luckily, we can calculate this by checking what the grade is now
-					// and taking away the delta. That gets us the original.
-					// If this is less than the clearGradeIndex, use that instead.
-
-					// note: we add one to this because .slice is inclusive,
-					// so if we have a EX HARD CLEAR (i=7) with a raise of two,
-					// minusing two will take us to CLEAR (i=5), and the
-					// inclusivity will result in us
-					// slicing ["CLEAR", "HARD CLEAR", "EX HARD CLEAR"]
-					//          (i=5),    (i=6)          (i=7)
-					// but this wasn't a new clear! this was only a new HARD CLEAR
-					// and EX HARD CLEAR, so
-					// we want ["HARD CLEAR", "EX HARD CLEAR"].
-					const originalIndex =
-						// @ts-expect-error silly cheaty enum access
-						bestEnumOnThisChart.scoreData.enumIndexes[metric]! - gradeDelta + 1;
-
-					// lowerbound the original grade at the minimum-relevant enum.
-					const minimumGrade = Math.max(
-						conf.values.indexOf(conf.minimumRelevantValue),
-						originalIndex,
-					);
-
-					for (const grade of conf.values.slice(
-						minimumGrade,
-						// @ts-expect-error silly cheaty enum access (2)
-
-						bestEnumOnThisChart.scoreData.enumIndexes[metric]! + 1,
-					)) {
-						AddToSetInRecord(grade, metricDist, chartID);
-					}
-				}
-
-				for (const [enumVal, raisedCharts] of Object.entries(metricDist)) {
-					raiseInfo.push({
-						folder,
-
-						previousCount: previousDist[enumVal] ?? 0,
-
-						raisedCharts: Array.from(raisedCharts),
-						type: metric,
-						value: enumVal,
-						totalCharts: chartIDs.length,
-					});
-				}
-			}
-
-			// now that we know what we've raised, and what was there at the start
-			// we can push that.
-		}),
+	const relevantScoresNested = await Promise.all(
+		session.scoreIDs.map((id) => LoadScoreDocumentById(id)),
 	);
+	const relevantScores = relevantScoresNested.filter(
+		(s): s is MONGO_ScoreDocument => s !== undefined,
+	);
+
+	const affectedFolderIDs: Array<string> = [];
+
+	// if (chartUUIDs.length > 0) {
+	// 	const lookupRows = await DB.selectFrom("folder_chart_lookup")
+	// 		.select("folder_chart_lookup.folder_id")
+	// 		.where("folder_chart_lookup.chart_id", "in", chartUUIDs)
+	// 		.execute();
+
+	// 	affectedFolderIDs = [...new Set(lookupRows.map((r) => r.folder_id))];
+	// }
+
+	// const folderMap = await LoadFolderDocumentsByIds(affectedFolderIDs);
+	// const folders = affectedFolderIDs
+	// 	.map((id) => folderMap.get(id))
+	// 	.filter((f): f is MONGO_FolderDocument => f !== undefined && !f.inactive);
+
+	// const bestEnumMap = new Map<string, MONGO_ScoreDocument>();
+
+	// for (const score of relevantScores) {
+	// 	const chartId = chartKeyTochartId.get(score.chartID) ?? score.chartID;
+
+	// 	for (const [metric, conf] of Object.entries(enumScoreMetrics)) {
+	// 		if (
+	// 			// @ts-expect-error lazy index cheating
+	// 			score.scoreData.enumIndexes[metric]! <
+	// 			conf.values.indexOf(conf.minimumRelevantValue)
+	// 		) {
+	// 			// isn't relevant
+	// 			continue;
+	// 		}
+
+	// 		const mapKey = `${chartId}-${metric}`;
+
+	// 		const existing = bestEnumMap.get(mapKey);
+
+	// 		if (!existing) {
+	// 			bestEnumMap.set(mapKey, score);
+	// 		} else if (
+	// 			// @ts-expect-error lazy index cheating
+	// 			score.scoreData.enumIndexes[metric] > existing.scoreData.enumIndexes[metric]
+	// 		) {
+	// 			bestEnumMap.set(mapKey, score);
+	// 		}
+	// 	}
+	// }
+
+	const raiseInfo: Array<FolderRaiseInfo> = [];
+
+	// await Promise.all(
+	// 	folders.map(async (folder) => {
+	// 		// what was the grade and lamp distribution on this folder before the session?
+	// 		const { chartIDs, cumulativeEnumDist } = await GetEnumDistForFolderAsOf(
+	// 			session.userID,
+	// 			folder.folderID,
+	// 			session.timeStarted,
+	// 		);
+
+	// 		// what is the distribution of raises on this folder?
+	// 		// NOTE: instead of storing an integer here
+	// 		// i.e. For the Level 12 folder:
+	// 		// AAA: 5 <- 5 new AAAs,
+	// 		// AA: 2 <- 2 new AAs, etc.
+	// 		// we store a Set of chartIDs instead, so
+	// 		// AAA: ["chart1","chart2", ...] with size 5.
+	// 		// This is so we can display *what* charts were raised in the UI.
+	// 		// This type results in looking like:
+	// 		//
+	// 		// {
+	// 		// 	grade: {
+	// 		// 		AAA: [chartID, chartID2],
+	// 		// 		AA: [chartID3]
+	// 		// 	},
+	// 		// 	lamp: {
+	// 		// 		"HARD CLEAR": [chartID2]
+	// 		// 	}
+	// 		// }
+	// 		for (const [metric, conf] of Object.entries(enumScoreMetrics)) {
+	// 			const metricDist: Record<string, Set<string>> = {};
+	// 			const previousDist = cumulativeEnumDist[metric]!;
+
+	// 			for (const chartID of chartIDs) {
+	// 				const bestEnumOnThisChart = bestEnumMap.get(`${chartID}-${metric}`);
+
+	// 				if (!bestEnumOnThisChart) {
+	// 					continue;
+	// 				}
+
+	// 				const gradeDeltaSc = scoreInfo.find(
+	// 					(s) => s.scoreID === bestEnumOnThisChart.scoreID,
+	// 				);
+
+	// 				// if no grade delta exists then they raised from 0
+	// 				// @ts-expect-error silly cheaty enum access
+	// 				let gradeDelta = bestEnumOnThisChart.scoreData.enumIndexes[metric]!;
+
+	// 				if (
+	// 					gradeDeltaSc &&
+	// 					!gradeDeltaSc.isNewScore &&
+	// 					gradeDeltaSc.deltas[metric] !== undefined
+	// 				) {
+	// 					gradeDelta = gradeDeltaSc.deltas[metric]!;
+	// 				}
+
+	// 				// get all the enums this counts as a raise for.
+	// 				// that is to say: if you get an AAA, that also counts as a raise
+	// 				// for an AA, etc.
+
+	// 				// however, this should only extend down to whatever the previous
+	// 				// best enum on this chart was.
+	// 				// luckily, we can calculate this by checking what the grade is now
+	// 				// and taking away the delta. That gets us the original.
+	// 				// If this is less than the clearGradeIndex, use that instead.
+
+	// 				// note: we add one to this because .slice is inclusive,
+	// 				// so if we have a EX HARD CLEAR (i=7) with a raise of two,
+	// 				// minusing two will take us to CLEAR (i=5), and the
+	// 				// inclusivity will result in us
+	// 				// slicing ["CLEAR", "HARD CLEAR", "EX HARD CLEAR"]
+	// 				//          (i=5),    (i=6)          (i=7)
+	// 				// but this wasn't a new clear! this was only a new HARD CLEAR
+	// 				// and EX HARD CLEAR, so
+	// 				// we want ["HARD CLEAR", "EX HARD CLEAR"].
+	// 				// get all the enums this counts as a raise for.
+	// 				// that is to say: if you get an AAA, that also counts as a raise
+	// 				// for an AA, etc.
+
+	// 				// however, this should only extend down to whatever the previous
+	// 				// best enum on this chart was.
+	// 				// luckily, we can calculate this by checking what the grade is now
+	// 				// and taking away the delta. That gets us the original.
+	// 				// If this is less than the clearGradeIndex, use that instead.
+	// 				const originalIndex =
+	// 					// @ts-expect-error silly cheaty enum access
+	// 					bestEnumOnThisChart.scoreData.enumIndexes[metric]! - gradeDelta + 1;
+
+	// 				// lowerbound the original grade at the minimum-relevant enum.
+	// 				const minimumGrade = Math.max(
+	// 					conf.values.indexOf(conf.minimumRelevantValue),
+	// 					originalIndex,
+	// 				);
+
+	// 				for (const grade of conf.values.slice(
+	// 					minimumGrade,
+	// 					// @ts-expect-error silly cheaty enum access (2)
+	// 					bestEnumOnThisChart.scoreData.enumIndexes[metric]! + 1,
+	// 				)) {
+	// 					AddToSetInRecord(grade, metricDist, chartID);
+	// 				}
+	// 			}
+
+	// 			for (const [enumVal, raisedCharts] of Object.entries(metricDist)) {
+	// 				raiseInfo.push({
+	// 					folder,
+
+	// 					previousCount: previousDist[enumVal] ?? 0,
+
+	// 					raisedCharts: Array.from(raisedCharts),
+	// 					type: metric,
+	// 					value: enumVal,
+	// 					totalCharts: chartIDs.length,
+	// 				});
+	// 			}
+	// 		}
+
+	// 		// now that we know what we've raised, and what was there at the start
+	// 		// we can push that.
+
+	// 		// now that we know what we've raised, and what was there at the start
+	// 		// we can push that.
+	// 	}),
+	// );
 
 	return res.status(200).json({
 		success: true,
@@ -349,15 +352,37 @@ router.patch(
 			});
 		}
 
-		const newSession = await MONGODB_KILL.sessions.findOneAndUpdate(
-			{ sessionID: session.sessionID },
-			{ $set: updateExp },
-		);
+		const auth = req[SYMBOL_TACHI_API_AUTH];
+
+		if (auth.userID === null) {
+			return res.status(401).json({
+				success: false,
+				description: `You are not authorised as anyone, and this endpoint requires us to know who you are.`,
+			});
+		}
+
+		const user = await GetUserWithID(auth.userID);
+
+		if (!user) {
+			return res.status(401).json({
+				success: false,
+				description: `You are not authorised as anyone, and this endpoint requires us to know who you are.`,
+			});
+		}
+
+		const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
+
+		await ACTION_UpdateSession(taker, {
+			sessionID: session.sessionID,
+			name: updateExp.name,
+			desc: updateExp.desc,
+			highlight: updateExp.highlight,
+		});
 
 		return res.status(200).json({
 			success: true,
 			description: `Updated Session.`,
-			body: newSession,
+			body: {},
 		});
 	},
 );

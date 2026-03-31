@@ -1,3 +1,5 @@
+import { CustomScrollbar } from "#components/layout/CustomScrollbar";
+import { LocalDevMissingSeedsBanner } from "#components/layout/LocalDevMissingSeedsBanner";
 import { LoadingScreen } from "#components/layout/screens/LoadingScreen";
 import { AllLUGPTStatsContextProvider } from "#context/AllLUGPTStatsContext";
 import { BannedContextProvider } from "#context/BannedContext";
@@ -21,6 +23,7 @@ export default function App({ basename }: { basename: string }) {
 	return (
 		<React.StrictMode>
 			<WindowContextProvider>
+				<CustomScrollbar />
 				<QueryClientProvider client={queryClient}>
 					<BannedContextProvider>
 						<UserContextProvider>
@@ -30,6 +33,7 @@ export default function App({ basename }: { basename: string }) {
 										<AllLUGPTStatsContextProvider>
 											<BrowserRouter basename={basename}>
 												<Toaster />
+												<LocalDevMissingSeedsBanner />
 												<SubheaderContextProvider>
 													<Routes />
 												</SubheaderContextProvider>

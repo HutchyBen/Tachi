@@ -2,11 +2,12 @@ import type { FindOptions } from "monk";
 
 import { CreateActivityRouteHandler } from "#lib/activity/activity";
 import { ONE_HOUR } from "#lib/constants/time";
-import { SearchUsersRegExp } from "#lib/search/search";
+import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user.js";
 import prValidate from "#server/middleware/prudence-validate";
 import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db.js";
 import { GetRelevantSongsAndCharts } from "#utils/db";
-import { IsString } from "#utils/misc";
+import { EscapeForILIKE, IsString } from "#utils/misc";
 import { GetGPT } from "#utils/req-tachi-data";
 import {
 	CheckStrProfileAlg,
@@ -19,6 +20,7 @@ import NodeCache from "node-cache";
 import {
 	FormatGameGroup,
 	type GameGroup,
+	GamePTToV3,
 	GetGamePTConfig,
 	type integer,
 	type MONGO_UserGameStats,
@@ -234,22 +236,19 @@ router.get(
 	}),
 	async (req, res) => {
 		const { game, playtype } = GetGPT(req);
+		const v3Game = GamePTToV3(game, playtype);
 
 		const { search } = req.query as {
 			search: string;
 		};
 
-		const users = await SearchUsersRegExp(search);
-
-		const gameStats = await MONGODB_KILL["game-stats"].find({
-			userID: { $in: users.map((e) => e.id) },
-			game,
-			playtype,
-		});
-
-		const thoseWithStats = gameStats.map((e) => e.userID);
-
-		const gptPlayers = users.filter((e) => thoseWithStats.includes(e.id));
+		const gptPlayers = await DB.selectFrom("account")
+			.innerJoin("game_profile", "game_profile.user_id", "account.id")
+			.select(SELECT_USER)
+			.where("game_profile.game", "=", v3Game)
+			.where("account.username", "ilike", `%${EscapeForILIKE(search)}%`)
+			.execute()
+			.then((res) => res.map(ToUserDocument));
 
 		return res.status(200).json({
 			success: true,

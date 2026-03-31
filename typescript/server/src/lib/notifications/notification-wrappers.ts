@@ -1,7 +1,9 @@
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
+import { sql } from "kysely";
 import {
 	FormatGameGroup,
 	type GameGroup,
+	GamePTToV3,
 	type integer,
 	type MONGO_UserDocument,
 	type Playtype,
@@ -23,15 +25,17 @@ export async function SendSetRivalNotification(
 	game: GameGroup,
 	playtype: Playtype,
 ) {
-	const alreadyBeenPinged = await MONGODB_KILL.notifications.findOne({
-		sentTo: toUserID,
-		"body.type": "RIVALED_BY",
-		"body.content": {
-			userID: fromUser.id,
-			game,
-			playtype,
-		},
-	});
+	const body = {
+		type: "RIVALED_BY" as const,
+		content: { userID: fromUser.id, game, playtype },
+	};
+
+	const alreadyBeenPinged = await DB.selectFrom("notification")
+		.select("row_id")
+		.where("sent_to", "=", toUserID)
+		.where("kind", "=", "rivaled_by")
+		.where(sql<boolean>`payload @> ${JSON.stringify(body)}::jsonb`)
+		.executeTakeFirst();
 
 	if (alreadyBeenPinged) {
 		return;
@@ -56,17 +60,18 @@ export async function SendSiteAnnouncementNotification(
 	maybeGame?: GameGroup,
 	maybePlaytype?: Playtype,
 ) {
-	let toUserIDs = [];
+	let toUserIDs: integer[];
 
 	if (maybeGame && maybePlaytype) {
-		toUserIDs = (
-			await MONGODB_KILL["game-stats"].find(
-				{ game: maybeGame, playtype: maybePlaytype },
-				{ projection: { userID: 1 } },
-			)
-		).map((e) => e.userID);
+		const v3Game = GamePTToV3(maybeGame, maybePlaytype);
+		const rows = await DB.selectFrom("game_profile")
+			.select("user_id")
+			.where("game", "=", v3Game)
+			.execute();
+		toUserIDs = rows.map((e) => e.user_id);
 	} else {
-		toUserIDs = (await MONGODB_KILL.users.find({}, { projection: { id: 1 } })).map((e) => e.id);
+		const rows = await DB.selectFrom("account").select("id").execute();
+		toUserIDs = rows.map((e) => e.id);
 	}
 
 	return BulkSendNotification(title, toUserIDs, {

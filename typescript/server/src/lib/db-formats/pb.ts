@@ -2,6 +2,7 @@ import type { Game } from "tachi-db";
 
 import { pgScoreDataToMongo } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
+import { EscapeForILIKE } from "#utils/misc";
 import { ISO8601ToUnixMilliseconds } from "#utils/time";
 import { sql } from "kysely";
 import {
@@ -17,7 +18,6 @@ import {
 export interface PbDocumentJoinRow {
 	row_id: string;
 	user_id: number;
-	chart_id: string;
 	lens: string | null;
 	data: unknown;
 	derived_data: unknown;
@@ -30,10 +30,13 @@ export interface PbDocumentJoinRow {
 	ranking_value_tb5: number | null;
 	highlight: boolean;
 	time_achieved: string | null;
-	chart_legacy_id: string;
+	chart_id: string;
 	song_legacy_id: number;
 	chart_game: Game;
 	is_primary: boolean;
+	/** From `chart_leaderboard` (window rank / count on this chart + lens). */
+	leaderboard_rank: number;
+	leaderboard_out_of: number;
 }
 
 /** Columns for `pb` joined with `chart` and `song` (same shape as {@link PbDocumentJoinRow}). */
@@ -53,10 +56,21 @@ export const SELECT_PB_DOCUMENT_JOIN = [
 	"pb.ranking_value_tb5",
 	"pb.highlight",
 	"pb.time_achieved",
-	"chart.legacy_id as chart_legacy_id",
+	"chart.id as chart_id",
 	"song.legacy_id as song_legacy_id",
 	"chart.game as chart_game",
 	"chart.is_primary as is_primary",
+] as const;
+
+/** Columns from `chart_leaderboard` (must inner-join on `chart_leaderboard.row_id = pb.row_id`). */
+export const SELECT_PB_LEADERBOARD_EXTRA = [
+	sql<number>`chart_leaderboard.rank`.as("leaderboard_rank"),
+	sql<number>`chart_leaderboard.out_of`.as("leaderboard_out_of"),
+] as const;
+
+export const SELECT_PB_DOCUMENT_WITH_LEADERBOARD = [
+	...SELECT_PB_DOCUMENT_JOIN,
+	...SELECT_PB_LEADERBOARD_EXTRA,
 ] as const;
 
 /**
@@ -87,14 +101,19 @@ export async function ToPbScoreDocument(row: PbDocumentJoinRow): Promise<MONGO_P
 		} as Parameters<typeof pgScoreDataToMongo>[1],
 	);
 
-	const cd = (row.calculated_data ?? {}) as { rank?: number };
-	const rank = typeof cd.rank === "number" ? cd.rank : 0;
+	const rawCd = row.calculated_data;
+	const cd = (rawCd ?? {}) as Record<string, unknown>;
+	const rivalRank = typeof cd.rivalRank === "number" ? cd.rivalRank : null;
 
 	return {
 		composedFrom,
-		rankingData: { outOf: 0, rank, rivalRank: null },
+		rankingData: {
+			rank: row.leaderboard_rank,
+			outOf: row.leaderboard_out_of,
+			rivalRank,
+		},
 		userID: row.user_id,
-		chartID: row.chart_legacy_id,
+		chartID: row.chart_id,
 		game: game as GameGroup,
 		playtype: playtype as Playtype,
 		songID: row.song_legacy_id,
@@ -112,11 +131,12 @@ export async function LoadPbByUserAndChartLegacyId(
 	chartLegacyId: string,
 ): Promise<MONGO_PBScoreDocument | null> {
 	const row = await DB.selectFrom("pb")
+		.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
 		.innerJoin("chart", "chart.id", "pb.chart_id")
 		.innerJoin("song", "song.id", "chart.song_id")
-		.select(SELECT_PB_DOCUMENT_JOIN)
+		.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
 		.where("pb.user_id", "=", userId)
-		.where("chart.legacy_id", "=", chartLegacyId)
+		.where("chart.id", "=", chartLegacyId)
 		.executeTakeFirst();
 
 	if (!row) {
@@ -124,6 +144,148 @@ export async function LoadPbByUserAndChartLegacyId(
 	}
 
 	return ToPbScoreDocument(row as PbDocumentJoinRow);
+}
+
+/** Best PB for a user on a chart (by Postgres `chart.id`). */
+export async function LoadPbByUserAndChartPgId(
+	userId: number,
+	chartPgId: string,
+): Promise<MONGO_PBScoreDocument | null> {
+	const row = await DB.selectFrom("pb")
+		.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
+		.innerJoin("chart", "chart.id", "pb.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
+		.where("pb.user_id", "=", userId)
+		.where("chart.id", "=", chartPgId)
+		.executeTakeFirst();
+
+	if (!row) {
+		return null;
+	}
+
+	return ToPbScoreDocument(row as PbDocumentJoinRow);
+}
+
+/** Best PB for a user on a chart, matching either `chart.id` or `chart.legacy_id`. */
+export async function LoadPbByUserAndChartID(
+	userID: number,
+	chartID: string,
+): Promise<MONGO_PBScoreDocument | null> {
+	const row = await DB.selectFrom("pb")
+		.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
+		.innerJoin("chart", "chart.id", "pb.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
+		.where("pb.user_id", "=", userID)
+		.where("chart.id", "=", chartID)
+		.executeTakeFirst();
+
+	if (!row) {
+		return null;
+	}
+
+	return ToPbScoreDocument(row as PbDocumentJoinRow);
+}
+
+/** PBs for a user on any of the given charts (Postgres `chart.id`), newest `time_achieved` first. */
+export async function LoadPbsForUserOnChartsByPgIds(
+	userId: number,
+	chartPgIds: string[],
+	opts?: { limit?: number },
+): Promise<MONGO_PBScoreDocument[]> {
+	if (chartPgIds.length === 0) {
+		return [];
+	}
+
+	const rows = await DB.selectFrom("pb")
+		.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
+		.innerJoin("chart", "chart.id", "pb.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
+		.where("pb.user_id", "=", userId)
+		.where("chart.id", "in", chartPgIds)
+		.orderBy("pb.time_achieved", "desc")
+		.limit(opts?.limit ?? 30)
+		.execute();
+
+	return Promise.all(rows.map((r) => ToPbScoreDocument(r as PbDocumentJoinRow)));
+}
+
+/** Every PB on a chart (Postgres `chart.id`), e.g. beatoraja IR leaderboard. */
+export async function LoadAllPbsForChartPgId(chartPgId: string): Promise<MONGO_PBScoreDocument[]> {
+	const rows = await DB.selectFrom("pb")
+		.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
+		.innerJoin("chart", "chart.id", "pb.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
+		.where("chart.id", "=", chartPgId)
+		.execute();
+
+	return Promise.all(rows.map((r) => ToPbScoreDocument(r as PbDocumentJoinRow)));
+}
+
+/** All PBs for a user on primary charts for this GPT (`chart.game` + `is_primary`). */
+export async function LoadPbDocumentsForUserPrimaryCharts(
+	userId: number,
+	v3Game: Game,
+): Promise<MONGO_PBScoreDocument[]> {
+	const rows = await DB.selectFrom("pb")
+		.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
+		.innerJoin("chart", "chart.id", "pb.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
+		.where("pb.user_id", "=", userId)
+		.where("chart.game", "=", v3Game)
+		.where("chart.is_primary", "=", true)
+		.orderBy("pb.time_achieved", "desc")
+		.execute();
+
+	return Promise.all(rows.map((r) => ToPbScoreDocument(r as PbDocumentJoinRow)));
+}
+
+/** Primary-chart PBs for a user, sorted by a numeric field in `calculated_data` (descending). */
+export async function LoadPbDocumentsForUserPrimaryChartsSortedByAlg(
+	userId: number,
+	v3Game: Game,
+	alg: string,
+	limit: number,
+): Promise<MONGO_PBScoreDocument[]> {
+	const rows = await DB.selectFrom("pb")
+		.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
+		.innerJoin("chart", "chart.id", "pb.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
+		.where("pb.user_id", "=", userId)
+		.where("chart.game", "=", v3Game)
+		.where("chart.is_primary", "=", true)
+		.orderBy(sql`(pb.calculated_data::jsonb->>${sql.lit(alg)})::double precision`, "desc")
+		.orderBy("pb.time_achieved", "desc")
+		.limit(limit)
+		.execute();
+
+	return Promise.all(rows.map((r) => ToPbScoreDocument(r as PbDocumentJoinRow)));
+}
+
+/** PBs for a set of users on one chart (Postgres `chart.id`). */
+export async function LoadPbsByUserIdsAndChartPgId(
+	userIds: number[],
+	chartPgId: string,
+): Promise<MONGO_PBScoreDocument[]> {
+	if (userIds.length === 0) {
+		return [];
+	}
+
+	const rows = await DB.selectFrom("pb")
+		.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
+		.innerJoin("chart", "chart.id", "pb.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
+		.where("chart.id", "=", chartPgId)
+		.where("pb.user_id", "in", userIds)
+		.execute();
+
+	return Promise.all(rows.map((r) => ToPbScoreDocument(r as PbDocumentJoinRow)));
 }
 
 /**
@@ -134,10 +296,11 @@ export async function LoadPbServerRecordForChartLegacyId(
 	chartLegacyId: string,
 ): Promise<MONGO_PBScoreDocument | null> {
 	const row = await DB.selectFrom("pb")
+		.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
 		.innerJoin("chart", "chart.id", "pb.chart_id")
 		.innerJoin("song", "song.id", "chart.song_id")
-		.select(SELECT_PB_DOCUMENT_JOIN)
-		.where("chart.legacy_id", "=", chartLegacyId)
+		.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
+		.where("chart.id", "=", chartLegacyId)
 		.orderBy("pb.ranking_value", "desc")
 		.limit(1)
 		.executeTakeFirst();
@@ -149,14 +312,14 @@ export async function LoadPbServerRecordForChartLegacyId(
 	return ToPbScoreDocument(row as PbDocumentJoinRow);
 }
 
-/** PBs on a chart with `calculated_data.rank` strictly above / below the user’s rank (USC-style ladders). */
+/** PBs on a chart with leaderboard rank strictly above / below the user’s rank (USC-style ladders). */
 export async function LoadPbsAdjacentByChartRank(
 	chartLegacyId: string,
 	userRank: number,
 	dir: "above" | "below",
 	limit: number,
 ): Promise<Array<MONGO_PBScoreDocument>> {
-	const rankExpr = sql<number>`(pb.calculated_data::jsonb->>'rank')::double precision`;
+	const rankExpr = sql<number>`chart_leaderboard.rank`;
 	const cmp =
 		dir === "above"
 			? sql<boolean>`${rankExpr} < ${userRank}`
@@ -164,18 +327,120 @@ export async function LoadPbsAdjacentByChartRank(
 	const order = dir === "above" ? ("desc" as const) : ("asc" as const);
 
 	const q = DB.selectFrom("pb")
+		.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
 		.innerJoin("chart", "chart.id", "pb.chart_id")
 		.innerJoin("song", "song.id", "chart.song_id")
-		.select(SELECT_PB_DOCUMENT_JOIN)
-		.where("chart.legacy_id", "=", chartLegacyId)
-		.where(
-			sql<boolean>`jsonb_typeof(pb.calculated_data::jsonb -> 'rank') = ${sql.lit("number")}`,
-		)
+		.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
+		.where("chart.id", "=", chartLegacyId)
 		.where(cmp)
 		.orderBy(rankExpr, order)
 		.limit(limit);
 
 	const rows = await q.execute();
+
+	return Promise.all(rows.map((r) => ToPbScoreDocument(r as PbDocumentJoinRow)));
+}
+
+/** PB with ladder rank 1 on a chart (USC IR “server record” / GET record semantics). */
+export async function LoadPbRankOneOnChartLegacyId(
+	chartLegacyId: string,
+): Promise<MONGO_PBScoreDocument | null> {
+	const row = await DB.selectFrom("pb")
+		.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
+		.innerJoin("chart", "chart.id", "pb.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
+		.where("chart.id", "=", chartLegacyId)
+		.where(sql<boolean>`chart_leaderboard.rank = 1`)
+		.executeTakeFirst();
+
+	if (!row) {
+		return null;
+	}
+
+	return ToPbScoreDocument(row as PbDocumentJoinRow);
+}
+
+/** Top N PBs on a chart by `ranking_value` (matches USC score ordering for leaderboard). */
+export async function LoadPbsOnChartByRankingValueDesc(
+	chartLegacyId: string,
+	limit: number,
+): Promise<Array<MONGO_PBScoreDocument>> {
+	const rows = await DB.selectFrom("pb")
+		.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
+		.innerJoin("chart", "chart.id", "pb.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
+		.where("chart.id", "=", chartLegacyId)
+		.orderBy("pb.ranking_value", "desc")
+		.limit(limit)
+		.execute();
+
+	return Promise.all(rows.map((r) => ToPbScoreDocument(r as PbDocumentJoinRow)));
+}
+
+/** Number of PB rows on a chart (legacy Mongo `personal-bests` count by `chartID`). */
+export async function CountPbsOnChart(chartLegacyId: string): Promise<number> {
+	const row = await DB.selectFrom("pb")
+		.innerJoin("chart", "chart.id", "pb.chart_id")
+		.where("chart.id", "=", chartLegacyId)
+		.select((eb) => eb.fn.countAll<number>().as("count"))
+		.executeTakeFirst();
+
+	return Number(row?.count ?? 0);
+}
+
+/**
+ * PBs on a chart with leaderboard rank &gt;= `startRanking`, sorted by rank ascending
+ * (legacy GET …/charts/:chartID/pbs).
+ */
+export async function LoadPbsOnChartByRankAsc(
+	chartLegacyId: string,
+	startRanking: number,
+	limit: number,
+): Promise<Array<MONGO_PBScoreDocument>> {
+	const rankExpr = sql<number>`chart_leaderboard.rank`;
+
+	const rows = await DB.selectFrom("pb")
+		.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
+		.innerJoin("chart", "chart.id", "pb.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
+		.where("chart.id", "=", chartLegacyId)
+		.where(sql<boolean>`${rankExpr} >= ${startRanking}`)
+		.orderBy(rankExpr, "asc")
+		.limit(limit)
+		.execute();
+
+	return Promise.all(rows.map((r) => ToPbScoreDocument(r as PbDocumentJoinRow)));
+}
+
+/**
+ * PBs on a chart for accounts matching the v1 username search (ILIKE on
+ * `normalized_username`, limit 25). Username filter is folded into this query via
+ * `IN (SELECT id FROM account …)`.
+ */
+export async function LoadPbsOnChartForUserSearch(
+	chartLegacyId: string,
+	search: string,
+): Promise<Array<MONGO_PBScoreDocument>> {
+	const likeEsc = EscapeForILIKE(search.toLowerCase());
+	const pattern = `%${likeEsc}%`;
+
+	const rows = await DB.selectFrom("pb")
+		.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
+		.innerJoin("chart", "chart.id", "pb.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
+		.where("chart.id", "=", chartLegacyId)
+		.where(
+			sql<boolean>`pb.user_id IN (
+				SELECT id FROM account
+				WHERE normalized_username LIKE ${pattern}
+				LIMIT 25
+			)`,
+		)
+		.execute();
 
 	return Promise.all(rows.map((r) => ToPbScoreDocument(r as PbDocumentJoinRow)));
 }

@@ -17,7 +17,7 @@ import {
 } from "./_common";
 
 const BMS_PMS_MERGERS: Array<PBMergeFunction<GPTStrings["bms" | "pms"]>> = [
-	CreatePBMergeFor("largest", "enumIndexes.lamp", "Best Lamp", (base, lamp) => {
+	CreatePBMergeFor("largest", { type: "REGULAR", metric: "lamp" }, "Best Lamp", (base, lamp) => {
 		base.scoreData.lamp = lamp.scoreData.lamp;
 
 		// technically these don't exist on PMS scores but since undefined is a
@@ -28,7 +28,7 @@ const BMS_PMS_MERGERS: Array<PBMergeFunction<GPTStrings["bms" | "pms"]>> = [
 		base.scoreData.optional.gaugeHistoryGroove = lamp.scoreData.optional.gaugeHistoryGroove;
 		base.scoreData.optional.gaugeHistoryHard = lamp.scoreData.optional.gaugeHistoryHard;
 	}),
-	CreatePBMergeFor("smallest", "optional.bp", "Lowest BP", (base, bp) => {
+	CreatePBMergeFor("smallest", { type: "REGULAR", metric: "bp" }, "Lowest BP", (base, bp) => {
 		base.scoreData.optional.bp = bp.scoreData.optional.bp;
 	}),
 ];

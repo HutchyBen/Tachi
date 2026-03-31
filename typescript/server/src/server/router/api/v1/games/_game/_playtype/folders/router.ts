@@ -49,7 +49,7 @@ router.get("/", async (req, res) => {
 router.get("/:folderID", GetFolderFromParam, async (req, res) => {
 	const folder = GetTachiData(req, "folderDoc");
 
-	const { songs, charts } = await GetFolderChartsAndSongs(folder, {});
+	const { songs, charts } = await GetFolderChartsAndSongs(folder);
 
 	return res.status(200).json({
 		success: true,

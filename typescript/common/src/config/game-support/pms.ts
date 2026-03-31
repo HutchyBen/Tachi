@@ -141,7 +141,7 @@ export const PMS_CONTROLLER_CONF = {
 		notecount: zodNonNegativeInt,
 		hashMD5: z.string(),
 		hashSHA256: z.string(),
-		tableFolders: z.array(z.strictObject({ table: z.string(), level: z.string() })),
+		tableFolders: z.record(z.string(), z.string()),
 		sglEC: z.number().nullable().optional(),
 		sglHC: z.number().nullable().optional(),
 	}),

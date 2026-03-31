@@ -211,6 +211,7 @@ describe("GetSessionFromScore (Postgres)", () => {
 			chartID: chartId,
 			songID: 9_000_002,
 			isPrimary: true,
+			importType: "file/batch-manual",
 		});
 
 		expect(session).toBeNull();
@@ -304,6 +305,7 @@ describe("GetSessionFromScore (Postgres)", () => {
 			chartID: chartId,
 			songID: 9_000_003,
 			isPrimary: true,
+			importType: "file/batch-manual",
 		});
 
 		expect(session).not.toBeNull();

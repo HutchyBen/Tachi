@@ -8,10 +8,12 @@ import type {
 import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import { USCIR_ADJACENT_SCORE_N } from "#lib/constants/usc-ir";
+import { LoadPbsAdjacentByChartRank } from "#lib/db-formats/pb";
+import { LoadScoreDocumentById } from "#lib/db-formats/score";
 import { log } from "#lib/log/log";
-import MONGODB_KILL from "#services/mongo/db";
 import { MStoS } from "#utils/misc";
 import { GetPBOnChart, GetServerRecordOnChart } from "#utils/scores";
+import { GetUsernameFromUserID } from "#utils/user";
 
 import type { USCServerScore } from "./types";
 
@@ -36,21 +38,10 @@ export const TACHI_LAMP_TO_USC: Record<
 export async function TachiScoreToServerScore(
 	tachiScore: MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard">,
 ): Promise<USCServerScore> {
-	// @optimisable
-	// Repeated calls to this may pre-emptively provide usernames
-	// and score PBs.
-	const userDoc = await MONGODB_KILL.users.findOne(
-		{
-			id: tachiScore.userID,
-		},
-		{
-			projection: {
-				username: 1,
-			},
-		},
-	);
-
-	if (!userDoc) {
+	let username: string;
+	try {
+		username = await GetUsernameFromUserID(tachiScore.userID);
+	} catch {
 		log.error(
 			`User ${tachiScore.userID} from PB on chart ${tachiScore.chartID} has no user document?`,
 		);
@@ -61,9 +52,9 @@ export async function TachiScoreToServerScore(
 
 	const firstScoreID = tachiScore.composedFrom[0].scoreID;
 
-	const scorePB = (await MONGODB_KILL.scores.findOne({
-		scoreID: firstScoreID,
-	})) as MONGO_ScoreDocument<"usc:Controller" | "usc:Keyboard"> | null;
+	const scorePB = (await LoadScoreDocumentById(firstScoreID)) as
+		| MONGO_ScoreDocument<"usc:Controller" | "usc:Keyboard">
+		| undefined;
 
 	if (!scorePB) {
 		log.error(
@@ -83,7 +74,7 @@ export async function TachiScoreToServerScore(
 		error: tachiScore.scoreData.judgements.miss ?? 0,
 		ranking: tachiScore.rankingData.rank,
 		lamp: TACHI_LAMP_TO_USC[tachiScore.scoreData.lamp],
-		username: userDoc.username,
+		username,
 		noteMod: scorePB.scoreMeta.noteMod ?? "NORMAL",
 		gaugeMod: scorePB.scoreMeta.gaugeMod ?? "NORMAL",
 	};
@@ -135,15 +126,11 @@ export async function CreatePOSTScoresResponseBody(
 	// This returns immediately ranked higher
 	// than the current user.
 
-	const adjAbove = (await MONGODB_KILL["personal-bests"].find(
-		{
-			chartID: chartDoc.chartID,
-			"rankingData.rank": { $lt: usersRanking },
-		},
-		{
-			limit: USCIR_ADJACENT_SCORE_N,
-			sort: { "rankingData.rank": -1 },
-		},
+	const adjAbove = (await LoadPbsAdjacentByChartRank(
+		chartDoc.chartID,
+		usersRanking,
+		"above",
+		USCIR_ADJACENT_SCORE_N,
 	)) as Array<MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard">>;
 
 	// The specification enforces that we return them in
@@ -161,15 +148,11 @@ export async function CreatePOSTScoresResponseBody(
 
 	// Similar to above, this returns the N most immediate
 	// scores below the given user.
-	const adjBelow = (await MONGODB_KILL["personal-bests"].find(
-		{
-			chartID: chartDoc.chartID,
-			"rankingData.rank": { $gt: usersRanking },
-		},
-		{
-			limit: USCIR_ADJACENT_SCORE_N,
-			sort: { "rankingData.rank": 1 },
-		},
+	const adjBelow = (await LoadPbsAdjacentByChartRank(
+		chartDoc.chartID,
+		usersRanking,
+		"below",
+		USCIR_ADJACENT_SCORE_N,
 	)) as Array<MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard">>;
 
 	const [score, serverRecord, adjacentAbove, adjacentBelow] = await Promise.all([
@@ -179,9 +162,9 @@ export async function CreatePOSTScoresResponseBody(
 		Promise.all(adjBelow.map(TachiScoreToServerScore)),
 	]);
 
-	const originalScore = (await MONGODB_KILL.scores.findOne({
-		scoreID,
-	})) as MONGO_ScoreDocument<"usc:Controller" | "usc:Keyboard"> | null;
+	const originalScore = (await LoadScoreDocumentById(scoreID)) as
+		| MONGO_ScoreDocument<"usc:Controller" | "usc:Keyboard">
+		| undefined;
 
 	if (!originalScore) {
 		log.error(

@@ -5,13 +5,13 @@ import DB from "#services/pg/db";
 import {
 	type Classes,
 	type GameGroup,
+	GamePTToV3,
 	GetGPTConfig,
 	GetGPTString,
 	type GPTString,
 	type integer,
 	type MONGO_UserGameStats,
 	type Playtype,
-	GamePTToV3,
 } from "tachi-common";
 
 function parseProfileJson<T>(v: unknown): T {
@@ -22,7 +22,7 @@ function parseProfileJson<T>(v: unknown): T {
 	return v as T;
 }
 
-async function loadUserGameStats(
+export async function loadUserGameStats(
 	userID: integer,
 	game: GameGroup,
 	playtype: Playtype,

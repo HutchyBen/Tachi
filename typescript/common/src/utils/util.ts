@@ -12,8 +12,14 @@ import type {
 	MONGO_SongDocument,
 	Playtypes,
 	V3Game,
+	V3GameToGPTString,
 } from "../types";
-import type { GetEnumValue } from "../types/metrics";
+import type {
+	AllConfMetrics,
+	ConfEnumScoreMetric,
+	ExtractEnumMetricNames,
+	GetEnumValue,
+} from "../types/metrics";
 
 import {
 	GetGameGroupConfig,
@@ -21,6 +27,7 @@ import {
 	GetGPTString,
 	GetSpecificGPTConfig,
 	SplitGPT,
+	V3GetGameConfig,
 	V3ToGPTString,
 } from "../config/config";
 
@@ -33,7 +40,9 @@ export function FormatDifficulty(chart: MONGO_ChartDocument, game: GameGroup): s
 		const bmsChart = chart as MONGO_ChartDocument<"bms:7K" | "bms:14K">;
 
 		return (
-			bmsChart.data.tableFolders.map((e) => `${e.table}${e.level}`).join(", ") || "Unrated"
+			Object.entries(bmsChart.data.tableFolders)
+				.map(([table, level]) => `${table}${level}`)
+				.join(", ") || "Unrated"
 		);
 	}
 
@@ -191,28 +200,34 @@ export function FormatChart(
 			realTitle = `${realTitle} [${bmsSong.data.genre}]`;
 		}
 
-		if (tables.length === 0) {
+		if (Object.keys(tables).length === 0) {
 			return realTitle;
 		}
 
-		return `${realTitle} (${tables.map((e) => `${e.table}${e.level}`).join(", ")})`;
+		return `${realTitle} (${Object.entries(tables)
+			.map(([table, level]) => `${table}${level}`)
+			.join(", ")})`;
 	} else if (game === "usc") {
 		const uscChart = chart as MONGO_ChartDocument<GPTStrings["usc"]>;
 
 		// If this chart isn't an official, render it differently
 		if (!uscChart.data.isOfficial) {
 			// Same as BMS. turn this into SongTitle (Keyboard MXM normal1, insane2)
-			return `${song.title} (${chart.playtype} ${
-				chart.difficulty
-			} ${uscChart.data.tableFolders.map((e) => `${e.table}${e.level}`).join(", ")})`;
-		} else if (uscChart.data.tableFolders.length !== 0) {
+			return `${song.title} (${chart.playtype} ${chart.difficulty} ${Object.entries(
+				uscChart.data.tableFolders,
+			)
+				.map(([table, level]) => `${table}${level}`)
+				.join(", ")})`;
+		} else if (Object.keys(uscChart.data.tableFolders).length !== 0) {
 			// if this chart is an official **AND** is on tables (unlikely), render
 			// it as so:
 
 			// SongTitle (Keyboard MXM 17, normal1, insane2)
 			return `${song.title} (${chart.playtype} ${chart.difficulty} ${
 				chart.level
-			}, ${uscChart.data.tableFolders.map((e) => `${e.table}${e.level}`).join(", ")})`;
+			}, ${Object.entries(uscChart.data.tableFolders)
+				.map(([table, level]) => `${table}${level}`)
+				.join(", ")})`;
 		}
 
 		// otherwise, it's just an official and should be rendered like any other game.
@@ -450,17 +465,14 @@ export function CreateChartMap<GPT extends GPTString = GPTString>(
 
 	for (const chart of charts) {
 		chartMap.set(chart.chartID, chart);
-		if (chart.legacyChartId) {
-			chartMap.set(chart.legacyChartId, chart);
-		}
 	}
 
 	return chartMap;
 }
 
-/** Mongo `chartID` field (`personal-bests`, `scores`, etc.): legacy string, or same as `chartID` on raw Mongo chart docs. */
+/** TODO(zk) remove this function */
 export function MongoChartLegacyId(chart: MONGO_ChartDocument): string {
-	return chart.legacyChartId ?? chart.chartID;
+	return chart.chartID;
 }
 
 /**
@@ -534,4 +546,28 @@ export function IIDXLikeGetGrade(
 	}
 
 	return "F";
+}
+
+export function EnumIndexToValue<
+	G extends V3Game,
+	EV extends ExtractEnumMetricNames<AllConfMetrics[V3GameToGPTString[G]]>,
+>(game: G, enumMetric: EV, index: integer): GetEnumValue<V3GameToGPTString[G], EV> {
+	const config = V3GetGameConfig(game);
+
+	let metric = config.providedMetrics[enumMetric];
+	if (!metric) {
+		metric = config.derivedMetrics[enumMetric];
+	}
+	if (!metric) {
+		metric = config.optionalMetrics[enumMetric];
+	}
+
+	if (!metric) {
+		throw new Error(`Invalid enum metric ${enumMetric} for game ${game}.`);
+	}
+
+	return (metric as ConfEnumScoreMetric<string>).values[index] as GetEnumValue<
+		V3GameToGPTString[G],
+		EV
+	>;
 }

@@ -1,3 +1,4 @@
+import DebugContent from "#components/util/DebugContent.js";
 import useScoreRatingAlg from "#components/util/useScoreRatingAlg";
 import { type ScoreDataset } from "#types/tables";
 import { NumericSOV, StrSOV } from "#util/sorts";

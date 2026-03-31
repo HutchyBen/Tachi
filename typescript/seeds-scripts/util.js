@@ -1,7 +1,14 @@
-const crypto = require("crypto");
 const fjsh = require("fast-json-stable-hash");
 const fs = require("fs");
 const path = require("path");
+
+const {
+	CreateChartID,
+	CreateFolderID,
+	CreateQuestID,
+	CreateSongID,
+	CreateTableID,
+} = require("tachi-common");
 
 const DeterministicCollectionSort = require("./sort-seeds");
 
@@ -53,37 +60,6 @@ function MutateCollection(name, cb) {
 	WriteCollection(name, data);
 }
 
-/**
- * A variant of the snowflake ID algorithm for tachi
- */
-function tachiID(prefix, ts = Date.now(), epoch = 0) {
-	let dt = ts - epoch;
-	let dtb = dt.toString(16);
-	let rand = crypto.randomBytes(4).toString("hex");
-
-	return prefix + dtb + rand;
-}
-
-function CreateChartID(ts = Date.now()) {
-	return tachiID("C", ts);
-}
-
-function CreateQuestID(ts = Date.now()) {
-	return tachiID("Q", ts);
-}
-
-function CreateSongID(ts = Date.now()) {
-	return tachiID("S", ts);
-}
-
-function CreateFolderID(ts = Date.now()) {
-	return tachiID("F", ts);
-}
-
-function CreateTableID(ts = Date.now()) {
-	return tachiID("T", ts);
-}
-
 // this api sucks, maybe dont use it
 //
 // TODO(zk): remove this and give folders actual readable names
@@ -95,8 +71,8 @@ function CreateLegacyFolderIDFromFolder(folder) {
 	return CreateLegacyFolderID(folder.data, folder.game, folder.playtype);
 }
 
-function CreateGoalID(charts, criteria, game, playtype) {
-	return `G${fjsh.hash({ charts, criteria, game, playtype }, "sha256")}`;
+function CreateGoalID(charts, criteria, game) {
+	return `G${fjsh.hash({ charts, criteria, game }, "sha256")}`;
 }
 
 // quick inplace deepmerge hack

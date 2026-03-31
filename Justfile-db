@@ -5,14 +5,19 @@ DEFAULT_DB := "tachi_dev"
 db POSTGRES_DB=DEFAULT_DB:
 	psql "{{POSTGRES_URL}}/{{POSTGRES_DB}}"
 
-# Drop and recreate the database so migrations can be re-applied from scratch.
-db-reset POSTGRES_DB=DEFAULT_DB:
+db-cheap-reset POSTGRES_DB=DEFAULT_DB:
 	#!/bin/bash
-
 	export POSTGRES_URL="{{POSTGRES_URL}}/{{POSTGRES_DB}}"
 	tachidb database drop
 	tachidb database create
 	tachidb migrate run
+
+# Drop and recreate the database so migrations can be re-applied from scratch.
+db-reset POSTGRES_DB=DEFAULT_DB:
+	#!/bin/bash
+
+	just db-cheap-reset "{{POSTGRES_DB}}"
+	just db-load-seeds "{{POSTGRES_DB}}"
 
 # Show the status of all applied (and failed) migrations.
 db-migrate-status POSTGRES_DB=DEFAULT_DB:
@@ -27,5 +32,5 @@ db-load-seeds POSTGRES_DB=DEFAULT_DB:
 		bun run src/scripts/load-seeds-pg.ts
 
 # Reset templatedb from migrations, then dump schema and indexes for local debugging.
-db-schema: (db-reset "templatedb")
+db-schema: (db-cheap-reset "templatedb")
 	pg_dump "{{POSTGRES_URL}}/templatedb" --schema-only --no-owner --no-acl -f db/schema.sql

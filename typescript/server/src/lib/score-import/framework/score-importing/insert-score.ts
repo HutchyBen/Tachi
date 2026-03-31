@@ -1,25 +1,25 @@
-import type { integer, MONGO_ScoreDocument } from "tachi-common";
+import type { integer, MONGO_ChartDocument, MONGO_ScoreDocument } from "tachi-common";
 
 import { log } from "#lib/log/log";
-import MONGODB_KILL from "#services/mongo/db";
+import { mongoScoreDocumentToNewScoreRow } from "#lib/score-import/framework/pg/mongo-score-to-pg";
+import DB from "#services/pg/db";
 
 const MAX_PIPELINE_LENGTH = 500;
 
+interface PendingInsert {
+	score: MONGO_ScoreDocument;
+	chartIdPg: string;
+	committed: boolean;
+	importId: string | null;
+}
+
 interface ScoreQueue {
-	queue: Array<MONGO_ScoreDocument>;
+	queue: Array<PendingInsert>;
 	scoreIDSet: Set<string>;
 }
 
 const ScoreQueues: Record<integer, ScoreQueue> = {};
 
-/**
- * Returns this user's score queue. A score queue is a temporary place scores are saved
- * so that they can be inserted into the database in bulk.
- *
- * This massively improves performance on large imports instead of constantly running single imports.
- *
- * If a score queue does not exist for the user, one is created.
- */
 function GetOrSetScoreQueue(userID: integer) {
 	const queue = ScoreQueues[userID];
 
@@ -45,26 +45,29 @@ function SetScoreQueue(userID: integer) {
 	return queue;
 }
 
-/**
- * Adds a new score to the given queue.
- */
-function AddToScoreQueue(scoreQueue: ScoreQueue, score: MONGO_ScoreDocument) {
-	scoreQueue.queue.push(score);
-	scoreQueue.scoreIDSet.add(score.scoreID);
+function AddToScoreQueue(scoreQueue: ScoreQueue, item: PendingInsert) {
+	scoreQueue.queue.push(item);
+	scoreQueue.scoreIDSet.add(item.score.scoreID);
 }
 
 export async function InsertQueue(userID: integer) {
 	const scoreQueue = GetOrSetScoreQueue(userID);
 
-	const queuedScores = scoreQueue.queue.splice(0);
+	const queued = scoreQueue.queue.splice(0);
 
-	if (queuedScores.length !== 0) {
-		// Yeah, this is sketchy. Ah well.
-
+	if (queued.length !== 0) {
 		delete ScoreQueues[userID];
 
 		try {
-			await MONGODB_KILL.scores.insert(queuedScores);
+			const rows = queued.map((item) =>
+				mongoScoreDocumentToNewScoreRow(item.score, item.chartIdPg, {
+					committed: item.committed,
+					importId: item.importId,
+					sessionId: null,
+				}),
+			);
+
+			await DB.insertInto("score").values(rows).execute();
 		} catch (err) {
 			log.warn(
 				{ err },
@@ -74,25 +77,33 @@ export async function InsertQueue(userID: integer) {
 		}
 	}
 
-	return queuedScores.length;
+	return queued.length;
 }
 
 /**
  * Adds a score to a queue to be inserted in batch to the database.
- * @param score - The score document to queue.
  * @returns True on success, The amount of scores inserted on auto-pipeline-flush, and null if
  * the score provided is already loaded.
  */
-export function QueueScoreInsert(score: MONGO_ScoreDocument) {
+export function QueueScoreInsert(
+	score: MONGO_ScoreDocument,
+	chart: MONGO_ChartDocument,
+	importId: string | null,
+	committed: boolean,
+) {
 	const scoreQueue = GetOrSetScoreQueue(score.userID);
 
 	if (scoreQueue.scoreIDSet.has(score.scoreID)) {
-		// skip
 		log.debug(`Score ID ${score.scoreID} was already queued to be imported.`);
 		return null;
 	}
 
-	AddToScoreQueue(scoreQueue, score);
+	AddToScoreQueue(scoreQueue, {
+		score,
+		chartIdPg: chart.chartID,
+		committed,
+		importId,
+	});
 
 	log.debug(`ScoreQueue for ${score.userID} is now at ${scoreQueue.queue.length}.`);
 

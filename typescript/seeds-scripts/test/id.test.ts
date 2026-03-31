@@ -1,21 +1,23 @@
 import chalk from "chalk";
 import fjsh from "fast-json-stable-hash";
 import get from "lodash.get";
-import { allSupportedGameGroups, type GameGroup, type integer } from "tachi-common";
-import { type SCHEMAS } from "tachi-common/lib/schemas";
+import {
+	allSupportedGameGroups,
+	type GameGroup,
+	type integer,
+	v3AllGames,
+	type V3Game,
+	V3ToGameGroup,
+} from "tachi-common";
 
-import { ReadCollection } from "../util";
+import { GetChartCollectionGame, GetSongCollectionGame, ReadCollection } from "../util";
 import { FormatFunctions } from "./test-utils";
 
 // Either it's a bare string or an array of strings for co-uniqueness.
 type DuplicateKeyDecl = string | string[];
 
-// @ts-expect-error filled out dynamically.
-const SongChartKeys: Record<`${"chart" | "song"}s-${GameGroup}`, DuplicateKeyDecl[]> = {};
-
-for (const game of allSupportedGameGroups) {
-	SongChartKeys[`songs-${game}`] = ["id", "legacySongID"];
-	SongChartKeys[`charts-${game}`] = [
+function chartDupKeyDecls(): DuplicateKeyDecl[] {
+	return [
 		"id",
 		"legacyChartID",
 		// @todo THIS IS WRONG. CHARTS ARE ALLOWED TO HAVE MULTIPLE
@@ -24,7 +26,17 @@ for (const game of allSupportedGameGroups) {
 	];
 }
 
-const UniqueKeys: Partial<Record<keyof typeof SCHEMAS, DuplicateKeyDecl[]>> = {
+const SongChartKeys: Record<string, DuplicateKeyDecl[]> = {};
+
+for (const gameGroup of allSupportedGameGroups) {
+	SongChartKeys[`songs-${gameGroup}`] = ["id", "legacySongID"];
+}
+
+for (const v3Game of v3AllGames) {
+	SongChartKeys[`charts-${v3Game}`] = chartDupKeyDecls();
+}
+
+const UniqueKeys: Record<string, DuplicateKeyDecl[]> = {
 	"bms-course-lookup": [["set", "playtype", "value"]],
 	folders: ["id", "legacyFolderID"],
 	tables: ["id", "legacyTableID"],
@@ -34,17 +46,23 @@ const UniqueKeys: Partial<Record<keyof typeof SCHEMAS, DuplicateKeyDecl[]>> = {
 	...SongChartKeys,
 };
 
-UniqueKeys["charts-usc"]!.push(["data.hashSHA1", "playtype"]);
+for (const v3 of ["usc-keyboard", "usc-controller"] as const) {
+	UniqueKeys[`charts-${v3}`]!.push("data.hashSHA1");
+}
 
 UniqueKeys["charts-popn"]!.push("data.hashSHA256");
 
-UniqueKeys["charts-bms"]!.push("data.hashMD5");
-UniqueKeys["charts-bms"]!.push("data.hashSHA256");
+for (const v3 of ["bms-7k", "bms-14k"] as const) {
+	UniqueKeys[`charts-${v3}`]!.push("data.hashMD5");
+	UniqueKeys[`charts-${v3}`]!.push("data.hashSHA256");
+}
 
-UniqueKeys["charts-pms"]!.push(["data.hashMD5", "playtype"]);
-UniqueKeys["charts-pms"]!.push(["data.hashSHA256", "playtype"]);
+for (const v3 of ["pms-keyboard", "pms-controller"] as const) {
+	UniqueKeys[`charts-${v3}`]!.push("data.hashMD5");
+	UniqueKeys[`charts-${v3}`]!.push("data.hashSHA256");
+}
 
-UniqueKeys["charts-itg"]!.push("data.hashGSv3");
+UniqueKeys["charts-itg-stamina"]!.push("data.hashGSv3");
 
 let exitCode = 0;
 const suites: Array<{ good: boolean; name: string; report: unknown }> = [];
@@ -84,33 +102,41 @@ function cartesianProduct(elements: Array<Array<unknown>>) {
 	return result;
 }
 
+function gameGroupForFormat(collection: string): GameGroup {
+	if (collection.startsWith("songs-")) {
+		return GetSongCollectionGame(`${collection}.json`) as GameGroup;
+	}
+
+	if (collection.startsWith("charts-")) {
+		const v3Game = GetChartCollectionGame(`${collection}.json`) as V3Game;
+
+		return V3ToGameGroup(v3Game);
+	}
+
+	throw new Error(`Expected songs-* or charts-* collection, got ${collection}`);
+}
+
 for (const [collection, uniqueIDs] of Object.entries(UniqueKeys)) {
 	console.log(`[VALIDATING DUPES] ${collection}`);
 
 	const collectionName = `${collection}.json`;
-	const formatFn = FormatFunctions[collection] ?? ((v) => JSON.stringify(v));
+	const formatFn = FormatFunctions[collectionName] ?? ((v) => JSON.stringify(v));
 
 	let success = 0;
 	let fails = 0;
 
-	const data = ReadCollection(collectionName);
+	const data = ReadCollection(collectionName, true);
 
-	let game = "";
+	let gameGroupForFmt: GameGroup | null = null;
 
 	if (collection.startsWith("songs-") || collection.startsWith("charts-")) {
-		const maybeGame = collection.split("-")[1];
-
-		if (maybeGame === undefined) {
-			throw new Error(`You passed ${collection} as a collection. Why?`);
-		}
-
-		game = maybeGame;
+		gameGroupForFmt = gameGroupForFormat(collection);
 	}
 
 	for (const uniqueID of uniqueIDs) {
 		const set = new Set<string>();
 		for (const d of data) {
-			const pretty = formatFn(d, game as GameGroup);
+			const pretty = formatFn(d, gameGroupForFmt);
 
 			let value: Array<Array<number | string>>;
 
@@ -140,6 +166,12 @@ for (const [collection, uniqueIDs] of Object.entries(UniqueKeys)) {
 						),
 					);
 				}
+			}
+
+			const valueCells = value.flatMap((e) => (Array.isArray(e) ? e : [e]));
+			if (valueCells.some((cell) => cell === undefined)) {
+				// Optional seed fields (e.g. PMS hashes): cannot enforce uniqueness.
+				continue;
 			}
 
 			// cartesian product values before we interact with them.

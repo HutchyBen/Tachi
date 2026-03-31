@@ -221,7 +221,7 @@ export const SDVXLIKE_GOAL_PG_FMT: GPTGoalProgressFormatters<SDVXLikes> = {
 };
 
 export const SDVXLIKE_PB_MERGERS: Array<PBMergeFunction<SDVXLikes>> = [
-	CreatePBMergeFor("largest", "enumIndexes.lamp", "Best Lamp", (base, score) => {
+	CreatePBMergeFor("largest", { type: "REGULAR", metric: "lamp" }, "Best Lamp", (base, score) => {
 		base.scoreData.lamp = score.scoreData.lamp;
 	}),
 ];

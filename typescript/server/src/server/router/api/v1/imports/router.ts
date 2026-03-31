@@ -1,23 +1,28 @@
 import type { ScoreImportWorkerReturns } from "#lib/score-import/worker/types";
-import type { FilterQuery } from "mongodb";
-import type { ImportTypes, MONGO_ImportTrackerDocument } from "tachi-common";
+import type { ImportTypes } from "tachi-common";
 
-import { JOB_RETRY_COUNT } from "#lib/constants/tachi";
-import { RevertImport } from "#lib/imports/imports";
+import { ACTION_DeleteImport } from "#actions/delete-import.js";
+import { JOB_RETRY_COUNT, SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
+import {
+	GetImportTrackerByImportId,
+	ListFailedImportTrackers,
+	ListRecentImportDocuments,
+	LoadImportDocumentById,
+} from "#lib/db-formats/import-document";
+import { LoadSessionDocumentById } from "#lib/db-formats/session";
+import { GetImportScores } from "#lib/imports/imports";
 import { log } from "#lib/log/log";
 import ScoreImportQueue, { ScoreImportQueueEvents } from "#lib/score-import/worker/queue";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
 import { GetRelevantSongsAndCharts } from "#utils/db";
-import { DeleteUndefinedProps } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { GetUsersWithIDs, GetUserWithID } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
 
-import { GetImportFromParam, RequireOwnershipOfImportOrAdmin } from "./middleware";
+import { GetImportFromParam } from "./middleware";
 
 const router: Router = Router({ mergeParams: true });
 
@@ -43,16 +48,10 @@ router.get(
 		const userIntent =
 			req.query.userIntent === undefined ? undefined : req.query.userIntent === "true";
 
-		const query = {
-			userIntent,
+		const imports = await ListRecentImportDocuments({
 			importType,
-		};
-
-		DeleteUndefinedProps(query);
-
-		const imports = await MONGODB_KILL.imports.find(query, {
-			sort: { timeFinished: -1 },
 			limit: 500,
+			userIntent,
 		});
 
 		// mayaswell attach the users for better UI.
@@ -95,17 +94,10 @@ router.get(
 		const userIntent =
 			req.query.userIntent === undefined ? undefined : req.query.userIntent === "true";
 
-		const query: FilterQuery<MONGO_ImportTrackerDocument> = {
-			userIntent,
+		const trackers = await ListFailedImportTrackers({
 			importType,
-			type: "FAILED",
-		};
-
-		DeleteUndefinedProps(query);
-
-		const trackers = await MONGODB_KILL["import-trackers"].find(query, {
-			sort: { timeStarted: -1 },
 			limit: 500,
+			userIntent,
 		});
 
 		// mayaswell attach the users for better UI.
@@ -130,15 +122,15 @@ router.get(
 router.get("/:importID", GetImportFromParam, async (req, res) => {
 	const importDoc = GetTachiData(req, "importDoc");
 
-	const scores = await MONGODB_KILL.scores.find({
-		scoreID: { $in: importDoc.scoreIDs },
-	});
+	const scores = await GetImportScores(importDoc);
 
 	const { songs, charts } = await GetRelevantSongsAndCharts(scores, importDoc.game);
 
-	const sessions = await MONGODB_KILL.sessions.find({
-		sessionID: { $in: importDoc.createdSessions.map((e) => e.sessionID) },
-	});
+	const sessions = (
+		await Promise.all(
+			importDoc.createdSessions.map((e) => LoadSessionDocumentById(e.sessionID)),
+		)
+	).filter((s): s is NonNullable<typeof s> => s !== undefined);
 
 	const user = await GetUserWithID(importDoc.userID);
 
@@ -177,20 +169,29 @@ router.get("/:importID", GetImportFromParam, async (req, res) => {
  */
 router.post(
 	"/:importID/revert",
-	GetImportFromParam,
-	RequireOwnershipOfImportOrAdmin,
 	RequirePermissions("delete_score"),
 	async (req, res) => {
-		const importDoc = GetTachiData(req, "importDoc");
+		const auth = req[SYMBOL_TACHI_API_AUTH];
 
-		const k = await RevertImport(importDoc);
-
-		if (k !== null) {
-			return res.status(409).json({
+		if (auth.userID === null) {
+			return res.status(401).json({
 				success: false,
-				description: `You already have an import or a revert ongoing.`,
+				description: `You are not authorised as anyone, and this endpoint requires us to know who you are.`,
 			});
 		}
+
+		const user = await GetUserWithID(auth.userID);
+
+		if (!user) {
+			return res.status(401).json({
+				success: false,
+				description: `You are not authorised as anyone, and this endpoint requires us to know who you are.`,
+			});
+		}
+
+		const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
+
+		await ACTION_DeleteImport(taker, { id: req.params.importID });
 
 		return res.status(200).json({
 			success: true,
@@ -217,7 +218,7 @@ async function FindImportJob(importID: string) {
 		).find((k) => k);
 
 		return maybeJob;
-	} catch (err) {
+	} catch (_err) {
 		return undefined;
 	}
 }
@@ -243,7 +244,7 @@ router.get("/:importID/poll-status", async (req, res) => {
 		});
 	}
 
-	const importDoc = await MONGODB_KILL.imports.findOne({ importID: req.params.importID });
+	const importDoc = await LoadImportDocumentById(req.params.importID);
 
 	if (importDoc) {
 		return res.status(200).json({
@@ -259,9 +260,7 @@ router.get("/:importID/poll-status", async (req, res) => {
 	const job = await FindImportJob(req.params.importID);
 
 	if (!job) {
-		const tracker = await MONGODB_KILL["import-trackers"].findOne({
-			importID: req.params.importID,
-		});
+		const tracker = await GetImportTrackerByImportId(req.params.importID);
 
 		if (!tracker) {
 			return res.status(404).json({

@@ -1,17 +1,22 @@
+import { ACTION_UpdateUgptShowcase as ACTION_UpdateUGPTShowcase } from "#actions/update-ugpt-showcase";
+import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
+import { GetChartById } from "#lib/db-formats/chart";
+import { LoadFolderDocumentById, LoadFolderDocumentsByIds } from "#lib/db-formats/folders";
+import { GetUGPTSettingsDocument } from "#lib/db-formats/ugpt-settings.js";
 import { EvaluateShowcaseStat } from "#lib/showcase/evaluator";
 import { GetRelatedStatDocuments } from "#lib/showcase/get-related";
 import { EvaluateUsersStatsShowcase } from "#lib/showcase/get-stats";
 import { RequirePermissions } from "#server/middleware/auth";
 import { RequireAuthedAsUser } from "#server/router/api/v1/users/_userID/middleware";
-import MONGODB_KILL from "#services/mongo/db";
 import { IsRecord } from "#utils/misc";
 import { FormatPrError } from "#utils/prudence";
 import { GetUGPT } from "#utils/req-tachi-data";
-import { ResolveUser } from "#utils/user";
+import { GetUserWithIDGuaranteed, ResolveUser } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
 import {
 	FormatGameGroup,
+	GamePTToV3,
 	GetGamePTConfig,
 	GetGPTString,
 	GetScoreMetrics,
@@ -70,6 +75,7 @@ router.get("/custom", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
 	const gptConfig = GetGamePTConfig(game, playtype);
+	const v3Game = GamePTToV3(game, playtype);
 
 	let stat: ShowcaseStatDetails;
 
@@ -99,7 +105,7 @@ router.get("/custom", async (req, res) => {
 
 		const folderID = req.query.folderID as string;
 
-		const folder = await MONGODB_KILL.folders.findOne({ folderID });
+		const folder = await LoadFolderDocumentById(folderID);
 
 		if (!folder || folder.game !== game || folder.playtype !== playtype) {
 			return res.status(400).json({
@@ -136,9 +142,7 @@ router.get("/custom", async (req, res) => {
 			});
 		}
 
-		const chart = await MONGODB_KILL.anyCharts[game].findOne({
-			chartID: req.query.chartID as string,
-		});
+		const chart = await GetChartById(v3Game, req.query.chartID as string);
 
 		if (!chart || chart.playtype !== playtype) {
 			return res.status(400).json({
@@ -181,6 +185,7 @@ router.put("/", RequireAuthedAsUser, RequirePermissions("customise_profile"), as
 	const { user, game, playtype } = GetUGPT(req);
 
 	const gptConfig = GetGamePTConfig(game, playtype);
+	const v3Game = GamePTToV3(game, playtype);
 
 	if (!Array.isArray(req.safeBody)) {
 		return res.status(400).json({
@@ -282,7 +287,7 @@ router.put("/", RequireAuthedAsUser, RequirePermissions("customise_profile"), as
 
 		if (stat.mode === "chart") {
 			// eslint-disable-next-line no-await-in-loop
-			const chart = await MONGODB_KILL.anyCharts[game].findOne({ chartID: stat.chartID });
+			const chart = await GetChartById(v3Game, stat.chartID);
 
 			if (!chart || chart.playtype !== playtype) {
 				return res.status(400).json({
@@ -296,11 +301,22 @@ router.put("/", RequireAuthedAsUser, RequirePermissions("customise_profile"), as
 				: [unvalidatedStat.folderID];
 
 			// eslint-disable-next-line no-await-in-loop
-			const folders = await MONGODB_KILL.folders.find({ folderID: { $in: folderIDs } });
+			const folderMap = await LoadFolderDocumentsByIds(folderIDs);
+
+			if (folderMap.size !== folderIDs.length) {
+				return res.status(400).json({
+					success: false,
+
+					// this error message is kinda lazy.
+					description: `Invalid folderID - must be a folder for this game and playtype.`,
+				});
+			}
 
 			if (
-				folders.length !== folderIDs.length ||
-				!folders.every((r) => r.game === game && r.playtype === playtype)
+				!folderIDs.every((id) => {
+					const f = folderMap.get(id);
+					return f !== undefined && f.game === game && f.playtype === playtype;
+				})
 			) {
 				return res.status(400).json({
 					success: false,
@@ -312,24 +328,35 @@ router.put("/", RequireAuthedAsUser, RequirePermissions("customise_profile"), as
 		}
 	}
 
-	await MONGODB_KILL["game-settings"].update(
-		{
-			userID: user.id,
-			game,
-			playtype,
-		},
-		{
-			$set: {
-				"preferences.stats": req.safeBody,
-			},
-		},
-	);
+	const authUserID = req[SYMBOL_TACHI_API_AUTH].userID;
 
-	const newSettings = await MONGODB_KILL["game-settings"].findOne({
+	if (authUserID === null) {
+		return res.status(401).json({
+			success: false,
+			description: "Authentication is required for this endpoint.",
+		});
+	}
+
+	const authedUser = await GetUserWithIDGuaranteed(authUserID);
+	const taker = { ip: req.ip, acct: { id: authedUser.id, username: authedUser.username } };
+
+	const statsPayload = req.safeBody as ShowcaseStatDetails[];
+
+	await ACTION_UpdateUGPTShowcase(taker, {
 		userID: user.id,
 		game,
 		playtype,
+		stats: statsPayload,
 	});
+
+	const newSettings = await GetUGPTSettingsDocument(user.id, game, playtype);
+
+	if (!newSettings) {
+		return res.status(500).json({
+			success: false,
+			description: `Failed to load settings after updating showcase.`,
+		});
+	}
 
 	return res.status(200).json({
 		success: true,

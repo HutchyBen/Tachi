@@ -1,3 +1,5 @@
+import { ACTION_DeleteScore } from "#actions/delete-score.js";
+import { ACTION_DeleteSession } from "#actions/delete-session.js";
 import { ACTION_RebuildFolderChartLookup } from "#actions/rebuild-folder-chart-lookup.js";
 import { ACTION_SetUserSupporterStatus } from "#actions/set-user-supporter-status.js";
 import {
@@ -10,24 +12,18 @@ import {
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log";
 import { SendSiteAnnouncementNotification } from "#lib/notifications/notification-wrappers";
-import { UpdateGoalsForUser } from "#lib/score-import/framework/goals/goals";
-import { UpdateQuestsForUser } from "#lib/score-import/framework/quests/quests";
-import { DeleteMultipleScores, DeleteScore } from "#lib/score-mutation/delete-scores";
 import { TachiConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
-import { RecalcAllScores, UpdateAllPBs } from "#utils/calculations/recalc-scores";
-import { RecalcSessions } from "#utils/calculations/recalc-sessions";
+import DB from "#services/pg/db.js";
 import { IsValidPlaytype } from "#utils/misc";
-import DestroyUserGamePlaytypeData from "#utils/reset-state/destroy-ugpt";
-import { GetScoresFromSession } from "#utils/session";
+import DestroyUserGameProfile from "#utils/reset-state/destroy-user-game-profile.js";
 import { GetUserWithID, GetUserWithIDGuaranteed, ResolveUser } from "#utils/user";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
 import {
 	type GameGroup,
+	GamePTToV3,
 	type integer,
-	type MONGO_GoalSubscriptionDocument,
 	type Playtype,
 	UserAuthLevels,
 } from "tachi-common";
@@ -147,20 +143,11 @@ router.post(
 		userIDs: p.optional([p.isPositiveInteger]),
 		filter: "*object",
 	}),
-	async (req, res) => {
-		const body = req.safeBody as {
-			filter?: object;
-			userIDs?: Array<integer>;
-		};
-
-		await UpdateAllPBs(body.userIDs, body.filter);
-
-		return res.status(200).json({
-			success: true,
-			description: `Done.`,
-			body: {},
-		});
-	},
+	(_req, res) =>
+		res.status(501).json({
+			success: false,
+			description: `Not implemented.`,
+		}),
 );
 
 /**
@@ -173,16 +160,19 @@ router.post(
 router.post("/delete-score", prValidate({ scoreID: "string" }), async (req, res) => {
 	const body = req.safeBody as { scoreID: string };
 
-	const score = await MONGODB_KILL.scores.findOne({ scoreID: body.scoreID });
+	const adminUserID = req[SYMBOL_TACHI_API_AUTH].userID;
 
-	if (!score) {
-		return res.status(404).json({
+	if (adminUserID === null) {
+		return res.status(401).json({
 			success: false,
-			description: `This score does not exist.`,
+			description: `You are not authenticated.`,
 		});
 	}
 
-	await DeleteScore(score);
+	const adminUser = await GetUserWithIDGuaranteed(adminUserID);
+	const taker = { ip: req.ip, acct: { id: adminUser.id, username: adminUser.username } };
+
+	await ACTION_DeleteScore(taker, { id: body.scoreID });
 
 	return res.status(200).json({
 		success: true,
@@ -201,18 +191,19 @@ router.post("/delete-score", prValidate({ scoreID: "string" }), async (req, res)
 router.post("/delete-session", prValidate({ sessionID: "string" }), async (req, res) => {
 	const body = req.safeBody as { sessionID: string };
 
-	const session = await MONGODB_KILL.sessions.findOne({ scoreID: body.sessionID });
+	const adminUserID = req[SYMBOL_TACHI_API_AUTH].userID;
 
-	if (!session) {
-		return res.status(404).json({
+	if (adminUserID === null) {
+		return res.status(401).json({
 			success: false,
-			description: `This session does not exist.`,
+			description: `You are not authenticated.`,
 		});
 	}
 
-	const scores = await GetScoresFromSession(session);
+	const adminUser = await GetUserWithIDGuaranteed(adminUserID);
+	const taker = { ip: req.ip, acct: { id: adminUser.id, username: adminUser.username } };
 
-	await DeleteMultipleScores(scores);
+	await ACTION_DeleteSession(taker, { id: body.sessionID });
 
 	return res.status(200).json({
 		success: true,
@@ -254,11 +245,10 @@ router.post(
 			userID: integer;
 		};
 
-		const ugpt = await MONGODB_KILL["game-stats"].findOne({
-			userID,
-			game,
-			playtype,
-		});
+		const ugpt = await DB.selectFrom("game_profile")
+			.where("user_id", "=", userID)
+			.where("game", "=", GamePTToV3(game, playtype))
+			.executeTakeFirst();
 
 		if (!ugpt) {
 			return res.status(404).json({
@@ -267,7 +257,7 @@ router.post(
 			});
 		}
 
-		await DestroyUserGamePlaytypeData(userID, game, playtype);
+		await DestroyUserGameProfile(userID, game, playtype);
 
 		return res.status(200).json({
 			success: true,
@@ -278,76 +268,16 @@ router.post(
 );
 
 /**
- * Destroy a chart and all of its scores (and sessions).
- *
- * @param chartID - The chartID to delete.
- * @param game - The game this chart is for. Necessary for doing lookups.
- *
- * @name POST /api/v1/admin/destroy-chart
- */
-router.post(
-	"/destroy-chart",
-	prValidate({ chartID: "string", game: p.isIn(TachiConfig.GAMES) }),
-	async (req, res) => {
-		const body = req.safeBody as {
-			chartID: string;
-			game: GameGroup;
-		};
-
-		const { game, chartID } = body;
-
-		const scores = await MONGODB_KILL.scores.find({
-			chartID,
-		});
-
-		await DeleteMultipleScores(scores);
-
-		await MONGODB_KILL.anyCharts[game].remove({
-			chartID,
-		});
-
-		await MONGODB_KILL["personal-bests"].remove({
-			chartID,
-		});
-
-		return res.status(200).json({
-			success: true,
-			description: `Obliterated chart.`,
-			body: {},
-		});
-	},
-);
-
-/**
  * Perform a site recalc on this set of scores.
  *
  * @name POST /api/v1/admin/recalc
  */
-router.post("/recalc", async (req, res) => {
-	const filter = req.safeBody;
-
-	await RecalcAllScores(filter);
-
-	const scoreIDs = (
-		await MONGODB_KILL.scores.find(filter, {
-			projection: {
-				scoreID: 1,
-			},
-		})
-	).map((e) => e.scoreID);
-
-	await RecalcSessions({
-		scoreIDs: { $in: scoreIDs },
-	});
-
-	return res.status(200).json({
-		success: true,
-		description: `Recalced scores.`,
-		body: {
-			scoresRecalced: scoreIDs.length,
-		},
-	});
-});
+router.post("/recalc", (_req, res) =>
+	res.status(501).json({
+		success: false,
+		description: `Not implemented.`,
+	}),
+);
 
 /**
  * Send an announcement to the site.
@@ -508,52 +438,11 @@ router.post(
  *
  * @name POST /api/v1/admin/reprocess-all-goals
  */
-router.post("/reprocess-all-goals", async (req, res) => {
-	const ugpts = await MONGODB_KILL["game-stats"].find({});
-
-	const promises = [];
-
-	for (const ugpt of ugpts) {
-		promises.push(async () => {
-			const goalSubs = await MONGODB_KILL["goal-subs"].find({
-				game: ugpt.game,
-				playtype: ugpt.playtype,
-				userID: ugpt.userID,
-			});
-
-			const goalSubsMap = new Map<string, MONGO_GoalSubscriptionDocument>();
-
-			for (const gSub of goalSubs) {
-				goalSubsMap.set(gSub.goalID, gSub);
-			}
-
-			const goals = await MONGODB_KILL.goals.find({
-				goalID: { $in: goalSubs.map((e) => e.goalID) },
-			});
-
-			await UpdateGoalsForUser(goals, goalSubsMap, ugpt.userID, log);
-
-			const allQuestSubs = await MONGODB_KILL["quest-subs"].find({
-				game: ugpt.game,
-				playtype: ugpt.playtype,
-				userID: ugpt.userID,
-			});
-
-			const quests = await MONGODB_KILL.quests.find({
-				questID: { $in: allQuestSubs.map((e) => e.questID) },
-			});
-
-			await UpdateQuestsForUser(quests, allQuestSubs, ugpt.game, ugpt.userID, log);
-		});
-	}
-
-	await Promise.all(promises);
-
-	return res.status(200).json({
-		success: true,
-		description: "Reprocessed all goals.",
-		body: {},
-	});
-});
+router.post("/reprocess-all-goals", (_req, res) =>
+	res.status(501).json({
+		success: false,
+		description: `Not implemented.`,
+	}),
+);
 
 export default router;

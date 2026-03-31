@@ -1,4 +1,4 @@
-import { GetChartByPgIdOrLegacyId } from "#lib/db-formats/chart";
+import { GetChartById } from "#lib/db-formats/chart";
 import { type GameGroup, GamePTToV3, MongoChartLegacyId, type Playtype } from "tachi-common";
 
 /**
@@ -10,7 +10,7 @@ export async function ResolveLegacyChartIdForMongo(
 	playtype: Playtype,
 	chartIdParam: string,
 ): Promise<string | null> {
-	const fromPg = await GetChartByPgIdOrLegacyId(GamePTToV3(game, playtype), chartIdParam);
+	const fromPg = await GetChartById(GamePTToV3(game, playtype), chartIdParam);
 
 	if (fromPg) {
 		return MongoChartLegacyId(fromPg);

@@ -5,11 +5,13 @@ import { log } from "#lib/log/log";
 import { SendSetRivalNotification } from "#lib/notifications/notification-wrappers";
 import { ServerConfig } from "#lib/setup/config";
 import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { ArrayDiff } from "#utils/misc";
 import { GetUsersWithIDs, GetUserWithIDGuaranteed } from "#utils/user";
 import {
 	FormatGameGroup,
 	type GameGroup,
+	GamePTToV3,
 	GetGamePTConfig,
 	type integer,
 	type MONGO_PBScoreDocument,
@@ -21,26 +23,27 @@ import {
  * Throws if the user hasn't played the GPT in question.
  */
 export async function GetRivalIDs(userID: integer, game: GameGroup, playtype: Playtype) {
-	const gameSettings = await MONGODB_KILL["game-settings"].findOne(
-		{
-			userID,
-			game,
-			playtype,
-		},
-		{
-			projection: {
-				rivals: 1,
-			},
-		},
-	);
+	const v3Game = GamePTToV3(game, playtype);
 
-	if (!gameSettings) {
+	const settings = await DB.selectFrom("game_settings")
+		.select("user_id")
+		.where("user_id", "=", userID)
+		.where("game", "=", v3Game)
+		.executeTakeFirst();
+
+	if (!settings) {
 		throw new Error(
 			`User ${userID} has not played ${FormatGameGroup(game, playtype)}. Cannot retrieve rivals.`,
 		);
 	}
 
-	return gameSettings.rivals;
+	const rivalRows = await DB.selectFrom("game_rival")
+		.select("rival")
+		.where("user_id", "=", userID)
+		.where("game", "=", v3Game)
+		.execute();
+
+	return rivalRows.map((r) => r.rival);
 }
 
 /**

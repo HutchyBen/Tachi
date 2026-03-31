@@ -13,6 +13,11 @@ export const IIDX_CONF = {
 	songData: z.strictObject({
 		genre: z.string(),
 		displayVersion: z.nullable(z.string()),
+
+		// Sometimes, the titles in the e-amusement CSV are different from the titles in the database.
+		eamusementCsvTitle: z.optional(z.string()),
+		eamusementCsvArtist: z.optional(z.string()),
+		eamusementCsvGenre: z.optional(z.string()),
 	}),
 } as const satisfies INTERNAL_GAME_CONFIG;
 

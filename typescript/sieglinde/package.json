@@ -10,7 +10,7 @@
 		"lint": "eslint .",
 		"lint-fix": "eslint . --fix",
 		"typecheck": "tsgo --noEmit",
-		"test": "echo \"Error: no test specified\" && exit 1",
+		"test": "vitest",
 		"bench": "node -e \"process.exit(0)\""
 	},
 	"author": "zk",
@@ -26,7 +26,8 @@
 	},
 	"devDependencies": {
 		"@typescript/native-preview": "catalog:",
-		"eslint-config-tachi": "workspace:*"
+		"eslint-config-tachi": "workspace:*",
+		"vitest": "catalog:"
 	},
 	"engines": {
 		"bun": ">=1.2.0"

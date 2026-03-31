@@ -28,7 +28,7 @@ export default function IIDXStyleSongChartInfoFormat({
 
 function LevelText(chart: MONGO_ChartDocument, game: GameGroup) {
 	if ("tableFolders" in chart.data) {
-		const hasLevel = chart.data.tableFolders.length > 0;
+		const hasLevel = Object.keys(chart.data.tableFolders).length > 0;
 		return hasLevel ? FormatTables(chart.data.tableFolders) : "No Level";
 	}
 	return FormatDifficulty(chart, game);

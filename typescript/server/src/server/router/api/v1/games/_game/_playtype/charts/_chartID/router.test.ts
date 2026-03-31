@@ -56,17 +56,7 @@ describe("GET /api/v1/games/iidx/SP/charts/:chartID", () => {
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
 		expect(res.body.body.chart.chartID).toBe(CHART_PG_ID);
-		expect(res.body.body.chart.legacyChartId).toBe(CHART_LEGACY_ID);
 		expect(res.body.body.song.id).toBe(SONG_LEGACY_ID);
-	});
-
-	it("returns 200 when chartID is the legacy_id", async () => {
-		const res = await mockApi.get(`/api/v1/games/iidx/SP/charts/${CHART_LEGACY_ID}`);
-
-		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.body.chart.chartID).toBe(CHART_PG_ID);
-		expect(res.body.body.chart.legacyChartId).toBe(CHART_LEGACY_ID);
 	});
 
 	it("returns 404 when the chart does not exist", async () => {

@@ -320,16 +320,31 @@ export const DDR_IMPL: GPTServerImplementation<"ddr:DP" | "ddr:SP"> = {
 	goalProgressFormatters: DDR_GOAL_PG_FMT,
 	goalOutOfFormatters: DDR_GOAL_OO_FMT,
 	pbMergeFunctions: [
-		CreatePBMergeFor("largest", "enumIndexes.lamp", "Best Lamp", (base, score) => {
-			base.scoreData.lamp = score.scoreData.lamp;
-		}),
-		CreatePBMergeFor("largest", "score", "Best Score", (base, score) => {
-			base.scoreData.score = score.scoreData.score;
-			base.scoreData.grade = score.scoreData.grade;
-		}),
-		CreatePBMergeFor("largest", "optional.exScore", "Best EX Score", (base, score) => {
-			base.scoreData.optional.exScore = score.scoreData.optional.exScore;
-		}),
+		CreatePBMergeFor(
+			"largest",
+			{ type: "REGULAR", metric: "lamp" },
+			"Best Lamp",
+			(base, score) => {
+				base.scoreData.lamp = score.scoreData.lamp;
+			},
+		),
+		CreatePBMergeFor(
+			"largest",
+			{ type: "REGULAR", metric: "score" },
+			"Best Score",
+			(base, score) => {
+				base.scoreData.score = score.scoreData.score;
+				base.scoreData.grade = score.scoreData.grade;
+			},
+		),
+		CreatePBMergeFor(
+			"largest",
+			{ type: "REGULAR", metric: "exScore" },
+			"Best EX Score",
+			(base, score) => {
+				base.scoreData.optional.exScore = score.scoreData.optional.exScore;
+			},
+		),
 	],
 	sessionCalcs: (arr) => ({
 		flareSkill: SessionAvgBest10For("flareSkill")(arr),

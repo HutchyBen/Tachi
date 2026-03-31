@@ -1,11 +1,17 @@
+import type { Game } from "tachi-db";
+
 import { ONE_HOUR } from "#lib/constants/time";
+import { LoadScoreDocumentById } from "#lib/db-formats/score";
+import { LoadSessionDocumentById } from "#lib/db-formats/session";
 import { AppendLogCtx, type KtLogger, log } from "#lib/log/log";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { GetChartForIDGuaranteed } from "#utils/db";
-import { GetScoresFromSession } from "#utils/session";
+import { UnixMillisecondsToISO8601 } from "#utils/time";
 import crypto from "crypto";
+import { sql } from "kysely";
 import {
 	type GameGroup,
+	GamePTToV3,
 	GetGamePTConfig,
 	GetGPTString,
 	GetScoreMetricConf,
@@ -34,8 +40,8 @@ export async function CreateSessions(
 ) {
 	const allSessionInfo = [];
 
-	/* eslint-disable no-await-in-loop */
 	for (const [playtype, scores] of Object.entries(scorePtMap)) {
+		// eslint-disable-next-line no-await-in-loop
 		const sessionInfo = await LoadScoresIntoSessions(
 			userID,
 			scores,
@@ -46,7 +52,6 @@ export async function CreateSessions(
 
 		allSessionInfo.push(...sessionInfo);
 	}
-	/* eslint-enable no-await-in-loop */
 
 	return allSessionInfo;
 }
@@ -99,25 +104,38 @@ function ScoreToSessionScoreInfo(
 export async function GetSessionScoreInfo(
 	session: MONGO_SessionDocument,
 ): Promise<Array<SessionScoreInfo>> {
-	const scores = await MONGODB_KILL.scores.find({
-		scoreID: { $in: session.scoreIDs },
-	});
+	const scores = await DB.selectFrom("score")
+		.innerJoin("chart", "chart.id", "score.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select("score.id")
+		.where("score.session_id", "=", session.sessionID)
+		.execute();
+
+	const scoreIds = scores.map((r) => r.id);
 
 	const gptString = GetGPTString(session.game, session.playtype);
 
 	const promises = [];
 
-	for (const score of scores) {
+	for (const sid of scoreIds) {
 		promises.push(
-			GetChartForIDGuaranteed(score.game, score.chartID).then((chart) =>
-				CreatePBDoc(gptString, session.userID, chart, log, session.timeStarted).then((pb) =>
-					ScoreToSessionScoreInfo(score, pb),
-				),
-			),
+			LoadScoreDocumentById(sid).then((scoreDoc) => {
+				if (!scoreDoc) {
+					return null;
+				}
+
+				return GetChartForIDGuaranteed(scoreDoc.game, scoreDoc.chartID).then((chart) =>
+					CreatePBDoc(gptString, session.userID, chart, log, session.timeStarted).then(
+						(pb) => ScoreToSessionScoreInfo(scoreDoc, pb),
+					),
+				);
+			}),
 		);
 	}
 
-	const scoreInfo = await Promise.all(promises);
+	const scoreInfo = (await Promise.all(promises)).filter(
+		(e) => e !== null,
+	) as Array<SessionScoreInfo>;
 
 	return scoreInfo;
 }
@@ -189,6 +207,8 @@ export async function LoadScoresIntoSessions(
 ): Promise<Array<SessionInfoReturn>> {
 	const log = AppendLogCtx("Session Generation", baseLog);
 
+	const v3Game = GamePTToV3(game, playtype) as Game;
+
 	const timestampedScores = [];
 
 	for (const score of importScores) {
@@ -253,15 +273,26 @@ export async function LoadScoresIntoSessions(
 		// Find any sessions with +/-2hrs of this group. This is rather exhaustive, and could result in some issues
 		// if this query returns more than one session. We could account for that by smushing sessions together.
 		// This is not possible however, so this is now just a known tachi oddity.
-		const nearbySession = await MONGODB_KILL.sessions.findOne({
-			userID,
-			game,
-			playtype,
-			$or: [
-				{ timeStarted: { $gte: startOfGroup - TWO_HOURS, $lt: endOfGroup + TWO_HOURS } },
-				{ timeEnded: { $gte: startOfGroup - TWO_HOURS, $lt: endOfGroup + TWO_HOURS } },
-			],
-		});
+		const rangeStart = startOfGroup - TWO_HOURS;
+		const rangeEnd = endOfGroup + TWO_HOURS;
+
+		const nearbySession = await DB.selectFrom("session")
+			.selectAll()
+			.where("user_id", "=", userID)
+			.where("game", "=", v3Game)
+			.where((eb) =>
+				eb.or([
+					eb.and([
+						eb("time_started", ">=", UnixMillisecondsToISO8601(rangeStart)),
+						eb("time_started", "<", UnixMillisecondsToISO8601(rangeEnd)),
+					]),
+					eb.and([
+						eb("time_ended", ">=", UnixMillisecondsToISO8601(rangeStart)),
+						eb("time_ended", "<", UnixMillisecondsToISO8601(rangeEnd)),
+					]),
+				]),
+			)
+			.executeTakeFirst();
 
 		let infoReturn: SessionInfoReturn;
 
@@ -270,20 +301,32 @@ export async function LoadScoresIntoSessions(
 				`Found nearby session for ${userID} (${game} ${playtype}) around ${startOfGroup} ${endOfGroup}.`,
 			);
 
-			const oldScores = await GetScoresFromSession(nearbySession);
+			const mongoSession = await LoadSessionDocumentById(nearbySession.id);
 
-			const session = UpdateExistingSession(nearbySession, scoreIDs, oldScores, groupScores);
+			if (!mongoSession) {
+				log.error(`Session ${nearbySession.id} missing from LoadSessionDocumentById`);
+				continue;
+			}
+
+			const oldScores = await loadScoresByIds(mongoSession.scoreIDs);
+
+			const session = UpdateExistingSession(mongoSession, scoreIDs, oldScores, groupScores);
 
 			infoReturn = { sessionID: session.sessionID, type: "Appended" };
 
-			await MONGODB_KILL.sessions.update(
-				{
-					sessionID: session.sessionID,
-				},
-				{
-					$set: session,
-				},
-			);
+			await DB.updateTable("session")
+				.set({
+					time_started: UnixMillisecondsToISO8601(session.timeStarted),
+					time_ended: UnixMillisecondsToISO8601(session.timeEnded),
+					calculated_data: JSON.stringify(session.calculatedData),
+				})
+				.where("id", "=", session.sessionID)
+				.execute();
+
+			await DB.updateTable("score")
+				.set({ session_id: session.sessionID })
+				.where("id", "in", scoreIDs)
+				.execute();
 		} else {
 			log.debug(
 				`Creating new session for ${userID} (${game} ${playtype}) around ${startOfGroup} ${endOfGroup}.`,
@@ -292,7 +335,28 @@ export async function LoadScoresIntoSessions(
 			const session = CreateSession(userID, scoreIDs, groupScores, game, playtype);
 
 			infoReturn = { sessionID: session.sessionID, type: "Created" };
-			await MONGODB_KILL.sessions.insert(session);
+
+			const now = UnixMillisecondsToISO8601(Date.now());
+
+			await DB.insertInto("session")
+				.values({
+					id: session.sessionID,
+					user_id: userID,
+					game: v3Game,
+					name: session.name,
+					description: session.desc,
+					time_inserted: now,
+					time_started: UnixMillisecondsToISO8601(session.timeStarted),
+					time_ended: UnixMillisecondsToISO8601(session.timeEnded),
+					calculated_data: JSON.stringify(session.calculatedData),
+					highlight: session.highlight,
+				})
+				.execute();
+
+			await DB.updateTable("score")
+				.set({ session_id: session.sessionID })
+				.where("id", "in", scoreIDs)
+				.execute();
 		}
 
 		sessionInfoReturns.push(infoReturn);
@@ -300,4 +364,23 @@ export async function LoadScoresIntoSessions(
 	/* eslint-enable no-await-in-loop */
 
 	return sessionInfoReturns;
+}
+
+async function loadScoresByIds(ids: Array<string>): Promise<Array<MONGO_ScoreDocument>> {
+	if (ids.length === 0) {
+		return [];
+	}
+
+	const out: Array<MONGO_ScoreDocument> = [];
+
+	for (const id of ids) {
+		// eslint-disable-next-line no-await-in-loop
+		const s = await LoadScoreDocumentById(id);
+
+		if (s) {
+			out.push(s);
+		}
+	}
+
+	return out;
 }

@@ -113,9 +113,14 @@ export const ITG_STAMINA_IMPL: GPTServerImplementation<"itg:Stamina"> = {
 	pbMergeFunctions: [
 		// we'll pluck the best lamp, but this game has a pretty interesting concept
 		// for merging PBs. This is probably fine.
-		CreatePBMergeFor("largest", "enumIndexes.lamp", "Best Lamp", (base, score) => {
-			base.scoreData.lamp = score.scoreData.lamp;
-		}),
+		CreatePBMergeFor(
+			"largest",
+			{ type: "REGULAR", metric: "lamp" },
+			"Best Lamp",
+			(base, score) => {
+				base.scoreData.lamp = score.scoreData.lamp;
+			},
+		),
 	],
 
 	// this name sucks, what should we do instead? TODO.

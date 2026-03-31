@@ -41,6 +41,7 @@ import type {
 	NewNotification,
 	NewOrphanChart,
 	NewOrphanChartUser,
+	NewOrphanScore,
 	NewPrivAccountCredential,
 	NewPrivApiClient,
 	NewPrivApiToken,
@@ -412,6 +413,47 @@ async function main(): Promise<void> {
 		await batchInsert("orphan_chart", orphanRows);
 		await batchInsert("orphan_chart_user", orphanUserRows);
 		console.log(`  ${orphanRows.length} orphan charts, ${orphanUserRows.length} user links.`);
+	}
+
+	// ── orphan_score (Mongo orphan-scores) ─────────────────────────────────────
+	{
+		console.log("\n[orphan_score]");
+		interface MongoOrphanScoreDocument {
+			orphanID: string;
+			importType: string;
+			game: GameGroup;
+			userID: number;
+			timeInserted: number;
+			errMsg?: string | null;
+			data: unknown;
+			context: unknown;
+		}
+
+		const mongoOrphans = await mongoDB.get<MongoOrphanScoreDocument>("orphan-scores").find({});
+
+		const orphanScoreRows: Array<NewOrphanScore> = mongoOrphans.map((o) => ({
+			orphan_id: o.orphanID,
+			user_id: o.userID,
+			import_id: null,
+			import_type: o.importType as ImportType,
+			game_group: o.game,
+			data: o.data,
+			context: o.context,
+			time_inserted: tsReq(o.timeInserted),
+			error_message: o.errMsg ?? "",
+		}));
+
+		for (let i = 0; i < orphanScoreRows.length; i = i + INSERT_CHUNK) {
+			const chunk = orphanScoreRows.slice(i, i + INSERT_CHUNK);
+
+			await pg
+				.insertInto("orphan_score")
+				.values(chunk)
+				.onConflict((oc) => oc.column("orphan_id").doNothing())
+				.execute();
+		}
+
+		console.log(`  ${mongoOrphans.length} orphan scores (idempotent on orphan_id).`);
 	}
 
 	// ══════════════════════════════════════════════════════════════════════════
@@ -1302,6 +1344,7 @@ async function main(): Promise<void> {
 					meta: JSON.stringify(s.scoreMeta),
 					time_achieved: ts(s.timeAchieved),
 					time_added: tsReq(s.timeAdded),
+					committed: true,
 					highlight: s.highlight,
 					comment: s.comment,
 				});

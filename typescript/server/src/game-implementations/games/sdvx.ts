@@ -47,12 +47,22 @@ export const SDVX_IMPL: GPTServerImplementation<"sdvx:Single"> = {
 	goalProgressFormatters: SDVXLIKE_GOAL_PG_FMT,
 	goalOutOfFormatters: SDVXLIKE_GOAL_OO_FMT,
 	pbMergeFunctions: [
-		CreatePBMergeFor("largest", "enumIndexes.lamp", "Best Lamp", (base, score) => {
-			base.scoreData.lamp = score.scoreData.lamp;
-		}),
-		CreatePBMergeFor("largest", "optional.exScore", "Best EX Score", (base, score) => {
-			base.scoreData.optional.exScore = score.scoreData.optional.exScore;
-		}),
+		CreatePBMergeFor(
+			"largest",
+			{ type: "REGULAR", metric: "lamp" },
+			"Best Lamp",
+			(base, score) => {
+				base.scoreData.lamp = score.scoreData.lamp;
+			},
+		),
+		CreatePBMergeFor(
+			"largest",
+			{ type: "REGULAR", metric: "exScore" },
+			"Best EX Score",
+			(base, score) => {
+				base.scoreData.optional.exScore = score.scoreData.optional.exScore;
+			},
+		),
 	],
 	defaultMergeRefName: SDVXLIKE_DEFAULT_MERGE_NAME,
 	scoreValidators: SDVXLIKE_SCORE_VALIDATORS,

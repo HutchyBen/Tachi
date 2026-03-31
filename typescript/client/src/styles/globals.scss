@@ -1,3 +1,22 @@
+// Hide native document scrollbar (width); overlay bar in CustomScrollbar.tsx
+html {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+
+	&::-webkit-scrollbar {
+		display: none;
+	}
+}
+
+body {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+
+	&::-webkit-scrollbar {
+		display: none;
+	}
+}
+
 .nav-link {
 	@extend .rounded;
 }

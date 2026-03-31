@@ -1,11 +1,12 @@
 import type { KtLogger } from "#lib/log/log";
-import type { FilterQuery } from "mongodb";
 import type { GameGroup, ImportTypes, integer } from "tachi-common";
+import type { OrphanScore as PgOrphanScoreRow } from "tachi-db";
 
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { GetBlacklist } from "#utils/queries/blacklist";
 import { GetUserWithID } from "#utils/user";
 import fjsh from "fast-json-stable-hash";
+import { sql } from "kysely";
 
 import type {
 	ConverterFnReturnOrFailure,
@@ -19,6 +20,30 @@ import { Converters } from "../../import-types/converters";
 import { type ConverterFailure, IsConverterFailure } from "../common/converter-failures";
 import { HandlePostImportSteps } from "../score-importing/score-import-main";
 import { ProcessSuccessfulConverterReturn } from "../score-importing/score-importing";
+
+export type DeorphanScoresFilter = {
+	/** Beatoraja: match `context.chart.sha256` (import_type forced to ir/beatoraja). */
+	chartSha256?: string;
+	pmsPlaytype?: "Controller" | "Keyboard";
+	userID?: integer;
+};
+
+function pgOrphanRowToDocument(row: PgOrphanScoreRow): OrphanScoreDocument {
+	return {
+		orphanID: row.orphan_id,
+		userID: row.user_id,
+		importType: row.import_type as ImportTypes,
+		game: row.game_group as GameGroup,
+		data: row.data as OrphanScoreDocument["data"],
+		context: row.context as OrphanScoreDocument["context"],
+		errMsg: row.error_message.length > 0 ? row.error_message : null,
+		timeInserted: new Date(row.time_inserted).getTime(),
+	};
+}
+
+async function deleteOrphanByOrphanId(orphanID: string): Promise<void> {
+	await DB.deleteFrom("orphan_score").where("orphan_id", "=", orphanID).execute();
+}
 
 /**
  * Creates an OrphanedScore document from the data and context,
@@ -34,6 +59,7 @@ export async function OrphanScore<T extends ImportTypes = ImportTypes>(
 	errMsg: string | null,
 	game: GameGroup,
 	log: KtLogger,
+	importId: string,
 ) {
 	const orphan: Pick<OrphanScoreDocument, "context" | "data" | "importType" | "userID"> = {
 		importType,
@@ -44,7 +70,7 @@ export async function OrphanScore<T extends ImportTypes = ImportTypes>(
 
 	log.debug(orphan, "Orphaning document");
 
-	let orphanID;
+	let orphanID: string;
 
 	try {
 		orphanID = `O${fjsh.hash(orphan, "sha256")}`;
@@ -53,24 +79,28 @@ export async function OrphanScore<T extends ImportTypes = ImportTypes>(
 		throw new Error(`Failed to orphan score. ${(err as Error).message}`);
 	}
 
-	const exists = await MONGODB_KILL["orphan-scores"].findOne({ orphanID });
+	const inserted = await DB.insertInto("orphan_score")
+		.values({
+			orphan_id: orphanID,
+			user_id: userID,
+			import_id: importId,
+			import_type: importType,
+			game_group: game,
+			data,
+			context,
+			time_inserted: new Date().toISOString(),
+			error_message: errMsg ?? "",
+		})
+		.onConflict((oc) => oc.column("orphan_id").doNothing())
+		.returning("orphan_id")
+		.executeTakeFirst();
 
-	if (exists) {
+	if (!inserted) {
 		log.debug(`Skipped orphaning score ${orphanID} because it already exists.`);
 		return { success: false, orphanID };
 	}
 
-	const orphanScoreDoc: OrphanScoreDocument = {
-		...orphan,
-		orphanID,
-		game,
-		errMsg,
-		timeInserted: Date.now(),
-	};
-
-	log.debug(orphanScoreDoc, `Inserting orphanScoreDoc...`);
-
-	await MONGODB_KILL["orphan-scores"].insert(orphanScoreDoc);
+	log.debug({ orphanID }, `Inserted orphan_score row.`);
 
 	return { success: true, orphanID };
 }
@@ -136,7 +166,7 @@ export async function ReprocessOrphan(
 
 		// @danger - This could go terribly, if there's a mistake in the converterFN we might accidentally
 		// remove a users score.
-		await MONGODB_KILL["orphan-scores"].remove({ orphanID: orphan.orphanID });
+		await deleteOrphanByOrphanId(orphan.orphanID);
 
 		return null;
 	}
@@ -151,11 +181,12 @@ export async function ReprocessOrphan(
 			res,
 			blacklist,
 			log,
-			true,
+			null,
+			{ forceImmediateImport: true, directCommit: true },
 		);
 	} catch (err) {
 		if (IsConverterFailure(err) && err.failureType === "InvalidScore") {
-			await MONGODB_KILL["orphan-scores"].remove({ orphanID: orphan.orphanID });
+			await deleteOrphanByOrphanId(orphan.orphanID);
 			return null;
 		}
 
@@ -165,7 +196,7 @@ export async function ReprocessOrphan(
 	}
 
 	if (converterReturns === null || !converterReturns.success) {
-		await MONGODB_KILL["orphan-scores"].remove({ orphanID: orphan.orphanID });
+		await deleteOrphanByOrphanId(orphan.orphanID);
 		return null;
 	}
 
@@ -175,7 +206,7 @@ export async function ReprocessOrphan(
 		log.error(
 			`Orphan ${orphan.orphanID} belongs to ${orphan.userID}, but that user no longer exists in the database. Going to skip this and remove the orphan.`,
 		);
-		await MONGODB_KILL["orphan-scores"].remove({ orphanID: orphan.orphanID });
+		await deleteOrphanByOrphanId(orphan.orphanID);
 		return null;
 	}
 
@@ -187,20 +218,42 @@ export async function ReprocessOrphan(
 		null,
 		log,
 		undefined,
+		"",
 	);
 
-	await MONGODB_KILL["orphan-scores"].remove({ orphanID: orphan.orphanID });
+	await deleteOrphanByOrphanId(orphan.orphanID);
 	return converterReturns;
 }
 
-export async function DeorphanScores(query: FilterQuery<OrphanScoreDocument>, log: KtLogger) {
-	const orphans = await MONGODB_KILL["orphan-scores"].find(query);
+export async function DeorphanScores(filter: DeorphanScoresFilter, log: KtLogger) {
+	let q = DB.selectFrom("orphan_score").selectAll();
+
+	if (filter.userID !== undefined) {
+		q = q.where("user_id", "=", filter.userID);
+	}
+
+	if (filter.chartSha256 !== undefined) {
+		q = q
+			.where("import_type", "=", "ir/beatoraja")
+			.where(sql<boolean>`(orphan_score.context::jsonb->'chart'->>'sha256') = ${filter.chartSha256}`);
+
+		if (filter.pmsPlaytype !== undefined) {
+			if (filter.pmsPlaytype === "Controller") {
+				q = q.where(sql<boolean>`(orphan_score.data::jsonb->>'deviceType') = ${"BM_CONTROLLER"}`);
+			} else {
+				q = q.where(sql<boolean>`(orphan_score.data::jsonb->>'deviceType') IS DISTINCT FROM ${"BM_CONTROLLER"}`);
+			}
+		}
+	}
+
+	const rows = await q.execute();
+	const orphans = rows.map(pgOrphanRowToDocument);
 
 	// ScoreIDs are essentially userID dependent, so this is fine.
 	// TODO(zk): Gooood the performance of this is shit, what the fuck man.
 	const blacklist = await GetBlacklist();
 
-	log.info({ query }, `Found ${orphans.length} orphans.`);
+	log.info({ filter }, `Found ${orphans.length} orphans.`);
 
 	let failed = 0;
 	let success = 0;

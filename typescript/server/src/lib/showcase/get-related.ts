@@ -1,24 +1,15 @@
 import type { GameGroup, ShowcaseStatDetails } from "tachi-common";
 
+import { LoadFolderDocumentById } from "#lib/db-formats/folders";
 import { log } from "#lib/log/log";
-import MONGODB_KILL from "#services/mongo/db";
+import { GetChartForIDGuaranteed, GetSongForIDGuaranteed } from "#utils/db";
 
 export async function GetRelatedStatDocuments(stat: ShowcaseStatDetails, game: GameGroup) {
 	switch (stat.mode) {
 		case "chart": {
-			const chart = await MONGODB_KILL.anyCharts[game].findOne({ chartID: stat.chartID });
+			const chart = await GetChartForIDGuaranteed(game, stat.chartID);
 
-			if (!chart) {
-				log.error({ stat }, `This stat refers to a chart that does not exist?`);
-				throw new Error(`Stat refers to a chart that does not exist? ${stat.chartID}.`);
-			}
-
-			const song = await MONGODB_KILL.anySongs[game].findOne({ id: chart.songID });
-
-			if (!song) {
-				log.error({ chart }, `Song-Chart Mismatch - ${chart.songID}.`);
-				throw new Error(`Song-Chart Mismatch on ${chart.songID}.`);
-			}
+			const song = await GetSongForIDGuaranteed(game, chart.songID);
 
 			return { song, chart };
 		}
@@ -32,9 +23,7 @@ export async function GetRelatedStatDocuments(stat: ShowcaseStatDetails, game: G
 				throw new Error(`Legacy FolderIDs used in showcase stat.`);
 			}
 
-			const folder = await MONGODB_KILL.folders.findOne({
-				folderID: stat.folderID,
-			});
+			const folder = await LoadFolderDocumentById(stat.folderID);
 
 			if (!folder) {
 				log.error({ stat }, `This stat refers to a folder that does not exist?`);

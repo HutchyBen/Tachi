@@ -25,7 +25,7 @@ export default function BMSOrPMSDifficultyCell({
 		settings: MONGO_UGPTSettingsDocument<"bms:7K" | "bms:14K">;
 	};
 
-	const hasLevel = chart.data.tableFolders.length > 0;
+	const hasLevel = Object.keys(chart.data.tableFolders).length > 0;
 
 	const aiLevel =
 		game === "bms" && (chart as MONGO_ChartDocument<"bms:7K" | "bms:14K">).data.aiLevel;
@@ -33,18 +33,35 @@ export default function BMSOrPMSDifficultyCell({
 	let levelText = "No Rating";
 	let backgroundColour = hasLevel ? COLOUR_SET.red : COLOUR_SET.gray;
 
-	let filteredTables: Array<{ level: string; table: string }> = [];
+	let filteredTables: Record<string, string> = {};
 
 	if (hasLevel) {
 		let tables = chart.data.tableFolders;
 
 		if (settings?.preferences.gameSpecific.displayTables) {
-			filteredTables = tables.filter(
-				(e) => !settings.preferences.gameSpecific.displayTables!.includes(e.table),
-			);
-			tables = tables.filter((e) =>
-				settings.preferences.gameSpecific.displayTables!.includes(e.table),
-			);
+			filteredTables = Object.entries(tables)
+				.filter(
+					([table, _]) =>
+						!settings.preferences.gameSpecific.displayTables!.includes(table),
+				)
+				.reduce(
+					(acc, [table, level]) => {
+						acc[table] = level;
+						return acc;
+					},
+					{} as Record<string, string>,
+				);
+			tables = Object.entries(tables)
+				.filter(([table, _]) =>
+					settings.preferences.gameSpecific.displayTables!.includes(table),
+				)
+				.reduce(
+					(acc, [table, level]) => {
+						acc[table] = level;
+						return acc;
+					},
+					{} as Record<string, string>,
+				);
 		}
 
 		levelText = FormatTables(tables);
@@ -71,7 +88,7 @@ export default function BMSOrPMSDifficultyCell({
 						</div>
 					</QuickTooltip>
 				</>
-			) : filteredTables.length > 0 ? (
+			) : Object.keys(filteredTables).length > 0 ? (
 				<QuickTooltip
 					tooltipContent={
 						<div>
@@ -100,8 +117,8 @@ function FindTableColour(
 ) {
 	const lookup = new Map(BMS_TABLES.map((e) => [e.prefix, e.colour]));
 
-	for (const table of tableFolders) {
-		const colour = lookup.get(table.table);
+	for (const table of Object.keys(tableFolders)) {
+		const colour = lookup.get(table);
 
 		if (colour) {
 			return colour;

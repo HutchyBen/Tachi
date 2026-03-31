@@ -15,7 +15,7 @@ import {
  * It's worth keeping this around for both the currently-viewed user and the currently-logged-in user.
  */
 export interface UGPTData {
-	settings: MONGO_UGPTSettingsDocument;
+	settings: MONGO_UGPTSettingsDocument | null;
 	stats: MONGO_UserGameStats;
 	game: GameGroup;
 	playtype: Playtype;
@@ -48,7 +48,7 @@ export default async function fetchUGPTData(
 		);
 	}
 
-	const settingsRes = await APIFetchV1<MONGO_UGPTSettingsDocument>(
+	const settingsRes = await APIFetchV1<MONGO_UGPTSettingsDocument | null>(
 		`/users/${userID}/games/${game}/${playtype}/settings`,
 	);
 

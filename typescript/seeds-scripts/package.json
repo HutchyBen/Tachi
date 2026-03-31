@@ -2,7 +2,6 @@
 	"name": "tachi-seeds-scripts",
 	"version": "0.1.0-see-project-root",
 	"private": true,
-	"type": "module",
 	"description": "Scripts for dealing with tachi-seeds.",
 	"scripts": {
 		"build": "tsgo -b",

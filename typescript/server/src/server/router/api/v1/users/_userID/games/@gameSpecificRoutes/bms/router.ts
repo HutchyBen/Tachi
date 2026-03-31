@@ -1,3 +1,4 @@
+import { LoadPbByUserAndChartPgId } from "#lib/db-formats/pb";
 import {
 	CUSTOM_TACHI_BMS_TABLES,
 	HandleBMSTableBodyRequest,
@@ -5,9 +6,11 @@ import {
 	HandleBMSTableHTMLRequest,
 } from "#lib/game-specific/custom-bms-tables";
 import { ValidatePlaytypeFromParamFor } from "#server/router/api/v1/games/_game/_playtype/middleware";
-import MONGODB_KILL from "#services/mongo/db";
-import { AssignToReqTachiData, GetTachiData, GetUGPT, GetUser } from "#utils/req-tachi-data";
+import { FindBMSChartOnHashInGame } from "#utils/queries/charts";
+import { AssignToReqTachiData, GetTachiData, GetUser } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
+import { GamePTToV3, type Playtypes } from "tachi-common";
+import { type Game } from "tachi-db";
 
 const router: Router = Router({ mergeParams: true });
 
@@ -118,8 +121,6 @@ router.get(
 
 		const checksum = req.params.checksum.toLowerCase();
 
-		let query = {};
-
 		if (!/^[0-9a-f]+$/u.exec(checksum)) {
 			return res.status(400).json({
 				success: false,
@@ -127,24 +128,16 @@ router.get(
 			});
 		}
 
-		if (checksum.length === MD5_CHECKSUM_LENGTH) {
-			query = {
-				"data.hashMD5": checksum,
-			};
-		} else if (checksum.length === SHA256_CHECKSUM_LENGTH) {
-			query = {
-				"data.hashSHA256": checksum,
-			};
-		} else {
+		if (checksum.length !== MD5_CHECKSUM_LENGTH && checksum.length !== SHA256_CHECKSUM_LENGTH) {
 			return res.status(400).json({
 				success: false,
 				description: "Invalid checksum length (Was not a MD5 or SHA256 checksum).",
 			});
 		}
 
-		const chart = await MONGODB_KILL.charts.bms.findOne({
-			...query,
-		});
+		const v3Game = GamePTToV3("bms", req.params.playtype as Playtypes["bms"]) as Game;
+
+		const chart = await FindBMSChartOnHashInGame(checksum, v3Game);
 
 		if (!chart) {
 			return res
@@ -152,12 +145,7 @@ router.get(
 				.json({ success: false, description: "No chart found with the given checksum." });
 		}
 
-		const pb = await MONGODB_KILL["personal-bests"].findOne({
-			game: "bms",
-			playtype: chart.playtype,
-			userID: user.id,
-			chartID: chart.chartID,
-		});
+		const pb = await LoadPbByUserAndChartPgId(user.id, chart.chartID);
 
 		const description = pb ? "Best score found." : "Player has not played this chart.";
 

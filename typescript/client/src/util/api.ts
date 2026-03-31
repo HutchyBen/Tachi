@@ -22,6 +22,22 @@ export function ToAPIURL(url: string) {
 	return `${BASE_URL}/api/v1${url}`;
 }
 
+/**
+ * When `VITE_SERVER_URL` is unset, `ToAPIURL` is same-origin relative. On the Vite dev
+ * server, a plain `/api/v1/...` link would hit the SPA and reload `index.html` in a loop.
+ * For "open in browser" help links, force an absolute backend URL in local dev.
+ */
+export function ToAbsoluteAPIURLForHelpLink(url: string) {
+	const u = ToAPIURL(url);
+	if (u.startsWith("http://") || u.startsWith("https://")) {
+		return u;
+	}
+	if (import.meta.env.VITE_IS_LOCAL_DEV) {
+		return `http://127.0.0.1:8080${u}`;
+	}
+	return u;
+}
+
 export function ToCDNURL(url: string) {
 	if (url[0] !== "/") {
 		url = `/${url}`;

@@ -1,4 +1,4 @@
-import { GetChartByPgIdOrLegacyId } from "#lib/db-formats/chart";
+import { GetChartById } from "#lib/db-formats/chart";
 import DB from "#services/pg/db";
 import { CloseServerConnection } from "#test-utils/mock-api";
 import { GamePTToV3 } from "tachi-common";
@@ -49,7 +49,7 @@ async function cleanup() {
 	await DB.deleteFrom("song").where("id", "=", SONG_PG_ID).execute();
 }
 
-describe("GetChartByPgIdOrLegacyId", () => {
+describe("GetChartById", () => {
 	beforeEach(async () => {
 		await cleanup();
 		await seedSong();
@@ -57,25 +57,16 @@ describe("GetChartByPgIdOrLegacyId", () => {
 	});
 
 	it("resolves by Postgres chart id", async () => {
-		const c = await GetChartByPgIdOrLegacyId(GamePTToV3("iidx", "SP"), CHART_PG_ID);
+		const c = await GetChartById(GamePTToV3("iidx", "SP"), CHART_PG_ID);
 
 		expect(c).toBeDefined();
 		expect(c!.chartID).toBe(CHART_PG_ID);
-		expect(c!.legacyChartId).toBe(CHART_LEGACY_ID);
 		expect(c!.songID).toBe(SONG_LEGACY_ID);
 		expect(c!.versions).toContain("27");
 	});
 
-	it("resolves by legacy_id", async () => {
-		const c = await GetChartByPgIdOrLegacyId(GamePTToV3("iidx", "SP"), CHART_LEGACY_ID);
-
-		expect(c).toBeDefined();
-		expect(c!.chartID).toBe(CHART_PG_ID);
-		expect(c!.legacyChartId).toBe(CHART_LEGACY_ID);
-	});
-
 	it("returns undefined when no chart matches", async () => {
-		const c = await GetChartByPgIdOrLegacyId(GamePTToV3("iidx", "SP"), "nonexistent-chart-id");
+		const c = await GetChartById(GamePTToV3("iidx", "SP"), "nonexistent-chart-id");
 
 		expect(c).toBeUndefined();
 	});

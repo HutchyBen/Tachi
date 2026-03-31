@@ -1,4 +1,4 @@
-import { ToAPIURL } from "#util/api";
+import { ToAbsoluteAPIURLForHelpLink, ToAPIURL } from "#util/api";
 import { type TachiServerCoreConfig } from "tachi-common";
 // @ts-expect-error No types available...
 import syncFetch from "sync-fetch";
@@ -17,6 +17,9 @@ try {
 		throw new Error(`Failed to fetch config -- ${configRes.description}.`);
 	}
 } catch (err) {
+	const devServerUrl = import.meta.env.VITE_SERVER_URL ?? "";
+	const showHttpsCertHint = devServerUrl.startsWith("https://");
+	const statusHelpUrl = ToAbsoluteAPIURLForHelpLink("/status");
 	document.open();
 	document.write(`
 	<style>
@@ -44,9 +47,11 @@ try {
 			<h1><b>Couldn't connect to the server.</b></h1>
 			<h3>You are in local development mode.</h3>
 			<ul style="font-size: 2rem;">
-				<li>Have you accepted the HTTPS certificates for <a href="${ToAPIURL(
-					"/status",
-				)}">the server?</a>. If not, the site won't load.</li>
+				<li>${
+					showHttpsCertHint
+						? `Have you accepted the HTTPS certificates for <a href="${statusHelpUrl}">the server?</a> If not, the site won't load.`
+						: `Is the backend running? Try opening <a href="${statusHelpUrl}">the status endpoint</a> in your browser (default dev URL is <code>http://127.0.0.1:8080</code>).`
+				}</li>
 			</ul>
 		`
 				: `<h1>Failed to connect!</h1>

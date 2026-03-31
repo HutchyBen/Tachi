@@ -164,16 +164,31 @@ export const ONGEKI_IMPL: GPTServerImplementation<"ongeki:Single"> = {
 		platinumStars: () => FmtStarsCompact(6),
 	},
 	pbMergeFunctions: [
-		CreatePBMergeFor("largest", "platinumScore", "Best Platinum Score", (base, score) => {
-			base.scoreData.platinumScore = score.scoreData.platinumScore;
-			base.scoreData.platinumStars = score.scoreData.platinumStars;
-		}),
-		CreatePBMergeFor("largest", "enumIndexes.noteLamp", "Best Note Lamp", (base, score) => {
-			base.scoreData.noteLamp = score.scoreData.noteLamp;
-		}),
-		CreatePBMergeFor("largest", "enumIndexes.bellLamp", "Best Bell Lamp", (base, score) => {
-			base.scoreData.bellLamp = score.scoreData.bellLamp;
-		}),
+		CreatePBMergeFor(
+			"largest",
+			{ type: "REGULAR", metric: "platinumScore" },
+			"Best Platinum Score",
+			(base, score) => {
+				base.scoreData.platinumScore = score.scoreData.platinumScore;
+				base.scoreData.platinumStars = score.scoreData.platinumStars;
+			},
+		),
+		CreatePBMergeFor(
+			"largest",
+			{ type: "REGULAR", metric: "noteLamp" },
+			"Best Note Lamp",
+			(base, score) => {
+				base.scoreData.noteLamp = score.scoreData.noteLamp;
+			},
+		),
+		CreatePBMergeFor(
+			"largest",
+			{ type: "REGULAR", metric: "bellLamp" },
+			"Best Bell Lamp",
+			(base, score) => {
+				base.scoreData.bellLamp = score.scoreData.bellLamp;
+			},
+		),
 	],
 	defaultMergeRefName: "Best Score",
 	scoreValidators: [

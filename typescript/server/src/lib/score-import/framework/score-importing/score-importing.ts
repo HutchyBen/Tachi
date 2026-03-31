@@ -1,7 +1,8 @@
 import type { ScoreImportJob } from "#lib/score-import/worker/types";
 
 import { AppendLogCtx, type KtLogger } from "#lib/log/log";
-import MONGODB_KILL from "#services/mongo/db";
+import { mongoScoreDocumentToNewScoreRow } from "#lib/score-import/framework/pg/mongo-score-to-pg";
+import DB from "#services/pg/db";
 import { ClassToObject } from "#utils/misc";
 import {
 	type GameGroup,
@@ -47,16 +48,18 @@ export async function ImportAllIterableData<D, C>(
 	game: GameGroup,
 	log: KtLogger,
 	job: ScoreImportJob | undefined,
+	importId: string,
 ): Promise<Array<ImportProcessingInfo>> {
 	log.debug("Getting Blacklist...");
 
 	// @optimisable: could filter harder with score.game and score.playtype
 	// stuff.
-	const blacklist = (
-		await MONGODB_KILL["score-blacklist"].find({
-			userID,
-		})
-	).map((e) => e.scoreID);
+	const blacklistRows = await DB.selectFrom("score_blacklist")
+		.select("score_id")
+		.where("user_id", "=", userID)
+		.execute();
+
+	const blacklist = blacklistRows.map((e) => e.score_id);
 
 	log.debug(`Starting Data Processing...`);
 
@@ -78,6 +81,7 @@ export async function ImportAllIterableData<D, C>(
 				game,
 				blacklist,
 				log,
+				importId,
 			),
 		);
 
@@ -127,11 +131,19 @@ export async function ImportIterableDatapoint<D, C>(
 	game: GameGroup,
 	blacklist: Array<string>,
 	log: KtLogger,
+	importId: string,
 ): Promise<ImportProcessingInfo | null> {
 	try {
 		const cfnReturn = await ConverterFunction(data, context, importType, log);
 
-		const res = await ProcessSuccessfulConverterReturn(userID, cfnReturn, blacklist, log);
+		const res = await ProcessSuccessfulConverterReturn(
+			userID,
+			cfnReturn,
+			blacklist,
+			log,
+			importId,
+			{},
+		);
 
 		return res;
 	} catch (e) {
@@ -181,6 +193,7 @@ export async function ImportIterableDatapoint<D, C>(
 					dnfErr.message,
 					game,
 					log,
+					importId,
 				);
 
 				if (insertOrphan.success) {
@@ -283,7 +296,8 @@ export async function ProcessSuccessfulConverterReturn(
 	cfnReturn: ConverterFnSuccessReturn,
 	blacklist: Array<string>,
 	log: KtLogger,
-	forceImmediateImport = false,
+	importId: string | null,
+	opts: { directCommit?: boolean; forceImmediateImport?: boolean } = {},
 ): Promise<ImportProcessingInfo | null> {
 	const result = await HydrateCheckAndInsertScore(
 		userID,
@@ -292,7 +306,9 @@ export async function ProcessSuccessfulConverterReturn(
 		cfnReturn.song,
 		blacklist,
 		log,
-		forceImmediateImport,
+		importId,
+		opts.forceImmediateImport ?? false,
+		opts.directCommit ?? false,
 	);
 
 	// This used to be a ScoreExists error. However, we never actually care about
@@ -332,7 +348,9 @@ async function HydrateCheckAndInsertScore(
 	song: MONGO_SongDocument,
 	blacklist: Array<string>,
 	importLog: KtLogger,
+	importId: string | null,
 	force = false,
+	directCommit = false,
 ): Promise<MONGO_ScoreDocument | null> {
 	const gptString = GetGPTString(dryScore.game, chart.playtype);
 
@@ -352,26 +370,17 @@ async function HydrateCheckAndInsertScore(
 		return null;
 	}
 
-	const existingScore = await MONGODB_KILL.scores.findOne(
-		{
-			scoreID,
-		},
-		{
-			// micro-optimisation - mongoDB is significantly faster when returning less fields
-			// since we only care about whether we have a score or not here, we can minimise returned
-			// fields.
-			projection: {
-				_id: 1,
-			},
-		},
-	);
+	const existingCommitted = await DB.selectFrom("score")
+		.select("id")
+		.where("id", "=", scoreID)
+		.where("committed", "=", true)
+		.executeTakeFirst();
 
-	if (existingScore) {
+	if (existingCommitted) {
 		log.debug(`Skipped score.`);
 		return null;
 	}
 
-	// If this users score queue
 	if (GetScoreQueueMaybe(userID)?.scoreIDSet.has(scoreID) === true) {
 		log.debug(`Skipped score.`);
 		return null;
@@ -381,15 +390,35 @@ async function HydrateCheckAndInsertScore(
 
 	ValidateScore(score, chart);
 
-	let res;
+	let res: number | true | null;
+
+	const committed = directCommit;
+	const effectiveImportId = directCommit ? null : importId;
 
 	if (force) {
-		res = await MONGODB_KILL.scores.insert(score);
+		try {
+			await DB.insertInto("score")
+				.values(
+					mongoScoreDocumentToNewScoreRow(score, chart.chartID, {
+						committed,
+						importId: effectiveImportId,
+						sessionId: null,
+					}),
+				)
+				.execute();
+			res = true;
+		} catch {
+			res = null;
+		}
 	} else {
-		res = await QueueScoreInsert(score);
+		if (importId === null && !directCommit) {
+			log.debug(`Skipped score — missing import id.`);
+			return null;
+		}
+
+		res = await QueueScoreInsert(score, chart, effectiveImportId, committed);
 	}
 
-	// this is a last resort for avoiding doubled imports
 	if (res === null) {
 		log.debug(`Skipped score - Race Condition protection triggered.`);
 		return null;

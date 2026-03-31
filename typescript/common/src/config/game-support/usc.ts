@@ -107,12 +107,7 @@ export const USC_CONTROLLER_CONF = {
 		hashSHA1: z.union([z.array(z.string()), z.string()]),
 		isOfficial: z.boolean(),
 		effector: z.string(),
-		tableFolders: z.array(
-			z.strictObject({
-				table: z.string(),
-				level: z.string(),
-			}),
-		),
+		tableFolders: z.record(z.string(), z.string()),
 	}),
 
 	preferences: z.strictObject({ vf6Target: z.number().optional().nullable() }),

@@ -50,8 +50,10 @@ export function PartialArrayRecordAssign<K extends number | string | symbol, T>(
 	}
 }
 
-export function FormatTables(tables: { level: string; table: string }[]) {
-	return tables.map((e) => `${e.table}${e.level}`).join(", ");
+export function FormatTables(tables: Record<string, string>) {
+	return Object.entries(tables)
+		.map(([table, level]) => `${table}${level}`)
+		.join(", ");
 }
 
 export function FormatGPTProfileRating(
@@ -191,7 +193,7 @@ export function SelectRightChart(
 			return chart;
 		}
 
-		if (chartID === chart.chartID || chartID === chart.legacyChartId) {
+		if (chartID === chart.chartID) {
 			return chart;
 		}
 	}

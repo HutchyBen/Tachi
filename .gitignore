@@ -23,8 +23,9 @@ build
 # Coverage
 coverage
 test-results
+.nyc_output
 
-# Vitest bench --outputJson (see Justfile-bench bench-json)
+# Vitest bench --outputJson (see Justfile-bench)
 typescript/server/bench-results.json
 
 *.tsbuildinfo

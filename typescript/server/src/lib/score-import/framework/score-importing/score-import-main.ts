@@ -1,17 +1,22 @@
 import type { KtLogger } from "#lib/log/log";
 import type { ScoreImportJob } from "#lib/score-import/worker/types";
 
-import MONGODB_KILL from "#services/mongo/db";
+import { LoadImportDocumentById } from "#lib/db-formats/import-document";
+import { runWithImportContext } from "#lib/score-import/framework/import-run-context";
+import {
+	deleteImportRun,
+	ensureImportStub,
+} from "#lib/score-import/framework/pg/ensure-import-stub";
+import { finalizeImportToPostgres } from "#lib/score-import/framework/pg/finalize-import-pg";
+import DB from "#services/pg/db";
 import { GetMillisecondsSince } from "#utils/misc";
 import { GetUserWithID } from "#utils/user";
 import {
 	type GameGroup,
 	GetGameGroupConfig,
-	type GPTString,
 	type ImportProcessingInfo,
 	type ImportTypes,
 	type integer,
-	type MONGO_ImportDocument,
 	type MONGO_UserDocument,
 	type Playtype,
 } from "tachi-common";
@@ -82,173 +87,158 @@ export default async function ScoreImportMain<D, C>(
 	}
 
 	try {
-		const timeStarted = Date.now();
+		return await runWithImportContext(importID, async () => {
+			await deleteImportRun(importID);
 
-		void SetJobProgress(job, "Parsing score data.");
+			const timeStarted = Date.now();
 
-		// --- 1. Parsing ---
-		// We get an iterable from the provided parser function, alongside some context and a converter function.
-		// This iterable does not have to be an array - it's anything that's iterable, like a generator.
-		const parseTimeStart = process.hrtime.bigint();
-		const { iterable, context, game, classProvider: classProvider } = await InputParser(log);
+			void SetJobProgress(job, "Parsing score data.");
 
-		const parseTime = GetMillisecondsSince(parseTimeStart);
-
-		log.debug(`Parsing took ${parseTime} milliseconds.`);
-
-		void SetJobProgress(
-			job,
-			`Parsed Score Data. Took ${parseTime}ms. Importing ${
-				Array.isArray(iterable) ? iterable.length : "an unknown amount of"
-			} scores.`,
-		);
-
-		// We have to cast here due to typescript generic confusions. This is guaranteed` to be correct.
-		const ConverterFunction = Converters[importType] as unknown as ConverterFunction<D, C>;
-
-		// --- 2. Importing ---
-		// ImportAllIterableData iterates over the iterable, applying the converter function to each bit of data.
-		const importTimeStart = process.hrtime.bigint();
-
-		let importInfo;
-		const startOfImportingScores = Date.now();
-
-		// Score imports are not transaction based. As such, if they fail midway through, corrupt state
-		// may occur. This sucks, but we can band-aid over some of the worse parts. Here, if our score
-		// import fails, we **know** that we might've inserted scores but not properly handled their
-		// state. If so, we should attempt to revert any of those scores.
-		//
-		// There are still places where Tachi can fail on importing scores and result in corrupt state,
-		// but this band-aid fix handles all known cases of a partial-import failure.
-		try {
-			importInfo = await ImportAllIterableData(
-				user.id,
-				importType,
+			const parseTimeStart = process.hrtime.bigint();
+			const {
 				iterable,
-				ConverterFunction,
 				context,
 				game,
-				log,
+				classProvider: classProvider,
+			} = await InputParser(log);
+
+			const parseTime = GetMillisecondsSince(parseTimeStart);
+
+			log.debug(`Parsing took ${parseTime} milliseconds.`);
+
+			void SetJobProgress(
 				job,
+				`Parsed Score Data. Took ${parseTime}ms. Importing ${
+					Array.isArray(iterable) ? iterable.length : "an unknown amount of"
+				} scores.`,
 			);
-		} catch (err) {
-			// Remove all scores from the database for this user which were imported after our timer started.
-			const r = await MONGODB_KILL.scores.remove({
-				userID: user.id,
-				timeAdded: { $gte: startOfImportingScores },
+
+			await ensureImportStub(importID, user.id, game, importType, userIntent);
+
+			const ConverterFunction = Converters[importType] as unknown as ConverterFunction<D, C>;
+
+			const importTimeStart = process.hrtime.bigint();
+
+			let importInfo: Array<ImportProcessingInfo>;
+
+			try {
+				importInfo = await ImportAllIterableData(
+					user.id,
+					importType,
+					iterable,
+					ConverterFunction,
+					context,
+					game,
+					log,
+					job,
+					importID,
+				);
+			} catch (err) {
+				await deleteImportRun(importID);
+				throw err;
+			}
+
+			const importTime = GetMillisecondsSince(importTimeStart);
+			const importTimeRel = importTime / Math.max(1, importInfo.length);
+
+			log.debug(`Importing took ${importTime} milliseconds. (${importTimeRel}ms/doc)`);
+
+			void SetJobProgress(job, `Imported scores, took ${importTime} milliseconds. `);
+
+			let post: Awaited<ReturnType<typeof HandlePostImportSteps>>;
+
+			try {
+				// Steps 3-8 are handled inside here.
+				// This was moved inside here so the score de-orphaning process
+				// could hook into importing better
+				post = await HandlePostImportSteps(
+					importInfo,
+					user,
+					importType,
+					game,
+					classProvider,
+					log,
+					job,
+					importID,
+				);
+			} catch (err) {
+				await deleteImportRun(importID);
+				throw err;
+			}
+
+			const {
+				playtypes,
+				scoreIDs,
+				errors,
+				sessionInfo,
+				classDeltas,
+				goalInfo,
+				questInfo,
+				relativeTimes: _,
+				absoluteTimes,
+			} = post;
+
+			const { importParseTime, sessionTime, pbTime, ugsTime, goalTime, questTime } =
+				absoluteTimes;
+
+			void SetJobProgress(job, "Finalising Import.");
+
+			const timeFinished = Date.now();
+
+			const logMessage = `Import took: ${timeFinished - timeStarted}ms, with ${
+				importInfo.length
+			} documents (Fails: ${errors.length}, Successes: ${scoreIDs.length}, Sessions: ${
+				sessionInfo.length
+			}). Aprx ${(timeFinished - timeStarted) / Math.max(1, importInfo.length)}ms/doc`;
+
+			if (scoreIDs.length > 500) {
+				log.info(logMessage);
+			} else {
+				log.debug(logMessage);
+			}
+
+			// --- 9. Finalise Import Document ---
+			// Create and Save an import document to the database, and finish everything up!
+			await DB.transaction().execute(async (trx) => {
+				await finalizeImportToPostgres(trx, {
+					importId: importID,
+					userId: user.id,
+					gameGroup: game,
+					importType,
+					userIntent,
+					service: "Unknown",
+					timeStartedMs: timeStarted,
+					timeFinishedMs: timeFinished,
+					playtypes,
+					errors,
+					classDeltas,
+					createdSessions: sessionInfo,
+					goalInfo,
+					questInfo,
+					timing: {
+						parseMs: parseTime,
+						importMs: importTime,
+						importParseMs: importParseTime,
+						sessionMs: sessionTime,
+						pbMs: pbTime,
+						ugsMs: ugsTime,
+						goalMs: goalTime,
+						questMs: questTime,
+						totalMs: timeFinished - timeStarted,
+					},
+				});
 			});
 
-			if (r.deletedCount !== 0) {
-				log.error(
-					{ err },
-					`An error was thrown from ImportAllIterableData, which has resulted in a potential partial-score-import. Undoing scores inserted from this import.`,
-				);
-				log.error(
-					`Removed ${r.deletedCount} scores from the database to undo partial-import.`,
+			const loaded = await LoadImportDocumentById(importID);
+
+			if (!loaded) {
+				throw new InternalFailure(
+					`Import ${importID} was finalised but could not be reloaded.`,
 				);
 			}
 
-			throw err;
-		}
-
-		const importTime = GetMillisecondsSince(importTimeStart);
-		const importTimeRel = importTime / importInfo.length;
-
-		log.debug(`Importing took ${importTime} milliseconds. (${importTimeRel}ms/doc)`);
-
-		void SetJobProgress(job, `Imported scores, took ${importTime} milliseconds. `);
-
-		// Steps 3-8 are handled inside here.
-		// This was moved inside here so the score de-orphaning process
-		// could hook into importing better
-		const {
-			playtypes,
-			scoreIDs,
-			errors,
-			sessionInfo,
-			classDeltas,
-			goalInfo,
-			questInfo,
-			relativeTimes,
-			absoluteTimes,
-		} = await HandlePostImportSteps(
-			importInfo,
-			user,
-			importType,
-			game,
-			classProvider,
-			log,
-			job,
-		);
-
-		const { importParseTimeRel, pbTimeRel, sessionTimeRel } = relativeTimes;
-		const { importParseTime, sessionTime, pbTime, ugsTime, goalTime, questTime } =
-			absoluteTimes;
-
-		void SetJobProgress(job, "Finalising Import.");
-
-		// --- 9. Finalise Import Document ---
-		// Create and Save an import document to the database, and finish everything up!
-		const MONGO_ImportDocument: MONGO_ImportDocument = {
-			importType,
-			gptStrings: playtypes.map((e) => `${game}:${e}`) as Array<GPTString>,
-			scoreIDs,
-			playtypes,
-			game,
-			errors,
-			importID,
-			timeFinished: Date.now(),
-			timeStarted,
-			createdSessions: sessionInfo,
-			userID: user.id,
-			classDeltas,
-			goalInfo,
-			questInfo,
-			userIntent,
-		};
-
-		const logMessage = `Import took: ${MONGO_ImportDocument.timeFinished - timeStarted}ms, with ${
-			importInfo.length
-		} documents (Fails: ${errors.length}, Successes: ${scoreIDs.length}, Sessions: ${
-			sessionInfo.length
-		}). Aprx ${(MONGO_ImportDocument.timeFinished - timeStarted) / importInfo.length}ms/doc`;
-
-		// I only really want to log "big" imports. The others are here for debugging purposes.
-		if (scoreIDs.length > 500) {
-			log.info(logMessage);
-		} else if (scoreIDs.length > 1) {
-			log.debug(logMessage);
-		} else {
-			log.debug(logMessage);
-		}
-
-		await MONGODB_KILL.imports.insert(MONGO_ImportDocument);
-
-		// we don't await this because we don't
-		// particularly care about waiting for it.
-		void MONGODB_KILL["import-timings"].insert({
-			importID,
-			timestamp: Date.now(),
-			total: MONGO_ImportDocument.timeFinished - timeStarted,
-			rel: {
-				import: importTimeRel,
-				importParse: importParseTimeRel,
-				pb: pbTimeRel,
-				session: sessionTimeRel,
-			},
-			abs: {
-				parse: parseTime,
-				import: importTime,
-				importParse: importParseTime,
-				session: sessionTime,
-				pb: pbTime,
-				ugs: ugsTime,
-				goal: goalTime,
-				quest: questTime,
-			},
+			return loaded;
 		});
-
-		return MONGO_ImportDocument;
 	} finally {
 		await UnsetOngoingImportLock(user.id);
 	}
@@ -267,6 +257,7 @@ export async function HandlePostImportSteps(
 	classProvider: ClassProvider | null,
 	log: KtLogger,
 	job: ScoreImportJob | undefined,
+	_importId: string,
 ) {
 	// --- 3. ParseImportInfo ---
 	// ImportInfo is a relatively complex structure. We need some information from it for subsequent steps
@@ -275,7 +266,7 @@ export async function HandlePostImportSteps(
 	const { scorePlaytypeMap, errors, scoreIDs, chartIDs } = ParseImportInfo(importInfo);
 
 	const importParseTime = GetMillisecondsSince(importParseTimeStart);
-	const importParseTimeRel = importParseTime / importInfo.length;
+	const importParseTimeRel = importParseTime / Math.max(1, importInfo.length);
 
 	log.debug(`Import Parsing took ${importParseTime} milliseconds. (${importParseTimeRel}ms/doc)`);
 
@@ -288,7 +279,7 @@ export async function HandlePostImportSteps(
 	const sessionInfo = await CreateSessions(user.id, game, scorePlaytypeMap, log);
 
 	const sessionTime = GetMillisecondsSince(sessionTimeStart);
-	const sessionTimeRel = sessionTime / sessionInfo.length;
+	const sessionTimeRel = sessionTime / Math.max(1, sessionInfo.length);
 
 	log.debug(`Session Processing took ${sessionTime} milliseconds (${sessionTimeRel}ms/doc).`);
 
@@ -311,20 +302,18 @@ export async function HandlePostImportSteps(
 	}
 
 	await Promise.all(
-		Object.entries(chartIDsSeparatedByPlaytype).map(([playtype, chartIDs]) =>
-			ProcessPBs(game, playtype as Playtype, user.id, chartIDs, log),
+		Object.entries(chartIDsSeparatedByPlaytype).map(([playtype, cids]) =>
+			ProcessPBs(game, playtype as Playtype, user.id, cids, log),
 		),
 	);
 
 	const pbTime = GetMillisecondsSince(pbTimeStart);
-	const pbTimeRel = pbTime / chartIDs.size;
+	const pbTimeRel = pbTime / Math.max(1, chartIDs.size);
 
 	log.debug(`PB Processing took ${pbTime} milliseconds (${pbTimeRel}ms/doc)`);
 
 	void SetJobProgress(job, "Updating profile statistics.");
 
-	// --- 6. Game Stats ---
-	// This function updates the users "stats" for this game - such as their profile rating or their classes.
 	const ugsTimeStart = process.hrtime.bigint();
 	const classDeltas = await UpdateUsersGameStats(game, playtypes, user.id, classProvider, log);
 
@@ -334,8 +323,6 @@ export async function HandlePostImportSteps(
 
 	void SetJobProgress(job, "Updating Goals.");
 
-	// --- 7. Goals ---
-	// Evaluate and update the users goals. This returns information about goals that have changed.
 	const goalTimeStart = process.hrtime.bigint();
 	const goalInfo = await GetAndUpdateUsersGoals(game, user.id, chartIDs, log);
 
@@ -345,8 +332,6 @@ export async function HandlePostImportSteps(
 
 	void SetJobProgress(job, "Updating Quests.");
 
-	// --- 8. Quests ---
-	// Evaluate and update the users quests. This returns...
 	const questTimeStart = process.hrtime.bigint();
 	const questInfo = await UpdateUsersQuests(goalInfo, game, playtypes, user.id, log);
 
@@ -377,7 +362,6 @@ export async function HandlePostImportSteps(
 		},
 	};
 }
-
 /**
  * Calls UpdateUsersGamePlaytypeStats for every playtype in the import.
  * @returns A flattened array of ClassDeltas
@@ -427,8 +411,7 @@ function ParseImportInfo(importInfo: Array<ImportProcessingInfo>) {
 			chartIDs.add(info.content.score.chartID);
 
 			if (scorePlaytypeMap[info.content.score.playtype]) {
-				// @ts-expect-error obviously delusional typescript moment
-				scorePlaytypeMap[info.content.score.playtype].push(info.content.score);
+				scorePlaytypeMap[info.content.score.playtype]!.push(info.content.score);
 			} else {
 				scorePlaytypeMap[info.content.score.playtype] = [info.content.score];
 			}

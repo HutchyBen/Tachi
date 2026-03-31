@@ -2,10 +2,12 @@ import type { FilterQuery } from "mongodb";
 
 import prValidate from "#server/middleware/prudence-validate";
 import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { GetEnumDistForFolder, GetFolderChartsAndSongs, GetPBsOnFolder } from "#utils/folder";
 import { GetTachiData, GetUGPT } from "#utils/req-tachi-data";
-import { ParseStrPositiveInt } from "#utils/string-checks";
+import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { Router } from "express";
+import { sql } from "kysely";
 import {
 	GetGamePTConfig,
 	GetScoreMetricConf,
@@ -78,22 +80,18 @@ router.post("/viewed", RequireSelfRequestFromUser, async (req, res) => {
 
 	const folder = GetTachiData(req, "folderDoc");
 
-	await MONGODB_KILL["recent-folder-views"].update(
-		{
-			userID: user.id,
-			game: folder.game,
-			playtype: folder.playtype,
-			folderID: folder.folderID,
-		},
-		{
-			$set: {
-				lastViewed: Date.now(),
-			},
-		},
-		{
-			upsert: true,
-		},
-	);
+	await DB.insertInto("folder_view")
+		.values({
+			user_id: user.id,
+			folder_id: folder.folderID,
+			last_viewed: UnixMillisecondsToISO8601(Date.now()),
+		})
+		.onConflict((oc) =>
+			oc.columns(["user_id", "folder_id"]).doUpdateSet({
+				last_viewed: sql`excluded.last_viewed`,
+			}),
+		)
+		.execute();
 
 	return res.status(200).json({
 		success: true,
@@ -144,7 +142,7 @@ router.get(
 			});
 		}
 
-		const { songs, charts } = await GetFolderChartsAndSongs(folder, {});
+		const { songs, charts } = await GetFolderChartsAndSongs(folder);
 
 		const err = ValidateMetric(gptConfig, metric, criteriaValue);
 

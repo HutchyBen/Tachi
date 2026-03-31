@@ -100,7 +100,7 @@ function Component({ game, playtype }: UGPT) {
 						BMS_TABLES.map((e) => [
 							e.asciiPrefix,
 							(d: DatasetElement) =>
-								!!d.data.tableFolders.find((k) => k.table === e.prefix),
+								!!Object.keys(d.data.tableFolders).find((k) => k === e.prefix),
 						]),
 					)}
 				/>

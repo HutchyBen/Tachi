@@ -111,7 +111,7 @@ describe("ACTION_Sync", () => {
 
 		// node-pg returns BIGINT columns as strings
 		expect(action).toMatchObject({
-			app: "BOT",
+			app: "TACHI_BOT",
 			kind: "SYNC",
 			result: "GOOD",
 			user_id: taker.acct.id,

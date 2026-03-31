@@ -19,9 +19,9 @@ import {
 } from "tachi-common";
 
 function GetBMSTableVal(chart: MONGO_ChartDocument<"bms:7K" | "bms:14K">, key: string) {
-	for (const table of chart.data.tableFolders) {
-		if (table.table === key) {
-			return Number(table.level);
+	for (const [table, level] of Object.entries(chart.data.tableFolders)) {
+		if (table === key) {
+			return Number(level);
 		}
 	}
 

@@ -86,9 +86,14 @@ export const ARCAEA_IMPL: GPTServerImplementation<GPTStrings["arcaea"]> = {
 		score: GoalOutOfFmtScore,
 	},
 	pbMergeFunctions: [
-		CreatePBMergeFor("largest", "enumIndexes.lamp", "Best Lamp", (base, score) => {
-			base.scoreData.lamp = score.scoreData.lamp;
-		}),
+		CreatePBMergeFor(
+			"largest",
+			{ type: "REGULAR", metric: "lamp" },
+			"Best Lamp",
+			(base, score) => {
+				base.scoreData.lamp = score.scoreData.lamp;
+			},
+		),
 	],
 	defaultMergeRefName: "Best Score",
 	scoreValidators: [

@@ -1,13 +1,27 @@
 import { CreateActivityRouteHandler } from "#lib/activity/activity";
 import { PasswordCompare, ValidatePassword } from "#lib/auth/auth";
 import { ONE_MONTH, ONE_WEEK, ONE_YEAR } from "#lib/constants/time";
+import { GetChartsByIds } from "#lib/db-formats/chart.js";
+import { SELECT_GAME_PROFILE, ToGameStatsDocument } from "#lib/db-formats/game-profiles.js";
+import {
+	type PbDocumentJoinRow,
+	SELECT_PB_DOCUMENT_WITH_LEADERBOARD,
+	ToPbScoreDocument,
+} from "#lib/db-formats/pb";
+import {
+	type ScoreDocumentJoinRow,
+	SELECT_SCORE_DOCUMENT,
+	ToScoreDocument,
+} from "#lib/db-formats/score";
+import { GetSongsByLegacyIDs } from "#lib/db-formats/song.js";
 import { log } from "#lib/log/log";
 import prValidate from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { IsString } from "#utils/misc";
 import { GetTachiData, GetUGPT } from "#utils/req-tachi-data";
-import DestroyUserGamePlaytypeData from "#utils/reset-state/destroy-ugpt";
+import DestroyUserGameProfile from "#utils/reset-state/destroy-user-game-profile.js";
 import { CheckStrProfileAlg } from "#utils/string-checks";
+import { ISO8601ToUnixMilliseconds, UnixMillisecondsToISO8601 } from "#utils/time";
 import {
 	FormatUserDoc,
 	GetAllRankings,
@@ -17,9 +31,11 @@ import {
 	GetUsersWithIDs,
 } from "#utils/user";
 import { Router } from "express";
+import { sql, type SqlBool } from "kysely";
 import { p } from "prudence";
 import {
 	FormatGameGroup,
+	GamePTToV3,
 	GetGamePTConfig,
 	type GPTString,
 	type integer,
@@ -52,61 +68,46 @@ router.get("/", async (req, res) => {
 	const { game, playtype, user } = GetUGPT(req);
 
 	const stats = GetTachiData(req, "requestedUserGameStats");
+	const v3Game = GamePTToV3(game, playtype);
 
-	const [totalScores, firstScore, mostRecentScore, rankingData, playtime] = await Promise.all([
-		MONGODB_KILL.scores.count({
-			userID: user.id,
-			game,
-			playtype,
-		}),
-		MONGODB_KILL.scores.findOne(
-			{
-				userID: user.id,
-				game,
-				playtype,
-				timeAchieved: { $ne: null },
-			},
-			{
-				sort: {
-					timeAchieved: 1,
-				},
-			},
-		),
-		MONGODB_KILL.scores.findOne(
-			{
-				userID: user.id,
-				game,
-				playtype,
-				timeAchieved: { $ne: null },
-			},
-			{
-				sort: {
-					timeAchieved: -1,
-				},
-			},
-		),
+	const scoreJoin = () =>
+		DB.selectFrom("score")
+			.innerJoin("chart", "chart.id", "score.chart_id")
+			.innerJoin("song", "song.id", "chart.song_id")
+			.leftJoin("import", "import.id", "score.import_id")
+			.where("score.user_id", "=", user.id)
+			.where("score.game", "=", v3Game)
+			.where("score.time_achieved", "is not", null);
+
+	const [totalScores, firstRow, recentRow, rankingData, playtimeRow] = await Promise.all([
+		DB.selectFrom("score")
+			.select((eb) => eb.fn.countAll().as("c"))
+			.where("user_id", "=", user.id)
+			.where("game", "=", v3Game)
+			.executeTakeFirst()
+			.then((r) => Number(r?.c ?? 0)),
+		scoreJoin()
+			.select(SELECT_SCORE_DOCUMENT)
+			.orderBy("score.time_achieved", "asc")
+			.executeTakeFirst(),
+		scoreJoin()
+			.select(SELECT_SCORE_DOCUMENT)
+			.orderBy("score.time_achieved", "desc")
+			.executeTakeFirst(),
 		GetAllRankings(stats),
-		MONGODB_KILL.sessions.aggregate<[] | [{ playtime: number }]>([
-			{
-				$match: {
-					userID: user.id,
-					game,
-					playtype,
-				},
-			},
-			{
-				$project: {
-					duration: { $subtract: ["$timeEnded", "$timeStarted"] },
-				},
-			},
-			{
-				$group: {
-					_id: null,
-					playtime: { $sum: "$duration" },
-				},
-			},
-		]),
+		DB.selectFrom("session")
+			.select(
+				sql<number>`coalesce(sum(extract(epoch from (session.time_ended::timestamptz - session.time_started::timestamptz)) * 1000), 0)::double precision`.as(
+					"playtime",
+				),
+			)
+			.where("user_id", "=", user.id)
+			.where("game", "=", v3Game)
+			.executeTakeFirst(),
 	]);
+
+	const firstScore = firstRow ? ToScoreDocument(firstRow as ScoreDocumentJoinRow) : null;
+	const mostRecentScore = recentRow ? ToScoreDocument(recentRow as ScoreDocumentJoinRow) : null;
 
 	return res.status(200).json({
 		success: true,
@@ -117,7 +118,7 @@ router.get("/", async (req, res) => {
 			mostRecentScore,
 			totalScores,
 			rankingData,
-			playtime: playtime[0]?.playtime ?? 0,
+			playtime: Math.round(Number(playtimeRow?.playtime ?? 0)),
 		},
 	});
 });
@@ -162,27 +163,26 @@ router.get(
 		const { game, playtype, user } = GetUGPT(req);
 
 		const stats = GetTachiData(req, "requestedUserGameStats");
+		const v3Game = GamePTToV3(game, playtype);
 
-		const snapshots = (await MONGODB_KILL["game-stats-snapshots"].find(
-			{
-				userID: user.id,
-				game,
-				playtype,
-				timestamp: { $gte: time },
-			},
-			{
-				sort: {
-					timestamp: -1,
-				},
+		const snapshotRows = await DB.selectFrom("game_stats_snapshot")
+			.select(["timestamp", "playcount", "ratings", "classes", "rankings"])
+			.where("user_id", "=", user.id)
+			.where("game", "=", v3Game)
+			.where("timestamp", ">=", UnixMillisecondsToISO8601(time))
+			.orderBy("timestamp", "desc")
+			.execute();
 
-				// avoid sending so much garbage.
-				projection: {
-					userID: 0,
-					game: 0,
-					playtype: 0,
-				},
-			},
-		)) as Array<Omit<MONGO_UserGameStatsSnapshotDocument, "game" | "playtype" | "userID">>;
+		const snapshots = snapshotRows.map(
+			(row) =>
+				({
+					classes: row.classes,
+					ratings: row.ratings,
+					timestamp: ISO8601ToUnixMilliseconds(row.timestamp),
+					playcount: row.playcount,
+					rankings: row.rankings,
+				}) as Omit<MONGO_UserGameStatsSnapshotDocument, "game" | "playtype" | "userID">,
+		);
 
 		const currentSnapshot: Omit<
 			MONGO_UserGameStatsSnapshotDocument,
@@ -212,54 +212,52 @@ router.get(
  */
 router.get("/most-played", async (req, res) => {
 	const { game, playtype, user } = GetUGPT(req);
+	const v3Game = GamePTToV3(game, playtype);
 
-	const mostPlayed: Array<{ _id: string; playcount: integer; songID: integer }> =
-		await MONGODB_KILL.scores.aggregate([
-			{
-				$match: {
-					userID: user.id,
-					game,
-					playtype,
-				},
-			},
-			{
-				$group: {
-					_id: "$chartID",
+	const mostPlayed = await DB.selectFrom("score")
+		.innerJoin("chart", "chart.id", "score.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select([
+			"chart.id as chart_id",
+			"song.legacy_id as song_legacy_id",
+			sql<number>`count(*)::int`.as("playcount"),
+		])
+		.where("score.user_id", "=", user.id)
+		.where("score.game", "=", v3Game)
+		.groupBy(["chart.id", "song.legacy_id"])
+		.orderBy("playcount", "desc")
+		.limit(100)
+		.execute();
 
-					// micro opt
-					songID: { $first: "$songID" },
-					playcount: { $sum: 1 },
-				},
-			},
-			{
-				$sort: {
-					playcount: -1,
-				},
-			},
-			{
-				$limit: 100,
-			},
-		]);
+	const chartIDs = mostPlayed.map((e) => e.chart_id);
+	const songIDs = mostPlayed.map((e) => e.song_legacy_id);
 
-	const chartIDs = mostPlayed.map((e) => e._id);
-	const songIDs = mostPlayed.map((e) => e.songID);
-
-	const [songs, charts, pbs] = await Promise.all([
-		await MONGODB_KILL.anySongs[game].find({ id: { $in: songIDs } }),
-		await MONGODB_KILL.anyCharts[game].find({ chartID: { $in: chartIDs } }),
-		await MONGODB_KILL["personal-bests"].find({ chartID: { $in: chartIDs }, userID: user.id }),
+	const [songs, charts, pbRows] = await Promise.all([
+		GetSongsByLegacyIDs(game, songIDs),
+		GetChartsByIds(game, chartIDs),
+		chartIDs.length === 0
+			? Promise.resolve([] as Array<PbDocumentJoinRow>)
+			: DB.selectFrom("pb")
+					.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
+					.innerJoin("chart", "chart.id", "pb.chart_id")
+					.innerJoin("song", "song.id", "chart.song_id")
+					.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
+					.where("pb.user_id", "=", user.id)
+					.where("chart.id", "in", chartIDs)
+					.execute()
+					.then((rows) => rows as Array<PbDocumentJoinRow>),
 	]);
 
 	const playcountMap = new Map<string, integer>();
 
 	for (const doc of mostPlayed) {
-		playcountMap.set(doc._id, doc.playcount);
+		playcountMap.set(doc.chart_id, doc.playcount);
 	}
 
-	// @ts-expect-error monkeypatching
-	const playcountPBs = pbs as Array<{ __playcount: integer } & MONGO_PBScoreDocument>;
+	const playcountPBs = (await Promise.all(pbRows.map((row) => ToPbScoreDocument(row)))) as Array<
+		{ __playcount: integer } & MONGO_PBScoreDocument
+	>;
 
-	// monkey patch __playcount on
 	for (const pb of playcountPBs) {
 		pb.__playcount = playcountMap.get(pb.chartID) ?? 0;
 	}
@@ -306,53 +304,36 @@ router.get("/leaderboard-adjacent", async (req, res) => {
 		alg = temp;
 	}
 
-	const thisUsersStats = await MONGODB_KILL["game-stats"].findOne({
-		game,
-		playtype,
-		userID: user.id,
-	});
+	const thisUsersStats = GetTachiData(req, "requestedUserGameStats");
+	const v3Game = GamePTToV3(game, playtype);
+	const userRating = thisUsersStats.ratings[alg] ?? 0;
+	const ratingCol = sql<number>`coalesce((game_profile.ratings::jsonb->>${sql.lit(alg)})::numeric, 0)`;
 
-	if (!thisUsersStats) {
-		return res.status(400).json({
-			success: false,
-			description: `This user has not played this game.`,
-		});
-	}
-
-	const [above, below] = await Promise.all([
-		MONGODB_KILL["game-stats"].find(
-			{
-				game,
-				playtype,
-				userID: { $ne: user.id },
-				[`ratings.${alg}`]: { $gt: thisUsersStats.ratings[alg] },
-			},
-			{
-				limit: 5,
-				sort: {
-					[`ratings.${alg}`]: 1,
-				},
-			},
-		),
-		MONGODB_KILL["game-stats"].find(
-			{
-				game,
-				playtype,
-				userID: { $ne: user.id },
-				[`ratings.${alg}`]: { $lte: thisUsersStats.ratings[alg] },
-			},
-			{
-				limit: 5,
-				sort: {
-					[`ratings.${alg}`]: -1,
-				},
-			},
-		),
+	const [aboveRows, belowRows] = await Promise.all([
+		DB.selectFrom("game_profile")
+			.select(SELECT_GAME_PROFILE)
+			.where("game", "=", v3Game)
+			.where("user_id", "<>", user.id)
+			.where(sql<SqlBool>`${ratingCol} > ${userRating}`)
+			.orderBy(ratingCol, "asc")
+			.limit(5)
+			.execute(),
+		DB.selectFrom("game_profile")
+			.select(SELECT_GAME_PROFILE)
+			.where("game", "=", v3Game)
+			.where("user_id", "<>", user.id)
+			.where(sql<SqlBool>`${ratingCol} <= ${userRating}`)
+			.orderBy(ratingCol, "desc")
+			.limit(5)
+			.execute(),
 	]);
 
+	const above = aboveRows.map(ToGameStatsDocument);
+	const below = belowRows.map(ToGameStatsDocument);
+
 	const users = await GetUsersWithIDs([
-		...above.map((e) => e.userID),
-		...below.map((e) => e.userID),
+		...aboveRows.map((e) => e.user_id),
+		...belowRows.map((e) => e.user_id),
 	]);
 
 	const thisUsersRanking = await GetUsersRankingAndOutOf(thisUsersStats, alg);
@@ -443,7 +424,7 @@ router.delete(
 			});
 		}
 
-		await DestroyUserGamePlaytypeData(user.id, game, playtype);
+		await DestroyUserGameProfile(user.id, game, playtype);
 
 		return res.status(200).json({
 			success: true,

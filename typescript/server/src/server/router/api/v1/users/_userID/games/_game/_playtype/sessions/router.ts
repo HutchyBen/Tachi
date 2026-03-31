@@ -1,17 +1,48 @@
+import {
+	SELECT_SESSION_CALENDAR,
+	SELECT_SESSION_DOCUMENT,
+	ToSessionCalendarDocument,
+	ToSessionDocument,
+} from "#lib/db-formats/session";
 import { GetSessionScoreInfo } from "#lib/score-import/framework/sessions/sessions";
 import { SearchSessions } from "#lib/search/search";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
+import { GetScoreIdsGroupedBySessionId } from "#utils/queries/sessions";
 import { GetUGPT } from "#utils/req-tachi-data";
 import { CheckStrSessionAlg } from "#utils/string-checks";
 import { Router } from "express";
+import { sql } from "kysely";
 import {
 	type AnySessionRatingAlg,
+	GamePTToV3,
 	GetGamePTConfig,
 	type MONGO_SessionDocument,
 	type SessionScoreInfo,
 } from "tachi-common";
+import { type Game } from "tachi-db";
 
 const router: Router = Router({ mergeParams: true });
+
+async function attachSessionScoreInfo(
+	sessions: Array<MONGO_SessionDocument>,
+): Promise<Array<{ __scoreInfo: Array<SessionScoreInfo> } & MONGO_SessionDocument>> {
+	const sessionsWithScoreInfo: Array<
+		{ __scoreInfo: Array<SessionScoreInfo> } & MONGO_SessionDocument
+	> = [];
+
+	await Promise.all(
+		sessions.map((session) =>
+			GetSessionScoreInfo(session).then((r) => {
+				sessionsWithScoreInfo.push({
+					...session,
+					__scoreInfo: r,
+				});
+			}),
+		),
+	);
+
+	return sessionsWithScoreInfo;
+}
 
 /**
  * Search a users sessions.
@@ -28,12 +59,12 @@ router.get("/", async (req, res) => {
 		});
 	}
 
-	const sessions = await SearchSessions(req.query.search, game, playtype, user.id, 100);
+	const hits = await SearchSessions(req.query.search, game, playtype, user.id, 100);
 
 	return res.status(200).json({
 		success: true,
-		description: `Retrieved ${sessions.length} sessions.`,
-		body: sessions,
+		description: `Retrieved ${hits.length} sessions.`,
+		body: hits.map(({ session, rank }) => ({ ...session, __textScore: rank })),
 	});
 });
 
@@ -68,34 +99,24 @@ router.get("/best", async (req, res) => {
 		alg = userAlg;
 	}
 
-	const sessions = await MONGODB_KILL.sessions.find(
-		{
-			userID: user.id,
-			game,
-			playtype,
-		},
-		{
-			limit: 100,
-			sort: {
-				[`calculatedData.${alg}`]: -1,
-			},
-		},
-	);
+	const v3Game = GamePTToV3(game, playtype) as Game;
 
-	const sessionsWithScoreInfo: Array<
-		{ __scoreInfo: Array<SessionScoreInfo> } & MONGO_SessionDocument
-	> = [];
+	const rows = await DB.selectFrom("session")
+		.select(SELECT_SESSION_DOCUMENT)
+		.where("user_id", "=", user.id)
+		.where("game", "=", v3Game)
+		.orderBy(
+			sql`(session.calculated_data::jsonb->>${sql.lit(alg)})::double precision desc nulls last`,
+		)
+		.orderBy("session.time_ended", "desc")
+		.limit(100)
+		.execute();
 
-	await Promise.all(
-		sessions.map((session) =>
-			GetSessionScoreInfo(session).then((r) => {
-				sessionsWithScoreInfo.push({
-					...session,
-					__scoreInfo: r,
-				});
-			}),
-		),
-	);
+	const scoreMap = await GetScoreIdsGroupedBySessionId(rows.map((r) => r.id));
+
+	const sessions = rows.map((row) => ToSessionDocument(row, scoreMap.get(row.id) ?? []));
+
+	const sessionsWithScoreInfo = await attachSessionScoreInfo(sessions);
 
 	sessionsWithScoreInfo.sort(
 		(a, b) => (b.calculatedData[alg] ?? -Infinity) - (a.calculatedData[alg] ?? -Infinity),
@@ -116,25 +137,24 @@ router.get("/best", async (req, res) => {
 router.get("/highlighted", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const sessions = await MONGODB_KILL.sessions.find(
-		{ userID: user.id, game, playtype, highlight: true },
-		{ sort: { timeEnded: -1 }, limit: 100 },
-	);
+	const v3Game = GamePTToV3(game, playtype) as Game;
 
-	const sessionsWithScoreInfo: Array<
-		{ __scoreInfo: Array<SessionScoreInfo> } & MONGO_SessionDocument
-	> = [];
+	const rows = await DB.selectFrom("session")
+		.select(SELECT_SESSION_DOCUMENT)
+		.where("user_id", "=", user.id)
+		.where("game", "=", v3Game)
+		.where("highlight", "=", true)
+		.orderBy("session.time_ended", "desc")
+		.limit(100)
+		.execute();
 
-	await Promise.all(
-		sessions.map((session) =>
-			GetSessionScoreInfo(session).then((r) => {
-				sessionsWithScoreInfo.push({
-					...session,
-					__scoreInfo: r,
-				});
-			}),
-		),
-	);
+	const scoreMap = await GetScoreIdsGroupedBySessionId(rows.map((r) => r.id));
+
+	const sessions = rows.map((row) => ToSessionDocument(row, scoreMap.get(row.id) ?? []));
+
+	const sessionsWithScoreInfo = await attachSessionScoreInfo(sessions);
+
+	sessionsWithScoreInfo.sort((a, b) => b.timeEnded - a.timeEnded);
 
 	return res.status(200).json({
 		success: true,
@@ -151,25 +171,21 @@ router.get("/highlighted", async (req, res) => {
 router.get("/recent", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const sessions = await MONGODB_KILL.sessions.find(
-		{ userID: user.id, game, playtype },
-		{ sort: { timeEnded: -1 }, limit: 100 },
-	);
+	const v3Game = GamePTToV3(game, playtype) as Game;
 
-	const sessionsWithScoreInfo: Array<
-		{ __scoreInfo: Array<SessionScoreInfo> } & MONGO_SessionDocument
-	> = [];
+	const rows = await DB.selectFrom("session")
+		.select(SELECT_SESSION_DOCUMENT)
+		.where("user_id", "=", user.id)
+		.where("game", "=", v3Game)
+		.orderBy("session.time_ended", "desc")
+		.limit(100)
+		.execute();
 
-	await Promise.all(
-		sessions.map((session) =>
-			GetSessionScoreInfo(session).then((r) => {
-				sessionsWithScoreInfo.push({
-					...session,
-					__scoreInfo: r,
-				});
-			}),
-		),
-	);
+	const scoreMap = await GetScoreIdsGroupedBySessionId(rows.map((r) => r.id));
+
+	const sessions = rows.map((row) => ToSessionDocument(row, scoreMap.get(row.id) ?? []));
+
+	const sessionsWithScoreInfo = await attachSessionScoreInfo(sessions);
 
 	sessionsWithScoreInfo.sort((a, b) => b.timeEnded - a.timeEnded);
 
@@ -188,17 +204,25 @@ router.get("/recent", async (req, res) => {
 router.get("/last", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const session = await MONGODB_KILL.sessions.findOne(
-		{ userID: user.id, game, playtype },
-		{ sort: { timeEnded: -1 } },
-	);
+	const v3Game = GamePTToV3(game, playtype) as Game;
 
-	if (!session) {
+	const row = await DB.selectFrom("session")
+		.select(SELECT_SESSION_DOCUMENT)
+		.where("user_id", "=", user.id)
+		.where("game", "=", v3Game)
+		.orderBy("session.time_ended", "desc")
+		.executeTakeFirst();
+
+	if (!row) {
 		return res.status(404).json({
 			success: false,
 			description: `This user has not got any sessions!`,
 		});
 	}
+
+	const scoreMap = await GetScoreIdsGroupedBySessionId([row.id]);
+
+	const session = ToSessionDocument(row, scoreMap.get(row.id) ?? []);
 
 	const scoreInfo = await GetSessionScoreInfo(session);
 
@@ -221,30 +245,18 @@ router.get("/last", async (req, res) => {
 router.get("/calendar", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const sessions = await MONGODB_KILL.sessions.find(
-		{
-			userID: user.id,
-			game,
-			playtype,
-		},
-		{
-			projection: {
-				sessionID: 1,
-				name: 1,
-				desc: 1,
-				highlight: 1,
-				timeStarted: 1,
-				timeEnded: 1,
-				game: 1,
-				playtype: 1,
-			},
-		},
-	);
+	const v3Game = GamePTToV3(game, playtype) as Game;
+
+	const rows = await DB.selectFrom("session")
+		.select(SELECT_SESSION_CALENDAR)
+		.where("user_id", "=", user.id)
+		.where("game", "=", v3Game)
+		.execute();
 
 	return res.status(200).json({
 		success: true,
-		description: `Found ${sessions.length} events.`,
-		body: sessions,
+		description: `Found ${rows.length} events.`,
+		body: rows.map(ToSessionCalendarDocument),
 	});
 });
 

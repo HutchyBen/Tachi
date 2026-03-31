@@ -1,5 +1,6 @@
 import { ACTION_DeleteAllNotifications } from "#actions/delete-all-notifications.js";
 import { ACTION_MarkAllNotificationsRead } from "#actions/mark-all-notifications-read.js";
+import { ToNotificationDocument } from "#lib/db-formats/notification";
 import DB from "#services/pg/db";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
@@ -20,11 +21,13 @@ router.use(RequireSelfRequestFromUser);
 router.get("/", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
-	const notifs = await DB.selectFrom("notification")
+	const rows = await DB.selectFrom("notification")
 		.selectAll()
 		.where("sent_to", "=", user.id)
 		.orderBy("sent_at", "desc")
 		.execute();
+
+	const notifs = rows.map(ToNotificationDocument);
 
 	return res.status(200).json({
 		success: true,

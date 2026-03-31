@@ -1,11 +1,12 @@
 import type { LR2HookScore } from "#lib/score-import/import-types/ir/lr2hook/types";
+import type { Classes, GPTString, Playtypes } from "tachi-common";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { PR_LR2HOOK as PR_LR2_HOOK } from "#lib/score-import/import-types/ir/lr2hook/parser";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { UpdateClassIfGreater } from "#utils/class";
 import { Router } from "express";
 
@@ -56,9 +57,10 @@ router.post(
 			});
 		}
 
-		const course = await MONGODB_KILL["bms-course-lookup"].findOne({
-			md5sums: score.md5,
-		});
+		const course = await DB.selectFrom("bms_course_lookup")
+			.select(["set", "playtype", "value"])
+			.where("md5sums", "=", score.md5)
+			.executeTakeFirst();
 
 		if (!course) {
 			return res.status(404).json({
@@ -72,8 +74,8 @@ router.post(
 		const result = await UpdateClassIfGreater(
 			userID,
 			"bms",
-			course.playtype,
-			course.set,
+			course.playtype as Playtypes["bms"],
+			course.set as Classes[GPTString],
 			course.value,
 		);
 

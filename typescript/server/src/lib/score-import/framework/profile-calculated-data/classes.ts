@@ -1,8 +1,9 @@
 import type { KtLogger } from "#lib/log/log";
 
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { ReturnClassIfGreater } from "#utils/class";
+import { UnixMillisecondsToISO8601 } from "#utils/time.js";
 import deepmerge from "deepmerge";
 import {
 	type AnyClasses,
@@ -10,6 +11,7 @@ import {
 	type Classes,
 	type ExtractedClasses,
 	type GameGroup,
+	GamePTToV3,
 	GetGamePTConfig,
 	GetGPTString,
 	type GPTString,
@@ -163,7 +165,20 @@ export async function ProcessClassDeltas(
 		}
 	}
 
-	await MONGODB_KILL["class-achievements"].insert(achievementOps);
+	if (achievementOps.length > 0) {
+		await DB.insertInto("class_achievement")
+			.values(
+				achievementOps.map((op) => ({
+					class_prev_value: op.classOldValue ?? "",
+					class_set: op.classSet,
+					class_value: op.classValue,
+					game: GamePTToV3(op.game, op.playtype),
+					timestamp: UnixMillisecondsToISO8601(op.timeAchieved),
+					user_id: op.userID,
+				})),
+			)
+			.execute();
+	}
 
 	return deltas;
 }

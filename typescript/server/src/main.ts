@@ -9,7 +9,6 @@ import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 import server from "#server/server";
 import { monkDB } from "#services/mongo/db";
 import { UpdateIndexes } from "#services/mongo/indexes";
-import { InitSequenceDocs } from "#services/mongo/sequence-docs";
 import DB from "#services/pg/db";
 import fetch from "#utils/fetch";
 import { GetUserWithID } from "#utils/user";
@@ -30,7 +29,6 @@ log.info({ bootInfo: true }, `Log level is set to ${Env.LOG_LEVEL}.`);
 log.info({ bootInfo: true }, `Loading sequence documents...`);
 
 async function RunOnInit() {
-	await InitSequenceDocs();
 	await UpdateIndexes(monkDB, false);
 
 	await applyMigrations(Env.POSTGRES_URL, Env.MIGRATIONS_DIR);

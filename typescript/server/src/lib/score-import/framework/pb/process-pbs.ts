@@ -1,10 +1,18 @@
 import type { KtLogger } from "#lib/log/log";
+import type { Game } from "tachi-db";
 
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { GetChartForIDGuaranteed } from "#utils/db";
-import { type GameGroup, GetGPTString, type integer, type Playtype } from "tachi-common";
+import {
+	type GameGroup,
+	GamePTToV3,
+	GetGPTString,
+	type integer,
+	type Playtype,
+} from "tachi-common";
 
 import { CreatePBDoc, type MONGO_PBScoreDocumentNoRank, UpdateChartRanking } from "./create-pb-doc";
+import { upsertPbFromMongoDoc } from "./upsert-pb-pg";
 
 /**
  * Process, recalculate and update a users PBs for this set of chartIDs.
@@ -44,42 +52,57 @@ export async function ProcessPBs(
 		pbDocs.push(doc);
 	}
 
-	if (pbDocsReturn.length === 0) {
+	if (pbDocs.length === 0) {
 		return;
 	}
 
-	// so here's the kinda awkward part - for the time between this operation
-	// and the next one - THE SCORE PBS ARE IN THE DATABASE WITHOUT RANKINGDATA.
-	// this *is* bad behaviour, but I don't have a nice way to fix it.
-	// This should be fixed in the future to avoid crashes between these two
-	// calls - but that is unlikely.
-	await MONGODB_KILL["personal-bests"].bulkWrite(
-		pbDocs.map((e) => ({
-			updateOne: {
-				filter: { chartID: e.chartID, userID: e.userID },
-				update: {
-					$set: {
-						...e,
+	await DB.transaction().execute(async (trx) => {
+		// TODO(zk): parallelize?
+		for (const doc of pbDocs) {
+			await upsertPbFromMongoDoc(trx, doc);
+		}
+	});
 
-						// stub out ranking data with some invalid nonsense.
-						rankingData: {
-							outOf: 0,
-							rank: 0,
-							rivalRank: null,
-						},
-					},
-				},
-				upsert: true,
-			},
-		})),
-		{
-			ordered: false,
-		},
-	);
-
-	// now that everything has been updated or inserted, we can refresh
-	// the chart rankings.
 	await Promise.all(pbDocs.map((e) => UpdateChartRanking(game, playtype, e.chartID)));
+}
 
-	// and we're done!
+/**
+ * Re-runs {@link ProcessPBs} for every user who still has scores on any of the given charts
+ * (Postgres `score` / `chart` tables). Used after bulk PB removal so rankings stay coherent.
+ */
+export async function RecalculatePbsForChartsFromPostgresScores(
+	game: GameGroup,
+	playtype: Playtype,
+	chartLegacyIds: ReadonlyArray<string>,
+	log: KtLogger,
+): Promise<void> {
+	if (chartLegacyIds.length === 0) {
+		return;
+	}
+
+	const v3Game = GamePTToV3(game, playtype) as Game;
+
+	const rows = await DB.selectFrom("score")
+		.innerJoin("chart", "chart.id", "score.chart_id")
+		.select(["score.user_id", "chart.legacy_id"])
+		.where("chart.legacy_id", "in", [...chartLegacyIds])
+		.where("chart.game", "=", v3Game)
+		.execute();
+
+	const byUser = new Map<integer, Set<string>>();
+
+	for (const r of rows) {
+		let set = byUser.get(r.user_id);
+
+		if (!set) {
+			set = new Set();
+			byUser.set(r.user_id, set);
+		}
+
+		set.add(r.legacy_id);
+	}
+
+	for (const [uid, cids] of byUser) {
+		await ProcessPBs(game, playtype, uid, cids, log);
+	}
 }

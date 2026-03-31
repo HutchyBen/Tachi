@@ -1,4 +1,11 @@
-import { BuildFolderQuery } from "#lib/folders/folders.js";
+import type { MONGO_TableDocument } from "tachi-common";
+
+import { LoadTableDocumentByLegacyId } from "#lib/db-formats/table";
+import {
+	BuildFolderQuery,
+	GetFoldersFromTable,
+	GetTableForIDGuaranteed,
+} from "#lib/folders/folders.js";
 import DB from "#services/pg/db";
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
@@ -183,5 +190,131 @@ describe("BuildFolderQuery", () => {
 
 		expect(rows).toHaveLength(1);
 		expect((rows[0] as { id: string }).id).toBe(chartA);
+	});
+});
+
+describe("Postgres table + folder helpers", () => {
+	function tableIds(prefix: string) {
+		const u = randomUUID().replace(/-/gu, "").slice(0, 12);
+
+		return {
+			tablePk: `${prefix}-tbl-${u}`,
+			tableLegacy: `${prefix}-l-${u}`,
+			folderA: `${prefix}-fa-${u}`,
+			folderB: `${prefix}-fb-${u}`,
+		};
+	}
+
+	it("LoadTableDocumentByLegacyId and GetTableForIDGuaranteed load folder ids", async () => {
+		const { tablePk, tableLegacy, folderA, folderB } = tableIds("tfolder");
+
+		for (const [id, title] of [
+			[folderA, "A"],
+			[folderB, "B"],
+		] as const) {
+			await DB.insertInto("folder")
+				.values({
+					id,
+					legacy_id: `${id}-leg`,
+					game: "iidx-sp",
+					inactive: false,
+					title,
+					slug: null,
+					where: "chart.level_num > 0",
+					version_filter: null,
+					search_terms: [],
+				})
+				.execute();
+		}
+
+		await DB.insertInto("table")
+			.values({
+				id: tablePk,
+				legacy_id: tableLegacy,
+				game: "iidx-sp",
+				inactive: false,
+				title: "Test table",
+				default_value: false,
+				slug: null,
+			})
+			.execute();
+
+		await DB.insertInto("table_folder")
+			.values([
+				{ table_id: tablePk, folder_id: folderA },
+				{ table_id: tablePk, folder_id: folderB },
+			])
+			.execute();
+
+		const loaded = await LoadTableDocumentByLegacyId(tableLegacy);
+
+		expect(loaded).toBeDefined();
+		expect(loaded!.tableID).toBe(tableLegacy);
+		expect(loaded!.game).toBe("iidx");
+		expect(loaded!.playtype).toBe("SP");
+		expect(loaded!.folders).toEqual([folderA, folderB]);
+
+		const guaranteed = await GetTableForIDGuaranteed(tableLegacy);
+
+		expect(guaranteed.folders).toEqual([folderA, folderB]);
+
+		await expect(GetTableForIDGuaranteed("missing-table-id")).rejects.toThrow(
+			"Couldn't find table with ID 'missing-table-id'.",
+		);
+	});
+
+	it("GetFoldersFromTable returns documents in table.folders order", async () => {
+		const { tablePk, tableLegacy, folderA, folderB } = tableIds("gfft");
+
+		for (const [id, title] of [
+			[folderA, "First"],
+			[folderB, "Second"],
+		] as const) {
+			await DB.insertInto("folder")
+				.values({
+					id,
+					legacy_id: `${id}-leg`,
+					game: "iidx-sp",
+					inactive: false,
+					title,
+					slug: null,
+					where: "chart.level_num > 0",
+					version_filter: null,
+					search_terms: [],
+				})
+				.execute();
+		}
+
+		await DB.insertInto("table")
+			.values({
+				id: tablePk,
+				legacy_id: tableLegacy,
+				game: "iidx-sp",
+				inactive: false,
+				title: "Ord",
+				default_value: false,
+				slug: null,
+			})
+			.execute();
+
+		await DB.insertInto("table_folder")
+			.values({ table_id: tablePk, folder_id: folderA })
+			.execute();
+
+		const table: MONGO_TableDocument = {
+			tableID: tableLegacy,
+			game: "iidx",
+			playtype: "SP",
+			title: "Ord",
+			description: "",
+			folders: [folderB, folderA],
+			inactive: false,
+			default: false,
+		};
+
+		const folders = await GetFoldersFromTable(table);
+
+		expect(folders.map((f) => f.folderID)).toEqual([folderB, folderA]);
+		expect(folders.map((f) => f.title)).toEqual(["Second", "First"]);
 	});
 });

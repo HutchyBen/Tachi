@@ -9,10 +9,10 @@ describe("GetRecentUGPTScores / GetRecentUGPTHighlights (Postgres)", () => {
 	let counter = 0;
 
 	async function seedIidxScore(opts: {
-		userId: number;
-		scoreId: string;
 		highlight: boolean;
+		scoreId: string;
 		timeAddedMs: number;
+		userId: number;
 	}) {
 		const n = ++counter;
 		const songId = `song-qscores-${n}`;

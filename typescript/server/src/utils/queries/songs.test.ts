@@ -1,11 +1,7 @@
 import DB from "#services/pg/db";
 import { describe, expect, it } from "vitest";
 
-import {
-	FindSongOnID,
-	FindSongOnTitle,
-	FindSongOnTitleInsensitive,
-} from "./songs";
+import { FindSongOnID, FindSongOnTitle, FindSongOnTitleInsensitive } from "./songs";
 
 describe("FindSongOnTitle / FindSongOnTitleInsensitive / FindSongOnID (Postgres)", () => {
 	it("FindSongOnTitle matches title or alt_titles", async () => {

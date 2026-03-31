@@ -1,13 +1,17 @@
 import type { KtLogger } from "#lib/log/log";
 import type { Mutable } from "#utils/types";
-import type { MONGO_ChartDocument, MONGO_SongDocument, Playtypes } from "tachi-common";
 
 import { HandleOrphanQueue } from "#lib/orphan-queue/orphan-queue";
 import { DeorphanScores } from "#lib/score-import/framework/orphans/orphans";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
-import { Random20Hex } from "#utils/misc";
 import { FindChartOnSHA256, FindChartOnSHA256Playtype } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
+import {
+	CreateChartID,
+	type MONGO_ChartDocument,
+	type MONGO_SongDocument,
+	type Playtypes,
+} from "tachi-common";
 
 import type { DryScore } from "../../../framework/common/types";
 import type { ConverterFunction } from "../../common/types";
@@ -68,12 +72,12 @@ async function HandleOrphanChartProcess(
 	}
 
 	let chart;
-	let criteria;
+	let deorphanFilter:
+		| { chartSha256: string }
+		| { chartSha256: string; pmsPlaytype: Playtypes["pms"] };
 
 	if (game === "bms") {
-		criteria = {
-			"chartDoc.data.hashSHA256": context.chart.sha256,
-		};
+		deorphanFilter = { chartSha256: context.chart.sha256 };
 
 		const gptString = context.chart.mode === "BEAT_7K" ? "bms:7K" : "bms:14K";
 
@@ -91,19 +95,19 @@ async function HandleOrphanChartProcess(
 				"bms",
 				chartDoc,
 				songDoc,
-				criteria,
+				{
+					"chartDoc.data.hashSHA256": context.chart.sha256,
+				},
 				ServerConfig.BEATORAJA_QUEUE_SIZE,
 				context.userID,
 				chartName,
 			);
 		}
 	} else {
-		const playtype = data.deviceType === "BM_CONTROLLER" ? "Controller" : "Keyboard";
+		const playtype: Playtypes["pms"] =
+			data.deviceType === "BM_CONTROLLER" ? "Controller" : "Keyboard";
 
-		criteria = {
-			"chartDoc.data.hashSHA256": context.chart.sha256,
-			playtype,
-		};
+		deorphanFilter = { chartSha256: context.chart.sha256, pmsPlaytype: playtype };
 
 		const gptString = playtype === "Controller" ? "pms:Controller" : "pms:Keyboard";
 
@@ -118,7 +122,10 @@ async function HandleOrphanChartProcess(
 				"pms",
 				chartDoc,
 				songDoc,
-				criteria,
+				{
+					"chartDoc.data.hashSHA256": context.chart.sha256,
+					playtype,
+				},
 				ServerConfig.BEATORAJA_QUEUE_SIZE,
 				context.userID,
 				chartName,
@@ -137,7 +144,7 @@ async function HandleOrphanChartProcess(
 		);
 	}
 
-	await DeorphanScores(criteria, log);
+	await DeorphanScores(deorphanFilter, log);
 
 	return chart;
 }
@@ -281,11 +288,10 @@ export const ConverterIRBeatoraja: ConverterFunction<BeatorajaScore, BeatorajaCo
 };
 
 function ConvertBeatorajaChartToTachi(chart: BeatorajaChart, playtype: Playtypes["bms" | "pms"]) {
-	const legacyId = Random20Hex();
+	const chartID = CreateChartID();
 	const chartDoc: MONGO_ChartDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"> =
 		{
-			chartID: legacyId,
-			legacyChartId: legacyId,
+			chartID,
 			difficulty: "CHART",
 			isPrimary: true,
 			level: "?",
@@ -297,7 +303,7 @@ function ConvertBeatorajaChartToTachi(chart: BeatorajaChart, playtype: Playtypes
 				hashMD5: chart.md5,
 				hashSHA256: chart.sha256,
 				notecount: chart.notes,
-				tableFolders: [],
+				tableFolders: {},
 				aiLevel: null,
 				sglEC: null,
 				sglHC: null,

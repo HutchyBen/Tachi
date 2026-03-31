@@ -8,7 +8,7 @@ import {
 	USC_DEFAULT_PERFECT,
 	USC_DEFAULT_SLAM,
 } from "#lib/constants/usc-ir";
-import MONGODB_KILL from "#services/mongo/db";
+import { FindUSCChartOnSHA1Playtype } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
 import type { DryScore } from "../../../framework/common/types";
@@ -101,10 +101,7 @@ export const ConverterIRUSC: ConverterFunction<USCClientScore, IRUSCContext> = a
 		throw new InvalidScoreFailure(`Autoplay was enabled - Score is invalid.`);
 	}
 
-	const chartDoc = await MONGODB_KILL.charts.usc.findOne({
-		"data.hashSHA1": context.chartHash,
-		playtype: context.playtype,
-	});
+	const chartDoc = await FindUSCChartOnSHA1Playtype(context.chartHash, context.playtype);
 
 	if (!chartDoc) {
 		throw new SongOrChartNotFoundFailure(

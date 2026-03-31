@@ -22,6 +22,8 @@ export default interface ChartLeaderboardTable {
 
   calculated_data: ColumnType<unknown, never, never>;
 
+  judgements: ColumnType<unknown, never, never>;
+
   ranking_value: ColumnType<number, never, never>;
 
   ranking_value_tb1: ColumnType<number | null, never, never>;
@@ -39,6 +41,8 @@ export default interface ChartLeaderboardTable {
   time_achieved: ColumnType<string | null, never, never>;
 
   rank: ColumnType<number, never, never>;
+
+  out_of: ColumnType<number, never, never>;
 }
 
 export type ChartLeaderboard = Selectable<ChartLeaderboardTable>;

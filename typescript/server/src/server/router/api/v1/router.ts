@@ -9,6 +9,7 @@ import configRouter from "./config/router";
 import gamesRouter from "./games/router";
 import importRouter from "./import/router";
 import importsRouter from "./imports/router";
+import localdevRouter from "./localdev/router";
 import oauthRouter from "./oauth/router";
 import scoresRouter from "./scores/router";
 import searchRouter from "./search/router";
@@ -39,6 +40,7 @@ router.use("/sessions", sessionsRouter);
 router.use("/oauth", oauthRouter);
 router.use("/clients", clientsRouter);
 router.use("/config", configRouter);
+router.use("/localdev", localdevRouter);
 router.use("/seeds", seedsRouter);
 
 /**

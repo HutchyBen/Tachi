@@ -7,10 +7,7 @@ import { GetAdjacentAbove, GetAdjacentBelow } from "./pbs";
 describe("GetAdjacentAbove / GetAdjacentBelow (Postgres)", () => {
 	let n = 0;
 
-	async function seedUscChartWithRankedPbs(
-		chartLegacyId: string,
-		rows: Array<{ rank: number; userId: number }>,
-	) {
+	async function seedUscChartWithRankedPbs(rows: Array<{ ladderPos: number; userId: number }>) {
 		const k = ++n;
 		const songId = `song-pbs-${k}`;
 		const chartId = `chart-pbs-${k}`;
@@ -32,7 +29,7 @@ describe("GetAdjacentAbove / GetAdjacentBelow (Postgres)", () => {
 		await DB.insertInto("chart")
 			.values({
 				id: chartId,
-				legacy_id: chartLegacyId,
+				legacy_id: chartId,
 				game: "usc-controller",
 				song_id: songId,
 				level: "1",
@@ -48,13 +45,14 @@ describe("GetAdjacentAbove / GetAdjacentBelow (Postgres)", () => {
 			// eslint-disable-next-line no-await-in-loop
 			await DB.insertInto("pb")
 				.values({
-					calculated_data: JSON.stringify({ rank: r.rank }),
+					calculated_data: JSON.stringify({}),
 					chart_id: chartId,
 					data: JSON.stringify({}),
 					derived_data: JSON.stringify({}),
+					judgements: JSON.stringify({}),
 					lens: null,
 					user_id: r.userId,
-					ranking_value: 0,
+					ranking_value: 1000 - r.ladderPos,
 					ranking_value_tb1: null,
 					ranking_value_tb2: null,
 					ranking_value_tb3: null,
@@ -65,11 +63,13 @@ describe("GetAdjacentAbove / GetAdjacentBelow (Postgres)", () => {
 				})
 				.execute();
 		}
+
+		return { chartId };
 	}
 
-	const basePb = (chartLegacyId: string, rank: number) =>
+	const basePb = (chartId: string, rank: number) =>
 		({
-			chartID: chartLegacyId,
+			chartID: chartId,
 			rankingData: { outOf: 0, rank, rivalRank: null },
 		}) as never;
 
@@ -78,15 +78,14 @@ describe("GetAdjacentAbove / GetAdjacentBelow (Postgres)", () => {
 		const { id: u1 } = await seedUser({ username: `usc_a_${t}` });
 		const { id: u2 } = await seedUser({ username: `usc_b_${t}` });
 		const { id: u3 } = await seedUser({ username: `usc_c_${t}` });
-		const legacy = `usc-adj-${t}`;
 
-		await seedUscChartWithRankedPbs(legacy, [
-			{ rank: 1, userId: u1 },
-			{ rank: 2, userId: u2 },
-			{ rank: 10, userId: u3 },
+		const { chartId } = await seedUscChartWithRankedPbs([
+			{ ladderPos: 1, userId: u1 },
+			{ ladderPos: 2, userId: u2 },
+			{ ladderPos: 3, userId: u3 },
 		]);
 
-		const above = await GetAdjacentAbove(basePb(legacy, 5), 10);
+		const above = await GetAdjacentAbove(basePb(chartId, 3), 10);
 		const ranks = above.map((p) => p.rankingData.rank).sort((a, b) => a - b);
 		expect(ranks).toEqual([1, 2]);
 	});
@@ -95,15 +94,16 @@ describe("GetAdjacentAbove / GetAdjacentBelow (Postgres)", () => {
 		const t = Date.now();
 		const { id: u1 } = await seedUser({ username: `usc_d_${t}` });
 		const { id: u2 } = await seedUser({ username: `usc_e_${t}` });
-		const legacy = `usc-bel-${t}`;
+		const { id: u3 } = await seedUser({ username: `usc_f_${t}` });
 
-		await seedUscChartWithRankedPbs(legacy, [
-			{ rank: 8, userId: u1 },
-			{ rank: 20, userId: u2 },
+		const { chartId } = await seedUscChartWithRankedPbs([
+			{ ladderPos: 1, userId: u1 },
+			{ ladderPos: 2, userId: u2 },
+			{ ladderPos: 3, userId: u3 },
 		]);
 
-		const below = await GetAdjacentBelow(basePb(legacy, 5), 10);
+		const below = await GetAdjacentBelow(basePb(chartId, 2), 10);
 		const ranks = below.map((p) => p.rankingData.rank).sort((a, b) => a - b);
-		expect(ranks).toEqual([8, 20]);
+		expect(ranks).toEqual([3]);
 	});
 });

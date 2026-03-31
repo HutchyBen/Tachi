@@ -1,9 +1,9 @@
 import { ACTION_CustomiseScore } from "#actions/customise-score";
+import { ACTION_DeleteScore } from "#actions/delete-score.js";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { GetChartsBySongPgId } from "#lib/db-formats/chart";
 import { GetSongByLegacyID } from "#lib/db-formats/song";
 import { log } from "#lib/log/log";
-import { DeleteScore } from "#lib/score-mutation/delete-scores";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
 import { toPgGame } from "#services/pg/seeds";
@@ -15,6 +15,56 @@ import { p } from "prudence";
 import { GetScoreFromParam, RequireOwnershipOfScoreOrAdmin } from "./middleware";
 
 const router: Router = Router({ mergeParams: true });
+
+/**
+ * Deletes the score.
+ *
+ * @param blacklist - Whether to blacklist this scoreID or not.
+ * A blacklisted score will never be reimported.
+ *
+ * @name DELETE /api/v1/scores/:scoreID
+ */
+router.delete(
+	"/",
+	RequirePermissions("delete_score"),
+	prValidate({ blacklist: "*boolean" }),
+	async (req, res) => {
+		const body = req.safeBody as {
+			blacklist?: boolean;
+		};
+
+		const auth = req[SYMBOL_TACHI_API_AUTH];
+
+		if (auth.userID === null) {
+			return res.status(401).json({
+				success: false,
+				description: `You are not authorised as anyone, and this endpoint requires us to know who you are.`,
+			});
+		}
+
+		const user = await GetUserWithID(auth.userID);
+
+		if (!user) {
+			return res.status(401).json({
+				success: false,
+				description: `You are not authorised as anyone, and this endpoint requires us to know who you are.`,
+			});
+		}
+
+		const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
+
+		await ACTION_DeleteScore(taker, {
+			id: req.params.scoreID,
+			blacklist: body.blacklist,
+		});
+
+		return res.status(200).json({
+			success: true,
+			description: `Successfully deleted score.`,
+			body: {},
+		});
+	},
+);
 
 router.use(GetScoreFromParam);
 
@@ -153,36 +203,6 @@ router.patch(
 			success: true,
 			description: `Updated score.`,
 			body: result.score,
-		});
-	},
-);
-
-/**
- * Deletes the score.
- *
- * @param blacklist - Whether to blacklist this scoreID or not.
- * A blacklisted score will never be reimported.
- *
- * @name DELETE /api/v1/scores/:scoreID
- */
-router.delete(
-	"/",
-	RequireOwnershipOfScoreOrAdmin,
-	prValidate({ blacklist: "*boolean" }),
-	RequirePermissions("delete_score"),
-	async (req, res) => {
-		const body = req.safeBody as {
-			blacklist?: boolean;
-		};
-
-		const score = GetTachiData(req, "scoreDoc");
-
-		await DeleteScore(score, body.blacklist);
-
-		return res.status(200).json({
-			success: true,
-			description: `Successfully deleted score.`,
-			body: {},
 		});
 	},
 );

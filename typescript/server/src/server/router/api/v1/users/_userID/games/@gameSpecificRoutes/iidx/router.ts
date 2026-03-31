@@ -1,23 +1,26 @@
-import type {
-	integer,
-	MONGO_ChartDocument,
-	MONGO_PBScoreDocument,
-	MONGO_SongDocument,
-	Playtypes,
-} from "tachi-common";
 import type { GetEnumValue } from "tachi-common/types/metrics";
 
+import { SELECT_CHART } from "#lib/db-formats/chart.js";
+import { SELECT_SONG_DOCUMENT } from "#lib/db-formats/song.js";
 import {
 	CUSTOM_TACHI_IIDX_PLAYLISTS,
 	type TachiIIDXPlaylist,
 } from "#lib/game-specific/iidx-playlists";
-import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch-manual/converter";
 import { EAM_VERSION_NAMES } from "#lib/score-import/import-types/common/eamusement-iidx-csv/parser";
 import { AggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
 import { ValidatePlaytypeFromParamFor } from "#server/router/api/v1/games/_game/_playtype/middleware";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db.js";
 import { GetUser } from "#utils/req-tachi-data";
+import { ISO8601ToUnixMilliseconds } from "#utils/time.js";
 import { Router } from "express";
+import _ from "lodash";
+import {
+	EnumIndexToValue,
+	GamePTToV3,
+	type PgScoreData,
+	type Playtypes,
+	type SongDocumentData,
+} from "tachi-common";
 
 const router: Router = Router({ mergeParams: true });
 
@@ -50,75 +53,61 @@ router.get(
 	ValidatePlaytypeFromParamFor("iidx"),
 	AggressiveRateLimitMiddleware,
 	async (req, res) => {
-		const game = "iidx";
-
 		const playtype = req.params.playtype as Playtypes["iidx"];
+		const v3Game = GamePTToV3("iidx", playtype) as "iidx-dp" | "iidx-sp";
 		const user = GetUser(req);
-
-		const pbData: Array<{
-			_id: integer;
-			pbs: Array<MONGO_PBScoreDocument<"iidx:DP" | "iidx:SP">>;
-			song: MONGO_SongDocument<"iidx">;
-		}> = await MONGODB_KILL["personal-bests"].aggregate([
-			{
-				$match: {
-					userID: user.id,
-					game,
-					playtype,
-					isPrimary: true,
-				},
-			},
-			{
-				$group: {
-					// group our scores on the song
-					_id: "$songID",
-					pbs: { $push: "$$ROOT" },
-				},
-			},
-			{
-				$lookup: {
-					from: "songs-iidx",
-					foreignField: "id",
-					localField: "_id",
-					as: "song",
-				},
-			},
-			{
-				$unwind: "$song",
-			},
-		]);
 
 		const rows = [EAMUSEMENT_CSV_HEADER];
 
 		// get all relevant charts
-		const charts = await MONGODB_KILL.charts.iidx.find({
-			songID: { $in: pbData.map((e) => e.song.id) },
-			difficulty: { $in: ["NORMAL", "HYPER", "ANOTHER", "LEGGENDARIA"] },
-		});
+		const playerChartPbs = await DB.selectFrom("chart")
+			.leftJoin("pb", "pb.chart_id", "chart.id")
+			.innerJoin("song", "song.id", "chart.song_id")
+			.select(SELECT_SONG_DOCUMENT)
+			.select(SELECT_CHART)
+			.select([
+				"pb.data as pb_data",
+				"pb.derived_data as pb_derived_data",
+				"pb.calculated_data as pb_calculated_data",
+				"pb.time_achieved as pb_time_achieved",
+				"pb.judgements as pb_judgements",
+			])
+			.where("game", "=", v3Game)
+			.where("user_id", "=", user.id)
 
-		// get a lookup table for songID + difficulty -> chart.
-		const chartMap = new Map<string, MONGO_ChartDocument>();
+			// seems bizarre, but this is to exclude out 2dxtra charts.
+			.where("chart.difficulty", "in", [
+				"BEGINNER",
+				"NORMAL",
+				"HYPER",
+				"ANOTHER",
+				"LEGGENDARIA",
+			])
+			.execute();
 
-		for (const chart of charts) {
-			chartMap.set(`${chart.songID}-${chart.difficulty}`, chart);
-		}
+		const groupings = _.groupBy(playerChartPbs, "song_id");
 
-		for (const { pbs, song } of pbData) {
+		for (const [_songId, songPbs] of Object.entries(groupings)) {
 			let version = "UNKNOWN";
-			const tachiVer = song.data.displayVersion;
+			const firstChart = songPbs[0];
+			const songData = firstChart.song_data as SongDocumentData["iidx"];
+			const tachiVer = songData.displayVersion;
 
 			if (tachiVer !== null) {
 				// @ts-expect-error We're abusing enums which already aren't meant
 				// for this kind of lookup task. Ah well!
-
 				version = EAM_VERSION_NAMES[tachiVer] ?? tachiVer;
 			}
 
+			const songTitle = songData.eamusementCsvTitle ?? firstChart.song_title;
+			const songArtist = songData.eamusementCsvArtist ?? firstChart.song_artist;
+			const songGenre = songData.eamusementCsvGenre ?? songData.genre;
+
 			const row = [
 				version,
-				song.title,
-				song.data.genre,
-				song.artist,
+				songTitle,
+				songGenre,
+				songArtist,
 				"0", // always 0, who cares?
 			];
 
@@ -131,32 +120,23 @@ router.get(
 				"ANOTHER",
 				"LEGGENDARIA",
 			] as const) {
-				const chart = chartMap.get(`${song.id}-${difficulty}`);
-				let pb;
+				const pbInfo = songPbs.find((e) => e.chart_difficulty === difficulty);
+				const pbData = pbInfo?.pb_data as
+					| PgScoreData<"iidx-dp" | "iidx-sp">["data"]
+					| null
+					| undefined;
+				const pbDerivedData = pbInfo?.pb_derived_data as
+					| PgScoreData<"iidx-dp" | "iidx-sp">["derived"]
+					| null
+					| undefined;
+				const pbJudgements = pbInfo?.pb_judgements as
+					| PgScoreData<"iidx-dp" | "iidx-sp">["judgements"]
+					| null
+					| undefined;
 
-				// this song might not have a beginner/normal/hyper/another/legg
-				if (chart) {
-					// try and find the user's PB
-					pb = pbs.find((e) => e.chartID === chart.legacyChartId);
-				}
-
-				if (pb) {
+				if (!pbInfo || !pbData || !pbDerivedData || !pbJudgements) {
 					row.push(
-						chart ? chart.level : "0",
-						pb.scoreData.score.toString(), // ex
-						pb.scoreData.judgements.pgreat?.toString() ?? "0", // pgreat
-						pb.scoreData.judgements.great?.toString() ?? "0", // great
-						pb.scoreData.optional.bp?.toString() ?? "0", // BP
-						ConvertEamLamp(pb.scoreData.lamp), // lamp
-						ConvertEamGrade(pb.scoreData.grade), // grade
-					);
-
-					if (pb.timeAchieved !== null && lastPlayed < pb.timeAchieved) {
-						lastPlayed = pb.timeAchieved;
-					}
-				} else {
-					row.push(
-						chart ? chart.level : "0",
+						pbInfo?.chart_level ?? "0", // level
 						"0", // ex
 						"0", // pgreat
 						"0", // great
@@ -164,6 +144,24 @@ router.get(
 						"NO PLAY", // lamp
 						"---", // grade
 					);
+					continue;
+				}
+
+				row.push(
+					pbInfo.chart_level ?? "0",
+					pbData.score.toString(), // ex
+					pbJudgements?.pgreat?.toString() ?? "0", // pgreat
+					pbJudgements?.great?.toString() ?? "0", // great
+					pbData.bp?.toString() ?? "0", // BP
+					ConvertEamLamp(EnumIndexToValue(v3Game, "lamp", pbData.lamp)), // lamp
+					ConvertEamGrade(EnumIndexToValue(v3Game, "grade", pbDerivedData.grade)), // grade
+				);
+
+				if (
+					pbInfo.pb_time_achieved !== null &&
+					lastPlayed < ISO8601ToUnixMilliseconds(pbInfo.pb_time_achieved)
+				) {
+					lastPlayed = ISO8601ToUnixMilliseconds(pbInfo.pb_time_achieved);
 				}
 			}
 

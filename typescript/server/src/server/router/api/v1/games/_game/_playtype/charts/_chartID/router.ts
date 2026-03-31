@@ -1,9 +1,13 @@
 import { LoadFolderDocumentsByIds } from "#lib/db-formats/folders";
+import {
+	CountPbsOnChart,
+	LoadPbsOnChartByRankAsc,
+	LoadPbsOnChartForUserSearch,
+} from "#lib/db-formats/pb";
 import { GetSongByLegacyID } from "#lib/db-formats/song";
 import { GetFolderIDsForChartId } from "#lib/folders/folders";
 import { log } from "#lib/log/log";
 import { SearchUsersRegExp } from "#lib/search/search";
-import MONGODB_KILL from "#services/mongo/db";
 import { IsString } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { apiSuccess } from "#utils/response";
@@ -37,7 +41,7 @@ router.get("/", async (req, res) => {
 
 	if (!songRes) {
 		log.error(
-			`Song ${chart.songID} does not exist, yet chart ${chart.chartID} (${chart.legacyChartId}) has it as a parent?`,
+			`Song ${chart.songID} does not exist, yet chart ${chart.chartID} has it as a parent?`,
 		);
 
 		return res.status(500).json({
@@ -93,9 +97,7 @@ router.get("/folders", async (req, res) => {
 router.get("/playcount", async (req, res) => {
 	const chart = GetTachiData(req, "chartDoc");
 
-	const count = await MONGODB_KILL["personal-bests"].count({
-		chartID: MongoChartLegacyId(chart),
-	});
+	const count = await CountPbsOnChart(chart.chartID);
 
 	return res.status(200).json({
 		success: true,
@@ -119,18 +121,7 @@ router.get("/pbs", async (req, res) => {
 
 	const startRanking = ParseStrPositiveNonZeroInt(req.query.startRanking) ?? 1;
 
-	const pbs = await MONGODB_KILL["personal-bests"].find(
-		{
-			chartID: MongoChartLegacyId(chart),
-			"rankingData.rank": { $gte: startRanking },
-		},
-		{
-			limit: 100,
-			sort: {
-				"rankingData.rank": 1,
-			},
-		},
-	);
+	const pbs = await LoadPbsOnChartByRankAsc(MongoChartLegacyId(chart), startRanking, 100);
 
 	const users = await GetUsersWithIDs(pbs.map((e) => e.userID));
 
@@ -163,10 +154,7 @@ router.get("/pbs/search", async (req, res) => {
 
 	const users = await SearchUsersRegExp(req.query.search);
 
-	const pbs = await MONGODB_KILL["personal-bests"].find({
-		chartID: MongoChartLegacyId(chart),
-		userID: { $in: users.map((e) => e.id) },
-	});
+	const pbs = await LoadPbsOnChartForUserSearch(MongoChartLegacyId(chart), req.query.search);
 
 	return res.status(200).json(
 		apiSuccess<{ pbs: Array<MONGO_PBScoreDocument>; users: Array<MONGO_UserDocument> }>(

@@ -5,7 +5,7 @@ import {
 	type GameGroup,
 	type integer,
 	type MONGO_SongDocument,
-	type MONGO_SongDocumentData,
+	type SongDocumentData,
 } from "tachi-common";
 
 /** Hard cap on song hits per `game_group` (FTS + trgm combined). */
@@ -290,7 +290,7 @@ export async function searchSpecificGameSongsWithPgIds(
 			artist: row.artist,
 			searchTerms: ch?.searchTerms ?? [],
 			altTitles: ch?.altTitles ?? [],
-			data: row.data as MONGO_SongDocumentData[typeof game],
+			data: row.data as SongDocumentData[typeof game],
 			__textScore: Math.round(1000 * row.rank),
 		});
 	}

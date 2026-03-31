@@ -13,7 +13,6 @@ import type {
 	integer,
 	Judgements,
 	MONGO_ChartDocumentData,
-	MONGO_SongDocumentData,
 	MongoDerivedMetrics as MongoDerivedMetrics,
 	MongoOptionalMetrics as MongoOptionalMetrics,
 	MongoProvidedMetrics as MongoProvidedMetrics,
@@ -29,6 +28,7 @@ import type {
 	ScoreMeta,
 	ScoreRatingAlgorithms,
 	SessionRatingAlgorithms,
+	SongDocumentData,
 	UserAuthLevels,
 	V3Game,
 	V3GameToGPTString,
@@ -361,10 +361,7 @@ export interface ChartTierlistInfo {
 }
 
 export interface MONGO_ChartDocument<GPT extends GPTString = GPTString> {
-	/** Postgres `chart.id` — canonical in API URLs and JSON. */
 	chartID: string;
-	/** Legacy Mongo-era chart id (`chart.legacy_id` in Postgres). Required when loaded from PG; omit on raw Mongo chart docs. */
-	legacyChartId?: string;
 	songID: integer;
 	level: string;
 	levelNum: number;
@@ -381,7 +378,7 @@ export interface MONGO_SongDocument<G extends GameGroup = GameGroup> {
 	artist: string;
 	searchTerms: Array<string>;
 	altTitles: Array<string>;
-	data: MONGO_SongDocumentData[G];
+	data: SongDocumentData[G];
 }
 
 export interface MONGO_TableDocument {

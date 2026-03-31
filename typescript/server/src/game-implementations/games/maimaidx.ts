@@ -81,9 +81,14 @@ export const MAIMAIDX_IMPL: GPTServerImplementation<"maimaidx:Single"> = {
 		percent: (v) => GoalOutOfFmtPercent(v, 4),
 	},
 	pbMergeFunctions: [
-		CreatePBMergeFor("largest", "enumIndexes.lamp", "Best Lamp", (base, score) => {
-			base.scoreData.lamp = score.scoreData.lamp;
-		}),
+		CreatePBMergeFor(
+			"largest",
+			{ type: "REGULAR", metric: "lamp" },
+			"Best Lamp",
+			(base, score) => {
+				base.scoreData.lamp = score.scoreData.lamp;
+			},
+		),
 	],
 	defaultMergeRefName: "Best Percent",
 	scoreValidators: [

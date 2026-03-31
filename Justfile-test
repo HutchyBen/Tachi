@@ -21,7 +21,7 @@ fix:
 	set -euo pipefail
 
 	just gen
-	bun run --sequential --elide-lines=0 --filter '*' lint-fix
+	bun run --elide-lines=0 --filter '*' lint-fix
 	.scripts/ts_autoinherit.js
 	just fmt
 

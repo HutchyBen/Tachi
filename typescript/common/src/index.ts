@@ -11,5 +11,6 @@ export * as Schemas from "./lib/schemas";
 export * from "./lib/zod-schemas";
 export * from "./seeds/types";
 export * from "./types";
+export * from "./utils/tachi-id";
 export * from "./utils/util";
 export * from "./webhooks";

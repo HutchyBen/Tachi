@@ -4,7 +4,7 @@ import type { ImportTypes } from "tachi-common";
 import { CDNStoreOrOverwrite } from "#lib/cdn/cdn";
 import { GetScoreImportInputURL } from "#lib/cdn/url-format";
 import { log } from "#lib/log/log";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 
 import type ScoreImportFatalError from "../score-importing/score-import-error";
 
@@ -37,14 +37,25 @@ function SerialiseJobData(jobData: ScoreImportJobData<ImportTypes>): string {
  * awaited when you await this function, it happens in the background.
  */
 export async function StartTrackingImport(jobData: ScoreImportJobData<ImportTypes>) {
-	await MONGODB_KILL["import-trackers"].insert({
-		type: "ONGOING",
-		importID: jobData.importID,
-		importType: jobData.importType,
-		userID: jobData.userID,
-		userIntent: jobData.userIntent,
-		timeStarted: Date.now(),
-	});
+	await DB.insertInto("import_tracker")
+		.values({
+			import_id: jobData.importID,
+			user_id: jobData.userID,
+			import_type: jobData.importType,
+			user_intent: jobData.userIntent,
+			time_started: new Date().toISOString(),
+			error: null,
+		})
+		.onConflict((oc) =>
+			oc.column("import_id").doUpdateSet({
+				user_id: jobData.userID,
+				import_type: jobData.importType,
+				user_intent: jobData.userIntent,
+				time_started: new Date().toISOString(),
+				error: null,
+			}),
+		)
+		.execute();
 
 	// store the input for this import on the CDN. The CDN is likely the right place
 	// to store large amounts of write-only data, so lets do that.
@@ -63,20 +74,15 @@ export async function StartTrackingImport(jobData: ScoreImportJobData<ImportType
 }
 
 export async function MarkImportAsFailed(importID: string, error: Error | ScoreImportFatalError) {
-	await MONGODB_KILL["import-trackers"].update(
-		{
-			importID,
-		},
-		{
-			$set: {
-				type: "FAILED",
-				error: {
-					statusCode: "statusCode" in error ? error.statusCode : undefined,
-					message: error.message,
-				},
-			},
-		},
-	);
+	await DB.updateTable("import_tracker")
+		.set({
+			error: JSON.stringify({
+				statusCode: "statusCode" in error ? error.statusCode : undefined,
+				message: error.message,
+			}),
+		})
+		.where("import_id", "=", importID)
+		.execute();
 }
 
 /**
@@ -84,5 +90,5 @@ export async function MarkImportAsFailed(importID: string, error: Error | ScoreI
  * in the tracker.
  */
 export async function EndTrackingImport(importID: string) {
-	await MONGODB_KILL["import-trackers"].remove({ importID });
+	await DB.deleteFrom("import_tracker").where("import_id", "=", importID).execute();
 }

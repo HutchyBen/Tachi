@@ -17,7 +17,6 @@ import {
 	USC_DEFAULT_PERFECT,
 	USC_DEFAULT_SLAM,
 } from "#lib/constants/usc-ir";
-import MONGODB_KILL from "#services/mongo/db";
 import { ApplyNTimes, RFA } from "#utils/misc";
 import fs from "fs";
 import path from "path";
@@ -316,7 +315,6 @@ export const TestingSDVXPB: MONGO_PBScoreDocument<"sdvx:Single"> = {
 
 export const TestingSDVXAlbidaChart: MONGO_ChartDocument<"sdvx:Single"> = {
 	chartID: "5088a4d0e1ee9d0cc2f625934306e45b1a60699b",
-	legacyChartId: "5088a4d0e1ee9d0cc2f625934306e45b1a60699b",
 	difficulty: "ADV",
 	songID: 1,
 	playtype: "Single",
@@ -422,7 +420,6 @@ export const TestingLR2HookScore: LR2HookScore = {
 
 export const TestingJubeatChart: MONGO_ChartDocument<"jubeat:Single"> = {
 	chartID: "b90a319f18d1a746b330b8f4cd6f74874f664421",
-	legacyChartId: "b90a319f18d1a746b330b8f4cd6f74874f664421",
 	songID: 1,
 	level: "6",
 	levelNum: 6,
@@ -439,7 +436,6 @@ export const TestingJubeatChart: MONGO_ChartDocument<"jubeat:Single"> = {
 
 export const TestingGitadoraChart: MONGO_ChartDocument<"gitadora:Dora" | "gitadora:Gita"> = {
 	chartID: "bf62dd6c78afaf6b4f95cce70b5b08af193c0c57",
-	legacyChartId: "bf62dd6c78afaf6b4f95cce70b5b08af193c0c57",
 	data: {
 		inGameID: 0,
 	},
@@ -454,7 +450,6 @@ export const TestingGitadoraChart: MONGO_ChartDocument<"gitadora:Dora" | "gitado
 
 export const TestingMaimaiChart: MONGO_ChartDocument<"maimai:Single"> = {
 	chartID: "6e087e5f58519a2697374b9bff776a004046e952",
-	legacyChartId: "6e087e5f58519a2697374b9bff776a004046e952",
 	data: {
 		inGameID: 834,
 		inGameStrID: "pandora_paradoxxx",
@@ -471,7 +466,6 @@ export const TestingMaimaiChart: MONGO_ChartDocument<"maimai:Single"> = {
 
 export const TestingMaimaiDXChart: MONGO_ChartDocument<"maimaidx:Single"> = {
 	chartID: "fbde73d543f93cbad9ec67052a7165700c5c8df6",
-	legacyChartId: "fbde73d543f93cbad9ec67052a7165700c5c8df6",
 	data: {
 		displayVersion: "maimai",
 		inGameID: 1,
@@ -487,7 +481,6 @@ export const TestingMaimaiDXChart: MONGO_ChartDocument<"maimaidx:Single"> = {
 
 export const TestingMusecaChart: MONGO_ChartDocument<"museca:Single"> = {
 	chartID: "4f3a7bf907f7be54a0c531dd9077e58fd7b6bb9c",
-	legacyChartId: "4f3a7bf907f7be54a0c531dd9077e58fd7b6bb9c",
 	data: {
 		inGameID: 1,
 	},
@@ -502,7 +495,6 @@ export const TestingMusecaChart: MONGO_ChartDocument<"museca:Single"> = {
 
 export const TestingPopnChart: MONGO_ChartDocument<"popn:9B"> = {
 	chartID: "7489166ddfb6ec780249823d5bda255611fbc528",
-	legacyChartId: "7489166ddfb6ec780249823d5bda255611fbc528",
 	data: {
 		hashSHA256: "83287260cb32c5c54b06b76967ba8620dd3735063959d9fbaf2cffc0dba8a049",
 		inGameID: 0,
@@ -518,7 +510,6 @@ export const TestingPopnChart: MONGO_ChartDocument<"popn:9B"> = {
 
 export const Testing511SPA: MONGO_ChartDocument<"iidx:SP"> = {
 	chartID: "c2311194e3897ddb5745b1760d2c0141f933e683",
-	legacyChartId: "c2311194e3897ddb5745b1760d2c0141f933e683",
 	difficulty: "ANOTHER",
 	songID: 1,
 	playtype: "SP",
@@ -566,7 +557,6 @@ export const Testing511Song: MONGO_SongDocument<"iidx"> = {
 
 export const TestingDDRSP: MONGO_ChartDocument<"ddr:SP"> = {
 	chartID: "2fc2e0cfdda42addb7840b58be1df1f545310d66",
-	legacyChartId: "2fc2e0cfdda42addb7840b58be1df1f545310d66",
 	data: {
 		inGameID: 10,
 	},
@@ -593,7 +583,6 @@ export const TestingDDRSong: MONGO_SongDocument<"ddr"> = {
 
 export const TestingAlbidaADV: MONGO_ChartDocument<"sdvx:Single"> = {
 	chartID: "5088a4d0e1ee9d0cc2f625934306e45b1a60699b",
-	legacyChartId: "5088a4d0e1ee9d0cc2f625934306e45b1a60699b",
 	difficulty: "ADV",
 	songID: 1,
 	playtype: "Single",
@@ -621,18 +610,14 @@ export const TestingSDVXAlbidaSong: MONGO_SongDocument<"sdvx"> = {
 export const BMSGazerChart: MONGO_ChartDocument<"bms:7K"> = {
 	songID: 27339,
 	chartID: "88eb6cc5683e2740cbd07f588a5f3db1db8d467b",
-	legacyChartId: "88eb6cc5683e2740cbd07f588a5f3db1db8d467b",
 	data: {
 		aiLevel: "0",
 		notecount: 2256,
 		hashMD5: "38616b85332037cc12924f2ae2840262",
 		hashSHA256: "195fe1be5c3e74fccd04dc426e05f8a9cfa8a1059c339d0a23e99f63661f0b7d",
-		tableFolders: [
-			{
-				level: "17",
-				table: "★",
-			},
-		],
+		tableFolders: {
+			"★": "17",
+		},
 		sglEC: null,
 		sglHC: null,
 	},
@@ -660,7 +645,6 @@ export const BMSGazerSong: MONGO_SongDocument<"bms"> = {
 
 export const CHUNITHMBBKKChart: MONGO_ChartDocument<"chunithm:Single"> = {
 	chartID: "192b96bdb6150f80ba6412ce02df1249e16c0cb0",
-	legacyChartId: "192b96bdb6150f80ba6412ce02df1249e16c0cb0",
 	difficulty: "BASIC",
 	songID: 3,
 	playtype: "Single",
@@ -711,7 +695,6 @@ export const TestingChunithmScorePB: MONGO_PBScoreDocument<"chunithm:Single"> = 
 export const TestingDoraChart: MONGO_ChartDocument<"gitadora:Dora"> = {
 	songID: 0,
 	chartID: "29f0bfab357ba54e3fd0176fb3cbc578c9ec8df5",
-	legacyChartId: "29f0bfab357ba54e3fd0176fb3cbc578c9ec8df5",
 	difficulty: "BASIC",
 	playtype: "Dora",
 	levelNum: 1.6,
@@ -726,7 +709,6 @@ export const TestingDoraChart: MONGO_ChartDocument<"gitadora:Dora"> = {
 export const TestingWaccaPupaExp: MONGO_ChartDocument<"wacca:Single"> = {
 	songID: 77,
 	chartID: "2abcf2da86f3d968dbe07695ab7ebf6b79cb0841",
-	legacyChartId: "2abcf2da86f3d968dbe07695ab7ebf6b79cb0841",
 	difficulty: "EXPERT",
 	playtype: "Single",
 	levelNum: 13.7,
@@ -918,35 +900,6 @@ export const TestingIIDXSPQuestSub: MONGO_QuestSubscriptionDocument = {
 	wasInstantlyAchieved: false,
 };
 
-let KTDATA_CACHE:
-	| {
-			charts: Array<MONGO_ChartDocument<"iidx:DP" | "iidx:SP">>;
-			songs: Array<MONGO_SongDocument<"iidx">>;
-	  }
-	| undefined;
-
-export async function LoadTachiIIDXData() {
-	let songs;
-	let charts;
-
-	if (KTDATA_CACHE) {
-		songs = KTDATA_CACHE.songs;
-		charts = KTDATA_CACHE.charts;
-	} else {
-		songs = GetKTDataJSON("./tachi/tachi-songs-iidx.json") as Array<MONGO_SongDocument<"iidx">>;
-		charts = GetKTDataJSON("./tachi/tachi-charts-iidx.json") as Array<
-			MONGO_ChartDocument<"iidx:DP" | "iidx:SP">
-		>;
-
-		KTDATA_CACHE = { songs, charts };
-	}
-
-	await MONGODB_KILL.songs.iidx.remove({});
-	await MONGODB_KILL.songs.iidx.insert(songs);
-	await MONGODB_KILL.charts.iidx.remove({});
-	await MONGODB_KILL.charts.iidx.insert(charts);
-}
-
 export const MockBarbatosScore: BarbatosScore = {
 	clear_type: 2,
 	did_fail: false,
@@ -1003,7 +956,6 @@ export const MockBarbatosSDVX6Score: BarbatosSDVX6Score = {
 
 export const TestingUSCChart: MONGO_ChartDocument<"usc:Controller" | "usc:Keyboard"> = {
 	chartID: "USC_CHART_ID",
-	legacyChartId: "USC_CHART_ID",
 	difficulty: "NOV",
 	songID: 1,
 	playtype: "Keyboard",
@@ -1013,7 +965,7 @@ export const TestingUSCChart: MONGO_ChartDocument<"usc:Controller" | "usc:Keyboa
 		hashSHA1: "USC_CHART_HASH",
 		isOfficial: false,
 		effector: "foo",
-		tableFolders: [],
+		tableFolders: {},
 	},
 	isPrimary: true,
 	versions: [],
@@ -1415,7 +1367,6 @@ export const TestingArcaeaSheriruthSong: MONGO_SongDocument<"arcaea"> = {
 
 export const TestingArcaeaSheriruthFTR: MONGO_ChartDocument<"arcaea:Touch"> = {
 	chartID: "48de13e0be17a282eed6ef97e6e1478eb59bc55e",
-	legacyChartId: "48de13e0be17a282eed6ef97e6e1478eb59bc55e",
 	data: {
 		inGameStrID: "sheriruth",
 		notecount: 1151,
@@ -1431,7 +1382,6 @@ export const TestingArcaeaSheriruthFTR: MONGO_ChartDocument<"arcaea:Touch"> = {
 
 export const TestingOngekiChart: MONGO_ChartDocument<"ongeki:Single"> = {
 	chartID: "213796bdb6150f80ba6412ce69df1249e16c0cb0",
-	legacyChartId: "213796bdb6150f80ba6412ce69df1249e16c0cb0",
 	data: {
 		displayVersion: "オンゲキ bright MEMORY Act.3",
 		inGameID: 2137,
@@ -1485,7 +1435,6 @@ export const TestingOngekiScorePB: MONGO_PBScoreDocument<"ongeki:Single"> = {
 
 export const TestingOngekiChartConverter: MONGO_ChartDocument<"ongeki:Single"> = {
 	chartID: "e5e4ee3d4feb233c399751b3ba3daf8ba149c9e6",
-	legacyChartId: "e5e4ee3d4feb233c399751b3ba3daf8ba149c9e6",
 	data: {
 		displayVersion: "オンゲキ bright",
 		inGameID: 678,
@@ -1514,7 +1463,6 @@ export const TestingOngekiSongConverter: MONGO_SongDocument<"ongeki"> = {
 
 export const TestingChunithmChartConverter: MONGO_ChartDocument<"chunithm:Single"> = {
 	chartID: "fbba26a6a223b1dd0bf8ef139cfee83114b91086",
-	legacyChartId: "fbba26a6a223b1dd0bf8ef139cfee83114b91086",
 	data: {
 		inGameID: 956,
 	},
@@ -1553,7 +1501,6 @@ export const TestingMaimaiDXSongConverter: MONGO_SongDocument<"maimaidx"> = {
 
 export const TestingMaimaiDXChartConverter: MONGO_ChartDocument<"maimaidx:Single"> = {
 	chartID: "fab3d632610b9b98ee1e4f68e9ecf0161f9cb8cd",
-	legacyChartId: "fab3d632610b9b98ee1e4f68e9ecf0161f9cb8cd",
 	data: {
 		displayVersion: "maimaiでらっくす UNiVERSE",
 		inGameID: 11294,

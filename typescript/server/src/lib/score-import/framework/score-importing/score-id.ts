@@ -1,6 +1,5 @@
 import type { KtLogger } from "#lib/log/log";
 
-import MONGODB_KILL from "#services/mongo/db";
 import fjsh from "fast-json-stable-hash";
 import {
 	GetGPTConfig,
@@ -55,10 +54,4 @@ export function CreateScoreID(
 	}
 
 	return `T${hash}`;
-}
-
-export function GetWithScoreID(scoreID: string) {
-	return MONGODB_KILL.scores.findOne({
-		scoreID,
-	});
 }

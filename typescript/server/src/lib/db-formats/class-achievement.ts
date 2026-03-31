@@ -1,0 +1,34 @@
+import type { Database, Game } from "tachi-db";
+
+import { ISO8601ToUnixMilliseconds } from "#utils/time";
+import { type Selection } from "kysely";
+import { type MONGO_ClassAchievementDocument, V3ToGamePT } from "tachi-common";
+
+export const SELECT_CLASS_ACHIEVEMENT_DOCUMENT = [
+	"class_achievement.game",
+	"class_achievement.user_id",
+	"class_achievement.class_set",
+	"class_achievement.class_prev_value",
+	"class_achievement.class_value",
+	"class_achievement.timestamp",
+] as const;
+
+type ClassAchievementRow = Selection<
+	Database,
+	"class_achievement",
+	(typeof SELECT_CLASS_ACHIEVEMENT_DOCUMENT)[number]
+>;
+
+export function ToClassAchievementDocument(row: ClassAchievementRow): MONGO_ClassAchievementDocument {
+	const { game, playtype } = V3ToGamePT(row.game as Game);
+
+	return {
+		game,
+		playtype,
+		classSet: row.class_set as MONGO_ClassAchievementDocument["classSet"],
+		classOldValue: row.class_prev_value === "" ? null : row.class_prev_value,
+		classValue: row.class_value,
+		timeAchieved: ISO8601ToUnixMilliseconds(row.timestamp),
+		userID: row.user_id,
+	};
+}

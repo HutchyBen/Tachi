@@ -1,12 +1,13 @@
 import type { MONGO_ImportDocument } from "tachi-common";
 
+import { LoadScoreDocumentsForImport } from "#lib/db-formats/score";
 import { log } from "#lib/log/log";
 import {
 	CheckAndSetOngoingImportLock,
 	UnsetOngoingImportLock,
 } from "#lib/score-import/framework/import-locks/lock";
 import { DeleteMultipleScores } from "#lib/score-mutation/delete-scores";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 
 interface OngoingImportError {
 	tag: "ONGOING_IMPORT";
@@ -45,7 +46,7 @@ export async function RevertImport(
 		);
 
 		try {
-			await MONGODB_KILL.imports.remove({ importID: importDoc.importID });
+			await DB.deleteFrom("import").where("id", "=", importDoc.importID).execute();
 
 			log.info(`Reverted and deleted import '${importDoc.importID}'.`);
 		} catch (err) {
@@ -62,8 +63,8 @@ export async function RevertImport(
 }
 
 /**
- * Retrieve the scores inside this import.
+ * Loads all scores that belong to this import (Postgres `score.import_id`).
  */
 export function GetImportScores(importDoc: MONGO_ImportDocument) {
-	return MONGODB_KILL.scores.find({ scoreID: { $in: importDoc.scoreIDs } });
+	return LoadScoreDocumentsForImport(importDoc.importID);
 }

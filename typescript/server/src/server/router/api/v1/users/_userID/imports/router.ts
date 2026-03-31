@@ -1,10 +1,11 @@
-import type { FilterQuery } from "mongodb";
-import type { ImportTypes, MONGO_ImportTrackerDocument } from "tachi-common";
+import type { ImportTypes } from "tachi-common";
 
+import {
+	ListFailedImportTrackers,
+	ListRecentImportDocuments,
+} from "#lib/db-formats/import-document";
 import { TachiConfig } from "#lib/setup/config";
 import prValidate from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
-import { DeleteUndefinedProps } from "#utils/misc";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
 import { p } from "prudence";
@@ -34,16 +35,10 @@ router.get(
 		const userIntent =
 			req.query.userIntent === undefined ? undefined : req.query.userIntent === "true";
 
-		const query = {
-			userIntent,
-			userID,
+		const imports = await ListRecentImportDocuments({
+			userId: userID,
 			importType,
-		};
-
-		DeleteUndefinedProps(query);
-
-		const imports = await MONGODB_KILL.imports.find(query, {
-			sort: { timeFinished: -1 },
+			userIntent,
 			limit: 500,
 		});
 
@@ -79,17 +74,10 @@ router.get(
 		const userIntent =
 			req.query.userIntent === undefined ? undefined : req.query.userIntent === "true";
 
-		const query: FilterQuery<MONGO_ImportTrackerDocument> = {
-			type: "FAILED",
-			userIntent,
-			userID,
+		const trackers = await ListFailedImportTrackers({
+			userId: userID,
 			importType,
-		};
-
-		DeleteUndefinedProps(query);
-
-		const trackers = await MONGODB_KILL["import-trackers"].find(query, {
-			sort: { timeStarted: -1 },
+			userIntent,
 			limit: 500,
 		});
 

@@ -46,6 +46,7 @@ interface SeedApiTokenOpts {
 	identifier?: string;
 	fromClient?: string | null;
 	submitScore?: boolean;
+	customiseSession?: boolean;
 }
 
 export async function seedApiToken(opts: SeedApiTokenOpts) {
@@ -58,7 +59,7 @@ export async function seedApiToken(opts: SeedApiTokenOpts) {
 			pm_submit_score: opts.submitScore ?? null,
 			pm_customise_profile: null,
 			pm_customise_score: null,
-			pm_customise_session: null,
+			pm_customise_session: opts.customiseSession ?? null,
 			pm_delete_score: null,
 			pm_manage_rivals: null,
 			pm_manage_targets: null,

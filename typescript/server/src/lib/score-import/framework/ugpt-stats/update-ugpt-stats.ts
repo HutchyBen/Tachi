@@ -1,8 +1,15 @@
 import type { KtLogger } from "#lib/log/log";
-import type { ClassDelta, GameGroup, integer, MONGO_UserGameStats, Playtype } from "tachi-common";
 
 import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
+import { loadUserGameStats } from "#utils/class";
+import {
+	type ClassDelta,
+	type GameGroup,
+	GamePTToV3,
+	type integer,
+	type Playtype,
+} from "tachi-common";
 
 import type { ClassProvider } from "../calculated-data/types";
 
@@ -20,13 +27,11 @@ export async function UpdateUsersGamePlaytypeStats(
 
 	const ratings = await CalculateProfileRatings(game, playtype, userID);
 
+	const v3Game = GamePTToV3(game, playtype);
+
 	// Attempt to find a users game stats if one already exists. If one doesn't exist,
 	// this is this players first import for this game!
-	const userGameStats = await MONGODB_KILL["game-stats"].findOne({
-		game,
-		playtype,
-		userID,
-	});
+	const userGameStats = await loadUserGameStats(userID, game, playtype);
 
 	log.debug(`Calculating UGSClasses...`);
 
@@ -43,31 +48,28 @@ export async function UpdateUsersGamePlaytypeStats(
 	if (userGameStats) {
 		log.debug(`Updated player gamestats for ${game} (${playtype})`);
 
-		const updateClasses: Record<string, string> = {};
+		const nextClasses: Record<string, string | null | undefined> = {
+			...userGameStats.classes,
+		};
 
 		for (const delta of deltas) {
-			updateClasses[`classes.${delta.set}`] = delta.new;
+			nextClasses[delta.set] = delta.new;
 		}
 
-		await MONGODB_KILL["game-stats"].update(
-			{
-				game,
-				playtype,
-				userID,
-			},
-			{
-				$set: {
-					ratings,
-					...updateClasses,
-				},
-			},
-		);
+		await DB.updateTable("game_profile")
+			.set({
+				ratings: JSON.stringify(ratings),
+				classes: JSON.stringify(nextClasses),
+			})
+			.where("user_id", "=", userID)
+			.where("game", "=", v3Game)
+			.execute();
 	} else {
-		const hasAnyScores = await MONGODB_KILL.scores.findOne({
-			game,
-			playtype,
-			userID,
-		});
+		const hasAnyScores = await DB.selectFrom("score")
+			.select("id")
+			.where("user_id", "=", userID)
+			.where("game", "=", v3Game)
+			.executeTakeFirst();
 
 		if (!hasAnyScores) {
 			log.debug(
@@ -81,16 +83,15 @@ export async function UpdateUsersGamePlaytypeStats(
 			return deltas;
 		}
 
-		const newStats: MONGO_UserGameStats = {
-			game,
-			playtype,
-			userID,
-			ratings,
-			classes,
-		};
-
 		log.info(`Created new gamestats for ${game} (${playtype})`);
-		await MONGODB_KILL["game-stats"].insert(newStats);
+		await DB.insertInto("game_profile")
+			.values({
+				user_id: userID,
+				game: v3Game,
+				ratings: JSON.stringify(ratings),
+				classes: JSON.stringify(classes),
+			})
+			.execute();
 		await CreateGameSettings(userID, game, playtype);
 	}
 

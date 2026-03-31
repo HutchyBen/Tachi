@@ -625,7 +625,13 @@ CREATE TABLE "session" (
 	time_ended TIMESTAMPTZ NOT NULL,
 
 	calculated_data JSONB NOT NULL,
-	highlight BOOLEAN NOT NULL
+	highlight BOOLEAN NOT NULL,
+
+	-- Session UGPT search: FTS + trgm (see lib/search/session-search.ts).
+	textsearch tsvector NOT NULL GENERATED ALWAYS AS (
+		setweight(to_tsvector('simple', coalesce(name, '')), 'A') ||
+			setweight(to_tsvector('simple', coalesce(description, '')), 'B')
+	) STORED
 );
 
 CREATE TABLE "import" (
@@ -646,7 +652,7 @@ CREATE TABLE "import" (
 -- but importantly they're always in the same game group
 -- this is a random tachi2 holdover.
 CREATE TABLE "import_game" (
-	id TEXT REFERENCES import(id) NOT NULL,
+	id TEXT REFERENCES import(id) ON DELETE CASCADE NOT NULL,
 	game GAME NOT NULL,
 
 	PRIMARY KEY (id, game)
@@ -655,7 +661,7 @@ CREATE TABLE "import_game" (
 CREATE TABLE "import_error" (
 	row_id UUID PRIMARY KEY NOT NULL DEFAULT uuidv7(),
 
-	import_id TEXT REFERENCES import(id) NOT NULL,
+	import_id TEXT REFERENCES import(id) ON DELETE CASCADE NOT NULL,
 	type TEXT NOT NULL,
 	message TEXT NOT NULL
 );
@@ -663,7 +669,7 @@ CREATE TABLE "import_error" (
 CREATE TABLE "import_session" (
 	row_id UUID PRIMARY KEY NOT NULL DEFAULT uuidv7(),
 
-	import_id TEXT REFERENCES import(id) NOT NULL,
+	import_id TEXT REFERENCES import(id) ON DELETE CASCADE NOT NULL,
 	session_id TEXT REFERENCES session(id) NOT NULL,
 	type TEXT NOT NULL CHECK (type IN ('appended', 'created')),
 
@@ -673,7 +679,7 @@ CREATE TABLE "import_session" (
 CREATE TABLE "import_class" (
 	row_id UUID PRIMARY KEY DEFAULT uuidv7(),
 
-	import_id TEXT REFERENCES import(id) NOT NULL,
+	import_id TEXT REFERENCES import(id) ON DELETE CASCADE NOT NULL,
 	game GAME NOT NULL,
 	set TEXT NOT NULL,
 	prev TEXT,
@@ -682,7 +688,7 @@ CREATE TABLE "import_class" (
 
 
 CREATE TABLE "import_timing" (
-	id TEXT PRIMARY KEY REFERENCES import(id) NOT NULL,
+	id TEXT PRIMARY KEY REFERENCES import(id) ON DELETE CASCADE NOT NULL,
 	timestamp TIMESTAMPTZ NOT NULL,
 
 	import_secs_avg FLOAT8 NOT NULL,
@@ -738,7 +744,10 @@ CREATE TABLE "score" (
 	time_added TIMESTAMPTZ NOT NULL,
 	
 	highlight BOOLEAN NOT NULL,
-	comment TEXT
+	comment TEXT,
+
+	-- Staging: false until post-import steps finish; then true (see score_import_uncommitted_idx).
+	committed BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE "pb" (
@@ -758,6 +767,7 @@ CREATE TABLE "pb" (
 	data JSONB NOT NULL,
 	derived_data JSONB NOT NULL,
 	calculated_data JSONB NOT NULL,
+	judgements JSONB NOT NULL,
 
 	-- how to rank scores. Five (sorry, hardcoded) additional
 	-- tiebreakers are available.
@@ -783,11 +793,13 @@ CREATE TABLE "pb_composed_from" (
 	PRIMARY KEY (pb_id, score_id)
 );
 
+-- Global chart rank/outOf live in one place: the leaderboard window over `pb`,
+-- not duplicated into `calculated_data`.
 CREATE VIEW "chart_leaderboard" AS
 SELECT
 	pb.*,
 	RANK() OVER (
-		PARTITION BY chart_id
+		PARTITION BY chart_id, lens
 		ORDER BY
 			ranking_value DESC NULLS LAST,
 			ranking_value_tb1 DESC NULLS LAST,
@@ -795,15 +807,20 @@ SELECT
 			ranking_value_tb3 DESC NULLS LAST,
 			ranking_value_tb4 DESC NULLS LAST,
 			ranking_value_tb5 DESC NULLS LAST,
-			-- oldest time_achieved wins ties
 			time_achieved ASC NULLS LAST
-	) AS rank
+	) AS rank,
+	COUNT(*) OVER (PARTITION BY chart_id, lens) AS out_of
 FROM pb;
+
 
 CREATE TABLE "orphan_score" (
 	row_id UUID PRIMARY KEY NOT NULL DEFAULT uuidv7(),
 	user_id BIGINT REFERENCES account(id) NOT NULL,
-	import_id TEXT REFERENCES import(id) NOT NULL,
+	import_id TEXT REFERENCES import(id) ON DELETE SET NULL,
+
+	orphan_id TEXT NOT NULL,
+	import_type IMPORT_TYPE NOT NULL,
+	game_group GAME_GROUP NOT NULL,
 
 	data JSONB NOT NULL,
 	context JSONB NOT NULL,
@@ -944,7 +961,7 @@ CREATE TABLE "questline_quest" (
 CREATE TABLE "import_quest" (
 	row_id UUID PRIMARY KEY DEFAULT uuidv7(),
 
-	import_id TEXT REFERENCES import(id) NOT NULL,
+	import_id TEXT REFERENCES import(id) ON DELETE CASCADE NOT NULL,
 	quest_id TEXT REFERENCES quest(id) NOT NULL,
 
 	prev_achieved BOOLEAN NOT NULL,
@@ -957,7 +974,7 @@ CREATE TABLE "import_quest" (
 CREATE TABLE "import_goal" (
 	row_id UUID PRIMARY KEY DEFAULT uuidv7(),
 
-	import_id TEXT REFERENCES import(id) NOT NULL,
+	import_id TEXT REFERENCES import(id) ON DELETE CASCADE NOT NULL,
 	goal_id TEXT REFERENCES goal(id) NOT NULL,
 
 	prev_achieved BOOLEAN NOT NULL,
@@ -992,6 +1009,13 @@ CREATE INDEX score_user_highlights_idx ON score (user_id, time_added DESC)
 -- Needed separately because score_user_chart_idx has user_id as the left column.
 CREATE INDEX score_chart_idx ON score (chart_id);
 
+-- Failed-import cleanup: delete uncommitted rows by import_id.
+CREATE INDEX score_import_uncommitted_idx ON score (import_id)
+	WHERE
+		committed = FALSE;
+
+CREATE UNIQUE INDEX orphan_score_orphan_id_key ON orphan_score (orphan_id);
+
 -- pb (5M rows) — hottest table
 -- The single most important index in the schema.
 -- Serves: chart_leaderboard view, leaderboard pagination, and the COUNT rank
@@ -1020,6 +1044,12 @@ CREATE INDEX session_user_game_idx ON session (user_id, game, time_started DESC)
 
 -- Global game activity feed ("recent sessions for IIDX globally").
 CREATE INDEX session_game_recent_idx ON session (game, time_started DESC);
+
+CREATE INDEX session_textsearch_gin ON session USING GIN (textsearch);
+
+CREATE INDEX session_name_trgm ON session USING GIN (name gin_trgm_ops);
+
+CREATE INDEX session_description_trgm ON session USING GIN (description gin_trgm_ops);
 
 -- import
 -- User's import history page. time_started DESC for newest-first ordering.

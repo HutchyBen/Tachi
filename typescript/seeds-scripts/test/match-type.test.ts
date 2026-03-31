@@ -7,6 +7,7 @@ import {
 	v3AllGames,
 	V3FormatGame,
 	type V3Game,
+	V3ToGameGroup,
 	V3ToGPTString,
 } from "tachi-common";
 
@@ -91,7 +92,7 @@ for (const { game, matchType } of uniquenessChecks) {
 	const data =
 		handler.type === "CHARTS"
 			? ReadCollection(`charts-${game}.json`)
-			: ReadCollection(`songs-${game}.json`);
+			: ReadCollection(`songs-${V3ToGameGroup(game)}.json`);
 
 	const uniqueIDs = new Set();
 	for (const el of data) {

@@ -12,18 +12,9 @@ import {
 describe("FilterChartsAndSongs", () => {
 	it("keeps only charts and songs referenced by scores", () => {
 		const out = FilterChartsAndSongs(
-			[
-				{ chartID: "c1", songID: 1 } as never,
-				{ chartID: "c2", songID: 2 } as never,
-			],
-			[
-				{ chartID: "c1" } as never,
-				{ chartID: "cX" } as never,
-			],
-			[
-				{ id: 1 } as never,
-				{ id: 9 } as never,
-			],
+			[{ chartID: "c1", songID: 1 } as never, { chartID: "c2", songID: 2 } as never],
+			[{ chartID: "c1" } as never, { chartID: "cX" } as never],
+			[{ id: 1 } as never, { id: 9 } as never],
 		);
 
 		expect(out.charts.map((c: { chartID: string }) => c.chartID)).toEqual(["c1"]);
@@ -48,10 +39,7 @@ describe("GetScoreIDsFromComposed", () => {
 describe("GetPBOnChart / GetServerRecordOnChart (Postgres)", () => {
 	let n = 0;
 
-	async function seedIidxChartWithPbs(opts: {
-		chartLegacyId: string;
-		pbs: Array<{ userId: number; ranking: number }>;
-	}) {
+	async function seedIidxChartWithPbs(opts: { pbs: Array<{ ranking: number; userId: number }> }) {
 		const k = ++n;
 		const songId = `song-pbutil-${k}`;
 		const chartId = `chart-pbutil-${k}`;
@@ -73,7 +61,7 @@ describe("GetPBOnChart / GetServerRecordOnChart (Postgres)", () => {
 		await DB.insertInto("chart")
 			.values({
 				id: chartId,
-				legacy_id: opts.chartLegacyId,
+				legacy_id: chartId,
 				game: "iidx-sp",
 				song_id: songId,
 				level: "10",
@@ -94,7 +82,8 @@ describe("GetPBOnChart / GetServerRecordOnChart (Postgres)", () => {
 					lens: null,
 					data: JSON.stringify({}),
 					derived_data: JSON.stringify({}),
-					calculated_data: JSON.stringify({ rank: 1 }),
+					calculated_data: JSON.stringify({}),
+					judgements: JSON.stringify({}),
 					ranking_value: p.ranking,
 					ranking_value_tb1: null,
 					ranking_value_tb2: null,
@@ -110,34 +99,18 @@ describe("GetPBOnChart / GetServerRecordOnChart (Postgres)", () => {
 		return { chartId };
 	}
 
-	it("GetPBOnChart returns PB for user + legacy chart id", async () => {
-		const { id: u1 } = await seedUser();
-		const legacy = `leg-pb-${Date.now()}`;
-		await seedIidxChartWithPbs({
-			chartLegacyId: legacy,
-			pbs: [{ userId: u1, ranking: 100 }],
-		});
-
-		const pb = await GetPBOnChart(u1, legacy);
-		expect(pb).not.toBeNull();
-		expect(pb?.chartID).toBe(legacy);
-		expect(pb?.userID).toBe(u1);
-	});
-
 	it("GetServerRecordOnChart picks highest ranking_value on chart", async () => {
 		const t = Date.now();
 		const { id: low } = await seedUser({ username: `pb_low_${t}` });
 		const { id: high } = await seedUser({ username: `pb_high_${t}` });
-		const legacy = `leg-sr-${Date.now()}`;
-		await seedIidxChartWithPbs({
-			chartLegacyId: legacy,
+		const { chartId } = await seedIidxChartWithPbs({
 			pbs: [
 				{ userId: low, ranking: 10 },
 				{ userId: high, ranking: 99.5 },
 			],
 		});
 
-		const pb = await GetServerRecordOnChart(legacy);
+		const pb = await GetServerRecordOnChart(chartId);
 		expect(pb).not.toBeNull();
 		expect(pb?.userID).toBe(high);
 		expect(pb?.rankingData.rank).toBe(1);

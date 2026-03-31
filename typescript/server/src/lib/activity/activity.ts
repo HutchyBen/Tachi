@@ -1,34 +1,99 @@
 import type { Request, Response } from "express-serve-static-core";
-import type { FilterQuery } from "mongodb";
-import type {
-	GameGroup,
-	GPTString,
-	MONGO_ChartDocument,
-	MONGO_ClassAchievementDocument,
-	MONGO_GoalDocument,
-	MONGO_GoalSubscriptionDocument,
-	MONGO_QuestDocument,
-	MONGO_QuestSubscriptionDocument,
-	MONGO_ScoreDocument,
-	MONGO_SessionDocument,
-	MONGO_SongDocument,
-	MONGO_UserDocument,
-	Playtype,
-} from "tachi-common";
+import type { Game } from "tachi-db";
 
-import MONGODB_KILL from "#services/mongo/db";
+import {
+	SELECT_CLASS_ACHIEVEMENT_DOCUMENT,
+	ToClassAchievementDocument,
+} from "#lib/db-formats/class-achievement";
+import { type ScoreDocumentJoinRow, ToScoreDocument } from "#lib/db-formats/score";
+import { SELECT_SESSION_DOCUMENT, ToSessionDocument } from "#lib/db-formats/session";
+import DB from "#services/pg/db";
 import {
 	GetRecentlyAchievedGoals,
 	GetRecentlyAchievedQuests,
 	GetRelevantSongsAndCharts,
 } from "#utils/db";
 import { DedupeArr } from "#utils/misc";
+import { scoreDocumentJoin } from "#utils/queries/scores";
+import { GetScoreIdsGroupedBySessionId } from "#utils/queries/sessions";
 import { GetGPT } from "#utils/req-tachi-data";
+import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { GetUsersWithIDs } from "#utils/user";
+import { sql } from "kysely";
+import {
+	type GameGroup,
+	GamePTToV3,
+	type GPTString,
+	type integer,
+	type MONGO_ChartDocument,
+	type MONGO_ClassAchievementDocument,
+	type MONGO_GoalDocument,
+	type MONGO_GoalSubscriptionDocument,
+	type MONGO_QuestDocument,
+	type MONGO_QuestSubscriptionDocument,
+	type MONGO_ScoreDocument,
+	type MONGO_SessionDocument,
+	type MONGO_SongDocument,
+	type MONGO_UserDocument,
+	type Playtype,
+} from "tachi-common";
 
-export type ActivityConstraint = FilterQuery<
-	MONGO_ClassAchievementDocument & MONGO_ScoreDocument & MONGO_SessionDocument
->;
+export type ActivityConstraint = {
+	game: GameGroup;
+	playtype: Playtype;
+	userID?: integer | { $in: Array<integer> };
+};
+
+/** Kysely dynamic column refs — same pattern as `whereUserIdOnGoalSub` in `#utils/db`. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- OperandExpressionFactory varies by query (session / join / class_achievement).
+type ActivityWhereEb = any;
+
+function whereActivityUserId(
+	userID: ActivityConstraint["userID"],
+	column: "score.user_id" | "user_id",
+) {
+	if (userID === undefined) {
+		return undefined;
+	}
+
+	if (typeof userID === "number") {
+		return (eb: ActivityWhereEb) => eb(column, "=", userID);
+	}
+
+	if (
+		userID &&
+		typeof userID === "object" &&
+		"$in" in userID &&
+		Array.isArray(userID.$in)
+	) {
+		const ids = userID.$in;
+
+		if (ids.length === 0) {
+			return () => sql<boolean>`false`;
+		}
+
+		return (eb: ActivityWhereEb) => eb(column, "in", ids);
+	}
+
+	throw new Error("Unsupported userID filter for activity.");
+}
+
+function whereMsRangeOnColumn(
+	column: "class_achievement.timestamp" | "score.time_achieved",
+	earliestMs: number,
+	startFrom: number | null,
+) {
+	return (eb: ActivityWhereEb) => {
+		if (startFrom !== null) {
+			return eb.and([
+				eb(column, ">=", UnixMillisecondsToISO8601(earliestMs)),
+				eb(column, "<", UnixMillisecondsToISO8601(startFrom)),
+			]);
+		}
+
+		return eb(column, ">=", UnixMillisecondsToISO8601(earliestMs));
+	};
+}
 
 /**
  * Retrieves recent activity for this group of users for this GPT.
@@ -70,26 +135,41 @@ export async function GetRecentActivity(
 	songs: Array<MONGO_SongDocument>;
 	users: Array<MONGO_UserDocument>;
 }> {
-	const baseQuery = query;
+	const v3Game = GamePTToV3(query.game, query.playtype) as Game;
+	const sessionUserWhere = whereActivityUserId(query.userID, "user_id");
+	const scoreUserWhere = whereActivityUserId(query.userID, "score.user_id");
+	const classUserWhere = whereActivityUserId(query.userID, "user_id");
 
-	const initialSessionQuery = {
-		...baseQuery,
+	let sessionQ = DB.selectFrom("session")
+		.select(SELECT_SESSION_DOCUMENT)
+		.where("session.game", "=", v3Game);
 
-		// start from anytime if startFrom is omitted, otherwise, cap at the start.
-		timeStarted: { $lt: startFrom === null ? Infinity : startFrom },
-	};
+	if (sessionUserWhere) {
+		sessionQ = sessionQ.where(sessionUserWhere);
+	}
 
-	const recentSessions = await MONGODB_KILL.sessions.find(initialSessionQuery, {
-		sort: {
-			timeStarted: -1,
-		},
-		limit: sessions,
-	});
+	if (startFrom !== null) {
+		sessionQ = sessionQ.where(
+			"session.time_started",
+			"<",
+			UnixMillisecondsToISO8601(startFrom),
+		);
+	}
 
-	// find the earliest point in the sessions we just fetched.
-	// if we found no sessions, set this to now, which means we'll fetch no highlighted
-	// scores.
-	// (it's not possible to have no sessions *and* have scores with timestamps)
+	const sessionRows = await sessionQ
+		.orderBy("session.time_started", "desc")
+		.limit(sessions)
+		.execute();
+
+	const scoreMap =
+		sessionRows.length === 0
+			? new Map<string, Array<string>>()
+			: await GetScoreIdsGroupedBySessionId(sessionRows.map((r) => r.id));
+
+	const recentSessions = sessionRows.map((row) =>
+		ToSessionDocument(row, scoreMap.get(row.id) ?? []),
+	);
+
 	const earliestSession = recentSessions.at(-1)?.timeStarted ?? Date.now();
 
 	const timeConstraint =
@@ -99,41 +179,47 @@ export async function GetRecentActivity(
 					$gte: earliestSession,
 				};
 
+	const timeWhereAchieved = whereMsRangeOnColumn(
+		"class_achievement.timestamp",
+		earliestSession,
+		startFrom,
+	);
+	const timeWhereScore = whereMsRangeOnColumn("score.time_achieved", earliestSession, startFrom);
+
+	let classQ = DB.selectFrom("class_achievement")
+		.select(SELECT_CLASS_ACHIEVEMENT_DOCUMENT)
+		.where("class_achievement.game", "=", v3Game)
+		.where(timeWhereAchieved);
+
+	if (classUserWhere) {
+		classQ = classQ.where(classUserWhere);
+	}
+
+	let highlightQ = scoreDocumentJoin()
+		.where("score.game", "=", v3Game)
+		.where("score.highlight", "=", true)
+		.where(timeWhereScore);
+
+	if (scoreUserWhere) {
+		highlightQ = highlightQ.where(scoreUserWhere);
+	}
+
 	const [
-		// yeah, i hate doing stuff like this in parallel. It's really easy to get
-		// wrong, but this code is hit so frequently that I'd be insane not to take
-		// the performance win of parallelism in queries.
-		achievedClasses,
-		recentlyHighlightedScores,
+		classRows,
+		highlightRows,
 		{ goals, goalSubs },
 		{ quests, questSubs },
 	] = await Promise.all([
-		MONGODB_KILL["class-achievements"].find(
-			{
-				...baseQuery,
-				timeAchieved: timeConstraint,
-			},
-			{
-				sort: {
-					timeAchieved: -1,
-				},
-			},
-		),
-		MONGODB_KILL.scores.find(
-			{
-				...baseQuery,
-				highlight: true,
-				timeAchieved: timeConstraint,
-			},
-			{
-				sort: {
-					timeAchieved: -1,
-				},
-			},
-		),
-		GetRecentlyAchievedGoals({ ...baseQuery, timeAchieved: timeConstraint }, 0),
-		GetRecentlyAchievedQuests({ ...baseQuery, timeAchieved: timeConstraint }, 0),
+		classQ.orderBy("class_achievement.timestamp", "desc").execute(),
+		highlightQ.orderBy(sql`score.time_achieved desc nulls last`).execute(),
+		GetRecentlyAchievedGoals({ ...query, timeAchieved: timeConstraint }, 0),
+		GetRecentlyAchievedQuests({ ...query, timeAchieved: timeConstraint }, 0),
 	]);
+
+	const achievedClasses = classRows.map(ToClassAchievementDocument);
+	const recentlyHighlightedScores = highlightRows.map((row) =>
+		ToScoreDocument(row as ScoreDocumentJoinRow),
+	);
 
 	const { songs, charts } = await GetRelevantSongsAndCharts(recentlyHighlightedScores, game);
 
@@ -167,7 +253,7 @@ export async function GetRecentActivity(
  * @param gpts - An array of Game+Playtype combos to fetch from.
  */
 export async function GetRecentActivityForMultipleGames(
-	gpts: Array<{ game: GameGroup; playtype: Playtype; query: ActivityConstraint }>,
+	gpts: Array<{ game: GameGroup; playtype: Playtype }>,
 	sessions = 30,
 	startFrom: number | null = null,
 ) {

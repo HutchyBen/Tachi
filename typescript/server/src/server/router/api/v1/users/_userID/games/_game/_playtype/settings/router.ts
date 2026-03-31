@@ -1,9 +1,10 @@
-import { log } from "#lib/log/log";
+import { ACTION_PatchUGPTSettings } from "#actions/patch-ugpt-settings";
+import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
+import { GetUGPTSettingsDocument } from "#lib/db-formats/ugpt-settings";
 import { RequirePermissions } from "#server/middleware/auth";
-import MONGODB_KILL from "#services/mongo/db";
 import { FormatPrError, optNull } from "#utils/prudence";
 import { GetUGPT } from "#utils/req-tachi-data";
-import { FormatUserDoc } from "#utils/user";
+import { FormatUserDoc, GetUserWithIDGuaranteed } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
 import {
@@ -61,99 +62,33 @@ router.patch(
 
 		const body = req.safeBody as Partial<MONGO_UGPTSettingsDocument["preferences"]>;
 
-		if (typeof body.defaultTable === "string") {
-			const table = await MONGODB_KILL.tables.findOne({
-				game,
-				playtype,
-				tableID: body.defaultTable,
-			});
+		const authUserID = req[SYMBOL_TACHI_API_AUTH].userID;
 
-			if (!table) {
-				return res.status(400).json({
-					success: false,
-					description: `The table (${body.defaultTable}) does not exist (and therefore cannot be set as a default).`,
-				});
-			}
-		}
-
-		const updateQuery: Record<string, string | null> = {};
-
-		// @warning Slightly icky dynamic prop assignment instead of copypasta.
-		for (const key of ["Score", "Session", "Profile"] as const) {
-			const k = `preferred${key}Alg` as const;
-
-			const value = body[k];
-
-			if (value !== undefined) {
-				updateQuery[`preferences.${k}`] = value;
-			}
-		}
-
-		if (body.preferredDefaultEnum !== undefined) {
-			updateQuery[`preferences.preferredDefaultEnum`] = body.preferredDefaultEnum;
-		}
-
-		if (body.defaultTable !== undefined) {
-			updateQuery[`preferences.defaultTable`] = body.defaultTable;
-		}
-
-		if (body.preferredRanking !== undefined) {
-			updateQuery[`preferences.preferredRanking`] = body.preferredRanking;
-		}
-
-		if (body.gameSpecific) {
-			for (const [key, value] of Object.entries(body.gameSpecific)) {
-				updateQuery[`preferences.gameSpecific.${key}`] = value;
-			}
-		}
-
-		if (Object.keys(updateQuery).length === 0) {
-			const settings = await MONGODB_KILL["game-settings"].findOne({
-				userID: user.id,
-				game,
-				playtype,
-			});
-
-			return res.status(200).json({
-				success: true,
-				description: `Nothing has been modified, successfully.`,
-				body: settings,
+		if (authUserID === null) {
+			return res.status(401).json({
+				success: false,
+				description: "Authentication is required for this endpoint.",
 			});
 		}
 
-		await MONGODB_KILL["game-settings"].update(
-			{
-				userID: user.id,
-				game,
-				playtype,
-			},
-			{
-				$set: updateQuery,
-			},
-		);
+		const authedUser = await GetUserWithIDGuaranteed(authUserID);
+		const taker = { ip: req.ip, acct: { id: authedUser.id, username: authedUser.username } };
 
-		const settings = await MONGODB_KILL["game-settings"].findOne({
+		const { settings } = await ACTION_PatchUGPTSettings(taker, {
 			userID: user.id,
 			game,
 			playtype,
+			preferences: body,
 		});
 
-		if (!settings) {
-			log.error(
-				`User ${FormatUserDoc(
-					user,
-				)} has no game-settings, but has played ${game} ${playtype}?`,
-			);
-
-			return res.status(500).json({
-				success: false,
-				description: `An internal error has occured. Do not repeat this request.`,
-			});
-		}
+		const description =
+			Object.keys(body).length === 0
+				? "Nothing has been modified, successfully."
+				: "Updated settings.";
 
 		return res.status(200).json({
 			success: true,
-			description: `Updated settings.`,
+			description,
 			body: settings,
 		});
 	},
@@ -167,11 +102,7 @@ router.patch(
 router.get("/", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const settings = await MONGODB_KILL["game-settings"].findOne({
-		userID: user.id,
-		game,
-		playtype,
-	});
+	const settings = await GetUGPTSettingsDocument(user.id, game, playtype);
 
 	return res.status(200).json({
 		success: true,

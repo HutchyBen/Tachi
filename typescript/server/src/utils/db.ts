@@ -1,7 +1,7 @@
 import type { FilterQuery } from "mongodb";
 import type { Game } from "tachi-db";
 
-import { GetChartsByLegacyIds, SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart";
+import { GetChartsByIds, SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart";
 import { LoadFolderDocumentById } from "#lib/db-formats/folders.js";
 import { GetSongsByLegacyIDs } from "#lib/db-formats/song";
 import {
@@ -166,7 +166,7 @@ export async function GetRelevantSongsAndCharts(
 
 	const [songs, charts] = await Promise.all([
 		GetSongsByLegacyIDs(game, songIDs),
-		GetChartsByLegacyIds(game, chartKeys),
+		GetChartsByIds(game, chartKeys),
 	]);
 
 	return { songs, charts };
@@ -185,7 +185,7 @@ export async function GetChartForIDGuaranteed(game: GameGroup, chartID: string) 
 		.select(SELECT_CHART)
 		.select("song.legacy_id as song_legacy_id")
 		.where("song.game_group", "=", game)
-		.where((eb) => eb.or([eb("chart.id", "=", chartID), eb("chart.legacy_id", "=", chartID)]))
+		.where("chart.id", "=", chartID)
 		.executeTakeFirst();
 
 	if (!row) {

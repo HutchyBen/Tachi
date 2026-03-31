@@ -1,8 +1,10 @@
 import type { RequestHandler } from "express";
 
-import MONGODB_KILL from "#services/mongo/db";
+import { SELECT_GAME_PROFILE, ToGameStatsDocument } from "#lib/db-formats/game-profiles.js";
+import DB from "#services/pg/db";
 import { IsValidGame, IsValidPlaytype } from "#utils/misc";
 import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
+import { GamePTToV3 } from "tachi-common";
 
 export const CheckUserPlayedGamePlaytype: RequestHandler = async (req, res, next) => {
 	const user = GetTachiData(req, "requestedUser");
@@ -36,18 +38,22 @@ export const CheckUserPlayedGamePlaytype: RequestHandler = async (req, res, next
 		});
 	}
 
-	const stats = await MONGODB_KILL["game-stats"].findOne({
-		userID: user.id,
-		game,
-		playtype,
-	});
+	const v3Game = GamePTToV3(game, playtype);
 
-	if (!stats) {
+	const row = await DB.selectFrom("game_profile")
+		.select(SELECT_GAME_PROFILE)
+		.where("user_id", "=", user.id)
+		.where("game", "=", v3Game)
+		.executeTakeFirst();
+
+	if (!row) {
 		return res.status(404).json({
 			success: false,
 			description: `The user ${user.username} has not played ${req.params.game} (${req.params.playtype})`,
 		});
 	}
+
+	const stats = ToGameStatsDocument(row);
 
 	AssignToReqTachiData(req, {
 		requestedUserGameStats: stats,

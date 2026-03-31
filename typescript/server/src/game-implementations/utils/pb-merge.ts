@@ -13,6 +13,7 @@ import {
 	SELECT_SCORE_DOCUMENT,
 	ToScoreDocument,
 } from "#lib/db-formats/score";
+import { scoreVisibleSql } from "#lib/score-import/framework/pg/score-visibility";
 import DB from "#services/pg/db";
 import { UnixMillisecondsToISO8601 } from "#utils/time.js";
 import { sql } from "kysely";
@@ -48,6 +49,9 @@ function metricIsNumericSql<GPT extends GPTString>(metric: MetricKeys<GPT>) {
  * Utility for making a PB merge function. In short, get the best score this user has
  * on this chart for the stated metric, then run the applicator if a score was found.
  *
+ * `metric` uses Postgres JSON keys on `score.data` / `score.derived_data` (see `mongoScoreDataToPg`).
+ * For enum ordinals, use the metric name (e.g. `{ type: "REGULAR", metric: "lamp" }`), not `enumIndexes.*`.
+ *
  * @param direction - Whether to pick the largest value or smallest value for this metric.
  */
 export function CreatePBMergeFor<GPT extends GPTString>(
@@ -64,7 +68,8 @@ export function CreatePBMergeFor<GPT extends GPTString>(
 			.select(SELECT_SCORE_DOCUMENT)
 			.where("score.user_id", "=", userID)
 			.where("chart.legacy_id", "=", chartID)
-			.where(metricIsNumericSql(metric));
+			.where(metricIsNumericSql(metric))
+			.where(scoreVisibleSql());
 
 		if (asOfTimestamp !== null) {
 			q = q.where(

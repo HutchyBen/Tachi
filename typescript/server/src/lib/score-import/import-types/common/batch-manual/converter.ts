@@ -1,16 +1,27 @@
 import type { KtLogger } from "#lib/log/log";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
-import MONGODB_KILL from "#services/mongo/db";
+import { staticAssertUnreachable } from "#utils/misc";
 import {
 	FindBMSChartOnHash,
+	FindChartOnInGameIDPrimary,
+	FindChartOnInGameIDVersion,
+	FindChartOnInGameStrIDPrimary,
+	FindChartOnInGameStrIDVersion,
 	FindChartWithPTDF,
 	FindChartWithPTDFVersion,
 	FindITGChartOnHash,
+	FindPopnChartOnHashSHA256,
 	FindSDVXChartOnInGameID,
 	FindSDVXChartOnInGameIDVersion,
+	FindUSCChartOnSHA1Playtype,
+	SongHasAnyChart,
 } from "#utils/queries/charts";
-import { FindSongOnID, FindSongOnTitleInsensitive } from "#utils/queries/songs";
+import {
+	FindDDRSongOnDDRSongHash,
+	FindSongOnID,
+	FindSongOnTitleInsensitive,
+} from "#utils/queries/songs";
 import {
 	type BatchManualScore,
 	type Difficulties,
@@ -22,6 +33,7 @@ import {
 	type MONGO_ChartDocument,
 	type MONGO_SongDocument,
 	type MongoProvidedMetrics,
+	type Playtypes,
 	type Versions,
 } from "tachi-common";
 
@@ -161,7 +173,8 @@ export async function ResolveSongAndChart(
 		);
 	}
 
-	switch (resolver.matchType) {
+	const matchType = resolver.matchType;
+	switch (matchType) {
 		case "bmsChartHash": {
 			const chart = await FindBMSChartOnHash(resolver.identifier);
 
@@ -211,10 +224,7 @@ export async function ResolveSongAndChart(
 				throw new InvalidScoreFailure(`Invalid playtype '${playtype}', expected 9B.`);
 			}
 
-			const chart = await MONGODB_KILL.charts.popn.findOne({
-				playtype,
-				"data.hashSHA256": resolver.identifier,
-			});
+			const chart = await FindPopnChartOnHashSHA256(resolver.identifier, playtype);
 
 			if (!chart) {
 				return null;
@@ -328,7 +338,7 @@ export async function ResolveSongAndChart(
 				return null;
 			}
 
-			const song = await MONGODB_KILL.anySongs[game].findOne({ id: chart.songID });
+			const song = await FindSongOnID("sdvx", chart.songID);
 
 			if (!song) {
 				log.error(`Song-Chart desync on ${chart.songID}.`);
@@ -343,29 +353,30 @@ export async function ResolveSongAndChart(
 
 			const difficulty = AssertStrAsDifficulty(resolver.difficulty, game, resolver.playtype);
 
-			let chart: MONGO_ChartDocument | null | undefined;
+			let chart: MONGO_ChartDocument | null;
 
 			if (resolver.version) {
-				chart = await MONGODB_KILL.anyCharts[game].findOne({
-					"data.inGameID": identifier,
-					playtype: resolver.playtype,
+				chart = await FindChartOnInGameIDVersion(
+					game,
+					identifier,
+					resolver.playtype,
 					difficulty,
-					versions: resolver.version,
-				});
+					resolver.version,
+				);
 			} else {
-				chart = await MONGODB_KILL.anyCharts[game].findOne({
-					"data.inGameID": identifier,
-					playtype: resolver.playtype,
+				chart = await FindChartOnInGameIDPrimary(
+					game,
+					identifier,
+					resolver.playtype,
 					difficulty,
-					isPrimary: true,
-				});
+				);
 			}
 
 			if (!chart) {
 				return null;
 			}
 
-			const song = await MONGODB_KILL.anySongs[game].findOne({ id: chart.songID });
+			const song = await FindSongOnID(game, chart.songID);
 
 			if (!song) {
 				log.error(`Song-Chart desync on ${chart.songID}.`);
@@ -378,29 +389,30 @@ export async function ResolveSongAndChart(
 		case "inGameStrID": {
 			const difficulty = AssertStrAsDifficulty(resolver.difficulty, game, resolver.playtype);
 
-			let chart;
+			let chart: MONGO_ChartDocument | null;
 
 			if (resolver.version) {
-				chart = await MONGODB_KILL.anyCharts[game].findOne({
-					"data.inGameStrID": resolver.identifier,
-					playtype: resolver.playtype,
+				chart = await FindChartOnInGameStrIDVersion(
+					game,
+					resolver.identifier,
+					resolver.playtype,
 					difficulty,
-					versions: resolver.version,
-				});
+					resolver.version,
+				);
 			} else {
-				chart = await MONGODB_KILL.anyCharts[game].findOne({
-					"data.inGameStrID": resolver.identifier,
-					playtype: resolver.playtype,
+				chart = await FindChartOnInGameStrIDPrimary(
+					game,
+					resolver.identifier,
+					resolver.playtype,
 					difficulty,
-					isPrimary: true,
-				});
+				);
 			}
 
 			if (!chart) {
 				return null;
 			}
 
-			const song = await MONGODB_KILL.anySongs[game].findOne({ id: chart.songID });
+			const song = await FindSongOnID(game, chart.songID);
 
 			if (!song) {
 				log.error(`Song-Chart desync on ${chart.songID}.`);
@@ -419,16 +431,13 @@ export async function ResolveSongAndChart(
 				throw new InvalidScoreFailure(`Invalid playtype, expected Keyboard or Controller.`);
 			}
 
-			const chart = await MONGODB_KILL.charts.usc.findOne({
-				"data.hashSHA1": resolver.identifier,
-				playtype,
-			});
+			const chart = await FindUSCChartOnSHA1Playtype(resolver.identifier, playtype);
 
 			if (!chart) {
 				return null;
 			}
 
-			const song = await MONGODB_KILL.anySongs[game].findOne({ id: chart.songID });
+			const song = await FindSongOnID(game, chart.songID);
 
 			if (!song) {
 				log.error(`Song-Chart desync on ${chart.songID}.`);
@@ -445,40 +454,36 @@ export async function ResolveSongAndChart(
 
 			const difficulty = AssertStrAsDifficulty(resolver.difficulty, game, resolver.playtype);
 
-			const song = await MONGODB_KILL.anySongs.ddr.findOne({
-				"data.ddrSongHash": resolver.identifier,
-			});
+			const song = await FindDDRSongOnDDRSongHash(resolver.identifier);
 
 			if (!song) {
 				return null;
 			}
 
-			// check that a chart with the song's id exists
-			const chartSync = await MONGODB_KILL.anyCharts.ddr.findOne({
-				songID: song.id,
-			});
-
-			if (!chartSync) {
+			if (!(await SongHasAnyChart("ddr", song.id))) {
 				log.error(`Song-Chart desync on ${song.id}.`);
 				throw new InternalFailure(`Failed to get chart for a song that exists.`);
 			}
 
-			let chart;
+			let chart: MONGO_ChartDocument | null;
+
+			type DDRGPT = `ddr:${Playtypes["ddr"]}`;
 
 			if (resolver.version) {
-				chart = await MONGODB_KILL.anyCharts.ddr.findOne({
-					songID: song.id,
-					playtype: resolver.playtype,
+				chart = await FindChartWithPTDFVersion(
+					"ddr",
+					song.id,
+					resolver.playtype as Playtypes["ddr"],
 					difficulty,
-					versions: resolver.version,
-				});
+					resolver.version as Versions[DDRGPT],
+				);
 			} else {
-				chart = await MONGODB_KILL.anyCharts.ddr.findOne({
-					songID: song.id,
-					playtype: resolver.playtype,
+				chart = await FindChartWithPTDF(
+					"ddr",
+					song.id,
+					resolver.playtype as Playtypes["ddr"],
 					difficulty,
-					isPrimary: true,
-				});
+				);
 			}
 
 			if (!chart) {
@@ -489,14 +494,7 @@ export async function ResolveSongAndChart(
 		}
 
 		default: {
-			const { matchType } = resolver;
-
-			log.error(
-				`Invalid matchType ${matchType} ended up in conversion - should have been rejected by prudence?`,
-			);
-
-			// really, this could be a larger error. - it's an internal failure because prudence should reject this.
-			throw new InvalidScoreFailure(`Invalid matchType ${matchType}.`);
+			staticAssertUnreachable(matchType);
 		}
 	}
 }

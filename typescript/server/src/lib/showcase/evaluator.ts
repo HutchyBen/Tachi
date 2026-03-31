@@ -1,5 +1,7 @@
-import MONGODB_KILL from "#services/mongo/db";
+import { LoadPbByUserAndChartID } from "#lib/db-formats/pb";
+import DB from "#services/pg/db";
 import { GetFolderChartIDs } from "#utils/folder";
+import { sql } from "kysely";
 import {
 	GetGPTConfig,
 	type GPTString,
@@ -36,15 +38,17 @@ async function EvaluateShowcaseChartStat(
 ) {
 	// requires special handling
 	if (details.metric === "playcount") {
-		return { value: await MONGODB_KILL.scores.count({ chartID: details.chartID, userID }) };
+		const row = await DB.selectFrom("score")
+			.innerJoin("chart", "chart.id", "score.chart_id")
+			.select((eb) => eb.fn.countAll<number>().as("cnt"))
+			.where("score.user_id", "=", userID)
+			.where("chart.id", "=", details.chartID)
+			.executeTakeFirst();
+
+		return { value: Number(row?.cnt ?? 0) };
 	}
 
-	const mongoProp = PropToMongoProp(gpt, details.metric);
-
-	const pb = await MONGODB_KILL["personal-bests"].findOne(
-		{ chartID: details.chartID, userID },
-		{ projection: { [mongoProp]: 1 } },
-	);
+	const pb = await LoadPbByUserAndChartID(userID, details.chartID);
 
 	if (!pb) {
 		return { value: null };
@@ -82,31 +86,44 @@ async function EvaluateShowcaseFolderStat(
 		chartIDs = await GetFolderChartIDs(details.folderID);
 	}
 
-	const mongoProp = PropToMongoProp(gpt, details.metric);
-
-	const value = await MONGODB_KILL["personal-bests"].count({
+	const value = await CountPbsForFolderMetricGte(
 		userID,
-
-		// @optimisable - This is slightly inefficent, maybe we can use relational-style querying?
-		chartID: { $in: chartIDs },
-		[mongoProp]: { $gte: details.gte },
-	});
+		chartIDs,
+		gpt,
+		details.metric,
+		details.gte,
+	);
 
 	return { value, outOf: chartIDs.length };
 }
 
-function PropToMongoProp(gpt: GPTString, metric: string) {
-	const gptConfig = GetGPTConfig(gpt);
+async function CountPbsForFolderMetricGte(
+	userID: integer,
+	chartIDs: string[],
+	gpt: GPTString,
+	metric: string,
+	gte: number,
+): Promise<number> {
+	if (chartIDs.length === 0) {
+		return 0;
+	}
 
+	const gptConfig = GetGPTConfig(gpt);
 	const scoreMetricConfig = gptConfig.providedMetrics[metric] ?? gptConfig.derivedMetrics[metric];
 
 	if (!scoreMetricConfig) {
 		throw new Error(`Invalid metric of ${metric} passed for game ${gpt}.`);
 	}
 
-	if (scoreMetricConfig.type === "ENUM") {
-		return `scoreData.enumIndexes.${metric}`;
-	}
+	const jsonBlob =
+		gptConfig.derivedMetrics[metric] !== undefined ? sql`pb.derived_data` : sql`pb.data`;
 
-	return `scoreData.${metric}`;
+	const row = await DB.selectFrom("pb")
+		.select(sql<number>`count(*)::int`.as("count"))
+		.where("pb.user_id", "=", userID)
+		.where("pb.chart_id", "in", chartIDs)
+		.where(sql<boolean>`(${jsonBlob}::jsonb->>${sql.lit(metric)})::double precision >= ${gte}`)
+		.executeTakeFirst();
+
+	return row?.count ?? 0;
 }

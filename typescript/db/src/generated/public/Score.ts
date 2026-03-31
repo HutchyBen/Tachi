@@ -40,6 +40,8 @@ export default interface ScoreTable {
   highlight: ColumnType<boolean, boolean, boolean>;
 
   comment: ColumnType<string | null, string | null, string | null>;
+
+  committed: ColumnType<boolean, boolean | undefined, boolean>;
 }
 
 export type Score = Selectable<ScoreTable>;

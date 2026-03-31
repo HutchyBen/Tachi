@@ -63,7 +63,7 @@ describe("ACTION_Letmein", () => {
 
 		// node-pg returns BIGINT columns as strings
 		expect(action).toMatchObject({
-			app: "BOT",
+			app: "TACHI_BOT",
 			kind: "LETMEIN",
 			result: "GOOD",
 			user_id: null,
