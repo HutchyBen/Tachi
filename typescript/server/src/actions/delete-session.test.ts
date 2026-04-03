@@ -1,8 +1,8 @@
 import { mongoScoreDataToPg } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
-import { describe, expect, it } from "vitest";
 import { type MONGO_ScoreData } from "tachi-common";
+import { describe, expect, it } from "vitest";
 
 import { ACTION_DeleteSession } from "./delete-session";
 
@@ -124,8 +124,14 @@ describe("ACTION_DeleteSession", () => {
 
 		await ACTION_DeleteSession(taker, { id: sessionId });
 
-		const sess = await DB.selectFrom("session").select("id").where("id", "=", sessionId).executeTakeFirst();
-		const score = await DB.selectFrom("score").select("id").where("id", "=", scoreId).executeTakeFirst();
+		const sess = await DB.selectFrom("session")
+			.select("id")
+			.where("id", "=", sessionId)
+			.executeTakeFirst();
+		const score = await DB.selectFrom("score")
+			.select("id")
+			.where("id", "=", scoreId)
+			.executeTakeFirst();
 
 		expect(sess).toBeUndefined();
 		expect(score).toBeUndefined();
@@ -138,8 +144,14 @@ describe("ACTION_DeleteSession", () => {
 
 		await ACTION_DeleteSession(taker, { id: sessionId });
 
-		const sess = await DB.selectFrom("session").select("id").where("id", "=", sessionId).executeTakeFirst();
-		const score = await DB.selectFrom("score").select("id").where("id", "=", scoreId).executeTakeFirst();
+		const sess = await DB.selectFrom("session")
+			.select("id")
+			.where("id", "=", sessionId)
+			.executeTakeFirst();
+		const score = await DB.selectFrom("score")
+			.select("id")
+			.where("id", "=", scoreId)
+			.executeTakeFirst();
 
 		expect(sess).toBeUndefined();
 		expect(score).toBeUndefined();

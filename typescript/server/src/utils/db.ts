@@ -172,18 +172,10 @@ export async function GetRelevantSongsAndCharts(
 	return { songs, charts };
 }
 
-/** Mongo seed hook used to sync `*-song-id` counters after chart loads. Under Postgres the next id is always `max(legacy_id)+1` at allocation time — nothing to sync. */
-export async function UpdateGameSongIDCounter(game: "bms" | "pms") {
-	log.debug(
-		`UpdateGameSongIDCounter(${game}) — no-op (next legacy id comes from max(legacy_id) + 1).`,
-	);
-}
-
 export async function GetChartForIDGuaranteed(game: GameGroup, chartID: string) {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
 		.where("song.game_group", "=", game)
 		.where("chart.id", "=", chartID)
 		.executeTakeFirst();
@@ -192,7 +184,7 @@ export async function GetChartForIDGuaranteed(game: GameGroup, chartID: string) 
 		throw new Error(`Couldn't find chart with ID ${chartID} (${game}).`);
 	}
 
-	return ToChartDocument(row, row.song_legacy_id);
+	return ToChartDocument(row);
 }
 
 export async function GetSongForIDGuaranteed(game: GameGroup, songID: integer) {
@@ -229,6 +221,24 @@ export async function GetGoalForIDGuaranteed(goalID: string) {
 	}
 
 	return ToGoalDocument(row);
+}
+
+export async function GetGoalSubscriptionForIDGuaranteed(goalID: string, userID: integer) {
+	const row = await DB.selectFrom("goal_sub")
+		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+		.selectAll("goal_sub")
+		.select("goal.game as goal_game")
+		.where("goal_id", "=", goalID)
+		.where("user_id", "=", userID)
+		.executeTakeFirst();
+
+	if (!row) {
+		throw new Error(
+			`Couldn't find goal subscription with goalID ${goalID} and userID ${userID}`,
+		);
+	}
+
+	return ToGoalSubscriptionDocument(row);
 }
 
 export async function GetQuestForIDGuaranteed(questID: string) {
@@ -669,9 +679,13 @@ export async function GetMostSubscribedQuests(
 }
 
 export async function GetChildQuests(questline: MONGO_QuestlineDocument) {
+	if (questline.quests.length === 0) {
+		return [];
+	}
+
 	const quests = await DB.selectFrom("quest")
 		.selectAll()
-		.where("id", "in", questline.quests)
+		.where("quest.id", "in", questline.quests)
 		.execute();
 
 	if (quests.length !== questline.quests.length) {
@@ -681,5 +695,10 @@ export async function GetChildQuests(questline: MONGO_QuestlineDocument) {
 		);
 	}
 
-	return quests.map(ToQuestDocument);
+	const byId = new Map(quests.map((q) => [q.id, q]));
+
+	return questline.quests
+		.map((id) => byId.get(id))
+		.filter((q): q is NonNullable<typeof q> => q !== undefined)
+		.map(ToQuestDocument);
 }

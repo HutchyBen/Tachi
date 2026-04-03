@@ -1,15 +1,17 @@
 import type { MONGO_GoalDocument } from "tachi-common";
 
-import { log } from "#lib/log/log";
+import { ToGoalDocument, ToGoalSubscriptionDocument } from "#lib/db-formats/target-documents";
 import { CreateGoalTitle, ValidateGoalChartsAndCriteria } from "#lib/targets/goal-utils";
 import { GetQuestsThatContainGoal } from "#lib/targets/goals";
 import prValidate from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { GetMostSubscribedGoals } from "#utils/db";
 import { AssignToReqTachiData, GetGPT, GetTachiData } from "#utils/req-tachi-data";
 import { GetUsersWithIDs } from "#utils/user";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
+import { GamePTToV3 } from "tachi-common";
+import type { Game } from "tachi-db";
 
 const router: Router = Router({ mergeParams: true });
 
@@ -131,20 +133,18 @@ const ResolveGoalID: RequestHandler = async (req, res, next) => {
 	const { game, playtype } = GetGPT(req);
 	const goalID = req.params.goalID;
 
-	const goal = await MONGODB_KILL.goals.findOne({
-		goalID,
-		game,
-		playtype,
-	});
+	const v3Game = GamePTToV3(game, playtype);
 
-	if (!goal) {
+	const row = await DB.selectFrom("goal").selectAll().where("goal.id", "=", goalID).where("goal.game", "=", v3Game).executeTakeFirst();
+
+	if (!row) {
 		return res.status(404).json({
 			success: false,
 			description: `A goal with ID ${goalID} doesn't exist.`,
 		});
 	}
 
-	AssignToReqTachiData(req, { goalDoc: goal });
+	AssignToReqTachiData(req, { goalDoc: ToGoalDocument(row) });
 
 	next();
 };
@@ -157,9 +157,19 @@ const ResolveGoalID: RequestHandler = async (req, res, next) => {
 router.get("/:goalID", ResolveGoalID, async (req, res) => {
 	const goal = GetTachiData(req, "goalDoc");
 
-	const goalSubs = await MONGODB_KILL["goal-subs"].find({
-		goalID: goal.goalID,
-	});
+	const subRows = await DB.selectFrom("goal_sub")
+		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+		.selectAll("goal_sub")
+		.select("goal.game as goal_game")
+		.where("goal_sub.goal_id", "=", goal.goalID)
+		.execute();
+
+	const goalSubs = subRows.map((r) =>
+		ToGoalSubscriptionDocument({
+			...r,
+			goal_game: r.goal_game as Game,
+		}),
+	);
 
 	const users = await GetUsersWithIDs(goalSubs.map((e) => e.userID));
 

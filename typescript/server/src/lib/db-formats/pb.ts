@@ -267,6 +267,61 @@ export async function LoadPbDocumentsForUserPrimaryChartsSortedByAlg(
 	return Promise.all(rows.map((r) => ToPbScoreDocument(r as PbDocumentJoinRow)));
 }
 
+/**
+ * Top PBs in this GPT (`chart.game`), sorted by a numeric field in `calculated_data`
+ * (descending). Matches legacy Mongo `personal-bests` queries for the GPT PB leaderboard.
+ */
+export async function LoadPbDocumentsForGameSortedByCalculatedAlg(
+	v3Game: Game,
+	alg: string,
+	limit: number,
+): Promise<MONGO_PBScoreDocument[]> {
+	const rows = await DB.selectFrom("pb")
+		.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
+		.innerJoin("chart", "chart.id", "pb.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
+		.where("chart.game", "=", v3Game)
+		.where("pb.lens", "is", null)
+		.orderBy(sql`(pb.calculated_data::jsonb->>${sql.lit(alg)})::double precision`, "desc")
+		.orderBy("pb.time_achieved", "desc")
+		.limit(limit)
+		.execute();
+
+	return Promise.all(rows.map((r) => ToPbScoreDocument(r as PbDocumentJoinRow)));
+}
+
+/**
+ * PBs for any of the given users in this GPT (`chart.game`), sorted by a numeric field in
+ * `calculated_data` (descending). Matches legacy Mongo `personal-bests` queries that did not
+ * filter to primary charts only.
+ */
+export async function LoadPbDocumentsForUserSetSortedByCalculatedAlg(
+	userIds: number[],
+	v3Game: Game,
+	alg: string,
+	limit: number,
+): Promise<MONGO_PBScoreDocument[]> {
+	if (userIds.length === 0) {
+		return [];
+	}
+
+	const rows = await DB.selectFrom("pb")
+		.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
+		.innerJoin("chart", "chart.id", "pb.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
+		.where("pb.user_id", "in", userIds)
+		.where("chart.game", "=", v3Game)
+		.where("pb.lens", "is", null)
+		.orderBy(sql`(pb.calculated_data::jsonb->>${sql.lit(alg)})::double precision`, "desc")
+		.orderBy("pb.time_achieved", "desc")
+		.limit(limit)
+		.execute();
+
+	return Promise.all(rows.map((r) => ToPbScoreDocument(r as PbDocumentJoinRow)));
+}
+
 /** PBs for a set of users on one chart (Postgres `chart.id`). */
 export async function LoadPbsByUserIdsAndChartPgId(
 	userIds: number[],

@@ -6,9 +6,13 @@ import type {
 	MONGO_GoalSubscriptionDocument,
 } from "tachi-common";
 
+import { ToGoalDocument, ToGoalSubscriptionDocument } from "#lib/db-formats/target-documents";
 import { EvaluateGoalForUser, GetRelevantGoals } from "#lib/targets/goals";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
+import { UnixMillisecondsToISO8601 } from "#utils/time";
+import { sql } from "kysely";
+import type { Game } from "tachi-db";
 
 /**
  * Update a user's progress on all of their set goals.
@@ -22,7 +26,6 @@ export async function GetAndUpdateUsersGoals(
 	const { goals, goalSubsMap } = await GetRelevantGoals(game, userID, chartIDs, log);
 
 	if (!goals.length) {
-		// if we hit the below code with an empty array mongodb will flip out on the bulkwrite op
 		return [];
 	}
 
@@ -66,7 +69,6 @@ export async function UpdateGoalsForUser(
 	);
 
 	const importInfo = [];
-	const bulkWrite = [];
 	const webhookEventContent = [];
 
 	for (const ret of returns) {
@@ -75,16 +77,21 @@ export async function UpdateGoalsForUser(
 		}
 
 		importInfo.push(ret.import);
-		bulkWrite.push(ret.bwrite);
+
+		if (ret.pgUpdate) {
+			await DB.updateTable("goal_sub")
+				.set(ret.pgUpdate.set)
+				.where("goal_sub.goal_id", "=", ret.pgUpdate.goalId)
+				.where("goal_sub.user_id", "=", ret.pgUpdate.userId)
+				.execute();
+		}
 
 		if (ret.webhookEvent) {
 			webhookEventContent.push(ret.webhookEvent);
 		}
 	}
 
-	if (bulkWrite.length === 0) {
-		// bulkwrite cannot be an empty array -- this means there's nothing to update or return, then.
-		// i.e. goals was non empty but returns was entirely [undefined, undefined...].
+	if (importInfo.length === 0) {
 		return [];
 	}
 
@@ -95,14 +102,12 @@ export async function UpdateGoalsForUser(
 		});
 	}
 
-	await MONGODB_KILL["goal-subs"].bulkWrite(bulkWrite, { ordered: false });
-
 	return importInfo;
 }
 
 /**
- * Calls EvaluateGoalForUser, then processes the returns into a bulkWrite
- * operation and an import statistic.
+ * Calls EvaluateGoalForUser, then processes the returns into a Postgres update
+ * and an import statistic.
  * @returns undefined on error (i.e. EvaluateGoalForUser) OR if there's nothing
  * to say (i.e. user didnt raise the goal).
  */
@@ -115,11 +120,9 @@ export async function ProcessGoal(
 	const res = await EvaluateGoalForUser(goal, userID, log);
 
 	if (!res) {
-		// some sort of error occured - its logged by the previous function.
 		return;
 	}
 
-	// nothing has changed
 	if (goalSub.progress === res.progress && goalSub.outOf === res.outOf) {
 		return;
 	}
@@ -142,8 +145,6 @@ export async function ProcessGoal(
 
 	let webhookEvent = null;
 
-	// if this is a newly-achieved goal
-
 	if (res.achieved && !goalSub.achieved) {
 		webhookEvent = {
 			goalID: goal.goalID,
@@ -153,32 +154,20 @@ export async function ProcessGoal(
 		};
 	}
 
-	let newTimeAchieved = null;
+	let newTimeAchievedMs: number | null = null;
 
 	if (newData.achieved) {
-		// if this goal was just achieved
 		if (goalSub.timeAchieved === null) {
-			newTimeAchieved = Date.now();
+			newTimeAchievedMs = Date.now();
 		} else {
-			// keep the old timestamp
-			newTimeAchieved = goalSub.timeAchieved;
+			newTimeAchievedMs = goalSub.timeAchieved;
 		}
 	}
 
-	// otherwise if this goal wasn't achieved then the timeAchieved is always null
+	const lastInteractionIso = UnixMillisecondsToISO8601(Date.now());
 
-	const setData = {
-		...newData,
-		timeAchieved: newTimeAchieved,
+	let wasInstantlyAchieved = goalSub.wasInstantlyAchieved;
 
-		// we're guaranteed that this works, because things
-		// that haven't changed return nothing instead of
-		// getting to this point.
-		lastInteraction: Date.now(),
-	} as unknown as Partial<MONGO_GoalSubscriptionDocument>;
-
-	// If this goal was achieved, and is now *not* achieved, we need to unset
-	// some things.
 	if (goalSub.achieved && !res.achieved) {
 		log.info(
 			{
@@ -189,21 +178,30 @@ export async function ProcessGoal(
 			`User ${userID} lost their achieved status on ${goal.name}.`,
 		);
 
-		// This goal can't be marked as instantly achieved, since it was lost.
-		setData.wasInstantlyAchieved = false;
+		wasInstantlyAchieved = false;
 	}
 
-	const bulkWrite = {
-		updateOne: {
-			filter: { goalID: goalSub.goalID, userID: goalSub.userID },
-			update: {
-				$set: setData,
-			},
-		},
+	const setPayload = {
+		progress: newData.progress,
+		progress_human: newData.progressHuman,
+		out_of: newData.outOf,
+		out_of_human: newData.outOfHuman,
+		achieved: newData.achieved,
+		time_achieved: newData.achieved
+			? newTimeAchievedMs !== null
+				? UnixMillisecondsToISO8601(newTimeAchievedMs)
+				: null
+			: null,
+		last_interaction: lastInteractionIso,
+		was_instantly_achieved: wasInstantlyAchieved,
 	};
 
 	return {
-		bwrite: bulkWrite,
+		pgUpdate: {
+			goalId: goalSub.goalID,
+			userId: goalSub.userID,
+			set: setPayload,
+		},
 		import: {
 			goalID: goal.goalID,
 			old: oldData,
@@ -214,42 +212,54 @@ export async function ProcessGoal(
 }
 
 export async function UpdateGoalsInFolder(folderID: string, log: KtLogger) {
-	const goals = await MONGODB_KILL.goals.find({
-		"charts.type": "folder",
-		"charts.data": folderID,
-	});
+	const goalRows = await DB.selectFrom("goal")
+		.selectAll()
+		.where(sql`goal.charts->>'type'`, "=", "folder")
+		.where(sql`goal.charts->>'data'`, "=", folderID)
+		.execute();
+
+	const goals = goalRows.map(ToGoalDocument);
 
 	log.info(`Updating ${goals.length} goals for ${folderID}`);
 
-	const goalSubs = await MONGODB_KILL["goal-subs"].find({
-		goalID: { $in: goals.map((e) => e.goalID) },
-	});
+	const goalIds = goals.map((g) => g.goalID);
 
-	log.info(`Updating ${goalSubs.length} goal subs for ${folderID}`);
+	if (goalIds.length === 0) {
+		return;
+	}
 
-	// (User -> (goalID -> GoalSub))
+	const subRows = await DB.selectFrom("goal_sub")
+		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+		.selectAll("goal_sub")
+		.select("goal.game as goal_game")
+		.where("goal_sub.goal_id", "in", goalIds)
+		.execute();
+
+	log.info(`Updating ${subRows.length} goal subs for ${folderID}`);
+
+	const goalSubs = subRows.map((r) =>
+		ToGoalSubscriptionDocument({
+			...r,
+			goal_game: r.goal_game as Game,
+		}),
+	);
+
 	const ugsMap = new Map<integer, Map<string, MONGO_GoalSubscriptionDocument>>();
 
 	for (const gSub of goalSubs) {
-		const userID = gSub.userID;
+		const uid = gSub.userID;
 
-		if (ugsMap.has(userID)) {
-			ugsMap.get(userID)!.set(gSub.goalID, gSub);
+		if (ugsMap.has(uid)) {
+			ugsMap.get(uid)!.set(gSub.goalID, gSub);
 		} else {
-			ugsMap.set(userID, new Map());
-			ugsMap.get(userID)!.set(gSub.goalID, gSub);
+			ugsMap.set(uid, new Map());
+			ugsMap.get(uid)!.set(gSub.goalID, gSub);
 		}
 	}
 
-	const promises = [];
-
-	for (const [userID, goalSubsMap] of ugsMap.entries()) {
-		promises.push(async () => {
-			// hack: pass *all* goals here to avoid mass allocations
-			// use `skipMismatch` to ignore the cases where they don't match
-			await UpdateGoalsForUser(goals, goalSubsMap, userID, log, true);
-		});
-	}
-
-	await Promise.all(promises);
+	await Promise.all(
+		[...ugsMap.entries()].map(([uid, goalSubsMap]) =>
+			UpdateGoalsForUser(goals, goalSubsMap, uid, log, true),
+		),
+	);
 }

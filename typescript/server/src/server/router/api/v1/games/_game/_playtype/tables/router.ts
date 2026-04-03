@@ -1,6 +1,5 @@
 import { GetTableDocumentsForGamePlaytype } from "#lib/db-formats/table";
 import { log } from "#lib/log/log";
-import MONGODB_KILL from "#services/mongo/db";
 import { GetFoldersFromTable } from "#utils/folder";
 import { GetGPT, GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";

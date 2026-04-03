@@ -60,12 +60,7 @@ function whereActivityUserId(
 		return (eb: ActivityWhereEb) => eb(column, "=", userID);
 	}
 
-	if (
-		userID &&
-		typeof userID === "object" &&
-		"$in" in userID &&
-		Array.isArray(userID.$in)
-	) {
+	if (userID && typeof userID === "object" && "$in" in userID && Array.isArray(userID.$in)) {
 		const ids = userID.$in;
 
 		if (ids.length === 0) {
@@ -204,17 +199,13 @@ export async function GetRecentActivity(
 		highlightQ = highlightQ.where(scoreUserWhere);
 	}
 
-	const [
-		classRows,
-		highlightRows,
-		{ goals, goalSubs },
-		{ quests, questSubs },
-	] = await Promise.all([
-		classQ.orderBy("class_achievement.timestamp", "desc").execute(),
-		highlightQ.orderBy(sql`score.time_achieved desc nulls last`).execute(),
-		GetRecentlyAchievedGoals({ ...query, timeAchieved: timeConstraint }, 0),
-		GetRecentlyAchievedQuests({ ...query, timeAchieved: timeConstraint }, 0),
-	]);
+	const [classRows, highlightRows, { goals, goalSubs }, { quests, questSubs }] =
+		await Promise.all([
+			classQ.orderBy("class_achievement.timestamp", "desc").execute(),
+			highlightQ.orderBy(sql`score.time_achieved desc nulls last`).execute(),
+			GetRecentlyAchievedGoals({ ...query, timeAchieved: timeConstraint }, 0),
+			GetRecentlyAchievedQuests({ ...query, timeAchieved: timeConstraint }, 0),
+		]);
 
 	const achievedClasses = classRows.map(ToClassAchievementDocument);
 	const recentlyHighlightedScores = highlightRows.map((row) =>

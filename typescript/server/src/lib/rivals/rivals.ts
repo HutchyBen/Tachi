@@ -1,10 +1,10 @@
-import type { BulkWriteUpdateOneOperation } from "mongodb";
+import type { Game } from "tachi-db";
 
 import { SetRivalsFailReasons } from "#lib/constants/err-codes";
 import { log } from "#lib/log/log";
 import { SendSetRivalNotification } from "#lib/notifications/notification-wrappers";
 import { ServerConfig } from "#lib/setup/config";
-import MONGODB_KILL from "#services/mongo/db";
+import { pgScoreDataToMongo } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import { ArrayDiff } from "#utils/misc";
 import { GetUsersWithIDs, GetUserWithIDGuaranteed } from "#utils/user";
@@ -14,7 +14,7 @@ import {
 	GamePTToV3,
 	GetGamePTConfig,
 	type integer,
-	type MONGO_PBScoreDocument,
+	type PgScoreData,
 	type Playtype,
 } from "tachi-common";
 
@@ -66,39 +66,52 @@ export async function GetEveryonesRivalIDs(
 	game: GameGroup,
 	playtype: Playtype,
 ): Promise<Record<number, Array<number>>> {
-	const allGameSettings = await MONGODB_KILL["game-settings"].find(
-		{
-			game,
-			playtype,
-		},
-		{
-			projection: {
-				userID: 1,
-				rivals: 1,
-			},
-		},
-	);
+	const v3Game = GamePTToV3(game, playtype) as Game;
+
+	const rows = await DB.selectFrom("game_rival")
+		.select(["user_id", "rival"])
+		.where("game", "=", v3Game)
+		.execute();
 
 	const lookupTable: Record<integer, Array<integer>> = {};
 
-	for (const d of allGameSettings) {
-		lookupTable[d.userID] = d.rivals;
+	for (const r of rows) {
+		const list = lookupTable[r.user_id] ?? [];
+		list.push(r.rival);
+		lookupTable[r.user_id] = list;
 	}
 
 	return lookupTable;
+}
+
+function metricValueFromPbRow(
+	v3Game: Game,
+	data: unknown,
+	derivedData: unknown,
+	metricKey: string,
+): number | null {
+	const scoreData = pgScoreDataToMongo(v3Game, {
+		data,
+		derived: derivedData,
+		judgements: {},
+	} as PgScoreData<Game>);
+	const v = (scoreData as Record<string, unknown>)[metricKey];
+	return typeof v === "number" && !Number.isNaN(v) ? v : null;
 }
 
 /**
  * Sets an array of userIDs to be this user's rivals. Performs validation on all of the
  * rivals being players of the game, and not being duplicates. The maximum amount of rivals
  * a player can have is ServerConfig.MAX_RIVALS (defaults to 5).
+ *
+ * @returns `null` on success, or a {@link SetRivalsFailReasons} code on validation failure.
  */
-export async function SetRivals(
+export async function setRivalsWithResult(
 	userID: integer,
 	game: GameGroup,
 	playtype: Playtype,
 	newRivals: Array<integer>,
-) {
+): Promise<SetRivalsFailReasons | null> {
 	if (newRivals.length > ServerConfig.MAX_RIVALS) {
 		return SetRivalsFailReasons.TOO_MANY;
 	}
@@ -107,22 +120,25 @@ export async function SetRivals(
 		return SetRivalsFailReasons.RIVALED_SELF;
 	}
 
-	const playedGPTCount = await MONGODB_KILL["game-settings"].count({
-		userID: { $in: newRivals },
-		game,
-		playtype,
-	});
+	const v3Game = GamePTToV3(game, playtype) as Game;
 
-	// note: this check also checks that nothing provided is a duplicate.
+	const { count } = await DB.selectFrom("game_settings")
+		.select(DB.fn.countAll().as("count"))
+		.where("game", "=", v3Game)
+		.where("user_id", "in", newRivals)
+		.executeTakeFirstOrThrow();
+
+	const playedGPTCount = Number(count);
+
 	if (playedGPTCount !== newRivals.length) {
 		return SetRivalsFailReasons.RIVALS_HAVENT_PLAYED_GPT;
 	}
 
-	const currentGameSettings = await MONGODB_KILL["game-settings"].findOne({
-		userID,
-		game,
-		playtype,
-	});
+	const currentGameSettings = await DB.selectFrom("game_settings")
+		.select("user_id")
+		.where("user_id", "=", userID)
+		.where("game", "=", v3Game)
+		.executeTakeFirst();
 
 	if (!currentGameSettings) {
 		log.error(
@@ -140,7 +156,8 @@ export async function SetRivals(
 		);
 	}
 
-	const newSubs = ArrayDiff(currentGameSettings.rivals, newRivals);
+	const currentRivalIDs = await GetRivalIDs(userID, game, playtype);
+	const newSubs = ArrayDiff(currentRivalIDs, newRivals);
 
 	const user = await GetUserWithIDGuaranteed(userID);
 
@@ -148,20 +165,39 @@ export async function SetRivals(
 		newSubs.map((toUserID) => SendSetRivalNotification(toUserID, user, game, playtype)),
 	);
 
-	await MONGODB_KILL["game-settings"].update(
-		{
-			userID,
-			game,
-			playtype,
-		},
-		{
-			$set: {
-				rivals: newRivals,
-			},
-		},
-	);
+	await DB.transaction().execute(async (trx) => {
+		await trx
+			.deleteFrom("game_rival")
+			.where("user_id", "=", userID)
+			.where("game", "=", v3Game)
+			.execute();
+
+		if (newRivals.length > 0) {
+			await trx
+				.insertInto("game_rival")
+				.values(
+					newRivals.map((rival) => ({
+						user_id: userID,
+						game: v3Game,
+						rival,
+					})),
+				)
+				.execute();
+		}
+	});
 
 	await UpdatePlayersRivalRankings(userID, game, playtype);
+
+	return null;
+}
+
+export function SetRivals(
+	userID: integer,
+	game: GameGroup,
+	playtype: Playtype,
+	newRivals: Array<integer>,
+): Promise<SetRivalsFailReasons | null> {
+	return setRivalsWithResult(userID, game, playtype, newRivals);
 }
 
 /**
@@ -177,9 +213,7 @@ export async function AddRival(
 
 	rivalIDs.push(newRival);
 
-	// We use set rivals because its race condition safe. We don't have to check > 5
-	// or anything.
-	return SetRivals(userID, game, playtype, rivalIDs);
+	return setRivalsWithResult(userID, game, playtype, rivalIDs);
 }
 
 /**
@@ -202,27 +236,22 @@ export async function RemoveRival(
 		return null;
 	}
 
-	return SetRivals(userID, game, playtype, rivalIDs);
+	return setRivalsWithResult(userID, game, playtype, filteredRivals);
 }
 
 /**
  * Get all of the userIDs of people who rival the userID for this GPT.
  */
 export async function GetChallengerIDs(userID: integer, game: GameGroup, playtype: Playtype) {
-	const result = await MONGODB_KILL["game-settings"].find(
-		{
-			game,
-			playtype,
-			rivals: userID,
-		},
-		{
-			projection: {
-				userID: 1,
-			},
-		},
-	);
+	const v3Game = GamePTToV3(game, playtype) as Game;
 
-	return result.map((e) => e.userID);
+	const result = await DB.selectFrom("game_rival")
+		.select("user_id")
+		.where("game", "=", v3Game)
+		.where("rival", "=", userID)
+		.execute();
+
+	return result.map((e) => e.user_id);
 }
 
 /**
@@ -251,42 +280,77 @@ export async function UpdatePlayersRivalRankings(
 	playtype: Playtype,
 ) {
 	const gptConfig = GetGamePTConfig(game, playtype);
-
+	const metricKey = String(gptConfig.defaultMetric);
 	const rivalIDs = await GetRivalIDs(userID, game, playtype);
+	const v3Game = GamePTToV3(game, playtype) as Game;
 
-	// get all of this user's chartIDs so we know what to update
-	const userPBs = (await MONGODB_KILL["personal-bests"].find(
-		{ userID, game, playtype },
-		{ projection: { chartID: 1, [`scoreData.${gptConfig.defaultMetric}`]: 1 } },
-	)) as Array<{ chartID: string; scoreData: { percent: number } }>;
+	const userPBs = await DB.selectFrom("pb")
+		.innerJoin("chart", "chart.id", "pb.chart_id")
+		.select(["pb.row_id", "pb.chart_id", "pb.data", "pb.derived_data", "pb.calculated_data"])
+		.where("pb.user_id", "=", userID)
+		.where("chart.game", "=", v3Game)
+		.where("pb.lens", "is", null)
+		.execute();
 
-	const bwrite: Array<BulkWriteUpdateOneOperation<MONGO_PBScoreDocument>> = [];
-
-	await Promise.all(
-		userPBs.map(async (pb) => {
-			const rivalRank =
-				(await MONGODB_KILL["personal-bests"].count({
-					chartID: pb.chartID,
-					userID: { $in: rivalIDs },
-					[`scoreData.${gptConfig.defaultMetric}`]: { $gt: pb.scoreData.percent },
-				})) + 1;
-
-			bwrite.push({
-				updateOne: {
-					filter: { chartID: pb.chartID, userID },
-					update: {
-						$set: {
-							"rankingData.rivalRank": rivalRank,
-						},
-					},
-				},
-			});
-		}),
-	);
-
-	if (bwrite.length === 0) {
+	if (userPBs.length === 0) {
 		return;
 	}
 
-	await MONGODB_KILL["personal-bests"].bulkWrite(bwrite, { ordered: false });
+	const chartIds = [...new Set(userPBs.map((p) => p.chart_id))];
+
+	let rivalPBs: Array<{
+		chart_id: string;
+		data: unknown;
+		derived_data: unknown;
+		user_id: number;
+	}> = [];
+
+	if (rivalIDs.length > 0) {
+		rivalPBs = await DB.selectFrom("pb")
+			.select(["user_id", "chart_id", "data", "derived_data"])
+			.where("user_id", "in", rivalIDs)
+			.where("chart_id", "in", chartIds)
+			.where("lens", "is", null)
+			.execute();
+	}
+
+	await Promise.all(
+		userPBs.map(async (pb) => {
+			const userVal = metricValueFromPbRow(v3Game, pb.data, pb.derived_data, metricKey);
+			if (userVal === null) {
+				return;
+			}
+
+			let betterCount = 0;
+			for (const r of rivalPBs) {
+				if (r.chart_id !== pb.chart_id) {
+					continue;
+				}
+				const rivalVal = metricValueFromPbRow(v3Game, r.data, r.derived_data, metricKey);
+				if (rivalVal !== null && rivalVal > userVal) {
+					betterCount++;
+				}
+			}
+
+			const rivalRank = betterCount + 1;
+
+			const raw = pb.calculated_data;
+			const cd =
+				typeof raw === "string"
+					? (JSON.parse(raw) as Record<string, unknown>)
+					: ((raw ?? {}) as Record<string, unknown>);
+			delete cd.rank;
+			delete cd.outOf;
+
+			await DB.updateTable("pb")
+				.set({
+					calculated_data: JSON.stringify({
+						...cd,
+						rivalRank,
+					}),
+				})
+				.where("row_id", "=", pb.row_id)
+				.execute();
+		}),
+	);
 }

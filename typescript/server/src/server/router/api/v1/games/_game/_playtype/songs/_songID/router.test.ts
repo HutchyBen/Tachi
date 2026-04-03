@@ -39,7 +39,7 @@ async function seedSong({
 async function seedChart({
 	pgId = CHART_PG_ID,
 	legacyId = CHART_LEGACY_ID,
-	songPgId = SONG_PG_ID,
+	songNewID = SONG_PG_ID,
 	difficulty = "ANOTHER",
 	level = "10",
 	levelNum = 10,
@@ -51,7 +51,7 @@ async function seedChart({
 			id: pgId,
 			legacy_id: legacyId,
 			game: "iidx-sp",
-			song_id: songPgId,
+			song_id: songNewID,
 			difficulty,
 			level,
 			level_num: levelNum,

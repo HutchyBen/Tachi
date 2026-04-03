@@ -1,17 +1,18 @@
+import { ACTION_SetRivals } from "#actions/set-rivals";
 import { CreateActivityRouteHandler } from "#lib/activity/activity";
-import { SetRivalsFailReasons } from "#lib/constants/err-codes";
-import { GetChallengerUsers, GetRivalIDs, GetRivalUsers, SetRivals } from "#lib/rivals/rivals";
+import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
+import { LoadPbDocumentsForUserSetSortedByCalculatedAlg } from "#lib/db-formats/pb";
+import { GetChallengerUsers, GetRivalIDs, GetRivalUsers } from "#lib/rivals/rivals";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { IsString } from "#utils/misc";
 import { GetUGPT } from "#utils/req-tachi-data";
 import { CheckStrScoreAlg } from "#utils/string-checks";
-import { GetUsersWithIDs } from "#utils/user";
+import { GetUsersWithIDs, GetUserWithIDGuaranteed } from "#utils/user";
 import { Router } from "express";
 import { p } from "prudence";
-import { FormatGameGroup, GetGamePTConfig, type integer } from "tachi-common";
+import { GamePTToV3, GetGamePTConfig, type integer } from "tachi-common";
 
 import { RequireAuthedAsUser } from "../../../../middleware";
 
@@ -56,27 +57,24 @@ router.put(
 		const rivalIDs = body.rivalIDs;
 		const { user, game, playtype } = GetUGPT(req);
 
-		const result = await SetRivals(user.id, game, playtype, rivalIDs);
+		const authUserID = req[SYMBOL_TACHI_API_AUTH].userID;
 
-		if (result === SetRivalsFailReasons.RIVALED_SELF) {
-			return res.status(400).json({
+		if (authUserID === null) {
+			return res.status(401).json({
 				success: false,
-				description: `You cannot rival yourself.`,
-			});
-		} else if (result === SetRivalsFailReasons.RIVALS_HAVENT_PLAYED_GPT) {
-			return res.status(400).json({
-				success: false,
-				description: `Not all of the rivals you specified have played ${FormatGameGroup(
-					game,
-					playtype,
-				)}.`,
-			});
-		} else if (result === SetRivalsFailReasons.TOO_MANY) {
-			return res.status(400).json({
-				success: false,
-				description: `You can't set more than 5 rivals.`,
+				description: `Authentication is required for this endpoint.`,
 			});
 		}
+
+		const authedUser = await GetUserWithIDGuaranteed(authUserID);
+		const taker = { ip: req.ip, acct: { id: authedUser.id, username: authedUser.username } };
+
+		await ACTION_SetRivals(taker, {
+			userID: user.id,
+			game,
+			playtype,
+			rivalIDs,
+		});
 
 		return res.status(200).json({
 			success: true,
@@ -138,19 +136,8 @@ router.get("/pb-leaderboard", async (req, res) => {
 	const rivalIDs = await GetRivalIDs(user.id, game, playtype);
 	const userSet = [...rivalIDs, user.id];
 
-	const pbs = await MONGODB_KILL["personal-bests"].find(
-		{
-			game,
-			playtype,
-			userID: { $in: userSet },
-		},
-		{
-			sort: {
-				[`calculatedData.${alg}`]: -1,
-			},
-			limit: 100,
-		},
-	);
+	const v3Game = GamePTToV3(game, playtype);
+	const pbs = await LoadPbDocumentsForUserSetSortedByCalculatedAlg(userSet, v3Game, alg, 100);
 
 	const users = await GetUsersWithIDs(pbs.map((e) => e.userID));
 

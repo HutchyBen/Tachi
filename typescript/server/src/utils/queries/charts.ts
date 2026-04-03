@@ -19,24 +19,11 @@ import {
 	type Versions,
 } from "tachi-common";
 
-type ChartJoinedRow = {
-	song_legacy_id: number;
-} & Parameters<typeof ToChartDocument>[0] extends infer R
-	? R
-	: never;
-
-function chartJoinedToDocument(
-	row: { song_legacy_id: number } & ChartJoinedRow,
-): MONGO_ChartDocument {
-	const { song_legacy_id, ...chartRow } = row;
-	return ToChartDocument(chartRow, song_legacy_id);
-}
-
 export async function FindChartWithChartID(game: GameGroup, chartID: string) {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("song.game_group", "=", game)
 		.where("chart.id", "=", chartID)
 		.executeTakeFirst();
@@ -45,7 +32,7 @@ export async function FindChartWithChartID(game: GameGroup, chartID: string) {
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 /**
@@ -63,7 +50,7 @@ export async function FindChartWithPTDF<
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("song.game_group", "=", game)
 		.where("song.legacy_id", "=", songID)
 		.where("chart.game", "=", v3Game)
@@ -75,7 +62,7 @@ export async function FindChartWithPTDF<
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 /**
@@ -92,7 +79,7 @@ export async function FindChartWithPTDFVersion<
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("song.game_group", "=", game)
 		.where("song.legacy_id", "=", songID)
 		.where("chart.game", "=", v3Game)
@@ -104,14 +91,14 @@ export async function FindChartWithPTDFVersion<
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 export async function FindITGChartOnHash(hash: string) {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("chart.game", "=", "itg-stamina" as Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'hashGSv3') = ${hash}`)
 		.executeTakeFirst();
@@ -120,7 +107,7 @@ export async function FindITGChartOnHash(hash: string) {
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 /**
@@ -131,7 +118,7 @@ export async function FindBMSChartOnHash(hash: string) {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("song.game_group", "=", "bms")
 		.where((eb) =>
 			eb.or([
@@ -145,9 +132,7 @@ export async function FindBMSChartOnHash(hash: string) {
 		return null;
 	}
 
-	return chartJoinedToDocument(
-		row as { song_legacy_id: number } & ChartJoinedRow,
-	) as MONGO_ChartDocument<"bms:7K" | "bms:14K">;
+	return ToChartDocument(row) as MONGO_ChartDocument<"bms:7K" | "bms:14K">;
 }
 
 /**
@@ -176,11 +161,7 @@ export async function FindBMSSieglindeRatedCharts(playtype: Playtypes["bms"]): P
 	const songs: Array<MONGO_SongDocument<"bms">> = [];
 
 	for (const row of rows) {
-		charts.push(
-			chartJoinedToDocument(
-				row as { song_legacy_id: number } & ChartJoinedRow,
-			) as MONGO_ChartDocument<"bms:7K" | "bms:14K">,
-		);
+		charts.push(ToChartDocument(row) as MONGO_ChartDocument<"bms:7K" | "bms:14K">);
 		songs.push(ToSongDocument(row) as MONGO_SongDocument<"bms">);
 	}
 
@@ -192,7 +173,7 @@ export async function FindBMSChartOnHashInGame(hash: string, v3Game: Game) {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("chart.game", "=", v3Game)
 		.where((eb) =>
 			eb.or([
@@ -206,9 +187,7 @@ export async function FindBMSChartOnHashInGame(hash: string, v3Game: Game) {
 		return null;
 	}
 
-	return chartJoinedToDocument(
-		row as { song_legacy_id: number } & ChartJoinedRow,
-	) as MONGO_ChartDocument<"bms:7K" | "bms:14K">;
+	return ToChartDocument(row) as MONGO_ChartDocument<"bms:7K" | "bms:14K">;
 }
 
 /** All BMS charts matching MD5 or SHA256 in chart data. Used by global chart-hash search. */
@@ -218,7 +197,7 @@ export async function FindBMSChartsByHashMd5OrSha256(
 	const rows = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("song.game_group", "=", "bms")
 		.where((eb) =>
 			eb.or([
@@ -228,9 +207,7 @@ export async function FindBMSChartsByHashMd5OrSha256(
 		)
 		.execute();
 
-	return rows.map((row) =>
-		chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow),
-	);
+	return rows.map(ToChartDocument);
 }
 
 /** All PMS charts matching MD5 or SHA256 in chart data. Used by global chart-hash search. */
@@ -240,7 +217,7 @@ export async function FindPMSChartsByHashMd5OrSha256(
 	const rows = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("song.game_group", "=", "pms")
 		.where((eb) =>
 			eb.or([
@@ -250,9 +227,7 @@ export async function FindPMSChartsByHashMd5OrSha256(
 		)
 		.execute();
 
-	return rows.map((row) =>
-		chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow),
-	);
+	return rows.map(ToChartDocument);
 }
 
 /** All ITG Stamina charts matching hashGSv3. Used by global chart-hash search. */
@@ -260,14 +235,12 @@ export async function FindITGChartsByHashGSv3(hash: string): Promise<Array<MONGO
 	const rows = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("chart.game", "=", "itg-stamina" as Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'hashGSv3') = ${hash}`)
 		.execute();
 
-	return rows.map((row) =>
-		chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow),
-	);
+	return rows.map(ToChartDocument);
 }
 
 /**
@@ -279,21 +252,17 @@ export async function FindBeatorajaChartOnHashSHA256(
 	const bmsRow = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
 		.where("song.game_group", "=", "bms")
 		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA256') = ${hash}`)
 		.executeTakeFirst();
 
 	if (bmsRow) {
-		return chartJoinedToDocument(
-			bmsRow as { song_legacy_id: number } & ChartJoinedRow,
-		) as MONGO_ChartDocument<"bms:7K" | "bms:14K">;
+		return ToChartDocument(bmsRow) as MONGO_ChartDocument<"bms:7K" | "bms:14K">;
 	}
 
 	const pmsRow = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
 		.where("song.game_group", "=", "pms")
 		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA256') = ${hash}`)
 		.executeTakeFirst();
@@ -302,9 +271,7 @@ export async function FindBeatorajaChartOnHashSHA256(
 		return null;
 	}
 
-	return chartJoinedToDocument(
-		pmsRow as { song_legacy_id: number } & ChartJoinedRow,
-	) as MONGO_ChartDocument<"pms:Controller" | "pms:Keyboard">;
+	return ToChartDocument(pmsRow) as MONGO_ChartDocument<"pms:Controller" | "pms:Keyboard">;
 }
 
 /**
@@ -316,7 +283,6 @@ export async function FindPopnChartOnHashSHA256(hash: string, playtype: Playtype
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
 		.where("song.game_group", "=", "popn")
 		.where("chart.game", "=", v3Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA256') = ${hash}`)
@@ -326,7 +292,7 @@ export async function FindPopnChartOnHashSHA256(hash: string, playtype: Playtype
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 /**
@@ -361,7 +327,6 @@ export async function FindChartOnInGameID(
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
 		.where("song.game_group", "=", game)
 		.where("chart.game", "=", v3Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
@@ -372,7 +337,7 @@ export async function FindChartOnInGameID(
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 /**
@@ -393,7 +358,6 @@ export async function FindChartOnInGameIDPrimary(
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
 		.where("song.game_group", "=", game)
 		.where("chart.game", "=", v3Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
@@ -405,7 +369,7 @@ export async function FindChartOnInGameIDPrimary(
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 /**
@@ -422,7 +386,6 @@ export async function FindIIDXChartOnInGameID(
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
 		.where("chart.game", "=", v3Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
 		.where(sql<SqlBool>`(chart.data->>'2dxtraSet') IS NULL`)
@@ -434,7 +397,7 @@ export async function FindIIDXChartOnInGameID(
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 /**
@@ -452,7 +415,6 @@ export async function FindIIDXChartOnInGameIDVersion(
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
 		.where("chart.game", "=", v3Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
 		.where(sql<SqlBool>`(chart.data->>'2dxtraSet') IS NULL`)
@@ -464,7 +426,7 @@ export async function FindIIDXChartOnInGameIDVersion(
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 /**
@@ -482,7 +444,7 @@ export async function FindChartOnInGameIDVersion<GPT extends GPTString = GPTStri
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("song.game_group", "=", game)
 		.where("chart.game", "=", v3Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
@@ -494,7 +456,7 @@ export async function FindChartOnInGameIDVersion<GPT extends GPTString = GPTStri
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 /**
@@ -515,7 +477,7 @@ export async function FindChartOnInGameStrIDPrimary(
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("song.game_group", "=", game)
 		.where("chart.game", "=", v3Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameStrID') = ${inGameStrID}`)
@@ -527,7 +489,7 @@ export async function FindChartOnInGameStrIDPrimary(
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 /**
@@ -549,7 +511,7 @@ export async function FindChartOnInGameStrIDVersion<GPT extends GPTString = GPTS
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("song.game_group", "=", game)
 		.where("chart.game", "=", v3Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameStrID') = ${inGameStrID}`)
@@ -561,7 +523,7 @@ export async function FindChartOnInGameStrIDVersion<GPT extends GPTString = GPTS
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 /**
@@ -571,7 +533,7 @@ export async function FindIIDXChartWith2DXtraHash(hash: string) {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("chart.game", "=", "iidx-sp" as Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA256') = ${hash}`)
 		.executeTakeFirst();
@@ -580,7 +542,7 @@ export async function FindIIDXChartWith2DXtraHash(hash: string) {
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 const SDVX_INF_DIFFS = ["INF", "GRV", "HVN", "VVD", "XCD"] as const;
@@ -598,7 +560,7 @@ export async function FindSDVXChartOnInGameID(
 	let q = DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("chart.game", "=", "sdvx" as Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
 		.where("chart.is_primary", "=", true);
@@ -614,7 +576,7 @@ export async function FindSDVXChartOnInGameID(
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 export async function FindSDVXChartOnInGameIDVersion(
@@ -625,7 +587,7 @@ export async function FindSDVXChartOnInGameIDVersion(
 	let q = DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("chart.game", "=", "sdvx" as Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
 		.where(sql<boolean>`${sql.lit(String(version))} = ANY(chart.versions)`);
@@ -641,7 +603,7 @@ export async function FindSDVXChartOnInGameIDVersion(
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 export async function FindSDVXChartOnDFVersion(
@@ -652,7 +614,7 @@ export async function FindSDVXChartOnDFVersion(
 	let q = DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("song.game_group", "=", "sdvx")
 		.where("song.legacy_id", "=", songID)
 		.where("chart.game", "=", "sdvx" as Game)
@@ -669,7 +631,7 @@ export async function FindSDVXChartOnDFVersion(
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 export async function FindChartOnSHA256(game: GameGroup, hash: string) {
@@ -680,7 +642,7 @@ export async function FindChartOnSHA256(game: GameGroup, hash: string) {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("song.game_group", "=", game)
 		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA256') = ${hash}`)
 		.executeTakeFirst();
@@ -689,7 +651,7 @@ export async function FindChartOnSHA256(game: GameGroup, hash: string) {
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 export async function FindChartOnSHA256Playtype(game: GameGroup, hash: string, playtype: Playtype) {
@@ -702,7 +664,7 @@ export async function FindChartOnSHA256Playtype(game: GameGroup, hash: string, p
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("song.game_group", "=", game)
 		.where("chart.game", "=", v3Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA256') = ${hash}`)
@@ -712,7 +674,7 @@ export async function FindChartOnSHA256Playtype(game: GameGroup, hash: string, p
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 /**
@@ -725,7 +687,7 @@ export async function FindUSCChartOnSHA1Playtype(hash: string, playtype: Playtyp
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("song.game_group", "=", "usc")
 		.where("chart.game", "=", v3Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA1') = ${hash}`)
@@ -735,7 +697,7 @@ export async function FindUSCChartOnSHA1Playtype(hash: string, playtype: Playtyp
 		return null;
 	}
 
-	return chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow);
+	return ToChartDocument(row);
 }
 
 /** All USC charts matching a SHA1 hash (any playtype). Used by global chart-hash search. */
@@ -743,14 +705,12 @@ export async function FindUSCChartsByHashSHA1(hash: string): Promise<Array<MONGO
 	const rows = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
+
 		.where("song.game_group", "=", "usc")
 		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA1') = ${hash}`)
 		.execute();
 
-	return rows.map((row) =>
-		chartJoinedToDocument(row as { song_legacy_id: number } & ChartJoinedRow),
-	);
+	return rows.map((row) => ToChartDocument(row));
 }
 
 /**

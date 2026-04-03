@@ -11,10 +11,7 @@ export const ACTION_DeleteScore = MakeAction("DELETE_SCORE", async (taker, { id,
 		throw new ExpectedErr(404, "This score does not exist.");
 	}
 
-	if (
-		score.userID !== taker.acct.id &&
-		!(await IsUserAdmin(taker.acct.id))
-	) {
+	if (score.userID !== taker.acct.id && !(await IsUserAdmin(taker.acct.id))) {
 		throw new ExpectedErr(403, "You are not authorised to perform this action.");
 	}
 

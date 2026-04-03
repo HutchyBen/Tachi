@@ -1,15 +1,29 @@
 import type { GoalCriteriaFormatter } from "#game-implementations/types";
-import type { FilterQuery } from "mongodb";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
+import {
+	ToGoalDocument,
+	ToGoalSubscriptionDocument,
+	ToQuestDocument,
+	ToQuestSubscriptionDocument,
+} from "#lib/db-formats/target-documents";
 import { GetFolderChartIDs } from "#lib/folders/folders.js";
+import {
+	getGoalMetricValueFromPb,
+	LoadPbsForUserOnChartsForGoal,
+	pbMeetsGoalThreshold,
+} from "#lib/targets/goal-pb-queries.js";
 import { type KtLogger, log } from "#lib/log/log";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
+import { UnixMillisecondsToISO8601 } from "#utils/time";
 import fjsh from "fast-json-stable-hash";
+import { sql } from "kysely";
+import type { Game } from "tachi-db";
 import {
 	FormatGameGroup,
 	type GameGroup,
+	GamePTToV3,
 	GetGPTConfig,
 	GetGPTString,
 	GetScoreMetricConf,
@@ -21,6 +35,8 @@ import {
 	type MONGO_QuestDocument,
 	type MONGO_QuestSubscriptionDocument,
 	type Playtype,
+	V3ToGameGroup,
+	v3AllGames,
 } from "tachi-common";
 
 import { CreateGoalTitle as CreateGoalName, ValidateGoalChartsAndCriteria } from "./goal-utils";
@@ -58,8 +74,6 @@ export async function EvaluateGoalForUser(
 	userID: integer,
 	log: KtLogger,
 ): Promise<EvaluatedGoalReturn | null> {
-	// First, we need to resolve the set of charts this
-	// goal involves.
 	const chartIDs = await ResolveGoalCharts(goal);
 	const gptString = GetGPTString(goal.game, goal.playtype);
 	const gptConfig = GetGPTConfig(gptString);
@@ -71,41 +85,27 @@ export async function EvaluateGoalForUser(
 		);
 	}
 
-	let scoreDataKey;
-
-	if (scoreConf.type === "ENUM") {
-		scoreDataKey = `scoreData.enumIndexes.${goal.criteria.key}`;
-	} else {
-		scoreDataKey = `scoreData.${goal.criteria.key}`;
-	}
-
-	// lets configure a "base" query for our requests.
-	const scoreQuery: FilterQuery<MONGO_PBScoreDocument> = {
-		userID,
-		game: goal.game,
-		playtype: goal.playtype,
-
-		// normally, this would be a VERY WORRYING line of code, but goal.criteria.key is guaranteed to be
-		// within a specific set of fields.
-		[scoreDataKey]: { $gte: goal.criteria.value },
-		chartID: { $in: chartIDs },
-	};
+	const pbs = await LoadPbsForUserOnChartsForGoal(userID, chartIDs);
 
 	switch (goal.criteria.mode) {
 		case "single": {
-			const res = await MONGODB_KILL["personal-bests"].findOne(scoreQuery);
-
 			const outOfHuman = HumaniseGoalOutOf(gptString, goal.criteria.key, goal.criteria.value);
 
-			if (res) {
+			const qualifying = pbs.filter((pb) =>
+				pbMeetsGoalThreshold(pb, goal.criteria.key, goal.criteria.value, scoreConf),
+			);
+
+			if (qualifying.length > 0) {
+				const res = qualifying[0]!;
+
 				return {
 					achieved: true,
 					outOf: goal.criteria.value,
 					progress:
 						scoreConf.type === "ENUM"
-							? // @ts-expect-error this is always correct but the typesystem is rightfully concerned
+							? // @ts-expect-error narrow
 								res.scoreData.enumIndexes[goal.criteria.key]
-							: // @ts-expect-error see above
+							: // @ts-expect-error narrow
 								res.scoreData[goal.criteria.key],
 					outOfHuman,
 					progressHuman: HumaniseGoalProgress(
@@ -117,21 +117,15 @@ export async function EvaluateGoalForUser(
 				};
 			}
 
-			// if we didn't find a PB that achieved the goal immediately
-			// fetch the next best thing.
-			const nextBestQuery: FilterQuery<MONGO_PBScoreDocument> = {
-				userID,
-				game: goal.game,
-				playtype: goal.playtype,
-				chartID: { $in: chartIDs },
-			};
+			const scored = pbs
+				.map((pb) => ({
+					pb,
+					v: getGoalMetricValueFromPb(pb, goal.criteria.key, scoreConf),
+				}))
+				.filter((e): e is { pb: MONGO_PBScoreDocument; v: number } => e.v !== null)
+				.sort((a, b) => b.v - a.v);
 
-			const nextBestScore = await MONGODB_KILL["personal-bests"].findOne(nextBestQuery, {
-				sort: { [scoreDataKey]: -1 },
-			});
-
-			// user has no scores on any charts in this set.
-			if (!nextBestScore) {
+			if (scored.length === 0) {
 				return {
 					achieved: false,
 					outOf: goal.criteria.value,
@@ -141,15 +135,17 @@ export async function EvaluateGoalForUser(
 				};
 			}
 
+			const nextBestScore = scored[0]!.pb;
+
 			return {
 				achieved: false,
 				outOf: goal.criteria.value,
 				outOfHuman,
 				progress:
 					scoreConf.type === "ENUM"
-						? // @ts-expect-error this is always correct but the typesystem is rightfully concerned
+						? // @ts-expect-error narrow
 							nextBestScore.scoreData.enumIndexes[goal.criteria.key]
-						: // @ts-expect-error see above
+						: // @ts-expect-error narrow
 							nextBestScore.scoreData[goal.criteria.key],
 				progressHuman: HumaniseGoalProgress(
 					gptString,
@@ -162,21 +158,19 @@ export async function EvaluateGoalForUser(
 
 		case "absolute":
 		case "proportion": {
-			let count;
+			let count: number;
 
-			// abs -> Absolute mode, such as clear 10 charts.
 			if (goal.criteria.mode === "absolute") {
 				count = goal.criteria.countNum;
 			} else {
-				// proportion -> Proportional mode, the value
-				// is a multiplier for the amount of charts
-				// available -- i.e. 0.1 * charts.
 				const totalChartCount = chartIDs.length;
 
 				count = Math.floor(goal.criteria.countNum * totalChartCount);
 			}
 
-			const userCount = await MONGODB_KILL["personal-bests"].count(scoreQuery);
+			const userCount = pbs.filter((pb) =>
+				pbMeetsGoalThreshold(pb, goal.criteria.key, goal.criteria.value, scoreConf),
+			).length;
 
 			return {
 				achieved: userCount >= count,
@@ -188,8 +182,6 @@ export async function EvaluateGoalForUser(
 		}
 
 		default: {
-			// note that this seemingly nonsensical type assertion is because typescript has whittled down
-			// goal.criteria (correctly) to 'never', but we want to log if something somehow ends up here (it shouldn't).
 			log.warn(
 				{ goal },
 				`Invalid goal: ${goal.goalID}, unknown criteria.mode ${
@@ -305,11 +297,9 @@ export async function ConstructGoal(
 	game: GameGroup,
 	playtype: Playtype,
 ): Promise<MONGO_GoalDocument> {
-	// Throws if the charts or criteria are invalid somehow.
 	await ValidateGoalChartsAndCriteria(charts, criteria, game, playtype);
 
 	// @ts-expect-error It's complaining because the potential criteria types might mismatch.
-	// they're right, but this is enforced by ValidateGoalChartsAndCriteria.
 	const MONGO_GoalDocument: MONGO_GoalDocument = {
 		game,
 		playtype,
@@ -320,6 +310,26 @@ export async function ConstructGoal(
 	};
 
 	return MONGO_GoalDocument;
+}
+
+async function ensureGoalRow(doc: MONGO_GoalDocument) {
+	const v3Game = GamePTToV3(doc.game, doc.playtype);
+
+	const existed = await DB.selectFrom("goal").select("goal.id").where("id", "=", doc.goalID).executeTakeFirst();
+
+	if (!existed) {
+		await DB.insertInto("goal")
+			.values({
+				id: doc.goalID,
+				game: v3Game,
+				name: doc.name,
+				charts: doc.charts,
+				criteria: doc.criteria,
+			})
+			.execute();
+
+		log.info(`Inserting new goal '${doc.name}'.`);
+	}
 }
 
 /**
@@ -338,47 +348,48 @@ export async function SubscribeToGoal(
 	MONGO_GoalDocument: MONGO_GoalDocument,
 	isStandaloneAssignment: boolean,
 ) {
-	const goalExists = await MONGODB_KILL.goals.findOne({ goalID: MONGO_GoalDocument.goalID });
+	await ensureGoalRow(MONGO_GoalDocument);
 
-	if (!goalExists) {
-		await MONGODB_KILL.goals.insert(MONGO_GoalDocument);
-		log.info(`Inserting new goal '${MONGO_GoalDocument.name}'.`);
-	}
+	const existingSub = await DB.selectFrom("goal_sub")
+		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+		.selectAll("goal_sub")
+		.select("goal.game as goal_game")
+		.where("goal_sub.goal_id", "=", MONGO_GoalDocument.goalID)
+		.where("goal_sub.user_id", "=", userID)
+		.executeTakeFirst();
 
-	const userAlreadySubscribed = await MONGODB_KILL["goal-subs"].findOne({
-		userID,
-		goalID: MONGO_GoalDocument.goalID,
-	});
+	if (existingSub) {
+		const userAlreadySubscribed = ToGoalSubscriptionDocument({
+			...existingSub,
+			goal_game: existingSub.goal_game as Game,
+		});
 
-	if (userAlreadySubscribed) {
-		// A quest trying to assign an already subscribed goal should know that.
-		// (not that it cares)
 		if (!isStandaloneAssignment) {
 			return SubscribeFailReasons.ALREADY_SUBSCRIBED;
 		}
 
-		// if the user was already standalone-subscribed, ignore another standalone
-		// assignment.
 		if (userAlreadySubscribed.wasAssignedStandalone) {
 			return SubscribeFailReasons.ALREADY_SUBSCRIBED;
 		}
 
-		// otherwise, this is a standalone assignment to a goal that was already assigned
-		// as a consequence of a quest. Mark it as standalone
-		await MONGODB_KILL["goal-subs"].update(
-			{
-				userID,
-				goalID: MONGO_GoalDocument.goalID,
-			},
-			{
-				$set: {
-					wasAssignedStandalone: true,
-				},
-			},
-		);
+		await DB.updateTable("goal_sub")
+			.set({ was_assigned_standalone: true })
+			.where("goal_id", "=", MONGO_GoalDocument.goalID)
+			.where("user_id", "=", userID)
+			.execute();
 
-		// return this goal sub document, it's fast!
-		return { ...userAlreadySubscribed, wasAssignedStandalone: true };
+		const updated = await DB.selectFrom("goal_sub")
+			.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+			.selectAll("goal_sub")
+			.select("goal.game as goal_game")
+			.where("goal_sub.goal_id", "=", MONGO_GoalDocument.goalID)
+			.where("goal_sub.user_id", "=", userID)
+			.executeTakeFirstOrThrow();
+
+		return ToGoalSubscriptionDocument({
+			...updated,
+			goal_game: updated.goal_game as Game,
+		});
 	}
 
 	const result = await EvaluateGoalForUser(MONGO_GoalDocument, userID, log);
@@ -387,39 +398,72 @@ export async function SubscribeToGoal(
 		throw new Error(`Couldn't evaluate goal? See previous logs.`);
 	}
 
-	// standalone assignments shouldn't be allowed to assign instantly-achieved
-	// goals
 	if (result.achieved && isStandaloneAssignment) {
 		return SubscribeFailReasons.ALREADY_ACHIEVED;
 	}
 
-	// @ts-expect-error TS can't resolve this.
-	// because it can't explode out the types.
-	const goalSub: MONGO_GoalSubscriptionDocument = {
+	const nowMs = Date.now();
+	const nowIso = UnixMillisecondsToISO8601(nowMs);
+
+	const baseSub = {
 		outOf: result.outOf,
 		outOfHuman: result.outOfHuman,
 		progress: result.progress,
 		progressHuman: result.progressHuman,
 		userID,
 		lastInteraction: null,
-		timeAchieved: result.achieved ? Date.now() : null,
 		game: MONGO_GoalDocument.game,
 		playtype: MONGO_GoalDocument.playtype,
 		goalID: MONGO_GoalDocument.goalID,
-		achieved: result.achieved,
 		wasInstantlyAchieved: result.achieved,
 		wasAssignedStandalone: isStandaloneAssignment,
 	};
 
-	await MONGODB_KILL["goal-subs"].insert(goalSub);
+	const goalSub: MONGO_GoalSubscriptionDocument = result.achieved
+		? {
+				...baseSub,
+				achieved: true,
+				timeAchieved: nowMs,
+			}
+		: {
+				...baseSub,
+				achieved: false,
+				timeAchieved: null,
+			};
+
+	await DB.insertInto("goal_sub")
+		.values({
+			goal_id: MONGO_GoalDocument.goalID,
+			user_id: userID,
+			last_interaction: null,
+			progress: goalSub.progress,
+			progress_human: goalSub.progressHuman,
+			out_of: goalSub.outOf,
+			out_of_human: goalSub.outOfHuman,
+			achieved: goalSub.achieved,
+			time_achieved: result.achieved ? nowIso : null,
+			was_instantly_achieved: goalSub.wasInstantlyAchieved,
+			was_assigned_standalone: goalSub.wasAssignedStandalone,
+		})
+		.execute();
 
 	return goalSub;
 }
 
-export function GetQuestsThatContainGoal(goalID: string) {
-	return MONGODB_KILL.quests.find({
-		"questData.goals.goalID": goalID,
-	});
+export async function GetQuestsThatContainGoal(goalID: string): Promise<Array<MONGO_QuestDocument>> {
+	const rows = await DB.selectFrom("quest")
+		.selectAll()
+		.where(
+			sql<boolean>`exists (
+				select 1
+				from jsonb_array_elements(quest.quest_data) as section,
+				lateral jsonb_array_elements(coalesce(section->'goals', '[]'::jsonb)) as g
+				where g->>'goalID' = ${goalID}
+			)`,
+		)
+		.execute();
+
+	return rows.map(ToQuestDocument);
 }
 
 /**
@@ -432,42 +476,54 @@ export function GetQuestsThatContainGoal(goalID: string) {
 export async function GetQuestSubsWhichDependOnThisGoalSub(
 	goalSub: MONGO_GoalSubscriptionDocument,
 ): Promise<Array<{ quest: MONGO_QuestDocument } & MONGO_QuestSubscriptionDocument>> {
-	const dependencies: Array<{ quest: MONGO_QuestDocument } & MONGO_QuestSubscriptionDocument> =
-		await MONGODB_KILL["quest-subs"].aggregate([
-			{
-				// find all quests that this user is subscribed to
-				$match: {
-					userID: goalSub.userID,
-					game: goalSub.game,
-					playtype: goalSub.playtype,
-				},
-			},
-			{
-				// look up the parent quests
-				$lookup: {
-					from: "quests",
-					localField: "questID",
-					foreignField: "questID",
-					as: "parentQuestSubs",
-				},
-			},
-			{
-				// then project it onto the $quest field. This will be null
-				// if the quest has no parent, which we hopefully won't have
-				// to consider (illegal)
-				$set: {
-					quest: { $arrayElemAt: ["$parentQuestSubs", 0] },
-				},
-			},
-			{
-				// then finally, filter to only quests that pertain to this goal.
-				$match: {
-					"quest.questData.goals.goalID": goalSub.goalID,
-				},
-			},
-		]);
+	const v3Game = GamePTToV3(goalSub.game, goalSub.playtype);
 
-	return dependencies;
+	const subRows = await DB.selectFrom("quest_sub")
+		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
+		.selectAll("quest_sub")
+		.select("quest.game as quest_game")
+		.where("quest_sub.user_id", "=", goalSub.userID)
+		.where("quest.game", "=", v3Game)
+		.where(
+			sql<boolean>`exists (
+				select 1
+				from jsonb_array_elements(quest.quest_data) as section,
+				lateral jsonb_array_elements(coalesce(section->'goals', '[]'::jsonb)) as g
+				where g->>'goalID' = ${goalSub.goalID}
+			)`,
+		)
+		.execute();
+
+	const questIds = [...new Set(subRows.map((r) => r.quest_id))];
+
+	const questRows =
+		questIds.length === 0
+			? []
+			: await DB.selectFrom("quest").selectAll().where("id", "in", questIds).execute();
+
+	const questById = new Map(questRows.map((q) => [q.id, ToQuestDocument(q)]));
+
+	return subRows.map((r) => {
+		const quest = questById.get(r.quest_id);
+
+		if (!quest) {
+			throw new Error(`quest ${r.quest_id} missing after join`);
+		}
+
+		return {
+			quest,
+			...ToQuestSubscriptionDocument({
+				quest_id: r.quest_id,
+				user_id: r.user_id,
+				progress: r.progress,
+				last_interaction: r.last_interaction,
+				achieved: r.achieved,
+				time_achieved: r.time_achieved,
+				was_instantly_achieved: r.was_instantly_achieved,
+				quest_game: r.quest_game as Game,
+			}),
+		};
+	});
 }
 
 /**
@@ -489,11 +545,9 @@ export async function UnsubscribeFromGoal(
 
 	switch (dependencies.reason) {
 		case "HAS_QUEST_DEPENDENCIES":
-			// never remove a goalSub if it has quests depending on it
 			return dependencies;
 
 		case "WAS_STANDALONE": {
-			// only prevent standalone removal if we're told to
 			if (preventStandaloneRemoval) {
 				return dependencies;
 			}
@@ -501,15 +555,13 @@ export async function UnsubscribeFromGoal(
 			break;
 		}
 
-		// no handling necessary, orphaned goals should never happen.
 		case "WAS_ORPHAN":
 	}
 
-	// if we have no reason to prevent the removal, remove it.
-	await MONGODB_KILL["goal-subs"].remove({
-		userID: goalSub.userID,
-		goalID: goalSub.goalID,
-	});
+	await DB.deleteFrom("goal_sub")
+		.where("goal_id", "=", goalSub.goalID)
+		.where("user_id", "=", goalSub.userID)
+		.execute();
 
 	return null;
 }
@@ -552,7 +604,22 @@ export async function UnsubscribeFromOrphanedGoalSubs(
 	game: GameGroup,
 	playtype: Playtype,
 ) {
-	const goalSubs = await MONGODB_KILL["goal-subs"].find({ game, playtype, userID });
+	const v3Game = GamePTToV3(game, playtype);
+
+	const subRows = await DB.selectFrom("goal_sub")
+		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+		.selectAll("goal_sub")
+		.select("goal.game as goal_game")
+		.where("goal_sub.user_id", "=", userID)
+		.where("goal.game", "=", v3Game)
+		.execute();
+
+	const goalSubs = subRows.map((r) =>
+		ToGoalSubscriptionDocument({
+			...r,
+			goal_game: r.goal_game as Game,
+		}),
+	);
 
 	const maybeToRemove = await Promise.all(
 		goalSubs.map(async (goalSub) => {
@@ -566,8 +633,7 @@ export async function UnsubscribeFromOrphanedGoalSubs(
 		}),
 	);
 
-	// impressive that ts can't resolve this without a cast
-	const toRemove = maybeToRemove.filter((e) => e !== null) as Array<string>;
+	const toRemove = maybeToRemove.filter((e): e is string => e !== null);
 
 	if (toRemove.length > 0) {
 		log.info(
@@ -577,10 +643,10 @@ export async function UnsubscribeFromOrphanedGoalSubs(
 			)} as they were orphanned.`,
 		);
 
-		await MONGODB_KILL["goal-subs"].remove({
-			userID,
-			goalID: { $in: toRemove },
-		});
+		await DB.deleteFrom("goal_sub")
+			.where("user_id", "=", userID)
+			.where("goal_id", "in", toRemove)
+			.execute();
 	}
 }
 
@@ -605,22 +671,33 @@ export async function GetRelevantGoals(
 	goals: Array<MONGO_GoalDocument>;
 	goalSubsMap: Map<string, MONGO_GoalSubscriptionDocument>;
 }> {
-	const gsQuery: FilterQuery<MONGO_GoalSubscriptionDocument> = {
-		game,
-		userID,
-	};
+	const v3GamesForGroup = v3AllGames.filter((v) => V3ToGameGroup(v) === game);
+
+	let q = DB.selectFrom("goal_sub")
+		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+		.selectAll("goal_sub")
+		.select("goal.game as goal_game")
+		.where("goal_sub.user_id", "=", userID)
+		.where("goal.game", "in", v3GamesForGroup);
 
 	if (onlyUnachieved) {
-		gsQuery.achieved = false;
+		q = q.where("goal_sub.achieved", "=", false);
 	}
 
-	const goalSubs = await MONGODB_KILL["goal-subs"].find(gsQuery);
+	const subRows = await q.execute();
 
-	log.debug(`Found user has ${goalSubs.length} goals.`);
+	log.debug(`Found user has ${subRows.length} goals.`);
 
-	if (!goalSubs.length) {
+	if (!subRows.length) {
 		return { goals: [], goalSubsMap: new Map() };
 	}
+
+	const goalSubs = subRows.map((r) =>
+		ToGoalSubscriptionDocument({
+			...r,
+			goal_game: r.goal_game as Game,
+		}),
+	);
 
 	const goalIDs = goalSubs.map((e) => e.goalID);
 
@@ -630,18 +707,25 @@ export async function GetRelevantGoals(
 		chartIDsArr.push(c);
 	}
 
-	const promises = [
-		// this gets the relevantGoals for direct and multi
-		MONGODB_KILL.goals.find({
-			"charts.type": { $in: ["single", "multi"] },
-			"charts.data": { $in: chartIDsArr },
-			goalID: { $in: goalIDs },
-		}),
-		GetRelevantFolderGoals(goalIDs, chartIDsArr),
-	];
+	const goalRows = await DB.selectFrom("goal").selectAll().where("goal.id", "in", goalIDs).execute();
 
-	const goals = await Promise.all(promises).then((r) => r.flat(1));
+	const directMulti: Array<MONGO_GoalDocument> = [];
 
+	for (const g of goalRows) {
+		const doc = ToGoalDocument(g);
+
+		if (doc.charts.type === "single" && chartIDsArr.includes(doc.charts.data)) {
+			directMulti.push(doc);
+		} else if (doc.charts.type === "multi") {
+			if (doc.charts.data.some((c) => chartIDsArr.includes(c))) {
+				directMulti.push(doc);
+			}
+		}
+	}
+
+	const folderGoals = await GetRelevantFolderGoals(goalIDs, chartIDsArr);
+
+	const goals = [...directMulti, ...folderGoals];
 	const goalSet = new Set(goals.map((e) => e.goalID));
 
 	const goalSubsMap: Map<string, MONGO_GoalSubscriptionDocument> = new Map();
@@ -651,8 +735,6 @@ export async function GetRelevantGoals(
 			continue;
 		}
 
-		// since these are guaranteed to be unique, lets make a hot map of goalID -> goalSubDocument, so we can
-		// pull them in for post-processing and filter out the goalSubDocuments that aren't relevant.
 		goalSubsMap.set(goalSub.goalID, goalSub);
 	}
 
@@ -667,39 +749,21 @@ export async function GetRelevantGoals(
  * of chartIDsArr.
  */
 export async function GetRelevantFolderGoals(goalIDs: Array<string>, chartIDsArr: Array<string>) {
-	// Slightly black magic - this is kind of like doing an SQL join.
-	// it's weird to do this in mongodb, but this seems like the right
-	// way to actually handle this.
+	if (goalIDs.length === 0 || chartIDsArr.length === 0) {
+		return [];
+	}
 
-	const result: Array<MONGO_GoalDocument> = await MONGODB_KILL.goals.aggregate([
-		{
-			$match: {
-				"charts.type": "folder",
-				goalID: { $in: goalIDs },
-			},
-		},
-		{
-			$lookup: {
-				from: "folder-chart-lookup",
-				localField: "charts.data",
-				foreignField: "folderID",
-				as: "folderCharts",
-			},
-		},
-		{
-			$match: {
-				"folderCharts.chartID": { $in: chartIDsArr },
-			},
-		},
-		{
-			$project: {
-				folderCharts: 0,
-				_id: 0,
-			},
-		},
-	]);
+	const rows = await DB.selectFrom("goal")
+		.innerJoin("folder_chart_lookup", (join) =>
+			join.on(sql`folder_chart_lookup.folder_id`, "=", sql`goal.charts->>'data'`),
+		)
+		.selectAll("goal")
+		.where(sql`goal.charts->>'type'`, "=", "folder")
+		.where("goal.id", "in", goalIDs)
+		.where("folder_chart_lookup.chart_id", "in", chartIDsArr)
+		.execute();
 
-	return result;
+	return rows.map(ToGoalDocument);
 }
 
 /**
@@ -717,17 +781,8 @@ export async function EditGoal(oldGoal: MONGO_GoalDocument, newGoal: MONGO_GoalD
 
 	newGoal.goalID = newGoalID;
 
-	await MONGODB_KILL["goal-subs"].update(
-		{
-			goalID: oldGoal.goalID,
-		},
-		{
-			$set: { goalID: newGoalID },
-		},
-		{ multi: true },
-	);
+	await DB.updateTable("goal_sub").set({ goal_id: newGoalID }).where("goal_id", "=", oldGoal.goalID).execute();
 
-	// update any dangling quest references
 	const quests = await GetQuestsThatContainGoal(oldGoal.goalID);
 
 	for (const quest of quests) {
@@ -750,15 +805,13 @@ export async function EditGoal(oldGoal: MONGO_GoalDocument, newGoal: MONGO_GoalD
 			});
 		}
 
-		await MONGODB_KILL.quests.update(
-			{ questID: quest.questID },
-			{
-				$set: { questData: newQuestData },
-			},
-		);
+		await DB.updateTable("quest")
+			.set({ quest_data: newQuestData })
+			.where("quest.id", "=", quest.questID)
+			.execute();
 	}
 
-	await MONGODB_KILL.goals.remove({ goalID: oldGoal.goalID });
+	await DB.deleteFrom("goal").where("goal.id", "=", oldGoal.goalID).execute();
 
 	newGoal.name = await CreateGoalName(
 		newGoal.charts,
@@ -766,9 +819,20 @@ export async function EditGoal(oldGoal: MONGO_GoalDocument, newGoal: MONGO_GoalD
 		newGoal.game,
 		newGoal.playtype,
 	);
+
+	const v3Game = GamePTToV3(newGoal.game, newGoal.playtype);
+
 	try {
-		await MONGODB_KILL.goals.insert(newGoal);
-	} catch (err) {
+		await DB.insertInto("goal")
+			.values({
+				id: newGoal.goalID,
+				game: v3Game,
+				name: newGoal.name,
+				charts: newGoal.charts,
+				criteria: newGoal.criteria,
+			})
+			.execute();
+	} catch {
 		log.info(`Goal ${newGoal.name} already existed.`);
 	}
 }

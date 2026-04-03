@@ -1,8 +1,14 @@
 import { GetChartById } from "#lib/db-formats/chart";
+import { LoadFolderDocumentById } from "#lib/db-formats/folders";
+import {
+	ToGoalDocument,
+	ToGoalSubscriptionDocument,
+	ToQuestSubscriptionDocument,
+} from "#lib/db-formats/target-documents";
 import { log } from "#lib/log/log";
 import { GetRelevantGoals } from "#lib/targets/goals";
 import { GetParentQuests } from "#lib/targets/quests";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import {
 	GetRecentlyAchievedGoals,
 	GetRecentlyAchievedQuests,
@@ -13,6 +19,7 @@ import { GetFolderChartIDs } from "#utils/folder";
 import { GetUGPT } from "#utils/req-tachi-data";
 import { Router } from "express";
 import { GamePTToV3, MongoChartLegacyId } from "tachi-common";
+import type { Game } from "tachi-db";
 
 import goalsRouter from "./goals/router";
 import questsRouter from "./quests/router";
@@ -107,9 +114,33 @@ router.get("/on-chart/:chartID", async (req, res) => {
 
 	const quests = await GetParentQuests(user.id, game, playtype, goalSubs);
 
-	const questSubs = await MONGODB_KILL["quest-subs"].find({
-		questID: { $in: quests.map((e) => e.questID) },
-	});
+	const v3Game = GamePTToV3(game, playtype);
+	const questIds = quests.map((e) => e.questID);
+
+	const questSubRows =
+		questIds.length === 0
+			? []
+			: await DB.selectFrom("quest_sub")
+					.innerJoin("quest", "quest.id", "quest_sub.quest_id")
+					.selectAll("quest_sub")
+					.select("quest.game as quest_game")
+					.where("quest_sub.user_id", "=", user.id)
+					.where("quest.game", "=", v3Game)
+					.where("quest_sub.quest_id", "in", questIds)
+					.execute();
+
+	const questSubs = questSubRows.map((r) =>
+		ToQuestSubscriptionDocument({
+			quest_id: r.quest_id,
+			user_id: r.user_id,
+			progress: r.progress,
+			last_interaction: r.last_interaction,
+			achieved: r.achieved,
+			time_achieved: r.time_achieved,
+			was_instantly_achieved: r.was_instantly_achieved,
+			quest_game: r.quest_game as Game,
+		}),
+	);
 
 	return res.status(200).json({
 		success: true,
@@ -133,9 +164,9 @@ router.get("/on-folder/:folderID", async (req, res) => {
 
 	const folderID = req.params.folderID;
 
-	const folder = await MONGODB_KILL.folders.findOne({ folderID, playtype });
+	const folder = await LoadFolderDocumentById(folderID);
 
-	if (!folder) {
+	if (!folder || folder.game !== game || folder.playtype !== playtype) {
 		return res.status(404).json({
 			success: false,
 			description: `Failed to find a folder with folderID '${folderID}'.`,
@@ -144,42 +175,78 @@ router.get("/on-folder/:folderID", async (req, res) => {
 
 	const folderChartIDs = await GetFolderChartIDs(folderID);
 
-	const allGoalSubs = await MONGODB_KILL["goal-subs"].find({
-		userID: user.id,
-		game,
-		playtype,
-	});
+	const v3Game = GamePTToV3(game, playtype);
+
+	const allSubRows = await DB.selectFrom("goal_sub")
+		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+		.selectAll("goal_sub")
+		.select("goal.game as goal_game")
+		.where("goal_sub.user_id", "=", user.id)
+		.where("goal.game", "=", v3Game)
+		.execute();
+
+	const allGoalSubs = allSubRows.map((r) =>
+		ToGoalSubscriptionDocument({
+			...r,
+			goal_game: r.goal_game as Game,
+		}),
+	);
 
 	const goalIDs = allGoalSubs.map((e) => e.goalID);
 
-	// goals are relevant to a folder if it's part of a folder type goal
-	// or if it's on any of the charts in the folder.
-	// this is convenient for the UI, atleast.
-	const goals = await Promise.all([
-		MONGODB_KILL.goals.find({
-			"charts.type": { $in: ["single", "multi"] },
-			"charts.data": { $in: folderChartIDs },
-			goalID: { $in: goalIDs },
-		}),
-		MONGODB_KILL.goals.find({
-			"charts.type": "folder",
-			"charts.data": folderID,
-			goalID: { $in: goalIDs },
-		}),
-	]).then((r) => r.flat());
+	const goalDocRows =
+		goalIDs.length === 0
+			? []
+			: await DB.selectFrom("goal").selectAll().where("goal.id", "in", goalIDs).execute();
 
-	const goalSubs = await MONGODB_KILL["goal-subs"].find({
-		goalID: { $in: goals.map((e) => e.goalID) },
-		userID: user.id,
-		game,
-		playtype,
-	});
+	const goals: Array<ReturnType<typeof ToGoalDocument>> = [];
+
+	for (const row of goalDocRows) {
+		const g = ToGoalDocument(row);
+
+		if (g.charts.type === "single" && folderChartIDs.includes(g.charts.data)) {
+			goals.push(g);
+		} else if (
+			g.charts.type === "multi" &&
+			g.charts.data.some((c: string) => folderChartIDs.includes(c))
+		) {
+			goals.push(g);
+		} else if (g.charts.type === "folder" && g.charts.data === folderID) {
+			goals.push(g);
+		}
+	}
+
+	const active = new Set(goals.map((g) => g.goalID));
+	const goalSubs = allGoalSubs.filter((s) => active.has(s.goalID));
 
 	const quests = await GetParentQuests(user.id, game, playtype, goalSubs);
 
-	const questSubs = await MONGODB_KILL["quest-subs"].find({
-		questID: { $in: quests.map((e) => e.questID) },
-	});
+	const questIds = quests.map((e) => e.questID);
+
+	const questSubRows =
+		questIds.length === 0
+			? []
+			: await DB.selectFrom("quest_sub")
+					.innerJoin("quest", "quest.id", "quest_sub.quest_id")
+					.selectAll("quest_sub")
+					.select("quest.game as quest_game")
+					.where("quest_sub.user_id", "=", user.id)
+					.where("quest.game", "=", v3Game)
+					.where("quest_sub.quest_id", "in", questIds)
+					.execute();
+
+	const questSubs = questSubRows.map((r) =>
+		ToQuestSubscriptionDocument({
+			quest_id: r.quest_id,
+			user_id: r.user_id,
+			progress: r.progress,
+			last_interaction: r.last_interaction,
+			achieved: r.achieved,
+			time_achieved: r.time_achieved,
+			was_instantly_achieved: r.was_instantly_achieved,
+			quest_game: r.quest_game as Game,
+		}),
+	);
 
 	return res.status(200).json({
 		success: true,
@@ -201,10 +268,44 @@ router.get("/on-folder/:folderID", async (req, res) => {
 router.get("/all-subs", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const [goalSubs, questSubs] = await Promise.all([
-		MONGODB_KILL["goal-subs"].find({ userID: user.id, game, playtype }),
-		MONGODB_KILL["quest-subs"].find({ userID: user.id, game, playtype }),
+	const v3Game = GamePTToV3(game, playtype);
+
+	const [goalSubRows, questSubRows] = await Promise.all([
+		DB.selectFrom("goal_sub")
+			.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+			.selectAll("goal_sub")
+			.select("goal.game as goal_game")
+			.where("goal_sub.user_id", "=", user.id)
+			.where("goal.game", "=", v3Game)
+			.execute(),
+		DB.selectFrom("quest_sub")
+			.innerJoin("quest", "quest.id", "quest_sub.quest_id")
+			.selectAll("quest_sub")
+			.select("quest.game as quest_game")
+			.where("quest_sub.user_id", "=", user.id)
+			.where("quest.game", "=", v3Game)
+			.execute(),
 	]);
+
+	const goalSubs = goalSubRows.map((r) =>
+		ToGoalSubscriptionDocument({
+			...r,
+			goal_game: r.goal_game as Game,
+		}),
+	);
+
+	const questSubs = questSubRows.map((r) =>
+		ToQuestSubscriptionDocument({
+			quest_id: r.quest_id,
+			user_id: r.user_id,
+			progress: r.progress,
+			last_interaction: r.last_interaction,
+			achieved: r.achieved,
+			time_achieved: r.time_achieved,
+			was_instantly_achieved: r.was_instantly_achieved,
+			quest_game: r.quest_game as Game,
+		}),
+	);
 
 	return res.status(200).json({
 		success: true,

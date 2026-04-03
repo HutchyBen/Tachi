@@ -1,7 +1,8 @@
+import { LoadScoreDocumentById } from "#lib/db-formats/score.js";
 import { mongoScoreDataToPg, pgScoreDataToMongo } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
-import { type MONGO_ScoreData, type MONGO_ScoreDocument } from "tachi-common";
+import { type MONGO_ScoreData } from "tachi-common";
 import { describe, expect, it } from "vitest";
 
 import { ACTION_CustomiseScore } from "./customise-score";
@@ -109,19 +110,14 @@ describe("ACTION_CustomiseScore", () => {
 
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		const result = await ACTION_CustomiseScore(taker, {
+		await ACTION_CustomiseScore(taker, {
 			scoreID: scoreId,
 			comment: "nice",
 		});
 
-		expect((result.score as MONGO_ScoreDocument).comment).toBe("nice");
+		const score = await LoadScoreDocumentById(scoreId);
 
-		const row = await DB.selectFrom("score")
-			.select("comment")
-			.where("id", "=", scoreId)
-			.executeTakeFirst();
-
-		expect(row?.comment).toBe("nice");
+		expect(score?.comment).toBe("nice");
 	});
 
 	it("updates highlight and propagates to pb when present", async () => {

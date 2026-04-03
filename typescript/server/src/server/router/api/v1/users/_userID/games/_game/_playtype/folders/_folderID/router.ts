@@ -1,19 +1,12 @@
-import type { FilterQuery } from "mongodb";
-
 import prValidate from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
 import DB from "#services/pg/db";
 import { GetEnumDistForFolder, GetFolderChartsAndSongs, GetPBsOnFolder } from "#utils/folder";
+import { GetFolderTimelineScores } from "#utils/queries/scores";
 import { GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { Router } from "express";
 import { sql } from "kysely";
-import {
-	GetGamePTConfig,
-	GetScoreMetricConf,
-	type MONGO_ScoreDocument,
-	ValidateMetric,
-} from "tachi-common";
+import { GetGamePTConfig, GetScoreMetricConf, ValidateMetric } from "tachi-common";
 
 import { GetFolderFromParam } from "../../../../../../../games/_game/_playtype/folders/middleware";
 import { RequireSelfRequestFromUser } from "../../../../../middleware";
@@ -153,45 +146,14 @@ router.get(
 			});
 		}
 
-		const matchCriteria: FilterQuery<MONGO_ScoreDocument> = {
-			userID: user.id,
+		const scores = await GetFolderTimelineScores(
+			user.id,
 			game,
 			playtype,
-			chartID: { $in: charts.map((e) => e.chartID) },
-		};
-
-		matchCriteria[`scoreData.enumIndexes.${metric}`] = { $gte: criteriaValue };
-
-		// Returns a unique score per-chart that was the first score to achieve
-		// this criteria on that chart.
-		const scoresAgg: Array<{ doc: MONGO_ScoreDocument }> = await MONGODB_KILL.scores.aggregate([
-			{
-				$match: matchCriteria,
-			},
-			{
-				$addFields: {
-					__sortTime: { $ifNull: ["$timeAchieved", Infinity, "$timeAchieved"] },
-				},
-			},
-			{
-				$sort: {
-					__sortTime: 1,
-				},
-			},
-			{
-				$group: {
-					_id: "$chartID",
-					doc: { $first: "$$ROOT" },
-				},
-			},
-			{
-				$unset: ["doc.__sortTime"],
-			},
-		]);
-
-		const scores = scoresAgg
-			.map((e) => e.doc)
-			.sort((a, b) => (a.timeAchieved ?? 0) - (b.timeAchieved ?? 0));
+			charts.map((e) => e.chartID),
+			metric,
+			criteriaValue,
+		);
 
 		return res.status(200).json({
 			success: true,

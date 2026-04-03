@@ -129,10 +129,8 @@ export async function updateBpiDataCore() {
 
 	if (updatedChartIDs.length !== 0) {
 		log.info(`Finished applying BPI changes in Postgres. Recalcing scores.`);
-		await RecalcAllScores({
-			game: "iidx",
-			chartID: { $in: updatedChartIDs },
-		});
+		// TODO(zk): We don't want to recalc _everything_ on changes like this?
+		await RecalcAllScores();
 		log.info(`Finished recalcing scores.`);
 	}
 

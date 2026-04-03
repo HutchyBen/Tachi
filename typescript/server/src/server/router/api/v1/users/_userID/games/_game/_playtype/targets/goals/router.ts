@@ -1,21 +1,22 @@
-import { SubscribeFailReasons } from "#lib/constants/err-codes";
-import { log } from "#lib/log/log";
-import { ServerConfig } from "#lib/setup/config";
+import type { Game } from "tachi-db";
+
+import { ACTION_AddGoal } from "#actions/add-goal";
+import { ACTION_RemoveGoalSubscription } from "#actions/remove-goal-subscription";
 import {
-	ConstructGoal,
-	GetQuestsThatContainGoal,
-	SubscribeToGoal,
-	UnsubscribeFromGoal,
-} from "#lib/targets/goals";
+	ToGoalDocument,
+	ToGoalSubscriptionDocument,
+	ToQuestSubscriptionDocument,
+} from "#lib/db-formats/target-documents";
+import { GetQuestsThatContainGoal } from "#lib/targets/goals";
 import { GetParentQuests } from "#lib/targets/quests";
 import { RequirePermissions } from "#server/middleware/auth";
 import prValidate from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
-import { GetGoalForIDGuaranteed } from "#utils/db";
+import DB from "#services/pg/db";
+import { GetGoalForIDGuaranteed, GetGoalSubscriptionForIDGuaranteed } from "#utils/db";
 import { AssignToReqTachiData, GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
-import { GetGamePTConfig, type MONGO_GoalDocument, type MONGO_QuestDocument } from "tachi-common";
+import { GamePTToV3, type MONGO_GoalDocument, type MONGO_QuestDocument } from "tachi-common";
 
 import { RequireAuthedAsUser } from "../../../../../middleware";
 
@@ -29,23 +30,57 @@ const router: Router = Router({ mergeParams: true });
 router.get("/", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const goalSubs = await MONGODB_KILL["goal-subs"].find({
-		userID: user.id,
-		game,
-		playtype,
-	});
+	const v3Game = GamePTToV3(game, playtype);
 
-	const goals = await MONGODB_KILL.goals.find({
-		goalID: { $in: goalSubs.map((e) => e.goalID) },
-	});
+	const subRows = await DB.selectFrom("goal_sub")
+		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+		.selectAll("goal_sub")
+		.select("goal.game as goal_game")
+		.where("goal_sub.user_id", "=", user.id)
+		.where("goal.game", "=", v3Game)
+		.execute();
+
+	const goalSubs = subRows.map((r) =>
+		ToGoalSubscriptionDocument({
+			...r,
+			goal_game: r.goal_game as Game,
+		}),
+	);
+
+	const goalIds = goalSubs.map((e) => e.goalID);
+
+	const goalRows =
+		goalIds.length === 0
+			? []
+			: await DB.selectFrom("goal").selectAll().where("goal.id", "in", goalIds).execute();
+
+	const goals = goalRows.map(ToGoalDocument);
 
 	const allQuests = await GetParentQuests(user.id, game, playtype, goalSubs);
 
-	const questSubs = await MONGODB_KILL["quest-subs"].find({ userID: user.id, game, playtype });
+	const questSubRows = await DB.selectFrom("quest_sub")
+		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
+		.selectAll("quest_sub")
+		.select("quest.game as quest_game")
+		.where("quest_sub.user_id", "=", user.id)
+		.where("quest.game", "=", v3Game)
+		.execute();
+
+	const questSubs = questSubRows.map((r) =>
+		ToQuestSubscriptionDocument({
+			quest_id: r.quest_id,
+			user_id: r.user_id,
+			progress: r.progress,
+			last_interaction: r.last_interaction,
+			achieved: r.achieved,
+			time_achieved: r.time_achieved,
+			was_instantly_achieved: r.was_instantly_achieved,
+			quest_game: r.quest_game as Game,
+		}),
+	);
 
 	const questSubIDs = questSubs.map((e) => e.questID);
 
-	// filter parent quests to only those that this user is subscribed to
 	const quests = allQuests.filter((quest) => questSubIDs.includes(quest.questID));
 
 	return res.status(200).json({
@@ -136,67 +171,29 @@ router.post(
 	async (req, res) => {
 		const { user, game, playtype } = GetUGPT(req);
 
-		const existingGoalsCount = await MONGODB_KILL["goal-subs"].count({
-			userID: user.id,
-			game,
-			playtype,
-		});
+		const sessionUser = req.session.tachi?.user;
 
-		if (existingGoalsCount > ServerConfig.MAX_GOAL_SUBSCRIPTIONS) {
-			return res.status(400).json({
+		if (!sessionUser) {
+			return res.status(401).json({
 				success: false,
-				description: `You already have ${ServerConfig.MAX_GOAL_SUBSCRIPTIONS} goals. You cannot have anymore.`,
-			});
-		}
-
-		const gptConfig = GetGamePTConfig(game, playtype);
-
-		const validCriteria = [
-			...Object.keys(gptConfig.providedMetrics),
-			...Object.keys(gptConfig.derivedMetrics),
-		];
-
-		if (!validCriteria.includes(req.body.criteria.key)) {
-			return res.status(400).json({
-				success: false,
-				description: `Invalid criteria '${
-					req.body.criteria.key
-				}', expected any of ${validCriteria.join(", ")}.`,
+				description: "You are not authenticated.",
 			});
 		}
 
 		const data = req.safeBody as GoalCreationBody;
 
-		let goal;
+		const taker = { ip: req.ip, acct: { id: sessionUser.id, username: sessionUser.username } };
 
-		try {
-			goal = await ConstructGoal(data.charts, data.criteria, game, playtype);
-		} catch (e) {
-			const err = e as Error;
+		const { goalID } = await ACTION_AddGoal(taker, {
+			userID: user.id,
+			game,
+			playtype,
+			charts: data.charts,
+			criteria: data.criteria,
+		});
 
-			log.info({ err }, err.message);
-
-			return res.status(400).json({
-				success: false,
-				description: err.message,
-			});
-		}
-
-		const goalSub = await SubscribeToGoal(user.id, goal, true);
-
-		if (goalSub === SubscribeFailReasons.ALREADY_SUBSCRIBED) {
-			return res.status(409).json({
-				success: false,
-				description: `You are already subscribed to this goal.`,
-			});
-		}
-
-		if (goalSub === SubscribeFailReasons.ALREADY_ACHIEVED) {
-			return res.status(400).json({
-				success: false,
-				description: `You can't directly assign goals that you would immediately achieve.`,
-			});
-		}
+		const goal = await GetGoalForIDGuaranteed(goalID);
+		const goalSub = await GetGoalSubscriptionForIDGuaranteed(goalID, user.id);
 
 		return res.status(200).json({
 			success: true,
@@ -212,19 +209,28 @@ router.post(
 const GetGoalSubscription: RequestHandler = async (req, res, next) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const goalSub = await MONGODB_KILL["goal-subs"].findOne({
-		userID: user.id,
-		game,
-		playtype,
-		goalID: req.params.goalID,
-	});
+	const v3Game = GamePTToV3(game, playtype);
 
-	if (!goalSub) {
+	const row = await DB.selectFrom("goal_sub")
+		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+		.selectAll("goal_sub")
+		.select("goal.game as goal_game")
+		.where("goal_sub.user_id", "=", user.id)
+		.where("goal_sub.goal_id", "=", req.params.goalID)
+		.where("goal.game", "=", v3Game)
+		.executeTakeFirst();
+
+	if (!row) {
 		return res.status(404).json({
 			success: false,
 			description: `${user.username} is not subscribed to this goal.`,
 		});
 	}
+
+	const goalSub = ToGoalSubscriptionDocument({
+		...row,
+		goal_game: row.goal_game as Game,
+	});
 
 	AssignToReqTachiData(req, { goalSubDoc: goalSub });
 
@@ -265,31 +271,27 @@ router.get("/:goalID", GetGoalSubscription, async (req, res) => {
 router.delete(
 	"/:goalID",
 	RequireAuthedAsUser,
-	GetGoalSubscription,
 	RequirePermissions("manage_targets"),
 	async (req, res) => {
-		const goalSub = GetTachiData(req, "goalSubDoc");
+		const { user, game, playtype } = GetUGPT(req);
 
-		const fail = await UnsubscribeFromGoal(goalSub, false);
+		const sessionUser = req.session.tachi?.user;
 
-		if (fail) {
-			switch (fail.reason) {
-				case "WAS_STANDALONE":
-					// can't happen. mightaswell handle it though.
-					return res.status(400).json({
-						success: false,
-						description: `This goal was assigned by you and can't be removed as a consequence of another action.`,
-					});
-
-				case "HAS_QUEST_DEPENDENCIES":
-					return res.status(400).json({
-						success: false,
-						description: `This goal is part of a quest you are subscribed to. It can only be removed by unsubscribing from the relevant quests: ${fail.parentQuests
-							.map((e) => `'${e.quest.name}'`)
-							.join(", ")}.`,
-					});
-			}
+		if (!sessionUser) {
+			return res.status(401).json({
+				success: false,
+				description: "You are not authenticated.",
+			});
 		}
+
+		const taker = { ip: req.ip, acct: { id: sessionUser.id, username: sessionUser.username } };
+
+		await ACTION_RemoveGoalSubscription(taker, {
+			userID: user.id,
+			game,
+			playtype,
+			goalID: req.params.goalID,
+		});
 
 		return res.status(200).json({
 			success: true,

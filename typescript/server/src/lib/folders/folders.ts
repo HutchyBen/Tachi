@@ -47,11 +47,11 @@ export async function GetFolderCharts(
 
 	const rows = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
-		.select([...SELECT_CHART, "song.legacy_id as song_legacy_id"])
+		.select(SELECT_CHART)
 		.where("chart.id", "in", chartIds)
 		.execute();
 
-	const charts = rows.map((row) => ToChartDocument(row, row.song_legacy_id));
+	const charts = rows.map(ToChartDocument);
 
 	return { charts };
 }

@@ -36,13 +36,13 @@ describe("GET /api/v1/search/chart-hash", () => {
 		const n = ++seedCounter;
 		const md5 = `a${n.toString(16).padStart(31, "0")}`.slice(0, 32);
 		const sha256 = "b".repeat(64);
-		const songPgId = `s_ch_hash_bms_${n}`;
+		const songNewID = `s_ch_hash_bms_${n}`;
 		const chartPgId = `c_ch_hash_bms_${n}`;
 		const legacySongId = 970_000 + n;
 
 		await DB.insertInto("song")
 			.values({
-				id: songPgId,
+				id: songNewID,
 				legacy_id: legacySongId,
 				game_group: "bms",
 				title: "Chart Hash Search BMS",
@@ -64,7 +64,7 @@ describe("GET /api/v1/search/chart-hash", () => {
 				id: chartPgId,
 				legacy_id: chartPgId,
 				game: "bms-7k",
-				song_id: songPgId,
+				song_id: songNewID,
 				level: "?",
 				level_num: 0,
 				is_primary: true,
@@ -95,13 +95,13 @@ describe("GET /api/v1/search/chart-hash", () => {
 		const n = ++seedCounter;
 		const md5 = "c".repeat(32);
 		const sha256 = `d${n.toString(16).padStart(63, "0")}`.slice(0, 64);
-		const songPgId = `s_ch_hash_pms_${n}`;
+		const songNewID = `s_ch_hash_pms_${n}`;
 		const chartPgId = `c_ch_hash_pms_${n}`;
 		const legacySongId = 971_000 + n;
 
 		await DB.insertInto("song")
 			.values({
-				id: songPgId,
+				id: songNewID,
 				legacy_id: legacySongId,
 				game_group: "pms",
 				title: "Chart Hash Search PMS",
@@ -123,7 +123,7 @@ describe("GET /api/v1/search/chart-hash", () => {
 				id: chartPgId,
 				legacy_id: chartPgId,
 				game: "pms-keyboard",
-				song_id: songPgId,
+				song_id: songNewID,
 				level: "?",
 				level_num: 0,
 				is_primary: true,
@@ -151,13 +151,13 @@ describe("GET /api/v1/search/chart-hash", () => {
 	it("returns ITG charts matched by hashGSv3", async () => {
 		const n = ++seedCounter;
 		const gsv3 = `itg-gsv3-${n}`;
-		const songPgId = `s_ch_hash_itg_${n}`;
+		const songNewID = `s_ch_hash_itg_${n}`;
 		const chartPgId = `c_ch_hash_itg_${n}`;
 		const legacySongId = 972_000 + n;
 
 		await DB.insertInto("song")
 			.values({
-				id: songPgId,
+				id: songNewID,
 				legacy_id: legacySongId,
 				game_group: "itg",
 				title: "Chart Hash Search ITG",
@@ -174,7 +174,7 @@ describe("GET /api/v1/search/chart-hash", () => {
 				id: chartPgId,
 				legacy_id: chartPgId,
 				game: "itg-stamina",
-				song_id: songPgId,
+				song_id: songNewID,
 				level: "10",
 				level_num: 10,
 				is_primary: true,
@@ -211,13 +211,13 @@ describe("GET /api/v1/search/chart-hash", () => {
 	it("returns USC charts matched by hashSHA1", async () => {
 		const n = ++seedCounter;
 		const sha1 = `e${n.toString(16).padStart(39, "0")}`.slice(0, 40);
-		const songPgId = `s_ch_hash_usc_${n}`;
+		const songNewID = `s_ch_hash_usc_${n}`;
 		const chartPgId = `c_ch_hash_usc_${n}`;
 		const legacySongId = 973_000 + n;
 
 		await DB.insertInto("song")
 			.values({
-				id: songPgId,
+				id: songNewID,
 				legacy_id: legacySongId,
 				game_group: "usc",
 				title: "Chart Hash Search USC",
@@ -234,7 +234,7 @@ describe("GET /api/v1/search/chart-hash", () => {
 				id: chartPgId,
 				legacy_id: chartPgId,
 				game: "usc-controller",
-				song_id: songPgId,
+				song_id: songNewID,
 				level: "10",
 				level_num: 10,
 				is_primary: true,

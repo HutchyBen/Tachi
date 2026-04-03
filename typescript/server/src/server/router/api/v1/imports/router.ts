@@ -167,39 +167,35 @@ router.get("/:importID", GetImportFromParam, async (req, res) => {
  *
  * @name POST /api/v1/imports/:importID/revert
  */
-router.post(
-	"/:importID/revert",
-	RequirePermissions("delete_score"),
-	async (req, res) => {
-		const auth = req[SYMBOL_TACHI_API_AUTH];
+router.post("/:importID/revert", RequirePermissions("delete_score"), async (req, res) => {
+	const auth = req[SYMBOL_TACHI_API_AUTH];
 
-		if (auth.userID === null) {
-			return res.status(401).json({
-				success: false,
-				description: `You are not authorised as anyone, and this endpoint requires us to know who you are.`,
-			});
-		}
-
-		const user = await GetUserWithID(auth.userID);
-
-		if (!user) {
-			return res.status(401).json({
-				success: false,
-				description: `You are not authorised as anyone, and this endpoint requires us to know who you are.`,
-			});
-		}
-
-		const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
-
-		await ACTION_DeleteImport(taker, { id: req.params.importID });
-
-		return res.status(200).json({
-			success: true,
-			description: `Reverted import.`,
-			body: {},
+	if (auth.userID === null) {
+		return res.status(401).json({
+			success: false,
+			description: `You are not authorised as anyone, and this endpoint requires us to know who you are.`,
 		});
-	},
-);
+	}
+
+	const user = await GetUserWithID(auth.userID);
+
+	if (!user) {
+		return res.status(401).json({
+			success: false,
+			description: `You are not authorised as anyone, and this endpoint requires us to know who you are.`,
+		});
+	}
+
+	const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
+
+	await ACTION_DeleteImport(taker, { id: req.params.importID });
+
+	return res.status(200).json({
+		success: true,
+		description: `Reverted import.`,
+		body: {},
+	});
+});
 
 // Finding jobs is slightly harder than just doing a key lookup, because of retrying.
 async function FindImportJob(importID: string) {

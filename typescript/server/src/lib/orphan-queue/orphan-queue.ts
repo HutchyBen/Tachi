@@ -78,7 +78,7 @@ async function writeBmsPmsSongAndChart(
 	v3Game: Game,
 	songDoc: MONGO_SongDocument<"bms" | "pms">,
 	chartDoc: MONGO_ChartDocument,
-	songPgId: string,
+	songNewID: string,
 	songLegacyId: integer,
 ) {
 	const ftsDocument = [...songDoc.searchTerms, ...songDoc.altTitles].filter(Boolean).join(" ");
@@ -86,7 +86,7 @@ async function writeBmsPmsSongAndChart(
 	await trx
 		.insertInto("song")
 		.values({
-			id: songPgId,
+			id: songNewID,
 			legacy_id: songLegacyId,
 			game_group: gameGroup,
 			title: songDoc.title,
@@ -104,7 +104,7 @@ async function writeBmsPmsSongAndChart(
 			id: chartDoc.chartID,
 			legacy_id: chartDoc.chartID,
 			game: v3Game,
-			song_id: songPgId,
+			song_id: songNewID,
 			level: chartDoc.level,
 			level_num: chartDoc.levelNum,
 			is_primary: chartDoc.isPrimary,
@@ -198,7 +198,7 @@ export async function HandleOrphanQueue<GPT extends GPTString>(
 		songDocU.id = songLegacyId;
 		chartDocU.songID = songLegacyId;
 
-		const songPgId = CreateSongID();
+		const songNewID = CreateSongID();
 
 		await DB.transaction().execute(async (trx) => {
 			await writeBmsPmsSongAndChart(
@@ -207,7 +207,7 @@ export async function HandleOrphanQueue<GPT extends GPTString>(
 				v3Game,
 				songDocU as MONGO_SongDocument<"bms" | "pms">,
 				chartDocU,
-				songPgId,
+				songNewID,
 				songLegacyId,
 			);
 
@@ -272,7 +272,7 @@ export async function DeorphanIfInQueue<GPT extends GPTString>(
 	songDocU.id = songLegacyId;
 	chartDocU.songID = songLegacyId;
 
-	const songPgId = CreateSongID();
+	const songNewID = CreateSongID();
 
 	await DB.transaction().execute(async (trx) => {
 		await writeBmsPmsSongAndChart(
@@ -281,7 +281,7 @@ export async function DeorphanIfInQueue<GPT extends GPTString>(
 			v3Game,
 			songDocU as MONGO_SongDocument<"bms" | "pms">,
 			chartDocU,
-			songPgId,
+			songNewID,
 			songLegacyId,
 		);
 

@@ -23,16 +23,17 @@ export const SELECT_CHART = [
 	"chart.versions as chart_versions",
 	"chart.data as chart_data",
 	"chart.song_id as chart_song_id",
+	"song.legacy_id as song_legacy_id",
 ] as const;
 
-type ChartRow = Selection<Database, "chart", (typeof SELECT_CHART)[number]>;
+export type ChartRow = Selection<Database, "chart" | "song", (typeof SELECT_CHART)[number]>;
 
-export function ToChartDocument(row: ChartRow, songLegacyId: number): MONGO_ChartDocument {
+export function ToChartDocument(row: ChartRow): MONGO_ChartDocument {
 	const { playtype } = V3ToGamePT(row.chart_game);
 
 	return {
 		chartID: row.chart_id,
-		songID: songLegacyId,
+		songID: row.song_legacy_id,
 		level: row.chart_level,
 		levelNum: row.chart_level_num,
 		isPrimary: row.chart_is_primary,
@@ -44,30 +45,30 @@ export function ToChartDocument(row: ChartRow, songLegacyId: number): MONGO_Char
 }
 
 /**
- * Fetches all charts for a given PG game string (e.g. "iidx-sp") and song PG UUID,
+ * Fetches all charts for a given game (e.g. "iidx-sp") and song id,
  * including `chart.versions`. Returns fully-formed ChartDocuments using the provided
  * legacy song ID for the `songID` field.
  */
-export async function GetChartsBySongPgId(
+export async function GetChartsBySongId(
 	v3Game: Game,
-	songPgId: string,
-	songLegacyId: number,
+	songID: string,
 	opts?: { omit2dxtraCharts?: boolean },
 ): Promise<MONGO_ChartDocument[]> {
 	let q = DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.where("song_id", "=", songPgId)
+		.where("song_id", "=", songID)
 		.where("game", "=", v3Game);
 
 	const gameGroup = V3ToGameGroup(v3Game);
 
 	if (opts?.omit2dxtraCharts && gameGroup === "iidx") {
-		q = q.where(sql<SqlBool>`(data->>'2dxtraSet') IS NULL`);
+		q = q.where(sql<SqlBool>`(chart.data->>'2dxtraSet') IS NULL`);
 	}
 
 	const rows = await q.execute();
 
-	return rows.map((row) => ToChartDocument(row, songLegacyId));
+	return rows.map((row) => ToChartDocument(row));
 }
 
 /**
@@ -80,7 +81,6 @@ export async function GetChartById(
 	const chartRow = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
 		.where("chart.game", "=", v3Game)
 		.where("chart.id", "=", chartID)
 		.executeTakeFirst();
@@ -89,28 +89,27 @@ export async function GetChartById(
 		return undefined;
 	}
 
-	return ToChartDocument(chartRow, chartRow.song_legacy_id);
+	return ToChartDocument(chartRow);
 }
 
 // Loads charts from a list of IDs.
 // This function should rarely be used - it's an antipattern in sql to do queries like this.
 export async function GetChartsByIds(
 	game: GameGroup,
-	chartKeys: Array<string>,
+	chartIDs: Array<string>,
 ): Promise<Array<MONGO_ChartDocument>> {
-	if (chartKeys.length === 0) {
+	if (chartIDs.length === 0) {
 		return [];
 	}
 
-	const unique = [...new Set(chartKeys)];
+	const unique = [...new Set(chartIDs)];
 
 	const rows = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.select("song.legacy_id as song_legacy_id")
 		.where("song.game_group", "=", game)
 		.where("chart.id", "in", unique)
 		.execute();
 
-	return rows.map((r) => ToChartDocument(r, r.song_legacy_id));
+	return rows.map(ToChartDocument);
 }

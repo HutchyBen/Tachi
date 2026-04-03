@@ -1,7 +1,6 @@
 import { FindStandaloneQuests, GetGoalsInQuests } from "#lib/targets/quests";
-import MONGODB_KILL from "#services/mongo/db";
 import { GetChildQuests } from "#utils/db";
-import { IsString } from "#utils/misc";
+import { GetQuestlineById, GetQuestlinesForGamePlaytype } from "#utils/queries/questlines";
 import { AssignToReqTachiData, GetGPT, GetTachiData } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
 
@@ -11,11 +10,7 @@ const ResolveQuestlineID: RequestHandler = async (req, res, next) => {
 	const { game, playtype } = GetGPT(req);
 	const questlineID = req.params.questlineID;
 
-	const questline = await MONGODB_KILL.questlines.findOne({
-		questlineID,
-		game,
-		playtype,
-	});
+	const questline = await GetQuestlineById(game, playtype, questlineID);
 
 	if (!questline) {
 		return res.status(404).json({
@@ -37,7 +32,7 @@ const ResolveQuestlineID: RequestHandler = async (req, res, next) => {
 router.get("/", async (req, res) => {
 	const { game, playtype } = GetGPT(req);
 
-	const questlines = await MONGODB_KILL.questlines.find({ game, playtype });
+	const questlines = await GetQuestlinesForGamePlaytype(game, playtype);
 
 	const standalone = await FindStandaloneQuests(game, playtype);
 	const standaloneGoals = await GetGoalsInQuests(standalone);

@@ -25,7 +25,7 @@ export const ValidateAndGetSong: RequestHandler = async (req, res, next) => {
 		});
 	}
 
-	AssignToReqTachiData(req, { songDoc: result.doc, songPgId: result.pgId });
+	AssignToReqTachiData(req, { songDoc: result.doc, songNewID: result.newSongID });
 
 	next();
 };

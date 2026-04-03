@@ -267,9 +267,7 @@ describe("GET /api/v1/games/:game/:playtype/activity (smoke)", () => {
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
 		expect(res.body.body.recentSessions).toEqual(
-			expect.arrayContaining([
-				expect.objectContaining({ sessionID: `act-api-s-${base}` }),
-			]),
+			expect.arrayContaining([expect.objectContaining({ sessionID: `act-api-s-${base}` })]),
 		);
 	});
 });

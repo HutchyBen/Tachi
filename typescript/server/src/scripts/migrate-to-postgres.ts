@@ -1001,9 +1001,15 @@ async function main(): Promise<void> {
 
 		const uniqueGoalIds = [...new Set(goalSubs.map((gs) => gs.goalID))];
 		const existingGoalIds = new Set(
-			(
-				await pg.selectFrom("goal").select("id").where("id", "in", uniqueGoalIds).execute()
-			).map((r) => r.id),
+			uniqueGoalIds.length === 0
+				? []
+				: (
+						await pg
+							.selectFrom("goal")
+							.select("id")
+							.where("id", "in", uniqueGoalIds)
+							.execute()
+					).map((r) => r.id),
 		);
 
 		const goalSubRows: Array<NewGoalSub> = [];

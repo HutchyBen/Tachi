@@ -1,4 +1,4 @@
-import { GetChartsBySongPgId } from "#lib/db-formats/chart";
+import { GetChartsBySongId } from "#lib/db-formats/chart";
 import DB from "#services/pg/db";
 import { sql } from "kysely";
 import {
@@ -31,13 +31,13 @@ export async function SearchSpecificGameSongsAndCharts(
 
 	const chartLists = await Promise.all(
 		songs.map((song) => {
-			const pgId = pgIdByLegacyId.get(song.id);
+			const songID = pgIdByLegacyId.get(song.id);
 
-			if (!pgId) {
+			if (!songID) {
 				return Promise.resolve([] as Array<MONGO_ChartDocument>);
 			}
 
-			return GetChartsBySongPgId(v3Game, pgId, song.id, {
+			return GetChartsBySongId(v3Game, songID, {
 				omit2dxtraCharts: game === "iidx",
 			});
 		}),
@@ -60,7 +60,11 @@ export async function SearchGlobalGameSongsAndCharts(
 	playtype?: Playtype,
 	limit = MAX_SONG_SEARCH_RESULTS_PER_GAME,
 ): Promise<Array<{ chart: MONGO_ChartDocument; playcount: integer; song: MONGO_SongDocument }>> {
-	const { songs, pgIdByLegacyId } = await searchSpecificGameSongsWithPgIds(game, search, limit);
+	const { songs, pgIdByLegacyId: songIdByLegacyId } = await searchSpecificGameSongsWithPgIds(
+		game,
+		search,
+		limit,
+	);
 
 	if (!playtype) {
 		throw new Error("SearchGlobalGameSongsAndCharts requires playtype");
@@ -79,14 +83,14 @@ export async function SearchGlobalGameSongsAndCharts(
 			break;
 		}
 
-		const pgId = pgIdByLegacyId.get(song.id);
+		const songID = songIdByLegacyId.get(song.id);
 
-		if (!pgId) {
+		if (!songID) {
 			continue;
 		}
 
 		// eslint-disable-next-line no-await-in-loop -- stop after enough charts; avoids loading every song's charts when the cap is already reached.
-		const songCharts = await GetChartsBySongPgId(v3Game, pgId, song.id, {
+		const songCharts = await GetChartsBySongId(v3Game, songID, {
 			omit2dxtraCharts: game === "iidx",
 		});
 

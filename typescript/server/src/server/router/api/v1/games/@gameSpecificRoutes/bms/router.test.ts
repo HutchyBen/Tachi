@@ -12,12 +12,12 @@ async function seedBmsSongAndChart(opts: {
 	sglHC: number | null;
 }) {
 	const n = ++seedCounter;
-	const songPgId = `s_gpt_bms_${n}`;
+	const songNewID = `s_gpt_bms_${n}`;
 	const chartPgId = `c_gpt_bms_${n}`;
 
 	await DB.insertInto("song")
 		.values({
-			id: songPgId,
+			id: songNewID,
 			legacy_id: 970_000 + n,
 			game_group: "bms",
 			title: `Sieglinde GPT Test ${n}`,
@@ -42,7 +42,7 @@ async function seedBmsSongAndChart(opts: {
 			id: chartPgId,
 			legacy_id: chartPgId,
 			game: opts.game,
-			song_id: songPgId,
+			song_id: songNewID,
 			level: "?",
 			level_num: 0,
 			is_primary: true,

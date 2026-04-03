@@ -162,7 +162,10 @@ router.post("/orphans", RequirePermissions("submit_score"), async (req, res) => 
 
 	log.info(`User ${FormatUserDoc(userDoc)} forced an orphan sync.`);
 
-	const { processed, removed, failed, success } = await DeorphanScores({ userID: userDoc.id }, log);
+	const { processed, removed, failed, success } = await DeorphanScores(
+		{ userID: userDoc.id },
+		log,
+	);
 
 	log.info(`Finished attempting deorphaning.`);
 

@@ -1,21 +1,24 @@
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { GetSongsByLegacyIDs } from "#lib/db-formats/song";
+import { GetUGPTSettingsDocument } from "#lib/db-formats/ugpt-settings";
 import { log } from "#lib/log/log";
 import { ResolveSongAndChart } from "#lib/score-import/import-types/common/batch-manual/converter";
 import { SearchSpecificGameSongs } from "#lib/search/songs.js";
 import prValidate from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { IsString } from "#utils/misc";
 import { FindChartsOnPopularity } from "#utils/queries/charts";
 import { GetGPT } from "#utils/req-tachi-data";
 import { Router } from "express";
 import {
+	GamePTToV3,
 	type integer,
 	type MatchTypeResolver,
 	type MONGO_ChartDocument,
 	type MONGO_UGPTSettingsDocument,
 } from "tachi-common";
 import { PR_RESOLVER } from "tachi-common/lib/schemas";
+import { type Game } from "tachi-db";
 
 import chartIDRouter from "./_chartID/router";
 
@@ -55,12 +58,16 @@ router.get("/", async (req, res) => {
 			});
 		}
 
-		const playedSongs = (
-			await MONGODB_KILL["personal-bests"].find(
-				{ userID, game, playtype },
-				{ projection: { songID: 1 } },
-			)
-		).map((e) => e.songID);
+		const v3Game = GamePTToV3(game, playtype) as Game;
+		const playedSongRows = await DB.selectFrom("pb")
+			.innerJoin("chart", "chart.id", "pb.chart_id")
+			.innerJoin("song", "song.id", "chart.song_id")
+			.select("song.legacy_id as song_legacy_id")
+			.distinct()
+			.where("pb.user_id", "=", userID)
+			.where("chart.game", "=", v3Game)
+			.execute();
+		const playedSongs = playedSongRows.map((e) => e.song_legacy_id);
 
 		if (songIDs) {
 			songIDs = songIDs.filter((e) => playedSongs.includes(e));
@@ -104,13 +111,16 @@ router.get("/", async (req, res) => {
 				(e) => (e as MONGO_ChartDocument<"iidx:DP" | "iidx:SP">).data["2dxtraSet"] === null,
 			);
 		} else {
-			const iidxSettings = (await MONGODB_KILL["game-settings"].findOne({
-				userID: req[SYMBOL_TACHI_API_AUTH].userID,
+			const iidxSettings = await GetUGPTSettingsDocument(
+				req[SYMBOL_TACHI_API_AUTH].userID,
 				game,
 				playtype,
-			})) as MONGO_UGPTSettingsDocument<"iidx:DP" | "iidx:SP"> | null;
+			);
 
-			if (!iidxSettings?.preferences.gameSpecific.display2DXTra) {
+			const iidxGameSpecific = iidxSettings?.preferences
+				.gameSpecific as MONGO_UGPTSettingsDocument<"iidx:DP" | "iidx:SP">["preferences"]["gameSpecific"];
+
+			if (!iidxGameSpecific?.display2DXTra) {
 				charts = charts.filter(
 					(e) =>
 						(e as MONGO_ChartDocument<"iidx:DP" | "iidx:SP">).data["2dxtraSet"] ===

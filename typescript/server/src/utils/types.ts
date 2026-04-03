@@ -80,7 +80,7 @@ export interface TachiRequestData {
 
 	chartDoc?: MONGO_ChartDocument;
 	songDoc?: MONGO_SongDocument;
-	songPgId?: string;
+	songNewID?: string;
 	scoreDoc?: MONGO_ScoreDocument;
 	sessionDoc?: MONGO_SessionDocument;
 	tableDoc?: MONGO_TableDocument;

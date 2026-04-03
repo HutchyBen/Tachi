@@ -11,10 +11,7 @@ export const ACTION_DeleteImport = MakeAction("DELETE_IMPORT", async (taker, { i
 		throw new ExpectedErr(404, "This import does not exist.");
 	}
 
-	if (
-		importDoc.userID !== taker.acct.id &&
-		!(await IsUserAdmin(taker.acct.id))
-	) {
+	if (importDoc.userID !== taker.acct.id && !(await IsUserAdmin(taker.acct.id))) {
 		throw new ExpectedErr(403, "You are not authorised to perform this action.");
 	}
 

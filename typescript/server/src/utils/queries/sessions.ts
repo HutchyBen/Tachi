@@ -61,13 +61,13 @@ export async function GetSessionData(session: MONGO_SessionDocument): Promise<{
 		.where("score.session_id", "=", session.sessionID)
 		.execute();
 
-	let charts = rows.map((row) => ToChartDocument(row, row.song_legacy_id));
+	let charts = rows.map(ToChartDocument);
 	charts = _.uniqBy(charts, "chartID");
 
-	let songs = rows.map((row) => ToSongDocument(row));
+	let songs = rows.map(ToSongDocument);
 	songs = _.uniqBy(songs, "id");
 
-	let scores = rows.map((row) => ToScoreDocument(row));
+	let scores = rows.map(ToScoreDocument);
 	scores = _.uniqBy(scores, "scoreID");
 
 	// TODO: Hard to implement efficiently

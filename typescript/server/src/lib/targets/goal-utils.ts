@@ -1,13 +1,15 @@
 import type { GoalCriteriaFormatter } from "#game-implementations/types";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
+import { GetChartById } from "#lib/db-formats/chart";
+import { LoadFolderDocumentById } from "#lib/db-formats/folders";
 import { GetFolderChartIDs } from "#lib/folders/folders.js";
-import MONGODB_KILL from "#services/mongo/db";
-import { GetFolderForIDGuaranteed, HumaniseChartID } from "#utils/db";
+import { HumaniseChartID } from "#utils/db";
 import { HumanisedJoinArray, OnlyFloatToDP } from "#utils/misc";
 import {
 	FormatGameGroup,
 	type GameGroup,
+	GamePTToV3,
 	GetGPTConfig,
 	GetGPTString,
 	GetScoreMetricConf,
@@ -118,7 +120,11 @@ async function FormatCharts(
 		}
 
 		case "folder": {
-			const folder = await GetFolderForIDGuaranteed(charts.data);
+			const folder = await LoadFolderDocumentById(charts.data);
+
+			if (!folder) {
+				throw new Error(`Folder ${charts.data} not found.`);
+			}
 
 			return `the ${folder.title} folder`;
 		}
@@ -182,14 +188,13 @@ export async function ValidateGoalChartsAndCriteria(
 ) {
 	let chartCount = 0;
 
+	const v3Game = GamePTToV3(game, playtype);
+
 	// Validating the charts supplied
 
 	switch (charts.type) {
 		case "single": {
-			const chart = await MONGODB_KILL.anyCharts[game].findOne({
-				playtype,
-				chartID: charts.data,
-			});
+			const chart = await GetChartById(v3Game, charts.data);
 
 			if (!chart) {
 				throw new Error(
@@ -202,13 +207,9 @@ export async function ValidateGoalChartsAndCriteria(
 		}
 
 		case "folder": {
-			const folder = await MONGODB_KILL.folders.findOne({
-				game,
-				playtype,
-				folderID: charts.data,
-			});
+			const folder = await LoadFolderDocumentById(charts.data);
 
-			if (!folder) {
+			if (!folder || folder.game !== game || folder.playtype !== playtype) {
 				throw new Error(
 					`A folder with id ${charts.data} does not exist for ${game}:${playtype}.`,
 				);
@@ -225,14 +226,11 @@ export async function ValidateGoalChartsAndCriteria(
 				);
 			}
 
-			const multiCharts = await MONGODB_KILL.anyCharts[game].find({
-				playtype,
-				chartID: { $in: charts.data },
-			});
+			const multiCharts = await Promise.all(charts.data.map((chartID) => GetChartById(v3Game, chartID)));
 
-			if (multiCharts.length !== charts.data.length) {
+			if (multiCharts.some((c) => c === undefined)) {
 				throw new Error(
-					`Expected charts.data to match ${charts.data.length} charts. Instead, it only matched ${multiCharts.length}. Are all of these chartIDs valid?`,
+					`Expected charts.data to match ${charts.data.length} charts. Instead, it only matched ${multiCharts.filter(Boolean).length}. Are all of these chartIDs valid?`,
 				);
 			}
 
@@ -297,11 +295,7 @@ export async function ValidateGoalChartsAndCriteria(
 			let err;
 
 			if (config.chartDependentMax) {
-				const chart = await MONGODB_KILL.anyCharts[game].findOne({
-					playtype,
-					// guaranteed by previous if statement
-					chartID: charts.data as string,
-				});
+				const chart = await GetChartById(v3Game, charts.data as string);
 
 				if (!chart) {
 					throw new Error(

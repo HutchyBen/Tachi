@@ -19,7 +19,9 @@ type ClassAchievementRow = Selection<
 	(typeof SELECT_CLASS_ACHIEVEMENT_DOCUMENT)[number]
 >;
 
-export function ToClassAchievementDocument(row: ClassAchievementRow): MONGO_ClassAchievementDocument {
+export function ToClassAchievementDocument(
+	row: ClassAchievementRow,
+): MONGO_ClassAchievementDocument {
 	const { game, playtype } = V3ToGamePT(row.game as Game);
 
 	return {

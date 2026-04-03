@@ -1,4 +1,4 @@
-import { GetChartsBySongPgId } from "#lib/db-formats/chart";
+import { GetChartsBySongId } from "#lib/db-formats/chart";
 import { SearchGlobalGameSongsAndCharts } from "#lib/search/song-charts.js";
 import DB from "#services/pg/db";
 import { importSeedsSubset } from "#services/pg/seeds";
@@ -523,7 +523,7 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 		expect(res.some((r) => r.legacy_id === 9_000_861)).toBe(true);
 	});
 
-	it("GetChartsBySongPgId omits 2dxtra charts when omit2dxtraCharts is true", async () => {
+	it("GetChartsBysongNewID omits 2dxtra charts when omit2dxtraCharts is true", async () => {
 		const sid = makeSongId(870);
 
 		await DB.insertInto("song")
@@ -569,8 +569,8 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 			])
 			.execute();
 
-		const all = await GetChartsBySongPgId(GamePTToV3("iidx", "SP"), sid, 9_000_870);
-		const filtered = await GetChartsBySongPgId(GamePTToV3("iidx", "SP"), sid, 9_000_870, {
+		const all = await GetChartsBySongId(GamePTToV3("iidx", "SP"), sid);
+		const filtered = await GetChartsBySongId(GamePTToV3("iidx", "SP"), sid, {
 			omit2dxtraCharts: true,
 		});
 

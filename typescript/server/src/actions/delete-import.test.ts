@@ -62,7 +62,10 @@ describe("ACTION_DeleteImport", () => {
 
 		await ACTION_DeleteImport(taker, { id: importId });
 
-		const row = await DB.selectFrom("import").select("id").where("id", "=", importId).executeTakeFirst();
+		const row = await DB.selectFrom("import")
+			.select("id")
+			.where("id", "=", importId)
+			.executeTakeFirst();
 		expect(row).toBeUndefined();
 	});
 
@@ -73,7 +76,10 @@ describe("ACTION_DeleteImport", () => {
 
 		await ACTION_DeleteImport(taker, { id: importId });
 
-		const row = await DB.selectFrom("import").select("id").where("id", "=", importId).executeTakeFirst();
+		const row = await DB.selectFrom("import")
+			.select("id")
+			.where("id", "=", importId)
+			.executeTakeFirst();
 		expect(row).toBeUndefined();
 	});
 

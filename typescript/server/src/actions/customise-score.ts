@@ -1,5 +1,4 @@
 import { MakeAction } from "#lib/actions/actions.js";
-import { LoadScoreDocumentById } from "#lib/db-formats/score.js";
 import DB from "#services/pg/db.js";
 import { ExpectedErr } from "bliss";
 
@@ -41,11 +40,5 @@ export const ACTION_CustomiseScore = MakeAction("CUSTOMISE_SCORE", async (_taker
 		}
 	});
 
-	const doc = await LoadScoreDocumentById(input.scoreID);
-
-	if (!doc) {
-		throw new ExpectedErr(500, "Score disappeared after update.");
-	}
-
-	return { score: doc };
+	return {};
 });

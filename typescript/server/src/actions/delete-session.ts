@@ -12,10 +12,7 @@ export const ACTION_DeleteSession = MakeAction("DELETE_SESSION", async (taker, {
 		throw new ExpectedErr(404, "This session does not exist.");
 	}
 
-	if (
-		session.userID !== taker.acct.id &&
-		!(await IsUserAdmin(taker.acct.id))
-	) {
+	if (session.userID !== taker.acct.id && !(await IsUserAdmin(taker.acct.id))) {
 		throw new ExpectedErr(403, "You are not authorised to perform this action.");
 	}
 

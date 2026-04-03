@@ -235,13 +235,19 @@ export async function DeorphanScores(filter: DeorphanScoresFilter, log: KtLogger
 	if (filter.chartSha256 !== undefined) {
 		q = q
 			.where("import_type", "=", "ir/beatoraja")
-			.where(sql<boolean>`(orphan_score.context::jsonb->'chart'->>'sha256') = ${filter.chartSha256}`);
+			.where(
+				sql<boolean>`(orphan_score.context::jsonb->'chart'->>'sha256') = ${filter.chartSha256}`,
+			);
 
 		if (filter.pmsPlaytype !== undefined) {
 			if (filter.pmsPlaytype === "Controller") {
-				q = q.where(sql<boolean>`(orphan_score.data::jsonb->>'deviceType') = ${"BM_CONTROLLER"}`);
+				q = q.where(
+					sql<boolean>`(orphan_score.data::jsonb->>'deviceType') = ${"BM_CONTROLLER"}`,
+				);
 			} else {
-				q = q.where(sql<boolean>`(orphan_score.data::jsonb->>'deviceType') IS DISTINCT FROM ${"BM_CONTROLLER"}`);
+				q = q.where(
+					sql<boolean>`(orphan_score.data::jsonb->>'deviceType') IS DISTINCT FROM ${"BM_CONTROLLER"}`,
+				);
 			}
 		}
 	}

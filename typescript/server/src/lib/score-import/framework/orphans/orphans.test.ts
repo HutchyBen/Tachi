@@ -324,7 +324,9 @@ describe("DeorphanScores beatoraja filter (Postgres)", () => {
 			.where("user_id", "=", userId)
 			.where("import_type", "=", "ir/beatoraja")
 			.where(sql<boolean>`(orphan_score.context::jsonb->'chart'->>'sha256') = ${sha}`)
-			.where(sql<boolean>`(orphan_score.data::jsonb->>'deviceType') IS DISTINCT FROM ${"BM_CONTROLLER"}`)
+			.where(
+				sql<boolean>`(orphan_score.data::jsonb->>'deviceType') IS DISTINCT FROM ${"BM_CONTROLLER"}`,
+			)
 			.execute();
 
 		expect(keyboardRows.map((r) => r.orphan_id)).toEqual(["obe-kb"]);

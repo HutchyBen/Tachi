@@ -73,8 +73,8 @@ async function HandleOrphanChartProcess(
 
 	let chart;
 	let deorphanFilter:
-		| { chartSha256: string }
-		| { chartSha256: string; pmsPlaytype: Playtypes["pms"] };
+		| { chartSha256: string; pmsPlaytype: Playtypes["pms"] }
+		| { chartSha256: string };
 
 	if (game === "bms") {
 		deorphanFilter = { chartSha256: context.chart.sha256 };

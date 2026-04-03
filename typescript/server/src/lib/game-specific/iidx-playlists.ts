@@ -118,13 +118,12 @@ export const CUSTOM_TACHI_IIDX_PLAYLISTS: Array<TachiIIDXPlaylist> = [
 			const rows = await DB.selectFrom("chart")
 				.innerJoin("song", "song.id", "chart.song_id")
 				.select(SELECT_CHART)
-				.select("song.legacy_id as song_legacy_id")
 				.where("chart.game", "=", v3Game)
 				.where(sql<SqlBool>`(chart.data->>'kaidenAverage') IS NOT NULL`)
 				.where(sql<SqlBool>`(chart.data->>'2dxtraSet') IS NULL`)
 				.execute();
 
-			const charts = rows.map((r) => ToChartDocument(r, r.song_legacy_id)) as Array<
+			const charts = rows.map(ToChartDocument) as Array<
 				MONGO_ChartDocument<"iidx:DP" | "iidx:SP">
 			>;
 

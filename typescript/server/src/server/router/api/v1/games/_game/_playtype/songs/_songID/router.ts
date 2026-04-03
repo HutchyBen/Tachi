@@ -1,4 +1,4 @@
-import { GetChartsBySongPgId } from "#lib/db-formats/chart";
+import { GetChartsBySongId } from "#lib/db-formats/chart";
 import { GetGPT, GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
 import { GamePTToV3 } from "tachi-common";
@@ -16,10 +16,10 @@ router.use(ValidateAndGetSong);
  */
 router.get("/", async (req, res) => {
 	const song = GetTachiData(req, "songDoc");
-	const songPgId = GetTachiData(req, "songPgId");
+	const songNewID = GetTachiData(req, "songNewID");
 	const { game, playtype } = GetGPT(req);
 
-	const charts = await GetChartsBySongPgId(GamePTToV3(game, playtype), songPgId, song.id);
+	const charts = await GetChartsBySongId(GamePTToV3(game, playtype), songNewID);
 
 	return res.status(200).json({
 		success: true,

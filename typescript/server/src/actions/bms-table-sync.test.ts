@@ -35,7 +35,7 @@ vi.mock("tachi-common", async (importOriginal) => {
 });
 
 describe("ACTION_BMSTableSync", () => {
-	const songPgId = "song-bms-action-test";
+	const songNewID = "song-bms-action-test";
 	const chartId = CreateChartID();
 	const legacySongId = 884_001;
 	let adminId: number;
@@ -55,7 +55,7 @@ describe("ACTION_BMSTableSync", () => {
 
 	afterEach(async () => {
 		await DB.deleteFrom("chart").where("id", "=", chartId).execute();
-		await DB.deleteFrom("song").where("id", "=", songPgId).execute();
+		await DB.deleteFrom("song").where("id", "=", songNewID).execute();
 		await DB.deleteFrom("action").where("user_id", "=", adminId).execute();
 		await DB.deleteFrom("account").where("id", "=", adminId).execute();
 		mockLoadBMSTable.mockReset();
@@ -64,7 +64,7 @@ describe("ACTION_BMSTableSync", () => {
 	it("applies mocked table levels to an existing BMS chart and song (DefaultAdminUser taker)", async () => {
 		await DB.insertInto("song")
 			.values({
-				id: songPgId,
+				id: songNewID,
 				legacy_id: legacySongId,
 				game_group: "bms",
 				title: "Unit Song",
@@ -86,7 +86,7 @@ describe("ACTION_BMSTableSync", () => {
 				id: chartId,
 				legacy_id: chartId,
 				game: "bms-7k",
-				song_id: songPgId,
+				song_id: songNewID,
 				level: "?",
 				level_num: 0,
 				is_primary: true,
@@ -121,7 +121,7 @@ describe("ACTION_BMSTableSync", () => {
 
 		const songRow = await DB.selectFrom("song")
 			.select("data")
-			.where("id", "=", songPgId)
+			.where("id", "=", songNewID)
 			.executeTakeFirstOrThrow();
 
 		const ts = (songRow.data as { tableString: string | null }).tableString;

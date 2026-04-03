@@ -3,7 +3,6 @@ import type https from "https";
 
 import { log } from "#lib/log/log";
 import { CloseScoreImportQueue } from "#lib/score-import/worker/queue";
-import { monkDB } from "#services/mongo/db";
 import { ClosePgConnection } from "#services/pg/db";
 import { CloseRedisConnection } from "#services/redis/redis";
 
@@ -18,9 +17,6 @@ export function HandleSIGTERMGracefully(instance?: http.Server | https.Server) {
 }
 
 async function CloseEverythingElse() {
-	log.info({ shutdownInfo: true }, "Closing Mongo Database.");
-	await monkDB.close();
-
 	log.info({ shutdownInfo: true }, "Closing database...");
 	await ClosePgConnection();
 

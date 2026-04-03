@@ -9,9 +9,19 @@ import type {
 } from "tachi-common";
 
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
+import {
+	ToGoalDocument,
+	ToGoalSubscriptionDocument,
+	ToQuestDocument,
+	ToQuestSubscriptionDocument,
+} from "#lib/db-formats/target-documents";
 import { log } from "#lib/log/log";
 import { BulkSendNotification } from "#lib/notifications/notifications";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
+import { UnixMillisecondsToISO8601 } from "#utils/time";
+import { sql } from "kysely";
+import type { Game } from "tachi-db";
+import { GamePTToV3, V3ToGamePT } from "tachi-common";
 
 import {
 	type EvaluatedGoalReturn,
@@ -26,8 +36,6 @@ import {
  * nested structure of quests.
  */
 export function GetGoalIDsFromQuest(quest: MONGO_QuestDocument) {
-	// this sucks - maybe a nicer way to do this, because nested
-	// maps are just ugly
 	return quest.questData.map((e) => e.goals.map((e) => e.goalID)).flat(1);
 }
 
@@ -37,9 +45,7 @@ export function GetGoalIDsFromQuest(quest: MONGO_QuestDocument) {
 export async function GetGoalsInQuest(quest: MONGO_QuestDocument) {
 	const goalIDs = GetGoalIDsFromQuest(quest);
 
-	const goals = await MONGODB_KILL.goals.find({
-		goalID: { $in: goalIDs },
-	});
+	const goals = await DB.selectFrom("goal").selectAll().where("goal.id", "in", goalIDs).execute();
 
 	if (goals.length !== goalIDs.length) {
 		log.error(
@@ -49,7 +55,6 @@ export async function GetGoalsInQuest(quest: MONGO_QuestDocument) {
 		throw new Error(`Quest is corrupt. Not the right amount of goals in db?`);
 	}
 
-	// this shouldn't happen, but if it does it's recoverable by just ignoring it.
 	if (goalIDs.length < 2) {
 		log.warn(
 			{
@@ -59,7 +64,7 @@ export async function GetGoalsInQuest(quest: MONGO_QuestDocument) {
 		);
 	}
 
-	return goals;
+	return goals.map(ToGoalDocument);
 }
 
 /**
@@ -68,11 +73,13 @@ export async function GetGoalsInQuest(quest: MONGO_QuestDocument) {
 export async function GetGoalsInQuests(quests: Array<MONGO_QuestDocument>) {
 	const goalIDs = quests.flatMap((quest) => GetGoalIDsFromQuest(quest));
 
-	const goals = await MONGODB_KILL.goals.find({
-		goalID: { $in: goalIDs },
-	});
+	if (goalIDs.length === 0) {
+		return [];
+	}
 
-	return goals;
+	const goals = await DB.selectFrom("goal").selectAll().where("goal.id", "in", goalIDs).execute();
+
+	return goals.map(ToGoalDocument);
 }
 
 /**
@@ -98,23 +105,35 @@ type EvaluatedGoalResult = { goalID: string } & EvaluatedGoalReturn;
 export async function EvaluateQuestProgress(userID: integer, quest: MONGO_QuestDocument) {
 	const goals = await GetGoalsInQuest(quest);
 
-	const isSubscribedToQuest = await MONGODB_KILL["quest-subs"].findOne({
-		questID: quest.questID,
-		userID,
-	});
+	const isSubscribedToQuest = await DB.selectFrom("quest_sub")
+		.selectAll()
+		.where("quest_sub.quest_id", "=", quest.questID)
+		.where("quest_sub.user_id", "=", userID)
+		.executeTakeFirst();
 
-	// If the user is subscribed the quest, we don't need to calculate
-	// their progress on each goal.
 	const goalSubMap = new Map<string, MONGO_GoalSubscriptionDocument>();
 
 	if (isSubscribedToQuest) {
-		const goalSubs = await MONGODB_KILL["goal-subs"].find({
-			goalID: { $in: goals.map((e) => e.goalID) },
-			userID,
-		});
+		const goalSubRows = await DB.selectFrom("goal_sub")
+			.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+			.selectAll("goal_sub")
+			.select("goal.game as goal_game")
+			.where("goal_sub.user_id", "=", userID)
+			.where(
+				"goal_sub.goal_id",
+				"in",
+				goals.map((e) => e.goalID),
+			)
+			.execute();
 
-		for (const sub of goalSubs) {
-			goalSubMap.set(sub.goalID, sub);
+		for (const row of goalSubRows) {
+			goalSubMap.set(
+				row.goal_id,
+				ToGoalSubscriptionDocument({
+					...row,
+					goal_game: row.goal_game as Game,
+				}),
+			);
 		}
 	}
 
@@ -124,8 +143,6 @@ export async function EvaluateQuestProgress(userID: integer, quest: MONGO_QuestD
 				let goalSub = goalSubMap.get(goal.goalID);
 
 				if (!goalSub) {
-					// shouldn't happen. Let's just correct the user silently.
-
 					log.warn(
 						`User ${userID} has a corrupt subscription to quest '${quest.name}', They do not have all the goals in this quest assigned. Automatically subscribing them to the new goal.`,
 					);
@@ -142,7 +159,6 @@ export async function EvaluateQuestProgress(userID: integer, quest: MONGO_QuestD
 					}
 
 					if (newGoalSub === SubscribeFailReasons.ALREADY_ACHIEVED) {
-						// lol, wut
 						log.error(
 							`Impossible via typesystem: attempted resubscription for user ${userID} on goal ${goal.goalID}, was rejected for being already achieved. Not possible, as we allow already achieved goals here.`,
 						);
@@ -155,12 +171,14 @@ export async function EvaluateQuestProgress(userID: integer, quest: MONGO_QuestD
 					goalSub = newGoalSub;
 				}
 
+				const gSub = goalSub;
+
 				return {
-					achieved: goalSub.achieved,
-					progress: goalSub.progress,
-					outOf: goalSub.outOf,
-					progressHuman: goalSub.progressHuman,
-					outOfHuman: goalSub.outOfHuman,
+					achieved: gSub.achieved,
+					progress: gSub.progress,
+					outOf: gSub.outOf,
+					progressHuman: gSub.progressHuman,
+					outOfHuman: gSub.outOfHuman,
 					goalID: goal.goalID,
 				};
 			}
@@ -228,10 +246,11 @@ export async function SubscribeToQuest(
 	| SubscribeFailReasons.ALREADY_ACHIEVED
 	| SubscribeFailReasons.ALREADY_SUBSCRIBED
 > {
-	const isSubscribedToQuest = await MONGODB_KILL["quest-subs"].findOne({
-		userID,
-		questID: quest.questID,
-	});
+	const isSubscribedToQuest = await DB.selectFrom("quest_sub")
+		.selectAll()
+		.where("quest_sub.quest_id", "=", quest.questID)
+		.where("quest_sub.user_id", "=", userID)
+		.executeTakeFirst();
 
 	if (isSubscribedToQuest) {
 		return SubscribeFailReasons.ALREADY_SUBSCRIBED;
@@ -243,27 +262,44 @@ export async function SubscribeToQuest(
 		return SubscribeFailReasons.ALREADY_ACHIEVED;
 	}
 
-	// @ts-expect-error TS can't resolve this.
-	// because it can't explode out the types.
-	const questSub: MONGO_QuestSubscriptionDocument = {
+	const nowMs = Date.now();
+	const nowIso = UnixMillisecondsToISO8601(nowMs);
+
+	const questSubBase = {
 		progress: result.progress,
 		userID,
 		questID: quest.questID,
 		wasInstantlyAchieved: result.achieved,
 		game: quest.game,
 		playtype: quest.playtype,
-		achieved: result.achieved,
-		timeAchieved: result.achieved ? Date.now() : null,
 		lastInteraction: null,
 	};
 
-	// @optimisable, EvaluateQuestProgress calculates the users progress
-	// on each goal. We could probably shorten this by directly inserting the records
-	// from result.goalResults ourselves.
-	// evaluating goals is fairly cheap though.
+	const questSub: MONGO_QuestSubscriptionDocument = result.achieved
+		? {
+				...questSubBase,
+				achieved: true,
+				timeAchieved: nowMs,
+			}
+		: {
+				...questSubBase,
+				achieved: false,
+				timeAchieved: null,
+			};
+
 	await Promise.all(result.goals.map((goal) => SubscribeToGoal(userID, goal, false)));
 
-	await MONGODB_KILL["quest-subs"].insert(questSub);
+	await DB.insertInto("quest_sub")
+		.values({
+			quest_id: quest.questID,
+			user_id: userID,
+			progress: questSub.progress,
+			last_interaction: null,
+			achieved: questSub.achieved,
+			time_achieved: result.achieved ? nowIso : null,
+			was_instantly_achieved: questSub.wasInstantlyAchieved,
+		})
+		.execute();
 
 	log.info(`User ${userID} subscribed to '${quest.name}'.`);
 
@@ -282,25 +318,24 @@ export async function SubscribeToQuest(
 export async function UpdateQuestSubscriptions(questID: string) {
 	log.info(`Received update-subscribe call to quest ${questID}.`);
 
-	const subscriptions = await MONGODB_KILL["quest-subs"].find({ questID });
+	const subscriptions = await DB.selectFrom("quest_sub")
+		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
+		.selectAll("quest_sub")
+		.select("quest.game as quest_game")
+		.where("quest_sub.quest_id", "=", questID)
+		.execute();
 
-	const maybeQuest = await MONGODB_KILL.quests.findOne({ questID });
+	const maybeQuest = await DB.selectFrom("quest").selectAll().where("quest.id", "=", questID).executeTakeFirst();
 
-	// if the quest was deleted, we have to take a more manual approach.
 	if (!maybeQuest) {
-		// first, remove all subs to this quest
-		await MONGODB_KILL["quest-subs"].remove({
-			questID,
-		});
+		await DB.deleteFrom("quest_sub").where("quest_sub.quest_id", "=", questID).execute();
 
-		// then, this presents us with an interesting problem.
-		// We can't actually know what goals this user was subscribed to as a result
-		// of this quest, because said quest no longer exists.
-
-		// To mitigate this, we just prune all goalsubs that no longer have any
-		// dependencies
 		await Promise.all(
-			subscriptions.map((e) => UnsubscribeFromOrphanedGoalSubs(e.userID, e.game, e.playtype)),
+			subscriptions.map((e) => {
+				const { game, playtype } = V3ToGamePT(e.quest_game as Game);
+
+				return UnsubscribeFromOrphanedGoalSubs(e.user_id, game, playtype);
+			}),
 		);
 
 		log.info(`Quest ${questID} has been deleted. Unsubscribed ${subscriptions.length} users.`);
@@ -308,21 +343,34 @@ export async function UpdateQuestSubscriptions(questID: string) {
 		return;
 	}
 
-	// the easiest way to do this? unsubscribe all users from the quest, then subscribe
-	// them all again.
-	await Promise.all(subscriptions.map((e) => UnsubscribeFromQuest(e, maybeQuest)));
+	const quest = ToQuestDocument(maybeQuest);
 
-	await Promise.all(subscriptions.map((e) => SubscribeToQuest(e.userID, maybeQuest, false)));
+	const mappedSubs = subscriptions.map((e) =>
+		ToQuestSubscriptionDocument({
+			quest_id: e.quest_id,
+			user_id: e.user_id,
+			progress: e.progress,
+			last_interaction: e.last_interaction,
+			achieved: e.achieved,
+			time_achieved: e.time_achieved,
+			was_instantly_achieved: e.was_instantly_achieved,
+			quest_game: e.quest_game as Game,
+		}),
+	);
+
+	await Promise.all(mappedSubs.map((e) => UnsubscribeFromQuest(e, quest)));
+
+	await Promise.all(mappedSubs.map((e) => SubscribeToQuest(e.userID, quest, false)));
 
 	await BulkSendNotification(
-		`The quest '${maybeQuest.name}' has received an update.`,
-		subscriptions.map((e) => e.userID),
+		`The quest '${quest.name}' has received an update.`,
+		subscriptions.map((e) => e.user_id),
 		{
 			type: "QUEST_CHANGED",
 			content: {
 				questID,
-				game: maybeQuest.game,
-				playtype: maybeQuest.playtype,
+				game: quest.game,
+				playtype: quest.playtype,
 			},
 		},
 	);
@@ -340,20 +388,26 @@ export async function UnsubscribeFromQuest(
 ) {
 	const goalIDs = GetGoalIDsFromQuest(quest);
 
-	// remove the quest sub
-	// (preventing HAS_QUEST_DEPENDENCIES when this is the quest we're removing anyway)
-	await MONGODB_KILL["quest-subs"].remove({
-		questID: questSub.questID,
-		userID: questSub.userID,
-	});
+	await DB.deleteFrom("quest_sub")
+		.where("quest_sub.quest_id", "=", questSub.questID)
+		.where("quest_sub.user_id", "=", questSub.userID)
+		.execute();
 
-	const goalSubs = await MONGODB_KILL["goal-subs"].find({
-		userID: questSub.userID,
-		goalID: { $in: goalIDs },
-	});
+	const goalSubRows = await DB.selectFrom("goal_sub")
+		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+		.selectAll("goal_sub")
+		.select("goal.game as goal_game")
+		.where("goal_sub.user_id", "=", questSub.userID)
+		.where("goal_sub.goal_id", "in", goalIDs)
+		.execute();
 
-	// unsub the user from all goals we can. If we can't unsub from a goal, that's
-	// not a problem, we weren't meant to unsubscribe from it.
+	const goalSubs = goalSubRows.map((r) =>
+		ToGoalSubscriptionDocument({
+			...r,
+			goal_game: r.goal_game as Game,
+		}),
+	);
+
 	await Promise.all(goalSubs.map((e) => UnsubscribeFromGoal(e, true)));
 }
 
@@ -367,55 +421,57 @@ export async function GetParentQuests(
 	playtype: Playtype,
 	goalSubs: Array<MONGO_GoalSubscriptionDocument>,
 ) {
-	const questSubs: Array<{ questID: string }> = await MONGODB_KILL["quest-subs"].find(
-		{
-			game,
-			playtype,
-			userID,
-		},
-		{
-			projection: {
-				questID: 1,
-			},
-		},
-	);
+	const v3Game = GamePTToV3(game, playtype);
+	const goalIds = goalSubs.map((e) => e.goalID);
 
-	const questSubIDs = questSubs.map((e) => e.questID);
+	if (goalIds.length === 0) {
+		return [];
+	}
 
-	const quests = await MONGODB_KILL.quests.find({
-		questID: { $in: questSubIDs },
-		"questData.goals.goalID": { $in: goalSubs.map((e) => e.goalID) },
-	});
+	const questSubRows = await DB.selectFrom("quest_sub")
+		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
+		.select("quest_sub.quest_id")
+		.where("quest_sub.user_id", "=", userID)
+		.where("quest.game", "=", v3Game)
+		.execute();
 
-	return quests;
+	const questSubIDs = questSubRows.map((e) => e.quest_id);
+
+	if (questSubIDs.length === 0) {
+		return [];
+	}
+
+	const questRows = await DB.selectFrom("quest")
+		.selectAll()
+		.where("quest.id", "in", questSubIDs)
+		.execute();
+
+	return questRows
+		.filter((q) => {
+			const doc = ToQuestDocument(q);
+
+			return doc.questData.some((section) =>
+				section.goals.some((g) => goalIds.includes(g.goalID)),
+			);
+		})
+		.map(ToQuestDocument);
 }
 
 /**
  * Find all quests not in any questlines.
  */
 export async function FindStandaloneQuests(game: GameGroup, playtype: Playtype) {
-	const res: Array<MONGO_QuestDocument> = await MONGODB_KILL.quests.aggregate([
-		{
-			$match: {
-				game,
-				playtype,
-			},
-		},
-		{
-			$lookup: {
-				from: "questlines",
-				localField: "questID",
-				foreignField: "quests",
-				as: "parentQuestlines",
-			},
-		},
-		{
-			$match: {
-				// is an empty array
-				"parentQuestlines.0": { $exists: false },
-			},
-		},
-	]);
+	const v3Game = GamePTToV3(game, playtype);
 
-	return res;
+	const rows = await DB.selectFrom("quest")
+		.selectAll()
+		.where("quest.game", "=", v3Game)
+		.where(
+			sql<boolean>`not exists (
+				select 1 from questline_quest qq where qq.quest_id = quest.id
+			)`,
+		)
+		.execute();
+
+	return rows.map(ToQuestDocument);
 }

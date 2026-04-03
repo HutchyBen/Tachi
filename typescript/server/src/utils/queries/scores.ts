@@ -7,7 +7,15 @@ import {
 } from "#lib/db-formats/score";
 import DB from "#services/pg/db";
 import { sql } from "kysely";
-import { type GameGroup, GamePTToV3, type integer, type Playtype } from "tachi-common";
+import {
+	type GameGroup,
+	GamePTToV3,
+	GetGPTConfig,
+	GetGPTString,
+	type integer,
+	type MONGO_ScoreDocument,
+	type Playtype,
+} from "tachi-common";
 
 /** Shared score + chart + song + import select used by activity and UGPT score queries. */
 export function scoreDocumentJoin() {
@@ -114,4 +122,56 @@ export async function GetRecentUGPTHighlights(
 		.execute();
 
 	return rows.map((row) => ToScoreDocument(row as ScoreDocumentJoinRow));
+}
+
+/**
+ * For each chart in {@link chartIDs}, the earliest score (by play time; nulls last)
+ * that satisfies `metric >= criteriaValue`, then ordered by play time with
+ * null `timeAchieved` sorting as 0 (Mongo `/folders/.../timeline` parity).
+ */
+export async function GetFolderTimelineScores(
+	userID: integer,
+	game: GameGroup,
+	playtype: Playtype,
+	chartIDs: string[],
+	metric: string,
+	criteriaValue: number,
+): Promise<Array<MONGO_ScoreDocument>> {
+	if (chartIDs.length === 0) {
+		return [];
+	}
+
+	const gpt = GetGPTString(game, playtype);
+	const gptConfig = GetGPTConfig(gpt);
+	const v3Game = GamePTToV3(game, playtype) as Game;
+
+	const jsonBlob =
+		gptConfig.derivedMetrics[metric] !== undefined ? sql`score.derived_data` : sql`score.data`;
+
+	const rows = await scoreDocumentJoin()
+		.where("score.user_id", "=", userID)
+		.where("score.game", "=", v3Game)
+		.where("chart.id", "in", chartIDs)
+		.where(sql<boolean>`(${jsonBlob}::jsonb->>${sql.lit(metric)})::numeric >= ${criteriaValue}`)
+		.orderBy("score.chart_id")
+		.orderBy(sql`coalesce(score.time_achieved, 'infinity'::timestamptz) asc`)
+		.execute();
+
+	const seen = new Set<string>();
+	const picked: Array<ScoreDocumentJoinRow> = [];
+
+	for (const row of rows) {
+		const r = row as ScoreDocumentJoinRow;
+
+		if (!seen.has(r.chart_id)) {
+			seen.add(r.chart_id);
+			picked.push(r);
+		}
+	}
+
+	const scores = picked.map((r) => ToScoreDocument(r));
+
+	scores.sort((a, b) => (a.timeAchieved ?? 0) - (b.timeAchieved ?? 0));
+
+	return scores;
 }

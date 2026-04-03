@@ -55,7 +55,7 @@ export async function DeorphanBmsIfInOrphanChartPg(
 	log.info(`Song ${songDoc.title} was unorphaned forcefully (Postgres).`);
 
 	const songLegacyId = await GetNextBmsPmsSongLegacyId("bms");
-	const songPgId = CreateSongID();
+	const songNewID = CreateSongID();
 
 	songDoc.id = songLegacyId;
 	chartDoc.songID = songLegacyId;
@@ -66,7 +66,7 @@ export async function DeorphanBmsIfInOrphanChartPg(
 		await trx
 			.insertInto("song")
 			.values({
-				id: songPgId,
+				id: songNewID,
 				legacy_id: songLegacyId,
 				game_group: "bms",
 				title: songDoc.title,
@@ -84,7 +84,7 @@ export async function DeorphanBmsIfInOrphanChartPg(
 				id: chartDoc.chartID,
 				legacy_id: chartDoc.chartID,
 				game: v3Game,
-				song_id: songPgId,
+				song_id: songNewID,
 				level: chartDoc.level,
 				level_num: chartDoc.levelNum,
 				is_primary: chartDoc.isPrimary,

@@ -1,31 +1,34 @@
-import { SearchCollection } from "#lib/search/search";
+import { ToQuestDocument, ToQuestSubscriptionDocument } from "#lib/db-formats/target-documents";
 import { GetGoalsInQuest, GetGoalsInQuests } from "#lib/targets/quests";
-import MONGODB_KILL from "#services/mongo/db";
-import { IsString } from "#utils/misc";
+import DB from "#services/pg/db";
+import { EscapeForILIKE } from "#utils/misc";
 import { AssignToReqTachiData, GetGPT, GetTachiData } from "#utils/req-tachi-data";
 import { GetUsersWithIDs } from "#utils/user";
 import { type RequestHandler, Router } from "express";
-
+import { GamePTToV3, V3ToGamePT } from "tachi-common";
+import type { Game } from "tachi-db";
 const router: Router = Router({ mergeParams: true });
 
 const ResolveQuestID: RequestHandler = async (req, res, next) => {
 	const { game, playtype } = GetGPT(req);
 	const questID = req.params.questID;
 
-	const quest = await MONGODB_KILL.quests.findOne({
-		questID,
-		game,
-		playtype,
-	});
+	const v3Game = GamePTToV3(game, playtype);
 
-	if (!quest) {
+	const row = await DB.selectFrom("quest")
+		.selectAll()
+		.where("quest.id", "=", questID)
+		.where("quest.game", "=", v3Game)
+		.executeTakeFirst();
+
+	if (!row) {
 		return res.status(404).json({
 			success: false,
 			description: `A quest with ID ${questID} doesn't exist.`,
 		});
 	}
 
-	AssignToReqTachiData(req, { questDoc: quest });
+	AssignToReqTachiData(req, { questDoc: ToQuestDocument(row) });
 
 	next();
 };
@@ -40,20 +43,27 @@ const ResolveQuestID: RequestHandler = async (req, res, next) => {
 router.get("/", async (req, res) => {
 	const { game, playtype } = GetGPT(req);
 
-	if (!IsString(req.query.search)) {
+	if (typeof req.query.search !== "string") {
 		return res.status(400).json({
 			success: false,
 			description: `Invalid value for search.`,
 		});
 	}
 
-	const quests = await SearchCollection(
-		MONGODB_KILL.quests,
-		req.query.search,
-		"quests",
-		{ game, playtype },
-		50,
-	);
+	const v3Game = GamePTToV3(game, playtype);
+	const likeEsc = EscapeForILIKE(req.query.search.trim());
+	const pattern = `%${likeEsc}%`;
+
+	const rows = await DB.selectFrom("quest")
+		.selectAll()
+		.where("quest.game", "=", v3Game)
+		.where((eb) =>
+			eb.or([eb("quest.name", "ilike", pattern), eb("quest.description", "ilike", pattern)]),
+		)
+		.limit(50)
+		.execute();
+
+	const quests = rows.map(ToQuestDocument);
 	const goals = await GetGoalsInQuests(quests);
 
 	return res.status(200).json({
@@ -71,16 +81,46 @@ router.get("/", async (req, res) => {
 router.get("/:questID", ResolveQuestID, async (req, res) => {
 	const quest = GetTachiData(req, "questDoc");
 
-	const questSubs = await MONGODB_KILL["quest-subs"].find({
-		questID: quest.questID,
-	});
+	const questSubRows = await DB.selectFrom("quest_sub")
+		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
+		.selectAll("quest_sub")
+		.select("quest.game as quest_game")
+		.where("quest_sub.quest_id", "=", quest.questID)
+		.execute();
+
+	const questSubs = questSubRows.map((r) =>
+		ToQuestSubscriptionDocument({
+			quest_id: r.quest_id,
+			user_id: r.user_id,
+			progress: r.progress,
+			last_interaction: r.last_interaction,
+			achieved: r.achieved,
+			time_achieved: r.time_achieved,
+			was_instantly_achieved: r.was_instantly_achieved,
+			quest_game: r.quest_game as Game,
+		}),
+	);
 
 	const users = await GetUsersWithIDs(questSubs.map((e) => e.userID));
 
 	const goals = await GetGoalsInQuest(quest);
 
-	const parentQuestlines = await MONGODB_KILL.questlines.find({
-		quests: quest.questID,
+	const qlRows = await DB.selectFrom("questline")
+		.innerJoin("questline_quest", "questline_quest.questline_id", "questline.id")
+		.selectAll("questline")
+		.where("questline_quest.quest_id", "=", quest.questID)
+		.execute();
+
+	const parentQuestlines = qlRows.map((ql) => {
+		const { game: gg, playtype: pt } = V3ToGamePT(ql.game);
+
+		return {
+			questlineID: ql.id,
+			name: ql.name,
+			desc: ql.description,
+			game: gg,
+			playtype: pt,
+		};
 	});
 
 	return res.status(200).json({

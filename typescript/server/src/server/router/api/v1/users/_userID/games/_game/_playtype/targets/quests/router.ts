@@ -1,4 +1,5 @@
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
+import { ToQuestDocument, ToQuestSubscriptionDocument } from "#lib/db-formats/target-documents";
 import { log } from "#lib/log/log";
 import { ServerConfig } from "#lib/setup/config";
 import {
@@ -8,10 +9,13 @@ import {
 	UnsubscribeFromQuest,
 } from "#lib/targets/quests";
 import { RequirePermissions } from "#server/middleware/auth";
-import MONGODB_KILL from "#services/mongo/db";
+import DB from "#services/pg/db";
 import { AssignToReqTachiData, GetGPT, GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import { FormatUserDoc } from "#utils/user";
 import { type RequestHandler, Router } from "express";
+import { GamePTToV3 } from "tachi-common";
+import type { Game } from "tachi-db";
+import { sql } from "kysely";
 
 import { RequireAuthedAsUser } from "../../../../../middleware";
 
@@ -25,22 +29,54 @@ const router: Router = Router({ mergeParams: true });
 router.get("/", async (req, res) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const questSubs = await MONGODB_KILL["quest-subs"].find({
-		userID: user.id,
-		game,
-		playtype,
-	});
+	const v3Game = GamePTToV3(game, playtype);
 
-	const quests = await MONGODB_KILL.quests.find({
-		questID: { $in: questSubs.map((e) => e.questID) },
-	});
+	const questSubRows = await DB.selectFrom("quest_sub")
+		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
+		.selectAll("quest_sub")
+		.select("quest.game as quest_game")
+		.where("quest_sub.user_id", "=", user.id)
+		.where("quest.game", "=", v3Game)
+		.execute();
 
-	if (quests.length !== questSubs.length) {
+	const questSubs = questSubRows.map((r) =>
+		ToQuestSubscriptionDocument({
+			quest_id: r.quest_id,
+			user_id: r.user_id,
+			progress: r.progress,
+			last_interaction: r.last_interaction,
+			achieved: r.achieved,
+			time_achieved: r.time_achieved,
+			was_instantly_achieved: r.was_instantly_achieved,
+			quest_game: r.quest_game as Game,
+		}),
+	);
+
+	const questIds = questSubs.map((e) => e.questID);
+
+	const questRows =
+		questIds.length === 0
+			? []
+			: await DB.selectFrom("quest").selectAll().where("quest.id", "in", questIds).execute();
+
+	if (questRows.length !== questSubs.length) {
 		log.error(
-			`Found ${questSubs.length} subscriptions, but got ${quests.length} parents. This is a state desync.`,
+			`Found ${questSubs.length} subscriptions, but got ${questRows.length} parents. This is a state desync.`,
 		);
 		throw new Error("Failed to fetch quests");
 	}
+
+	const questById = new Map(questRows.map((q) => [q.id, ToQuestDocument(q)]));
+
+	const quests = questIds.map((id) => {
+		const q = questById.get(id);
+
+		if (!q) {
+			throw new Error("Failed to fetch quests");
+		}
+
+		return q;
+	});
 
 	const goals = await GetGoalsInQuests(quests);
 
@@ -58,19 +94,34 @@ router.get("/", async (req, res) => {
 const GetQuestSubscription: RequestHandler = async (req, res, next) => {
 	const { user, game, playtype } = GetUGPT(req);
 
-	const questSub = await MONGODB_KILL["quest-subs"].findOne({
-		userID: user.id,
-		game,
-		playtype,
-		questID: req.params.questID,
-	});
+	const v3Game = GamePTToV3(game, playtype);
 
-	if (!questSub) {
+	const row = await DB.selectFrom("quest_sub")
+		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
+		.selectAll("quest_sub")
+		.select("quest.game as quest_game")
+		.where("quest_sub.user_id", "=", user.id)
+		.where("quest_sub.quest_id", "=", req.params.questID)
+		.where("quest.game", "=", v3Game)
+		.executeTakeFirst();
+
+	if (!row) {
 		return res.status(404).json({
 			success: false,
 			description: `${user.username} is not subscribed to this quest.`,
 		});
 	}
+
+	const questSub = ToQuestSubscriptionDocument({
+		quest_id: row.quest_id,
+		user_id: row.user_id,
+		progress: row.progress,
+		last_interaction: row.last_interaction,
+		achieved: row.achieved,
+		time_achieved: row.time_achieved,
+		was_instantly_achieved: row.was_instantly_achieved,
+		quest_game: row.quest_game as Game,
+	});
 
 	AssignToReqTachiData(req, { questSubDoc: questSub });
 
@@ -80,20 +131,22 @@ const GetQuestSubscription: RequestHandler = async (req, res, next) => {
 const GetQuest: RequestHandler = async (req, res, next) => {
 	const { game, playtype } = GetGPT(req);
 
-	const quest = await MONGODB_KILL.quests.findOne({
-		game,
-		playtype,
-		questID: req.params.questID,
-	});
+	const v3Game = GamePTToV3(game, playtype);
 
-	if (!quest) {
+	const row = await DB.selectFrom("quest")
+		.selectAll()
+		.where("quest.id", "=", req.params.questID)
+		.where("quest.game", "=", v3Game)
+		.executeTakeFirst();
+
+	if (!row) {
 		return res.status(404).json({
 			success: false,
 			description: `Can't find a quest with id '${req.params.questID}'.`,
 		});
 	}
 
-	AssignToReqTachiData(req, { questDoc: quest });
+	AssignToReqTachiData(req, { questDoc: ToQuestDocument(row) });
 
 	next();
 };
@@ -110,9 +163,6 @@ router.get("/:questID", GetQuest, GetQuestSubscription, async (req, res) => {
 	const questSub = GetTachiData(req, "questSubDoc");
 	const quest = GetTachiData(req, "questDoc");
 
-	// Evaluate each goal for the user. This operation is much faster if the user is
-	// subscribed to the quest (they are), as we can just read their goalSub
-	// for each goal.
 	const { goalResults: results, goals } = await EvaluateQuestProgress(user.id, quest);
 
 	return res.status(200).json({
@@ -142,11 +192,16 @@ router.put(
 	async (req, res) => {
 		const { user, game, playtype } = GetUGPT(req);
 
-		const existingQuestsCount = await MONGODB_KILL["quest-subs"].count({
-			userID: user.id,
-			game,
-			playtype,
-		});
+		const v3Game = GamePTToV3(game, playtype);
+
+		const countRow = await DB.selectFrom("quest_sub")
+			.innerJoin("quest", "quest.id", "quest_sub.quest_id")
+			.select(sql<number>`count(*)::int`.as("c"))
+			.where("quest_sub.user_id", "=", user.id)
+			.where("quest.game", "=", v3Game)
+			.executeTakeFirst();
+
+		const existingQuestsCount = Number(countRow?.c ?? 0);
 
 		if (existingQuestsCount > ServerConfig.MAX_QUEST_SUBSCRIPTIONS) {
 			return res.status(400).json({
@@ -157,12 +212,15 @@ router.put(
 
 		const quest = GetTachiData(req, "questDoc");
 
-		const alreadySubscibed = await MONGODB_KILL["quest-subs"].findOne({
-			userID: user.id,
-			questID: quest.questID,
-		});
+		const alreadySubscribed = await DB.selectFrom("quest_sub")
+			.innerJoin("quest", "quest.id", "quest_sub.quest_id")
+			.select("quest_sub.quest_id")
+			.where("quest_sub.user_id", "=", user.id)
+			.where("quest_sub.quest_id", "=", quest.questID)
+			.where("quest.game", "=", v3Game)
+			.executeTakeFirst();
 
-		if (alreadySubscibed) {
+		if (alreadySubscribed) {
 			return res.status(409).json({
 				success: false,
 				description: `You are already subscribed to this goal.`,
@@ -170,16 +228,6 @@ router.put(
 		}
 
 		const subResult = await SubscribeToQuest(user.id, quest, false);
-
-		// Users should be able to subscribe to quests EVEN IF they would instantly
-		// achieve them.
-
-		// if (subResult === SubscribeFailReasons.ALREADY_ACHIEVED) {
-		// 	return res.status(400).json({
-		// 		success: false,
-		// 		description: `You cannot assign a quest that would be immediately achieved.`,
-		// 	});
-		// }
 
 		if (subResult === SubscribeFailReasons.ALREADY_SUBSCRIBED) {
 			return res.status(409).json({
@@ -207,7 +255,7 @@ router.delete(
 	GetQuest,
 	RequirePermissions("manage_targets"),
 	async (req, res) => {
-		const { user } = GetUGPT(req);
+		const { user, game, playtype } = GetUGPT(req);
 		const quest = GetTachiData(req, "questDoc");
 
 		log.info(
@@ -218,17 +266,34 @@ router.delete(
 			`User ${FormatUserDoc(user)} is unsubscribing from quest '${quest.name}'.`,
 		);
 
-		const questSub = await MONGODB_KILL["quest-subs"].findOne({
-			userID: user.id,
-			questID: quest.questID,
-		});
+		const v3Game = GamePTToV3(game, playtype);
 
-		if (!questSub) {
+		const row = await DB.selectFrom("quest_sub")
+			.innerJoin("quest", "quest.id", "quest_sub.quest_id")
+			.selectAll("quest_sub")
+			.select("quest.game as quest_game")
+			.where("quest_sub.user_id", "=", user.id)
+			.where("quest_sub.quest_id", "=", quest.questID)
+			.where("quest.game", "=", v3Game)
+			.executeTakeFirst();
+
+		if (!row) {
 			return res.status(409).json({
 				success: false,
 				description: `Can't unsubscribe from a quest you were never subscribed to.`,
 			});
 		}
+
+		const questSub = ToQuestSubscriptionDocument({
+			quest_id: row.quest_id,
+			user_id: row.user_id,
+			progress: row.progress,
+			last_interaction: row.last_interaction,
+			achieved: row.achieved,
+			time_achieved: row.time_achieved,
+			was_instantly_achieved: row.was_instantly_achieved,
+			quest_game: row.quest_game as Game,
+		});
 
 		await UnsubscribeFromQuest(questSub, quest);
 

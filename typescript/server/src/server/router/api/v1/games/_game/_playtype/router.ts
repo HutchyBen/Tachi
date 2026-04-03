@@ -1,10 +1,9 @@
-import type { FindOptions } from "monk";
-
 import { CreateActivityRouteHandler } from "#lib/activity/activity";
 import { ONE_HOUR } from "#lib/constants/time";
+import { SELECT_GAME_PROFILE, ToGameStatsDocument } from "#lib/db-formats/game-profiles.js";
+import { LoadPbDocumentsForGameSortedByCalculatedAlg } from "#lib/db-formats/pb";
 import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user.js";
 import prValidate from "#server/middleware/prudence-validate";
-import MONGODB_KILL from "#services/mongo/db";
 import DB from "#services/pg/db.js";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { EscapeForILIKE, IsString } from "#utils/misc";
@@ -16,6 +15,7 @@ import {
 } from "#utils/string-checks";
 import { GetUsersWithIDs } from "#utils/user";
 import { Router } from "express";
+import { sql } from "kysely";
 import NodeCache from "node-cache";
 import {
 	FormatGameGroup,
@@ -23,7 +23,6 @@ import {
 	GamePTToV3,
 	GetGamePTConfig,
 	type integer,
-	type MONGO_UserGameStats,
 	type Playtype,
 } from "tachi-common";
 
@@ -47,16 +46,24 @@ async function GetGameStats(
 	const cacheRes = gptStatCache.get(`${game}:${playtype}`);
 
 	if (cacheRes === undefined) {
+		const v3Game = GamePTToV3(game, playtype);
+
 		const [scoreCount, playerCount, chartCount] = await Promise.all([
-			MONGODB_KILL.scores.count({
-				game,
-				playtype,
-			}),
-			MONGODB_KILL["game-stats"].count({
-				game,
-				playtype,
-			}),
-			MONGODB_KILL.anyCharts[game].count({ playtype }),
+			DB.selectFrom("score")
+				.select((eb) => eb.fn.countAll().as("c"))
+				.where("score.game", "=", v3Game)
+				.executeTakeFirst()
+				.then((r) => Number(r?.c ?? 0)),
+			DB.selectFrom("game_profile")
+				.select((eb) => eb.fn.countAll().as("c"))
+				.where("game_profile.game", "=", v3Game)
+				.executeTakeFirst()
+				.then((r) => Number(r?.c ?? 0)),
+			DB.selectFrom("chart")
+				.select((eb) => eb.fn.countAll().as("c"))
+				.where("chart.game", "=", v3Game)
+				.executeTakeFirst()
+				.then((r) => Number(r?.c ?? 0)),
 		]);
 
 		gptStatCache.set(`${game}:${playtype}`, { scoreCount, playerCount, chartCount }, ONE_HOUR);
@@ -128,20 +135,16 @@ router.get("/leaderboard", async (req, res) => {
 		alg = temp;
 	}
 
-	const options: FindOptions<MONGO_UserGameStats> = {
-		sort: {
-			[`ratings.${alg}`]: -1,
-		},
-		limit,
-	};
+	const v3Game = GamePTToV3(game, playtype);
+	const ratingCol = sql<number>`coalesce((game_profile.ratings::jsonb->>${sql.lit(alg)})::numeric, 0)`;
 
-	const gameStats = await MONGODB_KILL["game-stats"].find(
-		{
-			game,
-			playtype,
-		},
-		options,
-	);
+	const gameStats = await DB.selectFrom("game_profile")
+		.select(SELECT_GAME_PROFILE)
+		.where("game_profile.game", "=", v3Game)
+		.orderBy(ratingCol, "desc")
+		.limit(limit)
+		.execute()
+		.then((rows) => rows.map(ToGameStatsDocument));
 
 	const users = await GetUsersWithIDs(gameStats.map((e) => e.userID));
 
@@ -193,18 +196,8 @@ router.get("/pb-leaderboard", async (req, res) => {
 		alg = temp;
 	}
 
-	const pbs = await MONGODB_KILL["personal-bests"].find(
-		{
-			game,
-			playtype,
-		},
-		{
-			sort: {
-				[`calculatedData.${alg}`]: -1,
-			},
-			limit,
-		},
-	);
+	const v3Game = GamePTToV3(game, playtype);
+	const pbs = await LoadPbDocumentsForGameSortedByCalculatedAlg(v3Game, alg, limit);
 
 	const users = await GetUsersWithIDs(pbs.map((e) => e.userID));
 

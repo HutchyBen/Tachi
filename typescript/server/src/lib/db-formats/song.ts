@@ -23,7 +23,7 @@ export const SELECT_SONG_DOCUMENT = [
 export async function GetSongByLegacyID(
 	game: GameGroup,
 	legacyId: number,
-): Promise<{ doc: MONGO_SongDocument; pgId: string } | undefined> {
+): Promise<{ doc: MONGO_SongDocument; newSongID: string } | undefined> {
 	const row = await DB.selectFrom("song")
 		.select(SELECT_SONG_DOCUMENT)
 		.where("legacy_id", "=", legacyId)
@@ -43,7 +43,7 @@ export async function GetSongByLegacyID(
 		data: row.song_data as SongDocumentData[typeof game],
 	};
 
-	return { doc, pgId: row.song_id };
+	return { doc, newSongID: row.song_id };
 }
 
 /**

@@ -264,9 +264,7 @@ export const ActionSignatures = {
 			comment: z.union([z.string().min(1).max(120), z.null()]).optional(),
 			highlight: z.boolean().optional(),
 		}),
-		output: z.object({
-			score: z.unknown(),
-		}),
+		output: z.object({}),
 	},
 	UPSERT_KAI_AUTH_TOKEN: {
 		input: z.object({
@@ -312,6 +310,36 @@ export const ActionSignatures = {
 			game: z.string(),
 			playtype: z.string(),
 			preferences: z.any(),
+		}),
+		output: z.object({}),
+	},
+	SET_RIVALS: {
+		input: z.object({
+			userID: z.number().int(),
+			game: z.string(),
+			playtype: z.string(),
+			rivalIDs: z.array(z.number().int().positive()),
+		}),
+		output: z.object({}),
+	},
+	ADD_GOAL: {
+		input: z.object({
+			userID: z.number().int(),
+			game: z.string(),
+			playtype: z.string(),
+			charts: z.any(),
+			criteria: z.any(),
+		}),
+		output: z.object({
+			goalID: z.string(),
+		}),
+	},
+	REMOVE_GOAL_SUBSCRIPTION: {
+		input: z.object({
+			userID: z.number().int(),
+			game: z.string(),
+			playtype: z.string(),
+			goalID: z.string(),
 		}),
 		output: z.object({}),
 	},

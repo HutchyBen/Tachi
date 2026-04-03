@@ -1,18 +1,7 @@
-/**
- * IR KsHook SV6C integration tests.
- *
- * Score import still resolves SDVX charts/songs via Mongo-backed queries until that path is
- * migrated to Postgres. Tests that require a successful chart lookup are marked with `it.fails`
- * until the migration is done.
- *
- * Vitest truncates Postgres per test. ResetDBState() is currently a no-op.
- */
-
 import { seedApiToken } from "#actions/test-utils/api-tokens";
 import DB from "#services/pg/db";
 import mockApi, { CloseServerConnection } from "#test-utils/mock-api";
 import { seedUser } from "#test-utils/pg-fixtures";
-import ResetDBState from "#test-utils/resets";
 import { TestingKsHookSV6CScore, TestingKsHookSV6CStaticScore } from "#test-utils/test-data";
 import deepmerge from "deepmerge";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
@@ -40,7 +29,6 @@ afterAll(() => CloseServerConnection());
 
 describe("POST /ir/kshook/sv6c/score/save", () => {
 	beforeEach(async () => {
-		await ResetDBState();
 		await seedPgUserAndApiToken();
 	});
 
@@ -138,7 +126,6 @@ describe("POST /ir/kshook/sv6c/score/export", () => {
 			.send({ scores: [data] });
 
 	beforeEach(async () => {
-		await ResetDBState();
 		await seedPgUserAndApiToken();
 		await DB.insertInto("svc_kshook_sv6c_settings")
 			.values({ user_id: IR_USER_ID, force_static_import: true })

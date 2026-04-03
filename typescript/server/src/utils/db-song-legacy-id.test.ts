@@ -13,11 +13,11 @@ describe("GetNextBmsPmsSongLegacyId", () => {
 
 		const base = maxRow?.m ?? 0;
 		const newLegacyId = base + 1;
-		const songPgId = `test-song-pms-legacy-seq-${newLegacyId}`;
+		const songNewID = `test-song-pms-legacy-seq-${newLegacyId}`;
 
 		await DB.insertInto("song")
 			.values({
-				id: songPgId,
+				id: songNewID,
 				legacy_id: newLegacyId,
 				game_group: "pms",
 				title: "t",
@@ -33,6 +33,6 @@ describe("GetNextBmsPmsSongLegacyId", () => {
 
 		expect(n).toBe(newLegacyId + 1);
 
-		await DB.deleteFrom("song").where("id", "=", songPgId).execute();
+		await DB.deleteFrom("song").where("id", "=", songNewID).execute();
 	});
 });

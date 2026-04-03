@@ -11,17 +11,17 @@ afterAll(() => CloseServerConnection());
 let seedCounter = 0;
 
 async function seedBmsChartWithHashes(opts: {
-	sha256: string;
 	game: "bms-7k" | "bms-14k";
 	md5: string;
+	sha256: string;
 }) {
 	const n = ++seedCounter;
-	const songPgId = `s_bms_router_${n}`;
+	const songNewID = `s_bms_router_${n}`;
 	const chartPgId = `c_bms_router_${n}`;
 
 	await DB.insertInto("song")
 		.values({
-			id: songPgId,
+			id: songNewID,
 			legacy_id: 960_000 + n,
 			game_group: "bms",
 			title: "BMS Router Test",
@@ -43,7 +43,7 @@ async function seedBmsChartWithHashes(opts: {
 			id: chartPgId,
 			legacy_id: chartPgId,
 			game: opts.game,
-			song_id: songPgId,
+			song_id: songNewID,
 			level: "?",
 			level_num: 0,
 			is_primary: true,
@@ -61,7 +61,7 @@ async function seedBmsChartWithHashes(opts: {
 		})
 		.execute();
 
-	return { chartPgId, songPgId };
+	return { chartPgId, songNewID };
 }
 
 async function insertBmsPb(userId: number, chartPgId: string) {

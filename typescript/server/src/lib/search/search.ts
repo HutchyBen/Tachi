@@ -1,9 +1,7 @@
 import type { FilterQuery } from "mongodb";
-import type { ICollection } from "monk";
 
 import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user";
 import { TachiConfig } from "#lib/setup/config";
-import MONGODB_KILL from "#services/mongo/db";
 import DB from "#services/pg/db";
 import { GetSongForIDGuaranteed } from "#utils/db";
 import { EscapeForILIKE } from "#utils/misc";
@@ -29,136 +27,10 @@ import {
 import { type Game } from "tachi-db";
 
 import { SearchFoldersFtsAndTrgmGlobal } from "./folders.js";
-import { AsyncFzf } from "./fzf/main";
 import { type SearchSessionHit, SearchSessionsForUserGptFtsAndTrgm } from "./session-search.js";
-
-export type { SearchSessionHit } from "./session-search.js";
 import { SearchSpecificGameSongs, type SongSearchReturn } from "./songs.js";
 
-interface SearchControls {
-	keys: Array<string>;
-	primary: string;
-}
-
-const SEARCH_CONTROLS = {
-	songs: {
-		keys: ["title", "artist", "searchTerms", "altTitles"],
-		primary: "id",
-	},
-	sessions: { keys: ["name"], primary: "sessionID" },
-	goals: { keys: ["name"], primary: "goalID" },
-	quests: { keys: ["name"], primary: "questID" },
-	users: { keys: ["username"], primary: "id" },
-} satisfies Partial<Record<keyof typeof MONGODB_KILL, SearchControls>>;
-
-interface SearchData {
-	primaryKey: number | string;
-	searchKey: string;
-}
-
-/**
- * Perform a $text index search on a collection.
- *
- * This throws an error if the collection does not have a text index.
- *
- * @param existingMatch - An existing $match query to further filter results
- * by.
- */
-export async function SearchCollection<T extends object>(
-	collection: ICollection<T>,
-	search: string,
-	searchMethod: keyof typeof SEARCH_CONTROLS,
-	existingMatch: FilterQuery<T> = {},
-	limit = 500,
-): Promise<Array<{ __textScore: number } & T>> {
-	const controls = SEARCH_CONTROLS[searchMethod];
-
-	const projection = Object.fromEntries([...controls.keys, controls.primary].map((e) => [e, 1]));
-
-	// we do the searching in-memory, because mongodb's search offerings are truly
-	// abysmal. I'm sorry. The performance is fine. I think.
-	const data = (await collection.find(existingMatch, { projection })) as Array<any>;
-
-	// instead of creating different AsyncFzf instances for each search control, we instead
-	// pool everything into the same instance. this ensures that all search controls are weighted
-	// equally, avoiding the case where bad results are included because all values for that search
-	// control are quite bad.
-	const searchData: Array<SearchData> = [];
-
-	for (const key of controls.keys) {
-		searchData.push(
-			...data
-				.filter((d) => d[key])
-				.flatMap<SearchData>((d) => {
-					// handles stuff like searchTerms or altTitles being an array
-					if (Array.isArray(d[key])) {
-						return d[key].map((k: any) => ({
-							primaryKey: d[controls.primary],
-							searchKey: k.toString(),
-						}));
-					}
-
-					return [
-						{
-							primaryKey: d[controls.primary],
-							searchKey: d[key].toString(),
-						},
-					];
-				}),
-		);
-	}
-
-	// we don't use fzf's limit since our best results may include duplicates,
-	// e.g. "gravekeeper" might match both the search terms "Gravekeeper" and
-	// "Gravekeeper of the Dead Tree" from the same song. The library doesn't do
-	// anything special with the option anyways; it still runs through all results
-	// but simply remove excess items before returning it to us.
-	const fzf = new AsyncFzf(searchData, {
-		selector: (item) => item.searchKey,
-		sort: true,
-		casing: "case-insensitive",
-	});
-	let results = await fzf.find(search);
-
-	// filter out anything far from the best match
-	// 30 was chosen arbitrarily :)
-	const max = results[0]?.score ?? 0;
-
-	results = results.filter((r) => r.score >= max - 30);
-
-	const pkeys: Set<number | string> = new Set();
-	const scores: Record<string, number> = {};
-
-	for (const res of results) {
-		const pkey = res.item.primaryKey;
-		const existingScore = scores[pkey];
-
-		pkeys.add(pkey);
-
-		if (!existingScore || res.score > existingScore) {
-			scores[pkey] = res.score;
-		}
-
-		if (pkeys.size > limit) {
-			break;
-		}
-	}
-
-	const documents: Array<any> = await (collection as ICollection).find({
-		[controls.primary]: { $in: Array.from(pkeys) },
-	});
-
-	// however, the results we get back from MongoDB are unordered, so we have to sort again.
-	documents.sort(
-		(a, b) => (scores[b[controls.primary]] ?? 0) - (scores[a[controls.primary]] ?? 0),
-	);
-
-	for (const doc of documents) {
-		doc.__textScore = scores[doc[controls.primary]] ?? 0;
-	}
-
-	return documents;
-}
+export type { SearchSessionHit } from "./session-search.js";
 
 export function SearchSessions(
 	search: string,
@@ -227,14 +99,10 @@ async function SearchAllGamesSingleGame(game: GameGroup, search: string) {
 /**
  * Searches all games' songs.
  */
-export async function SearchAllGamesSongs(search: string) {
-	return SearchGamesSongs(search, TachiConfig.GAMES);
-}
-
-export async function SearchGamesSongs(search: string, games: Array<GameGroup>) {
+export async function SearchGamesSongs(search: string, games: Array<GameGroup> | null) {
 	const promises = [];
 
-	for (const game of games) {
+	for (const game of games ?? TachiConfig.GAMES) {
 		promises.push(SearchAllGamesSingleGame(game, search));
 	}
 

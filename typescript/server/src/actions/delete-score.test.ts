@@ -1,8 +1,8 @@
 import { mongoScoreDataToPg } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
-import { describe, expect, it } from "vitest";
 import { type MONGO_ScoreData } from "tachi-common";
+import { describe, expect, it } from "vitest";
 
 import { ACTION_DeleteScore } from "./delete-score";
 
@@ -108,7 +108,10 @@ describe("ACTION_DeleteScore", () => {
 
 		await ACTION_DeleteScore(taker, { id: scoreId });
 
-		const row = await DB.selectFrom("score").select("id").where("id", "=", scoreId).executeTakeFirst();
+		const row = await DB.selectFrom("score")
+			.select("id")
+			.where("id", "=", scoreId)
+			.executeTakeFirst();
 		expect(row).toBeUndefined();
 	});
 
@@ -119,7 +122,10 @@ describe("ACTION_DeleteScore", () => {
 
 		await ACTION_DeleteScore(taker, { id: scoreId });
 
-		const row = await DB.selectFrom("score").select("id").where("id", "=", scoreId).executeTakeFirst();
+		const row = await DB.selectFrom("score")
+			.select("id")
+			.where("id", "=", scoreId)
+			.executeTakeFirst();
 		expect(row).toBeUndefined();
 	});
 

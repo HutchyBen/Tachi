@@ -51,7 +51,6 @@ async function loadAllChartsForGame(game: GameGroup): Promise<Array<MONGO_ChartD
 		let q = DB.selectFrom("chart")
 			.innerJoin("song", "song.id", "chart.song_id")
 			.select(SELECT_CHART)
-			.select("song.legacy_id as song_legacy_id")
 			.where("song.game_group", "=", game)
 			.orderBy("chart.id", "asc")
 			.limit(FETCH_CHUNK);
@@ -67,7 +66,7 @@ async function loadAllChartsForGame(game: GameGroup): Promise<Array<MONGO_ChartD
 		}
 
 		for (const row of rows) {
-			out.push(ToChartDocument(row, row.song_legacy_id));
+			out.push(ToChartDocument(row));
 		}
 
 		lastChartId = rows[rows.length - 1]!.chart_id;

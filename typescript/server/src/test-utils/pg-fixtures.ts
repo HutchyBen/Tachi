@@ -1,6 +1,49 @@
 import { HashPassword } from "#lib/auth/auth";
 import DB from "#services/pg/db";
 
+let minimalIidxChartCounter = 0;
+
+/**
+ * Inserts a minimal `song` + `chart` row for `iidx` / `SP` (`game` = `iidx-sp`) so
+ * goal/chart validation (`GetChartById`) succeeds in tests.
+ */
+export async function seedMinimalIidxSpChart() {
+	const n = ++minimalIidxChartCounter;
+	const songId = `S_MIN_IIDX_${n}_${Date.now()}`;
+	const chartId = `C_MIN_IIDX_${n}_${Date.now()}`;
+
+	await DB.insertInto("song")
+		.values({
+			id: songId,
+			legacy_id: 90_000 + n,
+			game_group: "iidx",
+			title: "Minimal IIDX Test Chart",
+			artist: "Tester",
+			search_terms: [],
+			alt_titles: [],
+			data: { displayVersion: "1", genre: "TEST" },
+			fts_document: "",
+		})
+		.execute();
+
+	await DB.insertInto("chart")
+		.values({
+			id: chartId,
+			legacy_id: `c_min_iidx_legacy_${n}`,
+			game: "iidx-sp",
+			song_id: songId,
+			difficulty: "ANOTHER",
+			level: "10",
+			level_num: 10,
+			is_primary: true,
+			versions: ["27"],
+			data: { inGameID: 1000, notecount: 786 },
+		})
+		.execute();
+
+	return chartId;
+}
+
 // ─── seedUser ─────────────────────────────────────────────────────────────────
 
 interface SeedUserOpts {

@@ -1,7 +1,7 @@
 import { ACTION_CustomiseScore } from "#actions/customise-score";
 import { ACTION_DeleteScore } from "#actions/delete-score.js";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { GetChartsBySongPgId } from "#lib/db-formats/chart";
+import { GetChartsBySongId } from "#lib/db-formats/chart";
 import { GetSongByLegacyID } from "#lib/db-formats/song";
 import { log } from "#lib/log/log";
 import { RequirePermissions } from "#server/middleware/auth";
@@ -86,11 +86,7 @@ router.get("/", async (req, res) => {
 		const charts =
 			songRes === undefined
 				? []
-				: await GetChartsBySongPgId(
-						toPgGame(score.game, score.playtype),
-						songRes.pgId,
-						score.songID,
-					);
+				: await GetChartsBySongId(toPgGame(score.game, score.playtype), songRes.newSongID);
 
 		const chart = charts.find((c) => c.chartID === score.chartID);
 		const song = songRes?.doc;

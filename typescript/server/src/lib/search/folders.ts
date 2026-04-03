@@ -70,9 +70,9 @@ async function finalizeFolderSearchRows(
 async function searchFoldersFtsAndTrgmCore(
 	search: string,
 	opts: {
+		allowedV3Games: Array<Game> | null;
 		limit: integer;
 		onlyActiveFolders: boolean;
-		allowedV3Games: Array<Game> | null;
 	},
 ): Promise<Array<{ __textScore: number } & MONGO_FolderDocument>> {
 	const q = search.trim();
@@ -237,8 +237,8 @@ async function searchFoldersFtsAndTrgmCore(
 export async function SearchFoldersFtsAndTrgmGlobal(
 	search: string,
 	opts: {
-		limit?: integer;
 		games?: GameGroup[];
+		limit?: integer;
 		playtypes?: Playtype[];
 	} = {},
 ): Promise<Array<{ __textScore: number } & MONGO_FolderDocument>> {

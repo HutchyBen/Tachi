@@ -101,11 +101,8 @@ export async function updateDpTiersCore() {
 	if (updatedSongIDs.size !== 0) {
 		log.info(`${updatedSongIDs.size} songs were changed. Recalcing the relevant scores now.`);
 
-		await RecalcAllScores({
-			game: "iidx",
-			playtype: "DP",
-			songID: { $in: [...updatedSongIDs.values()] },
-		});
+		// TODO(zk): We don't want to recalc _everything_ on changes like this?
+		await RecalcAllScores();
 
 		log.info(`Recalced those scores.`);
 	}

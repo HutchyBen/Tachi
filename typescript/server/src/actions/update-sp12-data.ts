@@ -190,10 +190,8 @@ export async function updateSp12DataCore() {
 
 	if (updatedChartIDs.length !== 0) {
 		log.info(`Finished applying SP12 changes. Recalcing.`);
-		await RecalcAllScores({
-			game: "iidx",
-			chartID: { $in: updatedChartIDs },
-		});
+		// TODO(zk): We don't want to recalc _everything_ on changes like this?
+		await RecalcAllScores();
 		log.info(`Finished recalcing scores.`);
 	}
 
