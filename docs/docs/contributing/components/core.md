@@ -20,7 +20,7 @@ To run the client and server, use `just start`. You can hit `Ctrl+C` to stop the
 
 ## Editing the Client
 
-With `just start` running, the client will listen for changes you make, and reload accordingly. You will see your changes reflected on http://127.0.0.1:3000.
+With `just start` running, the client will listen for changes you make, and reload accordingly. You will see your changes reflected on http://localhost:3000.
 
 ## Editing the Server
 

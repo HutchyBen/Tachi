@@ -225,6 +225,58 @@ function permRec(permissions: Record<string, boolean>, key: string): boolean | n
 
 const INSERT_CHUNK = 500;
 
+/** JSON text form of U+0000 that JSON.stringify uses; Postgres jsonb rejects this in strings. */
+const JSON_TEXT_ESCAPE_U0000 = ["\\", "u0000"].join("");
+
+function jsonStringHasPostgresRejectedNul(s: string): boolean {
+	return s.includes("\u0000") || s.includes(JSON_TEXT_ESCAPE_U0000);
+}
+
+/**
+ * Some chart_id sha256s in fervidex imports have nulbytes at the end; which are illegal in postgres serializations.
+ */
+function stripNulBytesIllegalInPostgres(s: string): string {
+	return s.replaceAll("\u0000", "").replaceAll(JSON_TEXT_ESCAPE_U0000, "");
+}
+
+function sanitizeOrphanScoreJsonForPostgres(value: unknown): unknown {
+	const json = JSON.stringify(value ?? null);
+	const stripped = stripNulBytesIllegalInPostgres(json);
+	return JSON.parse(stripped) as unknown;
+}
+
+/**
+ * Logs when a value destined for Postgres (jsonb or text) contains NUL / JSON \\u0000,
+ * which Postgres rejects (22P05).
+ */
+function logPostgresNulColumnIssue(
+	scopeLabel: string,
+	columnName: string,
+	value: string,
+	meta: Record<string, unknown>,
+): void {
+	const idxLiteral = value.indexOf("\u0000");
+	const idxEscaped = value.indexOf(JSON_TEXT_ESCAPE_U0000);
+	const idx = idxLiteral !== -1 ? idxLiteral : idxEscaped;
+	const kind =
+		idxLiteral !== -1
+			? "literal U+0000 in string"
+			: "JSON \\u0000 escape (disallowed by Postgres jsonb)";
+	const snippet =
+		idx === -1
+			? undefined
+			: value.slice(Math.max(0, idx - 48), Math.min(value.length, idx + 64));
+
+	console.warn(
+		`[${scopeLabel}] column "${columnName}" ${kind} — Postgres will reject this row. Source document:`,
+		{
+			...meta,
+			firstOccurrenceAtIndex: idx,
+			...(snippet !== undefined ? { snippetAroundFirstOccurrence: snippet } : {}),
+		},
+	);
+}
+
 async function batchInsert<T extends keyof Database>(
 	table: T,
 	rows: ReadonlyArray<Insertable<Database[T]>>,
@@ -429,19 +481,26 @@ async function main(): Promise<void> {
 			context: unknown;
 		}
 
-		const mongoOrphans = await mongoDB.get<MongoOrphanScoreDocument>("orphan-scores").find({});
+		const mongoOrphans = await mongoDB
+			.get<{ _id?: unknown } & MongoOrphanScoreDocument>("orphan-scores")
+			.find({});
 
-		const orphanScoreRows: Array<NewOrphanScore> = mongoOrphans.map((o) => ({
-			orphan_id: o.orphanID,
-			user_id: o.userID,
-			import_id: null,
-			import_type: o.importType as ImportType,
-			game_group: o.game,
-			data: o.data,
-			context: o.context,
-			time_inserted: tsReq(o.timeInserted),
-			error_message: o.errMsg ?? "",
-		}));
+		const orphanScoreRows: Array<NewOrphanScore> = [];
+		for (const o of mongoOrphans) {
+			const errMsg = stripNulBytesIllegalInPostgres(o.errMsg ?? "");
+
+			orphanScoreRows.push({
+				orphan_id: o.orphanID,
+				user_id: o.userID,
+				import_id: null,
+				import_type: o.importType as ImportType,
+				game_group: o.game,
+				data: sanitizeOrphanScoreJsonForPostgres(o.data),
+				context: sanitizeOrphanScoreJsonForPostgres(o.context),
+				time_inserted: tsReq(o.timeInserted),
+				error_message: errMsg,
+			});
+		}
 
 		for (let i = 0; i < orphanScoreRows.length; i = i + INSERT_CHUNK) {
 			const chunk = orphanScoreRows.slice(i, i + INSERT_CHUNK);
@@ -848,18 +907,29 @@ async function main(): Promise<void> {
 
 	// ── session ───────────────────────────────────────────────────────────────
 	console.log("\n[session]");
-	await streamMigrate<MONGO_SessionDocument, NewSession>("sessions", "session", (s) => ({
-		id: s.sessionID,
-		user_id: s.userID,
-		game: toGame(s.game, s.playtype),
-		name: s.name,
-		description: s.desc,
-		time_inserted: tsReq(s.timeInserted),
-		time_started: tsReq(s.timeStarted),
-		time_ended: tsReq(s.timeEnded),
-		calculated_data: JSON.stringify(s.calculatedData),
-		highlight: s.highlight,
-	}));
+	await streamCollection<{ _id?: unknown } & MONGO_SessionDocument>(
+		"sessions",
+		async (docs) => {
+			const rows: Array<NewSession> = [];
+			for (const s of docs) {
+				const calculated_data = JSON.stringify(s.calculatedData);
+				rows.push({
+					id: s.sessionID,
+					user_id: s.userID,
+					game: toGame(s.game, s.playtype),
+					name: s.name,
+					description: s.desc,
+					time_inserted: tsReq(s.timeInserted),
+					time_started: tsReq(s.timeStarted),
+					time_ended: tsReq(s.timeEnded),
+					calculated_data,
+					highlight: s.highlight,
+				});
+			}
+			await batchInsert("session", rows);
+		},
+		"sessions",
+	);
 
 	// ── import + import_* children ────────────────────────────────────────────
 	// Streamed: 2.5M rows. One pass populates the base table and all 6 child
@@ -1332,6 +1402,11 @@ async function main(): Promise<void> {
 				// if (!importId) {
 				// console.warn(`  [score] ${s.scoreID} belongs to no import!`);
 				// }
+
+				if (!s.scoreData.optional) {
+					// obscure corrupt data, one score has no "optional" data?
+					s.scoreData.optional = { enumIndexes: {} };
+				}
 
 				const gpt = GetGPTString(s.game, s.playtype);
 				const { data, derived, judgements } = mongoScoreDataToPg(gpt, s.scoreData);

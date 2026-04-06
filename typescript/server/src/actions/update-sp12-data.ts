@@ -1,10 +1,10 @@
 import type { Difficulties, integer, MONGO_ChartDocument } from "tachi-common";
 
 /* eslint-disable no-await-in-loop */
+import { computeDerivationChecksumForGPT } from "#game-implementations/utils/derivation-checksum";
 import { MakeAction } from "#lib/actions/actions";
 import { log } from "#lib/log/log";
 import DB from "#services/pg/db";
-import { RecalcAllScores } from "#utils/calculations/recalc-scores";
 import fetch from "#utils/fetch";
 import { FindChartWithPTDF } from "#utils/queries/charts";
 import { FindSongOnTitle } from "#utils/queries/songs";
@@ -179,8 +179,14 @@ export async function updateSp12DataCore() {
 				},
 			};
 
+			const updatedChart = { ...chart, data: chartData } as MONGO_ChartDocument;
+			const checksum = computeDerivationChecksumForGPT("iidx:SP", updatedChart);
+
 			await DB.updateTable("chart")
-				.set({ data: chartData as object })
+				.set({
+					data: chartData as object,
+					derivation_checksum: checksum,
+				})
 				.where("id", "=", chart.chartID)
 				.execute();
 
@@ -189,10 +195,10 @@ export async function updateSp12DataCore() {
 	}
 
 	if (updatedChartIDs.length !== 0) {
-		log.info(`Finished applying SP12 changes. Recalcing.`);
-		// TODO(zk): We don't want to recalc _everything_ on changes like this?
-		await RecalcAllScores();
-		log.info(`Finished recalcing scores.`);
+		log.info(
+			`Finished applying SP12 changes (${updatedChartIDs.length} charts). ` +
+				`Score re-derivation will be handled by the score_rederive queue.`,
+		);
 	}
 
 	return { chartsUpdated: updatedChartIDs.length };

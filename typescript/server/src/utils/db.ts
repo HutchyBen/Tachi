@@ -3,6 +3,8 @@ import type { Game } from "tachi-db";
 
 import { GetChartsByIds, SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart";
 import { LoadFolderDocumentById } from "#lib/db-formats/folders.js";
+import { SELECT_GOAL, SELECT_GOAL_SUB_WITH_GOAL_GAME } from "#lib/db-formats/goal";
+import { SELECT_QUEST, SELECT_QUEST_SUB_WITH_QUEST_GAME } from "#lib/db-formats/quest";
 import { GetSongsByLegacyIDs } from "#lib/db-formats/song";
 import {
 	ToGoalDocument,
@@ -214,7 +216,10 @@ export async function GetFolderForIDGuaranteed(folderID: string) {
 }
 
 export async function GetGoalForIDGuaranteed(goalID: string) {
-	const row = await DB.selectFrom("goal").selectAll().where("id", "=", goalID).executeTakeFirst();
+	const row = await DB.selectFrom("goal")
+		.select(SELECT_GOAL)
+		.where("goal.id", "=", goalID)
+		.executeTakeFirst();
 
 	if (!row) {
 		throw new Error(`Couldn't find goal with ID ${goalID}`);
@@ -226,10 +231,9 @@ export async function GetGoalForIDGuaranteed(goalID: string) {
 export async function GetGoalSubscriptionForIDGuaranteed(goalID: string, userID: integer) {
 	const row = await DB.selectFrom("goal_sub")
 		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-		.selectAll("goal_sub")
-		.select("goal.game as goal_game")
-		.where("goal_id", "=", goalID)
-		.where("user_id", "=", userID)
+		.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
+		.where("goal_sub.goal_id", "=", goalID)
+		.where("goal_sub.user_id", "=", userID)
 		.executeTakeFirst();
 
 	if (!row) {
@@ -243,8 +247,8 @@ export async function GetGoalSubscriptionForIDGuaranteed(goalID: string, userID:
 
 export async function GetQuestForIDGuaranteed(questID: string) {
 	const row = await DB.selectFrom("quest")
-		.selectAll()
-		.where("id", "=", questID)
+		.select(SELECT_QUEST)
+		.where("quest.id", "=", questID)
 		.executeTakeFirst();
 
 	if (!row) {
@@ -276,8 +280,7 @@ export async function GetRecentlyAchievedGoals(
 
 	let q = DB.selectFrom("goal_sub")
 		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-		.selectAll("goal_sub")
-		.select("goal.game as goal_game")
+		.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
 		.where("goal_sub.was_instantly_achieved", "=", false)
 		.where("goal_sub.achieved", "=", true);
 
@@ -319,19 +322,17 @@ export async function GetRecentlyAchievedGoals(
 
 	const goalSubRows = await q.execute();
 
-	const goalSubs = goalSubRows.map((r) =>
-		ToGoalSubscriptionDocument({
-			...r,
-			goal_game: r.goal_game as Game,
-		}),
-	);
+	const goalSubs = goalSubRows.map((r) => ToGoalSubscriptionDocument(r));
 
 	const goalIds = [...new Set(goalSubs.map((g) => g.goalID))];
 
 	const goalRows =
 		goalIds.length === 0
 			? []
-			: await DB.selectFrom("goal").selectAll().where("id", "in", goalIds).execute();
+			: await DB.selectFrom("goal")
+					.select(SELECT_GOAL)
+					.where("goal.id", "in", goalIds)
+					.execute();
 
 	const goals = goalRows.map(ToGoalDocument);
 
@@ -346,8 +347,7 @@ export async function GetRecentlyInteractedGoals(
 
 	let q = DB.selectFrom("goal_sub")
 		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-		.selectAll("goal_sub")
-		.select("goal.game as goal_game")
+		.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
 		.where("goal_sub.was_instantly_achieved", "=", false)
 		.where("goal_sub.achieved", "=", false)
 		.where("goal_sub.last_interaction", "is not", null);
@@ -390,19 +390,17 @@ export async function GetRecentlyInteractedGoals(
 
 	const goalSubRows = await q.execute();
 
-	const goalSubs = goalSubRows.map((r) =>
-		ToGoalSubscriptionDocument({
-			...r,
-			goal_game: r.goal_game as Game,
-		}),
-	);
+	const goalSubs = goalSubRows.map((r) => ToGoalSubscriptionDocument(r));
 
 	const goalIds = [...new Set(goalSubs.map((g) => g.goalID))];
 
 	const goalRows =
 		goalIds.length === 0
 			? []
-			: await DB.selectFrom("goal").selectAll().where("id", "in", goalIds).execute();
+			: await DB.selectFrom("goal")
+					.select(SELECT_GOAL)
+					.where("goal.id", "in", goalIds)
+					.execute();
 
 	const goals = goalRows.map(ToGoalDocument);
 
@@ -417,8 +415,7 @@ export async function GetRecentlyAchievedQuests(
 
 	let q = DB.selectFrom("quest_sub")
 		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
-		.selectAll("quest_sub")
-		.select("quest.game as quest_game")
+		.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
 		.where("quest_sub.was_instantly_achieved", "=", false)
 		.where("quest_sub.achieved", "=", true);
 
@@ -460,19 +457,17 @@ export async function GetRecentlyAchievedQuests(
 
 	const questSubRows = await q.execute();
 
-	const questSubs = questSubRows.map((r) =>
-		ToQuestSubscriptionDocument({
-			...r,
-			quest_game: r.quest_game as Game,
-		}),
-	);
+	const questSubs = questSubRows.map((r) => ToQuestSubscriptionDocument(r));
 
 	const questIds = [...new Set(questSubs.map((s) => s.questID))];
 
 	const questRows =
 		questIds.length === 0
 			? []
-			: await DB.selectFrom("quest").selectAll().where("id", "in", questIds).execute();
+			: await DB.selectFrom("quest")
+					.select(SELECT_QUEST)
+					.where("quest.id", "in", questIds)
+					.execute();
 
 	const quests = questRows.map(ToQuestDocument);
 
@@ -487,8 +482,7 @@ export async function GetRecentlyInteractedQuests(
 
 	let q = DB.selectFrom("quest_sub")
 		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
-		.selectAll("quest_sub")
-		.select("quest.game as quest_game")
+		.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
 		.where("quest_sub.last_interaction", "is not", null)
 		.where("quest_sub.achieved", "=", false)
 		.where("quest_sub.was_instantly_achieved", "=", false);
@@ -531,19 +525,17 @@ export async function GetRecentlyInteractedQuests(
 
 	const questSubRows = await q.execute();
 
-	const questSubs = questSubRows.map((r) =>
-		ToQuestSubscriptionDocument({
-			...r,
-			quest_game: r.quest_game as Game,
-		}),
-	);
+	const questSubs = questSubRows.map((r) => ToQuestSubscriptionDocument(r));
 
 	const questIds = [...new Set(questSubs.map((s) => s.questID))];
 
 	const questRows =
 		questIds.length === 0
 			? []
-			: await DB.selectFrom("quest").selectAll().where("id", "in", questIds).execute();
+			: await DB.selectFrom("quest")
+					.select(SELECT_QUEST)
+					.where("quest.id", "in", questIds)
+					.execute();
 
 	const quests = questRows.map(ToQuestDocument);
 
@@ -609,7 +601,10 @@ export async function GetMostSubscribedGoals(
 		return [];
 	}
 
-	const goalRows = await DB.selectFrom("goal").selectAll().where("id", "in", goalIds).execute();
+	const goalRows = await DB.selectFrom("goal")
+		.select(SELECT_GOAL)
+		.where("goal.id", "in", goalIds)
+		.execute();
 
 	const byId = new Map(goalRows.map((g) => [g.id, g]));
 
@@ -656,8 +651,8 @@ export async function GetMostSubscribedQuests(
 	}
 
 	const questRows = await DB.selectFrom("quest")
-		.selectAll()
-		.where("id", "in", questIds)
+		.select(SELECT_QUEST)
+		.where("quest.id", "in", questIds)
 		.execute();
 
 	const byId = new Map(questRows.map((x) => [x.id, x]));
@@ -684,7 +679,7 @@ export async function GetChildQuests(questline: MONGO_QuestlineDocument) {
 	}
 
 	const quests = await DB.selectFrom("quest")
-		.selectAll()
+		.select(SELECT_QUEST)
 		.where("quest.id", "in", questline.quests)
 		.execute();
 

@@ -1,4 +1,5 @@
 import { ONE_SECOND } from "#lib/constants/time";
+import { SELECT_NOTIFICATION } from "#lib/db-formats/notification";
 import DB from "#services/pg/db";
 
 export interface SeedNotifOpts {
@@ -29,7 +30,10 @@ export async function seedNotification(opts: SeedNotifOpts) {
 }
 
 export function getNotification(rowId: string) {
-	return DB.selectFrom("notification").selectAll().where("row_id", "=", rowId).executeTakeFirst();
+	return DB.selectFrom("notification")
+		.select(SELECT_NOTIFICATION)
+		.where("notification.row_id", "=", rowId)
+		.executeTakeFirst();
 }
 
 export async function countNotificationsForUser(userId: number) {

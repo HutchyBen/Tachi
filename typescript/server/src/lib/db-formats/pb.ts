@@ -39,6 +39,26 @@ export interface PbDocumentJoinRow {
 	leaderboard_out_of: number;
 }
 
+/** All columns from `pb` for single-table reads (e.g. updating `calculated_data`). */
+export const SELECT_PB_ROW = [
+	"pb.row_id",
+	"pb.user_id",
+	"pb.chart_id",
+	"pb.lens",
+	"pb.data",
+	"pb.derived_data",
+	"pb.calculated_data",
+	"pb.judgements",
+	"pb.ranking_value",
+	"pb.ranking_value_tb1",
+	"pb.ranking_value_tb2",
+	"pb.ranking_value_tb3",
+	"pb.ranking_value_tb4",
+	"pb.ranking_value_tb5",
+	"pb.highlight",
+	"pb.time_achieved",
+] as const;
+
 /** Columns for `pb` joined with `chart` and `song` (same shape as {@link PbDocumentJoinRow}). */
 export const SELECT_PB_DOCUMENT_JOIN = [
 	"pb.row_id",

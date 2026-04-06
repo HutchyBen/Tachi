@@ -125,6 +125,7 @@ export const MAIMAI_IMPL: GPTServerImplementation<"maimai:Single"> = {
 		),
 	],
 	defaultMergeRefName: "Best Percent",
+	derivationRelevantFields: ["levelNum", "data.maxPercent"],
 	scoreValidators: [
 		(s) => {
 			if (s.scoreData.percent > 104) {

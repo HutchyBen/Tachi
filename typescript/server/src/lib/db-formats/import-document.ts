@@ -1,6 +1,26 @@
 import type { Game, Import, ImportTracker } from "tachi-db";
 
 import DB from "#services/pg/db";
+
+export const SELECT_IMPORT = [
+	"import.id",
+	"import.user_id",
+	"import.time_started",
+	"import.time_finished",
+	"import.game_group",
+	"import.import_type",
+	"import.user_intent",
+	"import.service",
+] as const;
+
+export const SELECT_IMPORT_TRACKER = [
+	"import_tracker.import_id",
+	"import_tracker.user_id",
+	"import_tracker.import_type",
+	"import_tracker.user_intent",
+	"import_tracker.time_started",
+	"import_tracker.error",
+] as const;
 import { ISO8601ToUnixMilliseconds } from "#utils/time";
 import {
 	type ClassDelta,
@@ -128,8 +148,8 @@ export async function LoadImportDocumentById(
 	importID: string,
 ): Promise<MONGO_ImportDocument | undefined> {
 	const base = await DB.selectFrom("import")
-		.selectAll()
-		.where("id", "=", importID)
+		.select(SELECT_IMPORT)
+		.where("import.id", "=", importID)
 		.executeTakeFirst();
 
 	if (!base) {
@@ -169,21 +189,21 @@ export async function ListRecentImportDocuments(opts: {
 	userId?: number;
 	userIntent?: boolean;
 }): Promise<MONGO_ImportDocument[]> {
-	let q = DB.selectFrom("import").selectAll();
+	let q = DB.selectFrom("import").select(SELECT_IMPORT);
 
 	if (opts.userId !== undefined) {
-		q = q.where("user_id", "=", opts.userId);
+		q = q.where("import.user_id", "=", opts.userId);
 	}
 
 	if (opts.importType !== undefined) {
-		q = q.where("import_type", "=", opts.importType);
+		q = q.where("import.import_type", "=", opts.importType);
 	}
 
 	if (opts.userIntent !== undefined) {
-		q = q.where("user_intent", "=", opts.userIntent);
+		q = q.where("import.user_intent", "=", opts.userIntent);
 	}
 
-	const bases = await q.orderBy("time_finished", "desc").limit(opts.limit).execute();
+	const bases = await q.orderBy("import.time_finished", "desc").limit(opts.limit).execute();
 
 	if (bases.length === 0) {
 		return [];
@@ -283,21 +303,23 @@ export async function ListFailedImportTrackers(opts: {
 	userId?: number;
 	userIntent?: boolean;
 }): Promise<MONGO_ImportTrackerDocument[]> {
-	let q = DB.selectFrom("import_tracker").selectAll().where("error", "is not", null);
+	let q = DB.selectFrom("import_tracker")
+		.select(SELECT_IMPORT_TRACKER)
+		.where("import_tracker.error", "is not", null);
 
 	if (opts.userId !== undefined) {
-		q = q.where("user_id", "=", opts.userId);
+		q = q.where("import_tracker.user_id", "=", opts.userId);
 	}
 
 	if (opts.importType !== undefined) {
-		q = q.where("import_type", "=", opts.importType);
+		q = q.where("import_tracker.import_type", "=", opts.importType);
 	}
 
 	if (opts.userIntent !== undefined) {
-		q = q.where("user_intent", "=", opts.userIntent);
+		q = q.where("import_tracker.user_intent", "=", opts.userIntent);
 	}
 
-	const rows = await q.orderBy("time_started", "desc").limit(opts.limit).execute();
+	const rows = await q.orderBy("import_tracker.time_started", "desc").limit(opts.limit).execute();
 
 	return rows.map((row) => ToImportTrackerDocument(row));
 }
@@ -306,8 +328,8 @@ export async function GetImportTrackerByImportId(
 	importID: string,
 ): Promise<MONGO_ImportTrackerDocument | undefined> {
 	const row = await DB.selectFrom("import_tracker")
-		.selectAll()
-		.where("import_id", "=", importID)
+		.select(SELECT_IMPORT_TRACKER)
+		.where("import_tracker.import_id", "=", importID)
 		.executeTakeFirst();
 
 	if (!row) {

@@ -1,3 +1,5 @@
+import { SELECT_QUEST, SELECT_QUEST_SUB_WITH_QUEST_GAME } from "#lib/db-formats/quest";
+import { SELECT_QUESTLINE_ROW } from "#lib/db-formats/questline";
 import { ToQuestDocument, ToQuestSubscriptionDocument } from "#lib/db-formats/target-documents";
 import { GetGoalsInQuest, GetGoalsInQuests } from "#lib/targets/quests";
 import DB from "#services/pg/db";
@@ -6,7 +8,7 @@ import { AssignToReqTachiData, GetGPT, GetTachiData } from "#utils/req-tachi-dat
 import { GetUsersWithIDs } from "#utils/user";
 import { type RequestHandler, Router } from "express";
 import { GamePTToV3, V3ToGamePT } from "tachi-common";
-import type { Game } from "tachi-db";
+
 const router: Router = Router({ mergeParams: true });
 
 const ResolveQuestID: RequestHandler = async (req, res, next) => {
@@ -16,7 +18,7 @@ const ResolveQuestID: RequestHandler = async (req, res, next) => {
 	const v3Game = GamePTToV3(game, playtype);
 
 	const row = await DB.selectFrom("quest")
-		.selectAll()
+		.select(SELECT_QUEST)
 		.where("quest.id", "=", questID)
 		.where("quest.game", "=", v3Game)
 		.executeTakeFirst();
@@ -55,7 +57,7 @@ router.get("/", async (req, res) => {
 	const pattern = `%${likeEsc}%`;
 
 	const rows = await DB.selectFrom("quest")
-		.selectAll()
+		.select(SELECT_QUEST)
 		.where("quest.game", "=", v3Game)
 		.where((eb) =>
 			eb.or([eb("quest.name", "ilike", pattern), eb("quest.description", "ilike", pattern)]),
@@ -83,23 +85,11 @@ router.get("/:questID", ResolveQuestID, async (req, res) => {
 
 	const questSubRows = await DB.selectFrom("quest_sub")
 		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
-		.selectAll("quest_sub")
-		.select("quest.game as quest_game")
+		.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
 		.where("quest_sub.quest_id", "=", quest.questID)
 		.execute();
 
-	const questSubs = questSubRows.map((r) =>
-		ToQuestSubscriptionDocument({
-			quest_id: r.quest_id,
-			user_id: r.user_id,
-			progress: r.progress,
-			last_interaction: r.last_interaction,
-			achieved: r.achieved,
-			time_achieved: r.time_achieved,
-			was_instantly_achieved: r.was_instantly_achieved,
-			quest_game: r.quest_game as Game,
-		}),
-	);
+	const questSubs = questSubRows.map((r) => ToQuestSubscriptionDocument(r));
 
 	const users = await GetUsersWithIDs(questSubs.map((e) => e.userID));
 
@@ -107,7 +97,7 @@ router.get("/:questID", ResolveQuestID, async (req, res) => {
 
 	const qlRows = await DB.selectFrom("questline")
 		.innerJoin("questline_quest", "questline_quest.questline_id", "questline.id")
-		.selectAll("questline")
+		.select(SELECT_QUESTLINE_ROW)
 		.where("questline_quest.quest_id", "=", quest.questID)
 		.execute();
 

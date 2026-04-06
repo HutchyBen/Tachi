@@ -24,8 +24,8 @@ export function ToAPIURL(url: string) {
 
 /**
  * When `VITE_SERVER_URL` is unset, `ToAPIURL` is same-origin relative. On the Vite dev
- * server, a plain `/api/v1/...` link would hit the SPA and reload `index.html` in a loop.
- * For "open in browser" help links, force an absolute backend URL in local dev.
+ * server, `vite.config` proxies `/api` to the backend so `/api/v1/...` works.
+ * For "open in browser" help links in local dev, use the page origin (Vite on :3000), not :8080.
  */
 export function ToAbsoluteAPIURLForHelpLink(url: string) {
 	const u = ToAPIURL(url);
@@ -33,7 +33,11 @@ export function ToAbsoluteAPIURLForHelpLink(url: string) {
 		return u;
 	}
 	if (import.meta.env.VITE_IS_LOCAL_DEV) {
-		return `http://127.0.0.1:8080${u}`;
+		const origin =
+			typeof window !== "undefined" && window.location?.origin
+				? window.location.origin
+				: "http://localhost:3000";
+		return `${origin}${u}`;
 	}
 	return u;
 }

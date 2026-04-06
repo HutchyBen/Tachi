@@ -70,10 +70,14 @@ test-typescript FILTER="*":
 
 	bun run --elide-lines=0 --sequential --filter '{{FILTER}}' test -- --coverage --coverage.reporter=lcov --reporter=default --reporter=junit --outputFile.junit=test-results/junit.xml
 
+# Summarize Vitest v8 coverage across workspaces (see typescript/coverage-tools).
+coverage-report *ARGS:
+	bun run --filter tachi-coverage-tools report -- {{ARGS}}
+
 
 # Run all parity suites, or a single one if a name is given.
 test-parity suite="":
-	TACHI_SERVER=https://127.0.0.1:8080 bun vitest run {{ if suite != "" { "tests/" + suite + ".test.ts" } else { "" } }}
+	TACHI_SERVER=https://localhost:8080 bun vitest run {{ if suite != "" { "tests/" + suite + ".test.ts" } else { "" } }}
 
 # ==> Orchestration of parallel db tests
 

@@ -1,3 +1,5 @@
+import { SELECT_ACTION } from "#lib/db-formats/action";
+import { SELECT_USER_SETTINGS } from "#lib/db-formats/user-settings";
 import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -6,8 +8,8 @@ import { ACTION_UpdateUserSettings } from "./update-user-settings";
 
 async function getSettings(userId: number) {
 	return DB.selectFrom("account_settings")
-		.selectAll()
-		.where("user_id", "=", userId)
+		.select(SELECT_USER_SETTINGS)
+		.where("account_settings.user_id", "=", userId)
 		.executeTakeFirstOrThrow();
 }
 
@@ -135,8 +137,8 @@ describe("ACTION_UpdateUserSettings", () => {
 		await ACTION_UpdateUserSettings(taker, { invisible: true });
 
 		const action = await DB.selectFrom("action")
-			.selectAll()
-			.where("kind", "=", "UPDATE_USER_SETTINGS")
+			.select(SELECT_ACTION)
+			.where("action.kind", "=", "UPDATE_USER_SETTINGS")
 			.executeTakeFirstOrThrow();
 
 		expect(action).toMatchObject({

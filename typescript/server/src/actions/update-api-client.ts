@@ -1,6 +1,7 @@
 import { MakeAction } from "#lib/actions/actions.js";
 import DB from "#services/pg/db.js";
 import { GetClientByID } from "#utils/queries/api-clients.js";
+import { validateWebhookUri } from "#utils/validate-webhook-uri.js";
 import { ExpectedErr } from "bliss";
 
 export const ACTION_UpdateApiClient = MakeAction(
@@ -36,6 +37,14 @@ export const ACTION_UpdateApiClient = MakeAction(
 		}
 
 		if (webhookUri !== undefined) {
+			if (webhookUri !== null) {
+				const rejection = validateWebhookUri(webhookUri);
+
+				if (rejection) {
+					throw new ExpectedErr(400, rejection);
+				}
+			}
+
 			updates.webhook_uri = webhookUri;
 		}
 

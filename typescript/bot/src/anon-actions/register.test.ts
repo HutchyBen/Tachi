@@ -1,5 +1,6 @@
 import db from "#services/pg/db";
 import { createTestAccount } from "#test-utils/db";
+import { SELECT_ACTION, SELECT_PRIV_DISCORD_USER_MAP } from "#test-utils/select-constants";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { ANON_ACTION_Register } from "./register";
@@ -27,8 +28,8 @@ describe("ACTION_Register", () => {
 
 		const row = await db
 			.selectFrom("priv_discord_user_map")
-			.selectAll()
-			.where("user_id", "=", userId)
+			.select(SELECT_PRIV_DISCORD_USER_MAP)
+			.where("priv_discord_user_map.user_id", "=", userId)
 			.executeTakeFirst();
 
 		expect(row).toMatchObject({
@@ -58,8 +59,8 @@ describe("ACTION_Register", () => {
 
 		const row = await db
 			.selectFrom("priv_discord_user_map")
-			.selectAll()
-			.where("user_id", "=", userId)
+			.select(SELECT_PRIV_DISCORD_USER_MAP)
+			.where("priv_discord_user_map.user_id", "=", userId)
 			.executeTakeFirst();
 
 		expect(row?.discord_id).toBe(newDiscordId);
@@ -74,8 +75,8 @@ describe("ACTION_Register", () => {
 
 		const action = await db
 			.selectFrom("action")
-			.selectAll()
-			.where("kind", "=", "REGISTER")
+			.select(SELECT_ACTION)
+			.where("action.kind", "=", "REGISTER")
 			.executeTakeFirst();
 
 		expect(action).toMatchObject({

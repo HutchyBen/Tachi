@@ -17,8 +17,6 @@ try {
 		throw new Error(`Failed to fetch config -- ${configRes.description}.`);
 	}
 } catch (err) {
-	const devServerUrl = import.meta.env.VITE_SERVER_URL ?? "";
-	const showHttpsCertHint = devServerUrl.startsWith("https://");
 	const statusHelpUrl = ToAbsoluteAPIURLForHelpLink("/status");
 	document.open();
 	document.write(`
@@ -47,11 +45,7 @@ try {
 			<h1><b>Couldn't connect to the server.</b></h1>
 			<h3>You are in local development mode.</h3>
 			<ul style="font-size: 2rem;">
-				<li>${
-					showHttpsCertHint
-						? `Have you accepted the HTTPS certificates for <a href="${statusHelpUrl}">the server?</a> If not, the site won't load.`
-						: `Is the backend running? Try opening <a href="${statusHelpUrl}">the status endpoint</a> in your browser (default dev URL is <code>http://127.0.0.1:8080</code>).`
-				}</li>
+				<li>Is the backend running on <code>http://localhost:8080</code>? Try <a href="${statusHelpUrl}">the status endpoint</a>. With the default Vite proxy, the API is also available at <code>http://localhost:3000/api/v1/...</code>.</li>
 			</ul>
 		`
 				: `<h1>Failed to connect!</h1>

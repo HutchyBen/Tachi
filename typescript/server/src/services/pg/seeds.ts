@@ -1,12 +1,13 @@
-import type {
-	MONGO_BMSCourseDocument,
-	MONGO_ChartDocument,
-	MONGO_FolderDocument,
-	MONGO_GoalDocument,
-	MONGO_QuestDocument,
-	MONGO_QuestlineDocument,
-	MONGO_SongDocument,
-	MONGO_TableDocument,
+import {
+	type MONGO_BMSCourseDocument,
+	type MONGO_ChartDocument,
+	type MONGO_FolderDocument,
+	type MONGO_GoalDocument,
+	type MONGO_QuestDocument,
+	type MONGO_QuestlineDocument,
+	type MONGO_SongDocument,
+	type MONGO_TableDocument,
+	V3ToGPTString,
 } from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import type {
@@ -25,6 +26,7 @@ import type {
 	Game as PgGame,
 } from "tachi-db";
 
+import { computeDerivationChecksumForGPT } from "#game-implementations/utils/derivation-checksum";
 import { rebuildFolderChartLookup } from "#lib/folders/rebuild-folder-chart-lookup.js";
 import fs from "fs";
 import { type Insertable, type Kysely, sql } from "kysely";
@@ -172,6 +174,8 @@ async function upsertChartsForPgGame(
 
 	const chartRows: Array<NewChart> = [];
 
+	const gpt = V3ToGPTString(pgGame);
+
 	for (const c of charts) {
 		if (!c.id) {
 			throw new Error(
@@ -186,6 +190,8 @@ async function upsertChartsForPgGame(
 			);
 		}
 
+		const checksum = computeDerivationChecksumForGPT(gpt, c as unknown as MONGO_ChartDocument);
+
 		chartRows.push({
 			id: c.id,
 			legacy_id: c.legacyChartID,
@@ -197,6 +203,7 @@ async function upsertChartsForPgGame(
 			difficulty: c.difficulty,
 			versions: (c.versions ?? []).map(String),
 			data: JSON.stringify(c.data),
+			derivation_checksum: checksum,
 		});
 	}
 
@@ -214,6 +221,7 @@ async function upsertChartsForPgGame(
 					difficulty: sql`excluded.difficulty`,
 					versions: sql`excluded.versions`,
 					data: sql`excluded.data`,
+					derivation_checksum: sql`excluded.derivation_checksum`,
 				}),
 			)
 			.execute();

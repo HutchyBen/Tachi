@@ -2,6 +2,8 @@ import type { GoalCriteriaFormatter } from "#game-implementations/types";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
+import { SELECT_GOAL, SELECT_GOAL_SUB_WITH_GOAL_GAME } from "#lib/db-formats/goal";
+import { SELECT_QUEST, SELECT_QUEST_SUB_WITH_QUEST_GAME } from "#lib/db-formats/quest";
 import {
 	ToGoalDocument,
 	ToGoalSubscriptionDocument,
@@ -9,17 +11,16 @@ import {
 	ToQuestSubscriptionDocument,
 } from "#lib/db-formats/target-documents";
 import { GetFolderChartIDs } from "#lib/folders/folders.js";
+import { type KtLogger, log } from "#lib/log/log";
 import {
 	getGoalMetricValueFromPb,
 	LoadPbsForUserOnChartsForGoal,
 	pbMeetsGoalThreshold,
 } from "#lib/targets/goal-pb-queries.js";
-import { type KtLogger, log } from "#lib/log/log";
 import DB from "#services/pg/db";
 import { UnixMillisecondsToISO8601 } from "#utils/time";
 import fjsh from "fast-json-stable-hash";
 import { sql } from "kysely";
-import type { Game } from "tachi-db";
 import {
 	FormatGameGroup,
 	type GameGroup,
@@ -35,8 +36,8 @@ import {
 	type MONGO_QuestDocument,
 	type MONGO_QuestSubscriptionDocument,
 	type Playtype,
-	V3ToGameGroup,
 	v3AllGames,
+	V3ToGameGroup,
 } from "tachi-common";
 
 import { CreateGoalTitle as CreateGoalName, ValidateGoalChartsAndCriteria } from "./goal-utils";
@@ -315,7 +316,10 @@ export async function ConstructGoal(
 async function ensureGoalRow(doc: MONGO_GoalDocument) {
 	const v3Game = GamePTToV3(doc.game, doc.playtype);
 
-	const existed = await DB.selectFrom("goal").select("goal.id").where("id", "=", doc.goalID).executeTakeFirst();
+	const existed = await DB.selectFrom("goal")
+		.select("goal.id")
+		.where("id", "=", doc.goalID)
+		.executeTakeFirst();
 
 	if (!existed) {
 		await DB.insertInto("goal")
@@ -352,17 +356,13 @@ export async function SubscribeToGoal(
 
 	const existingSub = await DB.selectFrom("goal_sub")
 		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-		.selectAll("goal_sub")
-		.select("goal.game as goal_game")
+		.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
 		.where("goal_sub.goal_id", "=", MONGO_GoalDocument.goalID)
 		.where("goal_sub.user_id", "=", userID)
 		.executeTakeFirst();
 
 	if (existingSub) {
-		const userAlreadySubscribed = ToGoalSubscriptionDocument({
-			...existingSub,
-			goal_game: existingSub.goal_game as Game,
-		});
+		const userAlreadySubscribed = ToGoalSubscriptionDocument(existingSub);
 
 		if (!isStandaloneAssignment) {
 			return SubscribeFailReasons.ALREADY_SUBSCRIBED;
@@ -380,16 +380,12 @@ export async function SubscribeToGoal(
 
 		const updated = await DB.selectFrom("goal_sub")
 			.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-			.selectAll("goal_sub")
-			.select("goal.game as goal_game")
+			.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
 			.where("goal_sub.goal_id", "=", MONGO_GoalDocument.goalID)
 			.where("goal_sub.user_id", "=", userID)
 			.executeTakeFirstOrThrow();
 
-		return ToGoalSubscriptionDocument({
-			...updated,
-			goal_game: updated.goal_game as Game,
-		});
+		return ToGoalSubscriptionDocument(updated);
 	}
 
 	const result = await EvaluateGoalForUser(MONGO_GoalDocument, userID, log);
@@ -450,9 +446,11 @@ export async function SubscribeToGoal(
 	return goalSub;
 }
 
-export async function GetQuestsThatContainGoal(goalID: string): Promise<Array<MONGO_QuestDocument>> {
+export async function GetQuestsThatContainGoal(
+	goalID: string,
+): Promise<Array<MONGO_QuestDocument>> {
 	const rows = await DB.selectFrom("quest")
-		.selectAll()
+		.select(SELECT_QUEST)
 		.where(
 			sql<boolean>`exists (
 				select 1
@@ -480,8 +478,7 @@ export async function GetQuestSubsWhichDependOnThisGoalSub(
 
 	const subRows = await DB.selectFrom("quest_sub")
 		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
-		.selectAll("quest_sub")
-		.select("quest.game as quest_game")
+		.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
 		.where("quest_sub.user_id", "=", goalSub.userID)
 		.where("quest.game", "=", v3Game)
 		.where(
@@ -499,7 +496,10 @@ export async function GetQuestSubsWhichDependOnThisGoalSub(
 	const questRows =
 		questIds.length === 0
 			? []
-			: await DB.selectFrom("quest").selectAll().where("id", "in", questIds).execute();
+			: await DB.selectFrom("quest")
+					.select(SELECT_QUEST)
+					.where("quest.id", "in", questIds)
+					.execute();
 
 	const questById = new Map(questRows.map((q) => [q.id, ToQuestDocument(q)]));
 
@@ -512,16 +512,7 @@ export async function GetQuestSubsWhichDependOnThisGoalSub(
 
 		return {
 			quest,
-			...ToQuestSubscriptionDocument({
-				quest_id: r.quest_id,
-				user_id: r.user_id,
-				progress: r.progress,
-				last_interaction: r.last_interaction,
-				achieved: r.achieved,
-				time_achieved: r.time_achieved,
-				was_instantly_achieved: r.was_instantly_achieved,
-				quest_game: r.quest_game as Game,
-			}),
+			...ToQuestSubscriptionDocument(r),
 		};
 	});
 }
@@ -608,18 +599,12 @@ export async function UnsubscribeFromOrphanedGoalSubs(
 
 	const subRows = await DB.selectFrom("goal_sub")
 		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-		.selectAll("goal_sub")
-		.select("goal.game as goal_game")
+		.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
 		.where("goal_sub.user_id", "=", userID)
 		.where("goal.game", "=", v3Game)
 		.execute();
 
-	const goalSubs = subRows.map((r) =>
-		ToGoalSubscriptionDocument({
-			...r,
-			goal_game: r.goal_game as Game,
-		}),
-	);
+	const goalSubs = subRows.map((r) => ToGoalSubscriptionDocument(r));
 
 	const maybeToRemove = await Promise.all(
 		goalSubs.map(async (goalSub) => {
@@ -675,8 +660,7 @@ export async function GetRelevantGoals(
 
 	let q = DB.selectFrom("goal_sub")
 		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-		.selectAll("goal_sub")
-		.select("goal.game as goal_game")
+		.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
 		.where("goal_sub.user_id", "=", userID)
 		.where("goal.game", "in", v3GamesForGroup);
 
@@ -692,12 +676,7 @@ export async function GetRelevantGoals(
 		return { goals: [], goalSubsMap: new Map() };
 	}
 
-	const goalSubs = subRows.map((r) =>
-		ToGoalSubscriptionDocument({
-			...r,
-			goal_game: r.goal_game as Game,
-		}),
-	);
+	const goalSubs = subRows.map((r) => ToGoalSubscriptionDocument(r));
 
 	const goalIDs = goalSubs.map((e) => e.goalID);
 
@@ -707,7 +686,10 @@ export async function GetRelevantGoals(
 		chartIDsArr.push(c);
 	}
 
-	const goalRows = await DB.selectFrom("goal").selectAll().where("goal.id", "in", goalIDs).execute();
+	const goalRows = await DB.selectFrom("goal")
+		.select(SELECT_GOAL)
+		.where("goal.id", "in", goalIDs)
+		.execute();
 
 	const directMulti: Array<MONGO_GoalDocument> = [];
 
@@ -757,7 +739,7 @@ export async function GetRelevantFolderGoals(goalIDs: Array<string>, chartIDsArr
 		.innerJoin("folder_chart_lookup", (join) =>
 			join.on(sql`folder_chart_lookup.folder_id`, "=", sql`goal.charts->>'data'`),
 		)
-		.selectAll("goal")
+		.select(SELECT_GOAL)
 		.where(sql`goal.charts->>'type'`, "=", "folder")
 		.where("goal.id", "in", goalIDs)
 		.where("folder_chart_lookup.chart_id", "in", chartIDsArr)
@@ -781,7 +763,10 @@ export async function EditGoal(oldGoal: MONGO_GoalDocument, newGoal: MONGO_GoalD
 
 	newGoal.goalID = newGoalID;
 
-	await DB.updateTable("goal_sub").set({ goal_id: newGoalID }).where("goal_id", "=", oldGoal.goalID).execute();
+	await DB.updateTable("goal_sub")
+		.set({ goal_id: newGoalID })
+		.where("goal_id", "=", oldGoal.goalID)
+		.execute();
 
 	const quests = await GetQuestsThatContainGoal(oldGoal.goalID);
 

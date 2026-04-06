@@ -1,5 +1,7 @@
 import { GetChartById } from "#lib/db-formats/chart";
 import { LoadFolderDocumentById } from "#lib/db-formats/folders";
+import { SELECT_GOAL, SELECT_GOAL_SUB_WITH_GOAL_GAME } from "#lib/db-formats/goal";
+import { SELECT_QUEST_SUB_WITH_QUEST_GAME } from "#lib/db-formats/quest";
 import {
 	ToGoalDocument,
 	ToGoalSubscriptionDocument,
@@ -19,7 +21,6 @@ import { GetFolderChartIDs } from "#utils/folder";
 import { GetUGPT } from "#utils/req-tachi-data";
 import { Router } from "express";
 import { GamePTToV3, MongoChartLegacyId } from "tachi-common";
-import type { Game } from "tachi-db";
 
 import goalsRouter from "./goals/router";
 import questsRouter from "./quests/router";
@@ -122,25 +123,13 @@ router.get("/on-chart/:chartID", async (req, res) => {
 			? []
 			: await DB.selectFrom("quest_sub")
 					.innerJoin("quest", "quest.id", "quest_sub.quest_id")
-					.selectAll("quest_sub")
-					.select("quest.game as quest_game")
+					.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
 					.where("quest_sub.user_id", "=", user.id)
 					.where("quest.game", "=", v3Game)
 					.where("quest_sub.quest_id", "in", questIds)
 					.execute();
 
-	const questSubs = questSubRows.map((r) =>
-		ToQuestSubscriptionDocument({
-			quest_id: r.quest_id,
-			user_id: r.user_id,
-			progress: r.progress,
-			last_interaction: r.last_interaction,
-			achieved: r.achieved,
-			time_achieved: r.time_achieved,
-			was_instantly_achieved: r.was_instantly_achieved,
-			quest_game: r.quest_game as Game,
-		}),
-	);
+	const questSubs = questSubRows.map((r) => ToQuestSubscriptionDocument(r));
 
 	return res.status(200).json({
 		success: true,
@@ -179,25 +168,22 @@ router.get("/on-folder/:folderID", async (req, res) => {
 
 	const allSubRows = await DB.selectFrom("goal_sub")
 		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-		.selectAll("goal_sub")
-		.select("goal.game as goal_game")
+		.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
 		.where("goal_sub.user_id", "=", user.id)
 		.where("goal.game", "=", v3Game)
 		.execute();
 
-	const allGoalSubs = allSubRows.map((r) =>
-		ToGoalSubscriptionDocument({
-			...r,
-			goal_game: r.goal_game as Game,
-		}),
-	);
+	const allGoalSubs = allSubRows.map((r) => ToGoalSubscriptionDocument(r));
 
 	const goalIDs = allGoalSubs.map((e) => e.goalID);
 
 	const goalDocRows =
 		goalIDs.length === 0
 			? []
-			: await DB.selectFrom("goal").selectAll().where("goal.id", "in", goalIDs).execute();
+			: await DB.selectFrom("goal")
+					.select(SELECT_GOAL)
+					.where("goal.id", "in", goalIDs)
+					.execute();
 
 	const goals: Array<ReturnType<typeof ToGoalDocument>> = [];
 
@@ -228,25 +214,13 @@ router.get("/on-folder/:folderID", async (req, res) => {
 			? []
 			: await DB.selectFrom("quest_sub")
 					.innerJoin("quest", "quest.id", "quest_sub.quest_id")
-					.selectAll("quest_sub")
-					.select("quest.game as quest_game")
+					.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
 					.where("quest_sub.user_id", "=", user.id)
 					.where("quest.game", "=", v3Game)
 					.where("quest_sub.quest_id", "in", questIds)
 					.execute();
 
-	const questSubs = questSubRows.map((r) =>
-		ToQuestSubscriptionDocument({
-			quest_id: r.quest_id,
-			user_id: r.user_id,
-			progress: r.progress,
-			last_interaction: r.last_interaction,
-			achieved: r.achieved,
-			time_achieved: r.time_achieved,
-			was_instantly_achieved: r.was_instantly_achieved,
-			quest_game: r.quest_game as Game,
-		}),
-	);
+	const questSubs = questSubRows.map((r) => ToQuestSubscriptionDocument(r));
 
 	return res.status(200).json({
 		success: true,
@@ -273,39 +247,21 @@ router.get("/all-subs", async (req, res) => {
 	const [goalSubRows, questSubRows] = await Promise.all([
 		DB.selectFrom("goal_sub")
 			.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-			.selectAll("goal_sub")
-			.select("goal.game as goal_game")
+			.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
 			.where("goal_sub.user_id", "=", user.id)
 			.where("goal.game", "=", v3Game)
 			.execute(),
 		DB.selectFrom("quest_sub")
 			.innerJoin("quest", "quest.id", "quest_sub.quest_id")
-			.selectAll("quest_sub")
-			.select("quest.game as quest_game")
+			.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
 			.where("quest_sub.user_id", "=", user.id)
 			.where("quest.game", "=", v3Game)
 			.execute(),
 	]);
 
-	const goalSubs = goalSubRows.map((r) =>
-		ToGoalSubscriptionDocument({
-			...r,
-			goal_game: r.goal_game as Game,
-		}),
-	);
+	const goalSubs = goalSubRows.map((r) => ToGoalSubscriptionDocument(r));
 
-	const questSubs = questSubRows.map((r) =>
-		ToQuestSubscriptionDocument({
-			quest_id: r.quest_id,
-			user_id: r.user_id,
-			progress: r.progress,
-			last_interaction: r.last_interaction,
-			achieved: r.achieved,
-			time_achieved: r.time_achieved,
-			was_instantly_achieved: r.was_instantly_achieved,
-			quest_game: r.quest_game as Game,
-		}),
-	);
+	const questSubs = questSubRows.map((r) => ToQuestSubscriptionDocument(r));
 
 	return res.status(200).json({
 		success: true,

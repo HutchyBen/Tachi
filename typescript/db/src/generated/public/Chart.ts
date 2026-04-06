@@ -29,6 +29,8 @@ export default interface ChartTable {
   versions: ColumnType<string[], string[], string[]>;
 
   data: ColumnType<unknown, unknown, unknown>;
+
+  derivation_checksum: ColumnType<string | null, string | null, string | null>;
 }
 
 export type Chart = Selectable<ChartTable>;

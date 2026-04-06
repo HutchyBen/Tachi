@@ -73,24 +73,6 @@ function seedMinioCdn {
 	)
 }
 
-function selfSignHTTPS {
-	if [ -e typescript/server/cert/key.pem ] && [ -e typescript/server/cert/cert.pem ] && openssl x509 -checkend 0 -noout -in typescript/server/cert/cert.pem; then
-		echo "HTTPS Certificates for local-dev server already exists and has not expired."
-		return 0
-	fi
-
-	echo "Self-Signing HTTPS Certificates for local-dev server..."
-
-	# This is for dev servers only! You should use this to
-	# create a self-signed HTTPS certificate for local dev.
-	# That is it. This is not secure.
-	mkdir -p typescript/server/cert
-
-	openssl req -x509 -newkey rsa:4096 -keyout typescript/server/cert/key.pem -out typescript/server/cert/cert.pem -sha256 -days 365 -nodes -subj "/C=AU/ST=TachiExample/L=TachiExample/O=TachiExample/CN=127.0.0.1" &> /dev/null
-
-	echo "Created HTTPS Certificates!"
-}
-
 function bunInstall {
 	echo "Installing dependencies..."
 
@@ -125,7 +107,6 @@ function syncDatabaseWithSeeds {
 setupShell
 mvExampleFiles
 seedMinioCdn
-selfSignHTTPS
 bunInstall
 
 if [ -e _SETUP_OK ] && [ $FORCE -eq 0 ]; then

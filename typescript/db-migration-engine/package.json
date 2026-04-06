@@ -21,7 +21,6 @@
 		"bench": "node -e \"process.exit(0)\""
 	},
 	"dependencies": {
-		"kysely": "catalog:",
 		"pg": "catalog:"
 	},
 	"devDependencies": {

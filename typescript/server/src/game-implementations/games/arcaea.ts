@@ -96,6 +96,7 @@ export const ARCAEA_IMPL: GPTServerImplementation<GPTStrings["arcaea"]> = {
 		),
 	],
 	defaultMergeRefName: "Best Score",
+	derivationRelevantFields: ["levelNum"],
 	scoreValidators: [
 		(s) => {
 			if (s.scoreData.lamp === "PURE MEMORY" && s.scoreData.score < 10_000_000) {

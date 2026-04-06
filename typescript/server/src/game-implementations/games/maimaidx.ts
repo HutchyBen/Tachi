@@ -91,6 +91,7 @@ export const MAIMAIDX_IMPL: GPTServerImplementation<"maimaidx:Single"> = {
 		),
 	],
 	defaultMergeRefName: "Best Percent",
+	derivationRelevantFields: ["levelNum"],
 	scoreValidators: [
 		(s) => {
 			if (s.scoreData.lamp === "ALL PERFECT+" && s.scoreData.percent !== 101) {

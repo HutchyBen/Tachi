@@ -57,8 +57,8 @@ jobs:
         env:
           NODE_ENV: "test"
           PORT: 8080
-          MONGO_URL: "127.0.0.1"
-          REDIS_URL: "127.0.0.1"
+          MONGO_URL: "localhost"
+          REDIS_URL: "localhost"
 
   docker-push:
     runs-on: ubuntu-latest

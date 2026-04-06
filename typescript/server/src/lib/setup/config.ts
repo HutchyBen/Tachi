@@ -46,7 +46,6 @@ const configSchema = z.object({
 	MIN_OAUTH2_INFO: oauth2Schema.optional(),
 	ARC_AUTH_TOKEN: z.string().optional(),
 	MYT_AUTH_TOKEN: z.string().optional(),
-	ENABLE_SERVER_HTTPS: z.boolean().optional(),
 	CLIENT_DEV_SERVER: z.string().nullable().optional(),
 	RATE_LIMIT: z.number().int().positive().default(500),
 	OAUTH_CLIENT_CAP: z.number().int().positive().default(15),
@@ -54,7 +53,7 @@ const configSchema = z.object({
 	USE_EXTERNAL_SCORE_IMPORT_WORKER: z.boolean().default(false),
 	EXTERNAL_SCORE_IMPORT_WORKER_CONCURRENCY: z.number().int().positive().optional(),
 	ALLOW_RUNNING_OFFLINE: z.boolean().optional(),
-	ENABLE_METRICS: z.boolean().default(false),
+	ENABLE_METRICS: z.boolean().default(true),
 	EMAIL_CONFIG: z
 		.object({
 			FROM: z.string(),
@@ -323,7 +322,6 @@ const configFromEnv: unknown = {
 	...(minOauth !== undefined ? { MIN_OAUTH2_INFO: minOauth } : {}),
 	ARC_AUTH_TOKEN: opt("TACHI_ARC_AUTH_TOKEN"),
 	MYT_AUTH_TOKEN: opt("TACHI_MYT_AUTH_TOKEN"),
-	ENABLE_SERVER_HTTPS: parseBool("TACHI_ENABLE_SERVER_HTTPS"),
 	...(clientDev !== undefined ? { CLIENT_DEV_SERVER: clientDev } : {}),
 	RATE_LIMIT: parseIntEnv("TACHI_RATE_LIMIT", 500),
 	OAUTH_CLIENT_CAP: parseIntEnv("TACHI_OAUTH_CLIENT_CAP", 15),
@@ -334,7 +332,7 @@ const configFromEnv: unknown = {
 		10,
 	),
 	ALLOW_RUNNING_OFFLINE: parseBool("TACHI_ALLOW_RUNNING_OFFLINE"),
-	ENABLE_METRICS: parseBool("TACHI_ENABLE_METRICS", false) ?? false,
+	ENABLE_METRICS: parseBool("TACHI_ENABLE_METRICS", true) ?? true,
 	...(emailCfg !== undefined ? { EMAIL_CONFIG: emailCfg } : {}),
 	USC_QUEUE_SIZE: parseIntEnv("TACHI_USC_QUEUE_SIZE", 3),
 	BEATORAJA_QUEUE_SIZE: parseIntEnv("TACHI_BEATORAJA_QUEUE_SIZE", 3),

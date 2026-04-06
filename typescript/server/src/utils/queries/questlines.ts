@@ -28,7 +28,11 @@ export async function GetQuestlinesForGamePlaytype(
 	const questlineIds = qlRows.map((r) => r.questline_id);
 
 	const qqRows = await DB.selectFrom("questline_quest")
-		.select(["questline_quest.questline_id", "questline_quest.quest_id", "questline_quest.sort_order"])
+		.select([
+			"questline_quest.questline_id",
+			"questline_quest.quest_id",
+			"questline_quest.sort_order",
+		])
 		.where("questline_quest.questline_id", "in", questlineIds)
 		.orderBy("questline_quest.questline_id")
 		.orderBy("questline_quest.sort_order")

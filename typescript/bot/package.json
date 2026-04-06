@@ -17,7 +17,6 @@
 	},
 	"devDependencies": {
 		"@types/express": "catalog:",
-		"@types/json5": "catalog:",
 		"@types/lodash": "catalog:",
 		"@types/luxon": "catalog:",
 		"@types/node": "catalog:",
@@ -31,16 +30,11 @@
 	"dependencies": {
 		"@discordjs/builders": "catalog:",
 		"@discordjs/rest": "catalog:",
-		"@types/bson": "catalog:",
-		"@types/humanize-duration": "catalog:",
-		"@valuabletouch/winston-seq": "catalog:",
 		"deepmerge": "catalog:",
 		"discord-api-types": "catalog:",
 		"discord.js": "catalog:",
 		"dotenv": "catalog:",
 		"express": "catalog:",
-		"humanize-duration": "catalog:",
-		"json5": "catalog:",
 		"kysely": "catalog:",
 		"lodash": "catalog:",
 		"luxon": "catalog:",
@@ -48,13 +42,11 @@
 		"pg": "catalog:",
 		"bliss": "workspace:*",
 		"prudence": "catalog:",
-		"seq-logging": "catalog:",
 		"tachi-common": "workspace:*",
 		"tachi-db": "workspace:*",
 		"ts-node": "catalog:",
 		"tsconfig-paths": "catalog:",
-		"typescript": "catalog:",
-		"winston": "catalog:"
+		"typescript": "catalog:"
 	},
 	"engines": {
 		"bun": ">=1.2.0"

@@ -2,9 +2,6 @@
 .setup_env
 failed-tests.txt
 
-# HTTPS local certs
-cert
-
 # Error Files
 scripts/validate-database-errs/*
 

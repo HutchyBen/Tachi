@@ -1,10 +1,10 @@
 /* eslint-disable no-await-in-loop */
 import type { Difficulties, integer, MONGO_ChartDocument, Playtypes } from "tachi-common";
 
+import { computeDerivationChecksumForGPT } from "#game-implementations/utils/derivation-checksum";
 import { MakeAction } from "#lib/actions/actions";
 import { log } from "#lib/log/log";
 import DB from "#services/pg/db";
-import { RecalcAllScores } from "#utils/calculations/recalc-scores";
 import fetch from "#utils/fetch";
 import { FindChartWithPTDFVersion } from "#utils/queries/charts";
 import { FindSongOnTitle } from "#utils/queries/songs";
@@ -120,18 +120,25 @@ export async function updateBpiDataCore() {
 				worldRecord: newWR,
 			};
 
+			const gpt = `iidx:${playtype}` as const;
+			const updatedChart = { ...tachiChart, data: mergedData } as MONGO_ChartDocument;
+			const checksum = computeDerivationChecksumForGPT(gpt, updatedChart);
+
 			await DB.updateTable("chart")
-				.set({ data: mergedData as object })
+				.set({
+					data: mergedData as object,
+					derivation_checksum: checksum,
+				})
 				.where("id", "=", tachiChart.chartID)
 				.execute();
 		}
 	}
 
 	if (updatedChartIDs.length !== 0) {
-		log.info(`Finished applying BPI changes in Postgres. Recalcing scores.`);
-		// TODO(zk): We don't want to recalc _everything_ on changes like this?
-		await RecalcAllScores();
-		log.info(`Finished recalcing scores.`);
+		log.info(
+			`Finished applying BPI changes in Postgres (${updatedChartIDs.length} charts). ` +
+				`Score re-derivation will be handled by the score_rederive queue.`,
+		);
 	}
 
 	return { chartsUpdated: updatedChartIDs.length };

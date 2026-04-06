@@ -1,7 +1,7 @@
 import type { integer } from "tachi-common";
-import type { Game } from "tachi-db";
 
 import { SELECT_FOLDER, ToFolderDocument } from "#lib/db-formats/folders.js";
+import { SELECT_GOAL, SELECT_GOAL_SUB_WITH_GOAL_GAME } from "#lib/db-formats/goal";
 import { SELECT_SESSION_DOCUMENT, ToSessionDocument } from "#lib/db-formats/session";
 import { ToGoalDocument, ToGoalSubscriptionDocument } from "#lib/db-formats/target-documents";
 import DB from "#services/pg/db";
@@ -85,8 +85,7 @@ export async function GetGoalSummary(userID: integer) {
 
 	const achievedRows = await DB.selectFrom("goal_sub")
 		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-		.selectAll("goal_sub")
-		.select("goal.game as goal_game")
+		.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
 		.where("goal_sub.user_id", "=", userID)
 		.where("goal_sub.time_achieved", ">=", timeIso)
 		.where("goal_sub.was_instantly_achieved", "=", false)
@@ -94,27 +93,25 @@ export async function GetGoalSummary(userID: integer) {
 
 	const improvedRows = await DB.selectFrom("goal_sub")
 		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-		.selectAll("goal_sub")
-		.select("goal.game as goal_game")
+		.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
 		.where("goal_sub.user_id", "=", userID)
 		.where("goal_sub.last_interaction", ">=", timeIso)
 		.where("goal_sub.achieved", "=", false)
 		.execute();
 
-	const achievedGoals = achievedRows.map((r) =>
-		ToGoalSubscriptionDocument({ ...r, goal_game: r.goal_game as Game }),
-	);
+	const achievedGoals = achievedRows.map((r) => ToGoalSubscriptionDocument(r));
 
-	const improvedGoals = improvedRows.map((r) =>
-		ToGoalSubscriptionDocument({ ...r, goal_game: r.goal_game as Game }),
-	);
+	const improvedGoals = improvedRows.map((r) => ToGoalSubscriptionDocument(r));
 
 	const goalIds = [...new Set([...achievedGoals, ...improvedGoals].map((e) => e.goalID))];
 
 	const goalRows =
 		goalIds.length === 0
 			? []
-			: await DB.selectFrom("goal").selectAll().where("id", "in", goalIds).execute();
+			: await DB.selectFrom("goal")
+					.select(SELECT_GOAL)
+					.where("goal.id", "in", goalIds)
+					.execute();
 
 	const goals = goalRows.map(ToGoalDocument);
 

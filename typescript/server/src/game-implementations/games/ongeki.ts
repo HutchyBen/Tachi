@@ -191,6 +191,7 @@ export const ONGEKI_IMPL: GPTServerImplementation<"ongeki:Single"> = {
 		),
 	],
 	defaultMergeRefName: "Best Score",
+	derivationRelevantFields: ["levelNum", "data.maxPlatScore", "data.inGameID"],
 	scoreValidators: [
 		(s, chart) => {
 			let { hit, miss } = s.scoreData.judgements;

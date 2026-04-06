@@ -1,16 +1,27 @@
 import type http from "http";
-import type https from "https";
 
 import { log } from "#lib/log/log";
 import { CloseScoreImportQueue } from "#lib/score-import/worker/queue";
 import { ClosePgConnection } from "#services/pg/db";
 import { CloseRedisConnection } from "#services/redis/redis";
 
-export function HandleSIGTERMGracefully(instance?: http.Server | https.Server) {
+export function HandleSIGTERMGracefully(instance?: http.Server, metricsInstance?: http.Server) {
 	log.info({ shutdownInfo: true }, "SIGTERM Received, closing program.");
 
 	if (instance) {
-		instance.close(() => CloseEverythingElse());
+		instance.close(() => {
+			if (metricsInstance) {
+				metricsInstance.close(() => {
+					void CloseEverythingElse();
+				});
+			} else {
+				void CloseEverythingElse();
+			}
+		});
+	} else if (metricsInstance) {
+		metricsInstance.close(() => {
+			void CloseEverythingElse();
+		});
 	} else {
 		return CloseEverythingElse();
 	}

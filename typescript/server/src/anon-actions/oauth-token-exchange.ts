@@ -3,6 +3,7 @@ import { SELECT_API_TOKEN, ToAPITokenDocument } from "#lib/db-formats/api-token"
 import DB from "#services/pg/db";
 import { Random20Hex } from "#utils/misc";
 import { ExpectedErr } from "bliss";
+import crypto from "node:crypto";
 
 const SELECT_OAUTH_CLIENT = [
 	"priv_api_client.client_id",
@@ -31,7 +32,13 @@ export const ANON_ACTION_OAuthTokenExchange = MakeAnonAction(
 			throw new ExpectedErr(404, `This client does not exist.`);
 		}
 
-		if (client.client_secret !== input.client_secret) {
+		const expectedBuf = Buffer.from(client.client_secret, "utf8");
+		const receivedBuf = Buffer.from(String(input.client_secret), "utf8");
+
+		if (
+			expectedBuf.length !== receivedBuf.length ||
+			!crypto.timingSafeEqual(expectedBuf, receivedBuf)
+		) {
 			throw new ExpectedErr(403, `Invalid secret.`);
 		}
 

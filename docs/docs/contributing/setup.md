@@ -158,21 +158,13 @@ You should now be properly authenticated!
 
 With a terminal open inside the `Tachi` container you just cloned, run `just start`.
 
-The frontend will be running on `http://127.0.0.1:3000`.
-The backend will be running on `https://127.0.0.1:8080`.
-
-!!! danger
-The backend **always runs on HTTPS** in local development. This is because browsers
-tend to _really_ hate HTTP mode nowadays, and it causes so many problems.
-
-    You **need** to navigate to your running instance of the backend in a browser, and tell
-    the browser that you trust these certificates. Otherwise, all client requests to
-    the server will silently be chomped by the browser.
+The frontend will be running on `http://localhost:3000`.
+The backend listens on `http://localhost:8080`, and the Vite dev server **proxies** `/api` and `/ir` there so the browser talks to the app on port 3000 only (same-origin HTTP, no self-signed certificates).
 
 !!! tip
 Type `just` in the terminal to see other available commands.
 
-Navigate to http://127.0.0.1:3000 and check your Tachi instance!
+Navigate to http://localhost:3000 and check your Tachi instance!
 
 ## 6. OK, Now what.
 

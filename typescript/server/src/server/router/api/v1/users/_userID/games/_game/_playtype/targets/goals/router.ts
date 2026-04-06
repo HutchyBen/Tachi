@@ -1,7 +1,7 @@
-import type { Game } from "tachi-db";
-
 import { ACTION_AddGoal } from "#actions/add-goal";
 import { ACTION_RemoveGoalSubscription } from "#actions/remove-goal-subscription";
+import { SELECT_GOAL, SELECT_GOAL_SUB_WITH_GOAL_GAME } from "#lib/db-formats/goal";
+import { SELECT_QUEST_SUB_WITH_QUEST_GAME } from "#lib/db-formats/quest";
 import {
 	ToGoalDocument,
 	ToGoalSubscriptionDocument,
@@ -34,25 +34,22 @@ router.get("/", async (req, res) => {
 
 	const subRows = await DB.selectFrom("goal_sub")
 		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-		.selectAll("goal_sub")
-		.select("goal.game as goal_game")
+		.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
 		.where("goal_sub.user_id", "=", user.id)
 		.where("goal.game", "=", v3Game)
 		.execute();
 
-	const goalSubs = subRows.map((r) =>
-		ToGoalSubscriptionDocument({
-			...r,
-			goal_game: r.goal_game as Game,
-		}),
-	);
+	const goalSubs = subRows.map((r) => ToGoalSubscriptionDocument(r));
 
 	const goalIds = goalSubs.map((e) => e.goalID);
 
 	const goalRows =
 		goalIds.length === 0
 			? []
-			: await DB.selectFrom("goal").selectAll().where("goal.id", "in", goalIds).execute();
+			: await DB.selectFrom("goal")
+					.select(SELECT_GOAL)
+					.where("goal.id", "in", goalIds)
+					.execute();
 
 	const goals = goalRows.map(ToGoalDocument);
 
@@ -60,24 +57,12 @@ router.get("/", async (req, res) => {
 
 	const questSubRows = await DB.selectFrom("quest_sub")
 		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
-		.selectAll("quest_sub")
-		.select("quest.game as quest_game")
+		.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
 		.where("quest_sub.user_id", "=", user.id)
 		.where("quest.game", "=", v3Game)
 		.execute();
 
-	const questSubs = questSubRows.map((r) =>
-		ToQuestSubscriptionDocument({
-			quest_id: r.quest_id,
-			user_id: r.user_id,
-			progress: r.progress,
-			last_interaction: r.last_interaction,
-			achieved: r.achieved,
-			time_achieved: r.time_achieved,
-			was_instantly_achieved: r.was_instantly_achieved,
-			quest_game: r.quest_game as Game,
-		}),
-	);
+	const questSubs = questSubRows.map((r) => ToQuestSubscriptionDocument(r));
 
 	const questSubIDs = questSubs.map((e) => e.questID);
 
@@ -213,8 +198,7 @@ const GetGoalSubscription: RequestHandler = async (req, res, next) => {
 
 	const row = await DB.selectFrom("goal_sub")
 		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-		.selectAll("goal_sub")
-		.select("goal.game as goal_game")
+		.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
 		.where("goal_sub.user_id", "=", user.id)
 		.where("goal_sub.goal_id", "=", req.params.goalID)
 		.where("goal.game", "=", v3Game)
@@ -227,10 +211,7 @@ const GetGoalSubscription: RequestHandler = async (req, res, next) => {
 		});
 	}
 
-	const goalSub = ToGoalSubscriptionDocument({
-		...row,
-		goal_game: row.goal_game as Game,
-	});
+	const goalSub = ToGoalSubscriptionDocument(row);
 
 	AssignToReqTachiData(req, { goalSubDoc: goalSub });
 

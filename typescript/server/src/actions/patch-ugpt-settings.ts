@@ -1,4 +1,5 @@
 import { MakeAction } from "#lib/actions/actions.js";
+import { SELECT_GAME_SETTINGS } from "#lib/db-formats/ugpt-settings";
 import DB from "#services/pg/db.js";
 import { IsUserAdmin } from "#utils/user.js";
 import { ExpectedErr } from "bliss";
@@ -57,9 +58,9 @@ export const ACTION_PatchUGPTSettings = MakeAction("PATCH_UGPT_SETTINGS", async 
 	}
 
 	const row = await DB.selectFrom("game_settings")
-		.selectAll()
-		.where("user_id", "=", userID)
-		.where("game", "=", v3Game)
+		.select(SELECT_GAME_SETTINGS)
+		.where("game_settings.user_id", "=", userID)
+		.where("game_settings.game", "=", v3Game)
 		.executeTakeFirst();
 
 	if (!row) {

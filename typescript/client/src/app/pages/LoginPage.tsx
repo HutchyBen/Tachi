@@ -5,7 +5,7 @@ import { APIFetchV1 } from "#util/api";
 import { HumaniseError } from "#util/humanise-error";
 import { HistorySafeGoBack } from "#util/misc";
 import { useFormik } from "formik";
-import React, { useContext, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Alert, Button, Form } from "react-bootstrap";
 import ReCAPTCHA from "react-google-recaptcha";
 import toast from "react-hot-toast";
@@ -20,6 +20,35 @@ export default function LoginPage() {
 	const history = useHistory();
 
 	const recaptchaRef = useRef<any>(null);
+
+	const [localDevFirstAdminLogin, setLocalDevFirstAdminLogin] = useState<
+		| { password: string; status: "ready"; username: string }
+		| { status: "loading" }
+		| { status: "unavailable" }
+		| null
+	>(null);
+
+	useEffect(() => {
+		if (!import.meta.env.VITE_IS_LOCAL_DEV) {
+			return;
+		}
+		setLocalDevFirstAdminLogin({ status: "loading" });
+		void APIFetchV1<{ password: string; username: string }>("/localdev/first-admin-login")
+			.then((r) => {
+				if (r.success && r.body) {
+					setLocalDevFirstAdminLogin({
+						status: "ready",
+						username: r.body.username,
+						password: r.body.password,
+					});
+				} else {
+					setLocalDevFirstAdminLogin({ status: "unavailable" });
+				}
+			})
+			.catch(() => {
+				setLocalDevFirstAdminLogin({ status: "unavailable" });
+			});
+	}, []);
 
 	const performLogin = async (values: {
 		"!password": string;
@@ -86,22 +115,26 @@ export default function LoginPage() {
 		onSubmit: performLogin,
 	});
 
+	const localDevReadyLogin =
+		localDevFirstAdminLogin?.status === "ready" ? localDevFirstAdminLogin : null;
+
 	return (
 		<LoginPageLayout description={<Description />} heading="Log In">
 			<Form className="d-flex flex-column gap-4 w-100" onSubmit={formik.handleSubmit}>
-				{import.meta.env.VITE_IS_LOCAL_DEV && (
+				{import.meta.env.VITE_IS_LOCAL_DEV && localDevReadyLogin && (
 					<Alert className="mb-0" variant="info">
 						<div className="d-flex flex-column gap-2">
 							<span>
-								You are in local development mode. You can login as the admin
-								account.
+								You are in local development mode. You can log in as the first admin
+								account (<code>{localDevReadyLogin.username}</code> /{" "}
+								<code>{localDevReadyLogin.password}</code>).
 							</span>
 							<Button
 								className="align-self-start"
 								onClick={() =>
 									void performLogin({
-										username: "admin",
-										"!password": "password",
+										username: localDevReadyLogin.username,
+										"!password": localDevReadyLogin.password,
 										captcha: formik.values.captcha,
 									})
 								}
@@ -109,7 +142,7 @@ export default function LoginPage() {
 								type="button"
 								variant="outline-primary"
 							>
-								Log in as admin
+								Log in as first admin
 							</Button>
 						</div>
 					</Alert>

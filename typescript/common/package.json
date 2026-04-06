@@ -36,14 +36,13 @@
 	"author": "zk",
 	"license": "MIT",
 	"dependencies": {
-		"@types/express-serve-static-core": "catalog:",
 		"@types/mongodb": "catalog:",
-		"deepmerge": "catalog:",
 		"prudence": "catalog:",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@typescript/native-preview": "catalog:",
+		"@vitest/coverage-v8": "catalog:",
 		"eslint-config-tachi": "workspace:*",
 		"typescript": "catalog:",
 		"vitest": "catalog:"

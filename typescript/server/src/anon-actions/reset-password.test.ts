@@ -173,7 +173,7 @@ describe("ANON_ACTION_ResetPassword", () => {
 		expect(await PasswordCompare(user.password, cred.password)).toBe(true);
 	});
 
-	it("writes a THROW action row when the code does not exist (dead executeTakeFirstOrThrow)", async () => {
+	it("writes a BAD action row when the code does not exist", async () => {
 		await expect(
 			ANON_ACTION_ResetPassword(taker, {
 				code: "NONEXISTENT_TOKEN",
@@ -186,9 +186,48 @@ describe("ANON_ACTION_ResetPassword", () => {
 			.where("kind", "=", "RESET_PASSWORD")
 			.executeTakeFirstOrThrow();
 
-		// executeTakeFirstOrThrow raises a raw NoResultError (not an ExpectedErr),
-		// so the audit framework marks it THROW rather than BAD.
-		expect(action.result).toBe("THROW");
+		expect(action.result).toBe("BAD");
+	});
+
+	// ── Token invalidation ────────────────────────────────────────────────────
+
+	it("deletes the token from priv_password_reset_token after use", async () => {
+		await seedResetToken(user.id);
+
+		await ANON_ACTION_ResetPassword(taker, {
+			code: "VALID_RESET_TOKEN",
+			"!password": "new_secure_password",
+		});
+
+		const remaining = await DB.selectFrom("priv_password_reset_token")
+			.select("token")
+			.where("token", "=", "VALID_RESET_TOKEN")
+			.executeTakeFirst();
+
+		expect(remaining).toBeUndefined();
+	});
+
+	it("rejects a second use of the same reset code", async () => {
+		await seedResetToken(user.id);
+
+		await ANON_ACTION_ResetPassword(taker, {
+			code: "VALID_RESET_TOKEN",
+			"!password": "new_secure_password",
+		});
+
+		await expect(
+			ANON_ACTION_ResetPassword(taker, {
+				code: "VALID_RESET_TOKEN",
+				"!password": "attacker_password",
+			}),
+		).rejects.toMatchObject({ code: 404 });
+
+		const cred = await DB.selectFrom("priv_account_credential")
+			.select("password")
+			.where("user_id", "=", user.id)
+			.executeTakeFirstOrThrow();
+
+		expect(await PasswordCompare("new_secure_password", cred.password)).toBe(true);
 	});
 
 	// ── Token isolation ────────────────────────────────────────────────────────

@@ -1,3 +1,4 @@
+import { SELECT_API_TOKEN } from "#lib/db-formats/api-token";
 import DB from "#services/pg/db";
 
 // ─── seedApiClient ────────────────────────────────────────────────────────────
@@ -74,7 +75,7 @@ export async function seedApiToken(opts: SeedApiTokenOpts) {
 
 export async function getApiToken(token: string) {
 	return DB.selectFrom("priv_api_token")
-		.selectAll()
-		.where("token", "=", token)
+		.select(SELECT_API_TOKEN)
+		.where("priv_api_token.token", "=", token)
 		.executeTakeFirst();
 }

@@ -1,21 +1,21 @@
 import type { KtLogger } from "#lib/log/log";
-import type {
-	GameGroup,
-	GoalImportInfo,
-	integer,
-	MONGO_QuestDocument,
-	MONGO_QuestSubscriptionDocument,
-	Playtype,
-	QuestImportInfo,
-} from "tachi-common";
-import { GamePTToV3 } from "tachi-common";
 
+import { SELECT_QUEST, SELECT_QUEST_SUB_WITH_QUEST_GAME } from "#lib/db-formats/quest";
 import { ToQuestDocument, ToQuestSubscriptionDocument } from "#lib/db-formats/target-documents";
 import { EvaluateQuestProgress, GetGoalIDsFromQuest } from "#lib/targets/quests";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
 import DB from "#services/pg/db";
 import { UnixMillisecondsToISO8601 } from "#utils/time";
-import type { Game } from "tachi-db";
+import {
+	type GameGroup,
+	GamePTToV3,
+	type GoalImportInfo,
+	type integer,
+	type MONGO_QuestDocument,
+	type MONGO_QuestSubscriptionDocument,
+	type Playtype,
+	type QuestImportInfo,
+} from "tachi-common";
 
 export async function UpdateUsersQuests(
 	importGoalInfo: Array<GoalImportInfo>,
@@ -74,9 +74,9 @@ export async function UpdateQuestsForUser(
 			};
 
 			const setPayload: {
-				progress: number;
 				achieved: boolean;
 				last_interaction?: string;
+				progress: number;
 				time_achieved?: string | null;
 			} = {
 				progress,
@@ -129,27 +129,24 @@ async function GetRelevantQuests(
 
 	const questSubRows = await DB.selectFrom("quest_sub")
 		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
-		.selectAll("quest_sub")
-		.select("quest.game as quest_game")
+		.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
 		.where("quest_sub.user_id", "=", userID)
 		.where("quest.game", "in", v3Games)
 		.execute();
 
 	log.debug(`Found ${questSubRows.length} quest-subs.`);
 
-	const questSubs = questSubRows.map((r) =>
-		ToQuestSubscriptionDocument({
-			...r,
-			quest_game: r.quest_game as Game,
-		}),
-	);
+	const questSubs = questSubRows.map((r) => ToQuestSubscriptionDocument(r));
 
 	const questIds = [...new Set(questSubRows.map((r) => r.quest_id))];
 
 	const questRows =
 		questIds.length === 0
 			? []
-			: await DB.selectFrom("quest").selectAll().where("id", "in", questIds).execute();
+			: await DB.selectFrom("quest")
+					.select(SELECT_QUEST)
+					.where("quest.id", "in", questIds)
+					.execute();
 
 	const quests = questRows
 		.map(ToQuestDocument)

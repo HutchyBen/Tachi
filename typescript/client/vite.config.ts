@@ -1,10 +1,73 @@
+import { spawn } from "node:child_process";
 import react from "@vitejs/plugin-react";
 import { config } from "dotenv";
 import path from "path";
 import { defineConfig } from "vite";
+import type { Plugin, PreviewServer, ViteDevServer } from "vite";
 import { createHtmlPlugin } from "vite-plugin-html";
 
 config();
+
+/**
+ * Vite's `server.open` / `preview.open` resolve against `resolvedUrls`, which use
+ * `localhost` for loopback when `host: true` (see vite `resolveServerUrls`). The IDE
+ * may also open forwarded ports as `localhost`. Opening the OS browser ourselves
+ * with an explicit loopback URL keeps the address bar on localhost when that matters.
+ */
+function openLoopbackInBrowserPlugin(): Plugin {
+	const schedule = (
+		httpServer: ViteDevServer["httpServer"],
+		portFallback: number | undefined,
+		useHttps: boolean,
+	) => {
+		if (!httpServer) return;
+		const run = () => {
+			const addr = httpServer.address();
+			const port =
+				typeof addr === "object" && addr && "port" in addr
+					? addr.port
+					: (portFallback ?? 3000);
+			const protocol = useHttps ? "https" : "http";
+			const url = `${protocol}://localhost:${port}/`;
+			if (process.platform === "darwin") {
+				spawn("open", [url], { detached: true, stdio: "ignore" }).unref();
+			} else if (process.platform === "win32") {
+				spawn("cmd", ["/c", "start", "", url], {
+					detached: true,
+					stdio: "ignore",
+					shell: false,
+				}).unref();
+			} else {
+				spawn("xdg-open", [url], { detached: true, stdio: "ignore" }).unref();
+			}
+		};
+		if (httpServer.listening) run();
+		else httpServer.once("listening", run);
+	};
+
+	return {
+		name: "open-loopback-explicit",
+		apply: "serve",
+		configureServer(server: ViteDevServer) {
+			return () => {
+				schedule(
+					server.httpServer,
+					server.config.server.port,
+					Boolean(server.config.server.https),
+				);
+			};
+		},
+		configurePreviewServer(server: PreviewServer) {
+			return () => {
+				schedule(
+					server.httpServer,
+					server.config.preview.port,
+					Boolean(server.config.preview.https),
+				);
+			};
+		},
+	};
+}
 
 export default defineConfig({
 	build: {
@@ -25,6 +88,7 @@ export default defineConfig({
 		},
 	},
 	plugins: [
+		openLoopbackInBrowserPlugin(),
 		react(),
 		createHtmlPlugin({
 			inject: {
@@ -49,6 +113,7 @@ root.setAttribute("data-bs-theme", theme);
 		}),
 	],
 	preview: {
+		open: false,
 		port: 3000,
 	},
 	resolve: {
@@ -65,7 +130,13 @@ root.setAttribute("data-bs-theme", theme);
 	},
 	server: {
 		host: true,
+		open: false,
 		port: 3000,
+		// Same-origin `/api` + `/ir` so local dev can use HTTP + SameSite=Lax session cookies (no HTTPS).
+		proxy: {
+			"/api": { target: "http://localhost:8080", changeOrigin: true },
+			"/ir": { target: "http://localhost:8080", changeOrigin: true },
+		},
 		watch: {
 			usePolling: process.env.FORCE_FS_POLLING === "true",
 		},

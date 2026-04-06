@@ -3,6 +3,7 @@ import { ServerConfig } from "#lib/setup/config.js";
 import DB from "#services/pg/db.js";
 import { DedupeArr, Random20Hex } from "#utils/misc.js";
 import { IsUserAdmin } from "#utils/user.js";
+import { validateWebhookUri } from "#utils/validate-webhook-uri.js";
 import { ExpectedErr } from "bliss";
 import { ALL_PERMISSIONS, type APIPermissions } from "tachi-common";
 
@@ -37,6 +38,14 @@ export const ACTION_CreateApiClient = MakeAction(
 
 		if (permissions_deduped.length === 0) {
 			throw new ExpectedErr(400, "Must require at least one permission.");
+		}
+
+		if (webhookUri !== null) {
+			const rejection = validateWebhookUri(webhookUri);
+
+			if (rejection) {
+				throw new ExpectedErr(400, rejection);
+			}
 		}
 
 		if (apiKeyTemplate !== null && !apiKeyTemplate.includes("%%TACHI_KEY%%")) {

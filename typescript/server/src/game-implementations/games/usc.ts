@@ -36,6 +36,7 @@ const USC_IMPL: GPTServerImplementation<GPTStrings["usc"]> = {
 	pbMergeFunctions: SDVXLIKE_PB_MERGERS,
 	defaultMergeRefName: SDVXLIKE_DEFAULT_MERGE_NAME,
 	scoreValidators: SDVXLIKE_SCORE_VALIDATORS,
+	derivationRelevantFields: ["levelNum"],
 };
 
 export const USC_KEYBOARD_IMPL: GPTServerImplementation<"usc:Keyboard"> = USC_IMPL;

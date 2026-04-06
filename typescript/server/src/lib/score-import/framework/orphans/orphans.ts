@@ -2,6 +2,7 @@ import type { KtLogger } from "#lib/log/log";
 import type { GameGroup, ImportTypes, integer } from "tachi-common";
 import type { OrphanScore as PgOrphanScoreRow } from "tachi-db";
 
+import { SELECT_ORPHAN_SCORE } from "#lib/db-formats/orphan-score";
 import DB from "#services/pg/db";
 import { GetBlacklist } from "#utils/queries/blacklist";
 import { GetUserWithID } from "#utils/user";
@@ -226,15 +227,15 @@ export async function ReprocessOrphan(
 }
 
 export async function DeorphanScores(filter: DeorphanScoresFilter, log: KtLogger) {
-	let q = DB.selectFrom("orphan_score").selectAll();
+	let q = DB.selectFrom("orphan_score").select(SELECT_ORPHAN_SCORE);
 
 	if (filter.userID !== undefined) {
-		q = q.where("user_id", "=", filter.userID);
+		q = q.where("orphan_score.user_id", "=", filter.userID);
 	}
 
 	if (filter.chartSha256 !== undefined) {
 		q = q
-			.where("import_type", "=", "ir/beatoraja")
+			.where("orphan_score.import_type", "=", "ir/beatoraja")
 			.where(
 				sql<boolean>`(orphan_score.context::jsonb->'chart'->>'sha256') = ${filter.chartSha256}`,
 			);

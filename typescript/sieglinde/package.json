@@ -21,8 +21,7 @@
 		"commander": "catalog:",
 		"fast-xml-parser": "catalog:",
 		"node-fetch": "catalog:",
-		"tachi-common": "workspace:*",
-		"winston": "catalog:"
+		"tachi-common": "workspace:*"
 	},
 	"devDependencies": {
 		"@typescript/native-preview": "catalog:",

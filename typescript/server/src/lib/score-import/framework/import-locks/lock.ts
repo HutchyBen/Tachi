@@ -1,6 +1,7 @@
 import type { integer } from "tachi-common";
 
 import { ONE_DAY, ONE_HOUR } from "#lib/constants/time";
+import { SELECT_IMPORT_LOCK } from "#lib/db-formats/import-lock";
 import { log } from "#lib/log/log";
 import DB from "#services/pg/db";
 
@@ -24,8 +25,8 @@ export function CheckAndSetOngoingImportLock(userID: integer): Promise<boolean> 
 
 		let row = await trx
 			.selectFrom("import_lock")
-			.selectAll()
-			.where("user_id", "=", userID)
+			.select(SELECT_IMPORT_LOCK)
+			.where("import_lock.user_id", "=", userID)
 			.forUpdate()
 			.executeTakeFirstOrThrow();
 
@@ -54,8 +55,8 @@ export function CheckAndSetOngoingImportLock(userID: integer): Promise<boolean> 
 
 			row = await trx
 				.selectFrom("import_lock")
-				.selectAll()
-				.where("user_id", "=", userID)
+				.select(SELECT_IMPORT_LOCK)
+				.where("import_lock.user_id", "=", userID)
 				.forUpdate()
 				.executeTakeFirstOrThrow();
 		}

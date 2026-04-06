@@ -162,6 +162,16 @@ export const IIDX_SP_IMPL: GPTServerImplementation<"iidx:SP"> = {
 	pbMergeFunctions: IIDX_MERGERS,
 	defaultMergeRefName: "Best Score",
 	scoreValidators: IIDXLIKE_SCORE_VALIDATORS,
+	derivationRelevantFields: [
+		"levelNum",
+		"data.notecount",
+		"data.kaidenAverage",
+		"data.worldRecord",
+		"data.bpiCoefficient",
+		"data.ncTier",
+		"data.hcTier",
+		"data.exhcTier",
+	],
 };
 
 export const IIDX_DP_IMPL: GPTServerImplementation<"iidx:DP"> = {
@@ -209,4 +219,12 @@ export const IIDX_DP_IMPL: GPTServerImplementation<"iidx:DP"> = {
 	pbMergeFunctions: IIDX_MERGERS,
 	defaultMergeRefName: "Best Score",
 	scoreValidators: IIDXLIKE_SCORE_VALIDATORS,
+	derivationRelevantFields: [
+		"levelNum",
+		"data.notecount",
+		"data.kaidenAverage",
+		"data.worldRecord",
+		"data.bpiCoefficient",
+		"data.dpTier",
+	],
 };

@@ -36,7 +36,6 @@ the main benefits for us are as follows:
 		REDIRECT_URI: "https://example.com",
 	},
 	ARC_AUTH_TOKEN: "unused",
-	ENABLE_SERVER_HTTPS: false,
 	OUR_URL: "https://example.com",
 	INVITE_CODE_CONFIG: {
 		BATCH_SIZE: 2,
@@ -44,7 +43,7 @@ the main benefits for us are as follows:
 		BETA_USER_BONUS: 5,
 	},
 	CDN_CONFIG: {
-		WEB_LOCATION: "http://127.0.0.1:9000/tachi-public",
+		WEB_LOCATION: "http://localhost:9000/tachi-public",
 		SAVE_LOCATION: {
 			TYPE: "S3_BUCKET",
 			ENDPOINT: "http://tachi-s3:9000",
@@ -160,18 +159,6 @@ If present, these define our OAuth2 Client data for interacting with these servi
 	The server will throw a fatal error if you have OAUTH2_INFO set for one service, but not an API_URL.
 
 	Maybe a better solution would be to have the API_URL inside the OAUTH2_INFO. Ah well.
-
-### ENABLE_SERVER_HTTPS
-
-- Type: Boolean (optional)
-
-Whether to use HTTPS. If this is set to true, the files `cert/key.pem` and `cert/cert.pem` will be
-used as the privateKey and the certificate, respectively.
-
-!!! note
-	In production, we use an Nginx reverse proxy which handles this.
-	A warning will be emitted if you are using HTTPS mode, as it's not generally meant to be used
-	at this level.
 
 ### CLIENT_DEV_SERVER
 
@@ -374,7 +361,7 @@ If no LOGGER_CONFIG is provided, this is not set.
 
 Configures the CDN for the Tachi Server. Files are always stored in an S3-compatible bucket (AWS S3, Backblaze, MinIO, etc.).
 
-For local development with `docker-compose-dev.yml`, run the `tachi-s3` MinIO service and point `SAVE_LOCATION.ENDPOINT` at it (from the `tachi-dev` container, `http://tachi-s3:9000`). Use a `WEB_LOCATION` URL that browsers can load (for example `http://127.0.0.1:9000/<bucket>` when MinIO’s API port is published to the host).
+For local development with `docker-compose-dev.yml`, run the `tachi-s3` MinIO service and point `SAVE_LOCATION.ENDPOINT` at it (from the `tachi-dev` container, `http://tachi-s3:9000`). Use a `WEB_LOCATION` URL that browsers can load (for example `http://localhost:9000/<bucket>` when MinIO’s API port is published to the host).
 
 ```ts
 interface CDN_CONFIG: {
@@ -414,7 +401,7 @@ If not set, this will log a warning and default to 8080.
 
 ### MONGO_URL
 
-Where our mongoDB instance is. This would be `127.0.0.1:27017` if hosting on the same box.
+Where our mongoDB instance is. This would be `localhost:27017` if hosting on the same box.
 If not set, this will terminate the process with a critical error.
 
 ### SEQ_URL

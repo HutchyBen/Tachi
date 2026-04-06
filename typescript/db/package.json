@@ -12,8 +12,7 @@
 		"bench": "vitest bench --passWithNoTests"
 	},
 	"dependencies": {
-		"kysely": "catalog:",
-		"pg": "catalog:"
+		"kysely": "catalog:"
 	},
 	"devDependencies": {
 		"@typescript/native-preview": "catalog:",

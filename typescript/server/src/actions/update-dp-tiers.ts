@@ -1,10 +1,10 @@
 import type { MONGO_ChartDocument } from "tachi-common";
 
 /* eslint-disable no-await-in-loop */
+import { computeDerivationChecksumForGPT } from "#game-implementations/utils/derivation-checksum";
 import { MakeAction } from "#lib/actions/actions";
 import { log } from "#lib/log/log";
 import DB from "#services/pg/db";
-import { RecalcAllScores } from "#utils/calculations/recalc-scores";
 import fetch from "#utils/fetch";
 import { FindChartWithPTDFVersion } from "#utils/queries/charts";
 import { FindSongOnTitle } from "#utils/queries/songs";
@@ -89,8 +89,14 @@ export async function updateDpTiersCore() {
 				dpTier: nextTier,
 			};
 
+			const updatedChart = { ...chart, data: mergedData } as MONGO_ChartDocument;
+			const checksum = computeDerivationChecksumForGPT("iidx:DP", updatedChart);
+
 			await DB.updateTable("chart")
-				.set({ data: mergedData as object })
+				.set({
+					data: mergedData as object,
+					derivation_checksum: checksum,
+				})
 				.where("id", "=", chart.chartID)
 				.execute();
 
@@ -99,12 +105,10 @@ export async function updateDpTiersCore() {
 	}
 
 	if (updatedSongIDs.size !== 0) {
-		log.info(`${updatedSongIDs.size} songs were changed. Recalcing the relevant scores now.`);
-
-		// TODO(zk): We don't want to recalc _everything_ on changes like this?
-		await RecalcAllScores();
-
-		log.info(`Recalced those scores.`);
+		log.info(
+			`${updatedSongIDs.size} songs were changed. ` +
+				`Score re-derivation will be handled by the score_rederive queue.`,
+		);
 	}
 
 	log.info("Done.");

@@ -1,11 +1,11 @@
-import t from "tap";
+import { describe, expect, it } from "vitest";
 
 import { BMS_TABLES } from "./bms-tables";
 
-t.test("BMS Tables should be unique.", (t) => {
-	const allKeys = BMS_TABLES.map((e) => `${e.playtype}-${e.prefix}`);
+describe("BMS_TABLES", () => {
+	it("should have unique playtype-prefix keys", () => {
+		const allKeys = BMS_TABLES.map((e) => `${e.playtype}-${e.prefix}`);
 
-	t.strictSame(allKeys, [...new Set(allKeys)], "There should be no duplicate table prefixes.");
-
-	t.end();
+		expect(allKeys).toStrictEqual([...new Set(allKeys)]);
+	});
 });

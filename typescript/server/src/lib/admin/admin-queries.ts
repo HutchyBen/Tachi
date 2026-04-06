@@ -1,5 +1,10 @@
 import type { Action, CronTask, CronTaskExecution, JobQueue } from "tachi-db";
 
+import {
+	SELECT_CRON_TASK,
+	SELECT_CRON_TASK_EXECUTION,
+	SELECT_JOB_QUEUE,
+} from "#lib/db-formats/admin-jobs";
 import DB from "#services/pg/db";
 
 export const ADMIN_PAGE_SIZE = 50;
@@ -19,9 +24,9 @@ export interface PaginatedResult<T> {
 
 export function GetActiveJobs(): Promise<Array<JobQueue>> {
 	return DB.selectFrom("job_queue")
-		.selectAll()
-		.where("status", "=", 1)
-		.orderBy("scheduled_for", "asc")
+		.select(SELECT_JOB_QUEUE)
+		.where("job_queue.status", "=", 1)
+		.orderBy("job_queue.scheduled_for", "asc")
 		.execute();
 }
 
@@ -51,8 +56,8 @@ export async function GetJobQueue({
 
 	const [items, countRow] = await Promise.all([
 		base
-			.selectAll()
-			.orderBy("created_at", "desc")
+			.select(SELECT_JOB_QUEUE)
+			.orderBy("job_queue.created_at", "desc")
 			.limit(limit)
 			.offset(page * limit)
 			.execute(),
@@ -129,13 +134,16 @@ export async function GetActions({
 }
 
 export function GetCronTasks(): Promise<Array<CronTask>> {
-	return DB.selectFrom("cron_task").selectAll().orderBy("id", "asc").execute();
+	return DB.selectFrom("cron_task")
+		.select(SELECT_CRON_TASK)
+		.orderBy("cron_task.id", "asc")
+		.execute();
 }
 
 export function GetCronTaskExecutions(limit = 100): Promise<Array<CronTaskExecution>> {
 	return DB.selectFrom("cron_task_execution")
-		.selectAll()
-		.orderBy("scheduled_at", "desc")
+		.select(SELECT_CRON_TASK_EXECUTION)
+		.orderBy("cron_task_execution.scheduled_at", "desc")
 		.limit(limit)
 		.execute();
 }

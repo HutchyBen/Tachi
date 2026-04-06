@@ -6,9 +6,12 @@ import {
 	type MONGO_QuestSubscriptionDocument,
 	V3ToGamePT,
 } from "tachi-common";
-import { type Game, type Goal, type GoalSub, type Quest, type QuestSub } from "tachi-db";
+import { type Game } from "tachi-db";
 
-export function ToGoalDocument(row: Goal): MONGO_GoalDocument {
+import { type GoalRow, type GoalSubWithGoalGameRow } from "./goal";
+import { type QuestRow, type QuestSubWithQuestGameRow } from "./quest";
+
+export function ToGoalDocument(row: GoalRow): MONGO_GoalDocument {
 	const { game, playtype } = V3ToGamePT(row.game);
 
 	return {
@@ -22,9 +25,9 @@ export function ToGoalDocument(row: Goal): MONGO_GoalDocument {
 }
 
 export function ToGoalSubscriptionDocument(
-	row: { goal_game: Game } & GoalSub,
+	row: GoalSubWithGoalGameRow,
 ): MONGO_GoalSubscriptionDocument {
-	const { game, playtype } = V3ToGamePT(row.goal_game);
+	const { game, playtype } = V3ToGamePT(row.goal_game as Game);
 
 	const base = {
 		game,
@@ -53,7 +56,7 @@ export function ToGoalSubscriptionDocument(
 	};
 }
 
-export function ToQuestDocument(row: Quest): MONGO_QuestDocument {
+export function ToQuestDocument(row: QuestRow): MONGO_QuestDocument {
 	const { game, playtype } = V3ToGamePT(row.game);
 
 	return {
@@ -67,9 +70,9 @@ export function ToQuestDocument(row: Quest): MONGO_QuestDocument {
 }
 
 export function ToQuestSubscriptionDocument(
-	row: { quest_game: Game } & QuestSub,
+	row: QuestSubWithQuestGameRow,
 ): MONGO_QuestSubscriptionDocument {
-	const { game, playtype } = V3ToGamePT(row.quest_game);
+	const { game, playtype } = V3ToGamePT(row.quest_game as Game);
 
 	const base = {
 		game,

@@ -2,12 +2,14 @@ import type { KtLogger } from "#lib/log/log";
 import type { ScoreImportJob } from "#lib/score-import/worker/types";
 
 import { LoadImportDocumentById } from "#lib/db-formats/import-document";
+import { clearPbDirtyForUser } from "#lib/jobs/drain-dirty-queues";
 import { runWithImportContext } from "#lib/score-import/framework/import-run-context";
 import {
 	deleteImportRun,
 	ensureImportStub,
 } from "#lib/score-import/framework/pg/ensure-import-stub";
 import { finalizeImportToPostgres } from "#lib/score-import/framework/pg/finalize-import-pg";
+import { observeScoreImportDuration } from "#server/prometheus";
 import DB from "#services/pg/db";
 import { GetMillisecondsSince } from "#utils/misc";
 import { GetUserWithID } from "#utils/user";
@@ -229,6 +231,8 @@ export default async function ScoreImportMain<D, C>(
 				});
 			});
 
+			observeScoreImportDuration(importType, Date.now() - timeStarted);
+
 			const loaded = await LoadImportDocumentById(importID);
 
 			if (!loaded) {
@@ -306,6 +310,8 @@ export async function HandlePostImportSteps(
 			ProcessPBs(game, playtype as Playtype, user.id, cids, log),
 		),
 	);
+
+	await clearPbDirtyForUser(user.id, chartIDs);
 
 	const pbTime = GetMillisecondsSince(pbTimeStart);
 	const pbTimeRel = pbTime / Math.max(1, chartIDs.size);

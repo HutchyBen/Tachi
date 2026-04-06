@@ -2,7 +2,7 @@ import type { Game } from "tachi-db";
 
 import { ONE_HOUR } from "#lib/constants/time";
 import { LoadScoreDocumentById } from "#lib/db-formats/score";
-import { LoadSessionDocumentById } from "#lib/db-formats/session";
+import { LoadSessionDocumentById, SELECT_SESSION_DOCUMENT } from "#lib/db-formats/session";
 import { AppendLogCtx, type KtLogger, log } from "#lib/log/log";
 import DB from "#services/pg/db";
 import { GetChartForIDGuaranteed } from "#utils/db";
@@ -277,18 +277,18 @@ export async function LoadScoresIntoSessions(
 		const rangeEnd = endOfGroup + TWO_HOURS;
 
 		const nearbySession = await DB.selectFrom("session")
-			.selectAll()
-			.where("user_id", "=", userID)
-			.where("game", "=", v3Game)
+			.select(SELECT_SESSION_DOCUMENT)
+			.where("session.user_id", "=", userID)
+			.where("session.game", "=", v3Game)
 			.where((eb) =>
 				eb.or([
 					eb.and([
-						eb("time_started", ">=", UnixMillisecondsToISO8601(rangeStart)),
-						eb("time_started", "<", UnixMillisecondsToISO8601(rangeEnd)),
+						eb("session.time_started", ">=", UnixMillisecondsToISO8601(rangeStart)),
+						eb("session.time_started", "<", UnixMillisecondsToISO8601(rangeEnd)),
 					]),
 					eb.and([
-						eb("time_ended", ">=", UnixMillisecondsToISO8601(rangeStart)),
-						eb("time_ended", "<", UnixMillisecondsToISO8601(rangeEnd)),
+						eb("session.time_ended", ">=", UnixMillisecondsToISO8601(rangeStart)),
+						eb("session.time_ended", "<", UnixMillisecondsToISO8601(rangeEnd)),
 					]),
 				]),
 			)

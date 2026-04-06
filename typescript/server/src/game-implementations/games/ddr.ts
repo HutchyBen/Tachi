@@ -351,4 +351,5 @@ export const DDR_IMPL: GPTServerImplementation<"ddr:DP" | "ddr:SP"> = {
 	}),
 	profileCalcs: DDR_PROFILE_CALCS,
 	scoreValidators: DDR_SCORE_VALIDATORS,
+	derivationRelevantFields: ["levelNum"],
 };

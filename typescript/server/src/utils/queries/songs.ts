@@ -1,7 +1,7 @@
 import type { KtLogger } from "#lib/log/log";
 import type { GameGroup, integer, MONGO_SongDocument } from "tachi-common";
-import type { Song } from "tachi-db";
 
+import { SELECT_SONG_ROW, ToSongDocumentFromRow } from "#lib/db-formats/song";
 import {
 	AmbiguousTitleFailure,
 	InternalFailure,
@@ -10,17 +10,6 @@ import DB from "#services/pg/db";
 import { sql } from "kysely";
 
 import { EscapeStringRegexp } from "../misc";
-
-function rowToSongDoc(row: Song): MONGO_SongDocument {
-	return {
-		id: row.legacy_id,
-		title: row.title,
-		artist: row.artist,
-		searchTerms: row.search_terms,
-		altTitles: row.alt_titles,
-		data: row.data as MONGO_SongDocument["data"],
-	};
-}
 
 /**
  * Finds a song document for the given game with the given title (or alt-title).
@@ -35,10 +24,10 @@ export async function FindSongOnTitle(
 	title: string,
 ): Promise<MONGO_SongDocument | null> {
 	const res = await DB.selectFrom("song")
-		.selectAll()
-		.where("game_group", "=", game)
+		.select(SELECT_SONG_ROW)
+		.where("song.game_group", "=", game)
 		.where((eb) =>
-			eb.or([eb("title", "=", title), sql<boolean>`${title} = ANY(song.alt_titles)`]),
+			eb.or([eb("song.title", "=", title), sql<boolean>`${title} = ANY(song.alt_titles)`]),
 		)
 		.limit(2)
 		.execute();
@@ -50,7 +39,7 @@ export async function FindSongOnTitle(
 		);
 	}
 
-	return res[0] ? rowToSongDoc(res[0]) : null;
+	return res[0] ? ToSongDocumentFromRow(res[0]) : null;
 }
 
 /**
@@ -66,8 +55,8 @@ export async function FindSongOnTitleInsensitive(
 	const artistPat = `^${EscapeStringRegexp(artist ?? "")}$`;
 
 	let q = DB.selectFrom("song")
-		.selectAll()
-		.where("game_group", "=", game)
+		.select(SELECT_SONG_ROW)
+		.where("song.game_group", "=", game)
 		.where((eb) =>
 			eb.or([
 				sql<boolean>`song.title ~* ${titlePat}`,
@@ -91,7 +80,7 @@ export async function FindSongOnTitleInsensitive(
 		);
 	}
 
-	return res[0] ? rowToSongDoc(res[0]) : null;
+	return res[0] ? ToSongDocumentFromRow(res[0]) : null;
 }
 
 /**
@@ -103,12 +92,12 @@ export async function FindSongOnTitleInsensitive(
  */
 export async function FindSongOnID(game: GameGroup, songID: integer) {
 	const row = await DB.selectFrom("song")
-		.selectAll()
-		.where("game_group", "=", game)
-		.where("legacy_id", "=", songID)
+		.select(SELECT_SONG_ROW)
+		.where("song.game_group", "=", game)
+		.where("song.legacy_id", "=", songID)
 		.executeTakeFirst();
 
-	return row ? rowToSongDoc(row) : null;
+	return row ? ToSongDocumentFromRow(row) : null;
 }
 
 /**
@@ -116,12 +105,12 @@ export async function FindSongOnID(game: GameGroup, songID: integer) {
  */
 export async function FindDDRSongOnDDRSongHash(hash: string) {
 	const row = await DB.selectFrom("song")
-		.selectAll()
-		.where("game_group", "=", "ddr")
+		.select(SELECT_SONG_ROW)
+		.where("song.game_group", "=", "ddr")
 		.where(sql<boolean>`(song.data::jsonb->>'ddrSongHash') = ${hash}`)
 		.executeTakeFirst();
 
-	return row ? rowToSongDoc(row) : null;
+	return row ? ToSongDocumentFromRow(row) : null;
 }
 
 export async function FindSongOnIDGuaranteed(game: GameGroup, songID: integer, log: KtLogger) {

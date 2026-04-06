@@ -7,6 +7,10 @@
  * Usage:
  *   bun .scripts/ts_machete.js          # report unused deps
  *   bun .scripts/ts_machete.js --fix    # also remove them from package.json
+ *
+ * Root package.json may define `tsMachete.excludeGlobal` (dep names) and
+ * `tsMachete.exclude` (map of workspace package `name` → dep names) for
+ * dependencies that are used via scripts, tooling, SCSS, ESLint config, etc.
  */
 
 import path from "node:path";
@@ -28,6 +32,25 @@ const cwd = path.resolve(__dirname, "..");
 process.chdir(cwd);
 
 const rootPkg = JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8"));
+
+const tsMacheteConfig = rootPkg.tsMachete ?? {};
+const excludeGlobal = new Set(tsMacheteConfig.excludeGlobal ?? []);
+const excludeByPackageName = tsMacheteConfig.exclude ?? {};
+
+/**
+ * @param {string | undefined} packageName workspace package.json `name`
+ * @param {string} depName
+ */
+function isTsMacheteExcluded(packageName, depName) {
+	if (excludeGlobal.has(depName)) {
+		return true;
+	}
+	if (!packageName) {
+		return false;
+	}
+	const per = excludeByPackageName[packageName];
+	return Array.isArray(per) && per.includes(depName);
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -139,6 +162,8 @@ function getSourceFiles(pkgDir) {
 //   3. CommonJS require:        require("pkg")
 const IMPORT_PATTERNS = [
 	/\bfrom\s+["']([^"'\s]+)["']/gm,
+	// Side-effect imports: import "pkg" / import 'pkg' (no `from` clause)
+	/\bimport\s+["']([^"'\s]+)["']/gm,
 	/\bimport\(["']([^"'\s]+)["']\)/gm,
 	/\brequire\(["']([^"'\s]+)["']\)/gm,
 ];
@@ -228,6 +253,9 @@ for (const workspacePattern of rootPkg.workspaces) {
 			}
 
 			for (const depName of Object.keys(pkg[section])) {
+				if (isTsMacheteExcluded(pkg.name, depName)) {
+					continue;
+				}
 				if (!isDepUsed(depName, usedPackages)) {
 					(unusedBySection[section] ??= []).push(depName);
 				}

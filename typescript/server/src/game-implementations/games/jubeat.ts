@@ -269,6 +269,7 @@ export const JUBEAT_IMPL: GPTServerImplementation<"jubeat:Single"> = {
 		),
 	],
 	defaultMergeRefName: "Best Music Rate",
+	derivationRelevantFields: ["levelNum"],
 	scoreValidators: [
 		(s) => {
 			if (s.scoreData.lamp === "EXCELLENT" && s.scoreData.score !== 1_000_000) {

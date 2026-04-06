@@ -270,6 +270,15 @@ export interface GPTServerImplementation<GPT extends GPTString> {
 	 * could be (which might be chart dependent, etc), don't bother.
 	 */
 	scoreValidators: Array<ScoreValidator<GPT>>;
+
+	/**
+	 * Dot-path keys into MONGO_ChartDocument whose values feed into
+	 * `scoreDeriver` or `scoreCalcs`. When any of these change on a chart,
+	 * all scores on that chart must be re-derived.
+	 *
+	 * Used to build a stable derivation checksum stored on `chart.derivation_checksum`.
+	 */
+	derivationRelevantFields: Array<string>;
 }
 
 export type GPTImplementations = {

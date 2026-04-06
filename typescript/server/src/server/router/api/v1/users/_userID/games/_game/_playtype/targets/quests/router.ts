@@ -1,4 +1,5 @@
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
+import { SELECT_QUEST, SELECT_QUEST_SUB_WITH_QUEST_GAME } from "#lib/db-formats/quest";
 import { ToQuestDocument, ToQuestSubscriptionDocument } from "#lib/db-formats/target-documents";
 import { log } from "#lib/log/log";
 import { ServerConfig } from "#lib/setup/config";
@@ -13,9 +14,8 @@ import DB from "#services/pg/db";
 import { AssignToReqTachiData, GetGPT, GetTachiData, GetUGPT } from "#utils/req-tachi-data";
 import { FormatUserDoc } from "#utils/user";
 import { type RequestHandler, Router } from "express";
-import { GamePTToV3 } from "tachi-common";
-import type { Game } from "tachi-db";
 import { sql } from "kysely";
+import { GamePTToV3 } from "tachi-common";
 
 import { RequireAuthedAsUser } from "../../../../../middleware";
 
@@ -33,31 +33,22 @@ router.get("/", async (req, res) => {
 
 	const questSubRows = await DB.selectFrom("quest_sub")
 		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
-		.selectAll("quest_sub")
-		.select("quest.game as quest_game")
+		.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
 		.where("quest_sub.user_id", "=", user.id)
 		.where("quest.game", "=", v3Game)
 		.execute();
 
-	const questSubs = questSubRows.map((r) =>
-		ToQuestSubscriptionDocument({
-			quest_id: r.quest_id,
-			user_id: r.user_id,
-			progress: r.progress,
-			last_interaction: r.last_interaction,
-			achieved: r.achieved,
-			time_achieved: r.time_achieved,
-			was_instantly_achieved: r.was_instantly_achieved,
-			quest_game: r.quest_game as Game,
-		}),
-	);
+	const questSubs = questSubRows.map((r) => ToQuestSubscriptionDocument(r));
 
 	const questIds = questSubs.map((e) => e.questID);
 
 	const questRows =
 		questIds.length === 0
 			? []
-			: await DB.selectFrom("quest").selectAll().where("quest.id", "in", questIds).execute();
+			: await DB.selectFrom("quest")
+					.select(SELECT_QUEST)
+					.where("quest.id", "in", questIds)
+					.execute();
 
 	if (questRows.length !== questSubs.length) {
 		log.error(
@@ -98,8 +89,7 @@ const GetQuestSubscription: RequestHandler = async (req, res, next) => {
 
 	const row = await DB.selectFrom("quest_sub")
 		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
-		.selectAll("quest_sub")
-		.select("quest.game as quest_game")
+		.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
 		.where("quest_sub.user_id", "=", user.id)
 		.where("quest_sub.quest_id", "=", req.params.questID)
 		.where("quest.game", "=", v3Game)
@@ -112,16 +102,7 @@ const GetQuestSubscription: RequestHandler = async (req, res, next) => {
 		});
 	}
 
-	const questSub = ToQuestSubscriptionDocument({
-		quest_id: row.quest_id,
-		user_id: row.user_id,
-		progress: row.progress,
-		last_interaction: row.last_interaction,
-		achieved: row.achieved,
-		time_achieved: row.time_achieved,
-		was_instantly_achieved: row.was_instantly_achieved,
-		quest_game: row.quest_game as Game,
-	});
+	const questSub = ToQuestSubscriptionDocument(row);
 
 	AssignToReqTachiData(req, { questSubDoc: questSub });
 
@@ -134,7 +115,7 @@ const GetQuest: RequestHandler = async (req, res, next) => {
 	const v3Game = GamePTToV3(game, playtype);
 
 	const row = await DB.selectFrom("quest")
-		.selectAll()
+		.select(SELECT_QUEST)
 		.where("quest.id", "=", req.params.questID)
 		.where("quest.game", "=", v3Game)
 		.executeTakeFirst();
@@ -270,8 +251,7 @@ router.delete(
 
 		const row = await DB.selectFrom("quest_sub")
 			.innerJoin("quest", "quest.id", "quest_sub.quest_id")
-			.selectAll("quest_sub")
-			.select("quest.game as quest_game")
+			.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
 			.where("quest_sub.user_id", "=", user.id)
 			.where("quest_sub.quest_id", "=", quest.questID)
 			.where("quest.game", "=", v3Game)
@@ -284,16 +264,7 @@ router.delete(
 			});
 		}
 
-		const questSub = ToQuestSubscriptionDocument({
-			quest_id: row.quest_id,
-			user_id: row.user_id,
-			progress: row.progress,
-			last_interaction: row.last_interaction,
-			achieved: row.achieved,
-			time_achieved: row.time_achieved,
-			was_instantly_achieved: row.was_instantly_achieved,
-			quest_game: row.quest_game as Game,
-		});
+		const questSub = ToQuestSubscriptionDocument(row);
 
 		await UnsubscribeFromQuest(questSub, quest);
 

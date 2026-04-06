@@ -1,6 +1,5 @@
-import type { MONGO_QuestlineDocument } from "tachi-common";
-import { V3ToGamePT } from "tachi-common";
 import { type Selection } from "kysely";
+import { type MONGO_QuestlineDocument, V3ToGamePT } from "tachi-common";
 import { type Database } from "tachi-db";
 
 export const SELECT_QUESTLINE = [
@@ -8,6 +7,14 @@ export const SELECT_QUESTLINE = [
 	"questline.game as questline_game",
 	"questline.name as questline_name",
 	"questline.description as questline_description",
+] as const;
+
+/** Unaliased columns for joins where the API maps `questline.*` fields directly. */
+export const SELECT_QUESTLINE_ROW = [
+	"questline.id",
+	"questline.game",
+	"questline.name",
+	"questline.description",
 ] as const;
 
 export type QuestlineRow = Selection<Database, "questline", (typeof SELECT_QUESTLINE)[number]>;

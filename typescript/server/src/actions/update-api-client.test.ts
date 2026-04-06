@@ -61,6 +61,50 @@ describe("ACTION_UpdateApiClient", () => {
 		).rejects.toMatchObject({ code: 400 });
 	});
 
+	it("throws 400 when webhookUri uses http instead of https", async () => {
+		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
+
+		await expect(
+			ACTION_UpdateApiClient(taker, {
+				clientID: clientId,
+				webhookUri: "http://example.com/webhook",
+			}),
+		).rejects.toMatchObject({ code: 400 });
+	});
+
+	it("throws 400 when webhookUri targets a private IP address", async () => {
+		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
+
+		await expect(
+			ACTION_UpdateApiClient(taker, {
+				clientID: clientId,
+				webhookUri: "https://10.0.0.1:8080/internal",
+			}),
+		).rejects.toMatchObject({ code: 400 });
+	});
+
+	it("throws 400 when webhookUri targets localhost", async () => {
+		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
+
+		await expect(
+			ACTION_UpdateApiClient(taker, {
+				clientID: clientId,
+				webhookUri: "https://localhost/webhook",
+			}),
+		).rejects.toMatchObject({ code: 400 });
+	});
+
+	it("allows setting webhookUri to null", async () => {
+		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
+
+		const result = await ACTION_UpdateApiClient(taker, {
+			clientID: clientId,
+			webhookUri: null,
+		});
+
+		expect(result.webhookUri).toBeNull();
+	});
+
 	// ── Happy path ────────────────────────────────────────────────────────────
 
 	it("updates the name field", async () => {

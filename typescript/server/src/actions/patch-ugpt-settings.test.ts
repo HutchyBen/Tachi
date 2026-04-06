@@ -1,4 +1,5 @@
-import { GetUGPTSettingsDocument } from "#lib/db-formats/ugpt-settings.js";
+import { SELECT_ACTION } from "#lib/db-formats/action";
+import { GetUGPTSettingsDocument, SELECT_GAME_SETTINGS } from "#lib/db-formats/ugpt-settings.js";
 import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -42,9 +43,9 @@ describe("ACTION_PatchUGPTSettings", () => {
 		expect(settings?.preferences.preferredScoreAlg).toBe("ktLampRating");
 
 		const row = await DB.selectFrom("game_settings")
-			.selectAll()
-			.where("user_id", "=", userId)
-			.where("game", "=", "iidx-sp")
+			.select(SELECT_GAME_SETTINGS)
+			.where("game_settings.user_id", "=", userId)
+			.where("game_settings.game", "=", "iidx-sp")
 			.executeTakeFirstOrThrow();
 
 		expect(row.pf_preferred_score_alg).toBe("ktLampRating");
@@ -61,8 +62,8 @@ describe("ACTION_PatchUGPTSettings", () => {
 		});
 
 		const actionRow = await DB.selectFrom("action")
-			.selectAll()
-			.where("kind", "=", "PATCH_UGPT_SETTINGS")
+			.select(SELECT_ACTION)
+			.where("action.kind", "=", "PATCH_UGPT_SETTINGS")
 			.executeTakeFirstOrThrow();
 
 		expect(actionRow).toMatchObject({ result: "GOOD", ip: "10.0.0.2", user_id: userId });

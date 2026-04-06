@@ -46,7 +46,7 @@ docker run --rm \
   -v "${DUMP_DIR}:/dump:ro" \
   "mongo:$MONGO_VERSION" \
   mongorestore \
-    --host "127.0.0.1:${MONGO_PORT}" \
+    --host "localhost:${MONGO_PORT}" \
     "${RESTORE_ARGS[@]}"
 
 echo "Done."

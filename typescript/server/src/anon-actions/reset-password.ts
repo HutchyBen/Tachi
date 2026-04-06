@@ -8,16 +8,16 @@ import { ExpectedErr, log } from "bliss";
 export const ANON_ACTION_ResetPassword = MakeAnonAction(
 	"RESET_PASSWORD",
 	async (_taker, { "!password": password, code }) => {
-		const codeInfo = await DB.selectFrom("priv_password_reset_token")
-			.select(["user_id", "created_on"])
+		const deleted = await DB.deleteFrom("priv_password_reset_token")
 			.where("token", "=", code)
-			.executeTakeFirstOrThrow();
+			.returning(["user_id", "created_on"])
+			.executeTakeFirst();
 
-		if (!codeInfo) {
+		if (!deleted) {
 			throw new ExpectedErr(404, "Invalid reset code.");
 		}
 
-		if (ISO8601ToUnixMilliseconds(codeInfo.created_on) < GetTimeXHoursAgo(24)) {
+		if (ISO8601ToUnixMilliseconds(deleted.created_on) < GetTimeXHoursAgo(24)) {
 			throw new ExpectedErr(400, "Reset code has expired. Please request a new one.");
 		}
 
@@ -27,13 +27,13 @@ export const ANON_ACTION_ResetPassword = MakeAnonAction(
 			.set({
 				password: hashedPassword,
 			})
-			.where("user_id", "=", codeInfo.user_id)
+			.where("user_id", "=", deleted.user_id)
 			.execute();
 
-		log.info(`User ${codeInfo.user_id} reset their password.`);
+		log.info(`User ${deleted.user_id} reset their password.`);
 
 		return {
-			userID: codeInfo.user_id,
+			userID: deleted.user_id,
 		};
 	},
 );

@@ -6,13 +6,12 @@ import { VERSION_PRETTY } from "#lib/constants/version";
 import { HandleSIGTERMGracefully } from "#lib/handlers/sigterm";
 import { log } from "#lib/log/log";
 import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
-import server from "#server/server";
+import { METRICS_PORT } from "#server/prometheus";
+import server, { metricsApp } from "#server/server";
 import DB from "#services/pg/db";
 import fetch from "#utils/fetch";
 import { GetUserWithID } from "#utils/user";
 import { spawn } from "child_process";
-import fs from "fs";
-import https from "https";
 import path from "path";
 import { applyMigrations } from "tachi-db-migration-engine";
 
@@ -69,30 +68,20 @@ async function RunOnInit() {
 
 void RunOnInit();
 
-let instance: http.Server | https.Server;
+const instance: http.Server = server.listen(Env.PORT);
+log.info({ bootInfo: true }, `HTTP Listening on port ${Env.PORT}`);
 
-if (ServerConfig.ENABLE_SERVER_HTTPS === true) {
-	if (Env.NODE_ENV === "production") {
-		log.warn(
-			{ bootInfo: true },
-			"HTTPS Mode is enabled. This should not be used in production, and you should instead run behind a reverse proxy.",
-		);
-	}
-
-	const privateKey = fs.readFileSync("./cert/key.pem");
-	const certificate = fs.readFileSync("./cert/cert.pem");
-
-	const httpsServer = https.createServer({ key: privateKey, cert: certificate }, server);
-
-	instance = httpsServer.listen(Env.PORT);
-	log.info({ bootInfo: true }, `HTTPS Listening on port ${Env.PORT}`);
-} else {
-	instance = server.listen(Env.PORT);
-	log.info({ bootInfo: true }, `HTTP Listening on port ${Env.PORT}`);
+let metricsInstance: http.Server | undefined;
+if (metricsApp) {
+	metricsInstance = metricsApp.listen(METRICS_PORT);
+	log.info(
+		{ bootInfo: true },
+		`Prometheus metrics listening on port ${METRICS_PORT} (/metrics).`,
+	);
 }
 
 process.on("SIGTERM", () => {
-	void HandleSIGTERMGracefully(instance);
+	void HandleSIGTERMGracefully(instance, metricsInstance);
 });
 
 if (process.env.INVOKE_JOB_RUNNER) {

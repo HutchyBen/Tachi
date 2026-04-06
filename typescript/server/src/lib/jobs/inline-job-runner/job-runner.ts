@@ -11,6 +11,7 @@ import { Queue, Worker } from "bullmq";
 
 import { UpdateAILevels } from "../bms-ai-table-sync";
 import { DeorphanScoresMain } from "../deorphan-scores";
+import { drainPbDirty, drainScoreRederive } from "../drain-dirty-queues";
 import { RebuildFolderChartLookupJob } from "../rebuild-folder-chart-lookup";
 
 interface Job {
@@ -40,6 +41,44 @@ const jobs: Array<Job> = [
 		// just to spread load out a bit.
 		cronFormat: "1 0 * * *",
 		run: DeorphanScoresMain,
+	},
+	{
+		name: "Drain pb_dirty",
+		cronFormat: "* * * * *",
+		run: async () => {
+			let drained = 0;
+
+			// Keep draining until the queue is empty or we hit a safety cap.
+
+			while (true) {
+				// eslint-disable-next-line no-await-in-loop
+				const n = await drainPbDirty();
+
+				if (n === 0) {
+					break;
+				}
+
+				drained += n;
+
+				if (drained >= 10_000) {
+					break;
+				}
+			}
+		},
+	},
+	{
+		name: "Drain score_rederive",
+		cronFormat: "*/5 * * * *",
+		run: async () => {
+			while (true) {
+				// eslint-disable-next-line no-await-in-loop
+				const n = await drainScoreRederive();
+
+				if (n === 0) {
+					break;
+				}
+			}
+		},
 	},
 ];
 

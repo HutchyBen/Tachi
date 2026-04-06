@@ -15,6 +15,22 @@ export const SELECT_SONG_DOCUMENT = [
 	"song.game_group as song_game_group",
 ] as const;
 
+/** Full `song` row for single-table queries (e.g. title search). */
+export const SELECT_SONG_ROW = [
+	"song.id",
+	"song.legacy_id",
+	"song.game_group",
+	"song.title",
+	"song.artist",
+	"song.search_terms",
+	"song.alt_titles",
+	"song.fts_document",
+	"song.textsearch",
+	"song.data",
+] as const;
+
+export type SongRow = Selection<Database, "song", (typeof SELECT_SONG_ROW)[number]>;
+
 /**
  * Fetches a song by its legacy numeric ID (from the URL / Mongo era), including
  * `search_terms` / `alt_titles` arrays, and returns a fully-formed MONGO_SongDocument
@@ -105,5 +121,16 @@ export function ToSongDocument(
 		searchTerms: row.song_search_terms,
 		altTitles: row.song_alt_titles,
 		data: row.song_data as SongDocumentData[typeof row.song_game_group],
+	};
+}
+
+export function ToSongDocumentFromRow(row: SongRow): MONGO_SongDocument {
+	return {
+		id: row.legacy_id,
+		title: row.title,
+		artist: row.artist,
+		searchTerms: row.search_terms,
+		altTitles: row.alt_titles,
+		data: row.data as SongDocumentData[typeof row.game_group],
 	};
 }

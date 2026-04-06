@@ -41,10 +41,19 @@ export const RequestLoggerMiddleware: RequestHandler = (req, res, next) => {
 	res.json = ResJsonInteceptor(res, res.json);
 
 	res.on("finish", () => {
-		const contents = {
-			// @ts-expect-error we're doing some monkey patching - contentBody is what we're returning.
+		// special overrides
+		// This stuff is spam, so we'll just not log it.
+		if (res.statusCode === 429) {
+			return;
+		}
 
-			body: res.contentBody,
+		// 403 bannings like this are also spam.
+		// @ts-expect-error we're doing some monkey patching - contentBody is what we're returning.
+		if (res.contentBody?.description === `You are banned from ${TachiConfig.NAME}.`) {
+			return;
+		}
+
+		const contents = {
 			statusCode: res.statusCode,
 			requestQuery: req.query,
 			requestBody: safeBody,
@@ -54,18 +63,6 @@ export const RequestLoggerMiddleware: RequestHandler = (req, res, next) => {
 				(req[SYMBOL_TACHI_API_AUTH] as MONGO_APITokenDocument | undefined)?.userID ?? null,
 			fromIp: req.ip,
 		};
-
-		// special overrides
-		// This stuff is spam, so we'll just not log it.
-		if (res.statusCode === 429) {
-			return;
-		}
-
-		// 403 bannings like this are also spam.
-
-		if (contents.body?.description === `You are banned from ${TachiConfig.NAME}.`) {
-			return;
-		}
 
 		if (res.statusCode < 400 || res.statusCode === 404) {
 			let level: "debug" | "info";

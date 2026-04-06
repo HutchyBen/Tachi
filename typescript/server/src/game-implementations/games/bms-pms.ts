@@ -84,6 +84,7 @@ const BMS_IMPL: GPTServerImplementation<GPTStrings["bms" | "pms"]> = {
 	pbMergeFunctions: BMS_PMS_MERGERS,
 	defaultMergeRefName: "Best Score",
 	scoreValidators: IIDXLIKE_SCORE_VALIDATORS,
+	derivationRelevantFields: ["data.notecount", "data.sglEC", "data.sglHC"],
 };
 
 export const BMS_14K_IMPL: GPTServerImplementation<"bms:14K"> = BMS_IMPL;

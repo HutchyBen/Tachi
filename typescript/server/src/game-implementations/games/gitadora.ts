@@ -104,6 +104,7 @@ const GITADORA_IMPL: GPTServerImplementation<"gitadora:Dora" | "gitadora:Gita"> 
 	],
 	defaultMergeRefName: "Best Percent",
 	scoreValidators: [],
+	derivationRelevantFields: ["levelNum"],
 };
 
 export const GITADORA_GITA_IMPL: GPTServerImplementation<"gitadora:Gita"> = GITADORA_IMPL;

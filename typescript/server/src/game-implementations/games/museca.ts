@@ -59,6 +59,7 @@ export const MUSECA_IMPL: GPTServerImplementation<"museca:Single"> = {
 		),
 	],
 	defaultMergeRefName: "Best Score",
+	derivationRelevantFields: ["levelNum"],
 	scoreValidators: [
 		(s) => {
 			if (s.scoreData.lamp === "PERFECT CONNECT ALL" && s.scoreData.score !== 1_000_000) {

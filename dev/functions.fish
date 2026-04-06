@@ -60,7 +60,7 @@ function fish_greeting
 		echo $(rgb "This machine comes pre-installed with Tachi and helpful tools." ffffff 000000)
 		echo ""
 		echo "Type $(cmd "just start") to start up a frontend and backend."
-		echo "    $(rgb "The server will start on http://127.0.0.1:3000." ffff00 000000)"
+		echo "    $(rgb "The server will start on http://localhost:3000." ffff00 000000)"
 		echo "    $(rgb "Use Ctrl+C to stop the server." ffff00 000000)"
 		echo ""
 		echo "Type $(cmd "seeds") to run seeds scripts."

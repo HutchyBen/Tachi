@@ -2,6 +2,7 @@ import type { MONGO_ImportDocument } from "tachi-common";
 
 import db from "#services/pg/db";
 import { createTestAccount } from "#test-utils/db";
+import { SELECT_ACTION } from "#test-utils/select-constants";
 import { type ActionTaker, ExpectedErr } from "bliss";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -70,8 +71,8 @@ describe("ACTION_Sync", () => {
 
 		const action = await db
 			.selectFrom("action")
-			.selectAll()
-			.where("kind", "=", "SYNC")
+			.select(SELECT_ACTION)
+			.where("action.kind", "=", "SYNC")
 			.executeTakeFirst();
 
 		const input = action?.input as Record<string, unknown>;
@@ -105,8 +106,8 @@ describe("ACTION_Sync", () => {
 
 		const action = await db
 			.selectFrom("action")
-			.selectAll()
-			.where("kind", "=", "SYNC")
+			.select(SELECT_ACTION)
+			.where("action.kind", "=", "SYNC")
 			.executeTakeFirst();
 
 		// node-pg returns BIGINT columns as strings
@@ -127,8 +128,8 @@ describe("ACTION_Sync", () => {
 
 		const action = await db
 			.selectFrom("action")
-			.selectAll()
-			.where("kind", "=", "SYNC")
+			.select(SELECT_ACTION)
+			.where("action.kind", "=", "SYNC")
 			.executeTakeFirst();
 
 		expect(action?.result).toBe("BAD");
@@ -141,8 +142,8 @@ describe("ACTION_Sync", () => {
 
 		const action = await db
 			.selectFrom("action")
-			.selectAll()
-			.where("kind", "=", "SYNC")
+			.select(SELECT_ACTION)
+			.where("action.kind", "=", "SYNC")
 			.executeTakeFirst();
 
 		expect(action?.result).toBe("THROW");

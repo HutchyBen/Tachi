@@ -22,7 +22,7 @@ router.use("/api/v1", apiRouterV1);
 
 // if in localdev, add a debug endpoint to tell users when they got a successful fetch
 // on the root endpoint.
-// That is to say, if a user is hitting 127.0.0.1:8080/
+// That is to say, if a user is hitting localhost:8080/
 // instead of "cannot GET /", they should get a nice message.
 if (Env.NODE_ENV === "dev") {
 	router.get("/", (_req, res) =>

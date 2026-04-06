@@ -28,7 +28,7 @@ Other than that, our documentation is [markdown](https://www.markdownguide.org/b
 
 ## Running the Documentation
 
-Use `just docs start` inside Tachi to start up a local documentation viewer on http://127.0.0.1:8001.
+Use `just docs start` inside Tachi to start up a local documentation viewer on http://localhost:8001.
 
 This will automatically refresh when you edit anything related to the documentation, so you can quickly see how your stuff goes.
 

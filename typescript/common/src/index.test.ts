@@ -1,12 +1,12 @@
-import t from "tap";
+import { describe, expect, it } from "vitest";
 
 import * as tachiCommon from "./index";
 
 // we just check that we're exporting stuff properly
-t.test("Property Checks", (t) => {
-	t.type(tachiCommon.GetGameGroupConfig, "function");
-	t.type(tachiCommon.GetGamePTConfig, "function");
-	t.type(tachiCommon.COLOUR_SET, "object");
-
-	t.end();
+describe("Property Checks", () => {
+	it("exports core APIs and constants", () => {
+		expect(typeof tachiCommon.GetGameGroupConfig).toBe("function");
+		expect(typeof tachiCommon.GetGamePTConfig).toBe("function");
+		expect(typeof tachiCommon.COLOUR_SET).toBe("object");
+	});
 });

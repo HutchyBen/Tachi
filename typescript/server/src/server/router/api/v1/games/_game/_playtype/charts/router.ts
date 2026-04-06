@@ -118,7 +118,9 @@ router.get("/", async (req, res) => {
 			);
 
 			const iidxGameSpecific = iidxSettings?.preferences
-				.gameSpecific as MONGO_UGPTSettingsDocument<"iidx:DP" | "iidx:SP">["preferences"]["gameSpecific"];
+				.gameSpecific as MONGO_UGPTSettingsDocument<
+				"iidx:DP" | "iidx:SP"
+			>["preferences"]["gameSpecific"];
 
 			if (!iidxGameSpecific?.display2DXTra) {
 				charts = charts.filter(

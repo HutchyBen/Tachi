@@ -86,6 +86,7 @@ export const WACCA_IMPL: GPTServerImplementation<"wacca:Single"> = {
 		),
 	],
 	defaultMergeRefName: "Best Score",
+	derivationRelevantFields: ["levelNum"],
 
 	scoreValidators: [
 		(s) => {

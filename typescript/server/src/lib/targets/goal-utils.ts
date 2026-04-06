@@ -226,7 +226,9 @@ export async function ValidateGoalChartsAndCriteria(
 				);
 			}
 
-			const multiCharts = await Promise.all(charts.data.map((chartID) => GetChartById(v3Game, chartID)));
+			const multiCharts = await Promise.all(
+				charts.data.map((chartID) => GetChartById(v3Game, chartID)),
+			);
 
 			if (multiCharts.some((c) => c === undefined)) {
 				throw new Error(

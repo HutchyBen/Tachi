@@ -109,6 +109,7 @@ export const CHUNITHM_IMPL: GPTServerImplementation<"chunithm:Single"> = {
 		),
 	],
 	defaultMergeRefName: "Best Score",
+	derivationRelevantFields: ["levelNum"],
 	scoreValidators: [
 		(s) => {
 			if (

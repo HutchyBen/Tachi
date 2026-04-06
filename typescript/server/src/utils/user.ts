@@ -1,4 +1,5 @@
 import { ONE_DAY } from "#lib/constants/time";
+import { SELECT_PRIV_ACCOUNT_CREDENTIAL } from "#lib/db-formats/priv-account-credential";
 import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user";
 import { SELECT_USER_SETTINGS, ToUserSettingsDocument } from "#lib/db-formats/user-settings";
 import { log } from "#lib/log/log";
@@ -62,8 +63,8 @@ export async function CheckIfEmailInUse(email: string) {
 
 export function GetUserPrivateInfo(userID: integer) {
 	return DB.selectFrom("priv_account_credential")
-		.selectAll()
-		.where("user_id", "=", userID)
+		.select(SELECT_PRIV_ACCOUNT_CREDENTIAL)
+		.where("priv_account_credential.user_id", "=", userID)
 		.executeTakeFirst();
 }
 

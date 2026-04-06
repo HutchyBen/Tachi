@@ -1,14 +1,12 @@
-import type {
-	GameGroup,
-	integer,
-	MONGO_GoalDocument,
-	MONGO_GoalSubscriptionDocument,
-	MONGO_QuestDocument,
-	MONGO_QuestSubscriptionDocument,
-	Playtype,
-} from "tachi-common";
+import type { Game } from "tachi-db";
 
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
+import { SELECT_GOAL, SELECT_GOAL_SUB_WITH_GOAL_GAME } from "#lib/db-formats/goal";
+import {
+	SELECT_QUEST,
+	SELECT_QUEST_SUB,
+	SELECT_QUEST_SUB_WITH_QUEST_GAME,
+} from "#lib/db-formats/quest";
 import {
 	ToGoalDocument,
 	ToGoalSubscriptionDocument,
@@ -20,8 +18,17 @@ import { BulkSendNotification } from "#lib/notifications/notifications";
 import DB from "#services/pg/db";
 import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { sql } from "kysely";
-import type { Game } from "tachi-db";
-import { GamePTToV3, V3ToGamePT } from "tachi-common";
+import {
+	type GameGroup,
+	GamePTToV3,
+	type integer,
+	type MONGO_GoalDocument,
+	type MONGO_GoalSubscriptionDocument,
+	type MONGO_QuestDocument,
+	type MONGO_QuestSubscriptionDocument,
+	type Playtype,
+	V3ToGamePT,
+} from "tachi-common";
 
 import {
 	type EvaluatedGoalReturn,
@@ -45,7 +52,10 @@ export function GetGoalIDsFromQuest(quest: MONGO_QuestDocument) {
 export async function GetGoalsInQuest(quest: MONGO_QuestDocument) {
 	const goalIDs = GetGoalIDsFromQuest(quest);
 
-	const goals = await DB.selectFrom("goal").selectAll().where("goal.id", "in", goalIDs).execute();
+	const goals = await DB.selectFrom("goal")
+		.select(SELECT_GOAL)
+		.where("goal.id", "in", goalIDs)
+		.execute();
 
 	if (goals.length !== goalIDs.length) {
 		log.error(
@@ -77,7 +87,10 @@ export async function GetGoalsInQuests(quests: Array<MONGO_QuestDocument>) {
 		return [];
 	}
 
-	const goals = await DB.selectFrom("goal").selectAll().where("goal.id", "in", goalIDs).execute();
+	const goals = await DB.selectFrom("goal")
+		.select(SELECT_GOAL)
+		.where("goal.id", "in", goalIDs)
+		.execute();
 
 	return goals.map(ToGoalDocument);
 }
@@ -106,7 +119,7 @@ export async function EvaluateQuestProgress(userID: integer, quest: MONGO_QuestD
 	const goals = await GetGoalsInQuest(quest);
 
 	const isSubscribedToQuest = await DB.selectFrom("quest_sub")
-		.selectAll()
+		.select(SELECT_QUEST_SUB)
 		.where("quest_sub.quest_id", "=", quest.questID)
 		.where("quest_sub.user_id", "=", userID)
 		.executeTakeFirst();
@@ -116,8 +129,7 @@ export async function EvaluateQuestProgress(userID: integer, quest: MONGO_QuestD
 	if (isSubscribedToQuest) {
 		const goalSubRows = await DB.selectFrom("goal_sub")
 			.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-			.selectAll("goal_sub")
-			.select("goal.game as goal_game")
+			.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
 			.where("goal_sub.user_id", "=", userID)
 			.where(
 				"goal_sub.goal_id",
@@ -127,13 +139,7 @@ export async function EvaluateQuestProgress(userID: integer, quest: MONGO_QuestD
 			.execute();
 
 		for (const row of goalSubRows) {
-			goalSubMap.set(
-				row.goal_id,
-				ToGoalSubscriptionDocument({
-					...row,
-					goal_game: row.goal_game as Game,
-				}),
-			);
+			goalSubMap.set(row.goal_id, ToGoalSubscriptionDocument(row));
 		}
 	}
 
@@ -247,7 +253,7 @@ export async function SubscribeToQuest(
 	| SubscribeFailReasons.ALREADY_SUBSCRIBED
 > {
 	const isSubscribedToQuest = await DB.selectFrom("quest_sub")
-		.selectAll()
+		.select(SELECT_QUEST_SUB)
 		.where("quest_sub.quest_id", "=", quest.questID)
 		.where("quest_sub.user_id", "=", userID)
 		.executeTakeFirst();
@@ -320,12 +326,14 @@ export async function UpdateQuestSubscriptions(questID: string) {
 
 	const subscriptions = await DB.selectFrom("quest_sub")
 		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
-		.selectAll("quest_sub")
-		.select("quest.game as quest_game")
+		.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
 		.where("quest_sub.quest_id", "=", questID)
 		.execute();
 
-	const maybeQuest = await DB.selectFrom("quest").selectAll().where("quest.id", "=", questID).executeTakeFirst();
+	const maybeQuest = await DB.selectFrom("quest")
+		.select(SELECT_QUEST)
+		.where("quest.id", "=", questID)
+		.executeTakeFirst();
 
 	if (!maybeQuest) {
 		await DB.deleteFrom("quest_sub").where("quest_sub.quest_id", "=", questID).execute();
@@ -345,18 +353,7 @@ export async function UpdateQuestSubscriptions(questID: string) {
 
 	const quest = ToQuestDocument(maybeQuest);
 
-	const mappedSubs = subscriptions.map((e) =>
-		ToQuestSubscriptionDocument({
-			quest_id: e.quest_id,
-			user_id: e.user_id,
-			progress: e.progress,
-			last_interaction: e.last_interaction,
-			achieved: e.achieved,
-			time_achieved: e.time_achieved,
-			was_instantly_achieved: e.was_instantly_achieved,
-			quest_game: e.quest_game as Game,
-		}),
-	);
+	const mappedSubs = subscriptions.map((e) => ToQuestSubscriptionDocument(e));
 
 	await Promise.all(mappedSubs.map((e) => UnsubscribeFromQuest(e, quest)));
 
@@ -395,18 +392,12 @@ export async function UnsubscribeFromQuest(
 
 	const goalSubRows = await DB.selectFrom("goal_sub")
 		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-		.selectAll("goal_sub")
-		.select("goal.game as goal_game")
+		.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
 		.where("goal_sub.user_id", "=", questSub.userID)
 		.where("goal_sub.goal_id", "in", goalIDs)
 		.execute();
 
-	const goalSubs = goalSubRows.map((r) =>
-		ToGoalSubscriptionDocument({
-			...r,
-			goal_game: r.goal_game as Game,
-		}),
-	);
+	const goalSubs = goalSubRows.map((r) => ToGoalSubscriptionDocument(r));
 
 	await Promise.all(goalSubs.map((e) => UnsubscribeFromGoal(e, true)));
 }
@@ -442,7 +433,7 @@ export async function GetParentQuests(
 	}
 
 	const questRows = await DB.selectFrom("quest")
-		.selectAll()
+		.select(SELECT_QUEST)
 		.where("quest.id", "in", questSubIDs)
 		.execute();
 
@@ -464,7 +455,7 @@ export async function FindStandaloneQuests(game: GameGroup, playtype: Playtype) 
 	const v3Game = GamePTToV3(game, playtype);
 
 	const rows = await DB.selectFrom("quest")
-		.selectAll()
+		.select(SELECT_QUEST)
 		.where("quest.game", "=", v3Game)
 		.where(
 			sql<boolean>`not exists (

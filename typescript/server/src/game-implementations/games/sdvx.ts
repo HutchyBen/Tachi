@@ -66,4 +66,5 @@ export const SDVX_IMPL: GPTServerImplementation<"sdvx:Single"> = {
 	],
 	defaultMergeRefName: SDVXLIKE_DEFAULT_MERGE_NAME,
 	scoreValidators: SDVXLIKE_SCORE_VALIDATORS,
+	derivationRelevantFields: ["levelNum"],
 };

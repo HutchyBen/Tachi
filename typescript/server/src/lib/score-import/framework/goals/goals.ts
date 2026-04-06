@@ -6,13 +6,13 @@ import type {
 	MONGO_GoalSubscriptionDocument,
 } from "tachi-common";
 
+import { SELECT_GOAL, SELECT_GOAL_SUB_WITH_GOAL_GAME } from "#lib/db-formats/goal";
 import { ToGoalDocument, ToGoalSubscriptionDocument } from "#lib/db-formats/target-documents";
 import { EvaluateGoalForUser, GetRelevantGoals } from "#lib/targets/goals";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
 import DB from "#services/pg/db";
 import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { sql } from "kysely";
-import type { Game } from "tachi-db";
 
 /**
  * Update a user's progress on all of their set goals.
@@ -213,7 +213,7 @@ export async function ProcessGoal(
 
 export async function UpdateGoalsInFolder(folderID: string, log: KtLogger) {
 	const goalRows = await DB.selectFrom("goal")
-		.selectAll()
+		.select(SELECT_GOAL)
 		.where(sql`goal.charts->>'type'`, "=", "folder")
 		.where(sql`goal.charts->>'data'`, "=", folderID)
 		.execute();
@@ -230,19 +230,13 @@ export async function UpdateGoalsInFolder(folderID: string, log: KtLogger) {
 
 	const subRows = await DB.selectFrom("goal_sub")
 		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-		.selectAll("goal_sub")
-		.select("goal.game as goal_game")
+		.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
 		.where("goal_sub.goal_id", "in", goalIds)
 		.execute();
 
 	log.info(`Updating ${subRows.length} goal subs for ${folderID}`);
 
-	const goalSubs = subRows.map((r) =>
-		ToGoalSubscriptionDocument({
-			...r,
-			goal_game: r.goal_game as Game,
-		}),
-	);
+	const goalSubs = subRows.map((r) => ToGoalSubscriptionDocument(r));
 
 	const ugsMap = new Map<integer, Map<string, MONGO_GoalSubscriptionDocument>>();
 

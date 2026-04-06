@@ -1,3 +1,4 @@
+import { SELECT_NOTIFICATION } from "#lib/db-formats/notification";
 import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -18,8 +19,8 @@ describe("SendNotification", () => {
 		});
 
 		const row = await DB.selectFrom("notification")
-			.selectAll()
-			.where("sent_to", "=", userId)
+			.select(SELECT_NOTIFICATION)
+			.where("notification.sent_to", "=", userId)
 			.executeTakeFirstOrThrow();
 
 		expect(row.title).toBe("Quest updated");

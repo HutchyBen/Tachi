@@ -12,11 +12,11 @@ import { Env, ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RedisClient } from "#services/redis/redis";
 import { IsNonEmptyString, IsRecord } from "#utils/misc";
 import { ExpectedErr } from "bliss";
-import ExpressPromBundle from "express-prom-bundle";
 import expressSession from "express-session";
 import helmet from "helmet";
 
 import { RequestLoggerMiddleware } from "./middleware/request-logger";
+import { createPrometheusMiddlewares } from "./prometheus";
 import mainRouter from "./router/router";
 
 let store;
@@ -42,19 +42,17 @@ const userSessionMiddleware = expressSession({
 	resave: true,
 	saveUninitialized: false,
 	cookie: {
-		// the absence of Secure in combination with SameSite=None will cause issues on non-https
-		// instances in newer versions of chromium. there is no workaround for this.
-		secure:
-			Env.NODE_ENV === "production" ||
-			Env.NODE_ENV === "staging" ||
-			ServerConfig.ENABLE_SERVER_HTTPS,
+		secure: Env.NODE_ENV === "production" || Env.NODE_ENV === "staging",
 
 		// Very important. Without this, we're vulnerable to CSRF!
-		sameSite: Env.NODE_ENV === "production" || Env.NODE_ENV === "staging" ? "strict" : "none",
+		sameSite: Env.NODE_ENV === "production" || Env.NODE_ENV === "staging" ? "strict" : "lax",
 	},
 });
 
 const app: Express = express();
+
+/** When metrics are enabled, exposed only on `METRICS_PORT` as `GET /metrics` (not on the main HTTP port). */
+export const metricsApp: Express | undefined = ServerConfig.ENABLE_METRICS ? express() : undefined;
 
 app.get("/.deploy/up", (_req, res) => res.sendStatus(200));
 
@@ -113,8 +111,10 @@ if (Env.NODE_ENV !== "production" && IsNonEmptyString(ServerConfig.CLIENT_DEV_SE
 	app.use(helmet());
 }
 
-if (ServerConfig.ENABLE_METRICS) {
-	app.use(ExpressPromBundle({ includeMethod: true, includePath: true }));
+if (ServerConfig.ENABLE_METRICS && metricsApp) {
+	for (const mw of createPrometheusMiddlewares(metricsApp)) {
+		app.use(mw);
+	}
 }
 
 app.use(userSessionMiddleware);

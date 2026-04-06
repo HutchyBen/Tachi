@@ -1,5 +1,5 @@
 import DB from "#services/pg/db";
-import { type Selectable } from "kysely";
+import { type Selection } from "kysely";
 import {
 	type GameGroup,
 	GamePTToV3,
@@ -11,7 +11,23 @@ import {
 } from "tachi-common";
 import { type Database } from "tachi-db";
 
-export type GameSettingsRow = Selectable<Database["game_settings"]>;
+export const SELECT_GAME_SETTINGS = [
+	"game_settings.user_id",
+	"game_settings.game",
+	"game_settings.pf_preferred_score_alg",
+	"game_settings.pf_preferred_session_alg",
+	"game_settings.pf_preferred_profile_alg",
+	"game_settings.pf_preferred_default_enum",
+	"game_settings.pf_default_table",
+	"game_settings.pf_preferred_ranking",
+	"game_settings.data",
+] as const;
+
+export type GameSettingsRow = Selection<
+	Database,
+	"game_settings",
+	(typeof SELECT_GAME_SETTINGS)[number]
+>;
 
 export function ToUGPTSettingsDocument(
 	row: GameSettingsRow,
@@ -54,9 +70,9 @@ export async function GetUGPTSettingsDocument(
 	const v3Game = GamePTToV3(game, playtype);
 
 	const row = await DB.selectFrom("game_settings")
-		.selectAll()
-		.where("user_id", "=", userID)
-		.where("game", "=", v3Game)
+		.select(SELECT_GAME_SETTINGS)
+		.where("game_settings.user_id", "=", userID)
+		.where("game_settings.game", "=", v3Game)
 		.executeTakeFirst();
 
 	if (!row) {

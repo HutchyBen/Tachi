@@ -1,6 +1,7 @@
 import type { GuildMember } from "discord.js";
 
 import db from "#services/pg/db";
+import { SELECT_ACTION } from "#test-utils/select-constants";
 import { type AnonActionTaker } from "bliss";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -57,8 +58,8 @@ describe("ACTION_Letmein", () => {
 
 		const action = await db
 			.selectFrom("action")
-			.selectAll()
-			.where("kind", "=", "LETMEIN")
+			.select(SELECT_ACTION)
+			.where("action.kind", "=", "LETMEIN")
 			.executeTakeFirst();
 
 		// node-pg returns BIGINT columns as strings
@@ -91,8 +92,8 @@ describe("ACTION_Letmein", () => {
 
 		const action = await db
 			.selectFrom("action")
-			.selectAll()
-			.where("kind", "=", "LETMEIN")
+			.select(SELECT_ACTION)
+			.where("action.kind", "=", "LETMEIN")
 			.executeTakeFirst();
 
 		expect(action?.result).toBe("THROW");

@@ -3,6 +3,8 @@ import {
 	SELECT_SCORE_DOCUMENT,
 	ToScoreDocument,
 } from "#lib/db-formats/score";
+import { SELECT_SESSION_DOCUMENT } from "#lib/db-formats/session";
+import { clearPbDirtyForUser } from "#lib/jobs/drain-dirty-queues";
 import { log } from "#lib/log/log";
 import { CreateSessionCalcData } from "#lib/score-import/framework/calculated-data/session";
 import { GetAndUpdateUsersGoals } from "#lib/score-import/framework/goals/goals";
@@ -69,8 +71,8 @@ export async function DeleteMultipleScores(
 			await DB.deleteFrom("session").where("id", "=", sessionId).execute();
 		} else {
 			const sessionRow = await DB.selectFrom("session")
-				.selectAll()
-				.where("id", "=", sessionId)
+				.select(SELECT_SESSION_DOCUMENT)
+				.where("session.id", "=", sessionId)
 				.executeTakeFirst();
 
 			if (!sessionRow) {
@@ -93,6 +95,7 @@ export async function DeleteMultipleScores(
 
 	for (const score of scores) {
 		await ProcessPBs(score.game, score.playtype, score.userID, new Set([score.chartID]), log);
+		await clearPbDirtyForUser(score.userID, [score.chartID]);
 
 		if (blacklist) {
 			const alreadyBlacklisted = await DB.selectFrom("score_blacklist")

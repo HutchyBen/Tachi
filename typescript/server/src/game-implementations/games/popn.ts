@@ -119,6 +119,7 @@ export const POPN_9B_IMPL: GPTServerImplementation<"popn:9B"> = {
 		),
 	],
 	defaultMergeRefName: "Best Score",
+	derivationRelevantFields: ["levelNum"],
 	scoreValidators: [
 		(s) => {
 			const { bad, good } = s.scoreData.judgements;

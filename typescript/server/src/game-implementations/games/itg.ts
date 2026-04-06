@@ -125,6 +125,7 @@ export const ITG_STAMINA_IMPL: GPTServerImplementation<"itg:Stamina"> = {
 
 	// this name sucks, what should we do instead? TODO.
 	defaultMergeRefName: "Best Result",
+	derivationRelevantFields: ["data.rankedLevel", "data.notesPerMeasure", "data.npsPerMeasure"],
 
 	scoreValidators: [
 		(s) => {

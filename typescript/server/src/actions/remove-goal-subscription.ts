@@ -1,12 +1,12 @@
 import { MakeAction } from "#lib/actions/actions.js";
+import { SELECT_GOAL_SUB_WITH_GOAL_GAME } from "#lib/db-formats/goal";
 import { ToGoalSubscriptionDocument } from "#lib/db-formats/target-documents.js";
 import { UnsubscribeFromGoal } from "#lib/targets/goals.js";
 import DB from "#services/pg/db.js";
 import { staticAssertUnreachable } from "#utils/misc.js";
 import { IsUserAdmin } from "#utils/user.js";
 import { ExpectedErr } from "bliss";
-import type { Game } from "tachi-db";
-import { GamePTToV3, type GameGroup, type Playtype } from "tachi-common";
+import { type GameGroup, GamePTToV3, type Playtype } from "tachi-common";
 
 export const ACTION_RemoveGoalSubscription = MakeAction(
 	"REMOVE_GOAL_SUBSCRIPTION",
@@ -23,8 +23,7 @@ export const ACTION_RemoveGoalSubscription = MakeAction(
 
 		const row = await DB.selectFrom("goal_sub")
 			.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-			.selectAll("goal_sub")
-			.select("goal.game as goal_game")
+			.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
 			.where("goal_sub.user_id", "=", userID)
 			.where("goal_sub.goal_id", "=", goalID)
 			.where("goal.game", "=", v3Game)
@@ -34,10 +33,7 @@ export const ACTION_RemoveGoalSubscription = MakeAction(
 			throw new ExpectedErr(404, "You are not subscribed to this goal.");
 		}
 
-		const goalSub = ToGoalSubscriptionDocument({
-			...row,
-			goal_game: row.goal_game as Game,
-		});
+		const goalSub = ToGoalSubscriptionDocument(row);
 
 		const fail = await UnsubscribeFromGoal(goalSub, false);
 

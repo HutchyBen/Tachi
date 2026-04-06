@@ -1,5 +1,4 @@
-import type { MONGO_GoalDocument } from "tachi-common";
-
+import { SELECT_GOAL, SELECT_GOAL_SUB_WITH_GOAL_GAME } from "#lib/db-formats/goal";
 import { ToGoalDocument, ToGoalSubscriptionDocument } from "#lib/db-formats/target-documents";
 import { CreateGoalTitle, ValidateGoalChartsAndCriteria } from "#lib/targets/goal-utils";
 import { GetQuestsThatContainGoal } from "#lib/targets/goals";
@@ -10,8 +9,7 @@ import { AssignToReqTachiData, GetGPT, GetTachiData } from "#utils/req-tachi-dat
 import { GetUsersWithIDs } from "#utils/user";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
-import { GamePTToV3 } from "tachi-common";
-import type { Game } from "tachi-db";
+import { GamePTToV3, type MONGO_GoalDocument } from "tachi-common";
 
 const router: Router = Router({ mergeParams: true });
 
@@ -135,7 +133,11 @@ const ResolveGoalID: RequestHandler = async (req, res, next) => {
 
 	const v3Game = GamePTToV3(game, playtype);
 
-	const row = await DB.selectFrom("goal").selectAll().where("goal.id", "=", goalID).where("goal.game", "=", v3Game).executeTakeFirst();
+	const row = await DB.selectFrom("goal")
+		.select(SELECT_GOAL)
+		.where("goal.id", "=", goalID)
+		.where("goal.game", "=", v3Game)
+		.executeTakeFirst();
 
 	if (!row) {
 		return res.status(404).json({
@@ -159,17 +161,11 @@ router.get("/:goalID", ResolveGoalID, async (req, res) => {
 
 	const subRows = await DB.selectFrom("goal_sub")
 		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-		.selectAll("goal_sub")
-		.select("goal.game as goal_game")
+		.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
 		.where("goal_sub.goal_id", "=", goal.goalID)
 		.execute();
 
-	const goalSubs = subRows.map((r) =>
-		ToGoalSubscriptionDocument({
-			...r,
-			goal_game: r.goal_game as Game,
-		}),
-	);
+	const goalSubs = subRows.map((r) => ToGoalSubscriptionDocument(r));
 
 	const users = await GetUsersWithIDs(goalSubs.map((e) => e.userID));
 

@@ -20,4 +20,4 @@ server:
 		bun --watch src/main.ts
 
 client:
-	cd typescript/client && vite
+	cd typescript/client && bun vite

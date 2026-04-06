@@ -2,6 +2,7 @@ import type { KtLogger } from "#lib/log/log";
 import type { Game } from "tachi-db";
 
 import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
+import { SELECT_PB_ROW } from "#lib/db-formats/pb";
 import {
 	type ScoreDocumentJoinRow,
 	SELECT_SCORE_DOCUMENT,
@@ -179,10 +180,10 @@ export async function UpdateChartRanking(game: GameGroup, playtype: Playtype, ch
 		}
 
 		const pbRow = await DB.selectFrom("pb")
-			.selectAll()
-			.where("user_id", "=", userId)
-			.where("chart_id", "=", chartRow.id)
-			.where("lens", "is", null)
+			.select(SELECT_PB_ROW)
+			.where("pb.user_id", "=", userId)
+			.where("pb.chart_id", "=", chartRow.id)
+			.where("pb.lens", "is", null)
 			.executeTakeFirst();
 
 		if (!pbRow) {

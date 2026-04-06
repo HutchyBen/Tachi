@@ -48,6 +48,66 @@ describe("ACTION_CreateApiClient", () => {
 		).rejects.toMatchObject({ code: 400 });
 	});
 
+	it("throws 400 when webhookUri uses http instead of https", async () => {
+		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
+
+		await expect(
+			ACTION_CreateApiClient(taker, {
+				name: "My App",
+				redirectUri: null,
+				webhookUri: "http://example.com/webhook",
+				apiKeyTemplate: null,
+				apiKeyFilename: null,
+				permissions: ["submit_score"],
+			}),
+		).rejects.toMatchObject({ code: 400 });
+	});
+
+	it("throws 400 when webhookUri targets localhost", async () => {
+		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
+
+		await expect(
+			ACTION_CreateApiClient(taker, {
+				name: "My App",
+				redirectUri: null,
+				webhookUri: "https://localhost/webhook",
+				apiKeyTemplate: null,
+				apiKeyFilename: null,
+				permissions: ["submit_score"],
+			}),
+		).rejects.toMatchObject({ code: 400 });
+	});
+
+	it("throws 400 when webhookUri targets a private IP address", async () => {
+		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
+
+		await expect(
+			ACTION_CreateApiClient(taker, {
+				name: "My App",
+				redirectUri: null,
+				webhookUri: "https://10.0.0.1/webhook",
+				apiKeyTemplate: null,
+				apiKeyFilename: null,
+				permissions: ["submit_score"],
+			}),
+		).rejects.toMatchObject({ code: 400 });
+	});
+
+	it("throws 400 when webhookUri targets a link-local address", async () => {
+		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
+
+		await expect(
+			ACTION_CreateApiClient(taker, {
+				name: "My App",
+				redirectUri: null,
+				webhookUri: "https://169.254.169.254/latest/meta-data/",
+				apiKeyTemplate: null,
+				apiKeyFilename: null,
+				permissions: ["submit_score"],
+			}),
+		).rejects.toMatchObject({ code: 400 });
+	});
+
 	it("throws 400 when apiKeyTemplate does not contain %%TACHI_KEY%%", async () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 

@@ -1,6 +1,6 @@
 import { ACTION_DeleteAllNotifications } from "#actions/delete-all-notifications.js";
 import { ACTION_MarkAllNotificationsRead } from "#actions/mark-all-notifications-read.js";
-import { ToNotificationDocument } from "#lib/db-formats/notification";
+import { SELECT_NOTIFICATION, ToNotificationDocument } from "#lib/db-formats/notification";
 import DB from "#services/pg/db";
 import { GetTachiData } from "#utils/req-tachi-data";
 import { Router } from "express";
@@ -22,9 +22,9 @@ router.get("/", async (req, res) => {
 	const user = GetTachiData(req, "requestedUser");
 
 	const rows = await DB.selectFrom("notification")
-		.selectAll()
-		.where("sent_to", "=", user.id)
-		.orderBy("sent_at", "desc")
+		.select(SELECT_NOTIFICATION)
+		.where("notification.sent_to", "=", user.id)
+		.orderBy("notification.sent_at", "desc")
 		.execute();
 
 	const notifs = rows.map(ToNotificationDocument);
