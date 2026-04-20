@@ -6,12 +6,12 @@ import { GetEnumColour } from "#lib/game-implementations";
 import { type GPTClientImplementation } from "#lib/types";
 import { NumericSOV } from "#util/sorts";
 import React from "react";
-import { COLOUR_SET, type GPTStrings } from "tachi-common";
+import { COLOUR_SET, type GamesForGroup } from "tachi-common";
 
 import { bgc } from "./_util";
 
 const GITADORA_ENUM_COLOURS: GPTClientImplementation<
-	"gitadora:Dora" | "gitadora:Gita"
+	"gitadora-dora" | "gitadora-gita"
 >["enumColours"] = {
 	grade: {
 		C: COLOUR_SET.purple,
@@ -29,14 +29,14 @@ const GITADORA_ENUM_COLOURS: GPTClientImplementation<
 	},
 };
 
-const GITADORA_HEADERS: GPTClientImplementation<"gitadora:Dora" | "gitadora:Gita">["scoreHeaders"] =
+const GITADORA_HEADERS: GPTClientImplementation<"gitadora-dora" | "gitadora-gita">["scoreHeaders"] =
 	[
 		["Percent", "Percent", NumericSOV((x) => x.scoreData.percent)],
 		["Judgements", "Hits", NumericSOV((x) => x.scoreData.percent)],
 		["Lamp", "Lamp", NumericSOV((x) => x.scoreData.enumIndexes.lamp)],
 	];
 
-const GITADORA_COLOURS: GPTClientImplementation<GPTStrings["gitadora"]>["classColours"] = {
+const GITADORA_COLOURS: GPTClientImplementation<GamesForGroup["gitadora"]>["classColours"] = {
 	colour: {
 		WHITE: bgc("white", "var(--bs-dark)"),
 		ORANGE: bgc("orange", "var(--bs-dark)"),
@@ -63,7 +63,7 @@ const GITADORA_COLOURS: GPTClientImplementation<GPTStrings["gitadora"]>["classCo
 	},
 };
 
-const GITADORACoreCells: GPTClientImplementation<GPTStrings["gitadora"]>["scoreCoreCells"] = ({
+const GITADORACoreCells: GPTClientImplementation<GamesForGroup["gitadora"]>["scoreCoreCells"] = ({
 	sc,
 }) => (
 	<>
@@ -77,12 +77,12 @@ const GITADORACoreCells: GPTClientImplementation<GPTStrings["gitadora"]>["scoreC
 	</>
 );
 
-const GITADORARatingCell: GPTClientImplementation<GPTStrings["gitadora"]>["ratingCell"] = ({
+const GITADORARatingCell: GPTClientImplementation<GamesForGroup["gitadora"]>["ratingCell"] = ({
 	sc,
 	rating,
 }) => <RatingCell rating={rating} score={sc} />;
 
-export const GITADORA_GITA_IMPL: GPTClientImplementation<"gitadora:Gita"> = {
+export const GITADORA_GITA_IMPL: GPTClientImplementation<"gitadora-gita"> = {
 	sessionImportantScoreCount: 50,
 	enumIcons: {
 		grade: "sort-alpha-up",
@@ -106,7 +106,7 @@ export const GITADORA_GITA_IMPL: GPTClientImplementation<"gitadora:Gita"> = {
 	ratingCell: GITADORARatingCell,
 };
 
-export const GITADORA_DORA_IMPL: GPTClientImplementation<"gitadora:Dora"> = {
+export const GITADORA_DORA_IMPL: GPTClientImplementation<"gitadora-dora"> = {
 	sessionImportantScoreCount: 50,
 	enumIcons: {
 		grade: "sort-alpha-up",

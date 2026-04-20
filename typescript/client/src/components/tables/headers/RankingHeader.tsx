@@ -1,7 +1,7 @@
 import { type SetState } from "#types/react";
 import { NumericSOV } from "#util/sorts";
 import React from "react";
-import { type MONGO_PBScoreDocument } from "tachi-common";
+import { type PBScoreDocument } from "tachi-common";
 
 import { type RankingViewMode } from "../cells/RankingCell";
 import SelectableRanking from "../components/SelectableRanking";
@@ -10,7 +10,7 @@ import { type Header, type ZTableTHProps } from "../components/TachiTable";
 export function CreateRankingHeader<T>(
 	rankingViewMode: RankingViewMode,
 	setRankingViewMode: SetState<RankingViewMode>,
-	kMapToRankingData: (k: T) => MONGO_PBScoreDocument["rankingData"] | undefined,
+	kMapToRankingData: (k: T) => PBScoreDocument["rankingData"] | undefined,
 ): Header<T> {
 	return [
 		"Site Ranking",

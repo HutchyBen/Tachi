@@ -1,20 +1,105 @@
 import { ACTION_CustomiseScore } from "#actions/customise-score";
-import { ACTION_DeleteScore } from "#actions/delete-score.js";
+import { ACTION_DeleteScore } from "#actions/delete-score";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { GetChartsBySongId } from "#lib/db-formats/chart";
-import { GetSongByLegacyID } from "#lib/db-formats/song";
+import { LoadScoreDocumentById } from "#lib/db-formats/score";
+import { GetSongByID } from "#lib/db-formats/song";
 import { log } from "#lib/log/log";
-import { RequirePermissions } from "#server/middleware/auth";
-import prValidate from "#server/middleware/prudence-validate";
-import { toPgGame } from "#services/pg/seeds";
-import { GetTachiData } from "#utils/req-tachi-data";
+import { withScore, withScoreOwner } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
 import { GetUserWithID } from "#utils/user";
-import { Router } from "express";
-import { p } from "prudence";
+import { ExpectedErr } from "bliss";
+import { GameToGameGroup } from "tachi-common";
 
-import { GetScoreFromParam, RequireOwnershipOfScoreOrAdmin } from "./middleware";
+/**
+ * Retrieve the score document at this ID.
+ *
+ * @param getRelated - Gets the related song and chart document for this score, aswell.
+ *
+ * @name GET /api/v1/scores/:scoreID
+ */
+API_V1_ROUTER.add("GET /scores/:scoreID", withScore, async ({ input, ctx }) => {
+	const { scoreDoc: score } = ctx;
 
-const router: Router = Router({ mergeParams: true });
+	if (input.getRelated !== undefined) {
+		const user = await GetUserWithID(score.userID);
+		const songRes = await GetSongByID(GameToGameGroup(score.game), score.songID);
+		const charts =
+			songRes === undefined ? [] : await GetChartsBySongId(score.game, songRes.newSongID);
+
+		const chart = charts.find((c) => c.chartID === score.chartID);
+		const song = songRes?.doc;
+
+		if (!user || !chart || !song) {
+			log.error(
+				`Score ${score.scoreID} refers to non-existent data: [user,chart,song] [${!!user} ${!!chart} ${!!song}]`,
+			);
+			throw new ExpectedErr(500, "An internal server error has occurred.");
+		}
+
+		return success("Returned score.", { chart, score, song, user });
+	}
+
+	return success("Returned score.", { score });
+});
+
+/**
+ * Modifies a score.
+ *
+ * Requires you to be the owner of this score, and have the modify_scores permission.
+ *
+ * @name PATCH /api/v1/scores/:scoreID
+ */
+API_V1_ROUTER.add(
+	"PATCH /scores/:scoreID",
+	withScore,
+	withScoreOwner,
+	async ({ input, ctx, req }) => {
+		const { scoreDoc: score } = ctx;
+
+		const modifyOption: { comment?: string | null; highlight?: boolean } = {};
+
+		if (input.comment !== undefined) {
+			modifyOption.comment = input.comment;
+		}
+
+		if (input.highlight !== undefined) {
+			modifyOption.highlight = input.highlight;
+		}
+
+		if (Object.keys(modifyOption).length === 0) {
+			throw new ExpectedErr(400, "This request modifies nothing about the score.");
+		}
+
+		const auth = req[SYMBOL_TACHI_API_AUTH];
+
+		if (auth.userID === null) {
+			throw new ExpectedErr(401, "Authentication is required.");
+		}
+
+		const user = await GetUserWithID(auth.userID);
+
+		if (!user) {
+			throw new ExpectedErr(401, "Authentication is required.");
+		}
+
+		const taker = { acct: { id: user.id, username: user.username }, ip: req.ip };
+
+		await ACTION_CustomiseScore(taker, {
+			scoreID: score.scoreID,
+			...modifyOption,
+		});
+
+		const updated = await LoadScoreDocumentById(score.scoreID);
+
+		if (!updated) {
+			throw new ExpectedErr(500, "Score disappeared after update.");
+		}
+
+		return success("Updated score.", updated);
+	},
+);
 
 /**
  * Deletes the score.
@@ -24,183 +109,23 @@ const router: Router = Router({ mergeParams: true });
  *
  * @name DELETE /api/v1/scores/:scoreID
  */
-router.delete(
-	"/",
-	RequirePermissions("delete_score"),
-	prValidate({ blacklist: "*boolean" }),
-	async (req, res) => {
-		const body = req.safeBody as {
-			blacklist?: boolean;
-		};
+API_V1_ROUTER.add("DELETE /scores/:scoreID", async ({ input, params, req }) => {
+	const auth = req[SYMBOL_TACHI_API_AUTH];
 
-		const auth = req[SYMBOL_TACHI_API_AUTH];
-
-		if (auth.userID === null) {
-			return res.status(401).json({
-				success: false,
-				description: `You are not authorised as anyone, and this endpoint requires us to know who you are.`,
-			});
-		}
-
-		const user = await GetUserWithID(auth.userID);
-
-		if (!user) {
-			return res.status(401).json({
-				success: false,
-				description: `You are not authorised as anyone, and this endpoint requires us to know who you are.`,
-			});
-		}
-
-		const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
-
-		await ACTION_DeleteScore(taker, {
-			id: req.params.scoreID,
-			blacklist: body.blacklist,
-		});
-
-		return res.status(200).json({
-			success: true,
-			description: `Successfully deleted score.`,
-			body: {},
-		});
-	},
-);
-
-router.use(GetScoreFromParam);
-
-/**
- * Retrieve the score document at this ID.
- *
- * @param getRelated - Gets the related song and chart document for this score, aswell.
- *
- * @name GET /api/v1/scores/:scoreID
- */
-router.get("/", async (req, res) => {
-	const score = GetTachiData(req, "scoreDoc");
-
-	if (req.query.getRelated !== undefined) {
-		const user = await GetUserWithID(score.userID);
-
-		const songRes = await GetSongByLegacyID(score.game, score.songID);
-
-		const charts =
-			songRes === undefined
-				? []
-				: await GetChartsBySongId(toPgGame(score.game, score.playtype), songRes.newSongID);
-
-		const chart = charts.find((c) => c.chartID === score.chartID);
-		const song = songRes?.doc;
-
-		if (!user || !chart || !song) {
-			log.error(
-				`Score ${
-					score.scoreID
-				} refers to non-existent data: [user,chart,song] [${!!user} ${!!chart} ${!!song}]`,
-			);
-
-			return res.status(500).json({
-				success: false,
-				description: `An internal server error has occured.`,
-			});
-		}
-
-		return res.status(200).json({
-			success: true,
-			description: `Returned score.`,
-			body: {
-				score,
-				user,
-				song,
-				chart,
-			},
-		});
+	if (auth.userID === null) {
+		throw new ExpectedErr(401, "Authentication is required.");
 	}
 
-	return res.status(200).json({
-		success: true,
-		description: `Returned score.`,
-		body: {
-			score,
-		},
-	});
+	const user = await GetUserWithID(auth.userID);
+
+	if (!user) {
+		throw new ExpectedErr(401, "Authentication is required.");
+	}
+
+	await ACTION_DeleteScore(
+		{ acct: { id: user.id, username: user.username }, ip: req.ip },
+		{ blacklist: input.blacklist, id: params.scoreID },
+	);
+
+	return success("Successfully deleted score.", {});
 });
-
-interface ModifiableScoreProps {
-	comment?: string | null;
-	highlight?: boolean;
-}
-
-/**
- * Modifies a score.
- *
- * Requires you to be the owner of this score, and have the modify_scores permission.
- *
- * @name PATCH /api/v1/scores/:scoreID
- */
-router.patch(
-	"/",
-	RequireOwnershipOfScoreOrAdmin,
-	RequirePermissions("customise_score"),
-	prValidate({
-		comment: p.optional(p.nullable(p.isBoundedString(1, 120))),
-		highlight: "*boolean",
-	}),
-	async (req, res) => {
-		const body = req.safeBody as {
-			comment?: string | null;
-			highlight?: boolean;
-		};
-
-		const score = GetTachiData(req, "scoreDoc");
-
-		const modifyOption: ModifiableScoreProps = {};
-
-		if (body.comment !== undefined) {
-			modifyOption.comment = body.comment;
-		}
-
-		if (body.highlight !== undefined) {
-			modifyOption.highlight = body.highlight;
-		}
-
-		if (Object.keys(modifyOption).length === 0) {
-			return res.status(400).json({
-				success: false,
-				description: `This request modifies nothing about the score.`,
-			});
-		}
-
-		const auth = req[SYMBOL_TACHI_API_AUTH];
-
-		if (auth.userID === null) {
-			return res.status(401).json({
-				success: false,
-				description: `You are not authorised as anyone, and this endpoint requires us to know who you are.`,
-			});
-		}
-
-		const user = await GetUserWithID(auth.userID);
-
-		if (!user) {
-			return res.status(401).json({
-				success: false,
-				description: `You are not authorised as anyone, and this endpoint requires us to know who you are.`,
-			});
-		}
-
-		const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
-
-		const result = await ACTION_CustomiseScore(taker, {
-			scoreID: score.scoreID,
-			...modifyOption,
-		});
-
-		return res.status(200).json({
-			success: true,
-			description: `Updated score.`,
-			body: result.score,
-		});
-	},
-);
-
-export default router;

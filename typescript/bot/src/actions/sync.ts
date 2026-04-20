@@ -20,7 +20,7 @@ export const ACTION_Sync = MakeAction(
 			session_count: importDoc.createdSessions.length,
 			error_count: importDoc.errors.length,
 			user_id: importDoc.userID,
-			game: importDoc.game,
+			games: importDoc.games,
 		};
 	},
 );

@@ -6,15 +6,13 @@ import { FormatDuration, FormatTime, MillisToSince } from "#util/time";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-	type GameGroup,
-	GetGamePTConfig,
-	type GPTString,
+	GetGameConfig,
 	type integer,
-	type MONGO_SessionDocument,
-	type MONGO_UserDocument,
-	type Playtype,
+	type SessionDocument,
 	type SessionRatingAlgorithms,
 	type SessionScoreInfo,
+	type UserDocument,
+	type V3Game,
 } from "tachi-common";
 
 import IndexCell from "../cells/IndexCell";
@@ -23,26 +21,24 @@ import TachiTable, { type Header, type ZTableTHProps } from "../components/Tachi
 
 export type SessionDataset = ({
 	__related: { index: integer; scoreInfo: Array<SessionScoreInfo> };
-} & MONGO_SessionDocument)[];
+} & SessionDocument)[];
 
 export default function GenericSessionTable({
 	dataset,
 	indexCol = false,
 	reqUser,
 	game,
-	playtype,
 }: {
 	dataset: SessionDataset;
-	game: GameGroup;
+	game: V3Game;
 	indexCol?: boolean;
-	playtype: Playtype;
-	reqUser: MONGO_UserDocument;
+	reqUser: UserDocument;
 }) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
-	const defaultRating = useSessionRatingAlg(game, playtype);
+	const defaultRating = useSessionRatingAlg(game);
 
-	const [alg, setAlg] = useState<SessionRatingAlgorithms[GPTString]>(defaultRating);
+	const [alg, setAlg] = useState<SessionRatingAlgorithms[V3Game]>(defaultRating);
 
 	const headers: Header<SessionDataset[0]>[] = [
 		["Name", "Name", StrSOV((x) => x.name)],
@@ -52,7 +48,7 @@ export default function GenericSessionTable({
 		["Timestamp", "Timestamp", NumericSOV((x) => x.timeStarted)],
 	];
 
-	if (Object.keys(gptConfig.sessionRatingAlgs).length > 1) {
+	if (Object.keys(gameConfig.sessionRatingAlgs).length > 1) {
 		headers[2] = [
 			"Rating",
 			"Rating",
@@ -60,9 +56,8 @@ export default function GenericSessionTable({
 			(thProps: ZTableTHProps) => (
 				<SelectableRating
 					game={game}
-					key={`${game}-${playtype}`}
+					key={game}
 					mode="session"
-					playtype={playtype}
 					rating={alg}
 					setRating={setAlg}
 					{...thProps}
@@ -105,21 +100,21 @@ function Row({
 	ratingAlg,
 	reqUser,
 	indexCol = false,
-}: // reqUser,
-{
+}: {
 	data: SessionDataset[0];
 	indexCol?: boolean;
-	// reqUser: PublicUserDocument;
-	ratingAlg: SessionRatingAlgorithms[GPTString];
-	reqUser: MONGO_UserDocument;
+	ratingAlg: SessionRatingAlgorithms[V3Game];
+	reqUser: UserDocument;
 }) {
+	const game = data.game;
+
 	return (
 		<tr className={data.highlight ? "highlighted-row" : ""}>
 			{indexCol && <IndexCell index={data.__related.index} />}
 			<td style={{ minWidth: "140px" }}>
 				<Link
 					className="text-decoration-none"
-					to={`/u/${reqUser.username}/games/${data.game}/${data.playtype}/sessions/${data.sessionID}`}
+					to={`/u/${reqUser.username}/games/${game}/sessions/${data.sessionID}`}
 				>
 					{data.name}
 				</Link>
@@ -133,14 +128,7 @@ function Row({
 					{data.__related?.scoreInfo && `PBs: ${GetPBs(data.__related.scoreInfo).length}`}
 				</small>
 			</td>
-			<td>
-				{FormatGPTSessionRating(
-					data.game,
-					data.playtype,
-					ratingAlg,
-					data.calculatedData[ratingAlg],
-				)}
-			</td>
+			<td>{FormatGPTSessionRating(game, ratingAlg, data.calculatedData[ratingAlg])}</td>
 			<td>{FormatDuration(data.timeEnded - data.timeStarted)}</td>
 			<td>
 				{MillisToSince(data.timeStarted)}

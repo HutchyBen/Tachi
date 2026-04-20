@@ -1,12 +1,7 @@
 import DB from "#services/pg/db";
 import { EscapeForILIKE } from "#utils/misc";
 import { sql } from "kysely";
-import {
-	type GameGroup,
-	type integer,
-	type MONGO_SongDocument,
-	type SongDocumentData,
-} from "tachi-common";
+import { type GameGroup, type SongDocument, type SongDocumentData } from "tachi-common";
 
 /** Hard cap on song hits per `game_group` (FTS + trgm combined). */
 export const MAX_SONG_SEARCH_RESULTS_PER_GAME = 100;
@@ -255,47 +250,43 @@ export async function LoadSongChildrenForPgIds(
 
 export type SongSearchReturn = {
 	__textScore: number;
-} & MONGO_SongDocument;
+} & SongDocument;
 
 /**
- * Fuzzy song search over Postgres `song` metadata (same behaviour as legacy Mongo SearchCollection).
+ * Fuzzy song search over `song` metadata.
  */
-export async function searchSpecificGameSongsWithPgIds(
-	game: GameGroup,
+export async function searchSpecificGameSongs(
+	gameGroup: GameGroup,
 	search: string,
 	limit = 100,
 ): Promise<{
-	pgIdByLegacyId: Map<integer, string>;
 	songs: Array<SongSearchReturn>;
 }> {
-	const rows = await SearchSongsForGameFtsAndTrgm(game, search, limit);
+	const rows = await SearchSongsForGameFtsAndTrgm(gameGroup, search, limit);
 
 	if (rows.length === 0) {
-		return { songs: [], pgIdByLegacyId: new Map() };
+		return { songs: [] };
 	}
 
 	const children = await LoadSongChildrenForPgIds(rows.map((r) => r.id));
 
-	const pgIdByLegacyId = new Map<integer, string>();
 	const songs: Array<SongSearchReturn> = [];
 
 	for (const row of rows) {
 		const ch = children.get(row.id);
 
-		pgIdByLegacyId.set(row.legacy_id, row.id);
-
 		songs.push({
-			id: row.legacy_id,
+			id: row.id,
 			title: row.title,
 			artist: row.artist,
 			searchTerms: ch?.searchTerms ?? [],
 			altTitles: ch?.altTitles ?? [],
-			data: row.data as SongDocumentData[typeof game],
+			data: row.data as SongDocumentData[typeof gameGroup],
 			__textScore: Math.round(1000 * row.rank),
 		});
 	}
 
-	return { songs, pgIdByLegacyId };
+	return { songs };
 }
 
 export async function SearchSpecificGameSongs(
@@ -303,7 +294,7 @@ export async function SearchSpecificGameSongs(
 	search: string,
 	limit = 100,
 ): Promise<Array<SongSearchReturn>> {
-	const { songs } = await searchSpecificGameSongsWithPgIds(game, search, limit);
+	const { songs } = await searchSpecificGameSongs(game, search, limit);
 
 	return songs;
 }

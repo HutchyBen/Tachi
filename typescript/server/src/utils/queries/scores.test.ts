@@ -3,7 +3,7 @@ import { seedUser } from "#test-utils/pg-fixtures";
 import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { describe, expect, it } from "vitest";
 
-import { GetRecentUGPTHighlights, GetRecentUGPTScores } from "./scores";
+import { GetRecentUGPTHighlights, GetRecentUGScores } from "./scores";
 
 describe("GetRecentUGPTScores / GetRecentUGPTHighlights (Postgres)", () => {
 	let counter = 0;
@@ -83,7 +83,7 @@ describe("GetRecentUGPTScores / GetRecentUGPTHighlights (Postgres)", () => {
 			timeAddedMs: 9_000_000,
 		});
 
-		const scores = await GetRecentUGPTScores(userId, "iidx", "SP", 10);
+		const scores = await GetRecentUGScores(userId, "iidx-sp", 10);
 		expect(scores.length).toBeGreaterThanOrEqual(2);
 		expect(scores[0]?.timeAdded).toBeGreaterThanOrEqual(scores[1]?.timeAdded ?? 0);
 	});
@@ -104,7 +104,7 @@ describe("GetRecentUGPTScores / GetRecentUGPTHighlights (Postgres)", () => {
 			timeAddedMs: base + 2000,
 		});
 
-		const highlights = await GetRecentUGPTHighlights(userId, "iidx", "SP", 50);
+		const highlights = await GetRecentUGPTHighlights(userId, "iidx-sp", 50);
 		const ours = highlights.filter((s) => s.scoreID.startsWith("sc-hl-"));
 		expect(ours).toHaveLength(1);
 		expect(ours[0]?.highlight).toBe(true);

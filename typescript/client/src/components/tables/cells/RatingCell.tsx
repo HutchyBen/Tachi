@@ -1,15 +1,16 @@
 import { FormatScoreRating } from "#util/misc";
 import React from "react";
-import { type MONGO_PBScoreDocument, type MONGO_ScoreDocument } from "tachi-common";
+import { type PBScoreDocument, type ScoreDocument } from "tachi-common";
 
 export default function RatingCell({
 	score,
 	rating,
 }: {
-	rating: keyof MONGO_ScoreDocument["calculatedData"];
-	score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
+	rating: keyof ScoreDocument["calculatedData"];
+	score: PBScoreDocument | ScoreDocument;
 }) {
 	const value = score.calculatedData[rating];
+	const game = score.game;
 
-	return <td>{FormatScoreRating(score.game, score.playtype, rating, value)}</td>;
+	return <td>{FormatScoreRating(game, rating, value)}</td>;
 }

@@ -26,7 +26,12 @@ if (!table) {
 
 MutateCollection("folders.json", (folders) => {
 	for (const folder of folders) {
-		if (table.folders.includes(folder.folderID)) {
+		const id = folder.folderID ?? folder.id;
+		const matchesRef =
+			(folder.slug !== undefined && table.folders.includes(folder.slug)) ||
+			(id !== undefined && table.folders.includes(id));
+
+		if (matchesRef) {
 			folder.inactive = !folder.inactive;
 		}
 	}

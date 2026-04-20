@@ -8,7 +8,7 @@ programmatically, you should see [Game Endpoints](./games.md).
 
 ## Retrieve Game:Playtype Configuration.
 
-`GET /api/v1/games/:game/:playtype`
+`GET /api/v1/games/:gameGroup/:playtype`
 
 ### Parameters
 
@@ -54,7 +54,7 @@ GET /api/v1/games/iidx/SP
 
 ## Retrieve the player leaderboard.
 
-`GET /api/v1/games/:game/:playtype/leaderboard`
+`GET /api/v1/games/:gameGroup/:playtype/leaderboard`
 
 ### Parameters
 
@@ -104,7 +104,7 @@ GET /api/v1/games/iidx/SP/leaderboard
 
 ## Retrieve a song and its charts.
 
-`GET /api/v1/games/:game/:playtype/songs/:songID`
+`GET /api/v1/games/:gameGroup/:playtype/songs/:songID`
 
 ### Parameters
 
@@ -154,7 +154,7 @@ GET /api/v1/games/iidx/SP/songs/1
 
 ## Get popular charts for this game + playtype.
 
-`GET /api/v1/games/:game/:playtype/charts`
+`GET /api/v1/games/:gameGroup/:playtype/charts`
 
 ### Parameters
 
@@ -227,7 +227,7 @@ GET /api/v1/games/iidx/SP/charts?search=AA
 
 ## Retrieve a chart at a specific ID.
 
-`GET /api/v1/games/:game/:playtype/charts/:chartID`
+`GET /api/v1/games/:gameGroup/:playtype/charts/:chartID`
 
 ### Parameters
 
@@ -270,7 +270,7 @@ GET /api/v1/games/iidx/SP/charts/some_chart_id
 
 ## Retrieve playcount for this chart.
 
-`GET /api/v1/games/:game/:playtype/charts/:chartID/playcount`
+`GET /api/v1/games/:gameGroup/:playtype/charts/:chartID/playcount`
 
 ### Parameters
 
@@ -290,7 +290,7 @@ Self-explanatory.
 
 ## Retrieve leaderboards for this chart.
 
-`GET /api/v1/games/:game/:playtype/charts/:chartID/pbs`
+`GET /api/v1/games/:gameGroup/:playtype/charts/:chartID/pbs`
 
 ### Parameters
 
@@ -342,7 +342,7 @@ GET /api/v1/games/iidx/SP/charts/some_chart/pbs
 
 ## Search for a user's PB on this chart.
 
-`GET /api/v1/games/:game/:playtype/charts/:chartID/pbs/search`
+`GET /api/v1/games/:gameGroup/:playtype/charts/:chartID/pbs/search`
 
 ### Parameters
 
@@ -352,7 +352,7 @@ GET /api/v1/games/iidx/SP/charts/some_chart/pbs
 
 ### Response
 
-Same as `/api/v1/games/:game/:playtype/charts/:chartID/pbs`.
+Same as `/api/v1/games/:gameGroup/:playtype/charts/:chartID/pbs`.
 
 ### Example
 
@@ -362,7 +362,7 @@ See Above.
 
 ## Search a GPT's folders.
 
-`GET /api/v1/games/:game/:playtype/folders`
+`GET /api/v1/games/:gameGroup/:playtype/folders`
 
 ### Parameters
 
@@ -399,7 +399,7 @@ GET /api/v1/games/iidx/SP/folders?search=12
 
 ## Retrieve information on a specific folderID
 
-`GET /api/v1/games/:game/:playtype/folders/:folderID`
+`GET /api/v1/games/:gameGroup/:playtype/folders/:folderID`
 
 ### Parameters
 
@@ -449,7 +449,7 @@ GET /api/v1/games/iidx/SP/folders/some_folder_id
 
 ## Return all the tables for this game
 
-`GET /api/v1/games/:game/:playtype/tables`
+`GET /api/v1/games/:gameGroup/:playtype/tables`
 
 !!! note
 Unlike the folders endpoint, this one doesn't have a search parameter. This is because we expect
@@ -496,7 +496,7 @@ GET /api/v1/games/bms/7K/tables
 
 ## Retrieve folder documents for a specific table.
 
-`GET /api/v1/games/:game/:playtype/tables/:tableID`
+`GET /api/v1/games/:gameGroup/:playtype/tables/:tableID`
 
 ### Parameters
 
@@ -536,7 +536,7 @@ GET /api/v1/games/bms/7K/tableID/insane
 
 ## Retrieve the PB leaderboard for this Game.
 
-`GET /api/v1/games/:game/:playtype/pb-leaderboard`
+`GET /api/v1/games/:gameGroup/:playtype/pb-leaderboard`
 
 ### Parameters
 
@@ -558,7 +558,7 @@ GET /api/v1/games/bms/7K/tableID/insane
 
 ## Get the distribution of players for a provided class.
 
-`GET /api/v1/games/:game/:playtype/player-distribution`
+`GET /api/v1/games/:gameGroup/:playtype/player-distribution`
 
 ### Parameters
 
@@ -596,7 +596,7 @@ GET /api/v1/games/bms/7K/player-distribution?class=stslDan
 ```
 
 !!! info
-You can find the humanised conversions for these classes in the gptConfig for this GPT.
+You can find the humanised conversions for these classes in the gameConfig for this GPT.
 
     See [tachi/common](https://github.com/zkldi/Tachi/tree/main/common) for more information.
 
@@ -604,7 +604,7 @@ You can find the humanised conversions for these classes in the gptConfig for th
 
 ## Retrieve recent class updates from all users on this game.
 
-`GET /api/v1/games/:game/:playtype/player-distribution`
+`GET /api/v1/games/:gameGroup/:playtype/player-distribution`
 
 ### Parameters
 
@@ -623,7 +623,7 @@ You can find the humanised conversions for these classes in the gptConfig for th
 
 ## Retrieve the most recent highlighted scores for this GPT.
 
-`GET /api/v1/games/:game/:playtype/scores/highlighted`
+`GET /api/v1/games/:gameGroup/:playtype/scores/highlighted`
 
 ### Parameters
 

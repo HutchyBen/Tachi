@@ -1,5 +1,5 @@
 import type { KtLogger } from "#lib/log/log";
-import type { MONGO_CGCardInfo } from "tachi-common";
+import type { CGCardInfo } from "tachi-common";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ServerConfig } from "#lib/setup/config";
@@ -33,7 +33,7 @@ const PR_CG_ERR_RESPONSE: PrudenceSchema = {
  */
 export async function FetchCGScores(
 	service: CGServices,
-	cardInfo: MONGO_CGCardInfo,
+	cardInfo: CGCardInfo,
 	game: CGSupportedGames,
 	log: KtLogger,
 	fetch: NodeFetch = nodeFetch,
@@ -102,7 +102,7 @@ function GetCGConf(service: CGServices) {
 	return conf;
 }
 
-function GetCGUrl(service: CGServices, cardInfo: MONGO_CGCardInfo, game: CGSupportedGames) {
+function GetCGUrl(service: CGServices, cardInfo: CGCardInfo, game: CGSupportedGames) {
 	const cgConf = GetCGConf(service);
 
 	const params = new URLSearchParams();

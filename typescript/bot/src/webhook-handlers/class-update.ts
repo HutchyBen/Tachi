@@ -1,12 +1,10 @@
 import { log } from "#utils/log";
 import {
 	type Classes,
-	FormatGameGroup,
-	type GameGroup,
-	GetGamePTConfig,
-	type GPTString,
+	FormatGame,
+	GetGameConfig,
 	type integer,
-	type Playtype,
+	type V3Game,
 	type WebhookEventClassUpdateV1,
 } from "tachi-common";
 
@@ -20,7 +18,7 @@ import { FormatClass, GetGameChannel } from "../utils/misc";
 export async function HandleClassUpdateV1(
 	event: WebhookEventClassUpdateV1["content"],
 ): Promise<integer> {
-	const { game, playtype } = event;
+	const { game } = event;
 
 	let channel;
 
@@ -33,7 +31,7 @@ export async function HandleClassUpdateV1(
 		return 500;
 	}
 
-	if (!ShouldRenderUpdate(game, playtype, event.set, event.new)) {
+	if (!ShouldRenderUpdate(game, event.set, event.new)) {
 		log.info(
 			`Not rendering class update ${event.set}: ${event.old} -> ${event.new} (not relevant).`,
 		);
@@ -42,10 +40,10 @@ export async function HandleClassUpdateV1(
 
 	const userDoc = await GetUserInfo(event.userID);
 
-	const minimumNecessaryScores = GetMinimumScores(game, playtype, event.set);
+	const minimumNecessaryScores = GetMinimumScores(game, event.set);
 
 	if (minimumNecessaryScores !== null) {
-		const { totalScores } = await GetUGPTStats(userDoc.id, game, playtype);
+		const { totalScores } = await GetUGPTStats(userDoc.id, game);
 
 		// Do not render if the user hasn't hit the score cap.
 		if (totalScores < minimumNecessaryScores) {
@@ -56,19 +54,15 @@ export async function HandleClassUpdateV1(
 		}
 	}
 
-	const newClass = FormatClass(game, playtype, event.set, event.new);
+	const newClass = FormatClass(game, event.set, event.new);
 
 	const embed = CreateEmbed()
-		.setTitle(
-			`${userDoc.username} just achieved ${newClass} in ${FormatGameGroup(game, playtype)}!`,
-		)
-		.setURL(`${Env.TACHI_SERVER_LOCATION}/users/${userDoc.username}/games/${game}/${playtype}`)
+		.setTitle(`${userDoc.username} just achieved ${newClass} in ${FormatGame(game)}!`)
+		.setURL(`${Env.TACHI_SERVER_LOCATION}/u/${userDoc.username}/games/${game}`)
 		.setThumbnail(PrependTachiUrl(`/users/${userDoc.id}/pfp`));
 
 	if (event.old !== null) {
-		embed.setDescription(
-			`(This was raised from ${FormatClass(game, playtype, event.set, event.old)}.)`,
-		);
+		embed.setDescription(`(This was raised from ${FormatClass(game, event.set, event.old)}.)`);
 	}
 
 	await channel.send({ embeds: [embed] });
@@ -79,17 +73,12 @@ export async function HandleClassUpdateV1(
 /**
  * Returns Whether this class update is notable enough to be rendered or not.
  */
-function ShouldRenderUpdate(
-	game: GameGroup,
-	playtype: Playtype,
-	classSet: Classes[GPTString],
-	classValue: string,
-) {
-	const config = GetGamePTConfig(game, playtype);
+function ShouldRenderUpdate(game: V3Game, classSet: Classes[V3Game], classValue: string) {
+	const config = GetGameConfig(game);
 	const classSpec = config.classes[classSet];
 
 	if (classSpec === undefined) {
-		log.error(`Invalid class ${classSet} for ${game} ${playtype}`);
+		log.error(`Invalid class ${classSet} for ${game}`);
 		return false;
 	}
 
@@ -103,28 +92,24 @@ function ShouldRenderUpdate(
 	const minimumId = ids.indexOf(classSpec.minimumRelevantValue);
 
 	if (currentId < 0) {
-		log.error(`Invalid classValue ${classValue} for ${game} ${playtype}`);
+		log.error(`Invalid classValue ${classValue} for ${game}`);
 		return false;
 	}
 
 	if (minimumId < 0) {
-		log.error(`Invalid minimum classValue ${classValue} for ${game} ${playtype}`);
+		log.error(`Invalid minimum classValue ${classValue} for ${game}`);
 		return false;
 	}
 
 	return currentId >= minimumId;
 }
 
-function GetMinimumScores(
-	game: GameGroup,
-	playtype: Playtype,
-	classSet: Classes[GPTString],
-): integer | null {
-	const config = GetGamePTConfig(game, playtype);
+function GetMinimumScores(game: V3Game, classSet: Classes[V3Game]): integer | null {
+	const config = GetGameConfig(game);
 	const classSpec = config.classes[classSet];
 
 	if (classSpec === undefined) {
-		log.error(`Invalid class ${classSet} for ${game} ${playtype}`);
+		log.error(`Invalid class ${classSet} for ${game}`);
 		return null;
 	}
 

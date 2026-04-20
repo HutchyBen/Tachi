@@ -1,4 +1,4 @@
-import type { integer, Versions } from "tachi-common";
+import type { GamesForGroup, integer, Versions } from "tachi-common";
 
 export interface FervidexScore {
 	chart: `${"dp" | "sp"}${"a" | "b" | "h" | "l" | "n"}`;
@@ -71,7 +71,7 @@ export interface FervidexScore {
 }
 
 export interface FervidexContext {
-	version: Versions["iidx:DP" | "iidx:SP"];
+	version: Versions[GamesForGroup["iidx"]];
 	timeReceived: number;
 	userID: integer;
 }

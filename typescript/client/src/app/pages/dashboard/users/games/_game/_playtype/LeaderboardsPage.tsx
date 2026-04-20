@@ -17,14 +17,15 @@ import { useQuery } from "react-query";
 import {
 	type Classes,
 	COLOUR_SET,
-	FormatGameGroup,
+	FormatGame,
+	GameToGameGroup,
+	GetGameConfig,
 	GetGameGroupConfig,
-	GetGamePTConfig,
-	type GPTString,
 	type integer,
-	type MONGO_UserDocument,
-	type MONGO_UserGameStats,
 	type ProfileRatingAlgorithms,
+	type UserDocument,
+	type UserGameStats,
+	type V3Game,
 } from "tachi-common";
 
 interface LeaderboardsData {
@@ -32,18 +33,23 @@ interface LeaderboardsData {
 	leaderboard: GPTLeaderboard;
 }
 
-export default function LeaderboardsPage({ reqUser, game, playtype }: UGPT) {
-	const gameConfig = GetGameGroupConfig(game);
+export default function LeaderboardsPage({ reqUser, game }: UGPT) {
 	useSetSubheader(
-		["Users", reqUser.username, "Games", gameConfig.name, playtype, "Leaderboard"],
-		[reqUser, game, playtype],
-		`${reqUser.username}'s ${FormatGameGroup(game, playtype)} Leaderboard`,
+		[
+			"Users",
+			reqUser.username,
+			"Games",
+			GetGameGroupConfig(GameToGameGroup(game)).name,
+			"Leaderboard",
+		],
+		[reqUser, game],
+		`${reqUser.username}'s ${FormatGame(game)} Leaderboard`,
 	);
 
-	const defaultRating = useProfileRatingAlg(game, playtype);
+	const defaultRating = useProfileRatingAlg(game);
 	const [alg, setAlg] = useState(defaultRating);
 
-	const url = `/users/${reqUser.id}/games/${game}/${playtype}/leaderboard-adjacent?alg=${alg}`;
+	const url = `/users/${reqUser.id}/games/${game}/leaderboard-adjacent?alg=${alg}`;
 
 	const { data, error } = useQuery<LeaderboardsData, UnsuccessfulAPIFetchResponse>(
 		url,
@@ -55,7 +61,7 @@ export default function LeaderboardsPage({ reqUser, game, playtype }: UGPT) {
 			}
 
 			const lRes = await APIFetchV1<GPTLeaderboard>(
-				`/games/${game}/${playtype}/leaderboard?limit=3&alg=${alg}`,
+				`/games/${game}/leaderboard?limit=3&alg=${alg}`,
 			);
 
 			if (!lRes.success) {
@@ -71,7 +77,7 @@ export default function LeaderboardsPage({ reqUser, game, playtype }: UGPT) {
 
 	return (
 		<LoadingWrapper {...{ dataset: data, error }}>
-			<LeaderboardsPageContent {...{ reqUser, game, playtype, data: data!, alg, setAlg }} />
+			<LeaderboardsPageContent {...{ reqUser, game, data: data!, alg, setAlg }} />
 		</LoadingWrapper>
 	);
 }
@@ -79,20 +85,19 @@ export default function LeaderboardsPage({ reqUser, game, playtype }: UGPT) {
 function LeaderboardsPageContent({
 	reqUser,
 	game,
-	playtype,
 	data,
 	alg,
 }: {
-	alg: ProfileRatingAlgorithms[GPTString];
+	alg: ProfileRatingAlgorithms[V3Game];
 	data: LeaderboardsData;
-	reqUser: MONGO_UserDocument;
-	setAlg: SetState<ProfileRatingAlgorithms[GPTString]>;
+	reqUser: UserDocument;
+	setAlg: SetState<ProfileRatingAlgorithms[V3Game]>;
 } & GamePT) {
 	const { stats, leaderboard } = data;
 
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
-	const userMap = new Map<integer, MONGO_UserDocument>();
+	const userMap = new Map<integer, UserDocument>();
 
 	for (const u of stats.users) {
 		userMap.set(u.id, u);
@@ -102,12 +107,11 @@ function LeaderboardsPageContent({
 		userMap.set(u.id, u);
 	}
 
-	// hack - we aren't returned from this api call for some reason.
 	userMap.set(reqUser.id, reqUser);
 
 	const bestNearbyUser = stats.thisUsersRanking.ranking - stats.above.length - 1;
 
-	function LeaderboardRow({ s, i }: { i: integer; s: MONGO_UserGameStats }) {
+	function LeaderboardRow({ s, i }: { i: integer; s: UserGameStats }) {
 		return (
 			<tr
 				style={{
@@ -125,18 +129,15 @@ function LeaderboardsPageContent({
 					)}
 				</td>
 				<td>
-					<GentleLink
-						to={`/u/${userMap.get(s.userID)!.username}/games/${game}/${playtype}`}
-					>
+					<GentleLink to={`/u/${userMap.get(s.userID)!.username}/games/${game}`}>
 						{userMap.get(s.userID)?.username}
 					</GentleLink>
 				</td>
 				<td>
 					{IsNotNullish(s.ratings[alg])
-						? FormatGPTProfileRating(game, playtype, alg, s.ratings[alg]!)
+						? FormatGPTProfileRating(game, alg, s.ratings[alg]!)
 						: "No Data."}
 				</td>
-				{/* temp */}
 				<td>
 					{Object.entries(s.classes).length
 						? Object.entries(s.classes)
@@ -145,11 +146,10 @@ function LeaderboardsPageContent({
 									([k, v]) =>
 										v && (
 											<ClassBadge
-												classSet={k as Classes[GPTString]}
+												classSet={k as Classes[V3Game]}
 												classValue={v}
 												game={game}
 												key={`${k}:${v}`}
-												playtype={playtype}
 											/>
 										),
 								)
@@ -163,7 +163,7 @@ function LeaderboardsPageContent({
 		<Card
 			cardBodyClassName="overflow-x-auto d-flex flex-column justify-content-center p-4"
 			footer={
-				<LinkButton className="float-end" to={`/games/${game}/${playtype}/leaderboards`}>
+				<LinkButton className="float-end" to={`/games/${game}/leaderboards`}>
 					View Global Leaderboards
 				</LinkButton>
 			}
@@ -171,12 +171,7 @@ function LeaderboardsPageContent({
 		>
 			<MiniTable
 				className="text-center"
-				headers={[
-					"Position",
-					"User",
-					FormatGPTProfileRatingName(game, playtype, alg),
-					"Classes",
-				]}
+				headers={["Position", "User", FormatGPTProfileRatingName(game, alg), "Classes"]}
 			>
 				<>
 					{bestNearbyUser >= 1 &&

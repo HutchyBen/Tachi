@@ -28,16 +28,16 @@ describe("ACTION_SetUserSupporterStatus", () => {
 	it("throws when userID is 0 (not a positive integer)", async () => {
 		await expect(
 			ACTION_SetUserSupporterStatus(adminTaker(), { userID: 0, isSupporter: true }),
-		).rejects.toThrow(/SET_USER_SUPPORTER_STATUS received invalid input/u);
+		).rejects.toMatchObject({ code: 400 });
 	});
 
 	it("throws when userID is negative", async () => {
 		await expect(
 			ACTION_SetUserSupporterStatus(adminTaker(), { userID: -1, isSupporter: true }),
-		).rejects.toThrow(/SET_USER_SUPPORTER_STATUS received invalid input/u);
+		).rejects.toMatchObject({ code: 400 });
 	});
 
-	it("writes a THROW action row when input fails Zod validation", async () => {
+	it("writes a BAD action row when input fails Zod validation", async () => {
 		await expect(
 			ACTION_SetUserSupporterStatus(adminTaker("9.9.9.9"), { userID: 0, isSupporter: true }),
 		).rejects.toThrow();
@@ -50,7 +50,7 @@ describe("ACTION_SetUserSupporterStatus", () => {
 
 		expect(action).toMatchObject({
 			kind: "SET_USER_SUPPORTER_STATUS",
-			result: "THROW",
+			result: "BAD",
 			ip: "9.9.9.9",
 		});
 	});

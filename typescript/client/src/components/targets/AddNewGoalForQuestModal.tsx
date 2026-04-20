@@ -5,21 +5,18 @@ import { type SongChartsSearch } from "#types/api-returns";
 import { type GamePT, type SetState } from "#types/react";
 import { type RawQuestGoal } from "#types/tachi";
 import { APIFetchV1 } from "#util/api";
-import { CreateSongMap } from "#util/data";
 import { StrSOV } from "#util/sorts";
 import React, { useEffect, useState } from "react";
 import { Button, Col, Form, InputGroup, Modal, Row } from "react-bootstrap";
 import { type GroupBase, type OptionsOrGroups } from "react-select";
 import {
+	type ChartDocument,
+	type FolderDocument,
 	FormatChart,
-	GetGamePTConfig,
-	GetGPTString,
+	GetGameConfig,
 	GetScoreMetricConf,
-	type GPTString,
-	type MONGO_ChartDocument,
-	type MONGO_FolderDocument,
-	type MONGO_GoalDocument,
-	type MONGO_SongDocument,
+	type GoalDocument,
+	type SongDocument,
 } from "tachi-common";
 import { type ConfEnumScoreMetric } from "tachi-common/types/metrics";
 
@@ -29,7 +26,6 @@ export default function AddNewGoalForQuestModal({
 	show,
 	setShow,
 	game,
-	playtype,
 	onCreate,
 	noNote = false,
 	initialState,
@@ -40,22 +36,22 @@ export default function AddNewGoalForQuestModal({
 	setShow: SetState<boolean>;
 	show: boolean;
 } & GamePT) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
 	const enumConf = GetScoreMetricConf(
-		gptConfig,
-		gptConfig.preferredDefaultEnum,
+		gameConfig,
+		gameConfig.preferredDefaultEnum,
 	) as ConfEnumScoreMetric<string>;
 
-	const [criteria, setCriteria] = useState<MONGO_GoalDocument["criteria"]>(
+	const [criteria, setCriteria] = useState<GoalDocument["criteria"]>(
 		initialState?.goal.criteria ?? {
 			mode: "single",
-			key: gptConfig.preferredDefaultEnum,
+			key: gameConfig.preferredDefaultEnum,
 			value: enumConf.values.indexOf(enumConf.minimumRelevantValue),
 		},
 	);
 
-	const [charts, setCharts] = useState<MONGO_GoalDocument["charts"]>(
+	const [charts, setCharts] = useState<GoalDocument["charts"]>(
 		initialState?.goal.charts ??
 			({
 				type: "single",
@@ -75,7 +71,7 @@ export default function AddNewGoalForQuestModal({
 		}
 
 		try {
-			APIFetchV1<string>(`/games/${game}/${playtype}/targets/goals/format`, {
+			APIFetchV1<string>(`/games/${game}/targets/goals/format`, {
 				method: "POST",
 				body: JSON.stringify({ criteria, charts }),
 				headers: { "Content-Type": "application/json" },
@@ -123,7 +119,6 @@ export default function AddNewGoalForQuestModal({
 							charts={charts}
 							game={game}
 							onChange={(newCharts) => setCharts(newCharts)}
-							playtype={playtype}
 						/>
 					</Col>
 					<Col className="mt-4" xs={12}>
@@ -131,7 +126,6 @@ export default function AddNewGoalForQuestModal({
 							charts={charts}
 							criteria={criteria}
 							game={game}
-							playtype={playtype}
 							setCriteria={setCriteria}
 						/>
 
@@ -160,7 +154,7 @@ export default function AddNewGoalForQuestModal({
 							}
 							onClick={async () => {
 								const res = await APIFetchV1<string>(
-									`/games/${game}/${playtype}/targets/goals/format`,
+									`/games/${game}/targets/goals/format`,
 									{
 										headers: {
 											"Content-Type": "application/json",
@@ -201,13 +195,12 @@ export default function AddNewGoalForQuestModal({
 function RenderGoalChartPicker({
 	charts,
 	game,
-	playtype,
 	onChange,
 }: {
-	charts: MONGO_GoalDocument["charts"];
-	onChange: (charts: MONGO_GoalDocument["charts"]) => void;
+	charts: GoalDocument["charts"];
+	onChange: (charts: GoalDocument["charts"]) => void;
 } & GamePT) {
-	const [type, setType] = useState<MONGO_GoalDocument["charts"]["type"]>(charts.type);
+	const [type, setType] = useState<GoalDocument["charts"]["type"]>(charts.type);
 
 	// hackily declaring this as any because type and chartInfo are technically disjoint
 	// however, due to the code, these will always be in sync.
@@ -255,18 +248,18 @@ function RenderGoalChartPicker({
 
 			<div className="mt-4 ">
 				{type === "folder" ? (
-					<FolderSelect game={game} onChange={setData} playtype={playtype} />
+					<FolderSelect game={game} onChange={setData} />
 				) : type === "single" ? (
-					<ChartSelect game={game} onChange={setData} playtype={playtype} />
+					<ChartSelect game={game} onChange={setData} />
 				) : (
-					<ChartSelect game={game} multi onChange={setData} playtype={playtype} />
+					<ChartSelect game={game} multi onChange={setData} />
 				)}
 			</div>
 		</>
 	);
 }
 
-function FolderSelect({ game, playtype, onChange }: { onChange: (data: string) => void } & GamePT) {
+function FolderSelect({ game, onChange }: { onChange: (data: string) => void } & GamePT) {
 	let lastTimeout: number | null = null;
 
 	const loadFolderOptions = (
@@ -279,8 +272,8 @@ function FolderSelect({ game, playtype, onChange }: { onChange: (data: string) =
 
 		// debounce this query to only run after 300ms of no more user input.
 		lastTimeout = window.setTimeout(async () => {
-			const res = await APIFetchV1<Array<MONGO_FolderDocument>>(
-				`/games/${game}/${playtype}/folders?search=${input}`,
+			const res = await APIFetchV1<Array<FolderDocument>>(
+				`/games/${game}/folders?search=${input}`,
 			);
 			if (!res.success) {
 				throw new Error(res.description);
@@ -309,7 +302,6 @@ function FolderSelect({ game, playtype, onChange }: { onChange: (data: string) =
 
 function ChartSelect({
 	game,
-	playtype,
 	multi = false,
 	onChange,
 }: { multi?: boolean; onChange: (data: string | string[]) => void } & GamePT) {
@@ -326,15 +318,15 @@ function ChartSelect({
 		// debounce this query to only run after 300ms of no more user input.
 		lastTimeout = window.setTimeout(async () => {
 			const res = await APIFetchV1<SongChartsSearch>(
-				`/games/${game}/${playtype}/charts?search=${encodeURIComponent(input)}`,
+				`/games/${game}/charts?search=${encodeURIComponent(input)}`,
 			);
 
 			const res2 = await APIFetchV1<{
 				charts: Record<
-					GPTString,
+					string,
 					{
-						chart: MONGO_ChartDocument;
-						song: MONGO_SongDocument;
+						chart: ChartDocument;
+						song: SongDocument;
 					}[]
 				>;
 			}>(`/search/chart-hash?search=${encodeURIComponent(input)}`);
@@ -343,13 +335,11 @@ function ChartSelect({
 				throw new Error(res.description);
 			}
 
-			const res2Data = res2.body.charts[GetGPTString(game, playtype)] ?? [];
-
-			const songMap = CreateSongMap([...res.body.songs, ...res2Data.map((e) => e.song)]);
+			const res2Data = res2.body.charts[game] ?? [];
 
 			const options = [...res.body.charts, ...res2Data.map((e) => e.chart)].map((e) => ({
 				value: e.chartID,
-				label: FormatChart(game, songMap.get(e.songID)!, e),
+				label: FormatChart(e),
 			}));
 
 			options.sort(StrSOV((x) => x.label));

@@ -1,7 +1,7 @@
 import type {
+	ImportDocument,
 	ImportTypes,
 	integer,
-	MONGO_ImportDocument,
 	SuccessfulAPIResponse,
 	UnsuccessfulAPIResponse,
 } from "tachi-common";
@@ -16,7 +16,7 @@ import ScoreImportFatalError from "./score-importing/score-import-error";
 
 export interface WrappedAPIResponse {
 	statusCode: number;
-	body: SuccessfulAPIResponse<MONGO_ImportDocument> | UnsuccessfulAPIResponse;
+	body: SuccessfulAPIResponse<ImportDocument> | UnsuccessfulAPIResponse;
 }
 
 /**

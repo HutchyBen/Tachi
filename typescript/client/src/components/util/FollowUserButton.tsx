@@ -3,9 +3,9 @@ import { UserSettingsContext } from "#context/UserSettingsContext";
 import { APIFetchV1 } from "#util/api";
 import React, { useContext } from "react";
 import { Button } from "react-bootstrap";
-import { type MONGO_UserDocument } from "tachi-common";
+import { type UserDocument } from "tachi-common";
 
-export default function FollowUserButton({ userToFollow }: { userToFollow: MONGO_UserDocument }) {
+export default function FollowUserButton({ userToFollow }: { userToFollow: UserDocument }) {
 	const { settings: userSettings, setSettings: setUserSettings } =
 		useContext(UserSettingsContext);
 

@@ -2,9 +2,9 @@ import Divider from "#components/util/Divider";
 import LinkButton from "#components/util/LinkButton";
 import { TachiConfig } from "#lib/config";
 import React from "react";
-import { type MONGO_UserDocument } from "tachi-common";
+import { type UserDocument } from "tachi-common";
 
-export function DashboardLoggedInNoScores({ user }: { user: MONGO_UserDocument }) {
+export function DashboardLoggedInNoScores({ user }: { user: UserDocument }) {
 	return (
 		<div>
 			<span className="display-4">

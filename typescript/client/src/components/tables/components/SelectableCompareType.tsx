@@ -2,7 +2,7 @@ import Icon from "#components/util/Icon";
 import { type SetState } from "#types/react";
 import { UppercaseFirst } from "#util/misc";
 import React from "react";
-import { type GamePTConfig, GetScoreMetrics } from "tachi-common";
+import { type GameConfig, GetScoreMetrics } from "tachi-common";
 
 import { type ZTableTHProps } from "./TachiTable";
 
@@ -12,9 +12,9 @@ export default function SelectableCompareType({
 	changeSort,
 	currentSortMode,
 	reverseSort,
-	gptConfig,
+	gameConfig,
 }: {
-	gptConfig: GamePTConfig;
+	gameConfig: GameConfig;
 	metric: string;
 	setMetric: SetState<string>;
 } & ZTableTHProps) {
@@ -25,7 +25,7 @@ export default function SelectableCompareType({
 				onChange={(v) => setMetric(v.target.value)}
 				value={metric}
 			>
-				{GetScoreMetrics(gptConfig, ["DECIMAL", "INTEGER", "ENUM"]).map((e) => (
+				{GetScoreMetrics(gameConfig, ["DECIMAL", "INTEGER", "ENUM"]).map((e) => (
 					<option key={e} value={e}>
 						Vs. ({UppercaseFirst(e)})
 					</option>

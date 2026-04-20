@@ -20,50 +20,39 @@ import { FormatDate, MillisToSince } from "#util/time";
 import { DateTime } from "luxon";
 import React, { useMemo, useState } from "react";
 import FormSelect from "react-bootstrap/FormSelect";
-import {
-	FormatGameGroup,
-	type GameGroup,
-	GetGameGroupConfig,
-	GetGamePTConfig,
-	type MONGO_UserGameStats,
-	type Playtype,
-} from "tachi-common";
+import { FormatGame, GetGameConfig, type UserGameStats, type V3Game } from "tachi-common";
 
-export default function OverviewPage({ reqUser, game, playtype }: UGPT) {
-	const gameConfig = GetGameGroupConfig(game);
+export default function OverviewPage({ reqUser, game }: UGPT) {
 	useSetSubheader(
-		["Users", reqUser.username, "Games", gameConfig.name, playtype],
-		[reqUser, game, playtype],
-		`${reqUser.username}'s ${FormatGameGroup(game, playtype)} Overview`,
+		["Users", reqUser.username, "Games", FormatGame(game)],
+		[reqUser, game],
+		`${reqUser.username}'s ${FormatGame(game)} Overview`,
 	);
 
 	return (
-		<React.Fragment key={`${game}:${playtype}`}>
-			<UGPTStatShowcase game={game} playtype={playtype} reqUser={reqUser} />
-			<RankingInfo game={game} playtype={playtype} reqUser={reqUser} />
-			<RecentActivity game={game} playtype={playtype} reqUser={reqUser} />
+		<React.Fragment key={game}>
+			<UGPTStatShowcase game={game} reqUser={reqUser} />
+			<RankingInfo game={game} reqUser={reqUser} />
+			<RecentActivity game={game} reqUser={reqUser} />
 		</React.Fragment>
 	);
 }
 
-function RecentActivity({ reqUser, game, playtype }: UGPT) {
+function RecentActivity({ reqUser, game }: UGPT) {
 	return (
 		<div className="mt-4">
-			<Activity
-				handleNoActivity={null}
-				url={`/users/${reqUser.id}/games/${game}/${playtype}/activity`}
-			/>
+			<Activity handleNoActivity={null} url={`/users/${reqUser.id}/games/${game}/activity`} />
 		</div>
 	);
 }
 
-type RankingDurations = "3mo" | "year";
+type RankingDurations = "3mo" | "all" | "month" | "week" | "year";
 
-function RankingInfo({ reqUser, game, playtype }: UGPT) {
+function RankingInfo({ reqUser, game }: UGPT) {
 	const [duration, setDuration] = useState<RankingDurations>("3mo");
 
 	const { data, error } = useApiQuery<UGPTHistory>(
-		`/users/${reqUser.id}/games/${game}/${playtype}/history?duration=${duration}`,
+		`/users/${reqUser.id}/games/${game}/history?duration=${duration}`,
 	);
 
 	return (
@@ -75,7 +64,6 @@ function RankingInfo({ reqUser, game, playtype }: UGPT) {
 					data={data}
 					duration={duration}
 					game={game}
-					playtype={playtype}
 					setDuration={setDuration}
 				/>
 			) : (
@@ -88,7 +76,6 @@ function RankingInfo({ reqUser, game, playtype }: UGPT) {
 function UserHistory({
 	data,
 	game,
-	playtype,
 	duration,
 	setDuration,
 }: {
@@ -96,23 +83,23 @@ function UserHistory({
 	duration: RankingDurations;
 	setDuration: SetState<RankingDurations>;
 } & GamePT) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
 	const [mode, setMode] = useState<"playcount" | "ranking" | "rating">("rating");
 
-	const preferredRating = useProfileRatingAlg(game, playtype);
+	const preferredRating = useProfileRatingAlg(game);
 
-	const [rating, setRating] = useState<keyof MONGO_UserGameStats["ratings"]>(preferredRating);
+	const [rating, setRating] = useState<keyof UserGameStats["ratings"]>(preferredRating);
 
 	const propName = useMemo(() => {
 		if (mode === "rating" && rating) {
-			return FormatGPTProfileRatingName(game, playtype, rating);
+			return FormatGPTProfileRatingName(game, rating);
 		} else if (mode === "ranking") {
-			return `${FormatGPTProfileRatingName(game, playtype, rating)} Ranking`;
+			return `${FormatGPTProfileRatingName(game, rating)} Ranking`;
 		}
 
 		return UppercaseFirst(mode);
-	}, [mode, rating, game, playtype]);
+	}, [mode, rating, game]);
 
 	const currentPropValue = useMemo(() => {
 		if (mode === "rating" && rating) {
@@ -122,7 +109,7 @@ function UserHistory({
 				return "N/A";
 			}
 
-			return FormatGPTProfileRating(game, playtype, rating, ratingValue);
+			return FormatGPTProfileRating(game, rating, ratingValue);
 		} else if (mode === "ranking") {
 			return (
 				<>
@@ -133,7 +120,7 @@ function UserHistory({
 		}
 
 		return data[0].playcount;
-	}, [mode, rating, data, game, playtype]);
+	}, [mode, rating, data, game]);
 
 	return (
 		<>
@@ -144,6 +131,7 @@ function UserHistory({
 						<option value="month">Past Month</option>
 						<option value="3mo">Past 3 Months</option>
 						<option value="year">Past Year</option>
+						<option value="all">All Time</option>
 					</Select>
 				</div>
 				<div className="col-12 col-md-6 align-self-center">
@@ -170,19 +158,17 @@ function UserHistory({
 			<Divider className="mt-6 mb-2" />
 			{mode === "ranking" ? (
 				<>
-					{Object.keys(gptConfig.profileRatingAlgs).length > 1 && (
+					{Object.keys(gameConfig.profileRatingAlgs).length > 1 && (
 						<div className="col-12 offset-md-4 col-md-4 mt-4">
 							<FormSelect
 								onChange={(e) =>
-									setRating(
-										e.target.value as keyof MONGO_UserGameStats["ratings"],
-									)
+									setRating(e.target.value as keyof UserGameStats["ratings"])
 								}
 								value={rating}
 							>
-								{Object.keys(gptConfig.profileRatingAlgs).map((e) => (
+								{Object.keys(gameConfig.profileRatingAlgs).map((e) => (
 									<option key={e} value={e}>
-										{FormatGPTProfileRatingName(game, playtype, e)}
+										{FormatGPTProfileRatingName(game, e)}
 									</option>
 								))}
 							</FormSelect>
@@ -225,26 +211,24 @@ function UserHistory({
 				/>
 			) : (
 				<>
-					{Object.keys(gptConfig.profileRatingAlgs).length > 1 && (
+					{Object.keys(gameConfig.profileRatingAlgs).length > 1 && (
 						<div className="col-12 offset-md-4 col-md-4 mt-4">
 							<FormSelect
 								onChange={(e) =>
-									setRating(
-										e.target.value as keyof MONGO_UserGameStats["ratings"],
-									)
+									setRating(e.target.value as keyof UserGameStats["ratings"])
 								}
 								value={rating}
 							>
-								{Object.keys(gptConfig.profileRatingAlgs).map((e) => (
+								{Object.keys(gameConfig.profileRatingAlgs).map((e) => (
 									<option key={e} value={e}>
-										{FormatGPTProfileRatingName(game, playtype, e)}
+										{FormatGPTProfileRatingName(game, e)}
 									</option>
 								))}
 							</FormSelect>
 						</div>
 					)}
 
-					<RatingTimeline {...{ game, playtype, data, rating }} />
+					<RatingTimeline {...{ game, data, rating }} />
 				</>
 			)}
 		</>
@@ -253,14 +237,12 @@ function UserHistory({
 
 function RatingTimeline({
 	game,
-	playtype,
 	data,
 	rating,
 }: {
 	data: UGPTHistory;
-	game: GameGroup;
-	playtype: Playtype;
-	rating: keyof MONGO_UserGameStats["ratings"];
+	game: V3Game;
+	rating: keyof UserGameStats["ratings"];
 }) {
 	const ratingDataset = [
 		{ id: rating, data: data.map((e) => ({ x: e.timestamp, y: e.ratings[rating] })) },
@@ -270,13 +252,13 @@ function RatingTimeline({
 		<TimelineChart
 			axisBottom={{
 				format: (x) => DateTime.fromJSDate(x).toLocaleString(DateTime.DATE_FULL),
-				tickValues: 3, // temp
+				tickValues: 3,
 			}}
 			axisLeft={{
 				tickSize: 5,
 				tickPadding: 5,
 				tickRotation: 0,
-				format: (y) => (y ? FormatGPTProfileRating(game, playtype, rating, y) : "N/A"),
+				format: (y) => (y ? FormatGPTProfileRating(game, rating, y) : "N/A"),
 			}}
 			data={ratingDataset}
 			height="30rem"
@@ -285,14 +267,9 @@ function RatingTimeline({
 				<ChartTooltip>
 					<div>
 						{p.point.data.y
-							? FormatGPTProfileRating(
-									game,
-									playtype,
-									rating,
-									p.point.data.y as number,
-								)
+							? FormatGPTProfileRating(game, rating, p.point.data.y as number)
 							: "N/A"}{" "}
-						{FormatGPTProfileRatingName(game, playtype, rating)}
+						{FormatGPTProfileRatingName(game, rating)}
 					</div>
 					<small className="text-body-secondary">
 						{MillisToSince(+p.point.data.xFormatted)}
@@ -308,13 +285,13 @@ function RankingTimeline({
 	rating,
 }: {
 	data: UGPTHistory;
-	rating: keyof MONGO_UserGameStats["ratings"];
+	rating: keyof UserGameStats["ratings"];
 }) {
 	return (
 		<TimelineChart
 			axisBottom={{
 				format: (x) => DateTime.fromJSDate(x).toLocaleString(DateTime.DATE_FULL),
-				tickValues: 3, // temp
+				tickValues: 3,
 			}}
 			axisLeft={{
 				tickSize: 5,

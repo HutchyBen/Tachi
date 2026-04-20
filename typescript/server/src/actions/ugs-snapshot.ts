@@ -1,13 +1,13 @@
 import type { Game } from "tachi-db";
 
 /* eslint-disable no-await-in-loop */
-import { MakeAction } from "#lib/actions/actions.js";
-import { SELECT_GAME_PROFILE, ToGameStatsDocument } from "#lib/db-formats/game-profiles.js";
-import { log } from "#lib/log/log.js";
-import DB from "#services/pg/db.js";
-import { GetMillisecondsSince } from "#utils/misc.js";
-import { UnixMillisecondsToISO8601 } from "#utils/time.js";
-import { GetAllRankings, GetUGPTPlaycount, IsUserAdmin } from "#utils/user.js";
+import { MakeAction } from "#lib/actions/actions";
+import { SELECT_GAME_PROFILE, ToGameStatsDocument } from "#lib/db-formats/game-profiles";
+import { log } from "#lib/log/log";
+import DB from "#services/pg/db";
+import { GetMillisecondsSince } from "#utils/misc";
+import { UnixMillisecondsToISO8601 } from "#utils/time";
+import { GetAllRankings, GetUGPTPlaycount, IsUserAdmin } from "#utils/user";
 import { ExpectedErr } from "bliss";
 
 const PROFILE_BATCH = 500;
@@ -91,10 +91,10 @@ export async function runUgsSnapshotCore() {
 			for (const row of rows) {
 				const stats = ToGameStatsDocument(row);
 
-				log.debug(`Snapshotting ${stats.userID} ${stats.playtype} ${stats.game}.`);
+				log.debug(`Snapshotting ${stats.userID} ${stats.game}.`);
 
 				const [playcount, rankings] = await Promise.all([
-					GetUGPTPlaycount(stats.userID, stats.game, stats.playtype),
+					GetUGPTPlaycount(stats.userID, stats.game),
 					GetAllRankings(stats),
 				]);
 

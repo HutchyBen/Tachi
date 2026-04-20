@@ -2,14 +2,14 @@ import Activity from "#components/activity/Activity";
 import useSetSubheader from "#components/layout/header/useSetSubheader";
 import { type GamePT } from "#types/react";
 import React from "react";
-import { FormatGameGroup, GetGameGroupConfig } from "tachi-common";
+import { FormatGame, GameToGameGroup, GetGameGroupConfig } from "tachi-common";
 
-export default function GPTMainPage({ game, playtype }: GamePT) {
+export default function GPTMainPage({ game }: GamePT) {
 	useSetSubheader(
-		["Games", GetGameGroupConfig(game).name, playtype],
-		[game, playtype],
-		FormatGameGroup(game, playtype),
+		["Games", GetGameGroupConfig(GameToGameGroup(game)).name],
+		[game],
+		FormatGame(game),
 	);
 
-	return <Activity url={`/games/${game}/${playtype}/activity`} />;
+	return <Activity url={`/games/${game}/activity`} />;
 }

@@ -3,11 +3,10 @@ import { GPT_CLIENT_IMPLEMENTATIONS } from "#lib/game-implementations";
 import React from "react";
 import {
 	type AnyScoreRatingAlg,
-	type GameGroup,
-	GetGPTString,
-	type MONGO_ChartDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_ScoreDocument,
+	type ChartDocument,
+	type PBScoreDocument,
+	type ScoreDocument,
+	type V3Game,
 } from "tachi-common";
 
 export default function ScoreCoreCells({
@@ -19,15 +18,15 @@ export default function ScoreCoreCells({
 	// should we show the rating cell or not?
 	short = false,
 }: {
-	chart: MONGO_ChartDocument;
-	game: GameGroup;
+	chart: ChartDocument;
+	game: V3Game;
 	rating?: AnyScoreRatingAlg;
-	score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
+	score: PBScoreDocument | ScoreDocument;
 	short?: boolean;
 }): JSX.Element {
-	const [defaultRating] = useScoreRatingAlg(game, chart.playtype);
+	const [defaultRating] = useScoreRatingAlg(game);
 
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, chart.playtype)];
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
 	// fallback to this users preferred rating if none provided.
 	// @ts-expect-error whateverr

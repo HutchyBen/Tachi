@@ -4,7 +4,7 @@ import { type UGPT } from "#types/react";
 import React from "react";
 import { Link } from "react-router-dom";
 
-export default function RivalsActivityPage({ reqUser, game, playtype }: UGPT) {
+export default function RivalsActivityPage({ reqUser, game }: UGPT) {
 	const { settings } = useLUGPTSettings();
 
 	if (!settings) {
@@ -15,12 +15,10 @@ export default function RivalsActivityPage({ reqUser, game, playtype }: UGPT) {
 		return (
 			<div className="text-center">
 				You have no rivals set.{" "}
-				<Link to={`/u/${reqUser.id}/games/${game}/${playtype}/rivals/manage`}>
-					Go set some!
-				</Link>
+				<Link to={`/u/${reqUser.id}/games/${game}/rivals/manage`}>Go set some!</Link>
 			</div>
 		);
 	}
 
-	return <Activity url={`/users/${reqUser.id}/games/${game}/${playtype}/rivals/activity`} />;
+	return <Activity url={`/users/${reqUser.id}/games/${game}/rivals/activity`} />;
 }

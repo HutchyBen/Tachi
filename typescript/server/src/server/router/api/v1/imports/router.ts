@@ -1,7 +1,6 @@
 import type { ScoreImportWorkerReturns } from "#lib/score-import/worker/types";
-import type { ImportTypes } from "tachi-common";
 
-import { ACTION_DeleteImport } from "#actions/delete-import.js";
+import { ACTION_DeleteImport } from "#actions/delete-import";
 import { JOB_RETRY_COUNT, SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import {
 	GetImportTrackerByImportId,
@@ -12,19 +11,17 @@ import {
 import { LoadSessionDocumentById } from "#lib/db-formats/session";
 import { GetImportScores } from "#lib/imports/imports";
 import { log } from "#lib/log/log";
+import { withImport } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
 import ScoreImportQueue, { ScoreImportQueueEvents } from "#lib/score-import/worker/queue";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
-import { RequirePermissions } from "#server/middleware/auth";
-import prValidate from "#server/middleware/prudence-validate";
 import { GetRelevantSongsAndCharts } from "#utils/db";
-import { GetTachiData } from "#utils/req-tachi-data";
 import { GetUsersWithIDs, GetUserWithID } from "#utils/user";
-import { Router } from "express";
-import { p } from "prudence";
+import { ExpectedErr } from "bliss";
 
-import { GetImportFromParam } from "./middleware";
+import { API_V1_ROUTER } from "../router";
 
-const router: Router = Router({ mergeParams: true });
+// ─── Admin-facing import list ─────────────────────────────────────────────────
 
 /**
  * Query imports. Returns the 500 most recently-finished imports.
@@ -34,39 +31,19 @@ const router: Router = Router({ mergeParams: true });
  *
  * @name GET /api/v1/imports
  */
-router.get(
-	"/",
-	prValidate({
-		importType: p.optional(p.isIn(TachiConfig.IMPORT_TYPES)),
-		userIntent: p.optional(p.isIn("true", "false")),
-	}),
-	async (req, res) => {
-		const importType = req.query.importType as ImportTypes | undefined;
+API_V1_ROUTER.add("GET /imports", async ({ input }) => {
+	const userIntent = input.userIntent === undefined ? undefined : input.userIntent === "true";
 
-		// all query input ends up as strings, so we need convert it into an optional
-		// boolean
-		const userIntent =
-			req.query.userIntent === undefined ? undefined : req.query.userIntent === "true";
+	const imports = await ListRecentImportDocuments({
+		importType: input.importType as never,
+		limit: 500,
+		userIntent,
+	});
 
-		const imports = await ListRecentImportDocuments({
-			importType,
-			limit: 500,
-			userIntent,
-		});
+	const users = await GetUsersWithIDs(imports.map((e) => e.userID));
 
-		// mayaswell attach the users for better UI.
-		const users = await GetUsersWithIDs(imports.map((e) => e.userID));
-
-		return res.status(200).json({
-			success: true,
-			description: `Found ${imports.length} imports.`,
-			body: {
-				imports,
-				users,
-			},
-		});
-	},
-);
+	return success(`Found ${imports.length} imports.`, { imports, users });
+});
 
 /**
  * Query *failed* imports. Returns the 500 most recently-finished imports.
@@ -80,51 +57,30 @@ router.get(
  *
  * @name GET /api/v1/imports/failed
  */
-router.get(
-	"/failed",
-	prValidate({
-		importType: p.optional(p.isIn(TachiConfig.IMPORT_TYPES)),
-		userIntent: p.optional(p.isIn("true", "false")),
-	}),
-	async (req, res) => {
-		const importType = req.query.importType as ImportTypes | undefined;
+API_V1_ROUTER.add("GET /imports/failed", async ({ input }) => {
+	const userIntent = input.userIntent === undefined ? undefined : input.userIntent === "true";
 
-		// all query input ends up as strings, so we need convert it into an optional
-		// boolean
-		const userIntent =
-			req.query.userIntent === undefined ? undefined : req.query.userIntent === "true";
+	const trackers = await ListFailedImportTrackers({
+		importType: input.importType as never,
+		limit: 500,
+		userIntent,
+	});
 
-		const trackers = await ListFailedImportTrackers({
-			importType,
-			limit: 500,
-			userIntent,
-		});
+	const users = await GetUsersWithIDs(trackers.map((e) => e.userID));
 
-		// mayaswell attach the users for better UI.
-		const users = await GetUsersWithIDs(trackers.map((e) => e.userID));
-
-		return res.status(200).json({
-			success: true,
-			description: `Found ${trackers.length} failed imports.`,
-			body: {
-				failedImports: trackers,
-				users,
-			},
-		});
-	},
-);
+	return success(`Found ${trackers.length} failed imports.`, { failedImports: trackers, users });
+});
 
 /**
  * Retrieve an import with this ID.
  *
  * @name GET /api/v1/imports/:importID
  */
-router.get("/:importID", GetImportFromParam, async (req, res) => {
-	const importDoc = GetTachiData(req, "importDoc");
+API_V1_ROUTER.add("GET /imports/:importID", withImport, async ({ ctx }) => {
+	const { importDoc } = ctx;
 
 	const scores = await GetImportScores(importDoc);
-
-	const { songs, charts } = await GetRelevantSongsAndCharts(scores, importDoc.game);
+	const { songs, charts } = await GetRelevantSongsAndCharts(scores);
 
 	const sessions = (
 		await Promise.all(
@@ -135,24 +91,17 @@ router.get("/:importID", GetImportFromParam, async (req, res) => {
 	const user = await GetUserWithID(importDoc.userID);
 
 	if (!user) {
-		log.error(`User ${importDoc.userID} doesn't exist, yet has a session?`);
-		return res.status(500).json({
-			success: false,
-			description: `An internal server error has occured.`,
-		});
+		log.error(`User ${importDoc.userID} doesn't exist, yet has an import?`);
+		throw new ExpectedErr(500, "An internal server error has occurred.");
 	}
 
-	return res.status(200).json({
-		success: true,
-		description: `Returned info about this session.`,
-		body: {
-			scores,
-			songs,
-			charts,
-			sessions,
-			import: importDoc,
-			user,
-		},
+	return success("Returned info about this import.", {
+		charts,
+		import: importDoc,
+		scores,
+		sessions,
+		songs,
+		user,
 	});
 });
 
@@ -167,35 +116,28 @@ router.get("/:importID", GetImportFromParam, async (req, res) => {
  *
  * @name POST /api/v1/imports/:importID/revert
  */
-router.post("/:importID/revert", RequirePermissions("delete_score"), async (req, res) => {
+API_V1_ROUTER.add("POST /imports/:importID/revert", withImport, async ({ params, req }) => {
 	const auth = req[SYMBOL_TACHI_API_AUTH];
 
 	if (auth.userID === null) {
-		return res.status(401).json({
-			success: false,
-			description: `You are not authorised as anyone, and this endpoint requires us to know who you are.`,
-		});
+		throw new ExpectedErr(401, "Authentication is required.");
 	}
 
 	const user = await GetUserWithID(auth.userID);
 
 	if (!user) {
-		return res.status(401).json({
-			success: false,
-			description: `You are not authorised as anyone, and this endpoint requires us to know who you are.`,
-		});
+		throw new ExpectedErr(401, "Authentication is required.");
 	}
 
-	const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
+	await ACTION_DeleteImport(
+		{ acct: { id: user.id, username: user.username }, ip: req.ip },
+		{ id: params.importID },
+	);
 
-	await ACTION_DeleteImport(taker, { id: req.params.importID });
-
-	return res.status(200).json({
-		success: true,
-		description: `Reverted import.`,
-		body: {},
-	});
+	return success("Reverted import.", {});
 });
+
+// ─── Import poll-status ───────────────────────────────────────────────────────
 
 // Finding jobs is slightly harder than just doing a key lookup, because of retrying.
 async function FindImportJob(importID: string) {
@@ -208,7 +150,6 @@ async function FindImportJob(importID: string) {
 	try {
 		// Note that instead of the cleaner await-inside-for here, we parallelise this
 		// for performance.
-		// Just for scalings sake.
 		const maybeJob = (
 			await Promise.all(possibleImportIDs.map((i) => ScoreImportQueue.getJob(i)))
 		).find((k) => k);
@@ -228,71 +169,58 @@ async function FindImportJob(importID: string) {
  * If the import was never ongoing, return 404.
  *
  * If the import was finalised and was unsuccessful (i.e. threw a fatal error)
- * return its error information in expressified form.
+ * return its error information.
  *
- * @name GET /api/v1/import/:importID/poll-status
+ * @name GET /api/v1/imports/:importID/poll-status
  */
-router.get("/:importID/poll-status", async (req, res) => {
+API_V1_ROUTER.add("GET /imports/:importID/poll-status", async ({ params }) => {
 	if (!ServerConfig.USE_EXTERNAL_SCORE_IMPORT_WORKER) {
-		return res.status(501).json({
-			success: false,
-			description: `${TachiConfig.NAME} does not use an external score import worker. Polling imports is not possible. This import may be ongoing, or it may have never occured.`,
-		});
+		throw new ExpectedErr(
+			501,
+			`${TachiConfig.NAME} does not use an external score import worker. Polling imports is not possible.`,
+		);
 	}
 
-	const importDoc = await LoadImportDocumentById(req.params.importID);
+	const importDoc = await LoadImportDocumentById(params.importID);
 
 	if (importDoc) {
-		return res.status(200).json({
-			success: true,
-			description: `Import was completed!`,
-			body: {
-				importStatus: "completed",
-				import: importDoc,
-			},
+		return success("Import was completed!", {
+			import: importDoc,
+			importStatus: "completed",
 		});
 	}
 
-	const job = await FindImportJob(req.params.importID);
+	const job = await FindImportJob(params.importID);
 
 	if (!job) {
-		const tracker = await GetImportTrackerByImportId(req.params.importID);
+		const tracker = await GetImportTrackerByImportId(params.importID);
 
 		if (!tracker) {
-			return res.status(404).json({
-				success: false,
-				description: `There is no ongoing import here.`,
-			});
+			throw new ExpectedErr(404, "There is no ongoing import here.");
 		}
 
-		// the user has requested the status of the import before the job has even
+		// The user has requested the status of the import before the job has even
 		// been sent to redis. This is rare, but prevents a race condition of saying
 		// that an import is not ongoing when it is.
-
 		switch (tracker.type) {
 			case "ONGOING":
-				return res.status(200).json({
-					success: true,
-					description: `Import is ongoing.`,
-					body: {
-						importStatus: "ongoing",
-						progress: 0,
-					},
-				});
+				return success("Import is ongoing.", { importStatus: "ongoing", progress: 0 });
+
 			case "FAILED":
-				return res.status(tracker.error.statusCode ?? 500).json({
-					success: false,
+				return {
+					$status: tracker.error.statusCode ?? 500,
+					body: {},
 					description: tracker.error.message,
-				});
+					success: true as const,
+				};
+
 			default:
-				throw new Error(
-					// @ts-expect-error shouldn't happen
-					`Unknown tracker type ${tracker.type}, expected ONGOING or FAILED.`,
-				);
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				throw new Error(`Unknown tracker type ${(tracker as any).type}`);
 		}
 	}
 
-	let isFailed;
+	let isFailed: boolean;
 
 	try {
 		isFailed = await job.isFailed();
@@ -301,7 +229,7 @@ router.get("/:importID/poll-status", async (req, res) => {
 		isFailed = true;
 	}
 
-	let isCompleted;
+	let isCompleted: boolean;
 
 	try {
 		isCompleted = await job.isCompleted();
@@ -310,54 +238,38 @@ router.get("/:importID/poll-status", async (req, res) => {
 		isCompleted = false;
 	}
 
-	// job.isFailed() actually means a critical error has occured.
-	// As in, an unhandled exception was thrown.
+	// job.isFailed() means a critical error has occurred — an unhandled exception was thrown.
 	if (isFailed) {
 		log.error({ job }, "Internal Server Error with job?");
+		throw new ExpectedErr(500, "An internal service error has occurred with this import.");
+	}
 
-		return res.status(500).json({
-			success: false,
-			description: `An internal service error has occured with this import. This has been reported!`,
-		});
-	} else if (isCompleted) {
+	if (isCompleted) {
 		const content = (await job.waitUntilFinished(
 			ScoreImportQueueEvents,
 		)) as ScoreImportWorkerReturns;
 
-		// Since job.isFailed() is for whether a job had a fatal exception
-		// or not. We still want to check whether a job failed from say,
-		// nonsense user input.
-		// As such, if content.success == true, then the import was
-		// successful.
-		// Else, it was a "score import fatal error", which means the user
-		// screwed something up and we had to bail on the import.
+		// content.success == true means the import finished cleanly.
+		// Otherwise it was a ScoreImportFatalError (bad user input etc.).
 		if (content.success) {
-			return res.status(200).json({
-				success: true,
-				description: `Import was completed!`,
-				body: {
-					importStatus: "completed",
-					import: content.MONGO_ImportDocument,
-				},
+			return success("Import was completed!", {
+				import: content.ImportDocument,
+				importStatus: "completed",
 			});
 		}
 
-		return res.status(content.statusCode).json({
-			success: false,
+		return {
+			$status: content.statusCode,
+			body: {},
 			description: content.description,
-		});
+			success: true,
+		};
 	}
 
 	const progress = job.progress;
 
-	return res.status(200).json({
-		success: true,
-		description: `Import is ongoing.`,
-		body: {
-			importStatus: "ongoing",
-			progress: progress === 0 ? { description: "Starting up import." } : progress,
-		},
+	return success("Import is ongoing.", {
+		importStatus: "ongoing",
+		progress: progress === 0 ? { description: "Starting up import." } : progress,
 	});
 });
-
-export default router;

@@ -3,17 +3,17 @@ import { LoadBMSTable } from "bms-table-loader";
 import {
 	BMS_TABLES,
 	type BMSTableInfo,
-	type MONGO_FolderDocument,
-	type MONGO_TableDocument,
+	type FolderDocument,
+	type TableDocument,
 } from "tachi-common";
 
-import { MutateCollection, ReadCollection } from "../../util";
+import { CreateLegacyFolderIDFromFolder, MutateCollection, ReadCollection } from "../../util";
 
 const existsTables = ReadCollection("tables.json").map((e) => e.tableID);
 const existsFolders = ReadCollection("folders.json").map((e) => e.folderID);
 
 async function UpdateTable(tableInfo: BMSTableInfo) {
-	const tableID = `bms-${tableInfo.playtype}-${tableInfo.asciiPrefix}`;
+	const tableID = `bms-${tableInfo.game}-${tableInfo.asciiPrefix}`;
 
 	if (existsTables.includes(tableID)) {
 		return;
@@ -25,12 +25,12 @@ async function UpdateTable(tableInfo: BMSTableInfo) {
 
 	const levels = table.getLevelOrder();
 
-	const folders: Array<MONGO_FolderDocument> = [];
+	const folders: Array<FolderDocument> = [];
 
 	for (const level of levels) {
-		const f: Omit<MONGO_FolderDocument, "folderID"> = {
+		const f: Omit<FolderDocument, "folderID"> = {
 			title: `${tableInfo.prefix}${level}`,
-			playtype: tableInfo.playtype,
+			playtype: tableInfo.game === "bms-7k" ? "7K" : "14K",
 			game: "bms",
 			searchTerms: [],
 			type: "charts",
@@ -45,12 +45,12 @@ async function UpdateTable(tableInfo: BMSTableInfo) {
 			inactive: false,
 		};
 
-		const folderID = CreateFolderIDFromFolder(f);
+		const folderID = CreateLegacyFolderIDFromFolder(f);
 
 		const realFolder = {
 			...f,
 			folderID,
-		} as MONGO_FolderDocument;
+		} as FolderDocument;
 
 		if (existsFolders.includes(folderID)) {
 			continue;
@@ -66,12 +66,12 @@ async function UpdateTable(tableInfo: BMSTableInfo) {
 		return f;
 	});
 
-	MutateCollection("tables.json", (t: Array<MONGO_TableDocument>) => {
+	MutateCollection("tables.json", (t: Array<TableDocument>) => {
 		t.push({
 			folders: folders.map((e) => e.folderID),
 			game: "bms",
 			default: false,
-			playtype: tableInfo.playtype,
+			playtype: tableInfo.game === "bms-7k" ? "7K" : "14K",
 			inactive: false,
 			description: tableInfo.description,
 			title: tableInfo.name,
@@ -86,7 +86,7 @@ async function UpdateTable(tableInfo: BMSTableInfo) {
 
 	const f = {
 		title: tableInfo.name,
-		playtype: tableInfo.playtype,
+		playtype: tableInfo.game === "bms-7k" ? "7K" : "14K",
 		game: "bms",
 		searchTerms: [tableInfo.asciiPrefix],
 		type: "charts",
@@ -96,18 +96,18 @@ async function UpdateTable(tableInfo: BMSTableInfo) {
 		inactive: false,
 	};
 
-	const folderID = CreateFolderIDFromFolder(f);
+	const folderID = CreateLegacyFolderIDFromFolder(f);
 
 	const realFolder = {
 		...f,
 		folderID,
-	} as MONGO_FolderDocument;
+	} as FolderDocument;
 
 	// add this to meta table.
 	if (!existsFolders.includes(folderID)) {
 		MutateCollection("tables.json", (tables) => {
 			for (const table of tables) {
-				if (table.tableID === `bms-${tableInfo.playtype}-meta`) {
+				if (table.tableID === `bms-${tableInfo.game}-meta`) {
 					table.folders.push(folderID);
 				}
 			}

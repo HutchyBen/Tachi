@@ -8,7 +8,7 @@ For user-specific target endpoints, such as subscriptions, see [UGPT-Target Endp
 
 ## Retrieve this game's recently achieved targets
 
-`GET /api/v1/games/:game/:playtype/targets/recently-achieved`
+`GET /api/v1/games/:gameGroup/:playtype/targets/recently-achieved`
 
 !!! info
 This endpoint returns the 100 most recently achieved goal subscriptions, and 50 most recently achieved quest subscriptions.
@@ -69,7 +69,7 @@ GET /api/v1/games/iidx/SP/targets/recently-achieved
 
 ## Retrieve this game's recently interacted-with targets
 
-`GET /api/v1/games/:game/:playtype/targets/recently-raised`
+`GET /api/v1/games/:gameGroup/:playtype/targets/recently-raised`
 
 !!! info
 This endpoint returns the 100 most recently interacted-with goal subscriptions, and 50 most recently interacted-with quest subscriptions.
@@ -135,7 +135,7 @@ GET /api/v1/games/iidx/SP/targets/recently-raised
 
 ## Get the most popular goals for this GPT.
 
-`GET /api/v1/games/:game/:playtype/targets/goals/popular`
+`GET /api/v1/games/:gameGroup/:playtype/targets/goals/popular`
 
 ### Parameters
 
@@ -152,7 +152,7 @@ N/A
 #### Request
 
 ```
-GET /api/v1/games/:game/:playtype/targets/goals/popular
+GET /api/v1/games/:gameGroup/:playtype/targets/goals/popular
 ```
 
 #### Response
@@ -174,7 +174,7 @@ GET /api/v1/games/:game/:playtype/targets/goals/popular
 
 ## Retrieve information about a specific goal and its subscribers.
 
-`GET /api/v1/games/:game/:playtype/targets/goals/:goalID`
+`GET /api/v1/games/:gameGroup/:playtype/targets/goals/:goalID`
 
 ### Parameters
 
@@ -193,7 +193,7 @@ None.
 
 ## Evaluate a goal upon a user.
 
-`GET /api/v1/games/:game/:playtype/targets/goals/:goalID/evaluate-for`
+`GET /api/v1/games/:gameGroup/:playtype/targets/goals/:goalID/evaluate-for`
 
 !!! note
 This endpoint is notably in a bit of a strange position. It can't go under UGPT because
@@ -259,7 +259,7 @@ GET /api/v1/games/iidx/SP/targets/goals/some_goal_id/evaluate-for?userID=zkldi
 
 ## Search quests for this GPT.
 
-`GET /api/v1/games/:game/:playtype/targets/quests`
+`GET /api/v1/games/:gameGroup/:playtype/targets/quests`
 
 !!! note
 You might notice that there's no equivalent endpoint for goals.
@@ -284,7 +284,7 @@ You might notice that there's no equivalent endpoint for goals.
 
 ## Retrieve information about a specific quest, and who is subscribed to it.
 
-`GET /api/v1/games/:game/:playtype/targets/quests/:questID`
+`GET /api/v1/games/:gameGroup/:playtype/targets/quests/:questID`
 
 ### Parameters
 
@@ -304,7 +304,7 @@ N/A
 
 ## Evaluate a quest for a user, even if they aren't subscribed to it.
 
-`GET /api/v1/games/:game/:playtype/targets/quests/:questID/evaluate-for`
+`GET /api/v1/games/:gameGroup/:playtype/targets/quests/:questID/evaluate-for`
 
 ### Parameters
 
@@ -337,7 +337,7 @@ N/A
 
 ## Search Questlines
 
-`GET /api/v1/games/:game/:playtype/targets/questlines`
+`GET /api/v1/games/:gameGroup/:playtype/targets/questlines`
 
 ### Parameters
 
@@ -355,7 +355,7 @@ N/A
 
 ## Retrieve a questline with a specific ID.
 
-`GET /api/v1/games/:game/:playtype/targets/questlines/:questlineID`
+`GET /api/v1/games/:gameGroup/:playtype/targets/questlines/:questlineID`
 
 ### Parameters
 

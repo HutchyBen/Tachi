@@ -1,5 +1,4 @@
-import type { GPTServerImplementation } from "#game-implementations/types";
-
+import { type GameImplementation } from "#game-implementations/types";
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileSumBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
@@ -9,7 +8,7 @@ import { GetGrade, GITADORA_GBOUNDARIES } from "tachi-common";
 
 import { GoalFmtPercent, GoalOutOfFmtPercent, GradeGoalFormatter } from "./_common";
 
-const GITADORA_IMPL: GPTServerImplementation<"gitadora:Dora" | "gitadora:Gita"> = {
+const GITADORA_IMPL: GameImplementation<"gitadora-dora" | "gitadora-gita"> = {
 	chartSpecificValidators: {},
 	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(GITADORA_GBOUNDARIES, scoreData.percent),
@@ -28,8 +27,8 @@ const GITADORA_IMPL: GPTServerImplementation<"gitadora:Dora" | "gitadora:Gita"> 
 	sessionCalcs: (arr) => ({
 		skill: SessionAvgBest10For("skill")(arr),
 	}),
-	profileCalcs: async (game, playtype, userID) => ({
-		naiveSkill: await ProfileSumBestN("skill", 50)(game, playtype, userID),
+	profileCalcs: async (game, userID) => ({
+		naiveSkill: await ProfileSumBestN("skill", 50)(game, userID),
 	}),
 	classDerivers: (ratings) => {
 		const sk = ratings.naiveSkill;
@@ -104,9 +103,9 @@ const GITADORA_IMPL: GPTServerImplementation<"gitadora:Dora" | "gitadora:Gita"> 
 	],
 	defaultMergeRefName: "Best Percent",
 	scoreValidators: [],
-	derivationRelevantFields: ["levelNum"],
+	chartDataRelevantFields: ["levelNum"],
 };
 
-export const GITADORA_GITA_IMPL: GPTServerImplementation<"gitadora:Gita"> = GITADORA_IMPL;
+export const GITADORA_GITA_IMPL: GameImplementation<"gitadora-gita"> = GITADORA_IMPL;
 
-export const GITADORA_DORA_IMPL: GPTServerImplementation<"gitadora:Dora"> = GITADORA_IMPL;
+export const GITADORA_DORA_IMPL: GameImplementation<"gitadora-dora"> = GITADORA_IMPL;

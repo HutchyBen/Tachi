@@ -1,14 +1,15 @@
 import { p } from "prudence";
 import { z } from "zod";
 
-import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_PT_CONFIG } from "../../types/internals";
+import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
 import { FmtNum, FmtStars } from "../../utils/util";
 import { ClassValue, ToDecimalPlaces } from "../config-utils";
 import { FAST_SLOW_MAXCOMBO } from "./_common";
 
-export const ONGEKI_CONF = {
+export const GAME_GROUP_ONGEKI_CONF = {
 	name: "O.N.G.E.K.I.",
+	games: ["ongeki"],
 	playtypes: ["Single"],
 	songData: z.strictObject({
 		genre: z.enum([
@@ -23,7 +24,7 @@ export const ONGEKI_CONF = {
 		]),
 		duration: z.number(),
 	}),
-} as const satisfies INTERNAL_GAME_CONFIG;
+} as const satisfies INTERNAL_GAME_GROUP_CONFIG;
 
 export const OngekiColours = [
 	ClassValue("BLUE", "水", "Blue: 0.000~3.999 Rating"),
@@ -40,7 +41,7 @@ export const OngekiColours = [
 	ClassValue("RAINBOW_EX", "虹(極)", "Rainbow Extreme: 21.000~ Rating"),
 ];
 
-export const ONGEKI_SINGLE_CONF = {
+export const GAME_ONGEKI_CONF = {
 	providedMetrics: {
 		score: {
 			type: "INTEGER",
@@ -183,7 +184,7 @@ export const ONGEKI_SINGLE_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["BASIC", "ADVANCED", "EXPERT", "MASTER", "LUNATIC"],
-		shorthand: {
+		format: {
 			BASIC: "BAS",
 			ADVANCED: "ADV",
 			EXPERT: "EXP",
@@ -236,4 +237,4 @@ export const ONGEKI_SINGLE_CONF = {
 	scoreMeta: z.strictObject({}),
 
 	supportedMatchTypes: ["songTitle", "tachiSongID", "inGameID"],
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;

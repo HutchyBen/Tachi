@@ -7,20 +7,19 @@ import { GetNextBmsPmsSongLegacyId } from "#utils/db";
 import { DedupeArr } from "#utils/misc";
 import { type Kysely, sql } from "kysely";
 import {
+	type ChartDocument,
 	CreateSongID,
-	type GPTString,
-	type GPTStringToGame,
-	type GPTStringToPlaytype,
-	GPTStringToV3,
+	type GameGroupFromGame,
+	GameToGameGroup,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
+	type SongDocument,
+	type V3Game,
 } from "tachi-common";
 
 /** Match shape used by Beatoraja BMS/PMS orphan handling (Postgres `chart_doc` JSON). */
-export type OrphanQueueMatchCriteria<GPT extends GPTString> = {
+export type OrphanQueueMatchCriteria<TGame extends V3Game> = {
 	"chartDoc.data.hashSHA256"?: string;
-	playtype?: GPTStringToPlaytype[GPT];
+	game: TGame;
 };
 
 function parseStoredJson<T>(raw: unknown): T {
@@ -31,24 +30,17 @@ function parseStoredJson<T>(raw: unknown): T {
 	return raw as T;
 }
 
-async function selectOrphanByCriteria<GPT extends GPTString>(
-	gptString: GPT,
-	orphanMatchCriteria: OrphanQueueMatchCriteria<GPT>,
+async function selectOrphanByCriteria<TGame extends V3Game>(
+	game: TGame,
+	orphanMatchCriteria: OrphanQueueMatchCriteria<TGame>,
 ) {
-	const v3Game = GPTStringToV3(gptString) as Game;
-
 	let q = DB.selectFrom("orphan_chart")
 		.select(["orphan_chart.id", "orphan_chart.chart_doc", "orphan_chart.song_doc"])
-		.where("orphan_chart.game", "=", v3Game);
+		.where("orphan_chart.game", "=", game);
 
 	const sha = orphanMatchCriteria["chartDoc.data.hashSHA256"];
 	if (sha !== undefined) {
 		q = q.where(sql<boolean>`(orphan_chart.chart_doc::jsonb->'data'->>'hashSHA256') = ${sha}`);
-	}
-
-	const pt = orphanMatchCriteria.playtype;
-	if (pt !== undefined) {
-		q = q.where(sql<boolean>`(orphan_chart.chart_doc::jsonb->>'playtype') = ${pt}`);
 	}
 
 	const row = await q.executeTakeFirst();
@@ -57,8 +49,8 @@ async function selectOrphanByCriteria<GPT extends GPTString>(
 		return null;
 	}
 
-	const chartDoc = parseStoredJson<MONGO_ChartDocument<GPT>>(row.chart_doc);
-	const songDoc = parseStoredJson<MONGO_SongDocument<GPTStringToGame[GPT]>>(row.song_doc);
+	const chartDoc = parseStoredJson<ChartDocument<TGame>>(row.chart_doc);
+	const songDoc = parseStoredJson<SongDocument<GameGroupFromGame[TGame]>>(row.song_doc);
 
 	return { id: row.id, chartDoc, songDoc };
 }
@@ -76,8 +68,8 @@ async function writeBmsPmsSongAndChart(
 	trx: Kysely<Database>,
 	gameGroup: "bms" | "pms",
 	v3Game: Game,
-	songDoc: MONGO_SongDocument<"bms" | "pms">,
-	chartDoc: MONGO_ChartDocument,
+	songDoc: SongDocument<"bms" | "pms">,
+	chartDoc: ChartDocument,
 	songNewID: string,
 	songLegacyId: integer,
 ) {
@@ -127,22 +119,20 @@ async function writeBmsPmsSongAndChart(
  * If the chart has been seen before, and has >= N unique players who have
  * played it, unorphan the chart, and return it.
  */
-export async function HandleOrphanQueue<GPT extends GPTString>(
-	gptString: GPT,
-	game: GPTStringToGame[GPT],
-	chartDoc: MONGO_ChartDocument<GPT>,
-	songDoc: MONGO_SongDocument<GPTStringToGame[GPT]>,
-	orphanMatchCriteria: OrphanQueueMatchCriteria<GPT>,
+export async function HandleOrphanQueue<TGame extends V3Game>(
+	v3Game: TGame,
+	chartDoc: ChartDocument<TGame>,
+	songDoc: SongDocument<GameGroupFromGame[TGame]>,
+	orphanMatchCriteria: OrphanQueueMatchCriteria<TGame>,
 	queueSize: integer,
 	userID: integer,
 	chartName: string,
 ) {
 	log.debug(`Received orphanqueue request for ${chartName}.`);
 
-	const v3Game = GPTStringToV3(gptString) as Game;
-	const gameGroup = game as "bms" | "pms";
+	const gameGroup = GameToGameGroup(v3Game) as "bms" | "pms";
 
-	const orphan = await selectOrphanByCriteria(gptString, orphanMatchCriteria);
+	const orphan = await selectOrphanByCriteria(v3Game, orphanMatchCriteria);
 
 	if (!orphan) {
 		log.debug(`Received unknown chart ${chartName}, orphaning.`);
@@ -193,19 +183,18 @@ export async function HandleOrphanQueue<GPT extends GPTString>(
 		log.debug(`${chartName} has been assigned songID ${songLegacyId}.`);
 
 		const songDocU = { ...orphan.songDoc };
-		const chartDocU = { ...orphan.chartDoc };
-
-		songDocU.id = songLegacyId;
-		chartDocU.songID = songLegacyId;
+		let chartDocU = { ...orphan.chartDoc };
 
 		const songNewID = CreateSongID();
+		songDocU.id = songNewID;
+		chartDocU = { ...chartDocU, song: songDocU };
 
 		await DB.transaction().execute(async (trx) => {
 			await writeBmsPmsSongAndChart(
 				trx,
 				gameGroup,
 				v3Game,
-				songDocU as MONGO_SongDocument<"bms" | "pms">,
+				songDocU as SongDocument<"bms" | "pms">,
 				chartDocU,
 				songNewID,
 				songLegacyId,
@@ -219,7 +208,7 @@ export async function HandleOrphanQueue<GPT extends GPTString>(
 			await trx.deleteFrom("orphan_chart").where("id", "=", orphan.id).execute();
 		});
 
-		const loaded = await GetChartById(v3Game, chartDocU.chartID);
+		const loaded = await GetChartById(chartDocU.chartID);
 
 		if (!loaded) {
 			log.error(
@@ -228,7 +217,7 @@ export async function HandleOrphanQueue<GPT extends GPTString>(
 			return null;
 		}
 
-		return loaded as MONGO_ChartDocument<GPT>;
+		return loaded as ChartDocument<TGame>;
 	}
 
 	// otherwise, this play is recorded in orphan_chart_user; no row update needed
@@ -244,19 +233,17 @@ export async function HandleOrphanQueue<GPT extends GPTString>(
  * Useful for something like BMS-Table-Sync, where we want to load anything in a table
  * regardless of how many people have played the chart.
  */
-export async function DeorphanIfInQueue<GPT extends GPTString>(
-	gptString: GPT,
-	game: GPTStringToGame[GPT],
-	orphanMatchCriteria: OrphanQueueMatchCriteria<GPT>,
-): Promise<MONGO_ChartDocument<GPT> | null> {
-	const orphan = await selectOrphanByCriteria(gptString, orphanMatchCriteria);
+export async function DeorphanIfInQueue<TGame extends V3Game>(
+	v3Game: TGame,
+	orphanMatchCriteria: OrphanQueueMatchCriteria<TGame>,
+): Promise<ChartDocument<TGame> | null> {
+	const orphan = await selectOrphanByCriteria(v3Game, orphanMatchCriteria);
 
 	if (!orphan) {
 		return null;
 	}
 
-	const v3Game = GPTStringToV3(gptString) as Game;
-	const gameGroup = game as "bms" | "pms";
+	const gameGroup = GameToGameGroup(v3Game) as "bms" | "pms";
 
 	const { songDoc, chartDoc } = orphan;
 
@@ -267,19 +254,18 @@ export async function DeorphanIfInQueue<GPT extends GPTString>(
 	log.debug(`${songDoc.title} has been assigned songID ${songLegacyId}.`);
 
 	const songDocU = { ...songDoc };
-	const chartDocU = { ...chartDoc };
-
-	songDocU.id = songLegacyId;
-	chartDocU.songID = songLegacyId;
+	let chartDocU = { ...chartDoc };
 
 	const songNewID = CreateSongID();
+	songDocU.id = songNewID;
+	chartDocU = { ...chartDocU, song: songDocU };
 
 	await DB.transaction().execute(async (trx) => {
 		await writeBmsPmsSongAndChart(
 			trx,
 			gameGroup,
 			v3Game,
-			songDocU as MONGO_SongDocument<"bms" | "pms">,
+			songDocU as SongDocument<"bms" | "pms">,
 			chartDocU,
 			songNewID,
 			songLegacyId,
@@ -293,12 +279,12 @@ export async function DeorphanIfInQueue<GPT extends GPTString>(
 		await trx.deleteFrom("orphan_chart").where("id", "=", orphan.id).execute();
 	});
 
-	const loaded = await GetChartById(v3Game, chartDocU.chartID);
+	const loaded = await GetChartById(chartDocU.chartID);
 
 	if (!loaded) {
 		log.error(`DeorphanIfInQueue succeeded but GetChartById failed for ${chartDocU.chartID}.`);
 		return null;
 	}
 
-	return loaded as MONGO_ChartDocument<GPT>;
+	return loaded as ChartDocument<TGame>;
 }

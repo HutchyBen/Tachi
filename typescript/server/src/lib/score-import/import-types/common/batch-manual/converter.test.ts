@@ -214,19 +214,19 @@ describe("ResolveSongAndChart (Postgres)", () => {
 			inGameID: 42,
 			difficulty: "EXPERT",
 		});
+		const songId = `song-wacca-${suffix}`;
 
 		const r: MatchTypeResolver = {
 			game: "wacca",
-			playtype: "Single",
 			version: null,
-			identifier: String(legacySongId),
+			identifier: songId,
 			matchType: "tachiSongID",
 			difficulty: "EXPERT",
 		};
 
 		const got = await ResolveSongAndChart(r, mkLog());
 		expect(got).not.toBeNull();
-		expect(got!.song.id).toBe(legacySongId);
+		expect(got!.song.id).toBe(songId);
 		expect(got!.chart.difficulty).toBe("EXPERT");
 	});
 
@@ -244,7 +244,6 @@ describe("ResolveSongAndChart (Postgres)", () => {
 
 		const r: MatchTypeResolver = {
 			game: "wacca",
-			playtype: "Single",
 			version: null,
 			identifier: title.toLowerCase(),
 			matchType: "songTitle",
@@ -272,7 +271,6 @@ describe("ResolveSongAndChart (Postgres)", () => {
 
 		const r: MatchTypeResolver = {
 			game: "wacca",
-			playtype: "Single",
 			version: null,
 			identifier: String(inGameID),
 			matchType: "inGameID",
@@ -299,7 +297,6 @@ describe("ResolveSongAndChart (Postgres)", () => {
 
 		const r: MatchTypeResolver = {
 			game: "wacca",
-			playtype: "Single",
 			version: "reverse",
 			identifier: String(inGameID),
 			matchType: "inGameID",
@@ -314,7 +311,6 @@ describe("ResolveSongAndChart (Postgres)", () => {
 	it("returns null when inGameID does not match", async () => {
 		const r: MatchTypeResolver = {
 			game: "wacca",
-			playtype: "Single",
 			version: null,
 			identifier: "999999991",
 			matchType: "inGameID",
@@ -338,7 +334,6 @@ describe("ResolveSongAndChart (Postgres)", () => {
 
 		const r: MatchTypeResolver = {
 			game: "maimai",
-			playtype: "Single",
 			version: null,
 			identifier: strId,
 			matchType: "inGameStrID",
@@ -366,7 +361,6 @@ describe("ResolveSongAndChart (Postgres)", () => {
 
 		const r: MatchTypeResolver = {
 			game: "maimai",
-			playtype: "Single",
 			version: "finale",
 			identifier: strId,
 			matchType: "inGameStrID",
@@ -383,10 +377,10 @@ describe("ResolveSongAndChart (Postgres)", () => {
 		const legacySongId = nextLegacySongId();
 		const h = randomBytes(32).toString("hex");
 		await seedPopnChart({ suffix, legacySongId, hashSHA256: h });
+		const songId = `song-popn-${suffix}`;
 
 		const r: MatchTypeResolver = {
 			game: "popn",
-			playtype: "9B",
 			version: null,
 			identifier: h,
 			matchType: "popnChartHash",
@@ -394,7 +388,7 @@ describe("ResolveSongAndChart (Postgres)", () => {
 
 		const got = await ResolveSongAndChart(r, mkLog());
 		expect(got).not.toBeNull();
-		expect(got!.song.id).toBe(legacySongId);
+		expect(got!.song.id).toBe(songId);
 		expect((got!.chart.data as { hashSHA256?: string }).hashSHA256).toBe(h);
 	});
 
@@ -410,17 +404,17 @@ describe("ResolveSongAndChart (Postgres)", () => {
 		});
 
 		const r: MatchTypeResolver = {
-			game: "ddr",
-			playtype: "SP",
+			game: "ddr-sp",
 			version: null,
 			identifier: ddrSongHash,
 			matchType: "ddrSongHash",
 			difficulty: "EXPERT",
 		};
 
+		const songId = `song-ddr-${suffix}`;
 		const got = await ResolveSongAndChart(r, mkLog());
 		expect(got).not.toBeNull();
-		expect(got!.song.id).toBe(legacySongId);
+		expect(got!.song.id).toBe(songId);
 		expect(got!.chart.difficulty).toBe("EXPERT");
 	});
 
@@ -438,8 +432,7 @@ describe("ResolveSongAndChart (Postgres)", () => {
 		});
 
 		const r: MatchTypeResolver = {
-			game: "ddr",
-			playtype: "SP",
+			game: "ddr-sp",
 			version: "world",
 			identifier: ddrSongHash,
 			matchType: "ddrSongHash",
@@ -454,7 +447,6 @@ describe("ResolveSongAndChart (Postgres)", () => {
 	it("suggests sdvxInGameID when sdvx is given inGameID", async () => {
 		const r: MatchTypeResolver = {
 			game: "sdvx",
-			playtype: "Single",
 			version: null,
 			identifier: "1",
 			matchType: "inGameID",

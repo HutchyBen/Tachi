@@ -14,7 +14,7 @@ export async function CreateKaiSDVXClassProvider(
 	token: string,
 	reauthFn: KaiAPIReauthFunction,
 	fetch = nodeFetch,
-): Promise<ClassProvider> {
+): Promise<ClassProvider<"sdvx">> {
 	let json: unknown;
 	let err: unknown;
 	const baseUrl = KaiTypeToBaseURL(kaiType);
@@ -44,7 +44,7 @@ export async function CreateKaiSDVXClassProvider(
 		err = e;
 	}
 
-	return (gptString, userID, ratings, log) => {
+	return (_game, _userID, _ratings, log) => {
 		log.info(
 			{
 				json,

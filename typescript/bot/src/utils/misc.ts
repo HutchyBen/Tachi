@@ -4,15 +4,11 @@ import type { ClassInfo } from "tachi-common/types/game-config-utils";
 import _ from "lodash";
 import { DateTime } from "luxon";
 import {
+	type ChartDocument,
 	type Classes,
-	type GameGroup,
-	type GameGroupConfig,
-	GetGameGroupConfig,
-	GetGamePTConfig,
-	type GPTString,
+	GetGameConfig,
 	type integer,
-	type MONGO_ChartDocument,
-	type Playtype,
+	type V3Game,
 } from "tachi-common";
 
 import { Env } from "../config";
@@ -40,22 +36,6 @@ export function Entries<K extends string, V>(rec: Partial<Record<K, V>>): Array<
 	return Object.entries(rec) as Array<[K, V]>;
 }
 
-export function ParseGPT(str: string) {
-	const spl = str.split(":");
-
-	const game = spl[0] as GameGroup;
-	const playtype = spl[1] as Playtype;
-
-	// this is an interesting way of game checking noah
-	const gameConfig = GetGameGroupConfig(game) as GameGroupConfig | undefined;
-
-	if (!gameConfig?.playtypes.includes(playtype)) {
-		throw new Error(`Invalid GPT Combination '${str}'.`);
-	}
-
-	return { game, playtype };
-}
-
 export function UppercaseFirst(str: string) {
 	if (!str[0]) {
 		return "";
@@ -72,24 +52,17 @@ export function FormatDate(ms: number) {
 	return DateTime.fromMillis(ms).toLocaleString(DateTime.DATE_HUGE);
 }
 
-export function FormatClass(
-	game: GameGroup,
-	playtype: Playtype,
-	classSet: Classes[GPTString],
-	classValue: string,
-) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+export function FormatClass(game: V3Game, classSet: Classes[V3Game], classValue: string) {
+	const gameConfig = GetGameConfig(game);
 
 	// @ts-expect-error hacky access
 
-	const classInfo: ClassInfo = gptConfig.classes[classSet]?.values?.find?.(
+	const classInfo: ClassInfo = gameConfig.classes[classSet]?.values?.find?.(
 		(k) => k.id === classValue,
 	);
 
 	if (!classInfo) {
-		throw new Error(
-			`Couldn't find a class at index ${classValue} for ${game} ${playtype} ${classSet}?`,
-		);
+		throw new Error(`Couldn't find a class at index ${classValue} for ${game} ${classSet}?`);
 	}
 
 	return classInfo.display as string;
@@ -98,7 +71,7 @@ export function FormatClass(
 /**
  * Given a game, return the discord channel it's associated with.
  */
-export function GetGameChannel(client: Client, game: GameGroup) {
+export function GetGameChannel(client: Client, game: V3Game) {
 	const gameChannelID = Env.DISCORD_GAME_CHANNELS[game];
 
 	if (!gameChannelID) {
@@ -145,14 +118,8 @@ export function GetLimboChannel(client: Client) {
 /**
  * Given a chart and a game, return a link to the site for that chart.
  */
-export function CreateChartLink(chart: MONGO_ChartDocument, game: GameGroup) {
-	if (chart.isPrimary) {
-		return `${Env.TACHI_SERVER_LOCATION}/games/${game}/${chart.playtype}/songs/${
-			chart.songID
-		}/${encodeURIComponent(chart.difficulty)}`;
-	}
-
-	return `${Env.TACHI_SERVER_LOCATION}/games/${game}/${chart.playtype}/songs/${chart.songID}/${chart.chartID}`;
+export function CreateChartLink(chart: ChartDocument) {
+	return `${Env.TACHI_SERVER_LOCATION}/games/${chart.game}/charts/${chart.chartID}`;
 }
 
 export function ConvertInputIntoGenerousRegex(input: string) {

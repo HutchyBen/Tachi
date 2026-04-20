@@ -1,12 +1,12 @@
 import type { KtLogger } from "#lib/log/log";
+import type { ParserFunctionReturns } from "#lib/score-import/import-types/common/types";
+import type { GamesForGroup } from "tachi-common";
 
+import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { FormatPrError } from "#utils/prudence";
 import { p } from "prudence";
 
-import type { ParserFunctionReturns } from "../../common/types";
 import type { BarbatosContext, BarbatosScore, BarbatosSDVX6Score } from "./types";
-
-import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 
 const PR_BARBATOS = {
 	difficulty: p.isIn(0, 1, 2, 3, 4),
@@ -60,7 +60,11 @@ const PR_BARBATOS_SDVX6 = {
 export function ParseBarbatosSingle(
 	body: Record<string, unknown>,
 	_log: KtLogger,
-): ParserFunctionReturns<BarbatosScore | BarbatosSDVX6Score, BarbatosContext> {
+): ParserFunctionReturns<
+	BarbatosScore | BarbatosSDVX6Score,
+	BarbatosContext,
+	GamesForGroup["sdvx"]
+> {
 	// this is an extremely sketchy way of sniffing out whether it's sdvx6 or not.
 	// We could ask barbatos to send a header, but what difference does it make?
 	const schema = "ex_score" in body ? PR_BARBATOS_SDVX6 : PR_BARBATOS;
@@ -76,7 +80,7 @@ export function ParseBarbatosSingle(
 			timeReceived: Date.now(),
 			version: "ex_score" in body ? "exceed" : "vivid",
 		},
-		game: "sdvx",
+		gameGroup: "sdvx",
 		iterable: [body] as unknown as Array<BarbatosScore | BarbatosSDVX6Score>,
 		classProvider: null,
 	};

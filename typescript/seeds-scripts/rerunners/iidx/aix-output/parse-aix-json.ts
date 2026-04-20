@@ -1,15 +1,15 @@
 import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
 import {
+	type ChartDocument,
 	type Difficulties,
-	type GPTStrings,
+	type GamesForGroup,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
-	type Playtypes,
+	type LEGACY_Playtypes,
+	type SongDocument,
 } from "tachi-common";
 
-import { CreateChartID, GetFreshScoreIDGenerator, MutateCollection } from "../../util";
+import { CreateChartID, GetFreshSongIDGenerator, MutateCollection } from "../../../util";
 
 interface AixChart {
 	bpm_max: integer;
@@ -36,7 +36,7 @@ function ConvertAixStuff(d: AixData, songID: integer) {
 		searchTerms.push(d.title_ascii);
 	}
 
-	const song: MONGO_SongDocument<"iidx"> = {
+	const song: SongDocument<"iidx"> = {
 		title: d.title,
 		artist: d.artist,
 		altTitles: [],
@@ -48,7 +48,7 @@ function ConvertAixStuff(d: AixData, songID: integer) {
 		id: songID,
 	};
 
-	const charts: Array<MONGO_ChartDocument<GPTStrings["iidx"]>> = [];
+	const charts: Array<ChartDocument<GamesForGroup["iidx"]>> = [];
 	for (const [diff, c] of Object.entries(d.charts)) {
 		// wonderful ts oddity
 		charts.push(ParseAixChart(d, c, diff as ChartStrings, songID));
@@ -66,8 +66,8 @@ const DIFF_MAP = {
 } as const;
 
 function SplitAixDiff(diff: ChartStrings): {
-	difficulty: Difficulties["iidx:DP" | "iidx:SP"];
-	playtype: Playtypes["iidx"];
+	difficulty: Difficulties[GamesForGroup["iidx"]];
+	playtype: LEGACY_Playtypes["iidx"];
 } {
 	const difficulty = DIFF_MAP[diff[2]];
 
@@ -84,10 +84,11 @@ function SplitAixDiff(diff: ChartStrings): {
 function ParseAixChart(d: AixData, c: AixChart, diff: ChartStrings, songID: integer) {
 	const { difficulty, playtype } = SplitAixDiff(diff);
 
-	let chart: MONGO_ChartDocument<GPTStrings["iidx"]>;
+	let chart: ChartDocument<GamesForGroup["iidx"]>;
 
 	if (playtype === "SP") {
-		const temp: MONGO_ChartDocument<"iidx:SP"> = {
+		const temp: ChartDocument<"iidx-sp"> = {
+			game: "iidx-sp",
 			chartID: CreateChartID(),
 			data: {
 				notecount: c.note_count,
@@ -107,12 +108,13 @@ function ParseAixChart(d: AixData, c: AixChart, diff: ChartStrings, songID: inte
 			level: c.rating.toString(),
 			levelNum: c.rating,
 			songID,
-			versions: ["INFINITAS"],
+			versions: ["inf"],
 		};
 
 		chart = temp;
 	} else {
-		const temp: MONGO_ChartDocument<"iidx:DP"> = {
+		const temp: ChartDocument<"iidx-dp"> = {
+			game: "iidx-dp",
 			chartID: CreateChartID(),
 			data: {
 				notecount: c.note_count,
@@ -130,7 +132,7 @@ function ParseAixChart(d: AixData, c: AixChart, diff: ChartStrings, songID: inte
 			level: c.rating.toString(),
 			levelNum: c.rating,
 			songID,
-			versions: ["INFINITAS"],
+			versions: ["inf"],
 		};
 
 		chart = temp;
@@ -142,10 +144,10 @@ function ParseAixChart(d: AixData, c: AixChart, diff: ChartStrings, songID: inte
 if (require.main === module) {
 	const files = readdirSync(__dirname);
 
-	const getSongID = GetFreshScoreIDGenerator("iidx");
+	const getSongID = GetFreshSongIDGenerator("iidx");
 
-	const newSongs: Array<MONGO_SongDocument<"iidx">> = [];
-	const newCharts: Array<MONGO_ChartDocument<GPTStrings["iidx"]>> = [];
+	const newSongs: Array<SongDocument<"iidx">> = [];
+	const newCharts: Array<ChartDocument<GamesForGroup["iidx"]>> = [];
 	for (const file of files) {
 		if (file.endsWith(".json")) {
 			const songID = getSongID();

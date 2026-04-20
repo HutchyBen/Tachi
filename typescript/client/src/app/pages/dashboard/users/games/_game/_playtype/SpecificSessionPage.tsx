@@ -17,9 +17,9 @@ import { CreateChartMap, CreateScoreIDMap, CreateSongMap } from "#util/data";
 import React, { useContext, useMemo, useState } from "react";
 import { Badge, Button, Col, Row } from "react-bootstrap";
 import { Redirect, useParams } from "react-router-dom";
-import { GetGameGroupConfig } from "tachi-common";
+import { GameToGameGroup, GetGameGroupConfig } from "tachi-common";
 
-export default function SpecificSessionPage({ reqUser, game, playtype }: UGPT) {
+export default function SpecificSessionPage({ reqUser, game }: UGPT) {
 	const { sessionID } = useParams<{ sessionID: string }>();
 
 	const { data, error } = useApiQuery<SessionReturns>(`/sessions/${sessionID}`);
@@ -32,22 +32,20 @@ export default function SpecificSessionPage({ reqUser, game, playtype }: UGPT) {
 		return <Loading />;
 	}
 
-	if (
-		data.user.id !== reqUser.id ||
-		game !== data.session.game ||
-		playtype !== data.session.playtype
-	) {
+	const sessionV3Game = data.session.game;
+
+	if (data.user.id !== reqUser.id || game !== sessionV3Game) {
 		return (
 			<Redirect
-				to={`/u/${data.user.username}/games/${data.session.game}/${data.session.playtype}/sessions/${sessionID}`}
+				to={`/u/${data.user.username}/games/${sessionV3Game}/sessions/${sessionID}`}
 			/>
 		);
 	}
 
-	return <SessionPage {...{ data, game, playtype, reqUser }} />;
+	return <SessionPage {...{ data, game, reqUser }} />;
 }
 
-function SessionPage({ data, game, playtype }: { data: SessionReturns } & UGPT) {
+function SessionPage({ data, game }: { data: SessionReturns } & UGPT) {
 	const { settings } = useContext(UserSettingsContext);
 
 	const [sessionData, setSessionData] = useState(data);
@@ -60,12 +58,11 @@ function SessionPage({ data, game, playtype }: { data: SessionReturns } & UGPT) 
 			"Users",
 			user.username,
 			"Games",
-			GetGameGroupConfig(game).name,
-			playtype,
+			GetGameGroupConfig(GameToGameGroup(game)).name,
 			"Sessions",
 			session.name,
 		],
-		[session.name, game, playtype, user],
+		[session.name, game, user],
 		`${user.username}: ${session.name}`,
 	);
 

@@ -1,6 +1,6 @@
 import { type JustChildren, type SetState } from "#types/react";
 import React, { createContext, useState } from "react";
-import { type MONGO_UserGameStats } from "tachi-common";
+import { type UserGameStats } from "tachi-common";
 
 /**
  * Contains all of the currently logged-in users GPTStats.
@@ -9,13 +9,13 @@ import { type MONGO_UserGameStats } from "tachi-common";
  * dashboard info.
  */
 export const AllLUGPTStatsContext = createContext<{
-	setUGS: SetState<MONGO_UserGameStats[] | null>;
-	ugs: MONGO_UserGameStats[] | null;
+	setUGS: SetState<UserGameStats[] | null>;
+	ugs: UserGameStats[] | null;
 }>({ ugs: null, setUGS: () => void 0 });
 AllLUGPTStatsContext.displayName = "AllLUGPTStatsContext";
 
 export function AllLUGPTStatsContextProvider({ children }: JustChildren) {
-	const [ugs, setUGS] = useState<MONGO_UserGameStats[] | null>(null);
+	const [ugs, setUGS] = useState<UserGameStats[] | null>(null);
 
 	return (
 		<AllLUGPTStatsContext.Provider value={{ ugs, setUGS }}>

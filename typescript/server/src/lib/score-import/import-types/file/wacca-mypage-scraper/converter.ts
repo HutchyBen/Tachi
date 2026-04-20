@@ -1,4 +1,5 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
 import type { EmptyObject } from "#utils/types";
 import type { Difficulties } from "tachi-common";
 import type { GetEnumValue } from "tachi-common/types/metrics";
@@ -7,15 +8,14 @@ import {
 	InvalidScoreFailure,
 	SongOrChartNotFoundFailure,
 } from "#lib/score-import/framework/common/converter-failures";
-import { FindChartWithPTDF } from "#utils/queries/charts";
+import { FindChartWithSongDifficulty } from "#utils/queries/charts";
 import { FindSongOnTitle } from "#utils/queries/songs";
 
-import type { ConverterFunction } from "../../common/types";
 import type { MyPageRecordsParsedPB } from "./types";
 
-const DIFFICULTIES: Array<Difficulties["wacca:Single"]> = ["NORMAL", "HARD", "EXPERT", "INFERNO"];
+const DIFFICULTIES: Array<Difficulties["wacca"]> = ["NORMAL", "HARD", "EXPERT", "INFERNO"];
 
-const LAMPS: Record<number, GetEnumValue<"wacca:Single", "lamp">> = {
+const LAMPS: Record<number, GetEnumValue<"wacca", "lamp">> = {
 	0: "FAILED",
 	1: "CLEAR",
 	2: "MISSLESS",
@@ -49,7 +49,7 @@ const ConvertMyPageScraperRecordsCSV: ConverterFunction<
 
 	const humanisedChartTitle = `${song.title} [${difficulty}]`;
 
-	const chart = await FindChartWithPTDF("wacca", song.id, "Single", difficulty);
+	const chart = await FindChartWithSongDifficulty("wacca", song.id, difficulty);
 
 	if (chart === null) {
 		throw new SongOrChartNotFoundFailure(
@@ -73,7 +73,7 @@ const ConvertMyPageScraperRecordsCSV: ConverterFunction<
 		throw new InvalidScoreFailure(`${humanisedChartTitle} - Invalid lamp of ${data.lamp}.`);
 	}
 
-	const dryScore: DryScore<"wacca:Single"> = {
+	const dryScore: DryScore<"wacca"> = {
 		service: "mypage-scraper",
 		game: "wacca",
 		scoreMeta: {},

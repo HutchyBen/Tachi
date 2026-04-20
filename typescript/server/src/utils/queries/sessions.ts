@@ -1,16 +1,16 @@
-import { SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart.js";
-import { SELECT_SCORE_DOCUMENT, ToScoreDocument } from "#lib/db-formats/score.js";
-import { SELECT_SONG_DOCUMENT, ToSongDocument } from "#lib/db-formats/song.js";
-import DB from "#services/pg/db.js";
-import { GetUserWithIDGuaranteed } from "#utils/user.js";
+import { SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart";
+import { SELECT_SCORE_DOCUMENT, ToScoreDocument } from "#lib/db-formats/score";
+import { SELECT_SONG_DOCUMENT, ToSongDocument } from "#lib/db-formats/song";
+import DB from "#services/pg/db";
+import { GetUserWithIDGuaranteed } from "#utils/user";
 import _ from "lodash";
 import {
-	type MONGO_ChartDocument,
-	type MONGO_ScoreDocument,
-	type MONGO_SessionDocument,
-	type MONGO_SongDocument,
-	type MONGO_UserDocument,
+	type ChartDocument,
+	type ScoreDocument,
+	type SessionDocument,
 	type SessionScoreInfo,
+	type SongDocument,
+	type UserDocument,
 } from "tachi-common";
 
 /** Score ids attached to each session id (batch helper for session list endpoints). */
@@ -42,12 +42,12 @@ export async function GetScoreIdsGroupedBySessionId(
 	return map;
 }
 
-export async function GetSessionData(session: MONGO_SessionDocument): Promise<{
-	charts: Array<MONGO_ChartDocument>;
+export async function GetSessionData(session: SessionDocument): Promise<{
+	charts: Array<ChartDocument>;
 	scoreInfo: Array<SessionScoreInfo>;
-	scores: Array<MONGO_ScoreDocument>;
-	songs: Array<MONGO_SongDocument>;
-	user: MONGO_UserDocument;
+	scores: Array<ScoreDocument>;
+	songs: Array<SongDocument>;
+	user: UserDocument;
 }> {
 	const user = await GetUserWithIDGuaranteed(session.userID);
 

@@ -4,14 +4,14 @@ import { type CellsRenderFN, type QuestWithRelated } from "#types/seeds";
 import { StrSOV } from "#util/sorts";
 import { type SearchFunctions } from "#util/ztable/search";
 import React from "react";
-import { FormatGameGroup } from "tachi-common";
+import { FormatGame } from "tachi-common";
 
 import { type Header } from "../components/TachiTable";
 
 export const SeedsQuestsHeaders: Header<QuestWithRelated>[] = [
 	["ID", "ID", StrSOV((x) => x.questID)],
 	["Name", "Name", StrSOV((x) => x.name)],
-	["GPT", "GPT", StrSOV((x) => `${x.game} ${x.playtype}`)],
+	["GPT", "GPT", StrSOV((x) => x.game)],
 	["Goals", "Goals"],
 ];
 
@@ -19,8 +19,7 @@ export const SeedsQuestSearchFns: SearchFunctions<QuestWithRelated> = {
 	name: (x) => x.name,
 	questID: (x) => x.questID,
 	game: (x) => x.game,
-	playtype: (x) => x.playtype,
-	gpt: (x) => FormatGameGroup(x.game, x.playtype),
+	gpt: (x) => FormatGame(x.game),
 	goals: (x) =>
 		Object.values(x.__related.goals)
 			.map((e) => e!.name)
@@ -39,7 +38,7 @@ export const SeedsQuestCells: CellsRenderFN<QuestWithRelated> = ({
 		<td>
 			<strong>{data.name}</strong>
 		</td>
-		<td>{FormatGameGroup(data.game, data.playtype)}</td>
+		<td>{FormatGame(data.game)}</td>
 		<td>
 			<div style={{ maxHeight: "200px", overflowY: "auto" }}>
 				{data.questData.map((section) => (

@@ -1,7 +1,7 @@
 import type { z } from "zod";
 
 import chalk from "chalk";
-import { v3AllGames, V3FormatGame } from "tachi-common";
+import { ALL_GAMES, FormatGame } from "tachi-common";
 
 import { ReadCollection } from "../util";
 import { type V3_TABLE_SCHEMA } from "./schemas";
@@ -16,7 +16,7 @@ for (const t of tables) {
 	if (t.default && t.inactive) {
 		console.log(
 			chalk.red(
-				`[TABLE-DEFAULT] The default table for ${V3FormatGame(t.game)} '${
+				`[TABLE-DEFAULT] The default table for ${FormatGame(t.game)} '${
 					t.title
 				}' is inactive. This is not legal.`,
 			),
@@ -28,7 +28,7 @@ for (const t of tables) {
 		if (defaultTableMap[t.game]) {
 			console.log(
 				chalk.red(
-					`[TABLE-DEFAULT] There are multiple default tables for ${V3FormatGame(
+					`[TABLE-DEFAULT] There are multiple default tables for ${FormatGame(
 						t.game,
 					)}. This is not legal.`,
 				),
@@ -39,7 +39,7 @@ for (const t of tables) {
 	}
 }
 
-for (const game of v3AllGames) {
+for (const game of ALL_GAMES) {
 	if (!defaultTableMap[game]) {
 		console.log(chalk.red(`[TABLE-DEFAULT] There is no default table for ${game}.`));
 		errs += 1;

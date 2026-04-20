@@ -2,13 +2,9 @@ import {
 	type PbDocumentJoinRow,
 	SELECT_PB_DOCUMENT_WITH_LEADERBOARD,
 	ToPbScoreDocument,
-} from "#lib/db-formats/pb.js";
-import DB from "#services/pg/db.js";
-import {
-	type GetScoreMetricConf,
-	type MONGO_GoalDocument,
-	type MONGO_PBScoreDocument,
-} from "tachi-common";
+} from "#lib/db-formats/pb";
+import DB from "#services/pg/db";
+import { type GetScoreMetricConf, type GoalDocument, type PBScoreDocument } from "tachi-common";
 
 type GoalMetricConf = NonNullable<ReturnType<typeof GetScoreMetricConf>>;
 
@@ -18,7 +14,7 @@ type GoalMetricConf = NonNullable<ReturnType<typeof GetScoreMetricConf>>;
 export async function LoadPbsForUserOnChartsForGoal(
 	userId: number,
 	chartIDs: string[],
-): Promise<MONGO_PBScoreDocument[]> {
+): Promise<PBScoreDocument[]> {
 	if (chartIDs.length === 0) {
 		return [];
 	}
@@ -36,8 +32,8 @@ export async function LoadPbsForUserOnChartsForGoal(
 }
 
 export function getGoalMetricValueFromPb(
-	pb: MONGO_PBScoreDocument,
-	criteriaKey: MONGO_GoalDocument["criteria"]["key"],
+	pb: PBScoreDocument,
+	criteriaKey: GoalDocument["criteria"]["key"],
 	scoreConf: GoalMetricConf,
 ): number | null {
 	if (scoreConf.type === "ENUM") {
@@ -52,8 +48,8 @@ export function getGoalMetricValueFromPb(
 }
 
 export function pbMeetsGoalThreshold(
-	pb: MONGO_PBScoreDocument,
-	criteriaKey: MONGO_GoalDocument["criteria"]["key"],
+	pb: PBScoreDocument,
+	criteriaKey: GoalDocument["criteria"]["key"],
 	threshold: number,
 	scoreConf: GoalMetricConf,
 ): boolean {

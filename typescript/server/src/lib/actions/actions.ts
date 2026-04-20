@@ -1,6 +1,7 @@
 import DB from "#services/pg/db";
 import { type ActionTaker, type AnonActionTaker, MakeActionGuts } from "bliss";
 import { type ActionSignature } from "bliss/actions";
+import { ALL_GAMES as ALL_GAMES } from "tachi-common";
 import { z } from "zod";
 
 const APP_NAME = "TACHI_SERVER";
@@ -307,17 +308,17 @@ export const ActionSignatures = {
 	PATCH_UGPT_SETTINGS: {
 		input: z.object({
 			userID: z.number().int(),
-			game: z.string(),
-			playtype: z.string(),
+			game: z.enum(ALL_GAMES),
 			preferences: z.any(),
 		}),
-		output: z.object({}),
+		output: z.object({
+			settings: z.any(),
+		}),
 	},
 	SET_RIVALS: {
 		input: z.object({
 			userID: z.number().int(),
-			game: z.string(),
-			playtype: z.string(),
+			game: z.enum(ALL_GAMES),
 			rivalIDs: z.array(z.number().int().positive()),
 		}),
 		output: z.object({}),
@@ -325,8 +326,7 @@ export const ActionSignatures = {
 	ADD_GOAL: {
 		input: z.object({
 			userID: z.number().int(),
-			game: z.string(),
-			playtype: z.string(),
+			game: z.enum(ALL_GAMES),
 			charts: z.any(),
 			criteria: z.any(),
 		}),
@@ -337,8 +337,7 @@ export const ActionSignatures = {
 	REMOVE_GOAL_SUBSCRIPTION: {
 		input: z.object({
 			userID: z.number().int(),
-			game: z.string(),
-			playtype: z.string(),
+			game: z.enum(ALL_GAMES),
 			goalID: z.string(),
 		}),
 		output: z.object({}),
@@ -346,8 +345,7 @@ export const ActionSignatures = {
 	UPDATE_UGPT_SHOWCASE: {
 		input: z.object({
 			userID: z.number().int(),
-			game: z.string(),
-			playtype: z.string(),
+			game: z.enum(ALL_GAMES),
 			stats: z.array(z.any()),
 		}),
 		output: z.object({}),
@@ -419,7 +417,7 @@ export const AnonActionSignatures = {
 			"!password": z.string().min(8),
 			captcha: z.string(),
 			inviteCode: z.string().nullable(),
-			username: z.string().min(3).max(20),
+			username: z.string().regex(/^[a-zA-Z_-][a-zA-Z0-9_-]{2,20}$/u),
 		}),
 		output: z.object({
 			userID: z.number().int(),

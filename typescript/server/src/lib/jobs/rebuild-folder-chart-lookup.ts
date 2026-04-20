@@ -1,6 +1,6 @@
-import { rebuildFolderChartLookup } from "#lib/folders/rebuild-folder-chart-lookup.js";
+import { rebuildFolderChartLookup } from "#lib/folders/rebuild-folder-chart-lookup";
 import { log } from "#lib/log/log";
-import DB from "#services/pg/db.js";
+import DB from "#services/pg/db";
 
 /** Nightly (or cron) full rebuild of `folder_chart_lookup`. */
 export async function RebuildFolderChartLookupJob() {

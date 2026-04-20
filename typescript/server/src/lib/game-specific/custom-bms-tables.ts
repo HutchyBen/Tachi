@@ -11,17 +11,18 @@ import {
 	GetFoldersFromTable,
 	GetTableForIDGuaranteed,
 } from "#utils/folder";
-import { GetRecentUGPTScores } from "#utils/queries/scores";
-import { GetUser } from "#utils/req-tachi-data";
+import { GetRecentUGScores } from "#utils/queries/scores";
+import { REQ_GetGame, REQ_GetUser } from "#utils/req-tachi-data";
 import path from "path";
 import {
+	type ChartDocument,
 	CreateSongMap,
+	type FolderDocument,
+	type GamesForGroup,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_FolderDocument,
-	type MONGO_SongDocument,
-	type MONGO_TableDocument,
-	type Playtypes,
+	LEGACY_GameToPlaytypeFn,
+	type SongDocument,
+	type TableDocument,
 } from "tachi-common";
 
 // Instead of just supporting existing tables, Tachi should also be able
@@ -29,12 +30,12 @@ import {
 
 function AppendAndConvertChartsToBMSBody(
 	body: Array<RawBMSTableEntry>,
-	charts: Array<MONGO_ChartDocument<"bms:7K" | "bms:14K">>,
-	songMap: Map<integer, MONGO_SongDocument>,
+	charts: Array<ChartDocument<GamesForGroup["bms"]>>,
+	songMap: Map<string, SongDocument>,
 	level: string,
 ) {
 	for (const chart of charts) {
-		const song = songMap.get(chart.songID);
+		const song = songMap.get(chart.song.id);
 
 		// if we've got metadata to add...
 		if (song) {
@@ -58,7 +59,7 @@ function AppendAndConvertChartsToBMSBody(
  * Convert a table in Tachi into a bms header.json and body.json.
  */
 export async function TachiTableToBMSTableJSON(
-	table: MONGO_TableDocument,
+	table: TableDocument,
 ): Promise<Array<RawBMSTableEntry>> {
 	const body: Array<RawBMSTableEntry> = [];
 
@@ -67,18 +68,18 @@ export async function TachiTableToBMSTableJSON(
 	// we have to iterate over these folders in the order the table document says
 	// to
 	// as bms tables are somewhat sensitive to being placed in the correct order.
-	const folderMap = new Map<string, MONGO_FolderDocument>();
+	const folderMap = new Map<string, FolderDocument>();
 
 	for (const folder of folders) {
-		folderMap.set(folder.folderID, folder);
+		folderMap.set(folder.slug, folder);
 	}
 
-	for (const folderID of table.folders) {
-		const folder = folderMap.get(folderID);
+	for (const folderSlug of table.folders) {
+		const folder = folderMap.get(folderSlug);
 
 		if (!folder) {
 			log.warn(
-				`Table '${table.title}' refers to folder '${folderID}', yet no such folder exists in the db?`,
+				`Table '${table.title}' refers to folder '${folderSlug}', yet no such folder exists in the db?`,
 			);
 			continue;
 		}
@@ -87,7 +88,7 @@ export async function TachiTableToBMSTableJSON(
 		// order.
 		// eslint-disable-next-line no-await-in-loop
 		const data = await GetFolderChartsAndSongs(folder);
-		const charts = data.charts as Array<MONGO_ChartDocument<"bms:7K">>;
+		const charts = data.charts as Array<ChartDocument<GamesForGroup["bms"]>>;
 		const songMap = CreateSongMap(data.songs);
 
 		AppendAndConvertChartsToBMSBody(body, charts, songMap, folder.title);
@@ -100,7 +101,7 @@ export type TachiBMSTable = {
 	description: string;
 	// is for all playtypes.
 
-	playtype: Playtypes["bms"] | null; // what playtype is this for? If null, this table
+	game: GamesForGroup["bms"] | null; // what game is this for? If null, this table is for all bms games
 	symbol: string; // what symbol should this table have?
 	tableName: string; // what should it be called in-game?
 	urlName: string; // what do we call this in the url?
@@ -109,19 +110,19 @@ export type TachiBMSTable = {
 			forSpecificUser: true; // if this table is user-dependent
 			getBody: (
 				userID: integer,
-				playtype: Playtypes["bms"],
+				game: GamesForGroup["bms"],
 			) => Promise<Array<RawBMSTableEntry>>;
 			// like, say, their rivals scores or something.
 			// then the callbacks need to recieve that info.
 			getLevelOrder: (
 				userID: integer,
-				playtype: Playtypes["bms"],
+				game: GamesForGroup["bms"],
 			) => Promise<Array<string> | undefined>;
 	  }
 	| {
 			forSpecificUser?: false;
-			getBody: (playtype: Playtypes["bms"]) => Promise<Array<RawBMSTableEntry>>;
-			getLevelOrder: (playtype: Playtypes["bms"]) => Promise<Array<string> | undefined>;
+			getBody: (game: GamesForGroup["bms"]) => Promise<Array<RawBMSTableEntry>>;
+			getLevelOrder: (game: GamesForGroup["bms"]) => Promise<Array<string> | undefined>;
 	  }
 );
 
@@ -131,10 +132,12 @@ export type TachiBMSTable = {
  */
 export function BMSTableToAbsoluteURL(
 	bmsTable: TachiBMSTable,
-	playtype: Playtypes["bms"],
+	game: GamesForGroup["bms"],
 	headerOrBody: "body" | "header",
 	userID: number | null,
 ) {
+	const playtype = LEGACY_GameToPlaytypeFn(game);
+
 	return (
 		ServerConfig.OUR_URL +
 		path.join(
@@ -153,20 +156,12 @@ export function BMSTableToAbsoluteURL(
 
 function GetUserID(req: Request) {
 	if ("userID" in req.params) {
-		const user = GetUser(req);
+		const user = REQ_GetUser(req);
 
 		return user.id;
 	}
 
 	throw new Error(`No userID in params here. Is this route mounted in the right place?`);
-}
-
-function GetPlaytype(req: Request) {
-	if ("playtype" in req.params) {
-		return req.params.playtype as Playtypes["bms"];
-	}
-
-	throw new Error(`No playtype in params here. Is this route mounted in the right place?`);
 }
 
 /**
@@ -175,14 +170,14 @@ function GetPlaytype(req: Request) {
  */
 export function HandleBMSTableHTMLRequest(bmsTable: TachiBMSTable, req: Request, res: Response) {
 	let absURL;
-	const playtype = GetPlaytype(req);
+	const game = REQ_GetGame(req) as GamesForGroup["bms"];
 
 	if (bmsTable.forSpecificUser === true) {
 		const userID = GetUserID(req);
 
-		absURL = BMSTableToAbsoluteURL(bmsTable, playtype, "header", userID);
+		absURL = BMSTableToAbsoluteURL(bmsTable, game, "header", userID);
 	} else {
-		absURL = BMSTableToAbsoluteURL(bmsTable, playtype, "header", null);
+		absURL = BMSTableToAbsoluteURL(bmsTable, game, "header", null);
 	}
 
 	return res.status(200).send(`<html>
@@ -204,17 +199,17 @@ export async function HandleBMSTableHeaderRequest(
 	try {
 		let levelOrder;
 		let dataUrl;
-		const playtype = GetPlaytype(req);
+		const game = REQ_GetGame(req) as GamesForGroup["bms"];
 
 		if (bmsTable.forSpecificUser === true) {
 			const userID = GetUserID(req);
 
-			dataUrl = BMSTableToAbsoluteURL(bmsTable, playtype, "body", userID);
+			dataUrl = BMSTableToAbsoluteURL(bmsTable, game, "body", userID);
 
-			levelOrder = await bmsTable.getLevelOrder(userID, playtype);
+			levelOrder = await bmsTable.getLevelOrder(userID, game);
 		} else {
-			levelOrder = await bmsTable.getLevelOrder(playtype);
-			dataUrl = BMSTableToAbsoluteURL(bmsTable, playtype, "body", null);
+			levelOrder = await bmsTable.getLevelOrder(game);
+			dataUrl = BMSTableToAbsoluteURL(bmsTable, game, "body", null);
 		}
 
 		const header: BMSTableHead = {
@@ -245,14 +240,14 @@ export async function HandleBMSTableBodyRequest(
 	try {
 		let body;
 
-		const playtype = GetPlaytype(req);
+		const game = REQ_GetGame(req) as GamesForGroup["bms"];
 
 		if (bmsTable.forSpecificUser === true) {
 			const userID = GetUserID(req);
 
-			body = await bmsTable.getBody(userID, playtype);
+			body = await bmsTable.getBody(userID, game);
 		} else {
-			body = await bmsTable.getBody(playtype);
+			body = await bmsTable.getBody(game);
 		}
 
 		return res.status(200).send(body);
@@ -276,7 +271,7 @@ export async function HandleBMSTableBodyRequest(
 export const CUSTOM_TACHI_BMS_TABLES: Array<TachiBMSTable> = [
 	{
 		urlName: "sieglindeEC",
-		playtype: "7K",
+		game: "bms-7k",
 		symbol: "sgl-",
 		tableName: "Sieglinde EC",
 		description:
@@ -294,7 +289,7 @@ export const CUSTOM_TACHI_BMS_TABLES: Array<TachiBMSTable> = [
 	},
 	{
 		urlName: "sieglindeHC",
-		playtype: "7K",
+		game: "bms-7k",
 		symbol: "sgl-",
 		tableName: "Sieglinde HC",
 		description:
@@ -313,13 +308,13 @@ export const CUSTOM_TACHI_BMS_TABLES: Array<TachiBMSTable> = [
 
 	{
 		urlName: "rival-info",
-		playtype: null,
+		game: null,
 		symbol: "Rival",
 		tableName: `${TachiConfig.NAME} Rival Stats`,
 		forSpecificUser: true,
 		description: `Folders for your rivals on ${TachiConfig.NAME}. This includes things like their recent highlights and plays.`,
-		async getBody(userID, playtype) {
-			const rivals = await GetRivalUsers(userID, "bms", playtype);
+		async getBody(userID, game) {
+			const rivals = await GetRivalUsers(userID, game);
 
 			const body: Array<RawBMSTableEntry> = [];
 
@@ -328,11 +323,11 @@ export const CUSTOM_TACHI_BMS_TABLES: Array<TachiBMSTable> = [
 			for (const rival of rivals) {
 				promises.push(
 					(async () => {
-						const scores = await GetRecentUGPTScores(rival.id, "bms", playtype);
+						const scores = await GetRecentUGScores(rival.id, game);
 
-						const data = await GetRelevantSongsAndCharts(scores, "bms");
+						const data = await GetRelevantSongsAndCharts(scores);
 						const charts = data.charts as unknown as Array<
-							MONGO_ChartDocument<"bms:7K" | "bms:14K">
+							ChartDocument<GamesForGroup["bms"]>
 						>;
 
 						const songMap = CreateSongMap(data.songs);
@@ -348,11 +343,11 @@ export const CUSTOM_TACHI_BMS_TABLES: Array<TachiBMSTable> = [
 
 				promises.push(
 					(async () => {
-						const scores = await GetRecentUGPTScores(rival.id, "bms", playtype);
+						const scores = await GetRecentUGScores(rival.id, game);
 
-						const data = await GetRelevantSongsAndCharts(scores, "bms");
+						const data = await GetRelevantSongsAndCharts(scores);
 						const charts = data.charts as unknown as Array<
-							MONGO_ChartDocument<"bms:7K" | "bms:14K">
+							ChartDocument<GamesForGroup["bms"]>
 						>;
 
 						const songMap = CreateSongMap(data.songs);
@@ -371,8 +366,8 @@ export const CUSTOM_TACHI_BMS_TABLES: Array<TachiBMSTable> = [
 
 			return body;
 		},
-		async getLevelOrder(userID, playtype) {
-			const rivals = await GetRivalUsers(userID, "bms", playtype);
+		async getLevelOrder(userID, game) {
+			const rivals = await GetRivalUsers(userID, game);
 
 			return rivals.flatMap((rival) => [
 				`${rival.username} Recent Plays`,

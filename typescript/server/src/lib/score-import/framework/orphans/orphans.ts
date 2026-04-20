@@ -1,23 +1,22 @@
 import type { KtLogger } from "#lib/log/log";
-import type { GameGroup, ImportTypes, integer } from "tachi-common";
-import type { OrphanScore as PgOrphanScoreRow } from "tachi-db";
-
-import { SELECT_ORPHAN_SCORE } from "#lib/db-formats/orphan-score";
-import DB from "#services/pg/db";
-import { GetBlacklist } from "#utils/queries/blacklist";
-import { GetUserWithID } from "#utils/user";
-import fjsh from "fast-json-stable-hash";
-import { sql } from "kysely";
-
 import type {
 	ConverterFnReturnOrFailure,
 	ConverterFunction,
 	ImportTypeContextMap,
 	ImportTypeDataMap,
 	OrphanScoreDocument,
-} from "../../import-types/common/types";
+} from "#lib/score-import/import-types/common/types";
+import type { GameGroup, ImportTypes, integer } from "tachi-common";
+import type { OrphanScore as PgOrphanScoreRow } from "tachi-db";
 
-import { Converters } from "../../import-types/converters";
+import { SELECT_ORPHAN_SCORE } from "#lib/db-formats/orphan-score";
+import { Converters } from "#lib/score-import/import-types/converters";
+import DB from "#services/pg/db";
+import { GetBlacklist } from "#utils/queries/blacklist";
+import { GetUserWithID } from "#utils/user";
+import fjsh from "fast-json-stable-hash";
+import { sql } from "kysely";
+
 import { type ConverterFailure, IsConverterFailure } from "../common/converter-failures";
 import { HandlePostImportSteps } from "../score-importing/score-import-main";
 import { ProcessSuccessfulConverterReturn } from "../score-importing/score-importing";

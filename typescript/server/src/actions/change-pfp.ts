@@ -1,8 +1,8 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import { CDNStoreOrOverwrite } from "#lib/cdn/cdn.js";
-import { GetProfilePictureURL } from "#lib/cdn/url-format.js";
-import DB from "#services/pg/db.js";
-import { HashSHA256 } from "#utils/crypto.js";
+import { MakeAction } from "#lib/actions/actions";
+import { CDNStoreOrOverwrite } from "#lib/cdn/cdn";
+import { GetProfilePictureURL } from "#lib/cdn/url-format";
+import DB from "#services/pg/db";
+import { HashSHA256 } from "#utils/crypto";
 import { ExpectedErr } from "bliss";
 
 export const ACTION_ChangePfp = MakeAction(

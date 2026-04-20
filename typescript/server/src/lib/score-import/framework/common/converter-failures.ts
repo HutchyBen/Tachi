@@ -1,8 +1,10 @@
 // Various Errors that can occur during processing.
 
+import type {
+	ImportTypeContextMap,
+	ImportTypeDataMap,
+} from "#lib/score-import/import-types/common/types";
 import type { ImportTypes } from "tachi-common";
-
-import type { ImportTypeContextMap, ImportTypeDataMap } from "../../import-types/common/types";
 
 export type FailureTypes =
 	| "AmbiguousTitle"

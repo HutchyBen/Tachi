@@ -1,10 +1,10 @@
-import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
-import { type GPTString, type MONGO_ScoreDocument } from "tachi-common";
+import { GAME_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
+import { type ScoreDocument, type V3Game } from "tachi-common";
 
 /**
  * Create calculated data for a session of this game and playtype.
  * @param scores - All of the scores in this session.
  */
-export function CreateSessionCalcData(gpt: GPTString, scores: Array<MONGO_ScoreDocument>) {
-	return GPT_SERVER_IMPLEMENTATIONS[gpt].sessionCalcs(scores.map((e) => e.calculatedData));
+export function CreateSessionCalcData(game: V3Game, scores: Array<ScoreDocument>) {
+	return GAME_IMPLEMENTATIONS[game].sessionCalcs(scores.map((e) => e.calculatedData));
 }

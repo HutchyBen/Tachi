@@ -5,13 +5,11 @@ import type { ConfScoreMetric } from "tachi-common/types/metrics";
 import { writeFileSync } from "fs";
 import path from "path";
 import {
-	allSupportedGameGroups,
-	FormatGameGroup,
-	type GameGroup,
-	GetGameGroupConfig,
-	GetGPTConfig,
-	GetGPTString,
-	type Playtypes,
+	ALL_GAMES,
+	FormatGame,
+	GetGameConfig,
+	LEGACY_GameToGPTString,
+	type V3Game,
 } from "tachi-common";
 import {
 	type ClassConfig,
@@ -116,11 +114,11 @@ function formatVersions(versions: Record<string, string>): string {
 	return tbl;
 }
 
-function createConfigDocumentation(game: GameGroup, playtype: Playtypes[GameGroup]) {
-	const gptString = GetGPTString(game, playtype);
-	const gptConfig = GetGPTConfig(gptString);
+function createConfigDocumentation(game: V3Game) {
+	const gptString = LEGACY_GameToGPTString(game);
+	const gameConfig = GetGameConfig(game);
 
-	const output = `# ${FormatGameGroup(game, playtype)} Support
+	const output = `# ${FormatGame(game)} Support
 
 This game has the internal GPTString of \`${gptString}\`.
 
@@ -133,51 +131,51 @@ For more information on what metrics are and how they work, see [TODO]!
 
 ### Provided Metrics
 
-${metricsToTbl(gptConfig.providedMetrics)}
+${metricsToTbl(gameConfig.providedMetrics)}
 
 ### Derived Metrics
 
-${metricsToTbl(gptConfig.derivedMetrics)}
+${metricsToTbl(gameConfig.derivedMetrics)}
 
 ### Optional Metrics
 
-${metricsToTbl(gptConfig.optionalMetrics)}
+${metricsToTbl(gameConfig.optionalMetrics)}
 
 ## Judgements
 
 The following judgements are defined:
 
-${stringArrToList(gptConfig.orderedJudgements)}
+${stringArrToList(gameConfig.orderedJudgements)}
 
 ## Rating Algorithms
 
 ### Score Rating Algorithms
 
-${formatRatings(gptConfig.scoreRatingAlgs, gptConfig.defaultScoreRatingAlg)}
+${formatRatings(gameConfig.scoreRatingAlgs, gameConfig.defaultScoreRatingAlg)}
 
 ### Session Rating Algorithms
 
-${formatRatings(gptConfig.sessionRatingAlgs, gptConfig.defaultSessionRatingAlg)}
+${formatRatings(gameConfig.sessionRatingAlgs, gameConfig.defaultSessionRatingAlg)}
 
 ### Profile Rating Algorithms
 
-${formatRatings(gptConfig.profileRatingAlgs, gptConfig.defaultProfileRatingAlg)}
+${formatRatings(gameConfig.profileRatingAlgs, gameConfig.defaultProfileRatingAlg)}
 
 ## Difficulties
 
-${formatDifficulties(gptConfig.difficulties)}
+${formatDifficulties(gameConfig.difficulties)}
 
 ## Classes
 
-${formatClasses(gptConfig.classes)}
+${formatClasses(gameConfig.classes)}
 
 ## Versions
 
-${formatVersions(gptConfig.versions)}
+${formatVersions(gameConfig.versions)}
 
 ## Supported Match Types
 
-${stringArrToList(gptConfig.supportedMatchTypes)}`;
+${stringArrToList(gameConfig.supportedMatchTypes)}`;
 
 	return output;
 }
@@ -186,17 +184,10 @@ const baseDir = path.join(__filename, "../../../docs/game-support/games");
 
 let mkdocsConf = "- Game Information:";
 
-for (const game of allSupportedGameGroups) {
-	const gameConfig = GetGameGroupConfig(game);
+for (const game of ALL_GAMES) {
+	writeFileSync(path.join(baseDir, `${game}.md`), createConfigDocumentation(game));
 
-	for (const playtype of gameConfig.playtypes) {
-		writeFileSync(
-			path.join(baseDir, `${game}-${playtype}.md`),
-			createConfigDocumentation(game, playtype),
-		);
-
-		mkdocsConf += `\n    - "game-support/games/${game}-${playtype}.md"`;
-	}
+	mkdocsConf += `\n    - "game-support/games/${game}.md"`;
 }
 
 console.error("Done! Paste this config into your mkdocs.yml.");

@@ -1,11 +1,10 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import { PasswordCompare } from "#lib/auth/auth.js";
-import { SendEmail } from "#lib/email/client.js";
-import { EmailFormatVerifyEmail } from "#lib/email/formats.js";
-import { ServerConfig } from "#lib/setup/config.js";
-import DB from "#services/pg/db.js";
-import { Random20Hex } from "#utils/misc.js";
-import { CheckIfEmailInUse } from "#utils/user.js";
+import { MakeAction } from "#lib/actions/actions";
+import { PasswordCompare } from "#lib/auth/auth";
+import { SendEmail } from "#lib/email/client";
+import { EmailFormatVerifyEmail } from "#lib/email/formats";
+import DB from "#services/pg/db";
+import { Random20Hex } from "#utils/misc";
+import { CheckIfEmailInUse } from "#utils/user";
 import { ExpectedErr, log } from "bliss";
 
 export const ACTION_ChangeEmail = MakeAction(
@@ -45,29 +44,24 @@ export const ACTION_ChangeEmail = MakeAction(
 					.where("user_id", "=", taker.acct.id)
 					.execute();
 
-				if (ServerConfig.EMAIL_CONFIG) {
-					const resetEmailCode = Random20Hex();
+				const resetEmailCode = Random20Hex();
 
-					// clear out the previous email code!
-					await DB.deleteFrom("priv_verify_email_token")
-						.where("user_id", "=", taker.acct.id)
-						.execute();
+				// clear out the previous email code!
+				await DB.deleteFrom("priv_verify_email_token")
+					.where("user_id", "=", taker.acct.id)
+					.execute();
 
-					await DB.insertInto("priv_verify_email_token")
-						.values({
-							email,
-							token: resetEmailCode,
-							user_id: taker.acct.id,
-						})
-						.execute();
+				await DB.insertInto("priv_verify_email_token")
+					.values({
+						email,
+						token: resetEmailCode,
+						user_id: taker.acct.id,
+					})
+					.execute();
 
-					const { text, html } = EmailFormatVerifyEmail(
-						taker.acct.username,
-						resetEmailCode,
-					);
+				const { text, html } = EmailFormatVerifyEmail(taker.acct.username, resetEmailCode);
 
-					void SendEmail(email, "Email Verification", html, text);
-				}
+				void SendEmail(email, "Email Verification", html, text);
 			});
 
 		return {};

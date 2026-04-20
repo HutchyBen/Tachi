@@ -1,32 +1,32 @@
 import { APIFetchV1, type UnsuccessfulAPIFetchResponse } from "#util/api";
 import { useEffect, useState } from "react";
 import {
-	type GPTString,
+	type ChartDocument,
+	type FolderDocument,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_FolderDocument,
-	type MONGO_SongDocument,
-	type MONGO_UserDocument,
+	type SongDocument,
+	type UserDocument,
+	type V3Game,
 } from "tachi-common";
 
 type SearchResults = {
 	charts: {
-		[GPT in GPTString]?: Array<{
-			chart: MONGO_ChartDocument;
+		[GPT in V3Game]?: Array<{
+			chart: ChartDocument;
 			playcount: integer;
-			song: MONGO_SongDocument;
+			song: SongDocument;
 		}>;
 	};
-	folders: Array<MONGO_FolderDocument>;
-	users: Array<MONGO_UserDocument>;
+	folders: Array<FolderDocument>;
+	users: Array<UserDocument>;
 };
 
 type ChartHashSearchReturns = {
 	charts: {
-		[GPT in GPTString]?: Array<{
-			chart: MONGO_ChartDocument;
+		[GPT in V3Game]?: Array<{
+			chart: ChartDocument;
 			playcount: integer;
-			song: MONGO_SongDocument;
+			song: SongDocument;
 		}>;
 	};
 };
@@ -85,17 +85,17 @@ export function useTachiSearch(
 					}
 
 					for (const [g, charts] of Object.entries(result.body.charts)) {
-						const gpt = g as GPTString;
+						const game = g as V3Game;
 
-						if (setValue.charts[gpt]) {
-							setValue.charts[gpt]!.push(...charts);
+						if (setValue.charts[game]) {
+							setValue.charts[game]!.push(...charts);
 						} else {
-							setValue.charts[gpt] = charts;
+							setValue.charts[game] = charts;
 						}
 					}
 
 					if ("users" in result.body) {
-						setValue.users.push(...(result.body.users as Array<MONGO_UserDocument>));
+						setValue.users.push(...(result.body.users as Array<UserDocument>));
 					}
 				}
 

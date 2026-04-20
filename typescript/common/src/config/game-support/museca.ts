@@ -1,23 +1,24 @@
 import { p } from "prudence";
 import { z } from "zod";
 
-import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_PT_CONFIG } from "../../types/internals";
+import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
 import { FmtNum } from "../../utils/util";
 import { NoDecimalPlace, zodNonNegativeInt } from "../config-utils";
 import { FAST_SLOW_MAXCOMBO } from "./_common";
 
-export const MUSECA_CONF = {
+export const GAME_GROUP_MUSECA_CONF = {
 	name: "MÚSECA",
+	games: ["museca"],
 	playtypes: ["Single"],
 	songData: z.strictObject({
 		titleJP: z.string(),
 		artistJP: z.string(),
 		displayVersion: z.string(),
 	}),
-} as const satisfies INTERNAL_GAME_CONFIG;
+} as const satisfies INTERNAL_GAME_GROUP_CONFIG;
 
-export const MUSECA_SINGLE_CONF = {
+export const GAME_MUSECA_CONF = {
 	providedMetrics: {
 		score: {
 			type: "INTEGER",
@@ -84,7 +85,7 @@ export const MUSECA_SINGLE_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["Green", "Yellow", "Red"],
-		shorthand: { Green: "G", Yellow: "Y", Red: "R" },
+		format: { Green: "G", Yellow: "Y", Red: "R" },
 		default: "Red",
 	},
 
@@ -106,4 +107,4 @@ export const MUSECA_SINGLE_CONF = {
 	scoreMeta: z.strictObject({}),
 
 	supportedMatchTypes: ["songTitle", "tachiSongID", "inGameID"],
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;

@@ -1,6 +1,17 @@
+/**
+ * Legacy Mongo → v3 hex ids for folders/tables. After this, run `4-tablefolders-to-object.ts`,
+ * `5-folders-to-sql-queries.ts`, then `6-tables-folder-refs-to-slugs.ts` so `tables.json`
+ * references folders by slug.
+ */
+
 import fs from "fs";
 import path from "path";
-import { type GameGroup, GetGPTString, GPTStringToV3, type Playtype } from "tachi-common";
+import {
+	type GameGroup,
+	GPTStringToGame,
+	LEGACY_GetGPTString,
+	type LEGACY_Playtype,
+} from "tachi-common";
 
 import { CreateFolderID, CreateTableID, ReadCollection, WriteCollection } from "../../util";
 
@@ -47,7 +58,9 @@ for (const entry of folders) {
 		delete entry.folderID;
 	}
 
-	entry.game = GPTStringToV3(GetGPTString(entry.game as GameGroup, entry.playtype as Playtype));
+	entry.game = GPTStringToGame(
+		LEGACY_GetGPTString(entry.game as GameGroup, entry.playtype as LEGACY_Playtype),
+	);
 	delete entry.playtype;
 }
 
@@ -69,7 +82,9 @@ for (const entry of tables) {
 		delete entry.tableID;
 	}
 
-	entry.game = GPTStringToV3(GetGPTString(entry.game as GameGroup, entry.playtype as Playtype));
+	entry.game = GPTStringToGame(
+		LEGACY_GetGPTString(entry.game as GameGroup, entry.playtype as LEGACY_Playtype),
+	);
 	delete entry.playtype;
 
 	// Rewrite folder references to new hex ids.

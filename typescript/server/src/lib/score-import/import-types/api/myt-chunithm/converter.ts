@@ -1,4 +1,5 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
 import type { EmptyObject } from "#utils/types";
 
 import {
@@ -16,7 +17,6 @@ import {
 import { FindChartOnInGameID } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { ConverterFunction } from "../../common/types";
 import type { MytChunithmScore } from "./types";
 
 const DIFFICULTIES = {
@@ -79,7 +79,7 @@ const ConvertAPIMytChunithm: ConverterFunction<MytChunithmScore, EmptyObject> = 
 		throw new InvalidScoreFailure("Can't process a score with an invalid combo status");
 	}
 
-	const chart = await FindChartOnInGameID("chunithm", data.info.musicId, "Single", difficulty);
+	const chart = await FindChartOnInGameID("chunithm", data.info.musicId, difficulty);
 
 	if (chart === null) {
 		throw new SongOrChartNotFoundFailure(
@@ -90,14 +90,14 @@ const ConvertAPIMytChunithm: ConverterFunction<MytChunithmScore, EmptyObject> = 
 		);
 	}
 
-	const song = await FindSongOnID("chunithm", chart.songID);
+	const song = await FindSongOnID("chunithm", chart.song.id);
 
 	if (song === null) {
-		log.error({ chart }, `Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
-		throw new InternalFailure(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
+		log.error({ chart }, `Song/chart desync: ${chart.song.id} for chart ${chart.chartID}`);
+		throw new InternalFailure(`Song/chart desync: ${chart.song.id} for chart ${chart.chartID}`);
 	}
 
-	const dryScore: DryScore<"chunithm:Single"> = {
+	const dryScore: DryScore<"chunithm"> = {
 		service: "MYT",
 		game: "chunithm",
 		scoreMeta: {},

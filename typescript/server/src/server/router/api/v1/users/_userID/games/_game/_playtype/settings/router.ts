@@ -1,114 +1,60 @@
 import { ACTION_PatchUGPTSettings } from "#actions/patch-ugpt-settings";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { GetUGPTSettingsDocument } from "#lib/db-formats/ugpt-settings";
-import { RequirePermissions } from "#server/middleware/auth";
-import { FormatPrError, optNull } from "#utils/prudence";
-import { GetUGPT } from "#utils/req-tachi-data";
-import { FormatUserDoc, GetUserWithIDGuaranteed } from "#utils/user";
-import { Router } from "express";
-import { p } from "prudence";
-import {
-	GetGamePTConfig,
-	GetScoreMetrics,
-	type MONGO_UGPTSettingsDocument,
-	PrudenceZodShim,
-} from "tachi-common";
-
-import { RequireAuthedAsUser } from "../../../../middleware";
-
-const router: Router = Router({ mergeParams: true });
+import { withUserGameProfile } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
+import { GetUserWithIDGuaranteed } from "#utils/user";
+import { ExpectedErr } from "bliss";
 
 /**
- * Update your settings.
+ * Returns this user's UGPT settings.
  *
- * @param - See the prudence validation.
- *
- * @name PATCH /api/v1/users/:userID/games/:game/:playtype/settings
+ * @name GET /api/v1/users/:userID/games/:game/settings
  */
-router.patch(
-	"/",
-	RequireAuthedAsUser,
-	RequirePermissions("customise_profile"),
-	async (req, res) => {
-		const { user, game, playtype } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/settings",
+	withUserGameProfile,
+	async ({ ctx }) => {
+		const { requestedUser: user, game } = ctx;
 
-		const gptConfig = GetGamePTConfig(game, playtype);
+		const settings = await GetUGPTSettingsDocument(user.id, game);
 
-		const gameSpecificSchema = PrudenceZodShim(gptConfig.preferences);
-
-		const err = p(req.safeBody, {
-			preferredScoreAlg: p.optional(
-				p.nullable(p.isIn(Object.keys(gptConfig.scoreRatingAlgs))),
-			),
-			preferredSessionAlg: p.optional(
-				p.nullable(p.isIn(Object.keys(gptConfig.sessionRatingAlgs))),
-			),
-			preferredProfileAlg: p.optional(
-				p.nullable(p.isIn(Object.keys(gptConfig.profileRatingAlgs))),
-			),
-			defaultTable: "*?string",
-			preferredRanking: optNull(p.isIn("global", "rival")),
-
-			gameSpecific: optNull(gameSpecificSchema),
-			preferredDefaultEnum: optNull(p.isIn(...GetScoreMetrics(gptConfig, "ENUM"))),
-		});
-
-		if (err) {
-			return res.status(400).json({
-				success: false,
-				description: FormatPrError(err, "Invalid game-settings."),
-			});
-		}
-
-		const body = req.safeBody as Partial<MONGO_UGPTSettingsDocument["preferences"]>;
-
-		const authUserID = req[SYMBOL_TACHI_API_AUTH].userID;
-
-		if (authUserID === null) {
-			return res.status(401).json({
-				success: false,
-				description: "Authentication is required for this endpoint.",
-			});
-		}
-
-		const authedUser = await GetUserWithIDGuaranteed(authUserID);
-		const taker = { ip: req.ip, acct: { id: authedUser.id, username: authedUser.username } };
-
-		const { settings } = await ACTION_PatchUGPTSettings(taker, {
-			userID: user.id,
-			game,
-			playtype,
-			preferences: body,
-		});
-
-		const description =
-			Object.keys(body).length === 0
-				? "Nothing has been modified, successfully."
-				: "Updated settings.";
-
-		return res.status(200).json({
-			success: true,
-			description,
-			body: settings,
-		});
+		return success(`Returned ${user.username}'s settings.`, settings);
 	},
 );
 
 /**
- * Returns this user's settings.
+ * Update UGPT settings preferences.
  *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/settings
+ * @name PATCH /api/v1/users/:userID/games/:game/settings
  */
-router.get("/", async (req, res) => {
-	const { user, game, playtype } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"PATCH /users/:userID/games/:game/settings",
+	withUserGameProfile,
+	async ({ ctx, input, req }) => {
+		const { requestedUser: user, game } = ctx;
 
-	const settings = await GetUGPTSettingsDocument(user.id, game, playtype);
+		const authUserID = req[SYMBOL_TACHI_API_AUTH].userID;
 
-	return res.status(200).json({
-		success: true,
-		description: `Returned ${FormatUserDoc(user)}'s settings.`,
-		body: settings,
-	});
-});
+		if (authUserID === null) {
+			throw new ExpectedErr(401, "Authentication is required for this endpoint.");
+		}
 
-export default router;
+		const authedUser = await GetUserWithIDGuaranteed(authUserID);
+		const taker = { acct: { id: authedUser.id, username: authedUser.username }, ip: req.ip };
+
+		const { settings } = await ACTION_PatchUGPTSettings(taker, {
+			game,
+			preferences: input as Parameters<typeof ACTION_PatchUGPTSettings>[1]["preferences"],
+			userID: user.id,
+		});
+
+		const description =
+			Object.keys(input).length === 0
+				? "Nothing has been modified, successfully."
+				: "Updated settings.";
+
+		return success(description, settings);
+	},
+);

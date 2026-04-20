@@ -1,7 +1,7 @@
-import type { GPTServerImplementation, PBMergeFunction } from "#game-implementations/types";
+import type { GameImplementation, PBMergeFunction } from "#game-implementations/types";
 
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
-import { type GPTStrings, IIDXLIKE_GBOUNDARIES } from "tachi-common";
+import { type BMSGames, IIDXLIKE_GBOUNDARIES } from "tachi-common";
 
 import {
 	GoalFmtPercent,
@@ -16,7 +16,7 @@ import {
 	SGL_SESSION_CALCS,
 } from "./_common";
 
-const BMS_PMS_MERGERS: Array<PBMergeFunction<GPTStrings["bms" | "pms"]>> = [
+const BMS_PMS_MERGERS: Array<PBMergeFunction<BMSGames>> = [
 	CreatePBMergeFor("largest", { type: "REGULAR", metric: "lamp" }, "Best Lamp", (base, lamp) => {
 		base.scoreData.lamp = lamp.scoreData.lamp;
 
@@ -36,7 +36,7 @@ const BMS_PMS_MERGERS: Array<PBMergeFunction<GPTStrings["bms" | "pms"]>> = [
 // bms and pms currently have *identical*
 // implementations. Nice.
 
-const BMS_IMPL: GPTServerImplementation<GPTStrings["bms" | "pms"]> = {
+const BMS_IMPL: GameImplementation<BMSGames> = {
 	scoreDeriver: IIDXLIKE_SCORE_DERIVER,
 	scoreCalcs: SGL_SCORE_CALCS,
 	sessionCalcs: SGL_SESSION_CALCS,
@@ -84,12 +84,12 @@ const BMS_IMPL: GPTServerImplementation<GPTStrings["bms" | "pms"]> = {
 	pbMergeFunctions: BMS_PMS_MERGERS,
 	defaultMergeRefName: "Best Score",
 	scoreValidators: IIDXLIKE_SCORE_VALIDATORS,
-	derivationRelevantFields: ["data.notecount", "data.sglEC", "data.sglHC"],
+	chartDataRelevantFields: ["data.notecount", "data.sglEC", "data.sglHC"],
 };
 
-export const BMS_14K_IMPL: GPTServerImplementation<"bms:14K"> = BMS_IMPL;
+export const BMS_14K_IMPL: GameImplementation<"bms-14k"> = BMS_IMPL;
 
-export const BMS_7K_IMPL: GPTServerImplementation<"bms:7K"> = BMS_IMPL;
+export const BMS_7K_IMPL: GameImplementation<"bms-7k"> = BMS_IMPL;
 
-export const PMS_CONTROLLER_IMPL: GPTServerImplementation<"pms:Controller"> = BMS_IMPL;
-export const PMS_KEYBOARD_IMPL: GPTServerImplementation<"pms:Keyboard"> = BMS_IMPL;
+export const PMS_CONTROLLER_IMPL: GameImplementation<"pms-controller"> = BMS_IMPL;
+export const PMS_KEYBOARD_IMPL: GameImplementation<"pms-keyboard"> = BMS_IMPL;

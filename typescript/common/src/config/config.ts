@@ -1,37 +1,47 @@
 import { p } from "prudence";
 
 import type {
+	GameConfig,
 	GameGroup,
 	GameGroupConfig,
-	GamePTConfig,
-	GPTString,
-	Playtype,
-	Playtypes,
+	LEGACY_GPTString,
+	LEGACY_Playtype,
+	LEGACY_Playtypes,
+	SpecificGameConfig,
 	V3Game,
 } from "../types/game-config";
-import type {
-	INTERNAL_GAME_CONFIG as INTERNAL_GAME_GROUP_CONFIG,
-	INTERNAL_GAME_PT_CONFIG,
-} from "../types/internals";
+import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../types/internals";
 import type { ConfEnumScoreMetric, ConfScoreMetric } from "../types/metrics";
 
-import { ARCAEA_CONF, ARCAEA_TOUCH_CONF } from "./game-support/arcaea";
-import { BMS_7K_CONF, BMS_14K_CONF, BMS_CONF } from "./game-support/bms";
-import { CHUNITHM_CONF, CHUNITHM_SINGLE_CONF } from "./game-support/chunithm";
-import { DDR_CONF, DDR_DP_CONF, DDR_SP_CONF } from "./game-support/ddr";
-import { GITADORA_CONF, GITADORA_DORA_CONF, GITADORA_GITA_CONF } from "./game-support/gitadora";
-import { IIDX_CONF, IIDX_DP_CONF, IIDX_SP_CONF } from "./game-support/iidx";
-import { ITG_CONF, ITG_STAMINA_CONF } from "./game-support/itg";
-import { JUBEAT_CONF, JUBEAT_SINGLE_CONF } from "./game-support/jubeat";
-import { MAIMAI_CONF, MAIMAI_SINGLE_CONF } from "./game-support/maimai";
-import { MAIMAI_DX_CONF, MAIMAI_DX_SINGLE_CONF } from "./game-support/maimai-dx";
-import { MUSECA_CONF, MUSECA_SINGLE_CONF } from "./game-support/museca";
-import { ONGEKI_CONF, ONGEKI_SINGLE_CONF } from "./game-support/ongeki";
-import { PMS_CONF, PMS_CONTROLLER_CONF, PMS_KEYBOARD_CONF } from "./game-support/pms";
-import { POPN_9B_CONF, POPN_CONF } from "./game-support/popn";
-import { SDVX_CONF, SDVX_SINGLE_CONF } from "./game-support/sdvx";
-import { USC_CONF, USC_CONTROLLER_CONF, USC_KEYBOARD_CONF } from "./game-support/usc";
-import { WACCA_CONF, WACCA_SINGLE_CONF } from "./game-support/wacca";
+import { GAME_ARCAEA_CONF, GAME_GROUP_ARCAEA_CONF } from "./game-support/arcaea";
+import { GAME_BMS_7K_CONF, GAME_BMS_14K_CONF, GAME_GROUP_BMS_CONF } from "./game-support/bms";
+import { GAME_CHUNITHM_CONF, GAME_GROUP_CHUNITHM_CONF } from "./game-support/chunithm";
+import { GAME_DDR_DP_CONF, GAME_DDR_SP_CONF, GAME_GROUP_DDR_CONF } from "./game-support/ddr";
+import {
+	GAME_GITADORA_DORA_CONF,
+	GAME_GITADORA_GITA_CONF,
+	GAME_GROUP_GITADORA_CONF,
+} from "./game-support/gitadora";
+import { GAME_GROUP_IIDX_CONF, GAME_IIDX_DP_CONF, GAME_IIDX_SP_CONF } from "./game-support/iidx";
+import { GAME_GROUP_ITG_CONF, GAME_ITG_STAMINA_CONF } from "./game-support/itg";
+import { GAME_GROUP_JUBEAT_CONF, GAME_JUBEAT_SINGLE_CONF } from "./game-support/jubeat";
+import { GAME_GROUP_MAIMAI_CONF, GAME_MAIMAI_CONF } from "./game-support/maimai";
+import { GAME_GROUP_MAIMAI_DX_CONF, GAME_MAIMAI_DX_CONF } from "./game-support/maimai-dx";
+import { GAME_GROUP_MUSECA_CONF, GAME_MUSECA_CONF } from "./game-support/museca";
+import { GAME_GROUP_ONGEKI_CONF, GAME_ONGEKI_CONF } from "./game-support/ongeki";
+import {
+	GAME_PMS_CONF,
+	GAME_PMS_CONTROLLER_CONF,
+	GAME_PMS_KEYBOARD_CONF,
+} from "./game-support/pms";
+import { GAME_GROUP_POPN_CONF, GAME_POPN_CONF } from "./game-support/popn";
+import { GAME_GROUP_SDVX_CONF, GAME_SDVX_CONF } from "./game-support/sdvx";
+import {
+	GAME_GROUP_USC_CONF,
+	GAME_USC_CONTROLLER_CONF,
+	GAME_USC_KEYBOARD_CONF,
+} from "./game-support/usc";
+import { GAME_GROUP_WACCA_CONF, GAME_WACCA_CONF } from "./game-support/wacca";
 
 /**
  * All game groups that Tachi supports.
@@ -39,23 +49,23 @@ import { WACCA_CONF, WACCA_SINGLE_CONF } from "./game-support/wacca";
  * @warn DO NOT ACCESS THIS DIRECTLY! Use @see {GetGameGroupConfig} for better type safety.
  */
 export const GAME_GROUP_CONFIGS = {
-	iidx: IIDX_CONF,
-	museca: MUSECA_CONF,
-	chunithm: CHUNITHM_CONF,
-	bms: BMS_CONF,
-	gitadora: GITADORA_CONF,
-	jubeat: JUBEAT_CONF,
-	maimai: MAIMAI_CONF,
-	maimaidx: MAIMAI_DX_CONF,
-	popn: POPN_CONF,
-	sdvx: SDVX_CONF,
-	usc: USC_CONF,
-	wacca: WACCA_CONF,
-	pms: PMS_CONF,
-	itg: ITG_CONF,
-	arcaea: ARCAEA_CONF,
-	ongeki: ONGEKI_CONF,
-	ddr: DDR_CONF,
+	iidx: GAME_GROUP_IIDX_CONF,
+	museca: GAME_GROUP_MUSECA_CONF,
+	chunithm: GAME_GROUP_CHUNITHM_CONF,
+	bms: GAME_GROUP_BMS_CONF,
+	gitadora: GAME_GROUP_GITADORA_CONF,
+	jubeat: GAME_GROUP_JUBEAT_CONF,
+	maimai: GAME_GROUP_MAIMAI_CONF,
+	maimaidx: GAME_GROUP_MAIMAI_DX_CONF,
+	popn: GAME_GROUP_POPN_CONF,
+	sdvx: GAME_GROUP_SDVX_CONF,
+	usc: GAME_GROUP_USC_CONF,
+	wacca: GAME_GROUP_WACCA_CONF,
+	pms: GAME_PMS_CONF,
+	itg: GAME_GROUP_ITG_CONF,
+	arcaea: GAME_GROUP_ARCAEA_CONF,
+	ongeki: GAME_GROUP_ONGEKI_CONF,
+	ddr: GAME_GROUP_DDR_CONF,
 } as const satisfies Record<string, INTERNAL_GAME_GROUP_CONFIG>;
 
 /**
@@ -70,45 +80,45 @@ export function GetGameGroupConfig<G extends GameGroup>(game: G): GameGroupConfi
 /**
  * Given a game and playtype, combine them into a GPTString.
  */
-export function GetGPTString(game: GameGroup, playtype: Playtype): GPTString {
-	return `${game}:${playtype}` as GPTString;
+export function LEGACY_GetGPTString(game: GameGroup, playtype: LEGACY_Playtype): LEGACY_GPTString {
+	return `${game}:${playtype}` as LEGACY_GPTString;
 }
 
-export function SplitGPT(gpt: GPTString) {
-	return gpt.split(":") as [GameGroup, Playtype];
+export function LEGACY_SplitGPT(gpt: LEGACY_GPTString) {
+	return gpt.split(":") as [GameGroup, LEGACY_Playtype];
 }
 
 /**
  * Based on every declared playtype for every declared game, they all need a GPT
  * config. This controls almost everything about each GPT.
  */
-export const GAME_PT_CONFIGS = {
-	"iidx:SP": IIDX_SP_CONF,
-	"iidx:DP": IIDX_DP_CONF,
-	"museca:Single": MUSECA_SINGLE_CONF,
-	"sdvx:Single": SDVX_SINGLE_CONF,
-	"bms:14K": BMS_14K_CONF,
-	"bms:7K": BMS_7K_CONF,
-	"gitadora:Dora": GITADORA_DORA_CONF,
-	"gitadora:Gita": GITADORA_GITA_CONF,
-	"chunithm:Single": CHUNITHM_SINGLE_CONF,
-	"wacca:Single": WACCA_SINGLE_CONF,
-	"jubeat:Single": JUBEAT_SINGLE_CONF,
-	"popn:9B": POPN_9B_CONF,
-	"maimai:Single": MAIMAI_SINGLE_CONF,
-	"maimaidx:Single": MAIMAI_DX_SINGLE_CONF,
-	"pms:Controller": PMS_CONTROLLER_CONF,
-	"pms:Keyboard": PMS_KEYBOARD_CONF,
-	"usc:Controller": USC_CONTROLLER_CONF,
-	"usc:Keyboard": USC_KEYBOARD_CONF,
-	"itg:Stamina": ITG_STAMINA_CONF,
-	"arcaea:Touch": ARCAEA_TOUCH_CONF,
-	"ongeki:Single": ONGEKI_SINGLE_CONF,
-	"ddr:SP": DDR_SP_CONF,
-	"ddr:DP": DDR_DP_CONF,
-} as const satisfies Record<GPTString, INTERNAL_GAME_PT_CONFIG>;
+export const GAME_CONFIGS = {
+	"iidx-sp": GAME_IIDX_SP_CONF,
+	"iidx-dp": GAME_IIDX_DP_CONF,
+	museca: GAME_MUSECA_CONF,
+	sdvx: GAME_SDVX_CONF,
+	"bms-14k": GAME_BMS_14K_CONF,
+	"bms-7k": GAME_BMS_7K_CONF,
+	"gitadora-dora": GAME_GITADORA_DORA_CONF,
+	"gitadora-gita": GAME_GITADORA_GITA_CONF,
+	chunithm: GAME_CHUNITHM_CONF,
+	wacca: GAME_WACCA_CONF,
+	jubeat: GAME_JUBEAT_SINGLE_CONF,
+	popn: GAME_POPN_CONF,
+	maimai: GAME_MAIMAI_CONF,
+	maimaidx: GAME_MAIMAI_DX_CONF,
+	"pms-controller": GAME_PMS_CONTROLLER_CONF,
+	"pms-keyboard": GAME_PMS_KEYBOARD_CONF,
+	"usc-controller": GAME_USC_CONTROLLER_CONF,
+	"usc-keyboard": GAME_USC_KEYBOARD_CONF,
+	"itg-stamina": GAME_ITG_STAMINA_CONF,
+	arcaea: GAME_ARCAEA_CONF,
+	ongeki: GAME_ONGEKI_CONF,
+	"ddr-sp": GAME_DDR_SP_CONF,
+	"ddr-dp": GAME_DDR_DP_CONF,
+} as const satisfies Record<V3Game, INTERNAL_GAME_CONFIG>;
 
-const v3GameMappings: Record<GPTString, V3Game> = {
+const v3GameMappings: Record<LEGACY_GPTString, V3Game> = {
 	"iidx:SP": "iidx-sp",
 	"iidx:DP": "iidx-dp",
 	"museca:Single": "museca",
@@ -134,16 +144,16 @@ const v3GameMappings: Record<GPTString, V3Game> = {
 	"ddr:DP": "ddr-dp",
 };
 
-export function GamePTToV3(game: GameGroup, playtype: Playtype): V3Game {
-	return GPTStringToV3(GetGPTString(game, playtype));
+export function LEGACY_GameGroupPTToGame(game: GameGroup, playtype: LEGACY_Playtype): V3Game {
+	return GPTStringToGame(LEGACY_GetGPTString(game, playtype));
 }
 
-export function GPTStringToV3(gptString: GPTString): V3Game {
+export function GPTStringToGame(gptString: LEGACY_GPTString): V3Game {
 	return v3GameMappings[gptString];
 }
 
-export function V3ToGPTString(v3Game: V3Game): GPTString {
-	const mapping: Record<V3Game, GPTString> = {
+export function LEGACY_GameToGPTString(game: V3Game): LEGACY_GPTString {
+	const mapping: Record<V3Game, LEGACY_GPTString> = {
 		"iidx-sp": "iidx:SP",
 		"iidx-dp": "iidx:DP",
 		museca: "museca:Single",
@@ -169,12 +179,12 @@ export function V3ToGPTString(v3Game: V3Game): GPTString {
 		"ddr-sp": "ddr:SP",
 	};
 
-	return mapping[v3Game];
+	return mapping[game];
 }
 
-export const v3AllGames = Object.values(v3GameMappings);
+export const ALL_GAMES = Object.keys(GAME_CONFIGS) as Array<V3Game>;
 
-export function V3ToGameGroup(v3Game: V3Game): GameGroup {
+export function GameToGameGroup(game: V3Game): GameGroup {
 	const mapping: Record<V3Game, GameGroup> = {
 		"iidx-sp": "iidx",
 		"iidx-dp": "iidx",
@@ -201,51 +211,62 @@ export function V3ToGameGroup(v3Game: V3Game): GameGroup {
 		"ddr-dp": "ddr",
 	};
 
-	return mapping[v3Game];
+	return mapping[game];
 }
 
-export function V3ToGamePT(v3Game: V3Game): { game: GameGroup; playtype: Playtype } {
-	const gptString = V3ToGPTString(v3Game);
-	const [game, playtype] = SplitGPT(gptString);
-	return { game, playtype };
+export function LEGACY_GameToGameGroupPT(v3Game: V3Game): {
+	gameGroup: GameGroup;
+	playtype: LEGACY_Playtype;
+} {
+	const gptString = LEGACY_GameToGPTString(v3Game);
+	const [gameGroup, playtype] = LEGACY_SplitGPT(gptString);
+	return { gameGroup, playtype };
+}
+
+export function LEGACY_GameToPlaytypeFn(v3Game: V3Game): LEGACY_Playtype {
+	return LEGACY_GameToGameGroupPT(v3Game).playtype;
 }
 
 /**
  * Returns the configuration for this Game + Playtype. The type here is expanded to
  * its most generic form, for easiest interaction.
  */
-export function GetGamePTConfig(game: GameGroup, playtype: Playtypes[GameGroup]): GamePTConfig {
-	const gptString = GetGPTString(game, playtype);
+export function LEGACY_GetGamePTConfig(
+	gameGroup: GameGroup,
+	playtype: LEGACY_Playtypes[GameGroup],
+): GameConfig {
+	const game = LEGACY_GameGroupPTToGame(gameGroup, playtype);
 
-	return GAME_PT_CONFIGS[gptString] as unknown as GamePTConfig;
+	return GAME_CONFIGS[game] as unknown as GameConfig;
 }
 
-export function GetGPTConfig(gptString: GPTString): GamePTConfig {
-	return GAME_PT_CONFIGS[gptString] as unknown as GamePTConfig;
+export function LEGACY_GetGPTConfig(gptString: LEGACY_GPTString): GameConfig {
+	const game = GPTStringToGame(gptString);
+	return GAME_CONFIGS[game] as unknown as GameConfig;
 }
 
-export function V3GetGameConfig(game: V3Game): GamePTConfig {
-	return GAME_PT_CONFIGS[V3ToGPTString(game)] as unknown as GamePTConfig;
+export function GetGameConfig(game: V3Game): GameConfig {
+	return GAME_CONFIGS[game] as unknown as GameConfig;
 }
 
 /**
  * Returns the configuration for this specific Game + Playtype. This type is narrowed
  * down to its least generic form, and is instead for gpt-specific use cases.
  */
-export function GetSpecificGPTConfig<GPT extends GPTString>(gpt: GPT) {
-	return GAME_PT_CONFIGS[gpt];
+export function GetSpecificGameConfig<TGame extends V3Game>(game: TGame) {
+	return GAME_CONFIGS[game] as unknown as SpecificGameConfig<TGame>;
 }
 
 export const allSupportedGameGroups = Object.keys(GAME_GROUP_CONFIGS) as Array<GameGroup>;
-export const allGPTStrings = Object.keys(GAME_PT_CONFIGS) as Array<GPTString>;
+export const allGPTStrings = Object.keys(GAME_CONFIGS) as Array<LEGACY_GPTString>;
 
 export function GetScoreMetrics(
-	gptConfig: GamePTConfig,
+	gameConfig: GameConfig,
 	type?: Array<ConfScoreMetric["type"]> | ConfScoreMetric["type"],
 ) {
 	let metrics = [
-		...Object.entries(gptConfig.providedMetrics),
-		...Object.entries(gptConfig.derivedMetrics),
+		...Object.entries(gameConfig.providedMetrics),
+		...Object.entries(gameConfig.derivedMetrics),
 	];
 
 	if (Array.isArray(type)) {
@@ -257,10 +278,10 @@ export function GetScoreMetrics(
 	return metrics.map((e) => e[0]);
 }
 
-export function GetScoreEnumConfs(gptConfig: GamePTConfig) {
+export function GetScoreEnumConfs(gameConfig: GameConfig) {
 	const scoreMetrics = {
-		...gptConfig.providedMetrics,
-		...gptConfig.derivedMetrics,
+		...gameConfig.providedMetrics,
+		...gameConfig.derivedMetrics,
 	};
 
 	const enumMetrics: Record<string, ConfEnumScoreMetric<string>> = {};
@@ -282,10 +303,10 @@ export function GetScoreEnumConfs(gptConfig: GamePTConfig) {
  *
  * @note GRAPH and NULLABLE_GRAPH types are never valid here.
  */
-export function ValidateMetric(gptConfig: GamePTConfig, metricName: string, metricValue: number) {
-	const scoreMetrics = GetScoreMetrics(gptConfig, ["DECIMAL", "INTEGER", "ENUM"]);
+export function ValidateMetric(gameConfig: GameConfig, metricName: string, metricValue: number) {
+	const scoreMetrics = GetScoreMetrics(gameConfig, ["DECIMAL", "INTEGER", "ENUM"]);
 
-	const conf = gptConfig.providedMetrics[metricName] ?? gptConfig.derivedMetrics[metricName];
+	const conf = gameConfig.providedMetrics[metricName] ?? gameConfig.derivedMetrics[metricName];
 
 	if (!conf || !scoreMetrics.includes(metricName)) {
 		return `Invalid metric ${metricName}, Expected any of ${scoreMetrics.join(", ")}.`;
@@ -306,6 +327,6 @@ export function ValidateMetric(gptConfig: GamePTConfig, metricName: string, metr
 	return conf.validate(metricValue);
 }
 
-export function GetScoreMetricConf(gptConfig: GamePTConfig, metric: string) {
-	return gptConfig.providedMetrics[metric] ?? gptConfig.derivedMetrics[metric];
+export function GetScoreMetricConf(gameConfig: GameConfig, metric: string) {
+	return gameConfig.providedMetrics[metric] ?? gameConfig.derivedMetrics[metric];
 }

@@ -38,8 +38,7 @@ describe("ACTION_SetRivals", () => {
 
 		await ACTION_SetRivals(taker, {
 			userID: userId,
-			game: "iidx",
-			playtype: "SP",
+			game: "iidx-sp",
 			rivalIDs: [rivalId],
 		});
 
@@ -58,8 +57,7 @@ describe("ACTION_SetRivals", () => {
 
 		await ACTION_SetRivals(taker, {
 			userID: userId,
-			game: "iidx",
-			playtype: "SP",
+			game: "iidx-sp",
 			rivalIDs: [rivalId],
 		});
 
@@ -78,8 +76,7 @@ describe("ACTION_SetRivals", () => {
 		await expect(
 			ACTION_SetRivals(taker, {
 				userID: other.id,
-				game: "iidx",
-				playtype: "SP",
+				game: "iidx-sp",
 				rivalIDs: [rivalId],
 			}),
 		).rejects.toMatchObject({ code: 403 });
@@ -91,8 +88,7 @@ describe("ACTION_SetRivals", () => {
 		await expect(
 			ACTION_SetRivals(taker, {
 				userID: userId,
-				game: "iidx",
-				playtype: "SP",
+				game: "iidx-sp",
 				rivalIDs: [userId],
 			}),
 		).rejects.toMatchObject({ code: 400 });
@@ -129,8 +125,7 @@ describe("ACTION_SetRivals", () => {
 		await expect(
 			ACTION_SetRivals(taker, {
 				userID: main.id,
-				game: "iidx",
-				playtype: "SP",
+				game: "iidx-sp",
 				rivalIDs: rivalUsers.map((u) => u.id),
 			}),
 		).rejects.toMatchObject({ code: 400 });

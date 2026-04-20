@@ -1,19 +1,20 @@
 import { p } from "prudence";
 import { z } from "zod";
 
-import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_PT_CONFIG } from "../../types/internals";
+import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
 import { FmtNum, FmtPercent } from "../../utils/util";
 import { ClassValue, zodNonNegativeInt } from "../config-utils";
 import { FAST_SLOW_MAXCOMBO } from "./_common";
 
-export const JUBEAT_CONF = {
+export const GAME_GROUP_JUBEAT_CONF = {
 	name: "jubeat",
+	games: ["jubeat"],
 	playtypes: ["Single"],
 	songData: z.strictObject({
 		displayVersion: z.string(),
 	}),
-} as const satisfies INTERNAL_GAME_CONFIG;
+} as const satisfies INTERNAL_GAME_GROUP_CONFIG;
 
 const JubeatColours = [
 	ClassValue("BLACK", "Black"),
@@ -28,7 +29,7 @@ const JubeatColours = [
 	ClassValue("GOLD", "Gold"),
 ];
 
-export const JUBEAT_SINGLE_CONF = {
+export const GAME_JUBEAT_SINGLE_CONF = {
 	providedMetrics: {
 		score: {
 			type: "INTEGER",
@@ -97,7 +98,7 @@ export const JUBEAT_SINGLE_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["BSC", "ADV", "EXT", "HARD BSC", "HARD ADV", "HARD EXT"],
-		shorthand: {
+		format: {
 			BSC: "BSC",
 			ADV: "ADV",
 			EXT: "EXT",
@@ -139,4 +140,4 @@ export const JUBEAT_SINGLE_CONF = {
 	scoreMeta: z.strictObject({}),
 
 	supportedMatchTypes: ["inGameID", "tachiSongID"],
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;

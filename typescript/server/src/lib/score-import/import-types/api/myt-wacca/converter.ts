@@ -1,4 +1,5 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
 import type { EmptyObject } from "#utils/types";
 import type { Difficulties } from "tachi-common";
 import type { GetEnumValue } from "tachi-common/types/metrics";
@@ -13,10 +14,9 @@ import { type WaccaClearStatus, WaccaMusicDifficulty } from "#proto/generated/wa
 import { FindChartOnInGameID } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { ConverterFunction } from "../../common/types";
 import type { MytWaccaScore } from "./types";
 
-const DIFFICULTIES: Partial<Record<WaccaMusicDifficulty, Difficulties["wacca:Single"]>> = {
+const DIFFICULTIES: Partial<Record<WaccaMusicDifficulty, Difficulties["wacca"]>> = {
 	[WaccaMusicDifficulty.UNSPECIFIED]: undefined,
 	[WaccaMusicDifficulty.NORMAL]: "NORMAL",
 	[WaccaMusicDifficulty.HARD]: "HARD",
@@ -24,9 +24,7 @@ const DIFFICULTIES: Partial<Record<WaccaMusicDifficulty, Difficulties["wacca:Sin
 	[WaccaMusicDifficulty.INFERNO]: "INFERNO",
 };
 
-function convertClearStatus(
-	status: WaccaClearStatus | undefined,
-): GetEnumValue<"wacca:Single", "lamp"> {
+function convertClearStatus(status: WaccaClearStatus | undefined): GetEnumValue<"wacca", "lamp"> {
 	if (status === undefined) {
 		throw new InvalidScoreFailure(`Can't process a score without clearStatus`);
 	}
@@ -65,7 +63,7 @@ const ConvertAPIMytWACCA: ConverterFunction<MytWaccaScore, EmptyObject> = async 
 		);
 	}
 
-	const chart = await FindChartOnInGameID("wacca", data.musicId, "Single", difficulty);
+	const chart = await FindChartOnInGameID("wacca", data.musicId, difficulty);
 
 	if (chart === null) {
 		throw new SongOrChartNotFoundFailure(
@@ -76,17 +74,17 @@ const ConvertAPIMytWACCA: ConverterFunction<MytWaccaScore, EmptyObject> = async 
 		);
 	}
 
-	const song = await FindSongOnID("wacca", chart.songID);
+	const song = await FindSongOnID("wacca", chart.song.id);
 
 	if (song === null) {
-		log.error({ chart }, `Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
-		throw new InternalFailure(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
+		log.error({ chart }, `Song/chart desync: ${chart.song.id} for chart ${chart.chartID}`);
+		throw new InternalFailure(`Song/chart desync: ${chart.song.id} for chart ${chart.chartID}`);
 	}
 
 	const lamp = convertClearStatus(data.clearStatus);
 	const timeAchieved = ParseDateFromString(data.userPlayDate);
 
-	const dryScore: DryScore<"wacca:Single"> = {
+	const dryScore: DryScore<"wacca"> = {
 		service: "MYT",
 		game: "wacca",
 		scoreMeta: {},

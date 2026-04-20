@@ -1,5 +1,6 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
-import type { MONGO_ScoreDocument } from "tachi-common";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
+import type { GamesForGroup, ScoreDocument } from "tachi-common";
 import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import {
@@ -9,7 +10,6 @@ import {
 import { FindBMSChartOnHash } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { ConverterFunction } from "../../common/types";
 import type { LR2HookContext, LR2HookScore } from "./types";
 
 export const ConverterLR2Hook: ConverterFunction<LR2HookScore, LR2HookContext> = async (
@@ -29,11 +29,11 @@ export const ConverterLR2Hook: ConverterFunction<LR2HookScore, LR2HookContext> =
 		);
 	}
 
-	const song = await FindSongOnID("bms", chart.songID);
+	const song = await FindSongOnID("bms", chart.song.id);
 
 	if (!song) {
-		log.error(`Song ${chart.songID} (bms) has no parent song?`);
-		throw new InternalFailure(`Song ${chart.songID} (bms) has no parent song?`);
+		log.error(`Song ${chart.song.id} (bms) has no parent song?`);
+		throw new InternalFailure(`Song ${chart.song.id} (bms) has no parent song?`);
 	}
 
 	const gauge = ConvertGauge(data.playerData.gauge);
@@ -59,8 +59,8 @@ export const ConverterLR2Hook: ConverterFunction<LR2HookScore, LR2HookContext> =
 			: null;
 	})();
 
-	const dryScore: DryScore<"bms:7K" | "bms:14K"> = {
-		game: "bms",
+	const dryScore: DryScore<typeof chart.game> = {
+		game: chart.game,
 		service: "LR2Hook",
 		comment: null,
 		importType: "ir/lr2hook",
@@ -100,7 +100,7 @@ export const ConverterLR2Hook: ConverterFunction<LR2HookScore, LR2HookContext> =
 		},
 		scoreMeta: {
 			gauge,
-			random: chart.playtype === "7K" ? ConvertRandom(data.playerData.random) : null,
+			random: chart.game === "bms-7k" ? ConvertRandom(data.playerData.random) : null,
 			client: "LR2",
 		},
 	};
@@ -110,7 +110,7 @@ export const ConverterLR2Hook: ConverterFunction<LR2HookScore, LR2HookContext> =
 
 function ConvertGauge(
 	gauge: LR2HookScore["playerData"]["gauge"],
-): MONGO_ScoreDocument<"bms:7K" | "bms:14K">["scoreMeta"]["gauge"] {
+): ScoreDocument<GamesForGroup["bms"]>["scoreMeta"]["gauge"] {
 	switch (gauge) {
 		case "EASY":
 			return "EASY";
@@ -127,7 +127,7 @@ function ConvertGauge(
 
 function ConvertRandom(
 	random: LR2HookScore["playerData"]["random"],
-): MONGO_ScoreDocument<"bms:7K">["scoreMeta"]["random"] {
+): ScoreDocument<GamesForGroup["bms"]>["scoreMeta"]["random"] {
 	switch (random) {
 		case "NORAN":
 			return "NONRAN";
@@ -142,7 +142,7 @@ function ConvertRandom(
 
 function ConvertLamp(
 	lamp: LR2HookScore["scoreData"]["lamp"],
-): GetEnumValue<"bms:7K" | "bms:14K", "lamp"> {
+): GetEnumValue<GamesForGroup["bms"], "lamp"> {
 	switch (lamp) {
 		case "EASY":
 			return "EASY CLEAR";

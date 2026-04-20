@@ -7,16 +7,14 @@ import { clamp, UppercaseFirst } from "#util/misc";
 import React, { useEffect, useMemo, useState } from "react";
 import { Button, Col, Form, Modal, Row } from "react-bootstrap";
 import {
+	type ChartDocument,
+	type FolderDocument,
 	FormatChart,
-	type GameGroup,
-	GetGamePTConfig,
+	GetGameConfig,
 	GetScoreMetricConf,
 	GetScoreMetrics,
-	type MONGO_ChartDocument,
-	type MONGO_FolderDocument,
-	type MONGO_GoalDocument,
-	type MONGO_SongDocument,
-	type Playtype,
+	type GoalDocument,
+	type SongDocument,
 } from "tachi-common";
 import { type ConfEnumScoreMetric } from "tachi-common/types/metrics";
 
@@ -24,29 +22,28 @@ export default function SetNewGoalModal({
 	show,
 	setShow,
 	game,
-	playtype,
 	reqUser,
 	preData,
 	onNewGoalSet,
 }: {
 	onNewGoalSet?: () => void;
-	preData: MONGO_FolderDocument | { chart: MONGO_ChartDocument; song: MONGO_SongDocument };
+	preData: FolderDocument | { chart: ChartDocument; song: SongDocument };
 	setShow: SetState<boolean>;
 	show: boolean;
 } & UGPT) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 	const conf = GetScoreMetricConf(
-		gptConfig,
-		gptConfig.preferredDefaultEnum,
+		gameConfig,
+		gameConfig.preferredDefaultEnum,
 	) as ConfEnumScoreMetric<string>;
 
-	const [criteria, setCriteria] = useState<MONGO_GoalDocument["criteria"]>({
+	const [criteria, setCriteria] = useState<GoalDocument["criteria"]>({
 		mode: "single",
-		key: gptConfig.preferredDefaultEnum,
+		key: gameConfig.preferredDefaultEnum,
 		value: conf.values.indexOf(conf.minimumRelevantValue),
 	});
 
-	const charts = useMemo<MONGO_GoalDocument["charts"]>(
+	const charts = useMemo<GoalDocument["charts"]>(
 		() =>
 			"folderID" in preData
 				? {
@@ -61,9 +58,7 @@ export default function SetNewGoalModal({
 	);
 
 	const identifier =
-		"folderID" in preData
-			? `the '${preData.title}' folder`
-			: FormatChart(game, preData.song, preData.chart);
+		"folderID" in preData ? `the '${preData.title}' folder` : FormatChart(preData.chart);
 
 	return (
 		<Modal onHide={() => setShow(false)} show={show} size="xl">
@@ -80,7 +75,6 @@ export default function SetNewGoalModal({
 							charts={charts}
 							criteria={criteria}
 							game={game}
-							playtype={playtype}
 							setCriteria={setCriteria}
 						/>
 
@@ -91,7 +85,7 @@ export default function SetNewGoalModal({
 							disabled={criteria.mode === "absolute" && criteria.countNum <= 1}
 							onClick={() => {
 								APIFetchV1(
-									`/users/${reqUser.id}/games/${game}/${playtype}/targets/goals/add-goal`,
+									`/users/${reqUser.id}/games/${game}/targets/goals/add-goal`,
 									{
 										method: "POST",
 										headers: {
@@ -127,15 +121,12 @@ export function RenderGoalCriteriaPicker({
 	charts,
 	setCriteria,
 	game,
-	playtype,
 }: {
-	charts: MONGO_GoalDocument["charts"];
-	criteria: MONGO_GoalDocument["criteria"];
-	game: GameGroup;
-	playtype: Playtype;
-	setCriteria: SetState<MONGO_GoalDocument["criteria"]>;
-}) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+	charts: GoalDocument["charts"];
+	criteria: GoalDocument["criteria"];
+	setCriteria: SetState<GoalDocument["criteria"]>;
+} & GamePT) {
+	const gameConfig = GetGameConfig(game);
 
 	return (
 		<>
@@ -143,7 +134,7 @@ export function RenderGoalCriteriaPicker({
 				<Select
 					inline
 					setValue={(key) => {
-						const baseKeyValue = getBaseKeyValue(game, playtype, key);
+						const baseKeyValue = getBaseKeyValue(game, key);
 						setCriteria({
 							...criteria,
 							key,
@@ -152,7 +143,7 @@ export function RenderGoalCriteriaPicker({
 					}}
 					value={criteria.key}
 				>
-					{GetScoreMetrics(gptConfig, ["ENUM", "DECIMAL", "INTEGER"]).map((e) => (
+					{GetScoreMetrics(gameConfig, ["ENUM", "DECIMAL", "INTEGER"]).map((e) => (
 						<option key={e} value={e}>
 							{UppercaseFirst(e)}
 						</option>
@@ -169,7 +160,6 @@ export function RenderGoalCriteriaPicker({
 								value,
 							})
 						}
-						playtype={playtype}
 					/>
 				</div>
 			</div>
@@ -196,7 +186,6 @@ export function RenderGoalCriteriaPicker({
 								});
 							}
 						}}
-						playtype={playtype}
 					/>
 				</>
 			)}
@@ -209,9 +198,9 @@ function CriteriaModePicker({
 	onChange,
 	charts,
 }: {
-	charts: MONGO_GoalDocument["charts"];
-	criteria: MONGO_GoalDocument["criteria"];
-	onChange: (value: MONGO_GoalDocument["criteria"]["mode"], countNum?: number) => void;
+	charts: GoalDocument["charts"];
+	criteria: GoalDocument["criteria"];
+	onChange: (value: GoalDocument["criteria"]["mode"], countNum?: number) => void;
 } & GamePT) {
 	const [absCountNum, setAbsCountNum] = useState(
 		criteria.mode === "absolute" ? criteria.countNum : 10,
@@ -283,14 +272,13 @@ function CriteriaModePicker({
 function CriteriaValuePicker({
 	criteria,
 	game,
-	playtype,
 	onChange,
 }: {
-	criteria: MONGO_GoalDocument["criteria"];
-	onChange: (value: MONGO_GoalDocument["criteria"]["value"]) => void;
+	criteria: GoalDocument["criteria"];
+	onChange: (value: GoalDocument["criteria"]["value"]) => void;
 } & GamePT) {
-	const gptConfig = GetGamePTConfig(game, playtype);
-	const conf = GetScoreMetricConf(gptConfig, criteria.key);
+	const gameConfig = GetGameConfig(game);
+	const conf = GetScoreMetricConf(gameConfig, criteria.key);
 
 	if (!conf) {
 		return <>ENOCONF {criteria.key}</>;
@@ -335,12 +323,11 @@ function CriteriaValuePicker({
 }
 
 function getBaseKeyValue(
-	game: GameGroup,
-	playtype: Playtype,
-	key: MONGO_GoalDocument["criteria"]["key"],
+	game: Parameters<typeof GetGameConfig>[0],
+	key: GoalDocument["criteria"]["key"],
 ) {
-	const gptConfig = GetGamePTConfig(game, playtype);
-	const conf = GetScoreMetricConf(gptConfig, key);
+	const gameConfig = GetGameConfig(game);
+	const conf = GetScoreMetricConf(gameConfig, key);
 
 	if (!conf) {
 		// SHOULD NEVER HAPPEN!

@@ -1,12 +1,12 @@
-import type { ExtractedClasses, GPTString, MONGO_UserGameStats } from "tachi-common";
+import type { ExtractedClasses, UserGameStats, V3Game } from "tachi-common";
 
-import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
+import { GAME_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 
-export function CalculateDerivedClasses<GPT extends GPTString>(
-	gptString: GPT,
-	profileRatings: MONGO_UserGameStats["ratings"],
+export function CalculateDerivedClasses<TGame extends V3Game>(
+	game: TGame,
+	profileRatings: UserGameStats["ratings"],
 ) {
-	return GPT_SERVER_IMPLEMENTATIONS[gptString].classDerivers(profileRatings) as Partial<
-		ExtractedClasses[GPT]
+	return GAME_IMPLEMENTATIONS[game].classDerivers(profileRatings) as Partial<
+		ExtractedClasses[TGame]
 	>;
 }

@@ -19,14 +19,10 @@ import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import Stack from "react-bootstrap/Stack";
 import toast from "react-hot-toast";
-import {
-	type integer,
-	type MONGO_UserDocument,
-	type MONGO_UserSettingsDocument,
-} from "tachi-common";
+import { type integer, type UserDocument, type UserSettingsDocument } from "tachi-common";
 
 interface Props {
-	reqUser: MONGO_UserDocument;
+	reqUser: UserDocument;
 }
 
 export default function UserSettingsDocumentPage({ reqUser }: Props) {
@@ -101,7 +97,7 @@ export default function UserSettingsDocumentPage({ reqUser }: Props) {
 	);
 }
 
-export function AccountSettings({ reqUser }: { reqUser: MONGO_UserDocument }) {
+export function AccountSettings({ reqUser }: { reqUser: UserDocument }) {
 	const [page, setPage] = useState<"email" | "password" | "username">("email");
 
 	return (
@@ -129,7 +125,7 @@ export function AccountSettings({ reqUser }: { reqUser: MONGO_UserDocument }) {
 	);
 }
 
-function ChangeEmailForm({ reqUser }: { reqUser: MONGO_UserDocument }) {
+function ChangeEmailForm({ reqUser }: { reqUser: UserDocument }) {
 	const formikEmail = useFormik({
 		initialValues: {
 			"!password": "",
@@ -137,7 +133,7 @@ function ChangeEmailForm({ reqUser }: { reqUser: MONGO_UserDocument }) {
 			confEmail: "",
 		},
 		onSubmit: async (values) => {
-			const r = await APIFetchV1<MONGO_UserSettingsDocument>(
+			const r = await APIFetchV1<UserSettingsDocument>(
 				`/users/${reqUser.id}/change-email`,
 				{
 					method: "POST",
@@ -217,7 +213,7 @@ function ChangeEmailForm({ reqUser }: { reqUser: MONGO_UserDocument }) {
 	);
 }
 
-function ChangePasswordForm({ reqUser }: { reqUser: MONGO_UserDocument }) {
+function ChangePasswordForm({ reqUser }: { reqUser: UserDocument }) {
 	const formikPassword = useFormik({
 		initialValues: {
 			"!oldPassword": "",
@@ -225,7 +221,7 @@ function ChangePasswordForm({ reqUser }: { reqUser: MONGO_UserDocument }) {
 			confPass: "",
 		},
 		onSubmit: async (values) => {
-			const r = await APIFetchV1<MONGO_UserSettingsDocument>(
+			const r = await APIFetchV1<UserSettingsDocument>(
 				`/users/${reqUser.id}/change-password`,
 				{
 					method: "POST",
@@ -305,7 +301,7 @@ function ChangePasswordForm({ reqUser }: { reqUser: MONGO_UserDocument }) {
 	);
 }
 
-function ChangeUsernameForm({ reqUser }: { reqUser: MONGO_UserDocument }) {
+function ChangeUsernameForm({ reqUser }: { reqUser: UserDocument }) {
 	const lastUsernameChange = useApiQuery<
 		{ canChange: false; nextAvailableChange: integer | null } | { canChange: true }
 	>(`/users/${reqUser.id}/last-username-change`);
@@ -367,7 +363,7 @@ function ChangeUsernameForm({ reqUser }: { reqUser: MONGO_UserDocument }) {
 		}
 
 		const handle = window.setTimeout(async () => {
-			const usernameQuery = await APIFetchV1<MONGO_UserDocument | null>(
+			const usernameQuery = await APIFetchV1<UserDocument | null>(
 				`/users/${nameChangeFormik.values.newUsername}`,
 			);
 
@@ -447,7 +443,7 @@ function ChangeUsernameForm({ reqUser }: { reqUser: MONGO_UserDocument }) {
 	);
 }
 
-function PreferencesForm({ reqUser }: { reqUser: MONGO_UserDocument }) {
+function PreferencesForm({ reqUser }: { reqUser: UserDocument }) {
 	const { settings, setSettings } = useContext(UserSettingsContext);
 	const theme = getStoredTheme() || "system";
 	const [themeSetting, setThemeSetting] = useState<"system" | Themes>(theme);
@@ -461,7 +457,7 @@ function PreferencesForm({ reqUser }: { reqUser: MONGO_UserDocument }) {
 			deletableScores: settings?.preferences.deletableScores ?? false,
 		},
 		onSubmit: async (values) => {
-			const res = await APIFetchV1<MONGO_UserSettingsDocument>(
+			const res = await APIFetchV1<UserSettingsDocument>(
 				`/users/${reqUser.id}/settings`,
 				{
 					method: "PATCH",
@@ -535,7 +531,7 @@ function PreferencesForm({ reqUser }: { reqUser: MONGO_UserDocument }) {
 	);
 }
 
-function ImageForm({ reqUser }: { reqUser: MONGO_UserDocument }) {
+function ImageForm({ reqUser }: { reqUser: UserDocument }) {
 	const [pfp, setPfp] = useState<File | undefined>();
 
 	const pfpInput = useRef<HTMLInputElement>(null);
@@ -611,7 +607,7 @@ function ImageForm({ reqUser }: { reqUser: MONGO_UserDocument }) {
 	);
 }
 
-function SocialMediaForm({ reqUser }: { reqUser: MONGO_UserDocument }) {
+function SocialMediaForm({ reqUser }: { reqUser: UserDocument }) {
 	const placeholders = {
 		discord: "Discord Username",
 		twitter: "Twitter Handle",
@@ -638,7 +634,7 @@ function SocialMediaForm({ reqUser }: { reqUser: MONGO_UserDocument }) {
 				valuesClone[vx] = values[vx] || null;
 			}
 
-			const rj = await APIFetchV1<MONGO_UserDocument>(
+			const rj = await APIFetchV1<UserDocument>(
 				"/users/me",
 				{
 					method: "PATCH",
@@ -716,7 +712,7 @@ function FileUploadController({
 	reset,
 }: {
 	file?: File;
-	reqUser: MONGO_UserDocument;
+	reqUser: UserDocument;
 	reset: () => void;
 	setFile: SetState<File | undefined>;
 	type: "banner" | "pfp";

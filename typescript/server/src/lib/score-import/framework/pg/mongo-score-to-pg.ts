@@ -2,14 +2,14 @@ import type { NewScore } from "tachi-db";
 
 import { mongoScoreDataToPg } from "#lib/v3/migration-tools";
 import { UnixMillisecondsToISO8601 } from "#utils/time";
-import { GetGPTString, GPTStringToV3, type MONGO_ScoreDocument } from "tachi-common";
+import { type ScoreDocument } from "tachi-common";
 
 /**
  * Maps a hydrated Mongo-shaped score document to a Postgres `score` insert row.
  * `chartIdPg` must be `chart.id` (FK to `chart.id`). The score document's `chartID` may be a legacy id string.
  */
 export function mongoScoreDocumentToNewScoreRow(
-	score: MONGO_ScoreDocument,
+	score: ScoreDocument,
 	chartIdPg: string,
 	opts: {
 		committed: boolean;
@@ -17,14 +17,14 @@ export function mongoScoreDocumentToNewScoreRow(
 		sessionId: string | null;
 	},
 ): NewScore {
-	const gpt = GetGPTString(score.game, score.playtype);
-	const { data, derived, judgements } = mongoScoreDataToPg(gpt, score.scoreData);
+	const game = score.game;
+	const { data, derived, judgements } = mongoScoreDataToPg(game, score.scoreData);
 
 	return {
 		id: score.scoreID,
 		user_id: score.userID,
 		chart_id: chartIdPg,
-		game: GPTStringToV3(gpt),
+		game,
 		session_id: opts.sessionId,
 		import_id: opts.importId,
 		data: JSON.stringify(data),

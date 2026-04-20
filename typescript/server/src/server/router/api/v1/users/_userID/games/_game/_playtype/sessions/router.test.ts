@@ -43,12 +43,12 @@ async function insertSession(opts: {
 		.execute();
 }
 
-describe("GET /api/v1/users/:userID/games/:game/:playtype/sessions", () => {
+describe("GET /api/v1/users/:userID/games/:game/sessions", () => {
 	it("returns 400 when search query is missing or not a string", async () => {
 		const { id: userId } = await seedUser({ username: `sess_search_bad_${++counter}` });
 		await seedIidxSpProfile(userId);
 
-		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx/SP/sessions`);
+		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx-sp/sessions`);
 
 		expect(res.status).toBe(400);
 		expect(res.body.success).toBe(false);
@@ -69,7 +69,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/sessions", () => {
 		});
 
 		const res = await mockApi.get(
-			`/api/v1/users/${userId}/games/iidx/SP/sessions?search=Flower`,
+			`/api/v1/users/${userId}/games/iidx-sp/sessions?search=Flower`,
 		);
 
 		expect(res.status).toBe(200);
@@ -78,7 +78,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/sessions", () => {
 	});
 });
 
-describe("GET /api/v1/users/:userID/games/:game/:playtype/sessions/best", () => {
+describe("GET /api/v1/users/:userID/games/:game/sessions/best", () => {
 	it("sorts sessions by default session rating alg from calculated_data", async () => {
 		const { id: userId } = await seedUser({ username: `sess_best_${++counter}` });
 		await seedIidxSpProfile(userId);
@@ -103,7 +103,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/sessions/best", () => 
 			timeEndedIso: t,
 		});
 
-		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx/SP/sessions/best`);
+		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx-sp/sessions/best`);
 
 		expect(res.status).toBe(200);
 		expect(res.body.body[0].sessionID).toBe(high);
@@ -115,14 +115,14 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/sessions/best", () => 
 		await seedIidxSpProfile(userId);
 
 		const res = await mockApi.get(
-			`/api/v1/users/${userId}/games/iidx/SP/sessions/best?alg=not_a_real_alg`,
+			`/api/v1/users/${userId}/games/iidx-sp/sessions/best?alg=not_a_real_alg`,
 		);
 
 		expect(res.status).toBe(400);
 	});
 });
 
-describe("GET /api/v1/users/:userID/games/:game/:playtype/sessions/highlighted", () => {
+describe("GET /api/v1/users/:userID/games/:game/sessions/highlighted", () => {
 	it("returns only highlighted sessions", async () => {
 		const { id: userId } = await seedUser({ username: `sess_hi_${++counter}` });
 		await seedIidxSpProfile(userId);
@@ -147,7 +147,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/sessions/highlighted",
 			timeEndedIso: t,
 		});
 
-		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx/SP/sessions/highlighted`);
+		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx-sp/sessions/highlighted`);
 
 		expect(res.status).toBe(200);
 		expect(res.body.body).toHaveLength(1);
@@ -155,7 +155,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/sessions/highlighted",
 	});
 });
 
-describe("GET /api/v1/users/:userID/games/:game/:playtype/sessions/recent", () => {
+describe("GET /api/v1/users/:userID/games/:game/sessions/recent", () => {
 	it("orders sessions by timeEnded descending", async () => {
 		const { id: userId } = await seedUser({ username: `sess_rec_${++counter}` });
 		await seedIidxSpProfile(userId);
@@ -179,7 +179,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/sessions/recent", () =
 			timeEndedIso: newer,
 		});
 
-		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx/SP/sessions/recent`);
+		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx-sp/sessions/recent`);
 
 		expect(res.status).toBe(200);
 		expect(res.body.body[0].sessionID).toBe(`sess-new-${counter}`);
@@ -187,12 +187,12 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/sessions/recent", () =
 	});
 });
 
-describe("GET /api/v1/users/:userID/games/:game/:playtype/sessions/last", () => {
+describe("GET /api/v1/users/:userID/games/:game/sessions/last", () => {
 	it("returns 404 when the user has no sessions for this GPT", async () => {
 		const { id: userId } = await seedUser({ username: `sess_last_404_${++counter}` });
 		await seedIidxSpProfile(userId);
 
-		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx/SP/sessions/last`);
+		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx-sp/sessions/last`);
 
 		expect(res.status).toBe(404);
 		expect(res.body.success).toBe(false);
@@ -221,7 +221,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/sessions/last", () => 
 			timeEndedIso: newer,
 		});
 
-		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx/SP/sessions/last`);
+		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx-sp/sessions/last`);
 
 		expect(res.status).toBe(200);
 		expect(res.body.body.session.sessionID).toBe(`sess-last-new-${counter}`);
@@ -229,7 +229,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/sessions/last", () => 
 	});
 });
 
-describe("GET /api/v1/users/:userID/games/:game/:playtype/sessions/calendar", () => {
+describe("GET /api/v1/users/:userID/games/:game/sessions/calendar", () => {
 	it("returns slim session objects for the calendar view", async () => {
 		const { id: userId } = await seedUser({ username: `sess_cal_${++counter}` });
 		await seedIidxSpProfile(userId);
@@ -245,7 +245,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/sessions/calendar", ()
 			timeEndedIso: t,
 		});
 
-		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx/SP/sessions/calendar`);
+		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx-sp/sessions/calendar`);
 
 		expect(res.status).toBe(200);
 		expect(res.body.body).toHaveLength(1);
@@ -253,8 +253,8 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/sessions/calendar", ()
 
 		expect(ev.sessionID).toBe(sid);
 		expect(ev.name).toBe("Cal");
-		expect(ev.game).toBe("iidx");
-		expect(ev.playtype).toBe("SP");
+		expect(ev.game).toBe("iidx-sp");
+		expect(ev).not.toHaveProperty("playtype");
 		expect(ev).not.toHaveProperty("scoreIDs");
 		expect(ev).not.toHaveProperty("calculatedData");
 	});

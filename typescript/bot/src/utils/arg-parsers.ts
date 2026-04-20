@@ -1,23 +1,21 @@
 import type { CommandInteraction } from "discord.js";
 import type { PrivDiscordUserMap } from "tachi-db";
 
-import { type GameGroup, type MONGO_UserDocument, type Playtype } from "tachi-common";
+import { IsValidGame, type UserDocument, type V3Game } from "tachi-common";
 
 import type { Emittable } from "../slash-commands/types";
 
 import { GetUserInfo } from "./api-requests";
-import { ParseGPT } from "./misc";
 
 /**
- * Utility parser for getting the game, playtype and requesting user, since this is
+ * Utility parser for getting the game and requesting user, since this is
  * a common pattern in the bot.
  */
-export async function GetGPTAndUser(
+export async function GetGameAndUser(
 	interaction: CommandInteraction,
 	requestingUser: PrivDiscordUserMap,
 ): Promise<
-	| { content: { game: GameGroup; playtype: Playtype; userDoc: MONGO_UserDocument }; error: null }
-	| { error: Emittable }
+	{ content: { game: V3Game; userDoc: UserDocument }; error: null } | { error: Emittable }
 > {
 	const userID = interaction.options.getString("other_user") ?? requestingUser.user_id.toString();
 
@@ -33,7 +31,11 @@ export async function GetGPTAndUser(
 		return { error: `This user does not exist.` };
 	}
 
-	const { game, playtype } = ParseGPT(interaction.options.getString("game", true));
+	const game = interaction.options.getString("game", true);
 
-	return { error: null, content: { userDoc, game, playtype } };
+	if (!IsValidGame(game)) {
+		return { error: `Invalid game: ${game}.` };
+	}
+
+	return { error: null, content: { userDoc, game } };
 }

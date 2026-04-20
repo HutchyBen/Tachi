@@ -1,47 +1,24 @@
 import { GetRecentActivityForMultipleGames } from "#lib/activity/activity";
-import { TachiConfig } from "#lib/setup/config";
-import { Router } from "express";
-import { GetGameGroupConfig } from "tachi-common";
+import { ALL_GAMES } from "tachi-common";
 
-const router: Router = Router({ mergeParams: true });
+import { API_V1_ROUTER } from "../router";
 
 /**
  * Retrieve *all* activity across every game on the site.
  *
  * @param session - See CreateActivityRouteHandler
  * @param startTime - See CreateActivityRouteHandler
- *
- * @name GET /api/v1/activity
  */
-router.get("/", async (req, res) => {
-	const qStartTime = req.query.startTime as string | undefined;
+API_V1_ROUTER.add("GET /activity", async ({ input }) => {
+	const data = await GetRecentActivityForMultipleGames(
+		ALL_GAMES,
+		undefined,
+		input.startTime ?? null,
+	);
 
-	const startTime = qStartTime ? Number(qStartTime) : null;
-
-	if (Number.isNaN(startTime)) {
-		return res.status(400).json({
-			success: false,
-			description: `Invalid startTime, got a non number.`,
-		});
-	}
-
-	const gpts = [];
-
-	for (const game of TachiConfig.GAMES) {
-		const playtypes = GetGameGroupConfig(game).playtypes;
-
-		for (const playtype of playtypes) {
-			gpts.push({ game, playtype });
-		}
-	}
-
-	const data = await GetRecentActivityForMultipleGames(gpts, undefined, startTime);
-
-	return res.status(200).json({
+	return {
 		success: true,
 		description: `Returned global activity.`,
 		body: data,
-	});
+	};
 });
-
-export default router;

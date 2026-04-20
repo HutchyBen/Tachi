@@ -7,39 +7,35 @@ import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
 import DB from "#services/pg/db";
 import { UnixMillisecondsToISO8601 } from "#utils/time";
 import {
-	type GameGroup,
-	GamePTToV3,
 	type GoalImportInfo,
 	type integer,
-	type MONGO_QuestDocument,
-	type MONGO_QuestSubscriptionDocument,
-	type Playtype,
+	type QuestDocument,
 	type QuestImportInfo,
+	type QuestSubscriptionDocument,
+	type V3Game,
 } from "tachi-common";
 
 export async function UpdateUsersQuests(
 	importGoalInfo: Array<GoalImportInfo>,
-	game: GameGroup,
-	playtypes: Array<Playtype>,
+	game: V3Game,
 	userID: integer,
 	log: KtLogger,
 ) {
 	const goalIDs = importGoalInfo.map((e) => e.goalID);
 
-	const { quests, questSubs } = await GetRelevantQuests(goalIDs, game, playtypes, userID, log);
+	const { quests, questSubs } = await GetRelevantQuests(goalIDs, game, userID, log);
 
 	return UpdateQuestsForUser(quests, questSubs, game, userID, log);
 }
 
 export async function UpdateQuestsForUser(
-	quests: Array<MONGO_QuestDocument>,
-	questSubs: Array<MONGO_QuestSubscriptionDocument>,
-
-	game: GameGroup,
+	quests: Array<QuestDocument>,
+	questSubs: Array<QuestSubscriptionDocument>,
+	game: V3Game,
 	userID: integer,
 	log: KtLogger,
 ) {
-	const questSubMap = new Map<string, MONGO_QuestSubscriptionDocument>();
+	const questSubMap = new Map<string, QuestSubscriptionDocument>();
 
 	for (const um of questSubs) {
 		questSubMap.set(um.questID, um);
@@ -95,7 +91,6 @@ export async function UpdateQuestsForUser(
 						userID,
 						...questInfo,
 						game,
-						playtype: quest.playtype,
 					},
 				});
 
@@ -115,23 +110,21 @@ export async function UpdateQuestsForUser(
 
 async function GetRelevantQuests(
 	goalIDs: Array<string>,
-	game: GameGroup,
-	playtypes: Array<Playtype>,
+	game: V3Game,
 	userID: integer,
 	log: KtLogger,
 ) {
 	if (goalIDs.length === 0) {
-		return { quests: [] as Array<MONGO_QuestDocument>, questSubs: [] };
+		return { quests: [] as Array<QuestDocument>, questSubs: [] };
 	}
 
-	const v3Games = playtypes.map((pt) => GamePTToV3(game, pt));
 	const goalIdSet = new Set(goalIDs);
 
 	const questSubRows = await DB.selectFrom("quest_sub")
 		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
 		.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
 		.where("quest_sub.user_id", "=", userID)
-		.where("quest.game", "in", v3Games)
+		.where("quest.game", "=", game)
 		.execute();
 
 	log.debug(`Found ${questSubRows.length} quest-subs.`);

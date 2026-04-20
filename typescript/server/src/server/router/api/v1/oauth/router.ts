@@ -1,10 +1,9 @@
 import { ACTION_CreateOAuth2AuthCode } from "#actions/create-oauth2-auth-code";
 import { ANON_ACTION_OAuthTokenExchange } from "#anon-actions/oauth-token-exchange";
-import prValidate from "#server/middleware/prudence-validate";
-import { Router } from "express";
-import { p } from "prudence";
+import { success } from "#lib/router/typed-router";
+import { ExpectedErr } from "bliss";
 
-const router: Router = Router({ mergeParams: true });
+import { API_V1_ROUTER } from "../router";
 
 /**
  * Converts an auth code into a valid API key that is returned.
@@ -21,66 +20,35 @@ const router: Router = Router({ mergeParams: true });
  *
  * @name POST /api/v1/oauth/token
  */
-router.post(
-	"/token",
-	prValidate({
-		client_id: "string",
-		client_secret: "string",
-		grant_type: p.is("authorization_code"),
-		redirect_uri: "string",
-		code: "string",
-	}),
-	async (req, res) => {
-		const body = req.safeBody as {
-			client_id: string;
-			client_secret: string;
-			code: string;
-			grant_type: "authorization_code";
-			redirect_uri: string;
-		};
+API_V1_ROUTER.add("POST /oauth/token", async ({ input, req }) => {
+	const apiDoc = await ANON_ACTION_OAuthTokenExchange(
+		{ ip: req.ip },
+		{
+			client_id: input.client_id,
+			client_secret: input.client_secret,
+			code: input.code,
+			grant_type: input.grant_type,
+			redirect_uri: input.redirect_uri,
+		},
+	);
 
-		const apiDoc = await ANON_ACTION_OAuthTokenExchange(
-			{ ip: req.ip },
-			{
-				client_id: body.client_id,
-				client_secret: body.client_secret,
-				grant_type: body.grant_type,
-				redirect_uri: body.redirect_uri,
-				code: body.code,
-			},
-		);
-
-		return res.status(200).json({
-			success: true,
-			description: `Successfully authenticated.`,
-			body: apiDoc,
-		});
-	},
-);
+	return success("Successfully authenticated.", apiDoc);
+});
 
 /**
  * Creates an authorization code for this user (inferred from session).
  *
  * @name POST /api/v1/oauth/create-code
  */
-router.post("/create-code", async (req, res) => {
+API_V1_ROUTER.add("POST /oauth/create-code", async ({ req }) => {
 	if (!req.session.tachi?.user) {
-		return res.status(401).json({
-			success: false,
-			description: `You are not authenticated.`,
-		});
+		throw new ExpectedErr(401, "You are not authenticated.");
 	}
 
 	const user = req.session.tachi.user;
-	const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
+	const taker = { acct: { id: user.id, username: user.username }, ip: req.ip };
 
 	const doc = await ACTION_CreateOAuth2AuthCode(taker, {});
 
-	return res.status(200).json({
-		success: true,
-		description: `Successfully created code.`,
-		body: doc,
-	});
+	return success("Successfully created code.", doc);
 });
-
-export default router;

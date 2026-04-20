@@ -2,26 +2,22 @@ import type { FilterQuery } from "mongodb";
 
 import type {
 	AnyClasses,
+	ChartDocumentData,
 	Classes,
 	Difficulties,
 	ExtractedClasses,
 	GameGroup,
-	GPTString,
-	GPTStrings,
-	GPTStringToGame,
-	GPTStringToPlaytype,
+	GameGroupFromGame,
 	integer,
 	Judgements,
-	MONGO_ChartDocumentData,
-	MongoDerivedMetrics as MongoDerivedMetrics,
-	MongoOptionalMetrics as MongoOptionalMetrics,
-	MongoProvidedMetrics as MongoProvidedMetrics,
+	LEGACY_GPTStringToGameGroup,
+	MongoDerivedMetrics,
+	MongoOptionalMetrics,
+	MongoProvidedMetrics,
 	OptionalEnumIndexes,
 	PgDerivedMetrics,
 	PgOptionalMetrics,
 	PgProvidedMetrics,
-	Playtype,
-	Playtypes,
 	Preferences,
 	ProfileRatingAlgorithms,
 	ScoreEnumIndexes,
@@ -43,25 +39,14 @@ export interface IObjectID {
 	readonly toString: () => string;
 }
 
-export interface MONGO_CounterDocument {
-	counterName: string;
-	value: integer;
-}
-
-export interface MONGO_ChartFolderLookupDocument {
-	chartID: string;
-	folderID: string;
-}
-
-export interface MONGO_BaseGoalDocument<GPT extends GPTString> {
-	game: GameGroup;
-	playtype: Playtype;
+export interface BaseGoalDocument<TGame extends V3Game = V3Game> {
+	game: TGame;
 	name: string;
 	goalID: string;
-	criteria: GoalCountCriteria<GPT> | GoalSingleCriteria<GPT>;
+	criteria: GoalCountCriteria<TGame> | GoalSingleCriteria<TGame>;
 }
 
-interface GoalCriteria<_GPT extends GPTString> {
+interface GoalCriteria<_TGame extends V3Game = V3Game> {
 	// vvv this basically doesn't work as it starts thinking this might be a symbol
 	// causing a myriad of annoying errors.
 	// key: keyof DerivedMetrics[GPT] | keyof ProvidedMetrics[GPT];
@@ -72,7 +57,7 @@ interface GoalCriteria<_GPT extends GPTString> {
 	value: number;
 }
 
-export interface GoalSingleCriteria<GPT extends GPTString> extends GoalCriteria<GPT> {
+export interface GoalSingleCriteria<TGame extends V3Game = V3Game> extends GoalCriteria<TGame> {
 	mode: "single";
 }
 
@@ -80,7 +65,7 @@ export interface GoalSingleCriteria<GPT extends GPTString> extends GoalCriteria<
  * Criteria for a score to match this criteria - this is a "count" mode, which means that
  * atleast N scores have to match this criteria. This is for things like folders.
  */
-export interface GoalCountCriteria<GPT extends GPTString> extends GoalCriteria<GPT> {
+export interface GoalCountCriteria<TGame extends V3Game = V3Game> extends GoalCriteria<TGame> {
 	mode: "absolute" | "proportion";
 	countNum: number;
 }
@@ -88,8 +73,7 @@ export interface GoalCountCriteria<GPT extends GPTString> extends GoalCriteria<G
 /**
  * Goal Document - Single. A goal document that is only for one specific chart.
  */
-export interface MONGO_GoalDocumentSingle<GPT extends GPTString = GPTString>
-	extends MONGO_BaseGoalDocument<GPT> {
+export interface GoalDocumentSingle<TGame extends V3Game = V3Game> extends BaseGoalDocument<TGame> {
 	charts: {
 		data: string;
 		type: "single";
@@ -100,8 +84,7 @@ export interface MONGO_GoalDocumentSingle<GPT extends GPTString = GPTString>
  * Goal Document - Multi. A goal document whos set of charts is the array of
  * chartIDs inside "charts".
  */
-export interface MONGO_GoalDocumentMulti<GPT extends GPTString = GPTString>
-	extends MONGO_BaseGoalDocument<GPT> {
+export interface GoalDocumentMulti<TGame extends V3Game = V3Game> extends BaseGoalDocument<TGame> {
 	charts: {
 		data: Array<string>;
 		type: "multi";
@@ -112,18 +95,20 @@ export interface MONGO_GoalDocumentMulti<GPT extends GPTString = GPTString>
  * Goal Document - Folder. A goal document whos set of charts is derived from
  * the folderID inside "charts".
  */
-export interface MONGO_GoalDocumentFolder<GPT extends GPTString = GPTString>
-	extends MONGO_BaseGoalDocument<GPT> {
+export interface GoalDocumentFolder<TGame extends V3Game = V3Game> extends BaseGoalDocument<TGame> {
 	charts: {
+		/** Internal Postgres `folder.id`; goal validation and storage use this. */
 		data: string;
+		/** Set on API responses so clients can link with {@link BaseFolderDocument.slug}. */
+		folderSlug?: string;
 		type: "folder";
 	};
 }
 
-export type MONGO_GoalDocument<GPT extends GPTString = GPTString> =
-	| MONGO_GoalDocumentFolder<GPT>
-	| MONGO_GoalDocumentMulti<GPT>
-	| MONGO_GoalDocumentSingle<GPT>;
+export type GoalDocument<TGame extends V3Game = V3Game> =
+	| GoalDocumentFolder<TGame>
+	| GoalDocumentMulti<TGame>
+	| GoalDocumentSingle<TGame>;
 
 interface BaseInviteCodeDocument {
 	createdBy: integer;
@@ -131,7 +116,7 @@ interface BaseInviteCodeDocument {
 	createdAt: number;
 }
 
-export type MONGO_InviteCodeDocument = (
+export type InviteCodeDocument = (
 	| { consumed: false; consumedAt: null; consumedBy: null }
 	| { consumed: true; consumedAt: number; consumedBy: integer }
 ) &
@@ -157,19 +142,18 @@ interface SessionScoreNewInfo {
 
 export type SessionScoreInfo = SessionScoreNewInfo | SessionScorePBInfo;
 
-export interface MONGO_SessionDocument<GPT extends GPTString = GPTString> {
+export interface SessionDocument<TGame extends V3Game = V3Game> {
 	userID: integer;
 	sessionID: string;
 	scoreIDs: Array<string>;
 	name: string;
 	desc: string | null;
-	game: GameGroup;
-	playtype: Playtype;
+	game: V3Game;
 
 	timeInserted: integer;
 	timeEnded: integer;
 	timeStarted: integer;
-	calculatedData: Partial<Record<SessionRatingAlgorithms[GPT], number | null>>;
+	calculatedData: Partial<Record<SessionRatingAlgorithms[TGame], number | null>>;
 	highlight: boolean;
 }
 
@@ -178,17 +162,20 @@ interface ImportErrContent {
 	message: string;
 }
 
-export interface MONGO_ImportDocument {
+export interface ImportDocument {
 	userID: integer;
 	timeStarted: number;
 	timeFinished: number;
 
-	// Contains an array of GPTString, which dictates what (game:playtype)s were involved in this import.
-	gptStrings: Array<GPTString>;
+	gameGroup: GameGroup;
+	// What games were involved in this import.
+	// this is just a subset of the games available in the gameGroup above
+	// the logic around whether imports can have more than one gameGroup is - uh - muddled
+	// at best.
+	games: Array<V3Game>;
+
 	importID: string;
 	scoreIDs: Array<string>;
-	game: GameGroup;
-	playtypes: Array<Playtypes[GameGroup]>;
 	errors: Array<ImportErrContent>;
 
 	// TODO(zk): Incoherent and wrong comment
@@ -207,7 +194,7 @@ export interface MONGO_ImportDocument {
 	userIntent: boolean;
 }
 
-export interface MONGO_ImportTimingsDocument {
+export interface ImportTimingsDocument {
 	importID: string;
 	timestamp: number;
 	total: number;
@@ -236,7 +223,7 @@ interface ImportTimingSections {
 }
 
 export type GoalImportStat = Pick<
-	MONGO_GoalSubscriptionDocument,
+	GoalSubscriptionDocument,
 	"achieved" | "outOf" | "outOfHuman" | "progress" | "progressHuman"
 >;
 
@@ -246,7 +233,7 @@ export interface GoalImportInfo {
 	new: GoalImportStat;
 }
 
-export type QuestImportStat = Pick<MONGO_QuestSubscriptionDocument, "achieved" | "progress">;
+export type QuestImportStat = Pick<QuestSubscriptionDocument, "achieved" | "progress">;
 
 export interface QuestImportInfo {
 	questID: string;
@@ -254,20 +241,18 @@ export interface QuestImportInfo {
 	new: QuestImportStat;
 }
 
-export type MONGO_GoalSubscriptionDocument = {
-	game: GameGroup;
+export type GoalSubscriptionDocument = {
+	game: V3Game;
 	goalID: string;
 	lastInteraction: integer | null;
 	outOf: number;
 	outOfHuman: string;
-	playtype: Playtype;
 	progress: number | null;
 	progressHuman: string;
 	userID: integer;
 	// Was this goal assigned "standalone"? I.e. a user explicitly subscribed to this.
 	// instead of it being a result of a quest subscription.
 	wasAssignedStandalone: boolean;
-
 	wasInstantlyAchieved: boolean;
 } & (
 	| {
@@ -291,27 +276,25 @@ export interface QuestSection {
 	goals: Array<QuestGoalReference>;
 }
 
-export interface MONGO_QuestDocument {
-	game: GameGroup;
-	playtype: Playtype;
+export interface QuestDocument {
+	game: V3Game;
 	name: string;
 	desc: string;
 	questData: Array<QuestSection>;
 	questID: string;
 }
 
-export interface MONGO_QuestlineDocument {
+export interface QuestlineDocument {
 	questlineID: string;
 	name: string;
 	desc: string;
-	game: GameGroup;
-	playtype: Playtype;
+	game: V3Game;
 	quests: Array<string>;
 }
 
 export type UserBadges = "alpha" | "beta" | "contributor" | "dev-team" | "significant-contributor";
 
-export interface MONGO_UserDocument {
+export interface UserDocument {
 	username: string;
 	usernameLowercase: string;
 	id: integer;
@@ -334,23 +317,21 @@ export interface MONGO_UserDocument {
 	isSupporter?: boolean;
 }
 
-export interface MONGO_SpecificUserGameStats<GPT extends GPTString> {
+export interface SpecificUserGameStats<TGame extends V3Game> {
 	userID: integer;
-	game: GPTStringToGame[GPT];
-	playtype: GPTStringToPlaytype[GPT];
-	ratings: Partial<Record<ProfileRatingAlgorithms[GPT], number | null>>;
-	classes: Partial<ExtractedClasses[GPT]>;
+	game: V3Game;
+	ratings: Partial<Record<ProfileRatingAlgorithms[TGame], number | null>>;
+	classes: Partial<ExtractedClasses[TGame]>;
 }
 
 /**
  * GPT agnostic stats for a game. This type is easier to work with than the
  * specificUserGameStats one for general cases.
  */
-export interface MONGO_UserGameStats {
+export interface UserGameStats {
 	userID: integer;
-	game: GameGroup;
-	playtype: Playtype;
-	ratings: Partial<Record<ProfileRatingAlgorithms[GPTString], number | null>>;
+	game: V3Game;
+	ratings: Partial<Record<ProfileRatingAlgorithms[V3Game], number | null>>;
 	classes: AnyClasses;
 }
 
@@ -360,20 +341,20 @@ export interface ChartTierlistInfo {
 	individualDifference?: boolean;
 }
 
-export interface MONGO_ChartDocument<GPT extends GPTString = GPTString> {
+export interface ChartDocument<TGame extends V3Game = V3Game> {
+	game: TGame;
 	chartID: string;
-	songID: integer;
 	level: string;
 	levelNum: number;
 	isPrimary: boolean;
-	difficulty: Difficulties[GPT];
-	playtype: GPTStringToPlaytype[GPT];
-	data: MONGO_ChartDocumentData[GPT];
-	versions: Array<Versions[GPT]>;
+	difficulty: Difficulties[TGame];
+	data: ChartDocumentData[TGame];
+	versions: Array<Versions[TGame]>;
+	song: SongDocument<GameGroupFromGame[TGame]>;
 }
 
-export interface MONGO_SongDocument<G extends GameGroup = GameGroup> {
-	id: integer;
+export interface SongDocument<G extends GameGroup = GameGroup> {
+	id: string;
 	title: string;
 	artist: string;
 	searchTerms: Array<string>;
@@ -381,10 +362,9 @@ export interface MONGO_SongDocument<G extends GameGroup = GameGroup> {
 	data: SongDocumentData[G];
 }
 
-export interface MONGO_TableDocument {
+export interface TableDocument {
 	tableID: string;
-	game: GameGroup;
-	playtype: Playtype;
+	game: V3Game;
 	title: string;
 	description: string;
 	folders: Array<string>;
@@ -392,11 +372,11 @@ export interface MONGO_TableDocument {
 	default: boolean;
 }
 
-export interface MONGO_BaseFolderDocument {
-	title: string;
-	game: GameGroup;
-	playtype: Playtype;
+export interface BaseFolderDocument {
 	folderID: string;
+	slug: string;
+	title: string;
+	game: V3Game;
 
 	/**
 	 * This folder has been superceded by another folder,
@@ -406,35 +386,31 @@ export interface MONGO_BaseFolderDocument {
 	searchTerms: Array<string>;
 }
 
-export interface MONGO_FolderSongsDocument extends MONGO_BaseFolderDocument {
+export interface FolderSongsDocument extends BaseFolderDocument {
 	type: "songs";
-	data: FilterQuery<MONGO_SongDocument>;
+	data: FilterQuery<SongDocument>;
 }
 
-export interface MONGO_FolderChartsDocument extends MONGO_BaseFolderDocument {
+export interface FolderChartsDocument extends BaseFolderDocument {
 	type: "charts";
-	data: FilterQuery<MONGO_ChartDocument>;
+	data: FilterQuery<ChartDocument>;
 }
 
-export interface MONGO_FolderStaticDocument extends MONGO_BaseFolderDocument {
+export interface FolderStaticDocument extends BaseFolderDocument {
 	type: "static";
 	data: Array<string>;
 }
 
-export type MONGO_FolderDocument =
-	| MONGO_FolderChartsDocument
-	| MONGO_FolderSongsDocument
-	| MONGO_FolderStaticDocument;
+export type FolderDocument = FolderChartsDocument | FolderSongsDocument | FolderStaticDocument;
 
 export interface FolderChartLookup {
 	chartID: string;
 	folderID: string;
 }
 
-export type MONGO_QuestSubscriptionDocument = {
-	game: GameGroup;
+export type QuestSubscriptionDocument = {
+	game: V3Game;
 	lastInteraction: integer | null;
-	playtype: Playtype;
 	progress: integer;
 	questID: string;
 	userID: integer;
@@ -456,35 +432,33 @@ export type PgScoreData<Game extends V3Game = V3Game> = {
 	judgements: PgScoreJudgements<Game>;
 };
 
-export type PgScoreProvidedData<Game extends V3Game = V3Game> =
-	PgOptionalMetrics[V3GameToGPTString[Game]] & PgProvidedMetrics[V3GameToGPTString[Game]];
+export type PgScoreProvidedData<TGame extends V3Game = V3Game> = PgOptionalMetrics[TGame] &
+	PgProvidedMetrics[TGame];
 
-export type PgScoreDerivedData<Game extends V3Game = V3Game> =
-	PgDerivedMetrics[V3GameToGPTString[Game]];
+export type PgScoreDerivedData<TGame extends V3Game = V3Game> = PgDerivedMetrics[TGame];
 
-export type PgScoreJudgements<Game extends V3Game = V3Game> = Partial<
-	Record<Judgements[V3GameToGPTString[Game]], integer | null>
+export type PgScoreJudgements<TGame extends V3Game = V3Game> = Partial<
+	Record<Judgements[TGame], integer | null>
 >;
 
-export type MONGO_ScoreData<GPT extends GPTString = GPTString> = {
-	enumIndexes: ScoreEnumIndexes<GPT>;
-	judgements: Partial<Record<Judgements[GPT], integer | null>>;
+export type ScoreData<TGame extends V3Game = V3Game> = {
+	enumIndexes: ScoreEnumIndexes<TGame>;
+	judgements: Partial<Record<Judgements[TGame], integer | null>>;
 	optional: {
-		enumIndexes: OptionalEnumIndexes<GPT>;
-	} & MongoOptionalMetrics[GPT];
-} & MongoDerivedMetrics[GPT] &
-	MongoProvidedMetrics[GPT];
+		enumIndexes: OptionalEnumIndexes<TGame>;
+	} & MongoOptionalMetrics[TGame];
+} & MongoDerivedMetrics[TGame] &
+	MongoProvidedMetrics[TGame];
 
-export interface MONGO_ScoreDocument<GPT extends GPTString = GPTString> {
+export interface ScoreDocument<TGame extends V3Game = V3Game> {
 	service: string;
-	game: GPTStringToGame[GPT];
-	playtype: GPTStringToPlaytype[GPT];
+	game: TGame;
 	userID: integer;
-	scoreData: MONGO_ScoreData<GPT>;
-	scoreMeta: Partial<ScoreMeta[GPT]>;
-	calculatedData: Partial<Record<ScoreRatingAlgorithms[GPT], number | null>>;
+	scoreData: ScoreData<TGame>;
+	scoreMeta: Partial<ScoreMeta[TGame]>;
+	calculatedData: Partial<Record<ScoreRatingAlgorithms[TGame], number | null>>;
 	timeAchieved: integer | null;
-	songID: integer;
+	songID: string;
 	chartID: string;
 	isPrimary: boolean;
 	highlight: boolean;
@@ -499,7 +473,7 @@ export interface PBReference {
 	scoreID: string;
 }
 
-export interface MONGO_PBScoreDocument<GPT extends GPTString = GPTString> {
+export interface PBScoreDocument<TGame extends V3Game = V3Game> {
 	// guaranteed to atleast have one element.
 	composedFrom: [PBReference, ...Array<PBReference>];
 	rankingData: {
@@ -514,14 +488,13 @@ export interface MONGO_PBScoreDocument<GPT extends GPTString = GPTString> {
 	};
 	userID: integer;
 	chartID: string;
-	game: GameGroup;
-	playtype: Playtype;
-	songID: integer;
+	game: TGame;
+	songID: string;
 	highlight: boolean;
 	isPrimary: boolean;
 	timeAchieved: number | null;
-	scoreData: MONGO_ScoreData<GPT>;
-	calculatedData: Partial<Record<ScoreRatingAlgorithms[GPT], number | null>>;
+	scoreData: ScoreData<TGame>;
+	calculatedData: Partial<Record<ScoreRatingAlgorithms[TGame], number | null>>;
 }
 
 export interface ImportProcessInfoOrphanExists {
@@ -549,12 +522,12 @@ export interface ImportProcessInfoAmbiguousTitle {
 	};
 }
 
-export interface ImportProcessInfoScoreImported<GPT extends GPTString = GPTString> {
+export interface ImportProcessInfoScoreImported<TGame extends V3Game = V3Game> {
 	success: true;
 	type: "ScoreImported";
 	message: string;
 	content: {
-		score: MONGO_ScoreDocument<GPT>;
+		score: ScoreDocument<TGame>;
 	};
 }
 
@@ -577,12 +550,12 @@ export interface ImportProcessInfoSongOrChartNotFound {
 	};
 }
 
-export type ImportProcessingInfo<GPT extends GPTString = GPTString> =
+export type ImportProcessingInfo<TGame extends V3Game = V3Game> =
 	| ImportProcessInfoAmbiguousTitle
 	| ImportProcessInfoInternalError
 	| ImportProcessInfoInvalidDatapoint
 	| ImportProcessInfoOrphanExists
-	| ImportProcessInfoScoreImported<GPT>
+	| ImportProcessInfoScoreImported<TGame>
 	| ImportProcessInfoSongOrChartNotFound;
 
 export interface ImportStatistics {
@@ -594,14 +567,14 @@ export interface ImportStatistics {
 	importID: string;
 }
 
-export interface MONGO_KaiAuthDocument {
+export interface KaiAuthDocument {
 	userID: integer;
 	token: string;
 	refreshToken: string;
 	service: "EAG" | "FLO" | "MIN";
 }
 
-export interface MONGO_CGCardInfo {
+export interface CGCardInfo {
 	userID: integer;
 	service: "dev" | "gan" | "nag";
 	cardID: string;
@@ -610,22 +583,25 @@ export interface MONGO_CGCardInfo {
 	pin: string;
 }
 
-export interface MONGO_MytCardInfo {
+export interface MytCardInfo {
 	userID: integer;
 	cardAccessCode: string; // matches /^[0-9]{20}$/
 }
 
-interface BMSCourseInner<GPT extends GPTStrings["bms"], Set extends keyof ExtractedClasses[GPT]> {
+interface BMSCourseInner<TGame extends V3Game, Set extends keyof ExtractedClasses[TGame]> {
 	set: Set;
-	playtype: GPTStringToPlaytype[GPT];
-	value: ExtractedClasses[GPT][Set];
+	game: TGame;
+	value: ExtractedClasses[TGame][Set];
 }
 
 /**
  * Used to resolve beatoraja IR courses.
  */
-export interface MONGO_BMSCourseDocument
-	extends BMSCourseInner<GPTStrings["bms"], keyof ExtractedClasses[GPTStrings["bms"]]> {
+export interface BMSCourseDocument
+	extends BMSCourseInner<
+		"bms-7k" | "bms-14k" | "pms-controller" | "pms-keyboard",
+		keyof ExtractedClasses["bms-7k" | "bms-14k" | "pms-controller" | "pms-keyboard"]
+	> {
 	title: string;
 	md5sums: string;
 }
@@ -633,7 +609,7 @@ export interface MONGO_BMSCourseDocument
 /**
  * Information about the API Token used to make this request.
  */
-export interface MONGO_APITokenDocument {
+export interface APITokenDocument {
 	userID: integer | null;
 	token: string | null;
 	identifier: string;
@@ -644,15 +620,13 @@ export interface MONGO_APITokenDocument {
 	fromAPIClient: string | null;
 }
 
-export interface MONGO_ImportLockDocument {
-	userID: integer;
-}
-
 export type ShowcaseStatDetails = ShowcaseStatChart | ShowcaseStatFolder;
 
 export interface ShowcaseStatFolder {
 	mode: "folder";
-	folderID: string;
+	// TODO(zk): This should be folderID, not slug
+	/** {@link BaseFolderDocument.slug} for this game. */
+	slug: string;
 
 	// should be a valid metric for the showcase this game is for
 	// this is not checked by the typesystem though. sorry!
@@ -663,37 +637,32 @@ export interface ShowcaseStatFolder {
 export interface ShowcaseStatChart {
 	mode: "chart";
 	chartID: string;
-
-	// should be a valid metric for the showcase this game is for
-	// this is not checked by the typesystem though. sorry!
-	metric: string;
 }
 
-export interface MONGO_UGPTSettingsDocument<GPT extends GPTString = GPTString> {
+export interface UGPTSettingsDocument<TGame extends V3Game = V3Game> {
 	userID: integer;
-	game: GPTStringToGame[GPT];
-	playtype: GPTStringToPlaytype[GPT];
+	game: TGame;
 	preferences: {
 		defaultTable: string | null;
-		gameSpecific: Preferences[GPT];
+		gameSpecific: Preferences[TGame];
 		preferredDefaultEnum: string | null;
-		preferredProfileAlg: ProfileRatingAlgorithms[GPT] | null;
+		preferredProfileAlg: ProfileRatingAlgorithms[TGame] | null;
 		preferredRanking: "global" | "rival" | null;
-		preferredScoreAlg: ScoreRatingAlgorithms[GPT] | null;
-		preferredSessionAlg: SessionRatingAlgorithms[GPT] | null;
+		preferredScoreAlg: ScoreRatingAlgorithms[TGame] | null;
+		preferredSessionAlg: SessionRatingAlgorithms[TGame] | null;
 		stats: Array<ShowcaseStatDetails>;
 	};
 	rivals: Array<integer>;
 }
 
-export interface MONGO_UserGameStatsSnapshotDocument<GPT extends GPTString = GPTString>
-	extends MONGO_SpecificUserGameStats<GPT> {
-	rankings: Record<ProfileRatingAlgorithms[GPT], { outOf: integer; ranking: integer | null }>;
+export interface UserGameStatsSnapshotDocument<TGame extends V3Game = V3Game>
+	extends SpecificUserGameStats<TGame> {
+	rankings: Record<ProfileRatingAlgorithms[TGame], { outOf: integer; ranking: integer | null }>;
 	playcount: integer;
 	timestamp: integer;
 }
 
-export interface MONGO_UserSettingsDocument {
+export interface UserSettingsDocument {
 	userID: integer;
 	following: Array<integer>;
 	preferences: {
@@ -705,7 +674,7 @@ export interface MONGO_UserSettingsDocument {
 	};
 }
 
-export interface MONGO_TachiAPIClientDocument {
+export interface TachiAPIClientDocument {
 	clientID: string;
 	clientSecret: string;
 	name: string;
@@ -717,62 +686,58 @@ export interface MONGO_TachiAPIClientDocument {
 	apiKeyFilename: string | null;
 }
 
-export interface MONGO_FervidexSettingsDocument {
+export interface FervidexSettingsDocument {
 	userID: integer;
 	cards: Array<string> | null;
 	forceStaticImport: boolean;
 }
 
-export interface MONGO_KsHookSettingsDocument {
+export interface KsHookSettingsDocument {
 	userID: integer;
 	forceStaticImport: boolean;
 }
 
-export interface MONGO_OrphanChartDocument<GPT extends GPTString = GPTString> {
-	gptString: GPT;
-	chartDoc: MONGO_ChartDocument<GPT>;
-	songDoc: MONGO_SongDocument<GPTStringToGame[GPT]>;
+export interface OrphanChartDocument<TGame extends V3Game = V3Game> {
+	game: TGame;
+	chartDoc: ChartDocument<TGame>;
+	songDoc: SongDocument<LEGACY_GPTStringToGameGroup[V3GameToGPTString[TGame]]>;
 	userIDs: Array<integer>;
 }
 
 export interface ClassDelta {
-	game: GameGroup;
-	set: Classes[GPTString];
-	playtype: Playtype;
+	game: V3Game;
+	set: Classes[V3Game];
 	old: string | null;
 	new: string;
 }
 
-export interface MONGO_ClassAchievementDocument<GPT extends GPTString = GPTString> {
-	game: GPTStringToGame[GPT];
-	playtype: GPTStringToPlaytype[GPT];
-	classSet: Classes[GPT];
+export interface ClassAchievementDocument<TGame extends V3Game = V3Game> {
+	game: TGame;
+	classSet: Classes[TGame];
 	classOldValue: string | null;
 	classValue: string;
 	timeAchieved: number;
 	userID: integer;
 }
 
-export interface MONGO_RecentlyViewedFolderDocument {
+export interface RecentlyViewedFolderDocument {
 	userID: integer;
-	game: GameGroup;
-	playtype: Playtypes[GameGroup];
-	folderID: string;
+	game: V3Game;
+	// TODO(zk): should be folderID
+	/** Folder {@link BaseFolderDocument.slug} for this game. */
+	slug: string;
 	lastViewed: number;
 }
 
-export type MONGO_NotificationDocument = {
+export type NotificationDocument = {
 	body: NotificationBody;
 } & BaseNotification;
 
-export interface MONGO_ChallengeSubscriptionDocument {
+export interface ChallengeSubscriptionDocument {
 	chartID: string;
 	authorID: integer;
 	type: "lamp" | "score";
-
-	game: GameGroup;
-	playtype: Playtype;
-
+	game: V3Game;
 	userID: integer;
 	achieved: boolean;
 	achievedAt: number | null;
@@ -799,11 +764,11 @@ export interface ImportTrackerFailed extends BaseImportTracker {
  * Tracks the status of an import while it goes through the pipeline or if it fails.
  *
  * Successful imports are removed from the tracking database, and their existence
- * is kept track of via { @see MONGO_ImportDocument }.
+ * is kept track of via { @see ImportDocument }.
  */
-export type MONGO_ImportTrackerDocument = ImportTrackerFailed | ImportTrackerOngoing;
+export type ImportTrackerDocument = ImportTrackerFailed | ImportTrackerOngoing;
 
-export interface MONGO_UserNameChangeDocument {
+export interface UserNameChangeDocument {
 	userID: integer;
 	username: string;
 	timestamp: integer;

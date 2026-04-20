@@ -11,21 +11,30 @@ import { useFormik } from "formik";
 import React, { type ChangeEventHandler, useContext, useEffect, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import {
+	type FolderDocument,
 	FormatDifficulty,
-	type GameGroup,
-	GetGamePTConfig,
+	GetGameConfig,
 	GetScoreMetricConf,
 	GetScoreMetrics,
-	type MONGO_FolderDocument,
-	type MONGO_UserDocument,
-	type Playtype,
 	type ShowcaseStatDetails,
+	type UserDocument,
+	type V3Game,
 } from "tachi-common";
 
+function defaultFolderGteForMetric(game: V3Game, metric: string): number {
+	const conf = GetScoreMetricConf(GetGameConfig(game), metric);
+	if (!conf) {
+		return 0;
+	}
+	if (conf.type === "ENUM") {
+		const i = conf.values.indexOf(conf.minimumRelevantValue);
+		return i >= 0 ? i : 0;
+	}
+	return 0;
+}
+
 interface Props {
-	reqUser: MONGO_UserDocument;
-	game: GameGroup;
-	playtype: Playtype;
+	reqUser: UserDocument;
 	onCreate: (stat: ShowcaseStatDetails) => void;
 	show: boolean;
 	setShow: SetState<boolean>;
@@ -34,22 +43,20 @@ interface Props {
 export default function UGPTStatCreator({
 	reqUser,
 	game,
-	playtype,
 	onCreate,
 	show,
 	setShow,
-}: Props) {
+}: GamePT & Props) {
 	return (
-		<Modal onHide={() => setShow(false)} show={show}>
-			<Modal.Header closeButton>
-				<Modal.Title>Showcase Stat Creator</Modal.Title>
+		<Modal centered onHide={() => setShow(false)} scrollable show={show} size="lg">
+			<Modal.Header className="border-bottom-0 pb-0" closeButton>
+				<Modal.Title className="fs-5">Evaluate a one-off stat</Modal.Title>
 			</Modal.Header>
-			<Modal.Body>
+			<Modal.Body className="pt-2">
 				{show && (
 					<UGPTStatInnerSearchyBit
 						game={game}
 						onCreate={onCreate}
-						playtype={playtype}
 						reqUser={reqUser}
 						setShow={setShow}
 						show={show}
@@ -60,14 +67,14 @@ export default function UGPTStatCreator({
 	);
 }
 
-function UGPTStatInnerSearchyBit({ game, playtype, onCreate, setShow }: Props) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+function UGPTStatInnerSearchyBit({ game, onCreate, setShow }: GamePT & Props) {
+	const gameConfig = GetGameConfig(game);
 
 	const formik = useFormik({
 		initialValues: {
 			mode: "chart",
-			metric: GetScoreMetrics(gptConfig, ["DECIMAL", "INTEGER", "ENUM"])[0],
-			folderID: undefined,
+			metric: GetScoreMetrics(gameConfig, ["DECIMAL", "INTEGER", "ENUM"])[0],
+			folderSlug: undefined as string | undefined,
 			chartID: undefined,
 		},
 		onSubmit: (values) => {
@@ -76,14 +83,13 @@ function UGPTStatInnerSearchyBit({ game, playtype, onCreate, setShow }: Props) {
 			if (values.mode === "chart") {
 				stat = {
 					mode: "chart",
-					metric: values.metric as ShowcaseStatDetails["metric"],
 					chartID: values.chartID ?? "",
 				};
 			} else if (values.mode === "folder") {
 				stat = {
 					mode: "folder",
 					metric: values.metric as "grade" | "lamp" | "percent" | "score",
-					folderID: values.folderID ?? "",
+					slug: values.folderSlug ?? "",
 					gte,
 				};
 			} else {
@@ -106,10 +112,16 @@ function UGPTStatInnerSearchyBit({ game, playtype, onCreate, setShow }: Props) {
 	const [chartSearch, setChartSearch] = useState("");
 	const [requesterHasPlayed, setRequesterHasPlayed] = useState(user !== null);
 
-	const [folderData, setFolderData] = useState<{ folderID: string; name: string }[]>([]);
+	const [folderData, setFolderData] = useState<{ name: string; slug: string }[]>([]);
 	const [folderSearch, setFolderSearch] = useState("");
 
 	const [gte, setGte] = useState(0);
+
+	useEffect(() => {
+		if (formik.values.mode === "folder") {
+			setGte(defaultFolderGteForMetric(game, formik.values.metric));
+		}
+	}, [formik.values.mode, formik.values.metric, game]);
 
 	useEffect(() => {
 		(async () => {
@@ -118,8 +130,8 @@ function UGPTStatInnerSearchyBit({ game, playtype, onCreate, setShow }: Props) {
 				search,
 			});
 
-			const res = await APIFetchV1<MONGO_FolderDocument[]>(
-				`/games/${game}/${playtype}/folders?${params.toString()}`,
+			const res = await APIFetchV1<FolderDocument[]>(
+				`/games/${game}/folders?${params.toString()}`,
 				{},
 				false,
 				true,
@@ -130,9 +142,7 @@ function UGPTStatInnerSearchyBit({ game, playtype, onCreate, setShow }: Props) {
 			}
 
 			setFolderData(
-				res.body
-					.map((e) => ({ folderID: e.folderID, name: e.title }))
-					.sort(StrSOV((e) => e.name)),
+				res.body.map((e) => ({ slug: e.slug, name: e.title })).sort(StrSOV((e) => e.name)),
 			);
 		})();
 	}, [folderSearch]);
@@ -149,7 +159,7 @@ function UGPTStatInnerSearchyBit({ game, playtype, onCreate, setShow }: Props) {
 			}
 
 			const res = await APIFetchV1<SongChartsSearch>(
-				`/games/${game}/${playtype}/charts?${params.toString()}`,
+				`/games/${game}/charts?${params.toString()}`,
 				{},
 				false,
 				true,
@@ -163,11 +173,11 @@ function UGPTStatInnerSearchyBit({ game, playtype, onCreate, setShow }: Props) {
 
 			const data = [];
 			for (const chart of res.body.charts) {
-				const song = songMap.get(chart.songID);
+				const song = songMap.get(chart.song.id);
 
 				data.push({
 					chartID: chart.chartID,
-					name: `${song!.title} ${FormatDifficulty(chart, game)}`,
+					name: `${song!.title} ${FormatDifficulty(chart)}`,
 				});
 			}
 
@@ -187,22 +197,23 @@ function UGPTStatInnerSearchyBit({ game, playtype, onCreate, setShow }: Props) {
 				</Form.Select>
 				<Form.Text>What kind of stat should this be?</Form.Text>
 			</Form.Group>
-			<Form.Group className="d-flex flex-column">
-				<Form.Label>Property</Form.Label>
-				<Form.Select
-					id="metric"
-					onChange={formik.handleChange}
-					value={formik.values.metric}
-				>
-					{GetScoreMetrics(gptConfig, ["DECIMAL", "INTEGER", "ENUM"]).map((e) => (
-						<option key={e} value={e}>
-							{UppercaseFirst(e)}
-						</option>
-					))}
-					{formik.values.mode === "chart" && <option value="playcount">Playcount</option>}
-				</Form.Select>
-				<Form.Text>What kind of statistic should this check for?</Form.Text>
-			</Form.Group>
+			{formik.values.mode === "folder" && (
+				<Form.Group className="d-flex flex-column">
+					<Form.Label>Property</Form.Label>
+					<Form.Select
+						id="metric"
+						onChange={formik.handleChange}
+						value={formik.values.metric}
+					>
+						{GetScoreMetrics(gameConfig, ["DECIMAL", "INTEGER", "ENUM"]).map((e) => (
+							<option key={e} value={e}>
+								{UppercaseFirst(e)}
+							</option>
+						))}
+					</Form.Select>
+					<Form.Text>What kind of statistic should this check for?</Form.Text>
+				</Form.Group>
+			)}
 			{formik.values.mode === "chart" ? (
 				<Form.Group className="d-flex flex-column">
 					<Form.Label>Chart</Form.Label>
@@ -242,7 +253,6 @@ function UGPTStatInnerSearchyBit({ game, playtype, onCreate, setShow }: Props) {
 							value={gte}
 							{...{
 								game,
-								playtype,
 								metric: formik.values.metric,
 							}}
 						/>
@@ -253,13 +263,13 @@ function UGPTStatInnerSearchyBit({ game, playtype, onCreate, setShow }: Props) {
 						{folderData.length ? (
 							<Form.Select
 								className="mt-4"
-								id="folderID"
+								id="folderSlug"
 								onChange={formik.handleChange}
-								value={formik.values.folderID}
+								value={formik.values.folderSlug}
 							>
 								<option value="">Select a folder...</option>
 								{folderData.map((e, i) => (
-									<option key={i} value={e.folderID}>
+									<option key={i} value={e.slug}>
 										{e.name}
 									</option>
 								))}
@@ -271,11 +281,15 @@ function UGPTStatInnerSearchyBit({ game, playtype, onCreate, setShow }: Props) {
 				</>
 			)}
 			<Button
-				className="mt-4"
-				disabled={formik.values.mode === "chart" && !formik.values.chartID}
+				className="mt-2 w-100"
+				disabled={
+					(formik.values.mode === "chart" && !formik.values.chartID) ||
+					(formik.values.mode === "folder" && !formik.values.folderSlug)
+				}
 				type="submit"
+				variant="primary"
 			>
-				Submit
+				Evaluate
 			</Button>
 		</Form>
 	);
@@ -284,7 +298,6 @@ function UGPTStatInnerSearchyBit({ game, playtype, onCreate, setShow }: Props) {
 function FolderGTESelect({
 	metric,
 	game,
-	playtype,
 	value,
 	onChange,
 }: {
@@ -292,29 +305,32 @@ function FolderGTESelect({
 	onChange: ChangeEventHandler<HTMLInputElement | HTMLSelectElement>;
 	value: number;
 } & GamePT) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
 	const props = { value, onChange };
 
-	const conf = GetScoreMetricConf(gptConfig, metric);
+	const conf = GetScoreMetricConf(gameConfig, metric);
 
 	if (!conf) {
-		return <>error: no conf? what?</>;
+		return <>No config for {metric}. This is a bug!</>;
 	}
 
-	if (conf.type === "ENUM") {
-		return (
-			<select className="form-select" {...props}>
-				{conf.values.map((e, i) => (
-					<option key={i} value={i}>
-						{e}
-					</option>
-				))}
-			</select>
-		);
-	} else if (conf.type === "GRAPH" || conf.type === "NULLABLE_GRAPH") {
-		return <>can't set stats for graphs. how'd you get here?</>;
+	switch (conf.type) {
+		case "GRAPH":
+		case "NULLABLE_GRAPH":
+			return <>Not applicable.</>;
+		case "DECIMAL":
+		case "INTEGER":
+			return <Form.Control onChange={onChange as any} type="number" value={value} />;
+		case "ENUM":
+			return (
+				<Form.Select {...props}>
+					{conf.values.map((v, i) => (
+						<option key={v} value={i}>
+							{v}
+						</option>
+					))}
+				</Form.Select>
+			);
 	}
-
-	return <input className="form-control" min={0} type="number" {...props} />;
 }

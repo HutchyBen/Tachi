@@ -1,4 +1,4 @@
-import type { MONGO_ImportDocument } from "tachi-common";
+import type { ImportDocument } from "tachi-common";
 
 import db from "#services/pg/db";
 import { createTestAccount } from "#test-utils/db";
@@ -13,11 +13,12 @@ vi.mock("../utils/api-requests");
 
 const { PerformScoreImport } = await import("../utils/api-requests");
 
-function makeImportDoc(overrides: Partial<MONGO_ImportDocument> = {}): MONGO_ImportDocument {
+function makeImportDoc(overrides: Partial<ImportDocument> = {}): ImportDocument {
 	return {
 		importID: "import-abc-123",
 		userID: 1,
-		game: "iidx-sp",
+		gameGroup: "iidx",
+		games: ["iidx-sp"],
 		scoreIDs: ["s1", "s2"],
 		createdSessions: [{ sessionID: "sess1", type: "Created" }],
 		errors: [],
@@ -25,7 +26,7 @@ function makeImportDoc(overrides: Partial<MONGO_ImportDocument> = {}): MONGO_Imp
 		goalProgress: [],
 		questProgress: [],
 		...overrides,
-	} as unknown as MONGO_ImportDocument;
+	} as unknown as ImportDocument;
 }
 
 describe("ACTION_Sync", () => {
@@ -50,7 +51,7 @@ describe("ACTION_Sync", () => {
 			session_count: 1,
 			error_count: 0,
 			user_id: 1,
-			game: "iidx-sp",
+			games: ["iidx-sp"],
 		});
 	});
 
@@ -82,7 +83,7 @@ describe("ACTION_Sync", () => {
 
 	it("throws ExpectedErr when PerformScoreImport returns an error string", async () => {
 		vi.mocked(PerformScoreImport).mockResolvedValue(
-			"Your API key has expired." as unknown as MONGO_ImportDocument,
+			"Your API key has expired." as unknown as ImportDocument,
 		);
 
 		await expect(ACTION_Sync(taker, syncInput)).rejects.toMatchObject({
@@ -93,7 +94,7 @@ describe("ACTION_Sync", () => {
 
 	it("the ExpectedErr thrown on failure is an ExpectedErr instance", async () => {
 		vi.mocked(PerformScoreImport).mockResolvedValue(
-			"Import failed." as unknown as MONGO_ImportDocument,
+			"Import failed." as unknown as ImportDocument,
 		);
 
 		await expect(ACTION_Sync(taker, syncInput)).rejects.toBeInstanceOf(ExpectedErr);
@@ -120,9 +121,7 @@ describe("ACTION_Sync", () => {
 	});
 
 	it("writes a BAD action row when PerformScoreImport returns an error string", async () => {
-		vi.mocked(PerformScoreImport).mockResolvedValue(
-			"Bad import." as unknown as MONGO_ImportDocument,
-		);
+		vi.mocked(PerformScoreImport).mockResolvedValue("Bad import." as unknown as ImportDocument);
 
 		await expect(ACTION_Sync(taker, syncInput)).rejects.toBeInstanceOf(ExpectedErr);
 

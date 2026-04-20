@@ -40,7 +40,7 @@ async function seedIIDXUserProfile(userId: number) {
 		.execute();
 }
 
-describe("GET /api/v1/users/:userID/games/:game/:playtype/showcase", () => {
+describe("GET /api/v1/users/:userID/games/:game/showcase", () => {
 	let userId: number;
 
 	beforeEach(async () => {
@@ -52,7 +52,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/showcase", () => {
 	});
 
 	it("returns 200 with an empty evaluated list when showcase has no stats", async () => {
-		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx/SP/showcase`);
+		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx-sp/showcase`);
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
@@ -60,7 +60,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/showcase", () => {
 	});
 });
 
-describe("PUT /api/v1/users/:userID/games/:game/:playtype/showcase", () => {
+describe("PUT /api/v1/users/:userID/games/:game/showcase", () => {
 	let userId: number;
 	let cookie: string[];
 
@@ -107,12 +107,12 @@ describe("PUT /api/v1/users/:userID/games/:game/:playtype/showcase", () => {
 			})
 			.execute();
 
-		const stats = [{ mode: "chart" as const, metric: "playcount", chartID: chartId }];
+		const stats = [{ mode: "chart" as const, chartID: chartId }];
 
 		const res = await mockApi
-			.put(`/api/v1/users/${userId}/games/iidx/SP/showcase`)
+			.put(`/api/v1/users/${userId}/games/iidx-sp/showcase`)
 			.set("Cookie", cookie)
-			.send(stats);
+			.send({ showcase: stats });
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);

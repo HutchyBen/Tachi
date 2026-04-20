@@ -6,11 +6,13 @@ import { type RawQuestDocument } from "#types/tachi";
 import React, { useState } from "react";
 import { Button, Col, Modal, Row } from "react-bootstrap";
 import {
-	FormatGameGroup,
+	FormatGame,
 	type GameGroup,
 	GetGameGroupConfig,
-	type GPTString,
-	type Playtype,
+	LEGACY_GameGroupPTToGame,
+	type LEGACY_GPTString,
+	type LEGACY_Playtype,
+	type V3Game,
 } from "tachi-common";
 
 export default function AddNewQuestModal({
@@ -22,7 +24,7 @@ export default function AddNewQuestModal({
 	setShow: SetState<boolean>;
 	show: boolean;
 }) {
-	const [gpt, setGPT] = useState<GPTString | null>(null);
+	const [gpt, setGPT] = useState<LEGACY_GPTString | null>(null);
 
 	return (
 		<Modal onHide={() => setShow(false)} show={show} size="xl">
@@ -39,7 +41,7 @@ export default function AddNewQuestModal({
 							unselectedName="Select a game..."
 							value={gpt}
 						>
-							{TachiConfig.GAMES.flatMap((game) => {
+							{TachiConfig.GAME_GROUPS.flatMap((game) => {
 								const gameConfig = GetGameGroupConfig(game);
 
 								return gameConfig.playtypes.map((playtype) => (
@@ -47,7 +49,7 @@ export default function AddNewQuestModal({
 										key={`${game}:${playtype}`}
 										value={`${game}:${playtype}`}
 									>
-										{FormatGameGroup(game, playtype)}
+										{FormatGame(LEGACY_GameGroupPTToGame(game, playtype))}
 									</option>
 								));
 							})}
@@ -63,10 +65,13 @@ export default function AddNewQuestModal({
 								}
 
 								setShow(false);
-								const [game, playtype] = gpt.split(":") as [GameGroup, Playtype];
+								const [game, playtype] = gpt.split(":") as [
+									GameGroup,
+									LEGACY_Playtype,
+								];
+								const v3Game: V3Game = LEGACY_GameGroupPTToGame(game, playtype);
 								onCreate({
-									game,
-									playtype,
+									game: v3Game,
 									name: "Untitled Quest",
 									desc: "Please set a description.",
 									rawQuestData: [],

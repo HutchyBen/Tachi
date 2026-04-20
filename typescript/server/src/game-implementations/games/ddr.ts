@@ -1,38 +1,40 @@
 import type {
+	GameImplementation,
 	GPTGoalFormatters,
 	GPTGoalProgressFormatters,
 	GPTProfileCalcs,
-	GPTServerImplementation,
 	ScoreValidator,
 } from "#game-implementations/types";
 
 import DB from "#services/pg/db";
+import { IsNullish } from "#utils/misc";
 import { sql } from "kysely";
 import { DDRFlare } from "rg-stats";
 import {
+	type ChartDocument,
 	DDR_GBOUNDARIES,
 	FmtNum,
-	GamePTToV3,
+	GetGameConfig,
 	GetGrade,
-	GetSpecificGPTConfig,
-	type MONGO_ChartDocument,
-	type MONGO_ScoreDocument,
+	type ScoreDocument,
 } from "tachi-common";
 
-import { IsNullish } from "../../utils/misc";
 import { CreatePBMergeFor } from "../utils/pb-merge";
 import { SessionAvgBest10For } from "../utils/session-calc";
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
-const DDR_GOAL_FMT: GPTGoalFormatters<"ddr:DP" | "ddr:SP"> = {
+/** `ddr:SP` / `ddr:DP` as v3 games. */
+type DDRGames = "ddr-dp" | "ddr-sp";
+
+const DDR_GOAL_FMT: GPTGoalFormatters<DDRGames> = {
 	score: GoalFmtScore,
 };
 
-const DDR_GOAL_OO_FMT: GPTGoalFormatters<"ddr:DP" | "ddr:SP"> = {
+const DDR_GOAL_OO_FMT: GPTGoalFormatters<DDRGames> = {
 	score: GoalOutOfFmtScore,
 };
 
-const DDR_GOAL_PG_FMT: GPTGoalProgressFormatters<"ddr:DP" | "ddr:SP"> = {
+const DDR_GOAL_PG_FMT: GPTGoalProgressFormatters<DDRGames> = {
 	score: (pb) => FmtNum(pb.scoreData.score),
 	lamp: (pb) => pb.scoreData.lamp,
 	grade: (pb, gradeIndex) =>
@@ -45,11 +47,8 @@ const DDR_GOAL_PG_FMT: GPTGoalProgressFormatters<"ddr:DP" | "ddr:SP"> = {
 		),
 };
 
-export const DDR_SCORE_VALIDATORS: Array<ScoreValidator<"ddr:DP" | "ddr:SP">> = [
-	(
-		s: MONGO_ScoreDocument<"ddr:DP" | "ddr:SP">,
-		chart?: MONGO_ChartDocument<"ddr:DP" | "ddr:SP">,
-	) => {
+export const DDR_SCORE_VALIDATORS: Array<ScoreValidator<DDRGames>> = [
+	(s: ScoreDocument<DDRGames>, chart?: ChartDocument<DDRGames>) => {
 		if (s.scoreData.lamp === "FAILED" || !chart || IsNullish(chart.data.stepCount)) {
 			return;
 		}
@@ -147,9 +146,7 @@ export const DDR_SCORE_VALIDATORS: Array<ScoreValidator<"ddr:DP" | "ddr:SP">> = 
 	},
 ];
 
-const DDR_PROFILE_CALCS: GPTProfileCalcs<"ddr:DP" | "ddr:SP"> = async (game, playtype, userID) => {
-	const v3Game = GamePTToV3(game, playtype);
-
+const DDR_PROFILE_CALCS: GPTProfileCalcs<DDRGames> = async (game, userID) => {
 	const rows = await DB.selectFrom("pb")
 		.innerJoin("chart", "chart.id", "pb.chart_id")
 		.innerJoin("song", "song.id", "chart.song_id")
@@ -160,7 +157,7 @@ const DDR_PROFILE_CALCS: GPTProfileCalcs<"ddr:DP" | "ddr:SP"> = async (game, pla
 			sql<string | null>`song.data::jsonb->>'flareCategory'`.as("flare_category"),
 		])
 		.where("pb.user_id", "=", userID)
-		.where("chart.game", "=", v3Game)
+		.where("chart.game", "=", game)
 		.where("chart.is_primary", "=", true)
 		.where((eb) =>
 			eb(sql`jsonb_typeof(pb.calculated_data::jsonb -> 'flareSkill')`, "=", sql`'number'`),
@@ -284,7 +281,7 @@ function DeriveFlareClass(flarePoints: number) {
 	}
 }
 
-export const DDR_IMPL: GPTServerImplementation<"ddr:DP" | "ddr:SP"> = {
+export const DDR_IMPL: GameImplementation<DDRGames> = {
 	chartSpecificValidators: {},
 	classDerivers: (ratings) => {
 		const flarePoints = ratings.flareSkill;
@@ -300,11 +297,11 @@ export const DDR_IMPL: GPTServerImplementation<"ddr:DP" | "ddr:SP"> = {
 			return { flareSkill: 0 };
 		}
 
-		const flareLevel = scoreData.optional.flare
-			? GetSpecificGPTConfig("ddr:SP").optionalMetrics.flare.values.indexOf(
-					scoreData.optional.flare,
-				)
-			: 0;
+		const flareConf = GetGameConfig(chart.game).optionalMetrics.flare;
+		const flareLevel =
+			scoreData.optional.flare && flareConf.type === "ENUM"
+				? flareConf.values.indexOf(scoreData.optional.flare)
+				: 0;
 
 		return { flareSkill: DDRFlare.calculate(chart.levelNum, flareLevel) };
 	},
@@ -351,5 +348,5 @@ export const DDR_IMPL: GPTServerImplementation<"ddr:DP" | "ddr:SP"> = {
 	}),
 	profileCalcs: DDR_PROFILE_CALCS,
 	scoreValidators: DDR_SCORE_VALIDATORS,
-	derivationRelevantFields: ["levelNum"],
+	chartDataRelevantFields: ["levelNum"],
 };

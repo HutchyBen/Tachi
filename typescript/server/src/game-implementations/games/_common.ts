@@ -19,21 +19,28 @@ import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
 import { IsNullish, NumToDP } from "#utils/misc";
 import { Volforce } from "rg-stats";
 import {
+	type ChartDocument,
 	FmtNum,
 	FmtNumCompact,
 	GetGrade,
 	GetGradeDeltas,
-	type GPTString,
-	type GPTStrings,
 	type GradeBoundary,
-	IIDXLIKE_GBOUNDARIES,
 	IIDXLikeGetGrade,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_ScoreDocument,
-	type MONGO_SpecificUserGameStats,
+	type ScoreDocument,
 	SDVXLIKE_GBOUNDARIES,
+	type SpecificUserGameStats,
+	type V3Game,
 } from "tachi-common";
+
+/** BMS/PMS v3 games (e.g. `bms:7K` → `bms-7k`). */
+type BmsPmsGames = "bms-7k" | "bms-14k" | "pms-controller" | "pms-keyboard";
+
+/** IIDX/BMS/PMS shared chart logic (e.g. `iidx:SP` → `iidx-sp`). */
+type IIDXLikes = "iidx-dp" | "iidx-sp" | BmsPmsGames;
+
+/** SDVX and USC v3 games (`sdvx:Single` → `sdvx`; `usc:Controller` → `usc-controller`). */
+type SDVXLikes = "sdvx" | "usc-controller" | "usc-keyboard";
 
 export const EX_SCORE_CHECK: ChartSpecificMetricValidator<IIDXLikes> = (exScore, chart) => {
 	if (exScore < 0) {
@@ -50,8 +57,6 @@ export const EX_SCORE_CHECK: ChartSpecificMetricValidator<IIDXLikes> = (exScore,
 function calculateIIDXLikePercent(exScore: integer, notecount: integer) {
 	return (100 * exScore) / (notecount * 2);
 }
-
-type IIDXLikes = GPTStrings["bms" | "iidx" | "pms"];
 
 export const IIDXLIKE_SCORE_DERIVER: GPTScoreDeriver<IIDXLikes> = (scoreData, chart) => ({
 	percent: calculateIIDXLikePercent(scoreData.score, chart.data.notecount),
@@ -76,8 +81,6 @@ export const IIDXLIKE_SCORE_VALIDATORS: Array<ScoreValidator<IIDXLikes>> = [
 	},
 ];
 
-type SDVXLikes = GPTStrings["sdvx" | "usc"];
-
 export const SDVXLIKE_SCORE_DERIVER: GPTScoreDeriver<SDVXLikes> = (scoreData, _chart) => ({
 	grade: GetGrade(SDVXLIKE_GBOUNDARIES, scoreData.score),
 });
@@ -91,9 +94,7 @@ export const IIDXLIKE_PB_RANKING_VALUES: PBRankingValuesFunction<IIDXLikes> = (p
 	tb5: null,
 });
 
-export function VF6ToClass(
-	vf: number,
-): MONGO_SpecificUserGameStats<"sdvx:Single">["classes"]["vfClass"] {
+export function VF6ToClass(vf: number): SpecificUserGameStats<"sdvx">["classes"]["vfClass"] {
 	// jesus christ man
 	if (vf >= 23) {
 		return "IMPERIAL_IV";
@@ -188,12 +189,8 @@ export const SDVXLIKE_SESSION_CALCS: GPTSessionCalcs<SDVXLikes> = (arr) => {
 	return { ProfileVF6: v !== null ? v * 50 : null };
 };
 
-export const SDVXLIKE_PROFILE_CALCS: GPTProfileCalcs<SDVXLikes> = async (
-	game,
-	playtype,
-	userID,
-) => ({
-	VF6: await ProfileSumBestN("VF6", 50)(game, playtype, userID),
+export const SDVXLIKE_PROFILE_CALCS: GPTProfileCalcs<SDVXLikes> = async (game, userID) => ({
+	VF6: await ProfileSumBestN("VF6", 50)(game, userID),
 });
 
 export const SDVXLIKE_CLASS_DERIVERS: GPTClassDerivers<SDVXLikes> = (ratings) => ({
@@ -221,9 +218,14 @@ export const SDVXLIKE_GOAL_PG_FMT: GPTGoalProgressFormatters<SDVXLikes> = {
 };
 
 export const SDVXLIKE_PB_MERGERS: Array<PBMergeFunction<SDVXLikes>> = [
-	CreatePBMergeFor("largest", { type: "REGULAR", metric: "lamp" }, "Best Lamp", (base, score) => {
-		base.scoreData.lamp = score.scoreData.lamp;
-	}),
+	CreatePBMergeFor<SDVXLikes>(
+		"largest",
+		{ type: "REGULAR", metric: "lamp" },
+		"Best Lamp",
+		(base, score) => {
+			base.scoreData.lamp = score.scoreData.lamp;
+		},
+	),
 ];
 
 export const SDVXLIKE_DEFAULT_MERGE_NAME = "Best Score";
@@ -250,23 +252,15 @@ export const SDVXLIKE_SCORE_VALIDATORS: Array<ScoreValidator<SDVXLikes>> = [
 	},
 ];
 
-export const SGL_SESSION_CALCS: GPTSessionCalcs<GPTStrings["bms" | "pms"]> = (arr) => ({
+export const SGL_SESSION_CALCS: GPTSessionCalcs<BmsPmsGames> = (arr) => ({
 	sieglinde: SessionAvgBest10For("sieglinde")(arr),
 });
 
-export const SGL_PROFILE_CALCS: GPTProfileCalcs<GPTStrings["bms" | "pms"]> = async (
-	game,
-	playtype,
-	userID,
-) => ({
-	sieglinde: await ProfileAvgBestN("sieglinde", 20)(game, playtype, userID),
+export const SGL_PROFILE_CALCS: GPTProfileCalcs<BmsPmsGames> = async (game, userID) => ({
+	sieglinde: await ProfileAvgBestN("sieglinde", 20)(game, userID),
 });
 
-export const SGL_SCORE_CALCS: GPTScoreCalcs<GPTStrings["bms" | "pms"]> = (
-	scoreData,
-	_derivedData,
-	chart,
-) => {
+export const SGL_SCORE_CALCS: GPTScoreCalcs<BmsPmsGames> = (scoreData, _derivedData, chart) => {
 	const ecValue = chart.data.sglEC ?? 0;
 	const hcValue = chart.data.sglHC ?? 0;
 
@@ -341,10 +335,10 @@ export function GradeGoalFormatter<G extends string>(
  *
  * @returns undefined on success, an array of error messages (strings) on failure.
  */
-export function RunValidators<GPT extends GPTString>(
-	validators: Array<ScoreValidator<GPT>>,
-	score: MONGO_ScoreDocument<GPT>,
-	chart: MONGO_ChartDocument<GPT>,
+export function RunValidators<TGame extends V3Game>(
+	validators: Array<ScoreValidator<TGame>>,
+	score: ScoreDocument<TGame>,
+	chart: ChartDocument<TGame>,
 ) {
 	const errs = [];
 

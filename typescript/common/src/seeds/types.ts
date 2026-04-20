@@ -1,14 +1,14 @@
 import type {
+	BMSCourseDocument,
+	ChartDocument,
+	FolderDocument,
 	GameGroup,
-	GPTStrings,
-	MONGO_BMSCourseDocument,
-	MONGO_ChartDocument,
-	MONGO_FolderDocument,
-	MONGO_GoalDocument,
-	MONGO_QuestDocument,
-	MONGO_QuestlineDocument,
-	MONGO_SongDocument,
-	MONGO_TableDocument,
+	GoalDocument,
+	QuestDocument,
+	QuestlineDocument,
+	SongDocument,
+	TableDocument,
+	V3Game,
 } from "../types";
 
 import { allSupportedGameGroups } from "../config/config";
@@ -17,20 +17,20 @@ import { allSupportedGameGroups } from "../config/config";
 // note that TS won't let you do this multiple times within an object
 // so, we have to join them ourselves. Ah well, not that bad.
 type ChartDBSeeds = {
-	[G in GameGroup as `charts-${G}.json`]: Array<MONGO_ChartDocument<GPTStrings[G]>>;
+	[TGame in V3Game as `charts-${TGame}.json`]: Array<ChartDocument<TGame>>;
 };
 
 type SongDBSeeds = {
-	[G in GameGroup as `songs-${G}.json`]: Array<MONGO_SongDocument<G>>;
+	[G in GameGroup as `songs-${G}.json`]: Array<SongDocument<G>>;
 };
 
 interface OtherDBSeeds {
-	"bms-course-lookup.json": Array<MONGO_BMSCourseDocument>;
-	"folders.json": Array<MONGO_FolderDocument>;
-	"goals.json": Array<MONGO_GoalDocument>;
-	"questlines.json": Array<MONGO_QuestlineDocument>;
-	"quests.json": Array<MONGO_QuestDocument>;
-	"tables.json": Array<MONGO_TableDocument>;
+	"bms-course-lookup.json": Array<BMSCourseDocument>;
+	"folders.json": Array<FolderDocument>;
+	"goals.json": Array<GoalDocument>;
+	"questlines.json": Array<QuestlineDocument>;
+	"quests.json": Array<QuestDocument>;
+	"tables.json": Array<TableDocument>;
 }
 
 export type AllDatabaseSeeds = ChartDBSeeds & OtherDBSeeds & SongDBSeeds;

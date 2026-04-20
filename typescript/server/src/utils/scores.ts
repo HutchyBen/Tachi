@@ -1,30 +1,16 @@
 import {
-	LoadPbByUserAndChartLegacyId,
-	LoadPbServerRecordForChartLegacyId,
-} from "#lib/db-formats/pb";
-import {
-	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_ScoreDocument,
-	type MONGO_SongDocument,
-	MongoChartLegacyId,
+	type ChartDocument,
+	type PBScoreDocument,
+	type ScoreDocument,
+	type SongDocument,
 } from "tachi-common";
 
 import { DedupeArr } from "./misc";
 
-export function GetPBOnChart(userID: integer, chartID: string) {
-	return LoadPbByUserAndChartLegacyId(userID, chartID);
-}
-
-export function GetServerRecordOnChart(chartID: string) {
-	return LoadPbServerRecordForChartLegacyId(chartID);
-}
-
 export function FilterChartsAndSongs(
-	scores: Array<MONGO_PBScoreDocument | MONGO_ScoreDocument>,
-	charts: Array<MONGO_ChartDocument>,
-	songs: Array<MONGO_SongDocument>,
+	scores: Array<PBScoreDocument | ScoreDocument>,
+	charts: Array<ChartDocument>,
+	songs: Array<SongDocument>,
 ) {
 	const chartIDs = new Set();
 	const songIDs = new Set();
@@ -37,13 +23,11 @@ export function FilterChartsAndSongs(
 	// filter out irrelevant songs and charts
 	return {
 		songs: songs.filter((e) => songIDs.has(e.id)),
-		charts: charts.filter(
-			(e) => chartIDs.has(e.chartID) || chartIDs.has(MongoChartLegacyId(e)),
-		),
+		charts: charts.filter((e) => chartIDs.has(e.chartID)),
 	};
 }
 
-export function GetScoreIDsFromComposed(pb: MONGO_PBScoreDocument) {
+export function GetScoreIDsFromComposed(pb: PBScoreDocument) {
 	const arr = pb.composedFrom.map((e) => e.scoreID);
 
 	return DedupeArr(arr);

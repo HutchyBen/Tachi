@@ -1,4 +1,4 @@
-import type { MONGO_ImportDocument } from "tachi-common";
+import type { ImportDocument } from "tachi-common";
 
 import { LoadScoreDocumentsForImport } from "#lib/db-formats/score";
 import { log } from "#lib/log/log";
@@ -14,15 +14,13 @@ interface OngoingImportError {
 }
 
 /**
- * Given an MONGO_ImportDocument, undo it. This will remove all of the scores inside the import.
+ * Given an ImportDocument, undo it. This will remove all of the scores inside the import.
  *
  * It will *not* undo things like classes that were set, but it will invoke a profile recalculation.
  *
  * If this results in sessions being deleted, it will delete them.
  */
-export async function RevertImport(
-	importDoc: MONGO_ImportDocument,
-): Promise<OngoingImportError | null> {
+export async function RevertImport(importDoc: ImportDocument): Promise<OngoingImportError | null> {
 	log.info({ importDoc }, `Received revert-import request for import '${importDoc.importID}'`);
 
 	const scores = await GetImportScores(importDoc);
@@ -65,6 +63,6 @@ export async function RevertImport(
 /**
  * Loads all scores that belong to this import (Postgres `score.import_id`).
  */
-export function GetImportScores(importDoc: MONGO_ImportDocument) {
+export function GetImportScores(importDoc: ImportDocument) {
 	return LoadScoreDocumentsForImport(importDoc.importID);
 }

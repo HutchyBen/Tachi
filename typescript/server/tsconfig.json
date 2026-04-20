@@ -9,5 +9,5 @@
 		}
 	},
 	"include": ["src", "vitest.config.ts", "vitest.globalSetup.ts", "vitest.setup.ts"],
-	"exclude": ["node_modules", "src/**/*.oldtest.ts"]
+	"exclude": ["node_modules"]
 }

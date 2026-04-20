@@ -1,17 +1,18 @@
 import { p } from "prudence";
 import { z } from "zod";
 
-import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_PT_CONFIG } from "../../types/internals";
+import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
 import { FmtPercent } from "../../utils/util";
 import { ClassValue, zodNonNegativeInt } from "../config-utils";
 import { FAST_SLOW_MAXCOMBO } from "./_common";
 
-export const GITADORA_CONF = {
+export const GAME_GROUP_GITADORA_CONF = {
 	name: "GITADORA",
+	games: ["gitadora-gita", "gitadora-dora"],
 	playtypes: ["Gita", "Dora"],
 	songData: z.strictObject({}),
-} as const satisfies INTERNAL_GAME_CONFIG;
+} as const satisfies INTERNAL_GAME_GROUP_CONFIG;
 
 const GitadoraColours = [
 	ClassValue("WHITE", "白", "White"),
@@ -33,7 +34,7 @@ const GitadoraColours = [
 	ClassValue("RAINBOW", "虹", "Rainbow"),
 ];
 
-export const GITADORA_GITA_CONF = {
+export const GAME_GITADORA_GITA_CONF = {
 	providedMetrics: {
 		percent: {
 			type: "DECIMAL",
@@ -94,7 +95,7 @@ export const GITADORA_GITA_CONF = {
 			"BASS EXTREME",
 			"BASS MASTER",
 		],
-		shorthand: {
+		format: {
 			BASIC: "G-BSC",
 			ADVANCED: "G-ADV",
 			EXTREME: "G-EXT",
@@ -131,15 +132,15 @@ export const GITADORA_GITA_CONF = {
 	scoreMeta: z.strictObject({}),
 
 	supportedMatchTypes: ["inGameID", "songTitle", "tachiSongID"],
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;
 
-export const GITADORA_DORA_CONF = {
-	...GITADORA_GITA_CONF,
+export const GAME_GITADORA_DORA_CONF = {
+	...GAME_GITADORA_GITA_CONF,
 
 	difficulties: {
 		type: "FIXED",
 		order: ["BASIC", "ADVANCED", "EXTREME", "MASTER"],
-		shorthand: {
+		format: {
 			BASIC: "D-BSC",
 			ADVANCED: "D-ADV",
 			EXTREME: "D-EXT",
@@ -147,4 +148,4 @@ export const GITADORA_DORA_CONF = {
 		},
 		default: "EXTREME",
 	},
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;

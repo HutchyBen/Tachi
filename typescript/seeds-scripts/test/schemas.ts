@@ -1,11 +1,10 @@
 import {
+	ALL_GAMES,
 	allSupportedGameGroups,
+	GAME_CONFIGS,
 	GAME_GROUP_CONFIGS,
-	GAME_PT_CONFIGS,
 	type GameGroup,
-	v3AllGames,
 	type V3Game,
-	V3ToGPTString,
 } from "tachi-common";
 import { z, type ZodType } from "zod";
 
@@ -19,7 +18,7 @@ export type AllCollections =
 	| `charts-${V3Game}.json`
 	| `songs-${GameGroup}.json`;
 
-export const V3_GAME_SCHEMA = z.enum(v3AllGames as [V3Game, ...Array<V3Game>]);
+export const V3_GAME_SCHEMA = z.enum(ALL_GAMES as [V3Game, ...Array<V3Game>]);
 export const V3_GAME_GROUP_SCHEMA = z.enum(
 	allSupportedGameGroups as [GameGroup, ...Array<GameGroup>],
 );
@@ -55,7 +54,7 @@ export const V3_BMS_COURSE_LOOKUP_SCHEMA = z.strictObject({
 	md5sums: z.string(),
 	title: z.string(),
 	set: z.string(),
-	playtype: z.string(),
+	game: z.enum(["bms-7k", "bms-14k"]),
 	value: z.string(),
 });
 
@@ -82,7 +81,7 @@ export const V3_SONG_SCHEMAS: Record<`songs-${GameGroup}.json`, ZodType> = Objec
 // even when k is a subset of string
 
 export const V3_CHART_SCHEMAS: Record<`charts-${V3Game}.json`, ZodType> = Object.fromEntries(
-	v3AllGames.map((game) => [
+	ALL_GAMES.map((game) => [
 		`charts-${game}.json` as const,
 		z.strictObject({
 			id: V3_TACHI_ID("C"),
@@ -94,7 +93,7 @@ export const V3_CHART_SCHEMAS: Record<`charts-${V3Game}.json`, ZodType> = Object
 			levelNum: z.number(),
 			songID: V3_TACHI_ID("S"),
 			versions: z.array(z.string()),
-			data: GAME_PT_CONFIGS[V3ToGPTString(game)].chartData,
+			data: GAME_CONFIGS[game].chartData,
 		}),
 	]),
 ) as unknown as Record<`charts-${V3Game}.json`, ZodType>;

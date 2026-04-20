@@ -1,7 +1,7 @@
 import Loading from "#components/util/Loading";
 import fetchUGPTData, { type UGPTData } from "#components/util/query/fetchUGPTData";
 import { type JustChildren, type SetState } from "#types/react";
-import { IsSupportedGame, IsSupportedPlaytype } from "#util/asserts";
+import { IsSupportedGame } from "#util/asserts";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
@@ -39,14 +39,13 @@ export const UGPTContext = createContext<{
 UGPTContext.displayName = "UGPTContext";
 
 export function UGPTContextProvider({ children }: JustChildren) {
-	const {
-		game,
-		playtype,
-		userID: viewingUserID,
-	} = useParams<{ game: string; playtype: string; userID: string | undefined }>();
+	const { game, userID: viewingUserID } = useParams<{
+		game: string;
+		userID: string | undefined;
+	}>();
 
-	if (!IsSupportedGame(game) || !IsSupportedPlaytype(game, playtype)) {
-		throw new Error(`Invalid game of ${game} (${playtype}). Did you mess up?`);
+	if (!IsSupportedGame(game)) {
+		throw new Error(`Invalid game of ${game}. Did you mess up?`);
 	}
 
 	const { user } = useContext(UserContext);
@@ -65,7 +64,7 @@ export function UGPTContextProvider({ children }: JustChildren) {
 			if (viewingUserID === undefined) {
 				setViewingData(null);
 			} else {
-				const viewingData = await fetchUGPTData(viewingUserID, game, playtype);
+				const viewingData = await fetchUGPTData(viewingUserID, game);
 
 				setViewingData(viewingData);
 
@@ -92,14 +91,14 @@ export function UGPTContextProvider({ children }: JustChildren) {
 			if (!user) {
 				setLoggedInData(null);
 			} else {
-				const loggedData = await fetchUGPTData(user.id, game, playtype);
+				const loggedData = await fetchUGPTData(user.id, game);
 
 				setLoggedInData(loggedData);
 			}
 
 			setLoggedLoading(false);
 		})();
-	}, [user, game, playtype, viewingUserID]);
+	}, [user, game, viewingUserID]);
 
 	if (viewingLoading || loggedLoading) {
 		return <Loading />;

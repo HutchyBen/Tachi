@@ -3,19 +3,15 @@ import SelectNav from "#components/util/SelectNav";
 import { IsScore } from "#util/asserts";
 import React, { useEffect, useState } from "react";
 import { Nav } from "react-bootstrap";
-import {
-	type MONGO_ChartDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_ScoreDocument,
-} from "tachi-common";
+import { type ChartDocument, type PBScoreDocument, type ScoreDocument } from "tachi-common";
 
 type LampTypes = "Easy" | "EXHard" | "Hard" | "Normal";
 
 export function BMSGraphsComponent({
 	score,
 }: {
-	chart: MONGO_ChartDocument<"bms:7K" | "bms:14K">;
-	score: MONGO_PBScoreDocument<"bms:7K" | "bms:14K"> | MONGO_ScoreDocument<"bms:7K" | "bms:14K">;
+	chart: ChartDocument<"bms-7k" | "bms-14k">;
+	score: PBScoreDocument<"bms-7k" | "bms-14k"> | ScoreDocument<"bms-7k" | "bms-14k">;
 }) {
 	const [lamp, setLamp] = useState<LampTypes>(LampToKey(score));
 
@@ -141,7 +137,7 @@ function GraphComponent({ type, values }: { type: LampTypes; values: (number | n
 }
 
 function LampToKey(
-	score: MONGO_PBScoreDocument<"bms:7K" | "bms:14K"> | MONGO_ScoreDocument<"bms:7K" | "bms:14K">,
+	score: PBScoreDocument<"bms-7k" | "bms-14k"> | ScoreDocument<"bms-7k" | "bms-14k">,
 ): LampTypes {
 	const lamp = score.scoreData.lamp;
 

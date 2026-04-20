@@ -1,7 +1,7 @@
 import useLUGPTSettings from "#components/util/useLUGPTSettings";
 import React from "react";
 import { type integer } from "rg-stats/js/util/types";
-import { type MONGO_PBScoreDocument } from "tachi-common";
+import { type PBScoreDocument } from "tachi-common";
 
 export type RankingViewMode = "both-if-self" | "global" | "global-no-switch" | "rival";
 
@@ -10,7 +10,7 @@ export default function RankingCell({
 	userID,
 	rankingViewMode,
 }: {
-	rankingData: MONGO_PBScoreDocument["rankingData"];
+	rankingData: PBScoreDocument["rankingData"];
 	rankingViewMode: RankingViewMode;
 	userID: integer;
 }) {

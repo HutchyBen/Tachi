@@ -23,23 +23,20 @@ import { cloneDeep } from "lodash";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useQuery } from "react-query";
 import {
-	type GameGroup,
-	type GamePTConfig,
-	GetGamePTConfig,
-	GetGPTString,
+	type ChartDocument,
+	type GameConfig,
+	GetGameConfig,
 	GetScoreMetricConf,
 	GetScoreMetrics,
-	type GPTString,
-	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_ScoreDocument,
-	type MONGO_SongDocument,
-	type MONGO_TableDocument,
+	type ScoreDocument,
 	type SessionScoreInfo,
+	type SongDocument,
+	type TableDocument,
+	type V3Game,
 } from "tachi-common";
 import { type ConfEnumScoreMetric } from "tachi-common/types/metrics";
 
-type SetScores = (scores: MONGO_ScoreDocument[]) => void;
+type SetScores = (scores: ScoreDocument[]) => void;
 
 export default function SessionRaiseBreakdown({
 	sessionData,
@@ -51,13 +48,12 @@ export default function SessionRaiseBreakdown({
 	setScores?: SetScores;
 }) {
 	const game = sessionData.session.game;
-	const playtype = sessionData.session.playtype;
 	const lampName = game === "ongeki" || game === "chunithm" ? "noteLamp" : "lamp";
 
 	const { user } = useContext(UserContext);
 
-	const { data, error } = useQuery(`/games/${game}/${playtype}/tables`, async () => {
-		const res = await APIFetchV1<MONGO_TableDocument[]>(`/games/${game}/${playtype}/tables`);
+	const { data, error } = useQuery(`/games/${game}/tables`, async () => {
+		const res = await APIFetchV1<TableDocument[]>(`/games/${game}/tables`);
 
 		if (!res.success) {
 			throw new Error(res.description);
@@ -126,11 +122,12 @@ function SessionScoreStatBreakdown({
 	const songMap = CreateSongMap(sessionData.songs);
 	const chartMap = CreateChartMap(sessionData.charts);
 	const scoreMap = CreateScoreIDMap(sessionData.scores);
-	const gptConfig = GetGamePTConfig(sessionData.session.game, sessionData.session.playtype);
+	const game = sessionData.session.game;
+	const gameConfig = GetGameConfig(game);
 
-	const enumMetrics = GetScoreMetrics(gptConfig, "ENUM");
+	const enumMetrics = GetScoreMetrics(gameConfig, "ENUM");
 
-	type Datapoint = { score: MONGO_ScoreDocument; scoreInfo: SessionScoreInfo };
+	type Datapoint = { score: ScoreDocument; scoreInfo: SessionScoreInfo };
 	const newEnums = useMemo(() => {
 		const newEnums: Record<string, Record<string, Array<Datapoint>>> = {};
 
@@ -186,10 +183,7 @@ function SessionScoreStatBreakdown({
 		return newEnums;
 	}, [view]);
 
-	const gptImpl =
-		GPT_CLIENT_IMPLEMENTATIONS[
-			GetGPTString(sessionData.session.game, sessionData.session.playtype)
-		];
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
 	return (
 		<>
@@ -212,8 +206,8 @@ function SessionScoreStatBreakdown({
 								<ElementStatTable
 									chartMap={chartMap}
 									counts={newEnums[metric]!}
-									game={sessionData.session.game}
-									gptConfig={gptConfig}
+									game={game}
+									gameConfig={gameConfig}
 									gptImpl={gptImpl}
 									metric={metric}
 									scores={sessionData.scores}
@@ -234,8 +228,8 @@ function SessionScoreStatBreakdown({
 							chartMap={chartMap}
 							counts={newEnums[view]!}
 							fullSize
-							game={sessionData.session.game}
-							gptConfig={gptConfig}
+							game={game}
+							gameConfig={gameConfig}
 							gptImpl={gptImpl}
 							metric={view}
 							scores={sessionData.scores}
@@ -252,7 +246,7 @@ function SessionScoreStatBreakdown({
 function ElementStatTable({
 	metric: metric,
 	counts,
-	gptConfig,
+	gameConfig,
 	songMap,
 	chartMap,
 	game,
@@ -261,19 +255,19 @@ function ElementStatTable({
 	setScores,
 	gptImpl,
 }: {
-	chartMap: Map<string, MONGO_ChartDocument<GPTString>>;
-	counts: Record<string, { score: MONGO_ScoreDocument; scoreInfo: SessionScoreInfo }[]>;
+	chartMap: Map<string, ChartDocument<V3Game>>;
+	counts: Record<string, { score: ScoreDocument; scoreInfo: SessionScoreInfo }[]>;
 	fullSize?: boolean;
-	game: GameGroup;
-	gptConfig: GamePTConfig;
+	game: V3Game;
+	gameConfig: GameConfig;
 	gptImpl: GPTClientImplementation<any>;
 	metric: string;
-	scores: MONGO_ScoreDocument[];
+	scores: ScoreDocument[];
 	setScores?: SetScores;
-	songMap: Map<integer, MONGO_SongDocument<GameGroup>>;
+	songMap: Map<string, SongDocument>;
 }) {
 	const tableContents = useMemo(() => {
-		const conf = GetScoreMetricConf(gptConfig, metric) as ConfEnumScoreMetric<string>;
+		const conf = GetScoreMetricConf(gameConfig, metric) as ConfEnumScoreMetric<string>;
 
 		// relements.. haha
 		const relevantElements = conf.values.slice(conf.values.indexOf(conf.minimumRelevantValue));
@@ -305,7 +299,7 @@ function ElementStatTable({
 							songMap,
 							fullSize,
 							game,
-							gptConfig,
+							gameConfig,
 							metric: metric,
 							scores,
 							setScores,
@@ -324,7 +318,7 @@ function ElementStatTable({
 								songMap,
 								fullSize,
 								game,
-								gptConfig,
+								gameConfig,
 								metric: metric,
 								scores,
 								setScores,
@@ -356,31 +350,29 @@ function BreakdownChartContents({
 	songMap,
 	chartMap,
 	fullSize,
-	gptConfig,
+	gameConfig,
 	metric,
 	scores,
 	setScores,
 }: {
-	chartMap: Map<string, MONGO_ChartDocument>;
+	chartMap: Map<string, ChartDocument<V3Game>>;
 	fullSize: boolean;
-	game: GameGroup;
-	gptConfig: GamePTConfig;
+	game: V3Game;
+	gameConfig: GameConfig;
 	metric: string;
-	score: MONGO_ScoreDocument;
+	score: ScoreDocument;
 	scoreInfo: SessionScoreInfo;
-	scores: Array<MONGO_ScoreDocument>;
+	scores: Array<ScoreDocument>;
 	setScores?: SetScores;
-	songMap: Map<integer, MONGO_SongDocument>;
+	songMap: Map<string, SongDocument>;
 }) {
 	const modifyScore = useMemo(
 		() =>
 			(
 				{ highlight, comment }: { comment?: string | null; highlight?: boolean },
-				scores: MONGO_ScoreDocument[],
+				scores: ScoreDocument[],
 				setScores: SetScores,
 			) => {
-				console.log(scores.filter((e) => e.highlight).length);
-
 				const scoreID = score.scoreID;
 
 				ModifyScore(scoreID, { highlight, comment }).then((r) => {
@@ -430,7 +422,7 @@ function BreakdownChartContents({
 	}
 
 	if (fullSize) {
-		const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(score.game, score.playtype)];
+		const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[score.game];
 
 		let preScoreCell = <td colSpan={gptImpl.scoreHeaders.length}>No Play</td>;
 
@@ -441,7 +433,7 @@ function BreakdownChartContents({
 				// @ts-expect-error it'll be an enum
 				if (typeof score.scoreData[k] === "string") {
 					const enumConf = GetScoreMetricConf(
-						gptConfig,
+						gameConfig,
 						k,
 					) as ConfEnumScoreMetric<string>;
 
@@ -460,7 +452,7 @@ function BreakdownChartContents({
 
 			const mockScore = deepmerge(score, {
 				scoreData: newScoreData,
-			}) as MONGO_ScoreDocument;
+			}) as ScoreDocument;
 
 			// We don't actually know what the user's previous score was, we can only walk
 			// back the raise information we have. As such, we don't keep track of

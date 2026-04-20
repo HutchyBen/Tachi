@@ -1,13 +1,6 @@
 import { GetUGPTSettingsDocument } from "#lib/db-formats/ugpt-settings";
 import { log } from "#lib/log/log";
-import {
-	type GameGroup,
-	GetGPTString,
-	type GPTString,
-	type integer,
-	type Playtype,
-	type ShowcaseStatDetails,
-} from "tachi-common";
+import { type integer, type ShowcaseStatDetails, type V3Game } from "tachi-common";
 
 import { EvaluateShowcaseStat } from "./evaluator";
 import { GetRelatedStatDocuments } from "./get-related";
@@ -19,12 +12,11 @@ import { GetRelatedStatDocuments } from "./get-related";
  */
 export async function EvaluateUsersStatsShowcase(
 	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
+	game: V3Game,
 	projectUserStats?: integer,
 ) {
 	const getSettingsID = projectUserStats ?? userID;
-	const settings = await GetUGPTSettingsDocument(getSettingsID, game, playtype);
+	const settings = await GetUGPTSettingsDocument(getSettingsID, game);
 
 	if (!settings) {
 		log.error(
@@ -36,23 +28,16 @@ export async function EvaluateUsersStatsShowcase(
 		);
 	}
 
-	const gpt = GetGPTString(game, playtype);
-
 	const results = await Promise.all(
-		settings.preferences.stats.map((details) => EvaluateStats(gpt, details, userID, game)),
+		settings.preferences.stats.map((details) => EvaluateStats(game, details, userID)),
 	);
 
 	return results;
 }
 
-async function EvaluateStats(
-	gpt: GPTString,
-	details: ShowcaseStatDetails,
-	userID: integer,
-	game: GameGroup,
-) {
+async function EvaluateStats(game: V3Game, details: ShowcaseStatDetails, userID: integer) {
 	const [result, related] = await Promise.all([
-		EvaluateShowcaseStat(gpt, details, userID),
+		EvaluateShowcaseStat(game, details, userID),
 		GetRelatedStatDocuments(details, game),
 	]);
 

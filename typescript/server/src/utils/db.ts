@@ -2,11 +2,12 @@ import type { FilterQuery } from "mongodb";
 import type { Game } from "tachi-db";
 
 import { GetChartsByIds, SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart";
-import { LoadFolderDocumentById } from "#lib/db-formats/folders.js";
+import { LoadFolderDocumentById } from "#lib/db-formats/folders";
 import { SELECT_GOAL, SELECT_GOAL_SUB_WITH_GOAL_GAME } from "#lib/db-formats/goal";
 import { SELECT_QUEST, SELECT_QUEST_SUB_WITH_QUEST_GAME } from "#lib/db-formats/quest";
-import { GetSongsByLegacyIDs } from "#lib/db-formats/song";
+import { GetSongsByIDs as GetSongsByIDs } from "#lib/db-formats/song";
 import {
+	AttachFolderSlugsToGoals,
 	ToGoalDocument,
 	ToGoalSubscriptionDocument,
 	ToQuestDocument,
@@ -19,16 +20,16 @@ import { type ExpressionBuilder, sql } from "kysely";
 import {
 	FormatChart,
 	type GameGroup,
-	GamePTToV3,
+	type GoalDocument,
+	type GoalSubscriptionDocument,
 	type integer,
-	type MONGO_GoalDocument,
-	type MONGO_GoalSubscriptionDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_QuestDocument,
-	type MONGO_QuestlineDocument,
-	type MONGO_QuestSubscriptionDocument,
-	type MONGO_ScoreDocument,
-	type Playtype,
+	LEGACY_GameGroupPTToGame,
+	type LEGACY_Playtype,
+	type PBScoreDocument,
+	type QuestDocument,
+	type QuestlineDocument,
+	type QuestSubscriptionDocument,
+	type ScoreDocument,
 } from "tachi-common";
 
 type MsTimeRange =
@@ -147,8 +148,9 @@ function whereUserIdOnQuestSub(userID: unknown) {
 
 /**
  * Next numeric `song.legacy_id` for BMS/PMS — `max(existing) + 1`, or `1` if none.
- * Replaces Mongo `counters` `*-song-id` documents. Concurrent unorphans can race;
- * a future pass can add locking or retire legacy ids entirely.
+ * Replaces Mongo `counters` `*-song-id` documents.
+ *
+ * This shit sucks and should be dropped asap: TODO(zk)
  */
 export async function GetNextBmsPmsSongLegacyId(game: "bms" | "pms"): Promise<integer> {
 	const row = await DB.selectFrom("song")
@@ -159,43 +161,36 @@ export async function GetNextBmsPmsSongLegacyId(game: "bms" | "pms"): Promise<in
 	return (row?.m ?? 0) + 1;
 }
 
-export async function GetRelevantSongsAndCharts(
-	scores: Array<MONGO_PBScoreDocument | MONGO_ScoreDocument>,
-	game: GameGroup,
-) {
+export async function GetRelevantSongsAndCharts(scores: Array<PBScoreDocument | ScoreDocument>) {
 	const songIDs = [...new Set(scores.map((e) => e.songID))];
-	const chartKeys = [...new Set(scores.map((e) => e.chartID))];
+	const chartIDs = [...new Set(scores.map((e) => e.chartID))];
 
-	const [songs, charts] = await Promise.all([
-		GetSongsByLegacyIDs(game, songIDs),
-		GetChartsByIds(game, chartKeys),
-	]);
+	const [songs, charts] = await Promise.all([GetSongsByIDs(songIDs), GetChartsByIds(chartIDs)]);
 
 	return { songs, charts };
 }
 
-export async function GetChartForIDGuaranteed(game: GameGroup, chartID: string) {
+export async function GetChartForIDGuaranteed(chartID: string) {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.where("song.game_group", "=", game)
 		.where("chart.id", "=", chartID)
 		.executeTakeFirst();
 
 	if (!row) {
-		throw new Error(`Couldn't find chart with ID ${chartID} (${game}).`);
+		throw new Error(`Couldn't find chart with ID ${chartID}.`);
 	}
 
 	return ToChartDocument(row);
 }
 
-export async function GetSongForIDGuaranteed(game: GameGroup, songID: integer) {
-	const res = await GetSongsByLegacyIDs(game, [songID]);
+export async function GetSongForIDGuaranteed(songID: string) {
+	const res = await GetSongsByIDs([songID]);
 
 	const song = res[0];
 
 	if (!song) {
-		throw new Error(`Couldn't find song with ID ${songID} (${game}).`);
+		throw new Error(`Couldn't find song with ID ${songID}.`);
 	}
 
 	return song;
@@ -225,7 +220,10 @@ export async function GetGoalForIDGuaranteed(goalID: string) {
 		throw new Error(`Couldn't find goal with ID ${goalID}`);
 	}
 
-	return ToGoalDocument(row);
+	const goal = ToGoalDocument(row);
+	await AttachFolderSlugsToGoals([goal]);
+
+	return goal;
 }
 
 export async function GetGoalSubscriptionForIDGuaranteed(goalID: string, userID: integer) {
@@ -258,11 +256,10 @@ export async function GetQuestForIDGuaranteed(questID: string) {
 	return ToQuestDocument(row);
 }
 
-export async function HumaniseChartID(game: GameGroup, chartID: string) {
-	const chart = await GetChartForIDGuaranteed(game, chartID);
-	const song = await GetSongForIDGuaranteed(game, chart.songID);
+export async function HumaniseChartID(chartID: string) {
+	const chart = await GetChartForIDGuaranteed(chartID);
 
-	return FormatChart(game, song, chart);
+	return FormatChart(chart);
 }
 
 /**
@@ -273,7 +270,7 @@ export async function HumaniseChartID(game: GameGroup, chartID: string) {
  * @returns - The goals and their subs.
  */
 export async function GetRecentlyAchievedGoals(
-	baseQuery: Omit<FilterQuery<MONGO_GoalSubscriptionDocument>, "achieved">,
+	baseQuery: Omit<FilterQuery<GoalSubscriptionDocument>, "achieved">,
 	limit = 100,
 ) {
 	const b = baseQuery as Record<string, unknown>;
@@ -291,7 +288,10 @@ export async function GetRecentlyAchievedGoals(
 	}
 
 	if (b.game !== undefined && b.playtype !== undefined) {
-		const v3 = GamePTToV3(b.game as GameGroup, b.playtype as Playtype) as Game;
+		const v3 = LEGACY_GameGroupPTToGame(
+			b.game as GameGroup,
+			b.playtype as LEGACY_Playtype,
+		) as Game;
 
 		q = q.where("goal.game", "=", v3);
 	}
@@ -335,12 +335,13 @@ export async function GetRecentlyAchievedGoals(
 					.execute();
 
 	const goals = goalRows.map(ToGoalDocument);
+	await AttachFolderSlugsToGoals(goals);
 
 	return { goals, goalSubs };
 }
 
 export async function GetRecentlyInteractedGoals(
-	baseQuery: Omit<FilterQuery<MONGO_GoalSubscriptionDocument>, "achieved">,
+	baseQuery: Omit<FilterQuery<GoalSubscriptionDocument>, "achieved">,
 	limit = 100,
 ) {
 	const b = baseQuery as Record<string, unknown>;
@@ -359,7 +360,10 @@ export async function GetRecentlyInteractedGoals(
 	}
 
 	if (b.game !== undefined && b.playtype !== undefined) {
-		const v3 = GamePTToV3(b.game as GameGroup, b.playtype as Playtype) as Game;
+		const v3 = LEGACY_GameGroupPTToGame(
+			b.game as GameGroup,
+			b.playtype as LEGACY_Playtype,
+		) as Game;
 
 		q = q.where("goal.game", "=", v3);
 	}
@@ -403,12 +407,13 @@ export async function GetRecentlyInteractedGoals(
 					.execute();
 
 	const goals = goalRows.map(ToGoalDocument);
+	await AttachFolderSlugsToGoals(goals);
 
 	return { goals, goalSubs };
 }
 
 export async function GetRecentlyAchievedQuests(
-	baseQuery: Omit<FilterQuery<MONGO_QuestSubscriptionDocument>, "achieved">,
+	baseQuery: Omit<FilterQuery<QuestSubscriptionDocument>, "achieved">,
 	limit = 100,
 ) {
 	const b = baseQuery as Record<string, unknown>;
@@ -426,7 +431,10 @@ export async function GetRecentlyAchievedQuests(
 	}
 
 	if (b.game !== undefined && b.playtype !== undefined) {
-		const v3 = GamePTToV3(b.game as GameGroup, b.playtype as Playtype) as Game;
+		const v3 = LEGACY_GameGroupPTToGame(
+			b.game as GameGroup,
+			b.playtype as LEGACY_Playtype,
+		) as Game;
 
 		q = q.where("quest.game", "=", v3);
 	}
@@ -475,7 +483,7 @@ export async function GetRecentlyAchievedQuests(
 }
 
 export async function GetRecentlyInteractedQuests(
-	baseQuery: Omit<FilterQuery<MONGO_QuestSubscriptionDocument>, "achieved">,
+	baseQuery: Omit<FilterQuery<QuestSubscriptionDocument>, "achieved">,
 	limit = 100,
 ) {
 	const b = baseQuery as Record<string, unknown>;
@@ -494,7 +502,10 @@ export async function GetRecentlyInteractedQuests(
 	}
 
 	if (b.game !== undefined && b.playtype !== undefined) {
-		const v3 = GamePTToV3(b.game as GameGroup, b.playtype as Playtype) as Game;
+		const v3 = LEGACY_GameGroupPTToGame(
+			b.game as GameGroup,
+			b.playtype as LEGACY_Playtype,
+		) as Game;
 
 		q = q.where("quest.game", "=", v3);
 	}
@@ -570,9 +581,9 @@ function whereUserIdOnGoalSubForAggregate(userID: unknown) {
 }
 
 export async function GetMostSubscribedGoals(
-	query: FilterQuery<MONGO_GoalSubscriptionDocument>,
+	query: FilterQuery<GoalSubscriptionDocument>,
 	limit = 100,
-): Promise<Array<{ __subscriptions: integer } & MONGO_GoalDocument>> {
+): Promise<Array<{ __subscriptions: integer } & GoalDocument>> {
 	const b = query as Record<string, unknown>;
 
 	let q = DB.selectFrom("goal_sub")
@@ -588,7 +599,10 @@ export async function GetMostSubscribedGoals(
 	}
 
 	if (b.game !== undefined && b.playtype !== undefined) {
-		const v3 = GamePTToV3(b.game as GameGroup, b.playtype as Playtype) as Game;
+		const v3 = LEGACY_GameGroupPTToGame(
+			b.game as GameGroup,
+			b.playtype as LEGACY_Playtype,
+		) as Game;
 
 		q = q.where("goal.game", "=", v3);
 	}
@@ -621,13 +635,13 @@ export async function GetMostSubscribedGoals(
 				...ToGoalDocument(g),
 			};
 		})
-		.filter((e): e is { __subscriptions: integer } & MONGO_GoalDocument => e !== null);
+		.filter((e): e is { __subscriptions: integer } & GoalDocument => e !== null);
 }
 
 export async function GetMostSubscribedQuests(
-	query: FilterQuery<MONGO_QuestSubscriptionDocument>,
+	query: FilterQuery<QuestSubscriptionDocument>,
 	limit = 100,
-): Promise<Array<{ __subscriptions: integer } & MONGO_QuestDocument>> {
+): Promise<Array<{ __subscriptions: integer } & QuestDocument>> {
 	const b = query as Record<string, unknown>;
 
 	let q = DB.selectFrom("quest")
@@ -637,7 +651,10 @@ export async function GetMostSubscribedQuests(
 		.groupBy("quest.id");
 
 	if (b.game !== undefined && b.playtype !== undefined) {
-		const v3 = GamePTToV3(b.game as GameGroup, b.playtype as Playtype) as Game;
+		const v3 = LEGACY_GameGroupPTToGame(
+			b.game as GameGroup,
+			b.playtype as LEGACY_Playtype,
+		) as Game;
 
 		q = q.where("quest.game", "=", v3);
 	}
@@ -670,10 +687,10 @@ export async function GetMostSubscribedQuests(
 				...ToQuestDocument(x),
 			};
 		})
-		.filter((e): e is { __subscriptions: integer } & MONGO_QuestDocument => e !== null);
+		.filter((e): e is { __subscriptions: integer } & QuestDocument => e !== null);
 }
 
-export async function GetChildQuests(questline: MONGO_QuestlineDocument) {
+export async function GetChildQuests(questline: QuestlineDocument) {
 	if (questline.quests.length === 0) {
 		return [];
 	}

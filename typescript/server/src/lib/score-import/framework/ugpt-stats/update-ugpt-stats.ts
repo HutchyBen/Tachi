@@ -3,13 +3,7 @@ import type { KtLogger } from "#lib/log/log";
 import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
 import DB from "#services/pg/db";
 import { loadUserGameStats } from "#utils/class";
-import {
-	type ClassDelta,
-	type GameGroup,
-	GamePTToV3,
-	type integer,
-	type Playtype,
-} from "tachi-common";
+import { type ClassDelta, type integer, type V3Game } from "tachi-common";
 
 import type { ClassProvider } from "../calculated-data/types";
 
@@ -17,36 +11,33 @@ import { CalculateProfileRatings } from "../calculated-data/profile";
 import { CalculateUGPTClasses, ProcessClassDeltas } from "../profile-calculated-data/classes";
 
 export async function UpdateUsersGamePlaytypeStats(
-	game: GameGroup,
-	playtype: Playtype,
+	game: V3Game,
 	userID: integer,
-	classProvider: ClassProvider | null,
+	classProvider: ClassProvider<V3Game> | null,
 	log: KtLogger,
 ): Promise<Array<ClassDelta>> {
 	log.debug(`Calculating Ratings...`);
 
-	const ratings = await CalculateProfileRatings(game, playtype, userID);
-
-	const v3Game = GamePTToV3(game, playtype);
+	const ratings = await CalculateProfileRatings(game, userID);
 
 	// Attempt to find a users game stats if one already exists. If one doesn't exist,
 	// this is this players first import for this game!
-	const userGameStats = await loadUserGameStats(userID, game, playtype);
+	const userGameStats = await loadUserGameStats(userID, game);
 
 	log.debug(`Calculating UGSClasses...`);
 
-	const classes = await CalculateUGPTClasses(game, playtype, userID, ratings, classProvider, log);
+	const classes = await CalculateUGPTClasses(game, userID, ratings, classProvider, log);
 
 	log.debug(`Finished Calculating UGSClasses`);
 
 	log.debug(`Calculating Class Deltas...`);
 
-	const deltas = await ProcessClassDeltas(game, playtype, classes, userGameStats, userID, log);
+	const deltas = await ProcessClassDeltas(game, classes, userGameStats, userID, log);
 
 	log.debug(`Had ${deltas.length} deltas.`);
 
 	if (userGameStats) {
-		log.debug(`Updated player gamestats for ${game} (${playtype})`);
+		log.debug(`Updated player gamestats for ${game}`);
 
 		const nextClasses: Record<string, string | null | undefined> = {
 			...userGameStats.classes,
@@ -62,13 +53,13 @@ export async function UpdateUsersGamePlaytypeStats(
 				classes: JSON.stringify(nextClasses),
 			})
 			.where("user_id", "=", userID)
-			.where("game", "=", v3Game)
+			.where("game", "=", game)
 			.execute();
 	} else {
 		const hasAnyScores = await DB.selectFrom("score")
 			.select("id")
 			.where("user_id", "=", userID)
-			.where("game", "=", v3Game)
+			.where("game", "=", game)
 			.executeTakeFirst();
 
 		if (!hasAnyScores) {
@@ -76,23 +67,22 @@ export async function UpdateUsersGamePlaytypeStats(
 				{
 					userID,
 					game,
-					playtype,
 				},
 				"Not creating new game stats for user with no scores.",
 			);
 			return deltas;
 		}
 
-		log.info(`Created new gamestats for ${game} (${playtype})`);
+		log.info(`Created new gamestats for ${game}`);
 		await DB.insertInto("game_profile")
 			.values({
 				user_id: userID,
-				game: v3Game,
+				game,
 				ratings: JSON.stringify(ratings),
 				classes: JSON.stringify(classes),
 			})
 			.execute();
-		await CreateGameSettings(userID, game, playtype);
+		await CreateGameSettings(userID, game);
 	}
 
 	return deltas;

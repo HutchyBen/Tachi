@@ -1,4 +1,4 @@
-import type { GPTServerImplementation } from "#game-implementations/types";
+import type { GameImplementation } from "#game-implementations/types";
 
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileSumBestN } from "#game-implementations/utils/profile-calc";
@@ -11,13 +11,11 @@ import { p } from "prudence";
 import { Jubility } from "rg-stats";
 import {
 	FmtNum,
-	type GameGroup,
-	GamePTToV3,
 	GetGrade,
 	type integer,
 	JUBEAT_GBOUNDARIES,
-	type MONGO_PBScoreDocument,
-	type Playtype,
+	type PBScoreDocument,
+	type V3Game,
 	type Versions,
 } from "tachi-common";
 
@@ -28,37 +26,34 @@ import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
  * difficulties together, then globally sorts by jubility and takes the top `limit` rows.
  */
 export async function GetBestJubilityOnSongs(
-	songIDs: Array<integer>,
+	songIDs: Array<string>,
 	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
+	game: V3Game,
 	limit: integer,
-): Promise<Array<MONGO_PBScoreDocument>> {
+): Promise<Array<PBScoreDocument>> {
 	if (songIDs.length === 0) {
 		return [];
 	}
-
-	const v3Game = GamePTToV3(game, playtype);
 
 	const rows = await sql<PbDocumentJoinRow>`
 		WITH base AS (
 			SELECT
 				pb.row_id,
 				(pb.calculated_data::jsonb->>'jubility')::double precision AS jubility_val,
-				song.legacy_id AS song_legacy_id,
+				song.id AS song_id,
 				chart.difficulty
 			FROM pb
 			INNER JOIN chart ON chart.id = pb.chart_id
 			INNER JOIN song ON song.id = chart.song_id
 			WHERE pb.user_id = ${userID}
-				AND chart.game = ${v3Game}
-				AND song.legacy_id in (${sql.join(songIDs)})
+				AND chart.game = ${game}
+				AND song.id in (${sql.join(songIDs)})
 		),
 		bucketed AS (
 			SELECT
 				base.row_id,
 				base.jubility_val,
-				base.song_legacy_id,
+				base.song_id,
 				CASE
 					WHEN base.difficulty IN ('HARD BSC', 'BSC') THEN 'BSC'
 					WHEN base.difficulty IN ('HARD ADV', 'ADV') THEN 'ADV'
@@ -71,7 +66,7 @@ export async function GetBestJubilityOnSongs(
 			SELECT
 				bucketed.row_id,
 				ROW_NUMBER() OVER (
-					PARTITION BY bucketed.song_legacy_id, bucketed.jubility_bucket
+					PARTITION BY bucketed.song_id, bucketed.jubility_bucket
 					ORDER BY bucketed.jubility_val DESC NULLS LAST
 				) AS rn
 			FROM bucketed
@@ -93,7 +88,7 @@ export async function GetBestJubilityOnSongs(
 			pb.ranking_value_tb5,
 			pb.highlight,
 			pb.time_achieved,
-			song.legacy_id as song_legacy_id,
+			song.id as song_id,
 			chart.game as chart_game,
 			chart.is_primary as is_primary,
 			chart_leaderboard.rank AS leaderboard_rank,
@@ -110,42 +105,38 @@ export async function GetBestJubilityOnSongs(
 	return Promise.all(rows.rows.map((row) => ToPbScoreDocument(row)));
 }
 
-const CURRENT_JUBEAT_HOT_VERSION: Versions["jubeat:Single"] = "ave";
+const CURRENT_JUBEAT_HOT_VERSION: Versions["jubeat"] = "ave";
 
 export async function GetPBsForJubility(userID: integer) {
 	const hotSongRows = await DB.selectFrom("song")
-		.select("legacy_id")
+		.select("song.id")
 		.where("game_group", "=", "jubeat")
 		.where(
 			sql<boolean>`(song.data::jsonb->>'displayVersion') = ${sql.lit(CURRENT_JUBEAT_HOT_VERSION)}`,
 		)
 		.execute();
 
-	const hotSongIDs = hotSongRows.map((r) => r.legacy_id);
+	const hotSongIDs = hotSongRows.map((r) => r.id);
 
 	const coldSongRows = await DB.selectFrom("song")
-		.select("legacy_id")
+		.select("song.id")
 		.where("game_group", "=", "jubeat")
 		.where(
 			sql<boolean>`(song.data::jsonb->>'displayVersion') IS DISTINCT FROM ${sql.lit(CURRENT_JUBEAT_HOT_VERSION)}`,
 		)
 		.execute();
 
-	const coldSongIDs = coldSongRows.map((r) => r.legacy_id);
+	const coldSongIDs = coldSongRows.map((r) => r.id);
 
 	const [bestHotScores, bestScores] = await Promise.all([
-		GetBestJubilityOnSongs(hotSongIDs, userID, "jubeat", "Single", 30),
-		GetBestJubilityOnSongs(coldSongIDs, userID, "jubeat", "Single", 30),
+		GetBestJubilityOnSongs(hotSongIDs, userID, "jubeat", 30),
+		GetBestJubilityOnSongs(coldSongIDs, userID, "jubeat", 30),
 	]);
 
 	return { bestHotScores, bestScores };
 }
 
-async function CalculateJubility(
-	_game: GameGroup,
-	_playtype: Playtype,
-	userID: integer,
-): Promise<number> {
+async function CalculateJubility(userID: integer): Promise<number> {
 	const { bestHotScores, bestScores } = await GetPBsForJubility(userID);
 
 	let jubility = 0;
@@ -156,7 +147,7 @@ async function CalculateJubility(
 	return jubility;
 }
 
-export const JUBEAT_IMPL: GPTServerImplementation<"jubeat:Single"> = {
+export const JUBEAT_IMPL: GameImplementation<"jubeat"> = {
 	chartSpecificValidators: {
 		musicRate: (rate, chart) => {
 			switch (chart.difficulty) {
@@ -189,10 +180,10 @@ export const JUBEAT_IMPL: GPTServerImplementation<"jubeat:Single"> = {
 	sessionCalcs: (arr) => ({
 		jubility: SessionAvgBest10For("jubility")(arr),
 	}),
-	profileCalcs: async (game, playtype, userID) => {
+	profileCalcs: async (game, userID) => {
 		const [jubility, naiveJubility] = await Promise.all([
-			CalculateJubility(game, playtype, userID),
-			ProfileSumBestN("jubility", 60)(game, playtype, userID),
+			CalculateJubility(userID),
+			ProfileSumBestN("jubility", 60)(game, userID),
 		]);
 
 		return { jubility, naiveJubility };
@@ -269,7 +260,7 @@ export const JUBEAT_IMPL: GPTServerImplementation<"jubeat:Single"> = {
 		),
 	],
 	defaultMergeRefName: "Best Music Rate",
-	derivationRelevantFields: ["levelNum"],
+	chartDataRelevantFields: ["levelNum"],
 	scoreValidators: [
 		(s) => {
 			if (s.scoreData.lamp === "EXCELLENT" && s.scoreData.score !== 1_000_000) {

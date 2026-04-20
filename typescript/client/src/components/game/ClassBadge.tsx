@@ -4,11 +4,10 @@ import { type GamePT } from "#types/react";
 import { UppercaseFirst } from "#util/misc";
 import React from "react";
 import { Badge } from "react-bootstrap";
-import { type Classes, GetGamePTConfig, GetGPTString, type GPTString } from "tachi-common";
+import { type Classes, GetGameConfig, type V3Game } from "tachi-common";
 
-export default function ClassBadge<GPT extends GPTString = GPTString>({
+export default function ClassBadge<GPT extends V3Game = V3Game>({
 	game,
-	playtype,
 	classSet,
 	classValue,
 	showSetOnHover = true,
@@ -18,12 +17,10 @@ export default function ClassBadge<GPT extends GPTString = GPTString>({
 	showSetOnHover?: boolean;
 } & GamePT) {
 	const classStyle =
-		// @ts-expect-error hepl i'm trapped in a type factory
-		GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, playtype)].classColours[classSet][classValue];
+		// @ts-expect-error complex indexed types
+		GPT_CLIENT_IMPLEMENTATIONS[game].classColours[classSet][classValue];
 
-	const data = GetGamePTConfig(game, playtype).classes[classSet].values.find(
-		(e) => e.id === classValue,
-	);
+	const data = GetGameConfig(game).classes[classSet].values.find((e) => e.id === classValue);
 
 	if (!data) {
 		return (
@@ -64,7 +61,9 @@ export default function ClassBadge<GPT extends GPTString = GPTString>({
 	} else if (data.hoverText) {
 		return <QuickTooltip tooltipContent={data.hoverText}>{badgeComponent}</QuickTooltip>;
 	} else if (showSetOnHover) {
-		<QuickTooltip tooltipContent={UppercaseFirst(classSet)}>{badgeComponent}</QuickTooltip>;
+		return (
+			<QuickTooltip tooltipContent={UppercaseFirst(classSet)}>{badgeComponent}</QuickTooltip>
+		);
 	}
 
 	return badgeComponent;

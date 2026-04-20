@@ -1,5 +1,4 @@
-import type { GPTServerImplementation } from "#game-implementations/types";
-import type { GPTStrings } from "tachi-common";
+import type { GameImplementation } from "#game-implementations/types";
 
 import {
 	SDVXLIKE_CLASS_DERIVERS,
@@ -15,7 +14,7 @@ import {
 	SDVXLIKE_SESSION_CALCS,
 } from "./_common";
 
-const USC_IMPL: GPTServerImplementation<GPTStrings["usc"]> = {
+const USC_IMPL: GameImplementation<"usc-controller" | "usc-keyboard"> = {
 	scoreDeriver: SDVXLIKE_SCORE_DERIVER,
 	scoreCalcs: SDVXLIKE_SCORE_CALCS,
 	sessionCalcs: SDVXLIKE_SESSION_CALCS,
@@ -36,9 +35,9 @@ const USC_IMPL: GPTServerImplementation<GPTStrings["usc"]> = {
 	pbMergeFunctions: SDVXLIKE_PB_MERGERS,
 	defaultMergeRefName: SDVXLIKE_DEFAULT_MERGE_NAME,
 	scoreValidators: SDVXLIKE_SCORE_VALIDATORS,
-	derivationRelevantFields: ["levelNum"],
+	chartDataRelevantFields: ["levelNum"],
 };
 
-export const USC_KEYBOARD_IMPL: GPTServerImplementation<"usc:Keyboard"> = USC_IMPL;
+export const USC_KEYBOARD_IMPL: GameImplementation<"usc-keyboard"> = USC_IMPL;
 
-export const USC_CONTROLLER_IMPL: GPTServerImplementation<"usc:Controller"> = USC_IMPL;
+export const USC_CONTROLLER_IMPL: GameImplementation<"usc-controller"> = USC_IMPL;

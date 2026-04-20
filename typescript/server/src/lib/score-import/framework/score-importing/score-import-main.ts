@@ -1,4 +1,8 @@
 import type { KtLogger } from "#lib/log/log";
+import type {
+	ConverterFunction,
+	ImportInputParser,
+} from "#lib/score-import/import-types/common/types";
 import type { ScoreImportJob } from "#lib/score-import/worker/types";
 
 import { LoadImportDocumentById } from "#lib/db-formats/import-document";
@@ -9,6 +13,7 @@ import {
 	ensureImportStub,
 } from "#lib/score-import/framework/pg/ensure-import-stub";
 import { finalizeImportToPostgres } from "#lib/score-import/framework/pg/finalize-import-pg";
+import { Converters } from "#lib/score-import/import-types/converters";
 import { observeScoreImportDuration } from "#server/prometheus";
 import DB from "#services/pg/db";
 import { GetMillisecondsSince } from "#utils/misc";
@@ -16,18 +21,18 @@ import { GetUserWithID } from "#utils/user";
 import {
 	type GameGroup,
 	GetGameGroupConfig,
+	type GoalImportInfo,
 	type ImportProcessingInfo,
 	type ImportTypes,
 	type integer,
-	type MONGO_UserDocument,
-	type Playtype,
+	type QuestImportInfo,
+	type UserDocument,
+	type V3Game,
 } from "tachi-common";
 
-import type { ConverterFunction, ImportInputParser } from "../../import-types/common/types";
 import type { ClassProvider } from "../calculated-data/types";
-import type { ChartIDPlaytypeMap, ScorePlaytypeMap } from "../common/types";
+import type { ChartIDGameMap, ScoreGameMap } from "../common/types";
 
-import { Converters } from "../../import-types/converters";
 import { InternalFailure } from "../common/converter-failures";
 import { CreateScoreLogger } from "../common/import-logger";
 import { GetAndUpdateUsersGoals } from "../goals/goals";
@@ -48,7 +53,7 @@ export default async function ScoreImportMain<D, C>(
 	userID: integer,
 	userIntent: boolean,
 	importType: ImportTypes,
-	InputParser: ImportInputParser<D, C>,
+	InputParser: ImportInputParser<D, C, V3Game>,
 	importID: string,
 	providedLogger?: KtLogger,
 	job?: ScoreImportJob,
@@ -100,7 +105,7 @@ export default async function ScoreImportMain<D, C>(
 			const {
 				iterable,
 				context,
-				game,
+				gameGroup: game,
 				classProvider: classProvider,
 			} = await InputParser(log);
 
@@ -169,7 +174,7 @@ export default async function ScoreImportMain<D, C>(
 			}
 
 			const {
-				playtypes,
+				games,
 				scoreIDs,
 				errors,
 				sessionInfo,
@@ -203,7 +208,7 @@ export default async function ScoreImportMain<D, C>(
 			// Create and Save an import document to the database, and finish everything up!
 			await DB.transaction().execute(async (trx) => {
 				await finalizeImportToPostgres(trx, {
-					importId: importID,
+					importID: importID,
 					userId: user.id,
 					gameGroup: game,
 					importType,
@@ -211,7 +216,8 @@ export default async function ScoreImportMain<D, C>(
 					service: "Unknown",
 					timeStartedMs: timeStarted,
 					timeFinishedMs: timeFinished,
-					playtypes,
+					games,
+					scoreCount: scoreIDs.length,
 					errors,
 					classDeltas,
 					createdSessions: sessionInfo,
@@ -255,10 +261,10 @@ export default async function ScoreImportMain<D, C>(
  */
 export async function HandlePostImportSteps(
 	importInfo: Array<ImportProcessingInfo>,
-	user: MONGO_UserDocument,
-	importType: ImportTypes,
-	game: GameGroup,
-	classProvider: ClassProvider | null,
+	user: UserDocument,
+	_importType: ImportTypes,
+	gameGroup: GameGroup,
+	classProvider: ClassProvider<V3Game> | null,
 	log: KtLogger,
 	job: ScoreImportJob | undefined,
 	_importId: string,
@@ -267,7 +273,7 @@ export async function HandlePostImportSteps(
 	// ImportInfo is a relatively complex structure. We need some information from it for subsequent steps
 	// such as the list of chartIDs involved in this import.
 	const importParseTimeStart = process.hrtime.bigint();
-	const { scorePlaytypeMap, errors, scoreIDs, chartIDs } = ParseImportInfo(importInfo);
+	const { scoreGameMap, errors, scoreIDs, chartIDs } = ParseImportInfo(importInfo);
 
 	const importParseTime = GetMillisecondsSince(importParseTimeStart);
 	const importParseTimeRel = importParseTime / Math.max(1, importInfo.length);
@@ -280,7 +286,7 @@ export async function HandlePostImportSteps(
 	// We create (or update existing) sessions here. This uses the aforementioned parsed import info
 	// to determine what goes where.
 	const sessionTimeStart = process.hrtime.bigint();
-	const sessionInfo = await CreateSessions(user.id, game, scorePlaytypeMap, log);
+	const sessionInfo = await CreateSessions(user.id, scoreGameMap, log);
 
 	const sessionTime = GetMillisecondsSince(sessionTimeStart);
 	const sessionTimeRel = sessionTime / Math.max(1, sessionInfo.length);
@@ -289,7 +295,7 @@ export async function HandlePostImportSteps(
 
 	void SetJobProgress(job, "Processing scores and updating PBs.");
 
-	const playtypes = Object.keys(scorePlaytypeMap) as Array<Playtype>;
+	const games = Object.keys(scoreGameMap) as Array<V3Game>;
 
 	// --- 5. PersonalBests ---
 	// We want to keep an updated reference of a users best score on a given chart.
@@ -299,15 +305,15 @@ export async function HandlePostImportSteps(
 
 	// processing PBs is a playtype-specific action. As such, we need to split chartIDs
 	// accordingly
-	const chartIDsSeparatedByPlaytype: ChartIDPlaytypeMap = {};
+	const chartIDsSeparatedByGame: ChartIDGameMap = {};
 
-	for (const [playtype, scores] of Object.entries(scorePlaytypeMap)) {
-		chartIDsSeparatedByPlaytype[playtype as Playtype] = new Set(scores.map((e) => e.chartID));
+	for (const [game, scores] of Object.entries(scoreGameMap)) {
+		chartIDsSeparatedByGame[game as V3Game] = new Set(scores.map((e) => e.chartID));
 	}
 
 	await Promise.all(
-		Object.entries(chartIDsSeparatedByPlaytype).map(([playtype, cids]) =>
-			ProcessPBs(game, playtype as Playtype, user.id, cids, log),
+		Object.entries(chartIDsSeparatedByGame).map(([game, chartIDs]) =>
+			ProcessPBs(game as V3Game, user.id, chartIDs, log),
 		),
 	);
 
@@ -321,7 +327,7 @@ export async function HandlePostImportSteps(
 	void SetJobProgress(job, "Updating profile statistics.");
 
 	const ugsTimeStart = process.hrtime.bigint();
-	const classDeltas = await UpdateUsersGameStats(game, playtypes, user.id, classProvider, log);
+	const classDeltas = await UpdateUsersGameStats(gameGroup, user.id, classProvider, log);
 
 	const ugsTime = GetMillisecondsSince(ugsTimeStart);
 
@@ -330,7 +336,11 @@ export async function HandlePostImportSteps(
 	void SetJobProgress(job, "Updating Goals.");
 
 	const goalTimeStart = process.hrtime.bigint();
-	const goalInfo = await GetAndUpdateUsersGoals(game, user.id, chartIDs, log);
+	const goalInfo: Array<GoalImportInfo> = [];
+	for (const game of GetGameGroupConfig(gameGroup).games) {
+		// eslint-disable-next-line no-await-in-loop
+		goalInfo.push(...(await GetAndUpdateUsersGoals(game, user.id, chartIDs, log)));
+	}
 
 	const goalTime = GetMillisecondsSince(goalTimeStart);
 
@@ -339,7 +349,14 @@ export async function HandlePostImportSteps(
 	void SetJobProgress(job, "Updating Quests.");
 
 	const questTimeStart = process.hrtime.bigint();
-	const questInfo = await UpdateUsersQuests(goalInfo, game, playtypes, user.id, log);
+	const questInfo: Array<QuestImportInfo> = [];
+	for (const game of GetGameGroupConfig(gameGroup).games) {
+		// TODO(zk): Goal and quest "evaluation" can go - it should be automatic in the db
+		// by marking things as stale/dirty/whatever.
+
+		// eslint-disable-next-line no-await-in-loop
+		questInfo.push(...(await UpdateUsersQuests(goalInfo, game, user.id, log)));
+	}
 
 	const questTime = GetMillisecondsSince(questTimeStart);
 
@@ -349,7 +366,7 @@ export async function HandlePostImportSteps(
 		classDeltas,
 		questInfo,
 		goalInfo,
-		playtypes,
+		games,
 		scoreIDs,
 		errors,
 		sessionInfo,
@@ -373,23 +390,15 @@ export async function HandlePostImportSteps(
  * @returns A flattened array of ClassDeltas
  */
 async function UpdateUsersGameStats(
-	game: GameGroup,
-	modifiedPlaytypes: Array<Playtype>,
+	gameGroup: GameGroup,
 	userID: integer,
-	classProvider: ClassProvider | null,
+	classProvider: ClassProvider<V3Game> | null,
 	log: KtLogger,
 ) {
 	const promises = [];
 
-	// Instead of using the provided playtypes, run the classProvider on all
-	// playtypes. This should only happen if a classProvider is provided, and is
-	// a hack fix for things like #480.
-	const allPlaytypes = GetGameGroupConfig(game).playtypes;
-
-	const playtypes = classProvider ? allPlaytypes : modifiedPlaytypes;
-
-	for (const pt of playtypes) {
-		promises.push(UpdateUsersGamePlaytypeStats(game, pt, userID, classProvider, log));
+	for (const game of GetGameGroupConfig(gameGroup).games) {
+		promises.push(UpdateUsersGamePlaytypeStats(game, userID, classProvider, log));
 	}
 
 	const r = await Promise.all(promises);
@@ -405,7 +414,7 @@ async function UpdateUsersGameStats(
  * on their playtype.
  */
 function ParseImportInfo(importInfo: Array<ImportProcessingInfo>) {
-	const scorePlaytypeMap: ScorePlaytypeMap = {};
+	const scoreGameMap: ScoreGameMap = {};
 
 	const scoreIDs = [];
 	const errors = [];
@@ -416,17 +425,19 @@ function ParseImportInfo(importInfo: Array<ImportProcessingInfo>) {
 			scoreIDs.push(info.content.score.scoreID);
 			chartIDs.add(info.content.score.chartID);
 
-			if (scorePlaytypeMap[info.content.score.playtype]) {
-				scorePlaytypeMap[info.content.score.playtype]!.push(info.content.score);
+			const v3Game = info.content.score.game;
+
+			if (scoreGameMap[v3Game]) {
+				scoreGameMap[v3Game]!.push(info.content.score);
 			} else {
-				scorePlaytypeMap[info.content.score.playtype] = [info.content.score];
+				scoreGameMap[v3Game] = [info.content.score];
 			}
 		} else {
 			errors.push({ type: info.type, message: info.message });
 		}
 	}
 
-	return { scoreIDs, errors, scorePlaytypeMap, chartIDs };
+	return { scoreIDs, errors, scoreGameMap: scoreGameMap, chartIDs };
 }
 
 function SetJobProgress(job: ScoreImportJob | undefined, description: string) {

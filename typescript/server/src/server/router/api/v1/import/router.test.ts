@@ -66,10 +66,9 @@ describe("POST /api/v1/import/orphans", () => {
 				import_type: "ir/direct-manual",
 				game_group: "iidx",
 				context: {
-					game: "iidx",
-					playtype: "SP",
-					service: "foo",
+					game: "iidx-sp",
 					version: "27",
+					service: "foo",
 				},
 				data: {
 					score: 500,
@@ -91,10 +90,9 @@ describe("POST /api/v1/import/orphans", () => {
 				import_type: "ir/direct-manual",
 				game_group: "iidx",
 				context: {
-					game: "iidx",
-					playtype: "SP",
-					service: "foo",
+					game: "iidx-sp",
 					version: "27",
+					service: "foo",
 				},
 				data: {
 					score: 500,

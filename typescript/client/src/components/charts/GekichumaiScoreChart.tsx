@@ -73,11 +73,7 @@ const getScoreYAxisNotch = (game: GameGroup) => (s: number) => {
 };
 
 const strokeColor = (
-	type:
-		| "BELLS"
-		| Difficulties["chunithm:Single"]
-		| Difficulties["maimaidx:Single"]
-		| Difficulties["ongeki:Single"],
+	type: "BELLS" | Difficulties["chunithm"] | Difficulties["maimaidx"] | Difficulties["ongeki"],
 ) => {
 	const isLight = getTheme() === "light";
 
@@ -170,10 +166,7 @@ export default function GekichumaiScoreChart({
 	duration,
 }: {
 	data: Serie[];
-	difficulty:
-		| Difficulties["chunithm:Single"]
-		| Difficulties["maimaidx:Single"]
-		| Difficulties["ongeki:Single"];
+	difficulty: Difficulties["chunithm"] | Difficulties["maimaidx"] | Difficulties["ongeki"];
 	duration: number;
 	game: "chunithm" | "maimaidx" | "ongeki";
 	height?: number | string;
@@ -188,18 +181,18 @@ export default function GekichumaiScoreChart({
 	if (type === "Score") {
 		if (game === "chunithm") {
 			color =
-				GPT_CLIENT_IMPLEMENTATIONS["chunithm:Single"].difficultyColours[
-					difficulty as Difficulties["chunithm:Single"]
+				GPT_CLIENT_IMPLEMENTATIONS.chunithm.difficultyColours[
+					difficulty as Difficulties["chunithm"]
 				];
 		} else if (game === "ongeki") {
 			color =
-				GPT_CLIENT_IMPLEMENTATIONS["ongeki:Single"].difficultyColours[
-					difficulty as Difficulties["ongeki:Single"]
+				GPT_CLIENT_IMPLEMENTATIONS.ongeki.difficultyColours[
+					difficulty as Difficulties["ongeki"]
 				];
 		} else if (game === "maimaidx") {
 			color =
-				GPT_CLIENT_IMPLEMENTATIONS["maimaidx:Single"].difficultyColours[
-					difficulty as Difficulties["maimaidx:Single"]
+				GPT_CLIENT_IMPLEMENTATIONS.maimaidx.difficultyColours[
+					difficulty as Difficulties["maimaidx"]
 				];
 		}
 	} else if (type === "Bells") {

@@ -1,76 +1,34 @@
-import type { GameGroup, MONGO_ChartDocument, MONGO_SongDocument } from "tachi-common";
+import type { ChartDocument, GameGroup, SongDocument } from "tachi-common";
 
 /* eslint-disable no-await-in-loop */
-import { MakeAction } from "#lib/actions/actions.js";
-import { SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart.js";
-import { SELECT_SONG_DOCUMENT, ToSongDocument } from "#lib/db-formats/song.js";
-import { log } from "#lib/log/log.js";
+import { MakeAction } from "#lib/actions/actions";
+import { SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart";
+import { SELECT_SONG_DOCUMENT, ToSongDocument } from "#lib/db-formats/song";
+import { log } from "#lib/log/log";
 import { PullDatabaseSeeds } from "#lib/seeds/repo";
-import DB from "#services/pg/db.js";
-import { IsUserAdmin } from "#utils/user.js";
+import DB from "#services/pg/db";
+import { IsUserAdmin } from "#utils/user";
 import { ExpectedErr } from "bliss";
 
-const FETCH_CHUNK = 3_000;
-
-async function loadAllSongsForGame(game: GameGroup): Promise<Array<MONGO_SongDocument>> {
-	const out: Array<MONGO_SongDocument> = [];
-	let lastLegacy: number | undefined;
-
-	for (;;) {
-		let q = DB.selectFrom("song")
-			.select(SELECT_SONG_DOCUMENT)
-			.where("game_group", "=", game)
-			.orderBy("legacy_id", "asc")
-			.limit(FETCH_CHUNK);
-
-		if (lastLegacy !== undefined) {
-			q = q.where("legacy_id", ">", lastLegacy);
-		}
-
-		const rows = await q.execute();
-
-		if (rows.length === 0) {
-			break;
-		}
-
-		for (const row of rows) {
-			out.push(ToSongDocument(row));
-		}
-
-		lastLegacy = rows[rows.length - 1]!.song_legacy_id;
-	}
+async function loadAllSongsForGame(game: GameGroup): Promise<Array<SongDocument>> {
+	const out = await DB.selectFrom("song")
+		.select(SELECT_SONG_DOCUMENT)
+		.where("game_group", "=", game)
+		.orderBy("id", "asc")
+		.execute()
+		.then((r) => r.map(ToSongDocument));
 
 	return out;
 }
 
-async function loadAllChartsForGame(game: GameGroup): Promise<Array<MONGO_ChartDocument>> {
-	const out: Array<MONGO_ChartDocument> = [];
-	let lastChartId: string | undefined;
-
-	for (;;) {
-		let q = DB.selectFrom("chart")
-			.innerJoin("song", "song.id", "chart.song_id")
-			.select(SELECT_CHART)
-			.where("song.game_group", "=", game)
-			.orderBy("chart.id", "asc")
-			.limit(FETCH_CHUNK);
-
-		if (lastChartId !== undefined) {
-			q = q.where("chart.id", ">", lastChartId);
-		}
-
-		const rows = await q.execute();
-
-		if (rows.length === 0) {
-			break;
-		}
-
-		for (const row of rows) {
-			out.push(ToChartDocument(row));
-		}
-
-		lastChartId = rows[rows.length - 1]!.chart_id;
-	}
+async function loadAllChartsForGame(game: GameGroup): Promise<Array<ChartDocument>> {
+	const out = await DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_CHART)
+		.where("song.game_group", "=", game)
+		.orderBy("chart.id", "asc")
+		.execute()
+		.then((r) => r.map(ToChartDocument));
 
 	return out;
 }

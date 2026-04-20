@@ -1,3 +1,5 @@
+import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
 import type { USCClientScore } from "#server/router/ir/usc/_playtype/types";
 import type { GetEnumValue } from "tachi-common/types/metrics";
 
@@ -8,18 +10,16 @@ import {
 	USC_DEFAULT_PERFECT,
 	USC_DEFAULT_SLAM,
 } from "#lib/constants/usc-ir";
-import { FindUSCChartOnSHA1Playtype } from "#utils/queries/charts";
-import { FindSongOnID } from "#utils/queries/songs";
-
-import type { DryScore } from "../../../framework/common/types";
-import type { ConverterFunction } from "../../common/types";
-import type { IRUSCContext } from "./types";
-
 import {
 	InternalFailure,
 	InvalidScoreFailure,
 	SongOrChartNotFoundFailure,
-} from "../../../framework/common/converter-failures";
+} from "#lib/score-import/framework/common/converter-failures";
+import { FindUSCChartOnSHA1 } from "#utils/queries/charts";
+import { FindSongOnID } from "#utils/queries/songs";
+import { type GamesForGroup } from "tachi-common";
+
+import type { IRUSCContext } from "./types";
 
 /**
  * Interprets the "note mod" used based on the USC score.
@@ -39,9 +39,7 @@ export function DeriveNoteMod(data: USCClientScore): "MIR-RAN" | "MIRROR" | "NOR
 /**
  * Determines the lamp of a USC score.
  */
-export function DeriveLamp(
-	scoreDoc: USCClientScore,
-): GetEnumValue<"usc:Controller" | "usc:Keyboard", "lamp"> {
+export function DeriveLamp(scoreDoc: USCClientScore): GetEnumValue<GamesForGroup["usc"], "lamp"> {
 	if (scoreDoc.score === 10_000_000) {
 		return "PERFECT ULTIMATE CHAIN";
 	} else if (scoreDoc.error === 0) {
@@ -101,7 +99,9 @@ export const ConverterIRUSC: ConverterFunction<USCClientScore, IRUSCContext> = a
 		throw new InvalidScoreFailure(`Autoplay was enabled - Score is invalid.`);
 	}
 
-	const chartDoc = await FindUSCChartOnSHA1Playtype(context.chartHash, context.playtype);
+	const game = context.playtype === "Controller" ? "usc-controller" : "usc-keyboard";
+
+	const chartDoc = await FindUSCChartOnSHA1(context.chartHash, game);
 
 	if (!chartDoc) {
 		throw new SongOrChartNotFoundFailure(
@@ -112,18 +112,18 @@ export const ConverterIRUSC: ConverterFunction<USCClientScore, IRUSCContext> = a
 		);
 	}
 
-	const song = await FindSongOnID("usc", chartDoc.songID);
+	const song = await FindSongOnID("usc", chartDoc.song.id);
 
 	if (!song) {
-		log.error(`Song-Chart desync on USCIR ${chartDoc.songID}.`);
-		throw new InternalFailure(`Song-Chart desync on USCIR ${chartDoc.songID}.`);
+		log.error(`Song-Chart desync on USCIR ${chartDoc.song.id}.`);
+		throw new InternalFailure(`Song-Chart desync on USCIR ${chartDoc.song.id}.`);
 	}
 
 	const lamp = DeriveLamp(data);
 
-	const dryScore: DryScore<"usc:Controller" | "usc:Keyboard"> = {
+	const dryScore: DryScore<typeof game> = {
 		comment: null,
-		game: "usc",
+		game,
 		importType,
 		timeAchieved: context.timeReceived,
 		service: "USC-IR",

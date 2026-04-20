@@ -1,21 +1,22 @@
 import { p } from "prudence";
 import { z } from "zod";
 
-import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_PT_CONFIG } from "../../types/internals";
+import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
 import { FmtNum, FmtPercent } from "../../utils/util";
 import { ClassValue, zodNonNegativeInt } from "../config-utils";
 import { FAST_SLOW_MAXCOMBO } from "./_common";
 
-export const POPN_CONF = {
+export const GAME_GROUP_POPN_CONF = {
 	name: "pop'n music",
+	games: ["popn"],
 	playtypes: ["9B"],
 	songData: z.strictObject({
 		displayVersion: z.nullable(z.string()),
 		genre: z.string(),
 		genreEN: z.nullable(z.string()),
 	}),
-} as const satisfies INTERNAL_GAME_CONFIG;
+} as const satisfies INTERNAL_GAME_GROUP_CONFIG;
 
 const PopnClasses = [
 	ClassValue("KITTY", "にゃんこ", "Kitty"),
@@ -28,7 +29,7 @@ const PopnClasses = [
 	ClassValue("GOD", "神", "God"),
 ];
 
-export const POPN_9B_CONF = {
+export const GAME_POPN_CONF = {
 	providedMetrics: {
 		score: {
 			type: "INTEGER",
@@ -118,7 +119,7 @@ export const POPN_9B_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["Easy", "Normal", "Hyper", "EX"],
-		shorthand: {
+		format: {
 			Easy: "E",
 			Normal: "N",
 			Hyper: "H",
@@ -160,4 +161,4 @@ export const POPN_9B_CONF = {
 	preferences: z.strictObject({}),
 
 	supportedMatchTypes: ["inGameID", "tachiSongID", "popnChartHash"],
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;

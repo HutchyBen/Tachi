@@ -4,14 +4,14 @@ import { StrSOV } from "#util/sorts";
 import { type SearchFunctions } from "#util/ztable/search";
 import React from "react";
 import { Badge } from "react-bootstrap";
-import { FormatGameGroup } from "tachi-common";
+import { FormatGame } from "tachi-common";
 
 import { type Header } from "../components/TachiTable";
 
 export const SeedsTableHeaders: Header<TableWithRelated>[] = [
 	["ID", "ID", StrSOV((x) => x.tableID)],
 	["Name", "Name", StrSOV((x) => x.title)],
-	["GPT", "GPT", StrSOV((x) => `${x.game} ${x.playtype}`)],
+	["GPT", "GPT", StrSOV((x) => x.game)],
 	["Folders", "Folders", StrSOV((x) => x.title)],
 ];
 
@@ -22,8 +22,7 @@ export const SeedsTableSearchFns: SearchFunctions<TableWithRelated> = {
 	default: (x) => x.default,
 	description: (x) => x.description,
 	game: (x) => x.game,
-	playtype: (x) => x.playtype,
-	gpt: (x) => FormatGameGroup(x.game, x.playtype),
+	gpt: (x) => FormatGame(x.game),
 	folder: (x) =>
 		Object.values(x.__related.folders)
 			.filter((e) => e !== undefined)
@@ -44,7 +43,7 @@ export const SeedsTableCells: CellsRenderFN<TableWithRelated> = ({ data }) => (
 			{data.default && <Badge bg="success">DEFAULT</Badge>}
 			{data.inactive && <Badge bg="warning">INACTIVE</Badge>}
 		</td>
-		<td>{FormatGameGroup(data.game, data.playtype)}</td>
+		<td>{FormatGame(data.game)}</td>
 		<td className="text-start">
 			<div style={{ maxHeight: "200px", overflowY: "auto" }}>
 				{data.folders.map((e) => {
@@ -54,7 +53,7 @@ export const SeedsTableCells: CellsRenderFN<TableWithRelated> = ({ data }) => (
 						<div key={e}>
 							{folder ? (
 								<span>
-									{folder.title} ({folder.playtype})
+									{folder.title} ({FormatGame(folder.game)})
 								</span>
 							) : (
 								<span className="text-danger">UNKNOWN FOLDER {e}</span>

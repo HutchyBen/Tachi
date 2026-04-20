@@ -24,7 +24,7 @@ describe("FindSongOnTitle / FindSongOnTitleInsensitive / FindSongOnID (Postgres)
 			.execute();
 
 		const byTitle = await FindSongOnTitle("iidx", title);
-		expect(byTitle?.id).toBe(4_200_000);
+		expect(byTitle?.id).toBe(songId);
 
 		const songId2 = `song-ft2-${suffix}`;
 		await DB.insertInto("song")
@@ -42,7 +42,7 @@ describe("FindSongOnTitle / FindSongOnTitleInsensitive / FindSongOnID (Postgres)
 			.execute();
 
 		const byAlt = await FindSongOnTitle("iidx", `Alt ${suffix}`);
-		expect(byAlt?.id).toBe(4_200_001);
+		expect(byAlt?.id).toBe(songId2);
 	});
 
 	it("FindSongOnTitleInsensitive matches case-insensitively", async () => {
@@ -64,10 +64,10 @@ describe("FindSongOnTitle / FindSongOnTitleInsensitive / FindSongOnID (Postgres)
 			.execute();
 
 		const doc = await FindSongOnTitleInsensitive("popn", `cased ${suffix}`, "artistx");
-		expect(doc?.id).toBe(4_200_010);
+		expect(doc?.id).toBe(songId);
 	});
 
-	it("FindSongOnID returns song by legacy_id", async () => {
+	it("FindSongOnID returns song by id", async () => {
 		const suffix = `${Date.now()}`;
 		const songId = `song-fid-${suffix}`;
 
@@ -85,7 +85,7 @@ describe("FindSongOnTitle / FindSongOnTitleInsensitive / FindSongOnID (Postgres)
 			})
 			.execute();
 
-		const doc = await FindSongOnID("sdvx", 4_200_020);
+		const doc = await FindSongOnID("sdvx", songId);
 		expect(doc?.title).toBe("T");
 	});
 });

@@ -15,35 +15,40 @@ import { NumericSOV } from "#util/sorts";
 import React, { useState } from "react";
 import { useQuery } from "react-query";
 import {
-	FormatGameGroup,
+	FormatGame,
+	GameToGameGroup,
 	GetGameGroupConfig,
-	type MONGO_SessionDocument,
-	type MONGO_UserDocument,
+	type SessionDocument,
 	type SessionScoreInfo,
 	type UnsuccessfulAPIResponse,
+	type UserDocument,
 } from "tachi-common";
 
-export default function SessionsPage({ reqUser, game, playtype }: UGPT) {
+export default function SessionsPage({ reqUser, game }: UGPT) {
 	const [sessionSet, setSessionSet] = useState<"best" | "highlighted" | "recent">("best");
 	const [search, setSearch] = useState("");
 
-	const gameConfig = GetGameGroupConfig(game);
-
 	useSetSubheader(
-		["Users", reqUser.username, "Games", gameConfig.name, playtype, "Sessions"],
+		[
+			"Users",
+			reqUser.username,
+			"Games",
+			GetGameGroupConfig(GameToGameGroup(game)).name,
+			"Sessions",
+		],
 		[reqUser],
-		`${reqUser.username}'s ${FormatGameGroup(game, playtype)} Sessions`,
+		`${reqUser.username}'s ${FormatGame(game)} Sessions`,
 	);
 
-	const baseUrl = `/users/${reqUser.id}/games/${game}/${playtype}/sessions`;
+	const baseUrl = `/users/${reqUser.id}/games/${game}/sessions`;
 
-	const rating = useSessionRatingAlg(game, playtype);
+	const rating = useSessionRatingAlg(game);
 
 	const { data, error } = useQuery<SessionDataset, UnsuccessfulAPIResponse>(
 		`${baseUrl}/${sessionSet}`,
 		async () => {
 			const res = await APIFetchV1<
-				({ __scoreInfo: Array<SessionScoreInfo> } & MONGO_SessionDocument)[]
+				({ __scoreInfo: Array<SessionScoreInfo> } & SessionDocument)[]
 			>(`${baseUrl}/${sessionSet}`);
 
 			if (!res.success) {
@@ -70,7 +75,7 @@ export default function SessionsPage({ reqUser, game, playtype }: UGPT) {
 		<div className="row">
 			<div className="col-12">
 				<SessionCalendar
-					url={`/users/${reqUser.id}/games/${game}/${playtype}/sessions/calendar`}
+					url={`/users/${reqUser.id}/games/${game}/sessions/calendar`}
 					user={reqUser}
 				/>
 				<Divider />
@@ -113,12 +118,11 @@ export default function SessionsPage({ reqUser, game, playtype }: UGPT) {
 							dataset={data!}
 							game={game}
 							indexCol={sessionSet === "best"}
-							playtype={playtype}
 							reqUser={reqUser}
 						/>
 					</LoadingWrapper>
 				) : (
-					<SearchSessionsTable {...{ game, playtype, reqUser, baseUrl, search }} />
+					<SearchSessionsTable {...{ game, reqUser, baseUrl, search }} />
 				)}
 			</div>
 		</div>
@@ -128,14 +132,13 @@ export default function SessionsPage({ reqUser, game, playtype }: UGPT) {
 function SearchSessionsTable({
 	search,
 	game,
-	playtype,
 	reqUser,
 	baseUrl,
-}: { baseUrl: string; reqUser: MONGO_UserDocument; search: string } & GamePT) {
+}: { baseUrl: string; reqUser: UserDocument; search: string } & GamePT) {
 	const { data, error } = useQuery<SessionDataset, UnsuccessfulAPIResponse>(
 		`${baseUrl}?search=${search}`,
 		async () => {
-			const res = await APIFetchV1<MONGO_SessionDocument[]>(`${baseUrl}?search=${search}`);
+			const res = await APIFetchV1<SessionDocument[]>(`${baseUrl}?search=${search}`);
 
 			if (!res.success) {
 				throw res;
@@ -152,12 +155,7 @@ function SearchSessionsTable({
 
 	return (
 		<LoadingWrapper {...{ error, dataset: data }}>
-			<GenericSessionTable
-				dataset={data!}
-				game={game}
-				playtype={playtype}
-				reqUser={reqUser}
-			/>
+			<GenericSessionTable dataset={data!} game={game} reqUser={reqUser} />
 		</LoadingWrapper>
 	);
 }

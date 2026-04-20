@@ -1,6 +1,6 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import DB from "#services/pg/db.js";
-import { DeleteUndefinedProps, IsNonEmptyString, StripUrl } from "#utils/misc.js";
+import { MakeAction } from "#lib/actions/actions";
+import DB from "#services/pg/db";
+import { DeleteUndefinedProps, IsNonEmptyString, StripUrl } from "#utils/misc";
 import { ExpectedErr } from "bliss";
 
 export const ACTION_UpdateUser = MakeAction("UPDATE_USER", async (taker, body) => {

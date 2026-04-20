@@ -18,7 +18,7 @@ export enum UserAuthLevels {
  * The config the server expects, and emits on /api/v1/config.
  */
 export interface TachiServerCoreConfig {
-	GAMES: Array<GameGroup>;
+	GAME_GROUPS: Array<GameGroup>;
 	IMPORT_TYPES: Array<ImportTypes>;
 	NAME: string;
 	TYPE: "boku" | "kamai" | "omni";

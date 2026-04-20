@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { GAME_GROUP_CONFIGS, GAME_PT_CONFIGS, GPTStringToV3, V3ToGameGroup } from "tachi-common";
+import { ALL_GAMES, GAME_GROUP_CONFIGS, GameToGameGroup } from "tachi-common";
 
 import { CreateChartID, CreateSongID, ReadCollection, WriteCollection } from "../../util";
 
@@ -72,9 +72,8 @@ for (const gameGroup of Object.keys(GAME_GROUP_CONFIGS)) {
 
 // ── Pass 2: charts ────────────────────────────────────────────────────────────
 
-for (const oldGpt of Object.keys(GAME_PT_CONFIGS)) {
-	const game = GPTStringToV3(oldGpt as any);
-	const gameGroup = V3ToGameGroup(game);
+for (const game of ALL_GAMES) {
+	const gameGroup = GameToGameGroup(game);
 	const collection = `charts-${game}.json`;
 	const data = ReadCollection(collection);
 	let modified = 0;

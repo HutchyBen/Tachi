@@ -1,4 +1,3 @@
-import DebugContent from "#components/util/DebugContent.js";
 import useScoreRatingAlg from "#components/util/useScoreRatingAlg";
 import { type ScoreDataset } from "#types/tables";
 import { NumericSOV, StrSOV } from "#util/sorts";
@@ -6,10 +5,9 @@ import { CreateDefaultScoreSearchParams } from "#util/tables/create-search";
 import React, { useState } from "react";
 import {
 	type AnyScoreRatingAlg,
-	type GameGroup,
 	type integer,
-	type MONGO_ScoreDocument,
-	type Playtype,
+	type ScoreDocument,
+	type V3Game,
 } from "tachi-common";
 
 import DifficultyCell from "../cells/DifficultyCell";
@@ -30,7 +28,6 @@ import IndicatorHeader, { EmptyHeader } from "../headers/IndicatorHeader";
 export default function ScoreTable({
 	dataset,
 	pageLen,
-	playtype,
 	userCol = false,
 	game,
 	alg,
@@ -39,21 +36,20 @@ export default function ScoreTable({
 }: {
 	alg?: AnyScoreRatingAlg;
 	dataset: ScoreDataset;
-	game: GameGroup;
+	game: V3Game;
 	noTopDisplayStr?: boolean;
-	onScoreUpdate?: (sc: MONGO_ScoreDocument) => void;
+	onScoreUpdate?: (sc: ScoreDocument) => void;
 	pageLen?: integer;
-	playtype: Playtype;
 	userCol?: boolean;
 }) {
-	const defaultRating = useScoreRatingAlg(game, playtype);
+	const defaultRating = useScoreRatingAlg(game);
 	const [rating, setRating] = useState(alg ?? defaultRating);
 
 	const headers: Header<ScoreDataset[0]>[] = [
 		ChartHeader(game, (k) => k.__related.chart),
 		IndicatorHeader,
 		["Song", "Song", StrSOV((x) => x.__related.song.title)],
-		...GetGPTCoreHeaders<ScoreDataset>(game, playtype, rating, setRating, (k) => k),
+		...GetGPTCoreHeaders<ScoreDataset>(game, rating, setRating, (k) => k),
 		["Timestamp", "Timestamp", NumericSOV((x) => x.timeAchieved ?? 0)],
 		EmptyHeader,
 	];
@@ -74,13 +70,12 @@ export default function ScoreTable({
 					game={game}
 					key={sc.scoreID}
 					onScoreUpdate={onScoreUpdate}
-					playtype={playtype}
 					rating={rating as any}
 					sc={sc}
 					userCol={userCol}
 				/>
 			)}
-			searchFunctions={CreateDefaultScoreSearchParams(game, playtype)}
+			searchFunctions={CreateDefaultScoreSearchParams(game)}
 		/>
 	);
 }
@@ -88,14 +83,12 @@ export default function ScoreTable({
 function Row({
 	sc,
 	rating,
-	playtype,
 	userCol,
 	game,
 	onScoreUpdate,
 }: {
-	game: GameGroup;
-	onScoreUpdate?: (sc: MONGO_ScoreDocument) => void;
-	playtype: Playtype;
+	game: V3Game;
+	onScoreUpdate?: (sc: ScoreDocument) => void;
 	rating: AnyScoreRatingAlg;
 	sc: ScoreDataset[0];
 	userCol: boolean;
@@ -109,7 +102,6 @@ function Row({
 					chart={sc.__related.chart}
 					game={game}
 					onScoreUpdate={onScoreUpdate}
-					playtype={playtype}
 					scoreState={scoreState}
 					song={sc.__related.song}
 					thisScore={sc}
@@ -117,7 +109,7 @@ function Row({
 				/>
 			}
 		>
-			{userCol && <UserCell game={sc.game} playtype={playtype} user={sc.__related.user} />}
+			{userCol && <UserCell game={game} user={sc.__related.user} />}
 			<DifficultyCell chart={sc.__related.chart} game={game} />
 			<IndicatorsCell highlight={scoreState.highlight} />
 			<TitleCell

@@ -1,7 +1,6 @@
 import { MakeAnonAction } from "#lib/actions/actions";
 import { SendEmail } from "#lib/email/client";
 import { EmailFormatResetPassword } from "#lib/email/formats";
-import { Env, ServerConfig } from "#lib/setup/config";
 import DB from "#services/pg/db";
 import { Random20Hex } from "#utils/misc";
 import { GetUserWithIDGuaranteed } from "#utils/user";
@@ -10,10 +9,6 @@ import { ExpectedErr, log } from "bliss";
 export const ANON_ACTION_ForgotPassword = MakeAnonAction(
 	"FORGOT_PASSWORD",
 	async (taker, { email }) => {
-		if (!ServerConfig.EMAIL_CONFIG && Env.NODE_ENV !== "test") {
-			throw new ExpectedErr(501, "This server does not support password resets.");
-		}
-
 		if (taker.ip === null) {
 			throw new ExpectedErr(400, "IP address is required to send a password reset email.");
 		}

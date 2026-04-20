@@ -1,19 +1,18 @@
 import type { CommandInteraction } from "discord.js";
-import type {
-	GameGroup,
-	integer,
-	MONGO_ChartDocument,
-	MONGO_GoalDocument,
-	MONGO_ImportDocument,
-	MONGO_PBScoreDocument,
-	MONGO_QuestDocument,
-	MONGO_SongDocument,
-	MONGO_UserDocument,
-	Playtype,
-} from "tachi-common";
 
 import { Env } from "#config";
 import { log } from "#utils/log";
+import {
+	type ChartDocument,
+	type GoalDocument,
+	type ImportDocument,
+	type integer,
+	type PBScoreDocument,
+	type QuestDocument,
+	type SongDocument,
+	type UserDocument,
+	type V3Game,
+} from "tachi-common";
 
 import type { ImportDeferred, ImportPollStatus, UGPTStats } from "./return-types";
 
@@ -21,7 +20,7 @@ import { RequestTypes, TachiServerV1Get, TachiServerV1Request } from "./fetch-ta
 import { Sleep } from "./misc";
 
 export async function GetUserInfo(userID: string | integer) {
-	const res = await TachiServerV1Get<MONGO_UserDocument>(`/users/${userID}`, null);
+	const res = await TachiServerV1Get<UserDocument>(`/users/${userID}`, null);
 
 	if (!res.success) {
 		throw new Error(`Failed to fetch user with userID ${userID}.`);
@@ -30,22 +29,19 @@ export async function GetUserInfo(userID: string | integer) {
 	return res.body;
 }
 
-export async function GetUGPTStats(userID: string | integer, game: GameGroup, playtype: Playtype) {
-	const res = await TachiServerV1Get<UGPTStats>(
-		`/users/${userID}/games/${game}/${playtype}`,
-		null,
-	);
+export async function GetUGPTStats(userID: string | integer, game: V3Game) {
+	const res = await TachiServerV1Get<UGPTStats>(`/users/${userID}/games/${game}`, null);
 
 	if (!res.success) {
-		throw new Error(`Failed to fetch UGPT stats for userID ${userID}, ${game}, ${playtype}.`);
+		throw new Error(`Failed to fetch UGPT stats for userID ${userID}, ${game}.`);
 	}
 
 	return res.body;
 }
 
-export async function GetGoalWithID(goalID: string, game: GameGroup, playtype: Playtype) {
-	const res = await TachiServerV1Get<{ goal: MONGO_GoalDocument }>(
-		`/games/${game}/${playtype}/targets/goals/${goalID}`,
+export async function GetGoalWithID(goalID: string, game: V3Game) {
+	const res = await TachiServerV1Get<{ goal: GoalDocument }>(
+		`/games/${game}/targets/goals/${goalID}`,
 		null,
 	);
 
@@ -56,9 +52,9 @@ export async function GetGoalWithID(goalID: string, game: GameGroup, playtype: P
 	return res.body.goal;
 }
 
-export async function GetQuestWithID(questID: string, game: GameGroup, playtype: Playtype) {
-	const res = await TachiServerV1Get<{ quest: MONGO_QuestDocument }>(
-		`/games/${game}/${playtype}/targets/quests/${questID}`,
+export async function GetQuestWithID(questID: string, game: V3Game) {
+	const res = await TachiServerV1Get<{ quest: QuestDocument }>(
+		`/games/${game}/targets/quests/${questID}`,
 		null,
 	);
 
@@ -69,14 +65,9 @@ export async function GetQuestWithID(questID: string, game: GameGroup, playtype:
 	return res.body.quest;
 }
 
-export async function GetChartInfoForUser(
-	userID: string | integer,
-	chartID: string,
-	game: GameGroup,
-	playtype: Playtype,
-) {
-	const res = await TachiServerV1Get<{ chart: MONGO_ChartDocument; song: MONGO_SongDocument }>(
-		`/games/${game}/${playtype}/charts/${chartID}`,
+export async function GetChartInfoForUser(userID: string | integer, chartID: string, game: V3Game) {
+	const res = await TachiServerV1Get<{ chart: ChartDocument; song: SongDocument }>(
+		`/games/${game}/charts/${chartID}`,
 		null,
 	);
 
@@ -84,8 +75,8 @@ export async function GetChartInfoForUser(
 		throw new Error(`Failed to fetch song/chart with chartID ${chartID}.`);
 	}
 
-	const pbRes = await TachiServerV1Get<{ chart: MONGO_ChartDocument; pb: MONGO_PBScoreDocument }>(
-		`/users/${userID}/games/${game}/${playtype}/pbs/${chartID}`,
+	const pbRes = await TachiServerV1Get<{ chart: ChartDocument; pb: PBScoreDocument }>(
+		`/users/${userID}/games/${game}/pbs/${chartID}`,
 		null,
 	);
 
@@ -104,7 +95,7 @@ export async function PerformScoreImport(
 	body: Record<string, unknown>,
 	interaction?: CommandInteraction,
 ) {
-	const initRes = await TachiServerV1Request<ImportDeferred | MONGO_ImportDocument>(
+	const initRes = await TachiServerV1Request<ImportDeferred | ImportDocument>(
 		RequestTypes.POST,
 		url,
 		authToken,
@@ -122,7 +113,7 @@ export async function PerformScoreImport(
 
 	// this server does not defer imports to a scorequeue
 	if (initRes.statusCode === 200) {
-		const result = initRes.body as MONGO_ImportDocument;
+		const result = initRes.body as ImportDocument;
 
 		return result;
 	} else if (initRes.statusCode === 202) {

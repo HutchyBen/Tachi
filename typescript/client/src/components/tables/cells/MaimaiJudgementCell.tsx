@@ -1,11 +1,11 @@
 import { IsNullish } from "#util/misc";
 import React from "react";
-import { COLOUR_SET, type MONGO_PBScoreDocument, type MONGO_ScoreDocument } from "tachi-common";
+import { COLOUR_SET, type PBScoreDocument, type ScoreDocument } from "tachi-common";
 
 export default function MaimaiJudgementCell({
 	score,
 }: {
-	score: MONGO_PBScoreDocument<"maimai:Single"> | MONGO_ScoreDocument<"maimai:Single">;
+	score: PBScoreDocument<"maimai"> | ScoreDocument<"maimai">;
 }) {
 	const judgements = score.scoreData.judgements;
 

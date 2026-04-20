@@ -1,22 +1,18 @@
-import { DeleteUndefinedProps } from "#utils/misc.js";
+import { DeleteUndefinedProps } from "#utils/misc";
 import {
-	GetGPTConfig,
-	type GPTString,
-	type GPTStringToV3Game,
+	GetGameConfig,
 	type integer,
-	type MONGO_ScoreData,
 	type MongoDerivedMetrics,
 	type MongoOptionalMetrics,
 	type MongoProvidedMetrics,
 	type PgScoreData,
+	type ScoreData,
 	type V3Game,
-	type V3GameToGPTString,
-	V3GetGameConfig,
 } from "tachi-common";
 
-interface RetVal<GPT extends GPTString> {
-	derived: MongoDerivedMetrics[GPT];
-	data: MongoOptionalMetrics[GPT] & MongoProvidedMetrics[GPT];
+interface RetVal<TGame extends V3Game = V3Game> {
+	derived: MongoDerivedMetrics[TGame];
+	data: MongoOptionalMetrics[TGame] & MongoProvidedMetrics[TGame];
 }
 
 /**
@@ -43,11 +39,11 @@ function applyOrdinals(
 	return result;
 }
 
-function splitScoreData<GPT extends GPTString = GPTString>(
-	gpt: GPT,
-	sd: MONGO_ScoreData<GPT>,
-): RetVal<GPT> {
-	const config = GetGPTConfig(gpt);
+function splitScoreData<TGame extends V3Game = V3Game>(
+	game: TGame,
+	sd: ScoreData<TGame>,
+): RetVal<TGame> {
+	const config = GetGameConfig(game);
 
 	const scoreData = sd as any;
 
@@ -84,13 +80,13 @@ function splitScoreData<GPT extends GPTString = GPTString>(
 	return eventualOut;
 }
 
-export function mongoScoreDataToPg<GPT extends GPTString = GPTString>(
-	gpt: GPT,
-	scoreData: MONGO_ScoreData,
-): PgScoreData<GPTStringToV3Game[GPT]> {
-	const { data, derived } = splitScoreData(gpt, scoreData);
+export function mongoScoreDataToPg<TGame extends V3Game = V3Game>(
+	game: TGame,
+	scoreData: ScoreData<TGame>,
+): PgScoreData<TGame> {
+	const { data, derived } = splitScoreData(game, scoreData);
 
-	const config = GetGPTConfig(gpt);
+	const config = GetGameConfig(game);
 
 	return {
 		data: applyOrdinals(data, config.providedMetrics as any) as any,
@@ -100,17 +96,17 @@ export function mongoScoreDataToPg<GPT extends GPTString = GPTString>(
 }
 
 /**
- * Reconstruct API {@link MONGO_ScoreData} from Postgres `data` / `derived_data` JSON blobs
+ * Reconstruct API {@link ScoreData} from Postgres `data` / `derived_data` JSON blobs
  * and the `judgements` column (the inverse of {@link mongoScoreDataToPg}).
  */
-export function pgScoreDataToMongo<G extends V3Game = V3Game>(
-	game: G,
-	scoreData: PgScoreData<G>,
-): MONGO_ScoreData<V3GameToGPTString[G]> {
+export function pgScoreDataToMongo<TGame extends V3Game = V3Game>(
+	game: TGame,
+	scoreData: PgScoreData<TGame>,
+): ScoreData<TGame> {
 	const data = scoreData.data as any;
 	const derived = scoreData.derived as any;
 
-	const config = V3GetGameConfig(game);
+	const config = GetGameConfig(game);
 
 	const eventualOut: any = {
 		enumIndexes: {},

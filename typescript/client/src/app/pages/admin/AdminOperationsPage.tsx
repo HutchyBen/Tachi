@@ -3,7 +3,12 @@ import { TachiConfig } from "#lib/config";
 import { APIFetchV1 } from "#util/api";
 import React, { useState } from "react";
 import { Button, Card, Col, Form, Row } from "react-bootstrap";
-import { FormatGameGroup, type GameGroup, GetGameGroupConfig } from "tachi-common";
+import {
+	FormatGame,
+	type GameGroup,
+	GetGameGroupConfig,
+	LEGACY_GameGroupPTToGame,
+} from "tachi-common";
 
 export default function AdminOperationsPage() {
 	useSetSubheader(["Admin", "Operations"]);
@@ -46,7 +51,7 @@ export default function AdminOperationsPage() {
 								value={announcementGame === "" ? "" : announcementGame}
 							>
 								<option value="">— Site-wide —</option>
-								{TachiConfig.GAMES.map((g) => (
+								{TachiConfig.GAME_GROUPS.map((g) => (
 									<option key={g} value={g}>
 										{g}
 									</option>
@@ -63,7 +68,12 @@ export default function AdminOperationsPage() {
 									<option value="">—</option>
 									{announcementGameConfig.playtypes.map((pt) => (
 										<option key={pt} value={pt}>
-											{FormatGameGroup(announcementGame as GameGroup, pt)}
+											{FormatGame(
+												LEGACY_GameGroupPTToGame(
+													announcementGame as GameGroup,
+													pt,
+												),
+											)}
 										</option>
 									))}
 								</Form.Select>

@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import fs from "fs";
 import path from "path";
-import { type GameGroup, V3ToGameGroup } from "tachi-common";
+import { type GameGroup, GameToGameGroup } from "tachi-common";
 import { z } from "zod";
 
 import { GetChartCollectionGame, GetSongCollectionGame, ReadCollection } from "../util";
@@ -54,7 +54,7 @@ for (const collection of collections) {
 			throw new Error(`Collection passed was literally ${collection}, why?`);
 		}
 
-		gameGroup = V3ToGameGroup(maybeGame);
+		gameGroup = GameToGameGroup(maybeGame);
 	}
 
 	for (const d of data) {

@@ -19,7 +19,7 @@ export default interface FolderTable {
 
   title: ColumnType<string, string, string>;
 
-  slug: ColumnType<string | null, string | null, string | null>;
+  slug: ColumnType<string, string, string>;
 
   where: ColumnType<string, string, string>;
 

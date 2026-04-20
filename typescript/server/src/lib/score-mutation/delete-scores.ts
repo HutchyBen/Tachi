@@ -12,22 +12,15 @@ import { ProcessPBs } from "#lib/score-import/framework/pb/process-pbs";
 import { UpdateUsersQuests } from "#lib/score-import/framework/quests/quests";
 import { UpdateUsersGamePlaytypeStats } from "#lib/score-import/framework/ugpt-stats/update-ugpt-stats";
 import DB from "#services/pg/db";
-import {
-	type GameGroup,
-	GetGPTString,
-	type MONGO_ScoreDocument,
-	type Playtype,
-	type V3Game,
-	V3ToGamePT,
-} from "tachi-common";
+import { type ScoreDocument } from "tachi-common";
 /* eslint-disable no-await-in-loop */
 
-export function DeleteScore(score: MONGO_ScoreDocument, blacklist = false): Promise<void> {
+export function DeleteScore(score: ScoreDocument, blacklist = false): Promise<void> {
 	return DeleteMultipleScores([score], blacklist);
 }
 
 export async function DeleteMultipleScores(
-	scores: Array<MONGO_ScoreDocument>,
+	scores: Array<ScoreDocument>,
 	blacklist = false,
 ): Promise<void> {
 	if (scores.length === 0) {
@@ -80,9 +73,7 @@ export async function DeleteMultipleScores(
 			}
 
 			const scoreDocs = remainingRows.map((r) => ToScoreDocument(r as ScoreDocumentJoinRow));
-			const { game, playtype } = V3ToGamePT(sessionRow.game as V3Game);
-			const gpt = GetGPTString(game, playtype);
-			const calculatedData = CreateSessionCalcData(gpt, scoreDocs);
+			const calculatedData = CreateSessionCalcData(sessionRow.game, scoreDocs);
 
 			await DB.updateTable("session")
 				.set({
@@ -94,7 +85,8 @@ export async function DeleteMultipleScores(
 	}
 
 	for (const score of scores) {
-		await ProcessPBs(score.game, score.playtype, score.userID, new Set([score.chartID]), log);
+		const v3Game = score.game;
+		await ProcessPBs(v3Game, score.userID, new Set([score.chartID]), log);
 		await clearPbDirtyForUser(score.userID, [score.chartID]);
 
 		if (blacklist) {
@@ -116,24 +108,30 @@ export async function DeleteMultipleScores(
 		}
 	}
 
-	const ugpts = [...new Set(scores.map((e) => `${e.game}-${e.playtype}-${e.userID}`))];
+	const userGamePairs = [
+		...new Map(scores.map((s) => [`${s.game}\x1f${s.userID}`, s] as const)).values(),
+	];
 
-	for (const ugpt of ugpts) {
-		const [game, playtype, strUserID] = ugpt.split("-") as [GameGroup, Playtype, string];
-
-		const userID = Number(strUserID);
+	for (const sample of userGamePairs) {
+		const game = sample.game;
+		const userID = sample.userID;
 
 		const pertinentChartIDs = scores
-			.filter((e) => e.game === game && e.playtype === playtype && e.userID === userID)
+			.filter((e) => e.game === game && e.userID === userID)
 			.map((e) => e.chartID);
 
 		if (pertinentChartIDs.length > 0) {
-			const goalInfo = await GetAndUpdateUsersGoals(game, userID, new Set(chartIDs), log);
+			const goalInfo = await GetAndUpdateUsersGoals(
+				game,
+				userID,
+				new Set(pertinentChartIDs),
+				log,
+			);
 
-			await UpdateUsersQuests(goalInfo, game, [playtype], userID, log);
+			await UpdateUsersQuests(goalInfo, game, userID, log);
 		}
 
-		await UpdateUsersGamePlaytypeStats(game, playtype, userID, null, log);
+		await UpdateUsersGamePlaytypeStats(game, userID, null, log);
 	}
 
 	log.info(`Finished deleting ${scores.length} scores (Postgres).`);

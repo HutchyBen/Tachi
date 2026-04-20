@@ -47,7 +47,7 @@ MutateCollection("bms-course-lookup.json", (courses) => {
 
 		courses.push({
 			md5sums,
-			playtype: options.playtype,
+			game: options.playtype === "7K" ? "bms-7k" : "bms-14k",
 			set: options.set,
 			title: d.title,
 			value: dans[i].id,

@@ -8,12 +8,7 @@ import { type SetState } from "#types/react";
 import { IsScore } from "#util/asserts";
 import { FormatGPTProfileRatingName } from "#util/misc";
 import React, { useContext, useEffect, useState } from "react";
-import {
-	GetGPTString,
-	type MONGO_ChartDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_ScoreDocument,
-} from "tachi-common";
+import { type ChartDocument, type PBScoreDocument, type ScoreDocument } from "tachi-common";
 
 import CommentContainer from "./CommentContainer";
 import DeleteScoreBtn from "./DeleteScoreBtn";
@@ -25,11 +20,12 @@ export function ScoreInfo({
 	score,
 	chart,
 }: {
-	chart: MONGO_ChartDocument;
-	score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
+	chart: ChartDocument;
+	score: PBScoreDocument | ScoreDocument;
 }) {
-	const rating = useScoreRatingAlg(score.game, score.playtype);
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(score.game, chart.playtype)];
+	const game = score.game;
+	const rating = useScoreRatingAlg(game);
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
 	return (
 		<div className="col-12">
@@ -37,18 +33,13 @@ export function ScoreInfo({
 				<thead>
 					<tr>
 						<td colSpan={gptImpl.scoreHeaders.length}>Score Info</td>
-						<td>{FormatGPTProfileRatingName(score.game, score.playtype, rating)}</td>
+						<td>{FormatGPTProfileRatingName(game, rating)}</td>
 						<td>Timestamp</td>
 					</tr>
 				</thead>
 				<tbody>
 					<tr>
-						<ScoreCoreCells
-							chart={chart}
-							game={score.game}
-							rating={rating}
-							score={score}
-						/>
+						<ScoreCoreCells chart={chart} game={game} rating={rating} score={score} />
 						{/* @ts-expect-error yeah we know service doesnt necessarily exist */}
 						<TimestampCell service={score?.service} time={score.timeAchieved} />
 					</tr>
@@ -76,21 +67,21 @@ export default function DocumentComponent({
 	chart,
 	onScoreUpdate,
 }: {
-	chart: MONGO_ChartDocument;
+	chart: ChartDocument;
 	forceScoreData?: boolean;
 	GraphComponent?:
 		| (({
 				score,
 				chart,
 		  }: {
-				chart: MONGO_ChartDocument;
-				score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
+				chart: ChartDocument;
+				score: PBScoreDocument | ScoreDocument;
 		  }) => JSX.Element)
 		| null;
-	onScoreUpdate?: (sc: MONGO_ScoreDocument) => void;
+	onScoreUpdate?: (sc: ScoreDocument) => void;
 	pbData: UGPTChartPBComposition;
 	renderScoreInfo?: boolean;
-	score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
+	score: PBScoreDocument | ScoreDocument;
 	scoreState: {
 		highlight: boolean;
 		setComment?: SetState<string | null>;
@@ -190,19 +181,19 @@ export function GraphAndJudgementDataComponent({
 	GraphComponent = null,
 	chart,
 }: {
-	chart: MONGO_ChartDocument;
+	chart: ChartDocument;
 	forceScoreData?: boolean;
 	GraphComponent?:
 		| (({
 				score,
 				chart,
 		  }: {
-				chart: MONGO_ChartDocument;
-				score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
+				chart: ChartDocument;
+				score: PBScoreDocument | ScoreDocument;
 		  }) => JSX.Element)
 		| null;
 	renderScoreInfo?: boolean;
-	score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
+	score: PBScoreDocument | ScoreDocument;
 	showSingleScoreNote?: boolean;
 }) {
 	return (

@@ -1,14 +1,13 @@
 import chalk from "chalk";
 import {
-	GetGPTConfig,
+	ALL_GAMES,
+	type ChartDocument,
+	FormatGame,
+	GameToGameGroup,
+	GetGameConfig,
 	type MatchTypes,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
-	v3AllGames,
-	V3FormatGame,
+	type SongDocument,
 	type V3Game,
-	V3ToGameGroup,
-	V3ToGPTString,
 } from "tachi-common";
 
 import { ReadCollection } from "../util";
@@ -16,10 +15,10 @@ import { ReadCollection } from "../util";
 // check that a given matchType works for a given game.
 const uniquenessChecks: Array<{ game: V3Game; matchType: MatchTypes }> = [];
 
-for (const game of v3AllGames) {
-	const gptConfig = GetGPTConfig(V3ToGPTString(game));
+for (const game of ALL_GAMES) {
+	const gameConfig = GetGameConfig(game);
 
-	for (const matchType of gptConfig.supportedMatchTypes) {
+	for (const matchType of gameConfig.supportedMatchTypes) {
 		uniquenessChecks.push({ game, matchType });
 	}
 }
@@ -44,7 +43,7 @@ const MATCH_TYPE_CHECKS: Record<
 	},
 	bmsChartHash: {
 		type: "CHARTS",
-		fn: (c: MONGO_ChartDocument<"bms:7K" | "bms:14K">) => [c.data.hashMD5, c.data.hashSHA256],
+		fn: (c: ChartDocument<"bms-7k" | "bms-14k">) => [c.data.hashMD5, c.data.hashSHA256],
 	},
 	inGameID: { type: "CHARTS", fn: (c) => `${c.data.inGameID}-${c.difficulty}` },
 	inGameStrID: { type: "CHARTS", fn: (c) => `${c.data.inGameStrID}-${c.difficulty}` },
@@ -65,7 +64,7 @@ const MATCH_TYPE_CHECKS: Record<
 	uscChartHash: { type: "CHARTS", fn: (c) => c.data.hashSHA1 },
 	ddrSongHash: {
 		type: "SONGS",
-		fn: (s: MONGO_SongDocument<"ddr">) => {
+		fn: (s: SongDocument<"ddr">) => {
 			// if there's no ddrSongHash then it's a konaste song / we're missing seed data
 			// so just use the inGameID
 			if (s.data.ddrSongHash === undefined) {
@@ -80,7 +79,7 @@ let exitCode = 0;
 const suites: Array<{ good: boolean; name: string; report: unknown }> = [];
 
 for (const { game, matchType } of uniquenessChecks) {
-	const name = `${V3FormatGame(game)} ${matchType}`;
+	const name = `${FormatGame(game)} ${matchType}`;
 	console.log(`[CHECKING MATCHTYPE] ${name}.`);
 
 	const handler = MATCH_TYPE_CHECKS[matchType];
@@ -92,7 +91,7 @@ for (const { game, matchType } of uniquenessChecks) {
 	const data =
 		handler.type === "CHARTS"
 			? ReadCollection(`charts-${game}.json`)
-			: ReadCollection(`songs-${V3ToGameGroup(game)}.json`);
+			: ReadCollection(`songs-${GameToGameGroup(game)}.json`);
 
 	const uniqueIDs = new Set();
 	for (const el of data) {
@@ -140,7 +139,7 @@ for (const { game, matchType } of uniquenessChecks) {
 				if (matchType === "songTitle") {
 					console.log(
 						chalk.yellow(
-							`Song title ${maybeUnique} wasn't case-insensitively unique in ${V3FormatGame(
+							`Song title ${maybeUnique} wasn't case-insensitively unique in ${FormatGame(
 								game,
 							)}. Imports using this song title *will* have their scores rejected.`,
 						),
@@ -149,7 +148,7 @@ for (const { game, matchType } of uniquenessChecks) {
 				} else {
 					console.log(
 						chalk.red(
-							`ID ${maybeUnique} wasn't unique in ${V3FormatGame(
+							`ID ${maybeUnique} wasn't unique in ${FormatGame(
 								game,
 							)} (matchType=${matchType}). It needs to be for this matchType to be legal.`,
 						),

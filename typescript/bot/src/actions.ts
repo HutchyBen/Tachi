@@ -21,7 +21,7 @@ export const ActionSignatures = {
 			session_count: z.number().int(),
 			error_count: z.number().int(),
 			user_id: z.number().int(),
-			game: z.string(),
+			games: z.string().array(),
 		}),
 	},
 } satisfies Record<string, ActionSignature>;

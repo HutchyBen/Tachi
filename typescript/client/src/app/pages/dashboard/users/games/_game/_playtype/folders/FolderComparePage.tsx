@@ -21,28 +21,24 @@ import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
 import Stack from "react-bootstrap/Stack";
 import { Link } from "react-router-dom";
-import { type MONGO_FolderDocument, type MONGO_UserDocument } from "tachi-common";
+import { type FolderDocument, type UserDocument } from "tachi-common";
 
 export default function RivalCompareFolderPage({
 	reqUser,
 	game,
-	playtype,
 	folder,
 }: {
-	folder: MONGO_FolderDocument;
-	reqUser: MONGO_UserDocument;
+	folder: FolderDocument;
+	reqUser: UserDocument;
 } & GamePT) {
 	const { settings } = useLUGPTSettings();
 	const { user } = useContext(UserContext);
 
-	const [selectedUser, setSelectedUser] = useState<MONGO_UserDocument | null>(null);
+	const [selectedUser, setSelectedUser] = useState<UserDocument | null>(null);
 	const [show, setShow] = useState(false);
 
-	// honestly don't care if this errors or not
-	const { data, error } = useApiQuery<Array<MONGO_UserDocument>>(
-		`/users/${settings?.userID}/games/${game}/${playtype}/rivals`,
-		undefined,
-		// [settings?.rivals.join(",")]
+	const { data, error } = useApiQuery<Array<UserDocument>>(
+		`/users/${settings?.userID}/games/${game}/rivals`,
 	);
 
 	if (!data && !error) {
@@ -51,9 +47,6 @@ export default function RivalCompareFolderPage({
 
 	let suggestUsers = data ?? [];
 
-	// if the user viewing this page is logged in and *is not*
-	// the person this page is for
-	// show them in the suggestions.
 	if (user && user.id !== reqUser.id && data) {
 		suggestUsers = [...suggestUsers, user];
 	}
@@ -65,7 +58,7 @@ export default function RivalCompareFolderPage({
 					<>
 						<Col className="d-flex justify-content-center flex-wrap" xs={12}>
 							{suggestUsers.map((e) => (
-								<UserIcon game={game} key={e.id} playtype={playtype} user={e}>
+								<UserIcon game={game} key={e.id} user={e}>
 									<Button
 										onClick={() => setSelectedUser(e)}
 										variant={
@@ -91,7 +84,7 @@ export default function RivalCompareFolderPage({
 					excludeSet={[reqUser.id]}
 					setShow={setShow}
 					show={show}
-					url={`/games/${game}/${playtype}/players`}
+					url={`/games/${game}/players`}
 				/>
 				<Button
 					className={suggestUsers.length === 0 ? "d-flex mx-auto" : ""}
@@ -107,7 +100,6 @@ export default function RivalCompareFolderPage({
 					<FolderCompare
 						folder={folder}
 						game={game}
-						playtype={playtype}
 						reqUser={reqUser}
 						withUser={selectedUser}
 					/>
@@ -120,26 +112,24 @@ export default function RivalCompareFolderPage({
 function FolderCompare({
 	reqUser,
 	game,
-	playtype,
 	withUser,
 	folder,
 }: {
-	folder: MONGO_FolderDocument;
-	reqUser: MONGO_UserDocument;
-	withUser: MONGO_UserDocument;
+	folder: FolderDocument;
+	reqUser: UserDocument;
+	withUser: UserDocument;
 } & GamePT) {
 	const { data: baseData, error: baseError } = useApiQuery<UGPTFolderReturns>(
-		`/users/${reqUser.id}/games/${game}/${playtype}/folders/${folder.folderID}`,
+		`/users/${reqUser.id}/games/${game}/folders/${folder.slug}`,
 	);
 
 	const { data: compareData, error: compareError } = useApiQuery<UGPTFolderReturns>(
-		`/users/${withUser.id}/games/${game}/${playtype}/folders/${folder.folderID}`,
+		`/users/${withUser.id}/games/${game}/folders/${folder.slug}`,
 	);
 
 	const [shouldIncludeNotPlayed, setShouldIncludeNotPlayed] = useState(false);
 
 	const dataset = useMemo(() => {
-		// i *LOVE* the rules of hooks! they're so convenient!
 		if (!baseData || !compareData) {
 			return [];
 		}
@@ -153,7 +143,7 @@ function FolderCompare({
 			chart,
 			base: basePBLookup.get(chart.chartID) ?? null,
 			compare: comparePBLookup.get(chart.chartID) ?? null,
-			song: songMap.get(chart.songID)!,
+			song: songMap.get(chart.song.id)!,
 		}));
 
 		if (!shouldIncludeNotPlayed) {
@@ -177,14 +167,9 @@ function FolderCompare({
 	return (
 		<Stack gap={4}>
 			<Row lg={{ cols: 2 }} xs={{ cols: 1 }}>
-				<UserCard game={game} playtype={playtype} user={reqUser} />
-				<UserCard game={game} playtype={playtype} user={withUser} />
+				<UserCard game={game} user={reqUser} />
+				<UserCard game={game} user={withUser} />
 			</Row>
-			{/* <CompareCard
-				dataset={dataset}
-				baseUsername={reqUser.username}
-				otherUsername={withUser.username}
-			/> */}
 			<Form.Check
 				checked={shouldIncludeNotPlayed}
 				label="Include charts without plays?"
@@ -196,16 +181,13 @@ function FolderCompare({
 				compareUser={withUser.username}
 				dataset={dataset}
 				game={game}
-				playtype={playtype}
 			/>
 		</Stack>
 	);
 }
 
-function UserCard({ user, game, playtype }: { user: MONGO_UserDocument } & GamePT) {
-	const { data, error } = useApiQuery<UGPTStatsReturn>(
-		`/users/${user.username}/games/${game}/${playtype}`,
-	);
+function UserCard({ user, game }: { user: UserDocument } & GamePT) {
+	const { data, error } = useApiQuery<UGPTStatsReturn>(`/users/${user.username}/games/${game}`);
 
 	if (error) {
 		return <ApiError error={error} />;
@@ -217,7 +199,7 @@ function UserCard({ user, game, playtype }: { user: MONGO_UserDocument } & GameP
 				<div className="d-flex flex-column">
 					<Link
 						className="fw-bold fs-4 text-center text-lg-start"
-						to={`/u/${user.username}/games/${game}/${playtype}`}
+						to={`/u/${user.username}/games/${game}`}
 					>
 						{user.username}
 					</Link>

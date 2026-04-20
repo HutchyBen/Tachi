@@ -9,7 +9,7 @@ import { ToAPIURL } from "#util/api";
 import React from "react";
 import { Col, Row } from "react-bootstrap";
 
-function Component({ game, playtype, reqUser }: UGPT) {
+function Component({ game, reqUser }: UGPT) {
 	const { data, error } = useApiQuery<
 		Array<{
 			description: string;
@@ -17,7 +17,7 @@ function Component({ game, playtype, reqUser }: UGPT) {
 			playlistName: string;
 			urlName: string;
 		}>
-	>(`/games/${game}/${playtype}/playlists`);
+	>(`/games/${game}/playlists`);
 
 	if (error) {
 		return <ApiError error={error} />;
@@ -47,7 +47,7 @@ function Component({ game, playtype, reqUser }: UGPT) {
 													e.forSpecificUser
 														? `/users/${reqUser.username}`
 														: ""
-												}/games/iidx/${playtype}/playlists/${e.urlName}`,
+												}/games/${game}/playlists/${e.urlName}`,
 											),
 										),
 									),

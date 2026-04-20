@@ -1,13 +1,14 @@
 import type { KtLogger } from "#lib/log/log";
+import type { ParserFunctionReturns } from "#lib/score-import/import-types/common/types";
 import type { EmptyObject } from "#utils/types";
+import type { GamesForGroup } from "tachi-common";
 
+import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { CsvError as CSVError, parse } from "csv-parse/sync";
 import { p, type PrudenceSchema } from "prudence";
 
-import type { ParserFunctionReturns } from "../../common/types";
 import type { MyPageRecordsParsedPB, MyPageRecordsRawCSVRecord } from "./types";
 
-import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 import { CreateMyPageScraperClassProvider } from "./class-handler";
 
 // This should match MyPageRecordsRawCSVRecord.
@@ -50,7 +51,7 @@ export function ParseMyPageScraperRecordsCSV(
 	fileData: Express.Multer.File,
 	_body: Record<string, unknown>,
 	_log: KtLogger,
-): ParserFunctionReturns<MyPageRecordsParsedPB, EmptyObject> {
+): ParserFunctionReturns<MyPageRecordsParsedPB, EmptyObject, GamesForGroup["wacca"]> {
 	let rawCSVRecords: Array<unknown>;
 
 	try {
@@ -111,7 +112,7 @@ export function ParseMyPageScraperRecordsCSV(
 	return {
 		iterable,
 		context: {},
-		game: "wacca",
+		gameGroup: "wacca",
 		classProvider: null,
 	};
 }
@@ -120,7 +121,7 @@ export function ParseMyPageScraperPlayerCSV(
 	fileData: Express.Multer.File,
 	_body: Record<string, unknown>,
 	_log: KtLogger,
-): ParserFunctionReturns<never, EmptyObject> {
+): ParserFunctionReturns<never, EmptyObject, GamesForGroup["wacca"]> {
 	let csvRecords: Array<Record<string, string>>;
 
 	try {
@@ -168,7 +169,7 @@ export function ParseMyPageScraperPlayerCSV(
 	return {
 		iterable: [],
 		context: {},
-		game: "wacca",
+		gameGroup: "wacca",
 		classProvider: CreateMyPageScraperClassProvider(stage),
 	};
 }

@@ -3,9 +3,9 @@ import SelectNav from "#components/util/SelectNav";
 import { IsScore } from "#util/asserts";
 import React, { useEffect, useState } from "react";
 import { Nav } from "react-bootstrap";
-import { type MONGO_PBScoreDocument, type MONGO_ScoreDocument } from "tachi-common";
+import { type GamesForGroup, type PBScoreDocument, type ScoreDocument } from "tachi-common";
 
-// export function ModsTable({ score }: { score: MONGO_ScoreDocument<"iidx:SP" | "iidx:DP"> }) {
+// export function ModsTable({ score }: { score: ScoreDocument<"iidx:SP" | "iidx:DP"> }) {
 // 	if (!score.scoreMeta.assist && !score.scoreMeta.random) {
 // 		return null;
 // 	}
@@ -37,9 +37,7 @@ type LampTypes = "DAN_GAUGE" | "Easy" | "EXHard" | "Hard" | "Normal";
 export function IIDXGraphsComponent({
 	score,
 }: {
-	score:
-		| MONGO_PBScoreDocument<"iidx:DP" | "iidx:SP">
-		| MONGO_ScoreDocument<"iidx:DP" | "iidx:SP">;
+	score: PBScoreDocument<GamesForGroup["iidx"]> | ScoreDocument<GamesForGroup["iidx"]>;
 }) {
 	const [lamp, setLamp] = useState<LampTypes>(LampToKey(score));
 
@@ -153,9 +151,7 @@ function GraphComponent({ type, values }: { type: LampTypes; values: (number | n
 }
 
 function LampToKey(
-	score:
-		| MONGO_PBScoreDocument<"iidx:DP" | "iidx:SP">
-		| MONGO_ScoreDocument<"iidx:DP" | "iidx:SP">,
+	score: PBScoreDocument<GamesForGroup["iidx"]> | ScoreDocument<GamesForGroup["iidx"]>,
 ): LampTypes {
 	const lamp = score.scoreData.lamp;
 

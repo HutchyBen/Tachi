@@ -3,15 +3,15 @@ import DB from "#services/pg/db";
 import { EscapeForILIKE } from "#utils/misc";
 import { GetScoreIdsGroupedBySessionId } from "#utils/queries/sessions";
 import { type Selection, sql } from "kysely";
-import { type integer, type MONGO_SessionDocument } from "tachi-common";
+import { type integer, type SessionDocument } from "tachi-common";
 import { type Database, type Game } from "tachi-db";
 
-import { SHORT_QUERY_LEN, SHORT_QUERY_STRICT_MAX_LEN } from "./songs.js";
+import { SHORT_QUERY_LEN, SHORT_QUERY_STRICT_MAX_LEN } from "./songs";
 
 /** One ranked hit from session search (Postgres FTS + trgm). */
 export type SearchSessionHit = {
 	rank: number;
-	session: MONGO_SessionDocument;
+	session: SessionDocument;
 };
 
 /**
@@ -50,7 +50,7 @@ async function finalizeHits(
  * short-query exact match, then pg_trgm / ILIKE — same strategy as
  * {@link SearchSongsForGameFtsAndTrgm} / {@link SearchFoldersForGameFtsAndTrgm}.
  *
- * Returns full {@link MONGO_SessionDocument}s (no follow-up `WHERE id IN (...)` on `session`).
+ * Returns full {@link SessionDocument}s (no follow-up `WHERE id IN (...)` on `session`).
  */
 export async function SearchSessionsForUserGptFtsAndTrgm(
 	userId: integer,

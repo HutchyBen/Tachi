@@ -1,5 +1,5 @@
 import { SELECT_ACTION } from "#lib/db-formats/action";
-import { GetUGPTSettingsDocument, SELECT_GAME_SETTINGS } from "#lib/db-formats/ugpt-settings.js";
+import { GetUGPTSettingsDocument, SELECT_GAME_SETTINGS } from "#lib/db-formats/ugpt-settings";
 import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -33,12 +33,11 @@ describe("ACTION_PatchUGPTSettings", () => {
 
 		await ACTION_PatchUGPTSettings(taker, {
 			userID: userId,
-			game: "iidx",
-			playtype: "SP",
+			game: "iidx-sp",
 			preferences: { preferredScoreAlg: "ktLampRating" },
 		});
 
-		const settings = await GetUGPTSettingsDocument(userId, "iidx", "SP");
+		const settings = await GetUGPTSettingsDocument(userId, "iidx-sp");
 
 		expect(settings?.preferences.preferredScoreAlg).toBe("ktLampRating");
 
@@ -56,8 +55,7 @@ describe("ACTION_PatchUGPTSettings", () => {
 
 		await ACTION_PatchUGPTSettings(taker, {
 			userID: userId,
-			game: "iidx",
-			playtype: "SP",
+			game: "iidx-sp",
 			preferences: { preferredProfileAlg: "ktRating" },
 		});
 
@@ -76,8 +74,7 @@ describe("ACTION_PatchUGPTSettings", () => {
 		await expect(
 			ACTION_PatchUGPTSettings(taker, {
 				userID: other.id,
-				game: "iidx",
-				playtype: "SP",
+				game: "iidx-sp",
 				preferences: { preferredScoreAlg: "ktLampRating" },
 			}),
 		).rejects.toMatchObject({ code: 403 });

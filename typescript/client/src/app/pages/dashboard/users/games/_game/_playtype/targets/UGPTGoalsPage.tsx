@@ -14,16 +14,16 @@ import { CreateGoalSubDataset } from "#util/data";
 import React, { useContext, useReducer, useState } from "react";
 import { Button, Col } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { FormatGameGroup } from "tachi-common";
+import { FormatGame } from "tachi-common";
 
-export default function UGPTGoalsPage({ reqUser, game, playtype }: UGPT) {
+export default function UGPTGoalsPage({ reqUser, game }: UGPT) {
 	const [show, setShow] = useState(false);
 	const [showDelete, setShowDelete] = useState(false);
 	const { reloadTargets } = useContext(TargetsContext);
 	const [refresh, refetchGoals] = useReducer((x) => x + 1, 0);
 
 	const { data, error } = useApiQuery<AllUGPTGoalsReturn>(
-		`/users/${reqUser.id}/games/${game}/${playtype}/targets/goals`,
+		`/users/${reqUser.id}/games/${game}/targets/goals`,
 		undefined,
 		[refresh.toString()],
 	);
@@ -61,13 +61,10 @@ export default function UGPTGoalsPage({ reqUser, game, playtype }: UGPT) {
 				</Button>
 				<div>
 					Looking for goal recommendations?{" "}
-					<Link to={`/games/${game}/${playtype}/quests`}>
-						Check out {FormatGameGroup(game, playtype)}'s Quests
-					</Link>
-					.
+					<Link to={`/games/${game}/quests`}>Check out {FormatGame(game)}'s Quests</Link>.
 				</div>
 				<Divider />
-				<GoalSubInfo dataset={dataset} game={game} playtype={playtype} />
+				<GoalSubInfo dataset={dataset} game={game} />
 			</Col>
 			{show && (
 				<AddNewGoalForQuestModal
@@ -75,7 +72,7 @@ export default function UGPTGoalsPage({ reqUser, game, playtype }: UGPT) {
 					noNote
 					onCreate={async (rawGoal) => {
 						await APIFetchV1(
-							`/users/${reqUser.id}/games/${game}/${playtype}/targets/goals/add-goal`,
+							`/users/${reqUser.id}/games/${game}/targets/goals/add-goal`,
 							{
 								method: "POST",
 								headers: { "Content-Type": "application/json" },
@@ -91,7 +88,6 @@ export default function UGPTGoalsPage({ reqUser, game, playtype }: UGPT) {
 						refetchGoals();
 						reloadTargets();
 					}}
-					playtype={playtype}
 					setShow={setShow}
 					show={show}
 				/>
@@ -101,7 +97,7 @@ export default function UGPTGoalsPage({ reqUser, game, playtype }: UGPT) {
 					dataset={dataset}
 					onDelete={async (goalID) => {
 						await APIFetchV1(
-							`/users/${reqUser.id}/games/${game}/${playtype}/targets/goals/${goalID}`,
+							`/users/${reqUser.id}/games/${game}/targets/goals/${goalID}`,
 							{
 								method: "DELETE",
 							},

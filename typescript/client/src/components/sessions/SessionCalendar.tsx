@@ -14,18 +14,13 @@ import FullCalendar from "@fullcalendar/react"; // must go before plugins
 import React from "react";
 import { Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import {
-	COLOUR_SET,
-	FormatGameGroup,
-	type MONGO_SessionDocument,
-	type MONGO_UserDocument,
-} from "tachi-common";
+import { COLOUR_SET, FormatGame, type SessionDocument, type UserDocument } from "tachi-common";
 
 import SessionRaiseBreakdown from "./SessionRaiseBreakdown";
 
 type MinSession = Pick<
-	MONGO_SessionDocument,
-	"desc" | "game" | "highlight" | "name" | "playtype" | "sessionID" | "timeEnded" | "timeStarted"
+	SessionDocument,
+	"desc" | "game" | "highlight" | "name" | "sessionID" | "timeEnded" | "timeStarted"
 >;
 
 export default function SessionCalendar({
@@ -35,7 +30,7 @@ export default function SessionCalendar({
 }: {
 	shouldDifferentiateGames?: boolean;
 	url: string;
-	user: MONGO_UserDocument;
+	user: UserDocument;
 }) {
 	const { data, error } = useApiQuery<Array<MinSession>>(url);
 
@@ -58,7 +53,6 @@ export default function SessionCalendar({
 					tooltipContent={
 						<SessionTooltip
 							game={e.event.extendedProps.game}
-							playtype={e.event.extendedProps.playtype}
 							reqUser={user}
 							sessionID={e.event.extendedProps.sessionID}
 						/>
@@ -70,7 +64,7 @@ export default function SessionCalendar({
 							textOverflow: "ellipsis",
 							wordWrap: "break-word",
 						}}
-						to={`/u/${user.username}/games/${e.event.extendedProps.game}/${e.event.extendedProps.playtype}/sessions/${e.event.extendedProps.sessionID}`}
+						to={`/u/${user.username}/games/${e.event.extendedProps.game}/sessions/${e.event.extendedProps.sessionID}`}
 					>
 						<div
 							className="rounded m-1"
@@ -110,12 +104,7 @@ export default function SessionCalendar({
 								{shouldDifferentiateGames && (
 									<>
 										<br />
-										<span>
-											{FormatGameGroup(
-												e.event.extendedProps.game,
-												e.event.extendedProps.playtype,
-											)}
-										</span>
+										<span>{FormatGame(e.event.extendedProps.game)}</span>
 									</>
 								)}
 							</div>
@@ -130,7 +119,7 @@ export default function SessionCalendar({
 	);
 }
 
-function SessionTooltip({ sessionID, game, playtype, reqUser }: { sessionID: string } & UGPT) {
+function SessionTooltip({ sessionID, game, reqUser }: { sessionID: string } & UGPT) {
 	const { data, error } = useApiQuery<SessionReturns>(`/sessions/${sessionID}`);
 
 	if (error) {
@@ -153,9 +142,7 @@ function SessionTooltip({ sessionID, game, playtype, reqUser }: { sessionID: str
 			</Row>
 			<div className="w-100 text-center">
 				<Divider />
-				<LinkButton
-					to={`/u/${reqUser.username}/games/${game}/${playtype}/sessions/${sessionID}`}
-				>
+				<LinkButton to={`/u/${reqUser.username}/games/${game}/sessions/${sessionID}`}>
 					View Session
 				</LinkButton>
 			</div>
@@ -174,7 +161,6 @@ function convertSession(min: MinSession): EventInput {
 			highlight: min.highlight,
 			sessionID: min.sessionID,
 			game: min.game,
-			playtype: min.playtype,
 		},
 	};
 }

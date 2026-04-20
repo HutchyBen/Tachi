@@ -1,11 +1,11 @@
-import type { MONGO_TableDocument } from "tachi-common";
+import type { TableDocument } from "tachi-common";
 
 import { LoadTableDocumentByLegacyId } from "#lib/db-formats/table";
 import {
 	BuildFolderQuery,
 	GetFoldersFromTable,
 	GetTableForIDGuaranteed,
-} from "#lib/folders/folders.js";
+} from "#lib/folders/folders";
 import DB from "#services/pg/db";
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
@@ -45,7 +45,7 @@ describe("BuildFolderQuery", () => {
 				game: "iidx-sp",
 				inactive: false,
 				title: "JSON query column",
-				slug: null,
+				slug: folderId,
 				where: JSON.stringify({ type: "charts", data: { level: "10" } }),
 				version_filter: null,
 				search_terms: [],
@@ -110,7 +110,7 @@ describe("BuildFolderQuery", () => {
 				game: "iidx-sp",
 				inactive: false,
 				title: "BFQ level 10 only",
-				slug: null,
+				slug: folderId,
 				where: "chart.level_num = 10",
 				version_filter: null,
 				search_terms: [],
@@ -178,7 +178,7 @@ describe("BuildFolderQuery", () => {
 				game: "iidx-sp",
 				inactive: false,
 				title: "Level 10 (EPOLIS)",
-				slug: null,
+				slug: folderId,
 				where: "chart.level_num = 10",
 				version_filter: ["epolis"],
 				search_terms: [],
@@ -219,7 +219,7 @@ describe("Postgres table + folder helpers", () => {
 					game: "iidx-sp",
 					inactive: false,
 					title,
-					slug: null,
+					slug: id,
 					where: "chart.level_num > 0",
 					version_filter: null,
 					search_terms: [],
@@ -241,8 +241,8 @@ describe("Postgres table + folder helpers", () => {
 
 		await DB.insertInto("table_folder")
 			.values([
-				{ table_id: tablePk, folder_id: folderA },
-				{ table_id: tablePk, folder_id: folderB },
+				{ table_id: tablePk, folder_id: folderA, ordering: 0 },
+				{ table_id: tablePk, folder_id: folderB, ordering: 1 },
 			])
 			.execute();
 
@@ -250,8 +250,7 @@ describe("Postgres table + folder helpers", () => {
 
 		expect(loaded).toBeDefined();
 		expect(loaded!.tableID).toBe(tableLegacy);
-		expect(loaded!.game).toBe("iidx");
-		expect(loaded!.playtype).toBe("SP");
+		expect(loaded!.game).toBe("iidx-sp");
 		expect(loaded!.folders).toEqual([folderA, folderB]);
 
 		const guaranteed = await GetTableForIDGuaranteed(tableLegacy);
@@ -277,7 +276,7 @@ describe("Postgres table + folder helpers", () => {
 					game: "iidx-sp",
 					inactive: false,
 					title,
-					slug: null,
+					slug: id,
 					where: "chart.level_num > 0",
 					version_filter: null,
 					search_terms: [],
@@ -298,13 +297,12 @@ describe("Postgres table + folder helpers", () => {
 			.execute();
 
 		await DB.insertInto("table_folder")
-			.values({ table_id: tablePk, folder_id: folderA })
+			.values({ table_id: tablePk, folder_id: folderA, ordering: 0 })
 			.execute();
 
-		const table: MONGO_TableDocument = {
+		const table: TableDocument = {
 			tableID: tableLegacy,
-			game: "iidx",
-			playtype: "SP",
+			game: "iidx-sp",
 			title: "Ord",
 			description: "",
 			folders: [folderB, folderA],

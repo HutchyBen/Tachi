@@ -6,7 +6,7 @@ import { FlattenValue, StringifyKeyChain } from "#util/misc";
 import { StrSOV } from "#util/sorts";
 import { type SearchFunctions } from "#util/ztable/search";
 import React from "react";
-import { COLOUR_SET, type GameGroup } from "tachi-common";
+import { COLOUR_SET, type V3Game } from "tachi-common";
 
 import DifficultyCell from "../cells/DifficultyCell";
 import ObjCell from "../cells/ObjCell";
@@ -14,7 +14,7 @@ import TitleCell from "../cells/TitleCell";
 import { type Header } from "../components/TachiTable";
 import ChartHeader from "../headers/ChartHeader";
 
-export function MakeSeedsChartsControls(game: GameGroup): {
+export function MakeSeedsChartsControls(game: V3Game): {
 	Cells: CellsRenderFN<ChartWithRelated>;
 	headers: Header<ChartWithRelated>[];
 	searchFns: SearchFunctions<ChartWithRelated>;
@@ -47,7 +47,7 @@ export function MakeSeedsChartsControls(game: GameGroup): {
 					<TitleCell chart={data} game={game} song={data.__related.song} />
 				) : (
 					<td style={{ backgroundColor: ChangeOpacity(COLOUR_SET.red, 0.3) }}>
-						INVALID SONG ({data.songID})
+						INVALID SONG ({data.song.id})
 						<QuickTooltip tooltipContent="This chart points to a songID that does not exist at the time of this commit. This is a fatal error, and this commit doesn't pass tests.">
 							<div>
 								<Icon type="info" />

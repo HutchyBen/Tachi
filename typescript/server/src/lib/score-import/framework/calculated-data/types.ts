@@ -1,6 +1,5 @@
 import type { KtLogger } from "#lib/log/log";
-import type { ClassConfigs, Classes, GPTString, integer } from "tachi-common";
-import type { DerivedClassConfig, ProvidedClassConfig } from "tachi-common/types/game-config-utils";
+import type { Classes, integer, V3Game } from "tachi-common";
 
 // type RecordClassProvider<GPT extends GPTString> = {
 // 	[C in keyof ClassConfigs[GPT] as ClassConfigs[GPT][C] extends ProvidedClassConfig
@@ -9,11 +8,11 @@ import type { DerivedClassConfig, ProvidedClassConfig } from "tachi-common/types
 // };
 
 // couldn't figure out how to get this typesafe, sorry.
-type RecordClassProvider<GPT extends GPTString> = Record<Classes[GPT], string>;
+type RecordClassProvider<TGame extends V3Game> = Record<Classes[TGame], string>;
 
-export type ClassProvider<GPT extends GPTString = GPTString> = (
-	gptString: GPT,
+export type ClassProvider<TGame extends V3Game> = (
+	game: TGame,
 	userID: integer,
 	ratings: Record<string, number | null>,
 	log: KtLogger,
-) => Partial<RecordClassProvider<GPT>> | Promise<Partial<RecordClassProvider<GPT>>> | undefined;
+) => Partial<RecordClassProvider<TGame>> | Promise<Partial<RecordClassProvider<TGame>>> | undefined;

@@ -1,8 +1,8 @@
-import type { Database, Game } from "tachi-db";
+import type { Database } from "tachi-db";
 
 import { ISO8601ToUnixMilliseconds } from "#utils/time";
 import { type Selection } from "kysely";
-import { type MONGO_ClassAchievementDocument, V3ToGamePT } from "tachi-common";
+import { type ClassAchievementDocument, type V3Game } from "tachi-common";
 
 export const SELECT_CLASS_ACHIEVEMENT_DOCUMENT = [
 	"class_achievement.game",
@@ -19,15 +19,10 @@ type ClassAchievementRow = Selection<
 	(typeof SELECT_CLASS_ACHIEVEMENT_DOCUMENT)[number]
 >;
 
-export function ToClassAchievementDocument(
-	row: ClassAchievementRow,
-): MONGO_ClassAchievementDocument {
-	const { game, playtype } = V3ToGamePT(row.game as Game);
-
+export function ToClassAchievementDocument(row: ClassAchievementRow): ClassAchievementDocument {
 	return {
-		game,
-		playtype,
-		classSet: row.class_set as MONGO_ClassAchievementDocument["classSet"],
+		game: row.game as V3Game,
+		classSet: row.class_set as ClassAchievementDocument["classSet"],
 		classOldValue: row.class_prev_value === "" ? null : row.class_prev_value,
 		classValue: row.class_value,
 		timeAchieved: ISO8601ToUnixMilliseconds(row.timestamp),

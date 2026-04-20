@@ -1,6 +1,6 @@
 import type { KtLogger } from "#lib/log/log";
 
-import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
+import { GAME_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import { SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart";
 import {
 	type ScoreDocumentJoinRow,
@@ -9,7 +9,6 @@ import {
 } from "#lib/db-formats/score";
 import { mongoScoreDataToPg } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
-import { GetGPTString, type V3Game, V3ToGamePT } from "tachi-common";
 
 const BATCH_SIZE = 500;
 
@@ -35,9 +34,7 @@ export async function rederiveScoresForChart(chartId: string, log: KtLogger): Pr
 	}
 
 	const chart = ToChartDocument(chartRow);
-	const { game, playtype } = V3ToGamePT(chartRow.chart_game as V3Game);
-	const gpt = GetGPTString(game, playtype);
-	const impl = GPT_SERVER_IMPLEMENTATIONS[gpt];
+	const impl = GAME_IMPLEMENTATIONS[chart.game];
 
 	let totalUpdated = 0;
 	let offset = 0;
@@ -74,7 +71,7 @@ export async function rederiveScoresForChart(chartId: string, log: KtLogger): Pr
 			const scoreCalcs = impl.scoreCalcs as any;
 			const calculatedData = scoreCalcs(newScoreData, derivedData, chart);
 
-			const { derived } = mongoScoreDataToPg(gpt, newScoreData as any);
+			const { derived } = mongoScoreDataToPg(chart.game, newScoreData as any);
 
 			// eslint-disable-next-line no-await-in-loop
 			await DB.updateTable("score")

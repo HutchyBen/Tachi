@@ -1,7 +1,7 @@
+import { SubheaderContext } from "#context/SubheaderContext";
 import React, { useContext } from "react";
 import { Container } from "react-bootstrap";
 
-import { SubheaderContext } from "../../../context/SubheaderContext";
 import { type LayoutStyles } from "../Layout";
 import { Breadcrumbs } from "./components/Breadcrumbs";
 

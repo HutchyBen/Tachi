@@ -1,4 +1,4 @@
-import type { GPTServerImplementation } from "#game-implementations/types";
+import type { GameImplementation } from "#game-implementations/types";
 
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 
@@ -15,7 +15,7 @@ import {
 	SDVXLIKE_SESSION_CALCS,
 } from "./_common";
 
-export const SDVX_IMPL: GPTServerImplementation<"sdvx:Single"> = {
+export const SDVX_IMPL: GameImplementation<"sdvx"> = {
 	scoreDeriver: SDVXLIKE_SCORE_DERIVER,
 	scoreCalcs: SDVXLIKE_SCORE_CALCS,
 	sessionCalcs: SDVXLIKE_SESSION_CALCS,
@@ -66,5 +66,5 @@ export const SDVX_IMPL: GPTServerImplementation<"sdvx:Single"> = {
 	],
 	defaultMergeRefName: SDVXLIKE_DEFAULT_MERGE_NAME,
 	scoreValidators: SDVXLIKE_SCORE_VALIDATORS,
-	derivationRelevantFields: ["levelNum"],
+	chartDataRelevantFields: ["levelNum"],
 };

@@ -1,5 +1,4 @@
 /* eslint-disable no-await-in-loop */
-import type { Game } from "tachi-db";
 
 import { MakeAction } from "#lib/actions/actions";
 import { log } from "#lib/log/log";
@@ -14,20 +13,15 @@ import { sql } from "kysely";
 import _ from "lodash";
 import {
 	BMS_TABLES,
+	type BMSGames,
 	type BMSTableInfo,
-	GamePTToV3,
-	type MONGO_ChartDocument,
-	type MONGO_ChartDocumentData,
-	type Playtypes,
+	type ChartDocument,
+	type ChartDocumentData,
 } from "tachi-common";
 
 const UPDATE_CHUNK = 500;
 
-type BmsChartData = MONGO_ChartDocumentData["bms:7K"];
-
-function v3GameForBmsPlaytype(playtype: Playtypes["bms"]): Game {
-	return GamePTToV3("bms", playtype) as Game;
-}
+type BmsChartData = ChartDocumentData["bms-7k"];
 
 function stripTableFoldersKeySql(prefix: string) {
 	return sql`jsonb_set(
@@ -46,7 +40,7 @@ function stripTableFoldersKeySql(prefix: string) {
  */
 async function HandleTableRemovals(
 	tableEntries: Array<BMSTableEntry>,
-	playtype: Playtypes["bms"],
+	game: BMSGames,
 	prefix: string,
 ) {
 	if (tableEntries.length === 0) {
@@ -56,12 +50,10 @@ async function HandleTableRemovals(
 		return;
 	}
 
-	const v3Game = v3GameForBmsPlaytype(playtype);
-
 	const rows = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(["chart.id as chart_id", "chart.data as chart_data"])
-		.where("chart.game", "=", v3Game)
+		.where("chart.game", "=", game)
 		.where(sql<boolean>`(chart.data::jsonb->'tableFolders') ? ${prefix}`)
 		.execute();
 
@@ -115,15 +107,14 @@ async function HandleTableRemovals(
 async function ImportTableLevels(
 	tableEntries: Array<BMSTableEntry>,
 	prefix: string,
-	playtype: Playtypes["bms"],
+	game: BMSGames,
 ) {
 	let failures = 0;
 	let success = 0;
 	const total = tableEntries.length;
-	const v3Game = v3GameForBmsPlaytype(playtype);
 
-	log.info(`Handling removals for ${playtype}:${prefix}...`);
-	await HandleTableRemovals(tableEntries, playtype, prefix);
+	log.info(`Handling removals for ${game}:${prefix}...`);
+	await HandleTableRemovals(tableEntries, game, prefix);
 
 	const md5s = tableEntries.filter((e) => e.checksum.type === "md5").map((e) => e.checksum.value);
 	const sha256s = tableEntries
@@ -133,7 +124,7 @@ async function ImportTableLevels(
 	if (md5s.length > 0) {
 		await DB.updateTable("chart")
 			.set({ data: stripTableFoldersKeySql(prefix) })
-			.where("game", "=", v3Game)
+			.where("game", "=", game)
 			.where(sql`(data::jsonb->>'hashMD5')::text`, "in", md5s)
 			.execute();
 	}
@@ -141,18 +132,20 @@ async function ImportTableLevels(
 	if (sha256s.length > 0) {
 		await DB.updateTable("chart")
 			.set({ data: stripTableFoldersKeySql(prefix) })
-			.where("game", "=", v3Game)
+			.where("game", "=", game)
 			.where(sql`(data::jsonb->>'hashSHA256')::text`, "in", sha256s)
 			.execute();
 	}
 
 	for (const td of tableEntries) {
-		let chart: MONGO_ChartDocument<"bms:7K" | "bms:14K"> | null =
-			await FindBMSChartOnHashInGame(td.checksum.value, v3Game);
+		let chart: ChartDocument<BMSGames> | null = await FindBMSChartOnHashInGame(
+			td.checksum.value,
+			game,
+		);
 
 		if (!chart) {
 			chart = await DeorphanBmsIfInOrphanChartPg(
-				playtype,
+				game,
 				td.checksum.type === "md5" ? "md5" : "sha256",
 				td.checksum.value,
 			);
@@ -196,7 +189,7 @@ async function ImportTableLevels(
 						? sql`jsonb_set(data::jsonb, '{tableString}', 'null'::jsonb)`
 						: sql`jsonb_set(data::jsonb, '{tableString}', to_jsonb(${tableString}::text))`,
 			})
-			.where("legacy_id", "=", chart.songID)
+			.where("song.id", "=", chart.song.id)
 			.where("song.game_group", "=", "bms")
 			.execute();
 
@@ -211,7 +204,7 @@ export async function UpdateTable(tableInfo: BMSTableInfo) {
 	const table = await LoadBMSTable(tableInfo.url);
 
 	log.info(`Bumping levels...`);
-	await ImportTableLevels(table.body, tableInfo.prefix, tableInfo.playtype);
+	await ImportTableLevels(table.body, tableInfo.prefix, tableInfo.game);
 	log.info(`Levels bumped.`);
 }
 

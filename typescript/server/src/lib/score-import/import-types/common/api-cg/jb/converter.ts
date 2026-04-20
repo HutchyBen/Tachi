@@ -1,5 +1,6 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
-import type { Difficulties, integer, Judgements, Versions } from "tachi-common";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
+import type { Difficulties, integer, Versions } from "tachi-common";
 
 import {
 	InternalFailure,
@@ -10,7 +11,6 @@ import { ParseDateFromString } from "#lib/score-import/framework/common/score-ut
 import { FindChartOnInGameID } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { ConverterFunction } from "../../types";
 import type { CGContext, CGJubeatScore } from "../types";
 
 import { FormatCGService } from "../util";
@@ -33,7 +33,7 @@ export const ConverterAPICGJubeat: ConverterFunction<CGJubeatScore, CGContext> =
 	};
 	const lamp = GetLamp(data.clearFlag);
 
-	const chart = await FindChartOnInGameID("jubeat", data.internalId, "Single", difficulty);
+	const chart = await FindChartOnInGameID("jubeat", data.internalId, difficulty);
 
 	if (!chart) {
 		throw new SongOrChartNotFoundFailure(
@@ -44,16 +44,16 @@ export const ConverterAPICGJubeat: ConverterFunction<CGJubeatScore, CGContext> =
 		);
 	}
 
-	const song = await FindSongOnID("jubeat", chart.songID);
+	const song = await FindSongOnID("jubeat", chart.song.id);
 
 	if (!song) {
-		log.error(`Song-Chart desync with song ID ${chart.songID} (jubeat).`);
-		throw new InternalFailure(`Song-Chart desync with song ID ${chart.songID} (jubeat).`);
+		log.error(`Song-Chart desync with song ID ${chart.song.id} (jubeat).`);
+		throw new InternalFailure(`Song-Chart desync with song ID ${chart.song.id} (jubeat).`);
 	}
 
 	const timeAchieved = ParseDateFromString(data.dateTime);
 
-	const dryScore: DryScore<"jubeat:Single"> = {
+	const dryScore: DryScore<"jubeat"> = {
 		comment: null,
 		game: "jubeat",
 		importType,
@@ -72,7 +72,7 @@ export const ConverterAPICGJubeat: ConverterFunction<CGJubeatScore, CGContext> =
 	return { song, chart, dryScore };
 };
 
-function ConvertDifficulty(diff: number, hardMode: boolean): Difficulties["jubeat:Single"] {
+function ConvertDifficulty(diff: number, hardMode: boolean): Difficulties["jubeat"] {
 	if (!hardMode) {
 		switch (diff) {
 			case 0:
@@ -96,7 +96,7 @@ function ConvertDifficulty(diff: number, hardMode: boolean): Difficulties["jubea
 	throw new InvalidScoreFailure(`Invalid difficulty of ${diff} - Could not convert.`);
 }
 
-function ConvertVersion(ver: number): Versions["jubeat:Single"] {
+function ConvertVersion(ver: number): Versions["jubeat"] {
 	switch (ver) {
 		case 1:
 			return "jubeat";

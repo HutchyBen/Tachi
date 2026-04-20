@@ -1,9 +1,9 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import { ServerConfig } from "#lib/setup/config.js";
-import DB from "#services/pg/db.js";
-import { DedupeArr, Random20Hex } from "#utils/misc.js";
-import { IsUserAdmin } from "#utils/user.js";
-import { validateWebhookUri } from "#utils/validate-webhook-uri.js";
+import { MakeAction } from "#lib/actions/actions";
+import { ServerConfig } from "#lib/setup/config";
+import DB from "#services/pg/db";
+import { DedupeArr, Random20Hex } from "#utils/misc";
+import { IsUserAdmin } from "#utils/user";
+import { validateWebhookUri } from "#utils/validate-webhook-uri";
 import { ExpectedErr } from "bliss";
 import { ALL_PERMISSIONS, type APIPermissions } from "tachi-common";
 

@@ -10,6 +10,8 @@ export default interface TableFolderTable {
   table_id: ColumnType<table_id, table_id, table_id>;
 
   folder_id: ColumnType<folder_id, folder_id, folder_id>;
+
+  ordering: ColumnType<number, number, number>;
 }
 
 export type TableFolder = Selectable<TableFolderTable>;

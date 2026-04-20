@@ -1,18 +1,18 @@
-import type { GPTServerImplementation } from "#game-implementations/types";
+import type { GameImplementation } from "#game-implementations/types";
 import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
-import { ProfileAvgBestN, ProfileSumBestN } from "#game-implementations/utils/profile-calc";
+import { ProfileAvgBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
 import { IsNullish } from "#utils/misc";
 import { PopnClassPoints } from "rg-stats";
-import { FmtNum, FmtNumCompact, GetGrade, POPN_GBOUNDARIES } from "tachi-common";
+import { FmtNum, GetGrade, POPN_GBOUNDARIES } from "tachi-common";
 
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
 export function PopnClearMedalToLamp(
-	clearMedal: GetEnumValue<"popn:9B", "clearMedal">,
-): GetEnumValue<"popn:9B", "lamp"> {
+	clearMedal: GetEnumValue<"popn", "clearMedal">,
+): GetEnumValue<"popn", "lamp"> {
 	switch (clearMedal) {
 		case "perfect":
 			return "PERFECT";
@@ -33,7 +33,7 @@ export function PopnClearMedalToLamp(
 	}
 }
 
-export const POPN_9B_IMPL: GPTServerImplementation<"popn:9B"> = {
+export const POPN_IMPL: GameImplementation<"popn"> = {
 	chartSpecificValidators: {},
 	scoreDeriver: (scoreData, _chart) => {
 		const lamp = PopnClearMedalToLamp(scoreData.clearMedal);
@@ -60,8 +60,8 @@ export const POPN_9B_IMPL: GPTServerImplementation<"popn:9B"> = {
 	sessionCalcs: (arr) => ({
 		classPoints: SessionAvgBest10For("classPoints")(arr),
 	}),
-	profileCalcs: async (game, playtype, userID) => ({
-		naiveClassPoints: await ProfileAvgBestN("classPoints", 20)(game, playtype, userID),
+	profileCalcs: async (game, userID) => ({
+		naiveClassPoints: await ProfileAvgBestN("classPoints", 20)(game, userID),
 	}),
 	classDerivers: (ratings) => {
 		const points = ratings.naiveClassPoints;
@@ -119,7 +119,7 @@ export const POPN_9B_IMPL: GPTServerImplementation<"popn:9B"> = {
 		),
 	],
 	defaultMergeRefName: "Best Score",
-	derivationRelevantFields: ["levelNum"],
+	chartDataRelevantFields: ["levelNum"],
 	scoreValidators: [
 		(s) => {
 			const { bad, good } = s.scoreData.judgements;

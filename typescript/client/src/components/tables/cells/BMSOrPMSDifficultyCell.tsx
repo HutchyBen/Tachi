@@ -7,28 +7,31 @@ import { FormatTables } from "#util/misc";
 import React from "react";
 import {
 	BMS_TABLES,
+	type ChartDocument,
 	COLOUR_SET,
-	type MONGO_ChartDocument,
-	type MONGO_UGPTSettingsDocument,
+	type UGPTSettingsDocument,
 } from "tachi-common";
 
 import RatingSystemPart from "./RatingSystemPart";
+
+type BMSGames = "bms-7k" | "bms-14k" | "pms-controller" | "pms-keyboard";
 
 export default function BMSOrPMSDifficultyCell({
 	chart,
 	game,
 }: {
-	chart: MONGO_ChartDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard">;
-	game: "bms" | "pms";
+	chart: ChartDocument<BMSGames>;
+	game: BMSGames;
 }) {
 	const { settings } = useLUGPTSettings() as {
-		settings: MONGO_UGPTSettingsDocument<"bms:7K" | "bms:14K">;
+		settings: UGPTSettingsDocument<"bms-7k" | "bms-14k"> | null;
 	};
 
-	const hasLevel = Object.keys(chart.data.tableFolders).length > 0;
+	const hasLevel = Object.keys((chart as ChartDocument<"bms-7k">).data.tableFolders).length > 0;
 
 	const aiLevel =
-		game === "bms" && (chart as MONGO_ChartDocument<"bms:7K" | "bms:14K">).data.aiLevel;
+		(game === "bms-7k" || game === "bms-14k") &&
+		(chart as ChartDocument<"bms-7k" | "bms-14k">).data.aiLevel;
 
 	let levelText = "No Rating";
 	let backgroundColour = hasLevel ? COLOUR_SET.red : COLOUR_SET.gray;
@@ -36,40 +39,37 @@ export default function BMSOrPMSDifficultyCell({
 	let filteredTables: Record<string, string> = {};
 
 	if (hasLevel) {
-		let tables = chart.data.tableFolders;
+		let tables = (chart as ChartDocument<"bms-7k">).data.tableFolders;
 
-		if (settings?.preferences.gameSpecific.displayTables) {
+		const gameSpecific = settings?.preferences.gameSpecific as any;
+
+		if (gameSpecific?.displayTables) {
 			filteredTables = Object.entries(tables)
-				.filter(
-					([table, _]) =>
-						!settings.preferences.gameSpecific.displayTables!.includes(table),
-				)
+				.filter(([table, _]) => !gameSpecific.displayTables.includes(table))
 				.reduce(
 					(acc, [table, level]) => {
-						acc[table] = level;
+						acc[table] = level as string;
 						return acc;
 					},
 					{} as Record<string, string>,
 				);
 			tables = Object.entries(tables)
-				.filter(([table, _]) =>
-					settings.preferences.gameSpecific.displayTables!.includes(table),
-				)
+				.filter(([table, _]) => gameSpecific.displayTables.includes(table))
 				.reduce(
 					(acc, [table, level]) => {
-						acc[table] = level;
+						acc[table] = level as string;
 						return acc;
 					},
 					{} as Record<string, string>,
 				);
 		}
 
-		levelText = FormatTables(tables);
+		levelText = FormatTables(tables as Record<string, string>);
 
-		if (game === "bms") {
+		if (game === "bms-7k" || game === "bms-14k") {
 			// use bms table colour instead of just red/gray.
 			// todo: add pms table colours maybe?
-			backgroundColour = FindTableColour(tables);
+			backgroundColour = FindTableColour(tables as Record<string, string>);
 		}
 	}
 
@@ -112,9 +112,7 @@ export default function BMSOrPMSDifficultyCell({
 	);
 }
 
-function FindTableColour(
-	tableFolders: MONGO_ChartDocument<"bms:7K" | "bms:14K">["data"]["tableFolders"],
-) {
+function FindTableColour(tableFolders: Record<string, string>) {
 	const lookup = new Map(BMS_TABLES.map((e) => [e.prefix, e.colour]));
 
 	for (const table of Object.keys(tableFolders)) {

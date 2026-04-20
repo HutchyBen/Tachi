@@ -2,9 +2,9 @@ import Icon from "#components/util/Icon";
 import { APIFetchV1 } from "#util/api";
 import { DelayedPageReload } from "#util/misc";
 import React, { useMemo, useReducer } from "react";
-import { type MONGO_ScoreDocument } from "tachi-common";
+import { type ScoreDocument } from "tachi-common";
 
-export default function DeleteScoreBtn({ score }: { score: MONGO_ScoreDocument }) {
+export default function DeleteScoreBtn({ score }: { score: ScoreDocument }) {
 	const [warn, upgWarn] = useReducer((r) => r + 1, 0);
 	const message = useMemo(() => {
 		if (warn === 0) {

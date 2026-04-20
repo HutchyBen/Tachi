@@ -1,8 +1,8 @@
 import type { ClassProvider } from "#lib/score-import/framework/calculated-data/types";
 
 import nodeFetch from "#utils/fetch";
-import { IsRecord } from "#utils/misc";
-import { IIDX_DANS } from "tachi-common";
+import { IsRecord, staticAssertUnreachable } from "#utils/misc";
+import { type GamesForGroup, IIDX_DANS } from "tachi-common";
 import { IIDXDans } from "tachi-common/config/game-support/iidx";
 
 import type { KaiAPIReauthFunction } from "../traverse-api";
@@ -14,7 +14,7 @@ export async function CreateKaiIIDXClassProvider(
 	token: string,
 	reauthFn: KaiAPIReauthFunction,
 	fetch = nodeFetch,
-): Promise<ClassProvider> {
+): Promise<ClassProvider<GamesForGroup["iidx"]>> {
 	let json: unknown;
 	let err: unknown;
 	const baseUrl = KaiTypeToBaseURL(kaiType);
@@ -52,7 +52,7 @@ export async function CreateKaiIIDXClassProvider(
 		err = e;
 	}
 
-	return (gptString, userID, ratings, log) => {
+	return (game, _userID, _ratings, log) => {
 		if (err !== undefined) {
 			log.error({ err }, `An error occured while updating classes for ${baseUrl}.`);
 			return {};
@@ -70,13 +70,15 @@ export async function CreateKaiIIDXClassProvider(
 
 		let maybeIIDXDan: unknown;
 
-		if (gptString === "iidx:SP") {
-			maybeIIDXDan = json.sp;
-		} else if (gptString === "iidx:DP") {
-			maybeIIDXDan = json.dp;
-		} else {
-			log.warn(`KAIIIDXClassUpdater called with invalid gptString of ${gptString}.`);
-			return {};
+		switch (game) {
+			case "iidx-sp":
+				maybeIIDXDan = json.sp;
+				break;
+			case "iidx-dp":
+				maybeIIDXDan = json.dp;
+				break;
+			default:
+				staticAssertUnreachable(game);
 		}
 
 		if (
@@ -84,7 +86,7 @@ export async function CreateKaiIIDXClassProvider(
 			maybeIIDXDan === undefined ||
 			typeof maybeIIDXDan !== "number"
 		) {
-			log.info(`User has no ${gptString} dan. Not updating anything.`);
+			log.info(`User has no ${game} dan. Not updating anything.`);
 			return {};
 		}
 

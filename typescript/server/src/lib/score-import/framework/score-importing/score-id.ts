@@ -2,11 +2,11 @@ import type { KtLogger } from "#lib/log/log";
 
 import fjsh from "fast-json-stable-hash";
 import {
-	GetGPTConfig,
-	type GPTString,
+	GetGameConfig,
 	type integer,
 	type MongoOptionalMetrics,
 	type MongoProvidedMetrics,
+	type V3Game,
 } from "tachi-common";
 
 import type { DryScore } from "../common/types";
@@ -16,7 +16,7 @@ import type { DryScore } from "../common/types";
  * This is used to deduplicate repeated scores.
  */
 export function CreateScoreID(
-	gptString: GPTString,
+	game: V3Game,
 	userID: integer,
 	dryScore: DryScore,
 	chartID: string,
@@ -24,18 +24,18 @@ export function CreateScoreID(
 ) {
 	const elements: Record<string, number | string> = { userID, chartID };
 
-	const gptConfig = GetGPTConfig(gptString);
+	const gameConfig = GetGameConfig(game);
 
-	for (const m of Object.keys(gptConfig.providedMetrics)) {
-		const metric = m as keyof MongoProvidedMetrics[GPTString];
+	for (const m of Object.keys(gameConfig.providedMetrics)) {
+		const metric = m as keyof MongoProvidedMetrics[V3Game];
 
 		elements[metric] = dryScore.scoreData[metric];
 	}
 
 	// Also include optional metrics in the checksum if they should be
 	// part of the scoreID.
-	for (const [m, conf] of Object.entries(gptConfig.optionalMetrics)) {
-		const metric = m as keyof MongoOptionalMetrics[GPTString];
+	for (const [m, conf] of Object.entries(gameConfig.optionalMetrics)) {
+		const metric = m as keyof MongoOptionalMetrics[V3Game];
 
 		if (conf.partOfScoreID) {
 			elements[`optional.${metric}`] = dryScore.scoreData.optional[metric] ?? null;

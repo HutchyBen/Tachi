@@ -87,6 +87,13 @@ async function resetDatabase() {
 			END LOOP;
 		END $$;
 	`.execute(db);
+
+	try {
+		const { clearGameStatsCacheForTests } = await import("#server/router/api/v1/games/router");
+		clearGameStatsCacheForTests();
+	} catch {
+		// ignore — router not loaded in edge test contexts
+	}
 }
 
 beforeAll(async () => {
@@ -115,23 +122,20 @@ beforeEach(async (ctx) => {
 	ClearTestingRateLimitCache();
 });
 
-afterAll(
-	async () => {
-		try {
-			const { CloseServerConnection } = await import("#test-utils/mock-api");
-			await CloseServerConnection();
-		} catch {
-			// No mock HTTP server in this worker, or close failed.
-		}
+afterAll(async () => {
+	try {
+		const { CloseServerConnection } = await import("#test-utils/mock-api");
+		await CloseServerConnection();
+	} catch {
+		// No mock HTTP server in this worker, or close failed.
+	}
 
-		try {
-			const { ClosePgConnection } = await import("#services/pg/db");
-			await ClosePgConnection();
-		} catch {
-			// Pool may not have been initialised if no test ran a query.
-		}
+	try {
+		const { ClosePgConnection } = await import("#services/pg/db");
+		await ClosePgConnection();
+	} catch {
+		// Pool may not have been initialised if no test ran a query.
+	}
 
-		await dropWorkerDatabase();
-	},
-	process.env.CI ? 60_000 : undefined,
-);
+	await dropWorkerDatabase();
+}, 60_000);

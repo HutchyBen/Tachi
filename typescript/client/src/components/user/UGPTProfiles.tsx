@@ -7,33 +7,28 @@ import ReferToUser from "#components/util/ReferToUser";
 import { AllLUGPTStatsContext } from "#context/AllLUGPTStatsContext";
 import { UserContext } from "#context/UserContext";
 import { type UGSWithRankingData } from "#types/api-returns";
-import { GetSortedGPTs } from "#util/site";
 import React, { memo, useContext } from "react";
 import { Col, Row } from "react-bootstrap";
-import { FormatGameGroup, type MONGO_UserDocument, type MONGO_UserGameStats } from "tachi-common";
+import { ALL_GAMES, FormatGame, type UserDocument, type UserGameStats } from "tachi-common";
 
 import RankingData from "./UGPTRankingData";
 import UGPTRatingsTable from "./UGPTStatsOverview";
 
 interface GamesInfoProps {
-	ugsList: MONGO_UserGameStats[];
-	reqUser: MONGO_UserDocument;
+	ugsList: UserGameStats[];
+	reqUser: UserDocument;
 }
 
 interface GamesInfoUnitProps {
-	ugs: UGSWithRankingData;
-	reqUser: MONGO_UserDocument;
+	ugs: UserGameStats;
+	reqUser: UserDocument;
 }
 
-export default function UGPTProfiles({ reqUser }: { reqUser?: MONGO_UserDocument }) {
+export default function UGPTProfiles({ reqUser }: { reqUser?: UserDocument }) {
 	const { user } = useContext(UserContext);
 
 	return (
 		<Row lg={{ cols: 2 }} xs={{ cols: 1 }}>
-			{/*
-                If a user is logged in and the component hasn't been provided reqUser or this is the logged in user's stats,
-                we can just grab the user's stats that have already been loaded into context on load.
-            */}
 			{user && (!reqUser || reqUser.id === user.id) ? (
 				<ContextualGamesInfo user={user} />
 			) : reqUser ? (
@@ -45,14 +40,14 @@ export default function UGPTProfiles({ reqUser }: { reqUser?: MONGO_UserDocument
 	);
 }
 
-const ContextualGamesInfo = memo(({ user }: { user: MONGO_UserDocument }) => {
+const ContextualGamesInfo = memo(({ user }: { user: UserDocument }) => {
 	const { ugs } = useContext(AllLUGPTStatsContext);
 
 	return <GamesInfo reqUser={user} ugsList={ugs ?? []} />;
 });
 
-function QueryGamesInfo({ reqUser }: { reqUser: MONGO_UserDocument }) {
-	const { data, error } = useApiQuery<UGSWithRankingData[]>(
+function QueryGamesInfo({ reqUser }: { reqUser: UserDocument }) {
+	const { data, error } = useApiQuery<UserGameStats[]>(
 		`/users/${reqUser.id}/game-stats`,
 		undefined,
 		undefined,
@@ -81,50 +76,43 @@ function GamesInfo({ ugsList, reqUser }: GamesInfoProps) {
 		);
 	}
 
-	const gpts = GetSortedGPTs();
-
-	const ugsMap = new Map();
-
-	for (const ugs of ugsList) {
-		ugsMap.set(`${ugs.game}:${ugs.playtype}`, ugs);
-	}
+	const ugsMap = new Map(ugsList.map((ugs) => [ugs.game, ugs] as const));
 
 	return (
 		<>
-			{gpts.map(({ game, playtype }) => {
-				const e = ugsMap.get(`${game}:${playtype}`);
+			{ALL_GAMES.map((game) => {
+				const e = ugsMap.get(game);
 
 				if (!e) {
 					return null;
 				}
 
-				return <GamesInfoUnit key={`${game}:${playtype}`} reqUser={reqUser} ugs={e} />;
+				return <GamesInfoUnit key={game} reqUser={reqUser} ugs={e} />;
 			})}
 		</>
 	);
 }
 
 function GamesInfoUnit({ ugs, reqUser }: GamesInfoUnitProps) {
+	const rankingData = (ugs as Partial<UGSWithRankingData>).__rankingData;
+
 	return (
 		<Col className="p-2 flex-grow-1">
 			<Card
 				className="h-100"
 				footer={
 					<div className="d-flex justify-content-end">
-						<LinkButton to={`/u/${reqUser.username}/games/${ugs.game}/${ugs.playtype}`}>
+						<LinkButton to={`/u/${reqUser.username}/games/${ugs.game}`}>
 							View Game Profile
 						</LinkButton>
 					</div>
 				}
-				header={FormatGameGroup(ugs.game, ugs.playtype)}
+				header={FormatGame(ugs.game)}
 			>
 				<UGPTRatingsTable ugs={ugs} />
-				<RankingData
-					game={ugs.game}
-					playtype={ugs.playtype}
-					rankingData={ugs.__rankingData}
-					userID={ugs.userID}
-				/>
+				{rankingData ? (
+					<RankingData game={ugs.game} rankingData={rankingData} userID={ugs.userID} />
+				) : null}
 			</Card>
 		</Col>
 	);

@@ -6,7 +6,7 @@ import type {
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { GetChartById } from "#lib/db-formats/chart";
 import { LoadScoreDocumentById } from "#lib/db-formats/score";
-import { GetSongByLegacyID } from "#lib/db-formats/song";
+import { GetSongByID } from "#lib/db-formats/song";
 import { log } from "#lib/log/log";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { ServerConfig } from "#lib/setup/config";
@@ -18,13 +18,7 @@ import { IsRecord, NotNullish } from "#utils/misc";
 import { Router } from "express";
 import { sql } from "kysely";
 import { p } from "prudence";
-import {
-	type Classes,
-	GamePTToV3,
-	type GPTString,
-	type integer,
-	type Playtypes,
-} from "tachi-common";
+import { type Classes, type GamesForGroup, GameToGameGroup, type integer } from "tachi-common";
 
 import { ValidateIRClientVersion } from "./auth";
 import chartsRouter from "./charts/_chartSHA256/router";
@@ -127,13 +121,11 @@ router.post("/submit-score", RequireNotGuest, async (req, res) => {
 		});
 	}
 
-	const v3Game = GamePTToV3(scoreDoc.game, scoreDoc.playtype);
-
-	const chart = await GetChartById(v3Game, scoreDoc.chartID);
+	const chart = await GetChartById(scoreDoc.chartID);
 
 	if (!chart) {
 		log.error(
-			`Expected to find a chart with chartID ${scoreDoc.chartID} for game ${v3Game}, but found none?`,
+			`Expected to find a chart with chartID ${scoreDoc.chartID} for game ${scoreDoc.game}, but found none?`,
 		);
 
 		return res.status(500).json({
@@ -142,7 +134,7 @@ router.post("/submit-score", RequireNotGuest, async (req, res) => {
 		});
 	}
 
-	const songRow = await GetSongByLegacyID(scoreDoc.game, scoreDoc.songID);
+	const songRow = await GetSongByID(GameToGameGroup(scoreDoc.game), scoreDoc.songID);
 
 	if (!songRow) {
 		log.error(
@@ -283,7 +275,7 @@ router.post(
 		const combinedMD5s = charts.map((e) => e.md5).join("");
 
 		const course = await DB.selectFrom("bms_course_lookup")
-			.select(["set", "playtype", "value"])
+			.select(["set", "game", "value"])
 			.where("md5sums", "=", combinedMD5s)
 			.executeTakeFirst();
 
@@ -298,9 +290,8 @@ router.post(
 
 		const result = await UpdateClassIfGreater(
 			userID,
-			"bms",
-			course.playtype as Playtypes["bms"],
-			course.set as Classes[GPTString],
+			course.game,
+			course.set as Classes[GamesForGroup["bms"]],
 			course.value,
 		);
 

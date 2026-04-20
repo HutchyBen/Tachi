@@ -12,14 +12,14 @@ export default function AdminDestructivePage() {
 	const [deleteSessionId, setDeleteSessionId] = useState("");
 
 	const [ugptUserId, setUgptUserId] = useState("");
-	const [ugptGame, setUgptGame] = useState<GameGroup>(TachiConfig.GAMES[0]);
+	const [ugptGame, setUgptGame] = useState<GameGroup>(TachiConfig.GAME_GROUPS[0]);
 	const ugptGameConfig = useMemo(() => GetGameGroupConfig(ugptGame), [ugptGame]);
 	const [ugptPlaytype, setUgptPlaytype] = useState<string>(
-		() => GetGameGroupConfig(TachiConfig.GAMES[0]).playtypes[0],
+		() => GetGameGroupConfig(TachiConfig.GAME_GROUPS[0]).playtypes[0],
 	);
 
 	const [destroyChartId, setDestroyChartId] = useState("");
-	const [destroyChartGame, setDestroyChartGame] = useState<GameGroup>(TachiConfig.GAMES[0]);
+	const [destroyChartGame, setDestroyChartGame] = useState<GameGroup>(TachiConfig.GAME_GROUPS[0]);
 
 	function confirmDelete(message: string): boolean {
 		return window.confirm(message);
@@ -138,7 +138,7 @@ export default function AdminDestructivePage() {
 								}}
 								value={ugptGame}
 							>
-								{TachiConfig.GAMES.map((g) => (
+								{TachiConfig.GAME_GROUPS.map((g) => (
 									<option key={g} value={g}>
 										{g}
 									</option>
@@ -208,7 +208,7 @@ export default function AdminDestructivePage() {
 								onChange={(e) => setDestroyChartGame(e.target.value as GameGroup)}
 								value={destroyChartGame}
 							>
-								{TachiConfig.GAMES.map((g) => (
+								{TachiConfig.GAME_GROUPS.map((g) => (
 									<option key={g} value={g}>
 										{g}
 									</option>

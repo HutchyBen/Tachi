@@ -1,14 +1,15 @@
 import type { KtLogger } from "#lib/log/log";
+import type { ParserFunctionReturns } from "#lib/score-import/import-types/common/types";
+import type { GamesForGroup } from "tachi-common";
 
+import { AssertStrAsPositiveInt } from "#lib/score-import/framework/common/string-asserts";
+import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { IsRecord } from "#utils/misc";
 import { FormatPrError } from "#utils/prudence";
 import { p, type PrudenceSchema } from "prudence";
 
-import type { ParserFunctionReturns } from "../../common/types";
 import type { FervidexStaticContext, FervidexStaticHeaders, FervidexStaticScore } from "./types";
 
-import { AssertStrAsPositiveInt } from "../../../framework/common/string-asserts";
-import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 import { SoftwareIDToVersion } from "../fervidex/parser";
 import { CreateFerStaticClassProvider } from "./class-handler";
 
@@ -22,7 +23,7 @@ export function ParseFervidexStatic(
 	body: Record<string, unknown>,
 	headers: FervidexStaticHeaders,
 	log: KtLogger,
-): ParserFunctionReturns<FervidexStaticScore, FervidexStaticContext> {
+): ParserFunctionReturns<FervidexStaticScore, FervidexStaticContext, GamesForGroup["iidx"]> {
 	const version = SoftwareIDToVersion(headers.model, log);
 	const classProvider = CreateFerStaticClassProvider(body);
 
@@ -30,7 +31,7 @@ export function ParseFervidexStatic(
 	if (!headers.shouldImportScores) {
 		return {
 			context: { version },
-			game: "iidx",
+			gameGroup: "iidx",
 			iterable: [],
 			classProvider,
 		};
@@ -90,7 +91,7 @@ export function ParseFervidexStatic(
 	// asserted using prudence.
 	return {
 		context: { version },
-		game: "iidx",
+		gameGroup: "iidx",
 		iterable: scores,
 		classProvider,
 	};

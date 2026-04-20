@@ -1,18 +1,20 @@
 import type { KtLogger } from "#lib/log/log";
 import type { ClassProvider } from "#lib/score-import/framework/calculated-data/types";
+import type { ConverterFailure } from "#lib/score-import/framework/common/converter-failures";
+import type { DryScore } from "#lib/score-import/framework/common/types";
 import type { USCClientScore } from "#server/router/ir/usc/_playtype/types";
 import type { EmptyObject } from "#utils/types";
 import type {
 	BatchManualScore,
+	ChartDocument,
 	GameGroup,
+	GameGroupFromGame,
 	ImportTypes,
 	integer,
-	MONGO_ChartDocument,
-	MONGO_SongDocument,
+	SongDocument,
+	V3Game,
 } from "tachi-common";
 
-import type { ConverterFailure } from "../../framework/common/converter-failures";
-import type { DryScore } from "../../framework/common/types";
 import type { MytChunithmScore } from "../api/myt-chunithm/types";
 import type { MytMaimaiDxScore } from "../api/myt-maimaidx/types";
 import type { MytOngekiScore } from "../api/myt-ongeki/types";
@@ -143,8 +145,8 @@ export interface OrphanScoreDocument<T extends ImportTypes = ImportTypes> {
 
 export interface ConverterFnSuccessReturn {
 	dryScore: DryScore;
-	chart: MONGO_ChartDocument;
-	song: MONGO_SongDocument;
+	chart: ChartDocument;
+	song: SongDocument;
 }
 
 export type ConverterFnReturnOrFailure = ConverterFailure | ConverterFnSuccessReturn;
@@ -156,17 +158,17 @@ export type ConverterFunction<D, C> = (
 	log: KtLogger,
 ) => Promise<ConverterFnSuccessReturn>;
 
-export type ImportInputParser<D, C> = (
+export type ImportInputParser<D, C, TGame extends V3Game> = (
 	log: KtLogger,
-) => ParserFunctionReturns<D, C> | Promise<ParserFunctionReturns<D, C>>;
+) => ParserFunctionReturns<D, C, TGame> | Promise<ParserFunctionReturns<D, C, TGame>>;
 
-export interface ParserFunctionReturns<D, C> {
+export interface ParserFunctionReturns<D, C, TGame extends V3Game> {
 	iterable: AsyncIterable<D> | Iterable<D>;
 	context: C;
-	game: GameGroup;
-	classProvider: ClassProvider | null;
+	gameGroup: GameGroupFromGame[TGame];
+	classProvider: ClassProvider<TGame> | null;
 }
 
-export type ParserFunction<D, C, A extends Array<unknown>> = (
+export type ParserFunction<D, C, TGame extends V3Game, A extends Array<unknown>> = (
 	...args: A
-) => ParserFunctionReturns<D, C> | Promise<ParserFunctionReturns<D, C>>;
+) => ParserFunctionReturns<D, C, TGame> | Promise<ParserFunctionReturns<D, C, TGame>>;

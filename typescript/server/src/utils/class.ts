@@ -4,14 +4,10 @@ import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
 import DB from "#services/pg/db";
 import {
 	type Classes,
-	type GameGroup,
-	GamePTToV3,
-	GetGPTConfig,
-	GetGPTString,
-	type GPTString,
+	GetGameConfig,
 	type integer,
-	type MONGO_UserGameStats,
-	type Playtype,
+	type UserGameStats,
+	type V3Game,
 } from "tachi-common";
 
 function parseProfileJson<T>(v: unknown): T {
@@ -24,14 +20,12 @@ function parseProfileJson<T>(v: unknown): T {
 
 export async function loadUserGameStats(
 	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
-): Promise<MONGO_UserGameStats | null> {
-	const v3Game = GamePTToV3(game, playtype);
+	game: V3Game,
+): Promise<UserGameStats | null> {
 	const row = await DB.selectFrom("game_profile")
 		.select(["ratings", "classes"])
 		.where("user_id", "=", userID)
-		.where("game", "=", v3Game)
+		.where("game", "=", game)
 		.executeTakeFirst();
 
 	if (!row) {
@@ -41,7 +35,6 @@ export async function loadUserGameStats(
 	return {
 		userID,
 		game,
-		playtype,
 		ratings: parseProfileJson(row.ratings),
 		classes: parseProfileJson(row.classes),
 	};
@@ -53,18 +46,18 @@ export async function loadUserGameStats(
  * to compare to, and FALSE if it is worse or equal.
  */
 export function ReturnClassIfGreater(
-	gptString: GPTString,
-	classSet: Classes[GPTString],
+	game: V3Game,
+	classSet: Classes[V3Game],
 	classVal: string,
-	userGameStats?: MONGO_UserGameStats | null,
+	userGameStats?: UserGameStats | null,
 ): boolean | null {
-	const gptConfig = GetGPTConfig(gptString);
+	const gameConfig = GetGameConfig(game);
 
-	const classInfo = gptConfig.classes[classSet];
+	const classInfo = gameConfig.classes[classSet];
 
 	if (!classInfo) {
 		log.warn(
-			`Invalid ReturnClassIfGreater call. Attempted to index set '${classSet}' on ${gptString}. No such class is defined for this game.`,
+			`Invalid ReturnClassIfGreater call. Attempted to index set '${classSet}' on ${game}. No such class is defined for this game.`,
 		);
 
 		return null;
@@ -80,8 +73,8 @@ export function ReturnClassIfGreater(
 		return null;
 	}
 
-	const previousClassIndex = ClassToIndex(gptString, classSet, prevClass);
-	const newClassIndex = ClassToIndex(gptString, classSet, classVal);
+	const previousClassIndex = ClassToIndex(game, classSet, prevClass);
+	const newClassIndex = ClassToIndex(game, classSet, classVal);
 
 	if (previousClassIndex === null && newClassIndex === null) {
 		return null;
@@ -94,14 +87,14 @@ export function ReturnClassIfGreater(
 	return newClassIndex > previousClassIndex;
 }
 
-export function ClassToIndex(gptString: GPTString, classSet: Classes[GPTString], classVal: string) {
-	const gptConfig = GetGPTConfig(gptString);
+export function ClassToIndex(game: V3Game, classSet: Classes[V3Game], classVal: string) {
+	const gameConfig = GetGameConfig(game);
 
-	const classInfo = gptConfig.classes[classSet];
+	const classInfo = gameConfig.classes[classSet];
 
 	if (!classInfo) {
 		log.warn(
-			`Invalid ClassToIndex call. Attempted to index set '${classSet}' on ${gptString}. No such class is defined for this game. Returning null.`,
+			`Invalid ClassToIndex call. Attempted to index set '${classSet}' on ${game}. No such class is defined for this game. Returning null.`,
 		);
 		return null;
 	}
@@ -110,7 +103,7 @@ export function ClassToIndex(gptString: GPTString, classSet: Classes[GPTString],
 
 	if (v === -1) {
 		log.warn(
-			`Attempted to index a class that doesn't exist: ${classVal} on ${classSet} (${gptString}). Returning null.`,
+			`Attempted to index a class that doesn't exist: ${classVal} on ${classSet} (${game}). Returning null.`,
 		);
 		return null;
 	}
@@ -128,16 +121,12 @@ export function ClassToIndex(gptString: GPTString, classSet: Classes[GPTString],
  */
 export async function UpdateClassIfGreater(
 	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
-	classSet: Classes[GPTString],
+	game: V3Game,
+	classSet: Classes[V3Game],
 	classVal: string,
 ) {
-	const gptString = GetGPTString(game, playtype);
-	const v3Game = GamePTToV3(game, playtype);
-
-	const userGameStats = await loadUserGameStats(userID, game, playtype);
-	const isGreater = ReturnClassIfGreater(gptString, classSet, classVal, userGameStats);
+	const userGameStats = await loadUserGameStats(userID, game);
+	const isGreater = ReturnClassIfGreater(game, classSet, classVal, userGameStats);
 
 	if (isGreater === false) {
 		return false;
@@ -152,21 +141,21 @@ export async function UpdateClassIfGreater(
 		await DB.updateTable("game_profile")
 			.set({ classes: JSON.stringify(nextClasses) })
 			.where("user_id", "=", userID)
-			.where("game", "=", v3Game)
+			.where("game", "=", game)
 			.execute();
 	} else {
 		await DB.insertInto("game_profile")
 			.values({
 				classes: JSON.stringify({ [classSet]: classVal }),
-				game: v3Game,
+				game,
 				ratings: JSON.stringify({}),
 				user_id: userID,
 			})
 			.execute();
 
-		log.info(`Created new player gamestats for ${userID} (${game} ${playtype})`);
+		log.info(`Created new player gamestats for ${userID} (${game})`);
 
-		await CreateGameSettings(userID, game, playtype);
+		await CreateGameSettings(userID, game);
 	}
 
 	const prevForAchievement =
@@ -179,7 +168,7 @@ export async function UpdateClassIfGreater(
 			class_prev_value: prevForAchievement,
 			class_set: classSet,
 			class_value: classVal,
-			game: v3Game,
+			game,
 			timestamp: new Date().toISOString(),
 			user_id: userID,
 		})
@@ -188,7 +177,7 @@ export async function UpdateClassIfGreater(
 	if (isGreater === null) {
 		void EmitWebhookEvent({
 			type: "class-update/v1",
-			content: { userID, new: classVal, old: null, set: classSet, game, playtype },
+			content: { userID, new: classVal, old: null, set: classSet, game },
 		});
 
 		return null;
@@ -202,7 +191,6 @@ export async function UpdateClassIfGreater(
 			old: userGameStats!.classes[classSet]!,
 			set: classSet,
 			game,
-			playtype,
 		},
 	});
 

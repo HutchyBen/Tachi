@@ -1,6 +1,7 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
 import type { EmptyObject } from "#utils/types";
-import type { MONGO_ScoreData } from "tachi-common";
+import type { ScoreData } from "tachi-common";
 
 import {
 	InternalFailure,
@@ -13,7 +14,6 @@ import { MaimaiComboStatus, MaimaiLevel } from "#proto/generated/maimai/common_p
 import { FindChartOnInGameID } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { ConverterFunction } from "../../common/types";
 import type { MytMaimaiDxScore } from "./types";
 
 const DIFFICULTIES = {
@@ -26,10 +26,7 @@ const DIFFICULTIES = {
 	[MaimaiLevel.UTAGE]: "Utage",
 };
 
-function getLamp(
-	comboStatus: number,
-	isClear: boolean,
-): MONGO_ScoreData<"maimaidx:Single">["lamp"] | undefined {
+function getLamp(comboStatus: number, isClear: boolean): ScoreData<"maimaidx">["lamp"] | undefined {
 	if (comboStatus === MaimaiComboStatus.UNSPECIFIED) {
 		return undefined;
 	}
@@ -94,7 +91,7 @@ const ConvertAPIMytMaimaiDx: ConverterFunction<MytMaimaiDxScore, EmptyObject> = 
 		);
 	}
 
-	const chart = await FindChartOnInGameID("maimaidx", data.info.musicId, "Single", difficulty);
+	const chart = await FindChartOnInGameID("maimaidx", data.info.musicId, difficulty);
 
 	if (chart === null) {
 		throw new SongOrChartNotFoundFailure(
@@ -105,14 +102,14 @@ const ConvertAPIMytMaimaiDx: ConverterFunction<MytMaimaiDxScore, EmptyObject> = 
 		);
 	}
 
-	const song = await FindSongOnID("maimaidx", chart.songID);
+	const song = await FindSongOnID("maimaidx", chart.song.id);
 
 	if (song === null) {
-		log.error({ chart }, `Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
-		throw new InternalFailure(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
+		log.error({ chart }, `Song/chart desync: ${chart.song.id} for chart ${chart.chartID}`);
+		throw new InternalFailure(`Song/chart desync: ${chart.song.id} for chart ${chart.chartID}`);
 	}
 
-	const dryScore: DryScore<"maimaidx:Single"> = {
+	const dryScore: DryScore<"maimaidx"> = {
 		service: "MYT",
 		game: "maimaidx",
 		scoreMeta: {},

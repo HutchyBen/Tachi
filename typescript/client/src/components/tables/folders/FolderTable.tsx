@@ -5,13 +5,7 @@ import { type FolderDataset } from "#types/tables";
 import { NumericSOV, StrSOV } from "#util/sorts";
 import { CreateDefaultFolderSearchParams } from "#util/tables/create-search";
 import React, { useState } from "react";
-import {
-	type GameGroup,
-	type GPTString,
-	type MONGO_PBScoreDocument,
-	type Playtype,
-	type ScoreRatingAlgorithms,
-} from "tachi-common";
+import { type PBScoreDocument, type ScoreRatingAlgorithms, type V3Game } from "tachi-common";
 
 import DifficultyCell from "../cells/DifficultyCell";
 import IndicatorsCell from "../cells/IndicatorsCell";
@@ -28,16 +22,8 @@ import { GetGPTCoreHeaders } from "../headers/GameHeaders";
 import { EmptyHeader, FolderIndicatorHeader } from "../headers/IndicatorHeader";
 import { CreateRankingHeader } from "../headers/RankingHeader";
 
-export default function FolderTable({
-	dataset,
-	game,
-	playtype,
-}: {
-	dataset: FolderDataset;
-	game: GameGroup;
-	playtype: Playtype;
-}) {
-	const defaultRating = useScoreRatingAlg(game, playtype);
+export default function FolderTable({ dataset, game }: { dataset: FolderDataset; game: V3Game }) {
+	const defaultRating = useScoreRatingAlg(game);
 
 	const preferredRanking = usePreferredRanking();
 
@@ -51,13 +37,7 @@ export default function FolderTable({
 		FolderIndicatorHeader,
 		["Song", "Song", StrSOV((x) => x.__related.song.title)],
 		EmptyHeader,
-		...GetGPTCoreHeaders<FolderDataset>(
-			game,
-			playtype,
-			rating,
-			setRating,
-			(x) => x.__related.pb,
-		),
+		...GetGPTCoreHeaders<FolderDataset>(game, rating, setRating, (x) => x.__related.pb),
 		CreateRankingHeader(
 			rankingViewMode,
 			setRankingViewMode,
@@ -80,7 +60,7 @@ export default function FolderTable({
 					rating={rating}
 				/>
 			)}
-			searchFunctions={CreateDefaultFolderSearchParams(game, playtype)}
+			searchFunctions={CreateDefaultFolderSearchParams(game)}
 		/>
 	);
 }
@@ -92,9 +72,9 @@ function Row({
 	rankingViewMode,
 }: {
 	data: FolderDataset[0];
-	game: GameGroup;
+	game: V3Game;
 	rankingViewMode: RankingViewMode;
-	rating: ScoreRatingAlgorithms[GPTString];
+	rating: ScoreRatingAlgorithms[V3Game];
 }) {
 	const score = data.__related.pb;
 
@@ -128,10 +108,10 @@ function RowInner({
 	score,
 }: {
 	data: FolderDataset[0];
-	game: GameGroup;
+	game: V3Game;
 	rankingViewMode: RankingViewMode;
-	rating: ScoreRatingAlgorithms[GPTString];
-	score: MONGO_PBScoreDocument;
+	rating: ScoreRatingAlgorithms[V3Game];
+	score: PBScoreDocument;
 }) {
 	// screw the rules of hooks
 	const scoreState = usePBState(score);
@@ -142,7 +122,6 @@ function RowInner({
 				<PBDropdown
 					chart={data}
 					game={game}
-					playtype={data.playtype}
 					scoreState={scoreState}
 					song={data.__related.song}
 					userID={score.userID}

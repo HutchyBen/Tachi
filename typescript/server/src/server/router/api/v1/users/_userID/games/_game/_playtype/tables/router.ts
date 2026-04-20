@@ -1,36 +1,30 @@
-import { GetEnumDistForFolders, GetFoldersFromTable } from "#utils/folder";
-import { GetTachiData, GetUGPT } from "#utils/req-tachi-data";
-import { Router } from "express";
-
-import { GetTableFromParam } from "../../../../../../games/_game/_playtype/tables/middleware";
-
-const router: Router = Router({ mergeParams: true });
+import { LoadTableDocumentByLegacyIdForGame } from "#lib/db-formats/table";
+import { GetEnumDistForFolders, GetFoldersFromTable } from "#lib/folders/folders";
+import { withUserGameProfile } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
+import { ExpectedErr } from "bliss";
 
 /**
  * Retrieves a users statistics on this table.
  *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/tables/:tableID
+ * @name GET /api/v1/users/:userID/games/:game/tables/:tableID
  */
-router.get("/:tableID", GetTableFromParam, async (req, res) => {
-	const { user } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/tables/:tableID",
+	withUserGameProfile,
+	async ({ ctx, params }) => {
+		const { requestedUser: user, game } = ctx;
 
-	const table = GetTachiData(req, "tableDoc");
+		const table = await LoadTableDocumentByLegacyIdForGame(params.tableID, game);
 
-	const folders = await GetFoldersFromTable(table);
+		if (!table) {
+			throw new ExpectedErr(404, `No table with ID ${params.tableID} exists.`);
+		}
 
-	// @optimisable - Requests a lot of charts we don't care about
-	// could be cached too, i guess.
-	const stats = await GetEnumDistForFolders(user.id, folders);
+		const folders = await GetFoldersFromTable(table);
+		const stats = await GetEnumDistForFolders(user.id, folders);
 
-	return res.status(200).json({
-		success: true,
-		description: `Returned stats for ${folders.length} folders.`,
-		body: {
-			folders,
-			stats,
-			table,
-		},
-	});
-});
-
-export default router;
+		return success(`Returned stats for ${folders.length} folders.`, { folders, stats, table });
+	},
+);

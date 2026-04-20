@@ -10,7 +10,7 @@ import { type RawQuestDocument, type RawQuestGoal, type RawQuestSection } from "
 import { ChangeAtPosition, CopyToClipboard, DeleteInPosition } from "#util/misc";
 import React, { useState } from "react";
 import { Button } from "react-bootstrap";
-import { FormatGameGroup } from "tachi-common";
+import { FormatGame } from "tachi-common";
 
 export default function EditableQuest({
 	quest,
@@ -50,7 +50,7 @@ export default function EditableQuest({
 						placeholderText={quest.desc || "Please set a description."}
 					/>
 
-					<Muted>Game: {FormatGameGroup(quest.game, quest.playtype)}</Muted>
+					<Muted>Game: {FormatGame(quest.game)}</Muted>
 				</div>
 			}
 		>
@@ -70,7 +70,6 @@ export default function EditableQuest({
 								rawQuestData: DeleteInPosition(quest.rawQuestData, i),
 							})
 						}
-						playtype={quest.playtype}
 						section={e}
 					/>
 					<Divider />
@@ -131,7 +130,6 @@ export default function EditableQuest({
 function QuestSection({
 	section,
 	game,
-	playtype,
 	onChange,
 	onDelete,
 }: {
@@ -190,7 +188,6 @@ function QuestSection({
 									rawGoals: DeleteInPosition(section.rawGoals, i),
 								});
 							}}
-							playtype={playtype}
 							rawGoal={e}
 						/>
 					))}
@@ -222,7 +219,6 @@ function QuestSection({
 							rawGoals: [...section.rawGoals, rawGoal],
 						});
 					}}
-					playtype={playtype}
 					setShow={setShow}
 					show={show}
 				/>
@@ -234,7 +230,6 @@ function QuestSection({
 function InnerQuestSectionGoal({
 	rawGoal,
 	game,
-	playtype,
 	onInnerGoalChange,
 	onInnerGoalDelete,
 }: {
@@ -277,7 +272,6 @@ function InnerQuestSectionGoal({
 					onCreate={(newRawGoal) => {
 						onInnerGoalChange(newRawGoal);
 					}}
-					playtype={playtype}
 					setShow={setShow}
 					show={show}
 				/>
@@ -289,7 +283,7 @@ function InnerQuestSectionGoal({
 function FormatQuest(quest: RawQuestDocument) {
 	let str = `# QUEST: ${quest.name}
 ${quest.desc}
-(Game: ${FormatGameGroup(quest.game, quest.playtype)})`;
+(Game: ${FormatGame(quest.game)})`;
 
 	for (const section of quest.rawQuestData) {
 		str += `\n\n### ${section.title}`;

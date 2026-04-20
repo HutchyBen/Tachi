@@ -14,7 +14,7 @@ const { testMd5, mockLoadBMSTable, fakeTable } = vi.hoisted(() => {
 		name: "TestTable",
 		prefix: "★",
 		asciiPrefix: "t",
-		playtype: "7K" as const,
+		game: "bms-7k" as const,
 		url: "https://test.invalid/bms-table-unit",
 		description: "unit test",
 	};

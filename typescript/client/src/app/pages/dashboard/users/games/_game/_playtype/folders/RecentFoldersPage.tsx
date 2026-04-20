@@ -8,29 +8,29 @@ import React, { useContext } from "react";
 import { Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
-	type MONGO_FolderDocument,
-	type MONGO_RecentlyViewedFolderDocument,
-	type MONGO_UserDocument,
+	type FolderDocument,
+	type RecentlyViewedFolderDocument,
+	type UserDocument,
 } from "tachi-common";
 
 import { FolderInfoComponent } from "./FolderSelectPage";
 
-export default function RecentFoldersPage({ reqUser, game, playtype }: UGPT) {
+export default function RecentFoldersPage({ reqUser, game }: UGPT) {
 	const { user } = useContext(UserContext);
 
 	if (!user) {
 		return <>Hey, you're not logged in. How did you get here!</>;
 	}
 
-	return <Inner game={game} playtype={playtype} reqUser={reqUser} user={user} />;
+	return <Inner game={game} reqUser={reqUser} user={user} />;
 }
 
-function Inner({ reqUser, game, playtype, user }: { user: MONGO_UserDocument } & UGPT) {
+function Inner({ reqUser, game, user }: { user: UserDocument } & UGPT) {
 	const { data, error } = useApiQuery<{
-		folders: MONGO_FolderDocument[];
+		folders: FolderDocument[];
 		stats: FolderStatsInfo[];
-		views: MONGO_RecentlyViewedFolderDocument[];
-	}>(`/users/${user.id}/games/${game}/${playtype}/folders/recent`);
+		views: RecentlyViewedFolderDocument[];
+	}>(`/users/${user.id}/games/${game}/folders/recent`);
 
 	if (error) {
 		return <ApiError error={error} />;
@@ -44,9 +44,7 @@ function Inner({ reqUser, game, playtype, user }: { user: MONGO_UserDocument } &
 		return (
 			<div className="text-center">
 				Looks like you've not recently interacted with any folders.{" "}
-				<Link to={`/u/${user.username}/games/${game}/${playtype}/folders`}>
-					Go do that!
-				</Link>
+				<Link to={`/u/${user.username}/games/${game}/folders`}>Go do that!</Link>
 			</div>
 		);
 	}
@@ -56,9 +54,8 @@ function Inner({ reqUser, game, playtype, user }: { user: MONGO_UserDocument } &
 	for (const recent of data.views) {
 		dataset.push({
 			view: recent,
-			// Is it really O(n^2) if the input is capped at 4?
-			folder: data.folders.find((x) => x.folderID === recent.folderID),
-			stats: data.stats.find((x) => x.folderID === recent.folderID),
+			folder: data.folders.find((x) => x.slug === recent.slug),
+			stats: data.stats.find((x) => x.slug === recent.slug),
 		});
 	}
 
@@ -66,9 +63,7 @@ function Inner({ reqUser, game, playtype, user }: { user: MONGO_UserDocument } &
 		<Row>
 			{dataset.map((e) => {
 				if (e.folder === undefined || e.stats === undefined) {
-					return (
-						<>Failed to load folder {e.view.folderID}. This is a bug. Report this!</>
-					);
+					return <>Failed to load folder {e.view.slug}. This is a bug. Report this!</>;
 				}
 
 				return (
@@ -76,8 +71,7 @@ function Inner({ reqUser, game, playtype, user }: { user: MONGO_UserDocument } &
 						folder={e.folder}
 						folderStats={e.stats}
 						game={game}
-						key={e.folder.folderID}
-						playtype={playtype}
+						key={e.folder.slug}
 						reqUser={reqUser}
 					/>
 				);

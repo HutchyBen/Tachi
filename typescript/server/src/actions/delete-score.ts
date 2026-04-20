@@ -1,7 +1,7 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import { LoadScoreDocumentById } from "#lib/db-formats/score.js";
-import { DeleteScore } from "#lib/score-mutation/delete-scores.js";
-import { IsUserAdmin } from "#utils/user.js";
+import { MakeAction } from "#lib/actions/actions";
+import { LoadScoreDocumentById } from "#lib/db-formats/score";
+import { DeleteScore } from "#lib/score-mutation/delete-scores";
+import { IsUserAdmin } from "#utils/user";
 import { ExpectedErr } from "bliss";
 
 export const ACTION_DeleteScore = MakeAction("DELETE_SCORE", async (taker, { id, blacklist }) => {

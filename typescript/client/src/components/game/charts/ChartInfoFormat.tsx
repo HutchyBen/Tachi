@@ -15,42 +15,41 @@ import React, { useContext } from "react";
 import { Col, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
+	type ChartDocument,
+	type FolderDocument,
 	FormatDifficultySearch,
-	type GameGroup,
+	GameToGameGroup,
+	GetGameConfig,
 	GetGameGroupConfig,
-	GetGamePTConfig,
-	GetGPTString,
-	type MONGO_ChartDocument,
-	type MONGO_FolderDocument,
-	type MONGO_SongDocument,
+	type SongDocument,
+	type V3Game,
 } from "tachi-common";
 
 export default function ChartInfoFormat({
 	song,
 	chart,
 	game,
-	playtype,
-}: { chart: MONGO_ChartDocument; song: MONGO_SongDocument } & GamePT) {
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, playtype)];
+}: { chart: ChartDocument; song: SongDocument } & GamePT) {
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
 	const ratingSystems = gptImpl.ratingSystems;
 
-	const { data, error } = useApiQuery<MONGO_FolderDocument[]>(
-		`/games/${game}/${playtype}/charts/${chart.chartID}/folders`,
+	const { data, error } = useApiQuery<FolderDocument[]>(
+		`/games/${game}/charts/${chart.chartID}/folders`,
 	);
 
 	const { user } = useContext(UserContext);
 	const { ugs } = useContext(AllLUGPTStatsContext);
 
 	if (error) {
-		<ApiError error={error} />;
+		return <ApiError error={error} />;
 	}
 
 	if (!data) {
 		return <Loading />;
 	}
 
-	const versions = Object.keys(GetGamePTConfig(game, playtype).versions);
+	const versions = Object.keys(GetGameConfig(game).versions);
 
 	return (
 		<Row
@@ -72,11 +71,11 @@ export default function ChartInfoFormat({
 								: 0,
 						)
 						.map((e) => (
-							<li key={e.folderID}>
+							<li key={e.slug}>
 								{user && ugs ? (
 									<Link
 										className="text-decoration-none"
-										to={`/u/${user.username}/games/${game}/${playtype}/folders/${e.folderID}`}
+										to={`/u/${user.username}/games/${game}/folders/${e.slug}`}
 									>
 										{e.title}
 									</Link>
@@ -145,12 +144,12 @@ function ChartInfoMiddle({
 	song,
 	chart,
 }: {
-	chart: MONGO_ChartDocument;
-	game: GameGroup;
-	song: MONGO_SongDocument;
+	chart: ChartDocument;
+	game: V3Game;
+	song: SongDocument;
 }) {
-	if (game === "bms") {
-		const bmsChart = chart as MONGO_ChartDocument<"bms:7K" | "bms:14K">;
+	if (game === "bms-7k" || game === "bms-14k") {
+		const bmsChart = chart as ChartDocument<"bms-7k" | "bms-14k">;
 
 		return (
 			<>
@@ -167,8 +166,8 @@ function ChartInfoMiddle({
 				</ExternalLink>
 			</>
 		);
-	} else if (game === "pms") {
-		const pmsChart = chart as MONGO_ChartDocument<"pms:Controller" | "pms:Keyboard">;
+	} else if (game === "pms-controller" || game === "pms-keyboard") {
+		const pmsChart = chart as ChartDocument<"pms-controller" | "pms-keyboard">;
 
 		return (
 			<>
@@ -181,11 +180,11 @@ function ChartInfoMiddle({
 		);
 	}
 
-	const gameConfig = GetGameGroupConfig(game);
+	const gameGroupConfig = GetGameGroupConfig(GameToGameGroup(game));
 
-	const diff = FormatDifficultySearch(chart, game);
+	const diff = FormatDifficultySearch(chart);
 	const gameName =
-		game === "ongeki" ? "オンゲキ" : game === "maimaidx" ? "maimai" : gameConfig.name;
+		game === "ongeki" ? "オンゲキ" : game === "maimaidx" ? "maimai" : gameGroupConfig.name;
 	const formattedTitle = song.title.replace(/-/gu, " ");
 
 	let search = `${gameName} ${formattedTitle}`;

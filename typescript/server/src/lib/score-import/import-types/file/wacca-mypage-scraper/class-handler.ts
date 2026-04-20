@@ -1,12 +1,12 @@
 import type { ClassProvider } from "#lib/score-import/framework/calculated-data/types";
 
+import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { WACCA_STAGEUPS } from "tachi-common";
 import { WaccaStageUps } from "tachi-common/config/game-support/wacca";
 
 import type { MyPagePlayerStage } from "./types";
 
-import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
-
+// TODO(zk): unused???
 const STAGES: Record<number, number> = {
 	1: WACCA_STAGEUPS.I,
 	2: WACCA_STAGEUPS.II,
@@ -42,8 +42,8 @@ const STAGE_NAMES: Record<number, string> = {
 	14: "XIV",
 };
 
-export function CreateMyPageScraperClassProvider(stage: MyPagePlayerStage): ClassProvider {
-	return (gpt, userID, ratings, log) => {
+export function CreateMyPageScraperClassProvider(stage: MyPagePlayerStage): ClassProvider<"wacca"> {
+	return (_game, _userID, _ratings, log) => {
 		const stageName = STAGE_NAMES[stage.id];
 
 		if (stageName === undefined) {

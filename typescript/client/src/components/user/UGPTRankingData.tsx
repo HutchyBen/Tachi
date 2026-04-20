@@ -3,18 +3,17 @@ import { type GamePT } from "#types/react";
 import { FormatGPTProfileRatingName } from "#util/misc";
 import React from "react";
 import { Link } from "react-router-dom";
-import { type GPTString, type integer, type ProfileRatingAlgorithms } from "tachi-common";
+import { type integer, type ProfileRatingAlgorithms, type V3Game } from "tachi-common";
 
 export default function RankingData({
 	rankingData,
 	game,
 	userID,
-	playtype,
 }: {
-	rankingData: Record<ProfileRatingAlgorithms[GPTString], { outOf: integer; ranking: number }>;
+	rankingData: Record<ProfileRatingAlgorithms[V3Game], { outOf: integer; ranking: number }>;
 	userID: integer;
 } & GamePT) {
-	const alg = useProfileRatingAlg(game, playtype);
+	const alg = useProfileRatingAlg(game);
 
 	// weird react edge case where rankingData and alg desynchronise.
 	if (!(alg in rankingData)) {
@@ -24,14 +23,14 @@ export default function RankingData({
 	const extendData = [];
 
 	for (const k in rankingData) {
-		const key = k as ProfileRatingAlgorithms[GPTString];
+		const key = k as ProfileRatingAlgorithms[V3Game];
 
 		if (key !== alg) {
 			extendData.push(
 				<div className="col-12" key={key}>
 					<small className="text-body-secondary">
-						{FormatGPTProfileRatingName(game, playtype, key)}: #
-						{rankingData[key].ranking}/{rankingData[key].outOf}
+						{FormatGPTProfileRatingName(game, key)}: #{rankingData[key].ranking}/
+						{rankingData[key].outOf}
 					</small>
 				</div>,
 			);
@@ -43,15 +42,13 @@ export default function RankingData({
 			<div className="col-12">
 				<h4>
 					Ranking
-					{extendData.length
-						? ` (${FormatGPTProfileRatingName(game, playtype, alg)})`
-						: ""}
+					{extendData.length ? ` (${FormatGPTProfileRatingName(game, alg)})` : ""}
 				</h4>
 			</div>
 			<div className="col-12">
 				<Link
 					className="text-decoration-none"
-					to={`/u/${userID}/games/${game}/${playtype}/leaderboard`}
+					to={`/u/${userID}/games/${game}/leaderboard`}
 				>
 					<strong className="display-4">#{rankingData[alg].ranking}</strong>
 				</Link>

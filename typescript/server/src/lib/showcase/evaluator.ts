@@ -1,29 +1,38 @@
-import { LoadPbByUserAndChartID } from "#lib/db-formats/pb";
+import { LoadFolderDocumentByGameAndSlug } from "#lib/db-formats/folders";
+import { GetPBOnChart } from "#lib/db-formats/pb";
 import DB from "#services/pg/db";
 import { GetFolderChartIDs } from "#utils/folder";
 import { sql } from "kysely";
 import {
-	GetGPTConfig,
-	type GPTString,
+	GetGameConfig,
 	type integer,
+	type PBScoreDocument,
 	type ShowcaseStatChart,
 	type ShowcaseStatDetails,
 	type ShowcaseStatFolder,
+	type V3Game,
 } from "tachi-common";
 
+export type ShowcaseEvalChartResult = {
+	pb: PBScoreDocument | null;
+	playcount: number;
+};
+
+export type ShowcaseEvalFolderResult = {
+	outOf: number;
+	value: number;
+};
+
 export function EvaluateShowcaseStat(
-	gpt: GPTString,
+	game: V3Game,
 	details: ShowcaseStatDetails,
 	userID: integer,
-): Promise<{
-	outOf?: number;
-	value: number | null;
-}> {
+): Promise<ShowcaseEvalChartResult | ShowcaseEvalFolderResult> {
 	switch (details.mode) {
 		case "chart":
-			return EvaluateShowcaseChartStat(gpt, details, userID);
+			return EvaluateShowcaseChartStat(details, userID);
 		case "folder":
-			return EvaluateShowcaseFolderStat(gpt, details, userID);
+			return EvaluateShowcaseFolderStat(game, details, userID);
 
 		default:
 			// @ts-expect-error This should never happen anyway -- this ignore ignores a 'never' result.
@@ -32,64 +41,44 @@ export function EvaluateShowcaseStat(
 }
 
 async function EvaluateShowcaseChartStat(
-	gpt: GPTString,
 	details: ShowcaseStatChart,
 	userID: integer,
-) {
-	// requires special handling
-	if (details.metric === "playcount") {
-		const row = await DB.selectFrom("score")
+): Promise<ShowcaseEvalChartResult> {
+	const [pb, playcountRow] = await Promise.all([
+		GetPBOnChart(userID, details.chartID),
+		DB.selectFrom("score")
 			.innerJoin("chart", "chart.id", "score.chart_id")
 			.select((eb) => eb.fn.countAll<number>().as("cnt"))
 			.where("score.user_id", "=", userID)
 			.where("chart.id", "=", details.chartID)
-			.executeTakeFirst();
+			.executeTakeFirst(),
+	]);
 
-		return { value: Number(row?.cnt ?? 0) };
-	}
-
-	const pb = await LoadPbByUserAndChartID(userID, details.chartID);
-
-	if (!pb) {
-		return { value: null };
-	}
-
-	const metric = details.metric;
-
-	const gptConfig = GetGPTConfig(gpt);
-
-	const scoreMetricConfig = gptConfig.providedMetrics[metric] ?? gptConfig.derivedMetrics[metric];
-
-	if (!scoreMetricConfig) {
-		throw new Error(`Invalid metric of ${metric} passed for game ${gpt}.`);
-	}
-
-	if (scoreMetricConfig.type === "ENUM") {
-		// @ts-expect-error guaranteed to be correct
-		return { value: pb.scoreData.enumIndexes[metric] };
-	}
-
-	// @ts-expect-error guaranteed to be correct
-	return { value: pb.scoreData[metric] };
+	return {
+		pb,
+		playcount: Number(playcountRow?.cnt ?? 0),
+	};
 }
 
 async function EvaluateShowcaseFolderStat(
-	gpt: GPTString,
+	game: V3Game,
 	details: ShowcaseStatFolder,
 	userID: integer,
-) {
-	let chartIDs;
+): Promise<ShowcaseEvalFolderResult> {
+	const folder = await LoadFolderDocumentByGameAndSlug(game, details.slug);
 
-	if (Array.isArray(details.folderID)) {
-		chartIDs = (await Promise.all(details.folderID.map((id) => GetFolderChartIDs(id)))).flat(1);
-	} else {
-		chartIDs = await GetFolderChartIDs(details.folderID);
+	if (!folder) {
+		throw new Error(
+			`Showcase folder slug ${JSON.stringify(details.slug)} does not exist for ${game}.`,
+		);
 	}
+
+	const chartIDs = await GetFolderChartIDs(folder.folderID);
 
 	const value = await CountPbsForFolderMetricGte(
 		userID,
 		chartIDs,
-		gpt,
+		game,
 		details.metric,
 		details.gte,
 	);
@@ -100,7 +89,7 @@ async function EvaluateShowcaseFolderStat(
 async function CountPbsForFolderMetricGte(
 	userID: integer,
 	chartIDs: string[],
-	gpt: GPTString,
+	game: V3Game,
 	metric: string,
 	gte: number,
 ): Promise<number> {
@@ -108,15 +97,16 @@ async function CountPbsForFolderMetricGte(
 		return 0;
 	}
 
-	const gptConfig = GetGPTConfig(gpt);
-	const scoreMetricConfig = gptConfig.providedMetrics[metric] ?? gptConfig.derivedMetrics[metric];
+	const gameConfig = GetGameConfig(game);
+	const scoreMetricConfig =
+		gameConfig.providedMetrics[metric] ?? gameConfig.derivedMetrics[metric];
 
 	if (!scoreMetricConfig) {
-		throw new Error(`Invalid metric of ${metric} passed for game ${gpt}.`);
+		throw new Error(`Invalid metric of ${metric} passed for game ${game}.`);
 	}
 
 	const jsonBlob =
-		gptConfig.derivedMetrics[metric] !== undefined ? sql`pb.derived_data` : sql`pb.data`;
+		gameConfig.derivedMetrics[metric] !== undefined ? sql`pb.derived_data` : sql`pb.data`;
 
 	const row = await DB.selectFrom("pb")
 		.select(sql<number>`count(*)::int`.as("count"))

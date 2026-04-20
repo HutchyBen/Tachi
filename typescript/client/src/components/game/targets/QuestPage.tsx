@@ -10,24 +10,16 @@ import { CreateGoalMap } from "#util/data";
 import React from "react";
 import { Col } from "react-bootstrap";
 import { Link, useParams } from "react-router-dom";
-import { GetGameGroupConfig } from "tachi-common";
+import { FormatGame } from "tachi-common";
 
-export default function QuestPage({ game, playtype }: GamePT) {
+export default function QuestPage({ game }: GamePT) {
 	const { questID } = useParams<{ questID: string }>();
 
-	const { data, error } = useApiQuery<QuestReturn>(
-		`/games/${game}/${playtype}/targets/quests/${questID}`,
-	);
+	const { data, error } = useApiQuery<QuestReturn>(`/games/${game}/targets/quests/${questID}`);
 
 	useSetSubheader(
-		[
-			"Games",
-			GetGameGroupConfig(game).name,
-			playtype,
-			"Quests",
-			data ? data.quest.name : "Loading...",
-		],
-		[game, playtype, data],
+		["Games", FormatGame(game), "Quests", data ? data.quest.name : "Loading..."],
+		[game, data],
 		data ? data.quest.name : "Loading...",
 	);
 
@@ -46,7 +38,7 @@ export default function QuestPage({ game, playtype }: GamePT) {
 	return (
 		<div>
 			<Col xs={12}>
-				<Link to={`/games/${game}/${playtype}/quests`}>Go back to all quests...</Link>
+				<Link to={`/games/${game}/quests`}>Go back to all quests...</Link>
 				<Divider />
 				<Quest goals={goalMap} quest={quest} />
 			</Col>

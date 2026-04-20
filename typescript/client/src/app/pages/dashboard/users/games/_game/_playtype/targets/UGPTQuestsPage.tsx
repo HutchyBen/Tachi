@@ -12,19 +12,19 @@ import React, { useMemo, useState } from "react";
 import { Col, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
-	type MONGO_GoalDocument,
-	type MONGO_QuestDocument,
-	type MONGO_QuestSubscriptionDocument,
+	type GoalDocument,
+	type QuestDocument,
+	type QuestSubscriptionDocument,
 } from "tachi-common";
 
-export default function UGPTQuestsPage({ reqUser, game, playtype }: UGPT) {
+export default function UGPTQuestsPage({ reqUser, game }: UGPT) {
 	const [show, setShow] = useState<"achieved" | "all" | "unachieved">("all");
 
 	const { data, error } = useApiQuery<{
-		goals: Array<MONGO_GoalDocument>;
-		quests: Array<MONGO_QuestDocument>;
-		questSubs: Array<MONGO_QuestSubscriptionDocument>;
-	}>(`/users/${reqUser.id}/games/${game}/${playtype}/targets/quests`);
+		goals: Array<GoalDocument>;
+		quests: Array<QuestDocument>;
+		questSubs: Array<QuestSubscriptionDocument>;
+	}>(`/users/${reqUser.id}/games/${game}/targets/quests`);
 
 	const questsToShow = useMemo(() => {
 		if (!data || error) {
@@ -33,27 +33,22 @@ export default function UGPTQuestsPage({ reqUser, game, playtype }: UGPT) {
 
 		const questSubMap = CreateQuestSubMap(data.questSubs);
 
-		// slice and sort based on progress
 		let base = data.quests.slice(0).sort(
 			NumericSOV((quest) => {
 				const sub = questSubMap.get(quest.questID);
 
 				if (!sub) {
-					return -Infinity; // shouldn't happen
+					return -Infinity;
 				}
 
-				// sink achieved things below goals in progress
 				if (sub.achieved) {
 					return -100;
 				}
 
-				// since this is always ostensibly positive, the magic numbers -99 and
-				// -100 should be fine.
 				return sub.progress / GetGoalIDsFromQuest(quest).length;
 			}, true),
 		);
 
-		// filter on "show" setting
 		switch (show) {
 			case "all":
 				break;
@@ -98,7 +93,7 @@ export default function UGPTQuestsPage({ reqUser, game, playtype }: UGPT) {
 					<div className="text-center">
 						Looks like you have no quests set.
 						<br />
-						<Link to={`/games/${game}/${playtype}/quests`}>Go set some!</Link>
+						<Link to={`/games/${game}/quests`}>Go set some!</Link>
 					</div>
 				</Col>
 			)}

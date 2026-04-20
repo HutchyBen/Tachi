@@ -1,8 +1,7 @@
-import type { GameGroup, GPTString, Playtype, Versions } from "tachi-common";
+import type { V3Game, Versions } from "tachi-common";
 
 export interface BatchManualContext {
-	game: GameGroup;
-	playtype: Playtype;
-	version: Versions[GPTString] | null;
+	game: V3Game;
+	version: Versions[V3Game] | null;
 	service: string;
 }

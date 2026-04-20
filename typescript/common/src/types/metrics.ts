@@ -1,11 +1,6 @@
-import type { integer } from "../types";
-import type { MONGO_ChartDocument } from "./documents";
-import type {
-	ConfDerivedMetrics,
-	ConfOptionalMetrics,
-	ConfProvidedMetrics,
-	GPTString,
-} from "./game-config";
+import type { integer, V3Game } from "../types";
+import type { ChartDocument } from "./documents";
+import type { ConfDerivedMetrics, ConfOptionalMetrics, ConfProvidedMetrics } from "./game-config";
 
 // WARNING! THIS FILE IS VERY COMPLEX. THERE IS SOME HIGH-TIER TYPESCRIPT MAGIC GOING
 // ON HERE.
@@ -175,9 +170,9 @@ export type ExtractEnumMetricNames<R extends Record<string, ConfScoreMetric>> = 
  * What are all the metrics available for this GPT?
  */
 export type AllConfMetrics = {
-	[GPT in GPTString]: ConfDerivedMetrics[GPT] &
-		ConfOptionalMetrics[GPT] &
-		ConfProvidedMetrics[GPT];
+	[TGame in V3Game]: ConfDerivedMetrics[TGame] &
+		ConfOptionalMetrics[TGame] &
+		ConfProvidedMetrics[TGame];
 };
 
 /**
@@ -186,10 +181,10 @@ export type AllConfMetrics = {
  * @usage GetEnumValue<"iidx:SP", "lamp"> = "FAILED" | "ASSIST CLEAR" | "EASY CLEAR" ...
  */
 export type GetEnumValue<
-	GPT extends GPTString,
-	MetricName extends ExtractEnumMetricNames<AllConfMetrics[GPT]>,
+	TGame extends V3Game,
+	MetricName extends ExtractEnumMetricNames<AllConfMetrics[TGame]>,
 > =
-	AllConfMetrics[GPT][MetricName] extends ConfEnumScoreMetric<infer EnumValues>
+	AllConfMetrics[TGame][MetricName] extends ConfEnumScoreMetric<infer EnumValues>
 		? EnumValues
 		: never;
 
@@ -220,30 +215,11 @@ export type DerivedMetricValue = number | string | Array<number> | Array<number 
 export type MetricValue = MongoExtractMetricValue<ConfScoreMetric>;
 
 export type MetricDeriver<
-	GPT extends GPTString,
+	TGame extends V3Game,
 	// possible return values
 	// from a derived fn
 	V extends DerivedMetricValue = DerivedMetricValue,
 > = (
-	mandatoryMetrics: MongoExtractMetrics<ConfProvidedMetrics[GPT]>,
-	chart: MONGO_ChartDocument<GPT>,
+	mandatoryMetrics: MongoExtractMetrics<ConfProvidedMetrics[TGame]>,
+	chart: ChartDocument<TGame>,
 ) => V;
-
-/**
- * A function that will derive this metric, given a function of other metrics and
- * a chart for this GPT.
- */
-export type __OLD_KILL_ScoreMetricDeriver<M extends ConfScoreMetric, GPT extends GPTString> =
-	// graph score metrics correspond to Array<number>
-	M extends ConfGraphScoreMetric
-		? MetricDeriver<GPT, Array<number>>
-		: // nullable graphs correspond to Array<number | null>
-			M extends ConfNullableGraphScoreMetric
-			? MetricDeriver<GPT, Array<number | null>>
-			: // enums correspond to their string unions ("FAILED"|"CLEAR")
-				M extends ConfEnumScoreMetric<infer V>
-				? MetricDeriver<GPT, V>
-				: // the other two are obvious
-					M extends ConfIntegerScoreMetric
-					? MetricDeriver<GPT, integer>
-					: MetricDeriver<GPT, number>;

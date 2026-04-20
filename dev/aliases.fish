@@ -3,7 +3,6 @@
 defnew g=git
 defnew j=just
 defnew c=cargo
-defnew p=pnpm
 
 defnew gp=git push
 defnew gsw=git switch

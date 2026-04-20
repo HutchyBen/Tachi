@@ -1,5 +1,3 @@
-import type { FilterQuery } from "mongodb";
-
 import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user";
 import { TachiConfig } from "#lib/setup/config";
 import DB from "#services/pg/db";
@@ -14,28 +12,30 @@ import {
 import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { GetOnlineCutoff } from "#utils/user";
 import {
+	type ChartDocument,
+	type FolderDocument,
 	type GameGroup,
-	GamePTToV3,
-	type GPTStrings,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_FolderDocument,
-	type MONGO_SongDocument,
-	type MONGO_UserDocument,
-	type Playtype,
+	LEGACY_GameGroupPTToGame,
+	LEGACY_GameToGameGroupPT,
+	type LEGACY_GPTStrings,
+	type LEGACY_Playtype,
+	type SongDocument,
+	type UserDocument,
+	type V3Game,
 } from "tachi-common";
 import { type Game } from "tachi-db";
 
-import { SearchFoldersFtsAndTrgmGlobal } from "./folders.js";
-import { type SearchSessionHit, SearchSessionsForUserGptFtsAndTrgm } from "./session-search.js";
-import { SearchSpecificGameSongs, type SongSearchReturn } from "./songs.js";
+import { SearchFoldersFtsAndTrgmGlobal } from "./folders";
+import { type SearchSessionHit, SearchSessionsForUserGptFtsAndTrgm } from "./session-search";
+import { SearchSpecificGameSongs, type SongSearchReturn } from "./songs";
 
-export type { SearchSessionHit } from "./session-search.js";
+export type { SearchSessionHit } from "./session-search";
 
 export function SearchSessions(
 	search: string,
 	game?: GameGroup,
-	playtype?: Playtype,
+	playtype?: LEGACY_Playtype,
 	userID?: integer,
 	limit = 100,
 ): Promise<Array<SearchSessionHit>> {
@@ -43,7 +43,7 @@ export function SearchSessions(
 		return Promise.resolve([]);
 	}
 
-	const v3Game = GamePTToV3(game, playtype) as Game;
+	const v3Game = LEGACY_GameGroupPTToGame(game, playtype) as Game;
 
 	return SearchSessionsForUserGptFtsAndTrgm(userID, v3Game, search, limit);
 }
@@ -59,7 +59,7 @@ export function SearchSessions(
 export function SearchUsersRegExp(
 	search: string,
 	matchOnline = false,
-): Promise<Array<MONGO_UserDocument>> {
+): Promise<Array<UserDocument>> {
 	const likeEsc = EscapeForILIKE(search.toLowerCase());
 
 	const onlineCutoff = UnixMillisecondsToISO8601(GetOnlineCutoff());
@@ -102,7 +102,7 @@ async function SearchAllGamesSingleGame(game: GameGroup, search: string) {
 export async function SearchGamesSongs(search: string, games: Array<GameGroup> | null) {
 	const promises = [];
 
-	for (const game of games ?? TachiConfig.GAMES) {
+	for (const game of games ?? TachiConfig.GAME_GROUPS) {
 		promises.push(SearchAllGamesSingleGame(game, search));
 	}
 
@@ -120,11 +120,11 @@ export async function SearchForChartHash(search: string) {
 	]);
 
 	const output: Record<
-		GPTStrings["bms" | "itg" | "pms" | "usc"],
+		LEGACY_GPTStrings["bms" | "itg" | "pms" | "usc"],
 		Array<{
-			chart: MONGO_ChartDocument;
+			chart: ChartDocument;
 			playcount: null;
-			song: MONGO_SongDocument;
+			song: SongDocument;
 		}>
 	> = {
 		"bms:7K": [],
@@ -136,24 +136,37 @@ export async function SearchForChartHash(search: string) {
 		"itg:Stamina": [],
 	};
 
-	const zip = [
-		["bms", bmsCharts],
-		["pms", pmsCharts],
-		["itg", itgCharts],
-		["usc", uscCharts],
-	] as const;
+	const push = async (chart: ChartDocument) => {
+		const { gameGroup, playtype } = LEGACY_GameToGameGroupPT(chart.game);
+		const key = `${gameGroup}:${playtype}` as keyof typeof output;
 
-	for (const [game, charts] of zip) {
-		for (const chart of charts as Array<MONGO_ChartDocument>) {
-			const song = await GetSongForIDGuaranteed(game, chart.songID);
-
-			// @ts-expect-error ts doesn't like this hack but it'll work.
-			output[`${game}:${chart.playtype}`]!.push({
-				song,
-				chart,
-				playcount: null,
-			});
+		if (!(key in output)) {
+			return;
 		}
+
+		const song = await GetSongForIDGuaranteed(chart.song.id);
+
+		output[key].push({
+			song,
+			chart,
+			playcount: null,
+		});
+	};
+
+	for (const chart of bmsCharts) {
+		await push(chart);
+	}
+
+	for (const chart of pmsCharts) {
+		await push(chart);
+	}
+
+	for (const chart of itgCharts) {
+		await push(chart);
+	}
+
+	for (const chart of uscCharts) {
+		await push(chart);
 	}
 
 	return output;
@@ -161,17 +174,13 @@ export async function SearchForChartHash(search: string) {
 
 export function SearchFolders(
 	search: string,
-	existingMatch?: FilterQuery<MONGO_FolderDocument>,
+	games: Array<V3Game> | null = null,
 	limit = 500,
-): Promise<Array<{ __textScore: number } & MONGO_FolderDocument>> {
-	const gameIn = existingMatch?.game as { $in?: Array<GameGroup> } | undefined;
-	const playtypeIn = existingMatch?.playtype as { $in?: Array<Playtype> } | undefined;
-
-	if (gameIn?.$in !== undefined && playtypeIn?.$in !== undefined) {
+): Promise<Array<{ __textScore: number } & FolderDocument>> {
+	if (games !== null) {
 		return SearchFoldersFtsAndTrgmGlobal(search, {
 			limit,
-			games: gameIn.$in,
-			playtypes: playtypeIn.$in,
+			games,
 		});
 	}
 

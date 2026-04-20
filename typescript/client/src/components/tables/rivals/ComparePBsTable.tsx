@@ -3,13 +3,7 @@ import { type ComparePBsDataset } from "#types/tables";
 import { NumericSOV, StrSOV } from "#util/sorts";
 import { CreatePBCompareSearchParams } from "#util/tables/create-search";
 import React, { useEffect, useState } from "react";
-import {
-	type GameGroup,
-	GetGamePTConfig,
-	GetGPTString,
-	GetScoreMetricConf,
-	type Playtype,
-} from "tachi-common";
+import { GetGameConfig, GetScoreMetricConf, type V3Game } from "tachi-common";
 
 import DifficultyCell from "../cells/DifficultyCell";
 import PBCompareCell from "../cells/PBCompareCell";
@@ -22,24 +16,22 @@ import ChartHeader from "../headers/ChartHeader";
 export default function ComparePBsTable({
 	dataset,
 	game,
-	playtype,
 	baseUser,
 	compareUser,
 }: {
 	baseUser: string;
 	compareUser: string;
 	dataset: ComparePBsDataset;
-	game: GameGroup;
-	playtype: Playtype;
+	game: V3Game;
 }) {
-	const gptConfig = GetGamePTConfig(game, playtype);
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, playtype)];
+	const gameConfig = GetGameConfig(game);
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
-	const [metric, setMetric] = useState<string>(gptConfig.defaultMetric);
+	const [metric, setMetric] = useState<string>(gameConfig.defaultMetric);
 
 	useEffect(() => {
-		setMetric(gptConfig.defaultMetric);
-	}, [gptConfig]);
+		setMetric(gameConfig.defaultMetric);
+	}, [gameConfig]);
 
 	const headers: Header<ComparePBsDataset[0]>[] = [
 		ChartHeader(game, (d) => d.chart),
@@ -57,7 +49,7 @@ export default function ComparePBsTable({
 					return Infinity;
 				}
 
-				const conf = GetScoreMetricConf(gptConfig, metric);
+				const conf = GetScoreMetricConf(gameConfig, metric);
 
 				if (!conf) {
 					return 0; // wut
@@ -81,7 +73,7 @@ export default function ComparePBsTable({
 			}),
 			(thProps: ZTableTHProps) => (
 				<SelectableCompareType
-					gptConfig={gptConfig}
+					gameConfig={gameConfig}
 					key={metric}
 					metric={metric}
 					setMetric={(e) => {
@@ -103,22 +95,14 @@ export default function ComparePBsTable({
 			entryName="Charts"
 			headers={headers}
 			rowFunction={(data) => <Row data={data} game={game} metric={metric} />}
-			searchFunctions={CreatePBCompareSearchParams(game, playtype)}
+			searchFunctions={CreatePBCompareSearchParams(game)}
 		/>
 	);
 }
 
-function Row({
-	data,
-	game,
-	metric,
-}: {
-	data: ComparePBsDataset[0];
-	game: GameGroup;
-	metric: string;
-}) {
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, data.chart.playtype)];
-	const metricConf = GetScoreMetricConf(GetGamePTConfig(game, data.chart.playtype), metric)!;
+function Row({ data, game, metric }: { data: ComparePBsDataset[0]; game: V3Game; metric: string }) {
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
+	const metricConf = GetScoreMetricConf(GetGameConfig(game), metric)!;
 
 	return (
 		<tr>
@@ -132,10 +116,8 @@ function Row({
 			<PBCompareCell
 				base={data.base}
 				compare={data.compare}
-				game={game}
 				metric={metric}
 				metricConf={metricConf}
-				playtype={data.chart.playtype}
 			/>
 			{data.compare ? (
 				<ScoreCoreCells chart={data.chart} game={game} score={data.compare} short />

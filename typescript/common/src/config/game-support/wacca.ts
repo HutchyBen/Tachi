@@ -1,20 +1,21 @@
 import { p } from "prudence";
 import { z } from "zod";
 
-import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_PT_CONFIG } from "../../types/internals";
+import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
 import { FmtNum } from "../../utils/util";
 import { ClassValue, zodNonNegativeInt } from "../config-utils";
 import { FAST_SLOW_MAXCOMBO } from "./_common";
 
-export const WACCA_CONF = {
+export const GAME_GROUP_WACCA_CONF = {
 	name: "WACCA",
+	games: ["wacca"],
 	playtypes: ["Single"],
 	songData: z.strictObject({
 		genre: z.string(),
 		displayVersion: z.nullable(z.string()),
 	}),
-} as const satisfies INTERNAL_GAME_CONFIG;
+} as const satisfies INTERNAL_GAME_GROUP_CONFIG;
 
 export const WaccaStageUps = [
 	ClassValue("I", "I"),
@@ -45,7 +46,7 @@ export const WaccaColours = [
 	ClassValue("RAINBOW", "Rainbow"),
 ];
 
-export const WACCA_SINGLE_CONF = {
+export const GAME_WACCA_CONF = {
 	providedMetrics: {
 		score: {
 			type: "INTEGER",
@@ -113,7 +114,7 @@ export const WACCA_SINGLE_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["NORMAL", "HARD", "EXPERT", "INFERNO"],
-		shorthand: {
+		format: {
 			NORMAL: "NRM",
 			HARD: "HRD",
 			EXPERT: "EXP",
@@ -149,4 +150,4 @@ export const WACCA_SINGLE_CONF = {
 	scoreMeta: z.strictObject({ mirror: z.boolean().optional() }),
 
 	supportedMatchTypes: ["songTitle", "tachiSongID", "inGameID"],
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;

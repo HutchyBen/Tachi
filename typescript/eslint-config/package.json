@@ -21,6 +21,7 @@
 		"eslint-config-prettier": "catalog:",
 		"eslint-import-resolver-typescript": "catalog:",
 		"eslint-plugin-import": "catalog:",
+		"eslint-plugin-unused-imports": "catalog:",
 		"eslint-plugin-jsx-a11y": "catalog:",
 		"eslint-plugin-perfectionist": "catalog:",
 		"eslint-plugin-react": "catalog:",

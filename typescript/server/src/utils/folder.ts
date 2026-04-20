@@ -13,4 +13,4 @@ export {
 	GetPBsOnFolder,
 	GetRecentlyViewedFolders,
 	GetTableForIDGuaranteed,
-} from "#lib/folders/folders.js";
+} from "#lib/folders/folders";

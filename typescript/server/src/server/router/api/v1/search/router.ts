@@ -1,23 +1,11 @@
-import type { FilterQuery } from "mongodb";
-
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
+import { success } from "#lib/router/typed-router";
 import { SearchFolders, SearchForChartHash, SearchUsersRegExp } from "#lib/search/search";
-import { SearchGamesSongsCharts } from "#lib/search/song-charts.js";
-import { TachiConfig } from "#lib/setup/config";
-import { IsString } from "#utils/misc";
-import { GetAllUserRivals, GetUserPlayedGPTs } from "#utils/user";
-import { Router } from "express";
-import {
-	GetGameGroupConfig,
-	GetGPTString,
-	type GPTString,
-	type integer,
-	type MONGO_FolderDocument,
-	type MONGO_SongDocument,
-	type MONGO_UserDocument,
-} from "tachi-common";
+import { SearchGamesSongsCharts } from "#lib/search/song-charts";
+import { GetAllUserRivals, GetUserPlayedGames } from "#utils/user";
+import { type integer, type UserDocument, type V3Game } from "tachi-common";
 
-const router: Router = Router({ mergeParams: true });
+import { API_V1_ROUTER } from "../router";
 
 /**
  * Performs a generic "search" across Tachi.
@@ -26,47 +14,25 @@ const router: Router = Router({ mergeParams: true });
  *
  * @name GET /api/v1/search
  */
-router.get("/", async (req, res) => {
-	if (!IsString(req.query.search)) {
-		return res.status(400).json({
-			success: false,
-			description: "No search parameter given.",
-		});
-	}
-
+API_V1_ROUTER.add("GET /search", async ({ input, req }) => {
 	const userID = req[SYMBOL_TACHI_API_AUTH].userID;
 
-	let filter: FilterQuery<MONGO_FolderDocument & MONGO_SongDocument & MONGO_UserDocument> = {};
-
-	let relevantGPTs: Array<GPTString> = TachiConfig.GAMES.flatMap((g) =>
-		GetGameGroupConfig(g).playtypes.map((pt) => GetGPTString(g, pt)),
-	);
+	let relevantGames: Array<V3Game> | null = null;
 
 	if (userID !== null) {
-		// if the requesting user exists, and they've set this param,
-		// only return info related to games they've played.
-		if (IsString(req.query.hasPlayedGame)) {
-			const gpts = await GetUserPlayedGPTs(userID);
+		const games = await GetUserPlayedGames(userID);
 
-			// @hack This is a bit lazy. We should really be filtering the user stuff
-			// on GPTs with an $or query.
-			filter = {
-				game: { $in: gpts.map((e) => e.game) },
-				playtype: { $in: gpts.map((e) => e.playtype) },
-			};
-
-			relevantGPTs = gpts.map((e) => GetGPTString(e.game, e.playtype));
-		}
+		relevantGames = games;
 	}
 
 	const [users, charts, folders] = await Promise.all([
-		SearchUsersRegExp(req.query.search),
-		SearchGamesSongsCharts(req.query.search, relevantGPTs),
-		SearchFolders(req.query.search, filter),
+		SearchUsersRegExp(input.search),
+		SearchGamesSongsCharts(input.search, relevantGames),
+		SearchFolders(input.search, relevantGames),
 	]);
 
-	// @ts-expect-error Handled below -- the field is added by the below for loop.
-	const usersWithRivalTag: Array<{ __isRival: boolean } & MONGO_UserDocument> = users;
+	// @ts-expect-error mutating after the fact
+	const usersWithRivalTag: Array<{ __isRival: boolean } & UserDocument> = users;
 
 	let rivals: Array<integer> = [];
 
@@ -78,15 +44,7 @@ router.get("/", async (req, res) => {
 		user.__isRival = rivals.includes(user.id);
 	}
 
-	return res.status(200).json({
-		success: true,
-		description: `Searched everything.`,
-		body: {
-			users,
-			charts,
-			folders,
-		},
-	});
+	return success("Searched everything.", { charts, folders, users });
 });
 
 /**
@@ -96,23 +54,9 @@ router.get("/", async (req, res) => {
  *
  * @note This matches MD5 and SHA256 for BMS/PMS, GSv3 for ITG and SHA1 for USC.
  */
-router.get("/chart-hash", async (req, res) => {
-	if (!IsString(req.query.search)) {
-		return res.status(400).json({
-			success: false,
-			description: "No search parameter given.",
-		});
-	}
+API_V1_ROUTER.add("GET /search/chart-hash", async ({ input }) => {
+	const buckets = await SearchForChartHash(input.search);
+	const charts = Object.values(buckets).flatMap((hits) => hits.map((h) => h.chart));
 
-	const charts = await SearchForChartHash(req.query.search);
-
-	return res.status(200).json({
-		success: true,
-		description: `Searched for chart hash ${req.query.search}.`,
-		body: {
-			charts,
-		},
-	});
+	return success(`Searched for chart hash ${input.search}.`, { charts });
 });
-
-export default router;

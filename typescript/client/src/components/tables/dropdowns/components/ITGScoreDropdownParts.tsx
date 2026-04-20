@@ -2,18 +2,14 @@ import ITGDensityChart from "#components/charts/ITGDensityChart";
 import SelectNav from "#components/util/SelectNav";
 import React, { useState } from "react";
 import { Nav } from "react-bootstrap";
-import {
-	type MONGO_ChartDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_ScoreDocument,
-} from "tachi-common";
+import { type ChartDocument, type PBScoreDocument, type ScoreDocument } from "tachi-common";
 
 export function ITGGraphsComponent({
 	score,
 	chart,
 }: {
-	chart: MONGO_ChartDocument<"itg:Stamina">;
-	score: MONGO_PBScoreDocument<"itg:Stamina"> | MONGO_ScoreDocument<"itg:Stamina">;
+	chart: ChartDocument<"itg-stamina">;
+	score: PBScoreDocument<"itg-stamina"> | ScoreDocument<"itg-stamina">;
 }) {
 	const [graph, setGraph] = useState("DENSITY");
 

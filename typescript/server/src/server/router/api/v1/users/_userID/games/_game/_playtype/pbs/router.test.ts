@@ -2,7 +2,7 @@ import { mongoScoreDataToPg } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import mockApi, { CloseServerConnection } from "#test-utils/mock-api";
 import { seedUser } from "#test-utils/pg-fixtures";
-import { type MONGO_ScoreData } from "tachi-common";
+import { type ScoreData } from "tachi-common";
 import { afterAll, describe, expect, it } from "vitest";
 
 afterAll(() => CloseServerConnection());
@@ -59,14 +59,14 @@ async function seedIidxChartPb(opts: { userId: number; withComposition?: boolean
 	const now = new Date().toISOString();
 
 	if (opts.withComposition) {
-		const { data, derived, judgements } = mongoScoreDataToPg("iidx:SP", {
+		const { data, derived, judgements } = mongoScoreDataToPg("iidx-sp", {
 			grade: "AAA",
 			lamp: "EX HARD CLEAR",
 			percent: 90,
 			score: 1400,
 			optional: {},
 			judgements: {},
-		} as MONGO_ScoreData<"iidx:SP">);
+		} as ScoreData<"iidx-sp">);
 
 		await DB.insertInto("score")
 			.values({
@@ -163,14 +163,14 @@ async function insertPbOnChart(opts: {
 		.execute();
 }
 
-describe("GET /api/v1/users/:userID/games/:game/:playtype/pbs/all", () => {
+describe("GET /api/v1/users/:userID/games/:game/pbs/all", () => {
 	it("returns primary-chart PBs with songs and charts", async () => {
 		const { id: userId } = await seedUser({ username: "ugpt_pb_all" });
 		await seedIidxSpProfile(userId);
 		await seedIidxChartPb({ userId });
 		await seedIidxChartPb({ userId });
 
-		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx/SP/pbs/all`);
+		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx-sp/pbs/all`);
 
 		expect(res.status).toBe(200);
 		expect(res.body.body.pbs.length).toBeGreaterThanOrEqual(2);
@@ -179,7 +179,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/pbs/all", () => {
 	});
 });
 
-describe("GET /api/v1/users/:userID/games/:game/:playtype/pbs/best", () => {
+describe("GET /api/v1/users/:userID/games/:game/pbs/best", () => {
 	it("orders primary PBs by ktLampRating descending by default", async () => {
 		const { id: userId } = await seedUser({ username: "ugpt_pb_best" });
 		await seedIidxSpProfile(userId);
@@ -201,7 +201,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/pbs/best", () => {
 			calculatedData: { ktLampRating: 99 },
 		});
 
-		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx/SP/pbs/best`);
+		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx-sp/pbs/best`);
 
 		expect(res.status).toBe(200);
 		expect(res.body.body.pbs[0].calculatedData.ktLampRating).toBe(99);
@@ -209,7 +209,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/pbs/best", () => {
 	});
 });
 
-describe("GET /api/v1/users/:userID/games/:game/:playtype/pbs/:chartID/rivals", () => {
+describe("GET /api/v1/users/:userID/games/:game/pbs/:chartID/rivals", () => {
 	it("returns rival PBs and the user PB on the chart", async () => {
 		const { id: mainId } = await seedUser({ username: "ugpt_pb_main" });
 		const { id: rivalId } = await seedUser({ username: "ugpt_pb_rival" });
@@ -229,7 +229,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/pbs/:chartID/rivals", 
 		});
 
 		const res = await mockApi.get(
-			`/api/v1/users/${mainId}/games/iidx/SP/pbs/${chartPg}/rivals`,
+			`/api/v1/users/${mainId}/games/iidx-sp/pbs/${chartPg}/rivals`,
 		);
 
 		expect(res.status).toBe(200);
@@ -238,7 +238,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/pbs/:chartID/rivals", 
 	});
 });
 
-describe("GET /api/v1/users/:userID/games/:game/:playtype/pbs/:chartID/leaderboard-adjacent", () => {
+describe("GET /api/v1/users/:userID/games/:game/pbs/:chartID/leaderboard-adjacent", () => {
 	it("returns adjacent ladder ranks around the user", async () => {
 		const { id: u1 } = await seedUser({ username: "ugpt_pb_lb1" });
 		const { id: u2 } = await seedUser({ username: "ugpt_pb_lb2" });
@@ -286,7 +286,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/pbs/:chartID/leaderboa
 		await insertPbOnChart({ userId: u3, chartPg, calculatedData: {}, rankingValue: 100 });
 
 		const res = await mockApi.get(
-			`/api/v1/users/${u2}/games/iidx/SP/pbs/${chartPg}/leaderboard-adjacent`,
+			`/api/v1/users/${u2}/games/iidx-sp/pbs/${chartPg}/leaderboard-adjacent`,
 		);
 
 		expect(res.status).toBe(200);
@@ -301,13 +301,13 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/pbs/:chartID/leaderboa
 	});
 });
 
-describe("GET /api/v1/users/:userID/games/:game/:playtype/pbs/:chartID", () => {
+describe("GET /api/v1/users/:userID/games/:game/pbs/:chartID", () => {
 	it("returns 404 when the chart does not exist", async () => {
 		const { id } = await seedUser({ username: "ugpt_pb_chart_missing" });
 		await seedIidxSpProfile(id);
 
 		const res = await mockApi.get(
-			`/api/v1/users/${id}/games/iidx/SP/pbs/00000000-0000-0000-0000-000000000000`,
+			`/api/v1/users/${id}/games/iidx-sp/pbs/00000000-0000-0000-0000-000000000000`,
 		);
 
 		expect(res.status).toBe(404);
@@ -352,7 +352,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/pbs/:chartID", () => {
 			})
 			.execute();
 
-		const res = await mockApi.get(`/api/v1/users/${targetId}/games/iidx/SP/pbs/${chartPg}`);
+		const res = await mockApi.get(`/api/v1/users/${targetId}/games/iidx-sp/pbs/${chartPg}`);
 
 		expect(res.status).toBe(404);
 		expect(res.body.description).toContain("not played");
@@ -363,7 +363,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/pbs/:chartID", () => {
 		await seedIidxSpProfile(targetId);
 		const { chartPg } = await seedIidxChartPb({ userId: targetId });
 
-		const res = await mockApi.get(`/api/v1/users/${targetId}/games/iidx/SP/pbs/${chartPg}`);
+		const res = await mockApi.get(`/api/v1/users/${targetId}/games/iidx-sp/pbs/${chartPg}`);
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
@@ -380,7 +380,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/pbs/:chartID", () => {
 		});
 
 		const res = await mockApi.get(
-			`/api/v1/users/${targetId}/games/iidx/SP/pbs/${chartPg}?getComposition=1`,
+			`/api/v1/users/${targetId}/games/iidx-sp/pbs/${chartPg}?getComposition=1`,
 		);
 
 		expect(res.status).toBe(200);

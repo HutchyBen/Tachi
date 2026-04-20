@@ -90,7 +90,7 @@ for (const music of xmlData.mdb.music) {
 		const difficulty = getDifficulty(diffKey, music.info.inf_ver["#text"]);
 
 		const chartIndex = charts.findIndex(
-			(chart) => chart.songID === id && chart.difficulty === difficulty,
+			(chart) => chart.song.id === id && chart.difficulty === difficulty,
 		);
 		if (chartIndex === -1) {
 			charts.push({

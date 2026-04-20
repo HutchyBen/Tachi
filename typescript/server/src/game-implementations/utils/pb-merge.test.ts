@@ -1,4 +1,4 @@
-import type { MONGO_ScoreData } from "tachi-common";
+import type { ScoreData } from "tachi-common";
 
 import { mongoScoreDataToPg } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
@@ -15,10 +15,10 @@ describe("CreatePBMergeFor (Postgres)", () => {
 		userId: number,
 		scores: Array<{
 			highlight?: boolean;
-			mongo: MONGO_ScoreData<"iidx:SP">;
+			mongo: ScoreData<"iidx-sp">;
 			timeAchievedMs: number;
 		}>,
-	): Promise<{ chartLegacyId: string }> {
+	): Promise<{ chartId: string; chartLegacyId: string }> {
 		const n = ++counter;
 		const songId = `song-pbm-${n}`;
 		const chartId = `chart-pbm-${n}`;
@@ -55,7 +55,7 @@ describe("CreatePBMergeFor (Postgres)", () => {
 
 		for (const s of scores) {
 			const scoreId = `score-pbm-${n}-${s.timeAchievedMs}`;
-			const { data, derived, judgements } = mongoScoreDataToPg("iidx:SP", {
+			const { data, derived, judgements } = mongoScoreDataToPg("iidx-sp", {
 				...s.mongo,
 				judgements: s.mongo.judgements ?? {},
 			});
@@ -82,7 +82,7 @@ describe("CreatePBMergeFor (Postgres)", () => {
 				.execute();
 		}
 
-		return { chartLegacyId };
+		return { chartLegacyId, chartId };
 	}
 
 	const basePb = () =>
@@ -90,8 +90,7 @@ describe("CreatePBMergeFor (Postgres)", () => {
 			composedFrom: [{ name: "Primary", scoreID: "x" }],
 			userID: 0,
 			chartID: "",
-			game: "iidx",
-			playtype: "SP",
+			game: "iidx-sp",
 			songID: 0,
 			scoreData: {} as any,
 			calculatedData: {},
@@ -102,7 +101,7 @@ describe("CreatePBMergeFor (Postgres)", () => {
 
 	it("returns null when no scores match", async () => {
 		const { id: userId } = await seedUser();
-		const merge = CreatePBMergeFor<"iidx:SP">(
+		const merge = CreatePBMergeFor<"iidx-sp">(
 			"largest",
 			{ metric: "score", type: "REGULAR" },
 			"Best Score",
@@ -114,7 +113,7 @@ describe("CreatePBMergeFor (Postgres)", () => {
 
 	it("picks largest score", async () => {
 		const { id: userId } = await seedUser();
-		const { chartLegacyId } = await seedIidxChartAndScores(userId, [
+		const { chartId } = await seedIidxChartAndScores(userId, [
 			{
 				timeAchievedMs: 1_000_000,
 				mongo: {
@@ -123,7 +122,7 @@ describe("CreatePBMergeFor (Postgres)", () => {
 					percent: 0,
 					score: 100,
 					optional: {},
-				} as MONGO_ScoreData<"iidx:SP">,
+				} as ScoreData<"iidx-sp">,
 			},
 			{
 				timeAchievedMs: 2_000_000,
@@ -133,18 +132,18 @@ describe("CreatePBMergeFor (Postgres)", () => {
 					percent: 0,
 					score: 999,
 					optional: {},
-				} as MONGO_ScoreData<"iidx:SP">,
+				} as ScoreData<"iidx-sp">,
 			},
 		]);
 
-		const merge = CreatePBMergeFor<"iidx:SP">(
+		const merge = CreatePBMergeFor<"iidx-sp">(
 			"largest",
 			{ metric: "score", type: "REGULAR" },
 			"Best Score",
 			() => {},
 		);
 		const pb = basePb();
-		const result = await merge(userId, chartLegacyId, null, pb);
+		const result = await merge(userId, chartId, null, pb);
 
 		expect(result?.scoreID).toMatch(/^score-pbm-/u);
 		const picked = await DB.selectFrom("score")
@@ -156,7 +155,7 @@ describe("CreatePBMergeFor (Postgres)", () => {
 
 	it("breaks ties by oldest timeAchieved", async () => {
 		const { id: userId } = await seedUser();
-		const { chartLegacyId } = await seedIidxChartAndScores(userId, [
+		const { chartId } = await seedIidxChartAndScores(userId, [
 			{
 				timeAchievedMs: 5_000_000,
 				mongo: {
@@ -165,7 +164,7 @@ describe("CreatePBMergeFor (Postgres)", () => {
 					percent: 50,
 					score: 500,
 					optional: {},
-				} as MONGO_ScoreData<"iidx:SP">,
+				} as ScoreData<"iidx-sp">,
 			},
 			{
 				timeAchievedMs: 1_000_000,
@@ -175,24 +174,24 @@ describe("CreatePBMergeFor (Postgres)", () => {
 					percent: 50,
 					score: 500,
 					optional: {},
-				} as MONGO_ScoreData<"iidx:SP">,
+				} as ScoreData<"iidx-sp">,
 			},
 		]);
 
-		const merge = CreatePBMergeFor<"iidx:SP">(
+		const merge = CreatePBMergeFor<"iidx-sp">(
 			"largest",
 			{ metric: "score", type: "REGULAR" },
 			"Best Score",
 			() => {},
 		);
-		const result = await merge(userId, chartLegacyId, null, basePb());
+		const result = await merge(userId, chartId, null, basePb());
 
 		expect(result?.scoreID).toContain("1000000");
 	});
 
 	it("respects asOfTimestamp", async () => {
 		const { id: userId } = await seedUser();
-		const { chartLegacyId } = await seedIidxChartAndScores(userId, [
+		const { chartId } = await seedIidxChartAndScores(userId, [
 			{
 				timeAchievedMs: 100,
 				mongo: {
@@ -201,7 +200,7 @@ describe("CreatePBMergeFor (Postgres)", () => {
 					percent: 0,
 					score: 2000,
 					optional: {},
-				} as MONGO_ScoreData<"iidx:SP">,
+				} as ScoreData<"iidx-sp">,
 			},
 			{
 				timeAchievedMs: 5000,
@@ -211,24 +210,24 @@ describe("CreatePBMergeFor (Postgres)", () => {
 					percent: 0,
 					score: 9000,
 					optional: {},
-				} as MONGO_ScoreData<"iidx:SP">,
+				} as ScoreData<"iidx-sp">,
 			},
 		]);
 
-		const merge = CreatePBMergeFor<"iidx:SP">(
+		const merge = CreatePBMergeFor<"iidx-sp">(
 			"largest",
 			{ metric: "score", type: "REGULAR" },
 			"Best Score",
 			() => {},
 		);
-		const result = await merge(userId, chartLegacyId, 3000, basePb());
+		const result = await merge(userId, chartId, 3000, basePb());
 
 		expect(result?.scoreID).toContain("100");
 	});
 
 	it("picks smallest optional.bp", async () => {
 		const { id: userId } = await seedUser();
-		const { chartLegacyId } = await seedIidxChartAndScores(userId, [
+		const { chartId } = await seedIidxChartAndScores(userId, [
 			{
 				timeAchievedMs: 10_000,
 				mongo: {
@@ -237,7 +236,7 @@ describe("CreatePBMergeFor (Postgres)", () => {
 					percent: 50,
 					score: 400,
 					optional: { bp: 12 },
-				} as MONGO_ScoreData<"iidx:SP">,
+				} as ScoreData<"iidx-sp">,
 			},
 			{
 				timeAchievedMs: 20_000,
@@ -247,24 +246,24 @@ describe("CreatePBMergeFor (Postgres)", () => {
 					percent: 50,
 					score: 400,
 					optional: { bp: 3 },
-				} as MONGO_ScoreData<"iidx:SP">,
+				} as ScoreData<"iidx-sp">,
 			},
 		]);
 
-		const merge = CreatePBMergeFor<"iidx:SP">(
+		const merge = CreatePBMergeFor<"iidx-sp">(
 			"smallest",
 			{ metric: "bp", type: "REGULAR" },
 			"Lowest BP",
 			() => {},
 		);
-		const result = await merge(userId, chartLegacyId, null, basePb());
+		const result = await merge(userId, chartId, null, basePb());
 
 		expect(result?.scoreID).toContain("20000");
 	});
 
 	it("merges highlight from chosen score", async () => {
 		const { id: userId } = await seedUser();
-		const { chartLegacyId } = await seedIidxChartAndScores(userId, [
+		const { chartId } = await seedIidxChartAndScores(userId, [
 			{
 				timeAchievedMs: 1,
 				highlight: true,
@@ -274,11 +273,11 @@ describe("CreatePBMergeFor (Postgres)", () => {
 					percent: 0,
 					score: 50,
 					optional: {},
-				} as MONGO_ScoreData<"iidx:SP">,
+				} as ScoreData<"iidx-sp">,
 			},
 		]);
 
-		const merge = CreatePBMergeFor<"iidx:SP">(
+		const merge = CreatePBMergeFor<"iidx-sp">(
 			"largest",
 			{ metric: "score", type: "REGULAR" },
 			"Best Score",
@@ -286,7 +285,7 @@ describe("CreatePBMergeFor (Postgres)", () => {
 		);
 		const pb = basePb();
 		pb.highlight = false;
-		await merge(userId, chartLegacyId, null, pb);
+		await merge(userId, chartId, null, pb);
 		expect(pb.highlight).toBe(true);
 	});
 });

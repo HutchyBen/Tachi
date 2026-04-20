@@ -1,4 +1,4 @@
-import type { GameGroup, integer, MONGO_SongDocument, SongDocumentData } from "tachi-common";
+import type { GameGroup, SongDocument, SongDocumentData } from "tachi-common";
 
 import DB from "#services/pg/db";
 import { type Selection } from "kysely";
@@ -6,7 +6,6 @@ import { type Database } from "tachi-db";
 
 export const SELECT_SONG_DOCUMENT = [
 	"song.id as song_id",
-	"song.legacy_id as song_legacy_id",
 	"song.title as song_title",
 	"song.artist as song_artist",
 	"song.search_terms as song_search_terms",
@@ -18,7 +17,6 @@ export const SELECT_SONG_DOCUMENT = [
 /** Full `song` row for single-table queries (e.g. title search). */
 export const SELECT_SONG_ROW = [
 	"song.id",
-	"song.legacy_id",
 	"song.game_group",
 	"song.title",
 	"song.artist",
@@ -31,18 +29,13 @@ export const SELECT_SONG_ROW = [
 
 export type SongRow = Selection<Database, "song", (typeof SELECT_SONG_ROW)[number]>;
 
-/**
- * Fetches a song by its legacy numeric ID (from the URL / Mongo era), including
- * `search_terms` / `alt_titles` arrays, and returns a fully-formed MONGO_SongDocument
- * plus the Postgres UUID needed for downstream chart queries.
- */
-export async function GetSongByLegacyID(
+export async function GetSongByID(
 	game: GameGroup,
-	legacyId: number,
-): Promise<{ doc: MONGO_SongDocument; newSongID: string } | undefined> {
+	id: string,
+): Promise<{ doc: SongDocument; newSongID: string } | undefined> {
 	const row = await DB.selectFrom("song")
 		.select(SELECT_SONG_DOCUMENT)
-		.where("legacy_id", "=", legacyId)
+		.where("song.id", "=", id)
 		.where("game_group", "=", game)
 		.executeTakeFirst();
 
@@ -50,8 +43,8 @@ export async function GetSongByLegacyID(
 		return undefined;
 	}
 
-	const doc: MONGO_SongDocument = {
-		id: row.song_legacy_id,
+	const doc: SongDocument = {
+		id: row.song_id,
 		title: row.song_title,
 		artist: row.song_artist,
 		searchTerms: row.song_search_terms,
@@ -62,50 +55,33 @@ export async function GetSongByLegacyID(
 	return { doc, newSongID: row.song_id };
 }
 
-/**
- * Batch-loads song documents by legacy numeric IDs (order follows first occurrence in `legacyIds`).
- */
-export async function GetSongsByLegacyIDs(
-	game: GameGroup,
-	legacyIds: Array<integer>,
-): Promise<Array<MONGO_SongDocument>> {
-	if (legacyIds.length === 0) {
+export async function GetSongsByIDs(ids: Array<string>): Promise<Array<SongDocument>> {
+	if (ids.length === 0) {
 		return [];
 	}
 
-	const unique = [...new Set(legacyIds)];
+	const unique = [...new Set(ids)];
 
 	const songRows = await DB.selectFrom("song")
 		.select(SELECT_SONG_DOCUMENT)
-		.where("game_group", "=", game)
-		.where("legacy_id", "in", unique)
+		.where("song.id", "in", unique)
 		.execute();
 
 	if (songRows.length === 0) {
 		return [];
 	}
 
-	const byLegacy = new Map<integer, MONGO_SongDocument>();
+	const out = [];
 
 	for (const row of songRows) {
-		byLegacy.set(row.song_legacy_id, {
-			id: row.song_legacy_id,
+		out.push({
+			id: row.song_id,
 			title: row.song_title,
 			artist: row.song_artist,
 			searchTerms: row.song_search_terms,
 			altTitles: row.song_alt_titles,
-			data: row.song_data as SongDocumentData[typeof game],
+			data: row.song_data as SongDocumentData[GameGroup],
 		});
-	}
-
-	const out: Array<MONGO_SongDocument> = [];
-
-	for (const id of legacyIds) {
-		const doc = byLegacy.get(id);
-
-		if (doc) {
-			out.push(doc);
-		}
 	}
 
 	return out;
@@ -113,9 +89,9 @@ export async function GetSongsByLegacyIDs(
 
 export function ToSongDocument(
 	row: Selection<Database, "song", (typeof SELECT_SONG_DOCUMENT)[number]>,
-): MONGO_SongDocument {
+): SongDocument {
 	return {
-		id: row.song_legacy_id,
+		id: row.song_id,
 		title: row.song_title,
 		artist: row.song_artist,
 		searchTerms: row.song_search_terms,
@@ -124,9 +100,9 @@ export function ToSongDocument(
 	};
 }
 
-export function ToSongDocumentFromRow(row: SongRow): MONGO_SongDocument {
+export function ToSongDocumentFromRow(row: SongRow): SongDocument {
 	return {
-		id: row.legacy_id,
+		id: row.id,
 		title: row.title,
 		artist: row.artist,
 		searchTerms: row.search_terms,

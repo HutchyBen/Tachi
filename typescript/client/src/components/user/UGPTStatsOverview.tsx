@@ -12,21 +12,22 @@ import { StrSOV } from "#util/sorts";
 import React from "react";
 import {
 	type Classes,
-	GetGamePTConfig,
-	type GPTString,
-	type MONGO_UserGameStats,
+	GetGameConfig,
 	type ProfileRatingAlgorithms,
+	type UserGameStats,
+	type V3Game,
 } from "tachi-common";
 
-export default function UGPTRatingsTable({ ugs }: { ugs: MONGO_UserGameStats }) {
-	const gptConfig = GetGamePTConfig(ugs.game, ugs.playtype);
+export default function UGPTRatingsTable({ ugs }: { ugs: UserGameStats }) {
+	const game = ugs.game;
+	const gameConfig = GetGameConfig(game);
 
-	const ratings = Object.entries(ugs.ratings) as [ProfileRatingAlgorithms[GPTString], number][];
+	const ratings = Object.entries(ugs.ratings) as [ProfileRatingAlgorithms[V3Game], number][];
 
 	return (
 		<MiniTable className="table-sm text-center" colSpan={2} headers={["Player Stats"]}>
 			<>
-				{(Object.keys(gptConfig.classes) as Classes[GPTString][])
+				{(Object.keys(gameConfig.classes) as Classes[V3Game][])
 					.sort(StrSOV((x) => x[0]))
 					.filter((k) => ugs.classes[k] !== undefined)
 					.map((k) => (
@@ -36,9 +37,8 @@ export default function UGPTRatingsTable({ ugs }: { ugs: MONGO_UserGameStats }) 
 								<ClassBadge
 									classSet={k}
 									classValue={ugs.classes[k]!}
-									game={ugs.game}
+									game={game}
 									key={`${k}:${ugs.classes[k]}`}
-									playtype={ugs.playtype}
 									showSetOnHover={false}
 								/>
 							</td>
@@ -50,23 +50,18 @@ export default function UGPTRatingsTable({ ugs }: { ugs: MONGO_UserGameStats }) 
 							<QuickTooltip
 								tooltipContent={
 									<div>
-										{gptConfig.profileRatingAlgs[k].description}
-										{(gptConfig.profileRatingAlgs[k].associatedScoreAlgs ?? [])
+										{gameConfig.profileRatingAlgs[k].description}
+										{(gameConfig.profileRatingAlgs[k].associatedScoreAlgs ?? [])
 											.length > 0 && (
 											<>
 												<Divider />
 											</>
 										)}
-										{gptConfig.profileRatingAlgs[k].associatedScoreAlgs?.map(
+										{gameConfig.profileRatingAlgs[k].associatedScoreAlgs?.map(
 											(alg) => (
 												<div key={alg}>
-													(
-													{FormatGPTScoreRatingName(
-														ugs.game,
-														ugs.playtype,
-														alg,
-													)}
-													: {gptConfig.scoreRatingAlgs[alg].description})
+													({FormatGPTScoreRatingName(game, alg)}:{" "}
+													{gameConfig.scoreRatingAlgs[alg].description})
 												</div>
 											),
 										)}
@@ -80,11 +75,11 @@ export default function UGPTRatingsTable({ ugs }: { ugs: MONGO_UserGameStats }) 
 										textDecorationStyle: "dotted",
 									}}
 								>
-									{FormatGPTProfileRatingName(ugs.game, ugs.playtype, k)}
+									{FormatGPTProfileRatingName(game, k)}
 								</div>
 							</QuickTooltip>
 						</td>
-						<td>{FormatGPTProfileRating(ugs.game, ugs.playtype, k as any, v)}</td>
+						<td>{FormatGPTProfileRating(game, k as any, v)}</td>
 					</tr>
 				))}
 			</>

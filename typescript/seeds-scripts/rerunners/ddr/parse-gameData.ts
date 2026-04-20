@@ -1,17 +1,17 @@
 import {
+	type ChartDocument,
 	type Difficulties,
-	type GameConfig,
+	type GameGroupConfig,
 	GetGameGroupConfig,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
-	type Playtypes,
+	type LEGACY_Playtypes,
+	type SongDocument,
 	type Versions,
 } from "tachi-common";
 import { DDR_FLARE_CATEGORIES } from "tachi-common/config/game-support/ddr";
 
-import { CreateChartID, MutateCollection, ReadCollection, WriteCollection } from "../../util";
+import { CreateChartID, ReadCollection, WriteCollection } from "../../util";
 
-const gameConfig = GetGameGroupConfig("ddr") as GameConfig<"ddr">;
+const gameGroupConfig = GetGameGroupConfig("ddr") as GameGroupConfig<"ddr">;
 
 export interface Music {
 	mcode: number;
@@ -26,7 +26,7 @@ export interface Music {
 	diffLv: string;
 }
 
-const DIFFICULTIES: Array<Difficulties["ddr:DP" | "ddr:SP"]> = [
+const DIFFICULTIES: Array<Difficulties["ddr-dp" | "ddr-sp"]> = [
 	"BEGINNER",
 	"BASIC",
 	"DIFFICULT",
@@ -53,7 +53,7 @@ function seriesToFlareCategory(series: number) {
 	return DDR_FLARE_CATEGORIES.enum.NONE;
 }
 
-function buildSong(music: Music): MONGO_SongDocument<"ddr"> {
+function buildSong(music: Music): SongDocument<"ddr"> {
 	return {
 		artist: `${music.artist}`,
 		title: `${music.title}`,
@@ -70,13 +70,15 @@ function buildSong(music: Music): MONGO_SongDocument<"ddr"> {
 
 function buildChart(
 	music: Music,
-	playtype: Playtypes["ddr"],
-	difficulty: Difficulties["ddr:DP" | "ddr:SP"],
-	version: Versions["ddr:DP" | "ddr:SP"],
-): MONGO_ChartDocument<"ddr:DP" | "ddr:SP"> {
+	playtype: LEGACY_Playtypes["ddr"],
+	difficulty: Difficulties["ddr-dp" | "ddr-sp"],
+	version: Versions["ddr-dp" | "ddr-sp"],
+): ChartDocument<"ddr-dp" | "ddr-sp"> {
 	const splitDiff = music.diffLv.split(" ");
 	const diffIndex = (playtype === "SP" ? 0 : 5) + DIFFICULTIES.indexOf(difficulty);
+	const game: "ddr-dp" | "ddr-sp" = playtype === "SP" ? "ddr-sp" : "ddr-dp";
 	return {
+		game,
 		chartID: CreateChartID(),
 		songID: music.mcode,
 		difficulty: difficulty,
@@ -91,18 +93,18 @@ function buildChart(
 	};
 }
 
-export function parseGameData(version: Versions["ddr:DP" | "ddr:SP"], gameData: Music[]) {
+export function parseGameData(version: Versions["ddr-dp" | "ddr-sp"], gameData: Music[]) {
 	const songs = ReadCollection("songs-ddr.json");
 	const existingChartDocs = ReadCollection("charts-ddr.json");
-	const existingCharts = new Map<string, MONGO_ChartDocument<"ddr:DP" | "ddr:SP">>();
+	const existingCharts = new Map<string, ChartDocument<"ddr-dp" | "ddr-sp">>();
 	for (const chart of existingChartDocs) {
 		existingCharts.set(`${chart.data.inGameID}-${chart.difficulty}-${chart.playtype}`, chart);
 	}
 
-	const newSongs: MONGO_SongDocument<"ddr">[] = [];
-	const newCharts: MONGO_ChartDocument<"ddr:DP" | "ddr:SP">[] = [];
+	const newSongs: SongDocument<"ddr">[] = [];
+	const newCharts: ChartDocument<"ddr-dp" | "ddr-sp">[] = [];
 	for (const music of gameData) {
-		const song = songs.find((s: MONGO_SongDocument<"ddr">) => s.data.inGameID === music.mcode);
+		const song = songs.find((s: SongDocument<"ddr">) => s.data.inGameID === music.mcode);
 		if (!song) {
 			const newSong = buildSong(music);
 			console.log(
@@ -116,7 +118,7 @@ export function parseGameData(version: Versions["ddr:DP" | "ddr:SP"], gameData: 
 		for (let i = 0; i < 10; i++) {
 			const diff = parseInt(splitDiff[i]!, 10);
 			if (diff > 0 && diff <= 19) {
-				const playtype = gameConfig.playtypes.at(Math.floor(i / 5))!;
+				const playtype = gameGroupConfig.playtypes.at(Math.floor(i / 5))!;
 				const difficulty = DIFFICULTIES.at(i % 5)!;
 				const exists = existingCharts.get(`${music.mcode}-${difficulty}-${playtype}`);
 				if (exists) {

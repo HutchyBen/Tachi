@@ -415,7 +415,7 @@ CREATE TABLE "bms_course_lookup" (
 	),
 	title TEXT NOT NULL UNIQUE,
 	set TEXT NOT NULL,
-	playtype TEXT NOT NULL,
+	game GAME NOT NULL,
 	value TEXT NOT NULL
 );
 
@@ -427,7 +427,7 @@ CREATE TABLE "folder" (
 	title TEXT NOT NULL,
 
 	-- Used in URLs. should be short, but must be unique per game!
-	slug TEXT,
+	slug TEXT NOT NULL,
 
 	-- SQL predicate (no leading WHERE) for charts in this folder; matches seeds `where`.
 	-- Quoted: "where" is a reserved word in SQL.
@@ -437,7 +437,7 @@ CREATE TABLE "folder" (
 	version_filter TEXT[],
 	search_terms TEXT[] NOT NULL
 );
-CREATE UNIQUE INDEX folder_unique_slug_game ON "folder" (game, slug) WHERE slug IS NOT NULL;
+CREATE UNIQUE INDEX folder_unique_slug_game ON "folder" (game, slug);
 
 CREATE TABLE "table" ( -- heh
 	id TEXT PRIMARY KEY NOT NULL,
@@ -458,6 +458,8 @@ CREATE UNIQUE INDEX one_default_table_per_game ON "table" (game) WHERE default_v
 CREATE TABLE "table_folder" (
 	table_id TEXT REFERENCES "table"(id) NOT NULL,
 	folder_id TEXT REFERENCES folder(id) NOT NULL,
+	-- Order within the table; matches the `folders` array index in `tables.json`.
+	ordering INTEGER NOT NULL,
 
 	PRIMARY KEY (table_id, folder_id)
 );
@@ -522,7 +524,11 @@ CREATE TABLE "chart" (
 
 	versions TEXT[] NOT NULL,
 
-	data JSONB NOT NULL -- game specific payload
+	data JSONB NOT NULL, -- game specific payload
+
+	-- SHA-256 hex digest of chart fields that feed scoreDeriver/scoreCalcs. When this
+	-- changes, scores on the chart need re-derivation.
+	derivation_checksum TEXT
 );
 
 -- Denormalized chart → folders cache (rebuilt by app; see rebuildFolderChartLookup).
@@ -749,6 +755,58 @@ CREATE TABLE "score" (
 	-- Staging: false until post-import steps finish; then true (see score_import_uncommitted_idx).
 	committed BOOLEAN NOT NULL DEFAULT TRUE
 );
+
+-- Mark here when PBs become dirty and need to be recalculated.
+CREATE TABLE pb_dirty (
+	user_id BIGINT NOT NULL,
+	chart_id TEXT NOT NULL,
+	enqueued_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+	PRIMARY KEY (user_id, chart_id)
+);
+
+-- Mark here when scores become dirty and need to be recalculated.
+CREATE TABLE "score_rederive" (
+	chart_id TEXT NOT NULL PRIMARY KEY,
+	enqueued_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Trigger function: on any score INSERT/UPDATE/DELETE, mark the (user_id, chart_id)
+-- pair as needing PB recalculation.
+CREATE FUNCTION enqueue_pb_dirty() RETURNS trigger AS $$
+BEGIN
+	IF TG_OP = 'DELETE' THEN
+		INSERT INTO pb_dirty (user_id, chart_id)
+		VALUES (OLD.user_id, OLD.chart_id)
+		ON CONFLICT DO NOTHING;
+	ELSE
+		INSERT INTO pb_dirty (user_id, chart_id)
+		VALUES (NEW.user_id, NEW.chart_id)
+		ON CONFLICT DO NOTHING;
+	END IF;
+	RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER "score_pb_dirty"
+	AFTER INSERT OR UPDATE OR DELETE ON score
+	FOR EACH ROW EXECUTE FUNCTION enqueue_pb_dirty();
+
+-- Trigger function: on chart UPDATE, if derivation_checksum changed, enqueue the chart
+-- for score re-derivation.
+CREATE FUNCTION enqueue_score_rederive() RETURNS trigger AS $$
+BEGIN
+	IF OLD.derivation_checksum IS DISTINCT FROM NEW.derivation_checksum THEN
+		INSERT INTO score_rederive (chart_id)
+		VALUES (NEW.id)
+		ON CONFLICT DO NOTHING;
+	END IF;
+	RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER "chart_score_rederive"
+	AFTER UPDATE ON chart
+	FOR EACH ROW EXECUTE FUNCTION enqueue_score_rederive();
 
 CREATE TABLE "pb" (
 	row_id UUID PRIMARY KEY NOT NULL DEFAULT uuidv7(),

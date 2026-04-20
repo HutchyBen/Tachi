@@ -5,13 +5,18 @@ import { XMLParser } from "fast-xml-parser";
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import path from "path";
 import {
+	type ChartDocument,
 	type Difficulties,
-	GetGamePTConfig,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
+	LEGACY_GetGamePTConfig,
+	type SongDocument,
 } from "tachi-common";
 
-import { CreateChartID, ReadCollection, WriteCollection } from "../../util";
+import {
+	CreateChartID,
+	GetFreshSongIDGenerator,
+	ReadCollection,
+	WriteCollection,
+} from "../../util";
 
 const VERSION_DISPLAY_NAMES = [
 	"maimai",
@@ -121,7 +126,7 @@ if (!options.vgmsBinary) {
 	}
 }
 
-const versions = Object.keys(GetGamePTConfig("maimaidx", "Single").versions);
+const versions = Object.keys(LEGACY_GetGamePTConfig("maimaidx", "Single").versions);
 
 if (versions.indexOf(options.version) === -1) {
 	throw new Error(
@@ -133,20 +138,19 @@ if (versions.indexOf(options.version) === -1) {
 
 const isLatestVersion =
 	versions.indexOf(options.version.replace(/(-intl|-omni)$/u, "")) === versions.length - 1;
-const existingSongs: Array<MONGO_SongDocument<"maimaidx">> = ReadCollection("songs-maimaidx.json");
-const existingCharts: Array<MONGO_ChartDocument<"maimaidx:Single">> =
-	ReadCollection("charts-maimaidx.json");
+const existingSongs: Array<SongDocument<"maimaidx">> = ReadCollection("songs-maimaidx.json");
+const existingCharts: Array<ChartDocument<"maimaidx">> = ReadCollection("charts-maimaidx.json");
 const songMap = new Map(existingSongs.map((s) => [s.id, s]));
-const chartMap = new Map<string, MONGO_ChartDocument<"maimaidx:Single">>();
+const chartMap = new Map<string, ChartDocument<"maimaidx">>();
 const songTitleArtistMap = new Map<string, number>();
 const durationMap = new Map<string, number>();
 
 for (const chart of existingCharts) {
-	const song = songMap.get(chart.songID);
+	const song = songMap.get(chart.song.id);
 
 	if (song === undefined) {
 		log.error(
-			`CONSISTENCY ERROR: Chart ID ${chart.chartID} does not belong to any songs! (songID was ${chart.songID})`,
+			`CONSISTENCY ERROR: Chart ID ${chart.chartID} does not belong to any songs! (songID was ${chart.song.id})`,
 		);
 		process.exit(1);
 	}
@@ -227,8 +231,8 @@ const parser = new XMLParser({
 	},
 });
 
-const newSongs: Array<MONGO_SongDocument<"maimaidx">> = [];
-const newCharts: Array<MONGO_ChartDocument<"maimaidx:Single">> = [];
+const newSongs: Array<SongDocument<"maimaidx">> = [];
+const newCharts: Array<ChartDocument<"maimaidx">> = [];
 
 const songIDGenerator = GetFreshSongIDGenerator("maimaidx");
 
@@ -333,14 +337,16 @@ for (const optionsDir of options.input) {
 
 			// New song?
 			if (tachiSongID === undefined) {
-				tachiSongID = songIDGenerator();
+				const newSongID = songIDGenerator();
 
-				const songDoc: MONGO_SongDocument<"maimaidx"> = {
+				tachiSongID = newSongID;
+
+				const songDoc: SongDocument<"maimaidx"> = {
 					title: musicData.name.str,
 					altTitles: [],
 					searchTerms: [],
 					artist: musicData.artistName.str,
-					id: tachiSongID,
+					id: newSongID,
 					data: {
 						genre,
 						duration,
@@ -348,8 +354,8 @@ for (const optionsDir of options.input) {
 				};
 
 				newSongs.push(songDoc);
-				songTitleArtistMap.set(`${songDoc.title}-${songDoc.artist}`, tachiSongID);
-				songMap.set(tachiSongID, songDoc);
+				songTitleArtistMap.set(`${songDoc.title}-${songDoc.artist}`, newSongID);
+				songMap.set(newSongID, songDoc);
 
 				log.info(
 					`Added new song ${songDoc.artist} - ${songDoc.title} (inGameID ${inGameID}, tachiSongID ${tachiSongID}).`,
@@ -389,7 +395,7 @@ for (const optionsDir of options.input) {
 					difficultyName = `DX ${difficultyName}`;
 				}
 
-				let exists: MONGO_ChartDocument<"maimaidx:Single"> | undefined;
+				let exists: ChartDocument<"maimaidx"> | undefined;
 
 				if (inGameID === 11422) {
 					exists = chartMap.get(`-x0o0x_-${difficultyName}`);
@@ -450,10 +456,11 @@ for (const optionsDir of options.input) {
 					continue;
 				}
 
-				const chartDoc: MONGO_ChartDocument<"maimaidx:Single"> = {
+				const chartDoc: ChartDocument<"maimaidx"> = {
 					chartID: CreateChartID(),
-					songID: tachiSongID,
-					difficulty: difficultyName as Difficulties["maimaidx:Single"],
+					songID: tachiSongID!,
+					game: "maimaidx",
+					difficulty: difficultyName as Difficulties["maimaidx"],
 					isPrimary: true,
 					level,
 					levelNum,

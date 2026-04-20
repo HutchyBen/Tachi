@@ -1,6 +1,6 @@
 /**
  * Registry of Vitest packages that emit `coverage/coverage-final.json` when tests
- * run with `--coverage` (see Justfile-test `test-typescript`).
+ * run (coverage is enabled in each package’s `vitest.config`; see Justfile-test `test-typescript`).
  *
  * When you add a new workspace with Vitest + v8 coverage, append an entry here
  * and (if needed) point `coverageFinal` at that package’s reportsDirectory.
@@ -34,5 +34,15 @@ export const COVERAGE_SOURCES: readonly CoverageSource[] = [
 		id: "common",
 		packageRoot: "typescript/common",
 		coverageFinal: "typescript/common/coverage/coverage-final.json",
+	},
+	{
+		id: "db",
+		packageRoot: "typescript/db",
+		coverageFinal: "typescript/db/coverage/coverage-final.json",
+	},
+	{
+		id: "sieglinde",
+		packageRoot: "typescript/sieglinde",
+		coverageFinal: "typescript/sieglinde/coverage/coverage-final.json",
 	},
 ] as const;

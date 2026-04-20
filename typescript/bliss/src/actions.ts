@@ -95,9 +95,10 @@ export function MakeActionGuts({
 			const inputParsed = inputSchema.safeParse(input);
 
 			if (!inputParsed.success) {
-				throw new Error(
-					`Action ${kind} received invalid input: ${inputParsed.error.message}`,
-				);
+				const msg = inputParsed.error.issues
+					.map((i) => `${i.path.join(".")}: ${i.message}`)
+					.join("; ");
+				throw new ExpectedErr(400, msg || `Action ${kind} received invalid input.`);
 			}
 
 			retval = await actionBodyFn(taker, input);

@@ -1,25 +1,25 @@
 import type { SlashCommandStringOption } from "@discordjs/builders";
 
-import { FormatGameGroup, GetGameGroupConfig } from "tachi-common";
+import { FormatGame, GetGameGroupConfig } from "tachi-common";
 
 import { ServerConfig } from "../config";
 
 /**
- * Game Playtype options. Frequently used by things that might need
+ * Game options. Frequently used by things that might need
  * game specific listening.
  */
-const GPTChoices: Array<[string, string]> = [];
+const GameChoices: Array<[string, string]> = [];
 
-for (const game of ServerConfig.GAMES) {
-	const gameConfig = GetGameGroupConfig(game);
+for (const gameGroup of ServerConfig.GAME_GROUPS) {
+	const gameGroupConfig = GetGameGroupConfig(gameGroup);
 
-	for (const playtype of gameConfig.playtypes) {
-		GPTChoices.push([FormatGameGroup(game, playtype), `${game}:${playtype}`]);
+	for (const game of gameGroupConfig.games) {
+		GameChoices.push([FormatGame(game), game]);
 	}
 }
 
-export const GPTOptions = (str: SlashCommandStringOption) =>
-	str.setName("game").setDescription("Pick the relevant game.").addChoices(GPTChoices);
+export const GameOptions = (str: SlashCommandStringOption) =>
+	str.setName("game").setDescription("Pick the relevant game.").addChoices(GameChoices);
 
 export function MakeRequired(fn: (str: SlashCommandStringOption) => SlashCommandStringOption) {
 	return (str: SlashCommandStringOption) => fn(str).setRequired(true);

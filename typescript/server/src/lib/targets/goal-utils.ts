@@ -1,35 +1,27 @@
 import type { GoalCriteriaFormatter } from "#game-implementations/types";
 
-import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
-import { GetChartById } from "#lib/db-formats/chart";
+import { GAME_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
+import { GetChartByIdForGame } from "#lib/db-formats/chart";
 import { LoadFolderDocumentById } from "#lib/db-formats/folders";
-import { GetFolderChartIDs } from "#lib/folders/folders.js";
+import { GetFolderChartIDs } from "#lib/folders/folders";
 import { HumaniseChartID } from "#utils/db";
 import { HumanisedJoinArray, OnlyFloatToDP } from "#utils/misc";
 import {
-	FormatGameGroup,
-	type GameGroup,
-	GamePTToV3,
-	GetGPTConfig,
-	GetGPTString,
+	FormatGame,
+	GetGameConfig,
 	GetScoreMetricConf,
-	GetSpecificGPTConfig,
-	type GPTString,
-	type MONGO_GoalDocument,
-	type Playtype,
+	type GoalDocument,
+	type V3Game,
 } from "tachi-common";
 
 export async function CreateGoalTitle(
-	charts: MONGO_GoalDocument["charts"],
-	criteria: MONGO_GoalDocument["criteria"],
-	game: GameGroup,
-	playtype: Playtype,
+	charts: GoalDocument["charts"],
+	criteria: GoalDocument["criteria"],
+	game: V3Game,
 ) {
-	const gptString = GetGPTString(game, playtype);
+	const formattedCriteria = FormatCriteria(criteria, game);
 
-	const formattedCriteria = FormatCriteria(criteria, gptString);
-
-	const datasetName = await FormatCharts(charts, criteria, game);
+	const datasetName = await FormatCharts(charts, criteria);
 
 	// Formatting this stuff into english is hard and excruciatingly manual.
 	switch (criteria.mode) {
@@ -93,19 +85,15 @@ export async function CreateGoalTitle(
 	}
 }
 
-async function FormatCharts(
-	charts: MONGO_GoalDocument["charts"],
-	criteria: MONGO_GoalDocument["criteria"],
-	game: GameGroup,
-) {
+async function FormatCharts(charts: GoalDocument["charts"], criteria: GoalDocument["criteria"]) {
 	switch (charts.type) {
 		case "single":
-			return HumaniseChartID(game, charts.data);
+			return HumaniseChartID(charts.data);
 		case "multi": {
 			// @inefficient
 			// This could be done with significantly less db queries.
 			const formattedTitles = await Promise.all(
-				charts.data.map((chartID) => HumaniseChartID(game, chartID)),
+				charts.data.map((chartID) => HumaniseChartID(chartID)),
 			);
 
 			// In the case where this is an absolute query for *all* of these charts
@@ -132,19 +120,19 @@ async function FormatCharts(
 		default:
 			throw new Error(
 				`Invalid goal charts.type -- got ${
-					(charts as MONGO_GoalDocument["charts"]).type
+					(charts as GoalDocument["charts"]).type
 				}, which we don't support?`,
 			);
 	}
 }
 
-function FormatCriteria<GPT extends GPTString>(
-	criteria: MONGO_GoalDocument<GPT>["criteria"],
-	gptString: GPT,
+function FormatCriteria<TGame extends V3Game>(
+	criteria: GoalDocument<TGame>["criteria"],
+	game: TGame,
 ) {
-	const gptConfig = GetSpecificGPTConfig(gptString);
+	const gameConfig = GetGameConfig(game);
 
-	const conf = GetScoreMetricConf(gptConfig, criteria.key);
+	const conf = GetScoreMetricConf(gameConfig, criteria.key);
 
 	if (!conf) {
 		throw new Error(`Invalid goal criteria with key ${criteria.key}. No config exists?`);
@@ -161,7 +149,7 @@ function FormatCriteria<GPT extends GPTString>(
 	} else if (conf.type === "DECIMAL" || conf.type === "INTEGER") {
 		const fmt: GoalCriteriaFormatter | undefined =
 			// @ts-expect-error it still thinks criteria.key might be a symbol.
-			GPT_SERVER_IMPLEMENTATIONS[gptString].goalCriteriaFormatters[criteria.key];
+			GAME_IMPLEMENTATIONS[game].goalCriteriaFormatters[criteria.key];
 
 		if (!fmt) {
 			throw new Error(`No formatter defined for ${criteria.key}, yet one must exist?`);
@@ -181,25 +169,20 @@ function FormatCriteria<GPT extends GPTString>(
  * @warn This function is disgusting. This should have never happened.
  */
 export async function ValidateGoalChartsAndCriteria(
-	charts: MONGO_GoalDocument["charts"],
-	criteria: MONGO_GoalDocument["criteria"],
-	game: GameGroup,
-	playtype: Playtype,
+	charts: GoalDocument["charts"],
+	criteria: GoalDocument["criteria"],
+	game: V3Game,
 ) {
 	let chartCount = 0;
-
-	const v3Game = GamePTToV3(game, playtype);
 
 	// Validating the charts supplied
 
 	switch (charts.type) {
 		case "single": {
-			const chart = await GetChartById(v3Game, charts.data);
+			const chart = await GetChartByIdForGame(game, charts.data);
 
 			if (!chart) {
-				throw new Error(
-					`A chart with id ${charts.data} does not exist for ${game}:${playtype}.`,
-				);
+				throw new Error(`A chart with id ${charts.data} does not exist for ${game}.`);
 			}
 
 			chartCount = 1;
@@ -209,10 +192,8 @@ export async function ValidateGoalChartsAndCriteria(
 		case "folder": {
 			const folder = await LoadFolderDocumentById(charts.data);
 
-			if (!folder || folder.game !== game || folder.playtype !== playtype) {
-				throw new Error(
-					`A folder with id ${charts.data} does not exist for ${game}:${playtype}.`,
-				);
+			if (!folder || folder.game !== game) {
+				throw new Error(`A folder with id ${charts.data} does not exist for ${game}.`);
 			}
 
 			chartCount = (await GetFolderChartIDs(charts.data)).length;
@@ -227,7 +208,7 @@ export async function ValidateGoalChartsAndCriteria(
 			}
 
 			const multiCharts = await Promise.all(
-				charts.data.map((chartID) => GetChartById(v3Game, chartID)),
+				charts.data.map((chartID) => GetChartByIdForGame(game, chartID)),
 			);
 
 			if (multiCharts.some((c) => c === undefined)) {
@@ -270,20 +251,16 @@ export async function ValidateGoalChartsAndCriteria(
 		);
 	}
 
-	const gptString = GetGPTString(game, playtype);
-
 	// checking whether the key and value make sense
-	const gptConfig = GetGPTConfig(gptString);
+	const gameConfig = GetGameConfig(game);
 
-	const config = GetScoreMetricConf(gptConfig, criteria.key);
+	const config = GetScoreMetricConf(gameConfig, criteria.key);
 
 	if (!config) {
-		throw new Error(
-			`Invalid criteria.key for ${FormatGameGroup(game, playtype)} (Got ${criteria.key}).`,
-		);
+		throw new Error(`Invalid criteria.key for ${FormatGame(game)} (Got ${criteria.key}).`);
 	}
 
-	const gptImpl = GPT_SERVER_IMPLEMENTATIONS[gptString];
+	const gptImpl = GAME_IMPLEMENTATIONS[game];
 
 	switch (config.type) {
 		case "DECIMAL":
@@ -297,7 +274,7 @@ export async function ValidateGoalChartsAndCriteria(
 			let err;
 
 			if (config.chartDependentMax) {
-				const chart = await GetChartById(v3Game, charts.data as string);
+				const chart = await GetChartByIdForGame(game, charts.data as string);
 
 				if (!chart) {
 					throw new Error(

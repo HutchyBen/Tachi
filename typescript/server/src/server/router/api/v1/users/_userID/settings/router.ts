@@ -1,28 +1,18 @@
 import { ACTION_UpdateUserSettings } from "#actions/update-user-settings";
-import prValidate from "#server/middleware/prudence-validate";
-import { GetTachiData } from "#utils/req-tachi-data";
+import { withRequestedUser, withSelf } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
 import { GetSettingsForUser } from "#utils/user";
-import { Router } from "express";
-
-import { RequireSelfRequestFromUser } from "../middleware";
-
-const router: Router = Router({ mergeParams: true });
 
 /**
  * Retrieve this user's settings. Note that these settings are NOT private.
  *
  * @name GET /api/v1/users/:userID/settings
  */
-router.get("/", async (req, res) => {
-	const user = GetTachiData(req, "requestedUser");
+API_V1_ROUTER.add("GET /users/:userID/settings", withRequestedUser, async ({ ctx }) => {
+	const settings = await GetSettingsForUser(ctx.requestedUser.id);
 
-	const settings = await GetSettingsForUser(user.id);
-
-	return res.status(200).json({
-		success: true,
-		description: `Retrieved settings.`,
-		body: settings,
-	});
+	return success("Retrieved settings.", settings);
 });
 
 /**
@@ -36,29 +26,21 @@ router.get("/", async (req, res) => {
  *
  * @name PATCH /api/v1/users/:userID/settings
  */
-router.patch(
-	"/",
-	RequireSelfRequestFromUser,
-	prValidate({
-		invisible: "*boolean",
-		developerMode: "*boolean",
-		contentiousContent: "*boolean",
-		advancedMode: "*boolean",
-		deletableScores: "*boolean",
-	}),
-	async (req, res) => {
-		const user = GetTachiData(req, "requestedUser");
-		const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
+API_V1_ROUTER.add(
+	"PATCH /users/:userID/settings",
+	withRequestedUser,
+	withSelf,
+	async ({ input, ctx, req }) => {
+		const { requestedUser: user } = ctx;
+		const taker = { acct: { id: user.id, username: user.username }, ip: req.ip };
 
-		const body = req.safeBody as {
-			advancedMode?: boolean;
-			contentiousContent?: boolean;
-			deletableScores?: boolean;
-			developerMode?: boolean;
-			invisible?: boolean;
-		};
-
-		await ACTION_UpdateUserSettings(taker, body);
+		await ACTION_UpdateUserSettings(taker, {
+			advancedMode: input.advancedMode,
+			contentiousContent: input.contentiousContent,
+			deletableScores: input.deletableScores,
+			developerMode: input.developerMode,
+			invisible: input.invisible,
+		});
 
 		const settings = await GetSettingsForUser(user.id);
 
@@ -66,12 +48,6 @@ router.patch(
 			req.session.tachi.settings = settings;
 		}
 
-		return res.status(200).json({
-			success: true,
-			description: `Updated settings.`,
-			body: settings,
-		});
+		return success("Updated settings.", settings);
 	},
 );
-
-export default router;

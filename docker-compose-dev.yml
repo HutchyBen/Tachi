@@ -64,12 +64,22 @@ services:
         - tachi-minio:/data
     entrypoint: /usr/bin/minio server /data --console-address=':9001'
 
+  # Local SMTP capture + web UI (http://localhost:8025). Server uses tachi-mailpit:1025 via env.
+  tachi-mailpit:
+    container_name: tachi-mailpit
+    image: axllent/mailpit:v1.29.7
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
   tachi-dev:
     user: "1000:1000"
     tty: true
     container_name: tachi-dev
     depends_on:
       - tachi-s3
+      - tachi-mailpit
     build:
       dockerfile: Dockerfile.dev
     ports:

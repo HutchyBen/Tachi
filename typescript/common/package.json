@@ -13,7 +13,7 @@
 	},
 	"scripts": {
 		"test": "vitest",
-		"bench": "vitest bench --passWithNoTests",
+		"bench": "vitest bench",
 		"build": "tsgo -p tsconfig.build.json",
 		"prepublishOnly": "tsgo -p tsconfig.build.json",
 		"lint": "eslint .",

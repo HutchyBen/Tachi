@@ -66,7 +66,7 @@ const command: SlashCommand = {
 				.addField("Errors", result.error_count.toString(), true)
 				.addField(
 					"Your Profile",
-					`${Env.TACHI_SERVER_LOCATION}/u/${result.user_id}/games/${result.game}`,
+					`${Env.TACHI_SERVER_LOCATION}/u/${result.user_id}/games/${result.games[0]}`,
 				);
 		} catch (e) {
 			if (ExpectedErr.is(e)) {

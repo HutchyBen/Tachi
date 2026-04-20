@@ -1,38 +1,38 @@
 import {
 	type APIPermissions,
-	type GamePTConfig,
-	type GPTString,
-	type GPTStringToGame,
+	type ChallengeSubscriptionDocument,
+	type ChartDocument,
+	type ClassAchievementDocument,
+	type FolderDocument,
+	type GameConfig,
+	type GameGroup,
+	type GoalDocument,
+	type GoalSubscriptionDocument,
+	type ImportDocument,
 	type ImportTrackerFailed,
 	type integer,
-	type MONGO_ChallengeSubscriptionDocument,
-	type MONGO_ChartDocument,
-	type MONGO_ClassAchievementDocument,
-	type MONGO_FolderDocument,
-	type MONGO_GoalDocument,
-	type MONGO_GoalSubscriptionDocument,
-	type MONGO_ImportDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_QuestDocument,
-	type MONGO_QuestlineDocument,
-	type MONGO_QuestSubscriptionDocument,
-	type MONGO_ScoreDocument,
-	type MONGO_SessionDocument,
-	type MONGO_SongDocument,
-	type MONGO_TableDocument,
-	type MONGO_UserDocument,
-	type MONGO_UserGameStats,
-	type MONGO_UserGameStatsSnapshotDocument,
+	type PBScoreDocument,
 	type ProfileRatingAlgorithms,
+	type QuestDocument,
+	type QuestlineDocument,
+	type QuestSubscriptionDocument,
+	type ScoreDocument,
+	type SessionDocument,
 	type SessionScoreInfo,
 	type ShowcaseStatChart,
 	type ShowcaseStatFolder,
+	type SongDocument,
+	type TableDocument,
+	type UserDocument,
+	type UserGameStats,
+	type UserGameStatsSnapshotDocument,
+	type V3Game,
 } from "tachi-common";
 
-export interface UGPTStatsReturn<GPT extends GPTString = GPTString> {
-	gameStats: MONGO_UserGameStats;
-	firstScore: MONGO_ScoreDocument<GPT>;
-	mostRecentScore: MONGO_ScoreDocument<GPT>;
+export interface UGPTStatsReturn<GPT extends V3Game = V3Game> {
+	gameStats: UserGameStats;
+	firstScore: ScoreDocument<GPT>;
+	mostRecentScore: ScoreDocument<GPT>;
 	totalScores: number;
 	rankingData: Record<
 		ProfileRatingAlgorithms[GPT],
@@ -45,10 +45,10 @@ export interface UGPTStatsReturn<GPT extends GPTString = GPTString> {
 }
 
 export interface UGPTLeaderboardAdjacent {
-	above: MONGO_UserGameStats[];
-	below: MONGO_UserGameStats[];
-	users: MONGO_UserDocument[];
-	thisUsersStats: MONGO_UserGameStats;
+	above: UserGameStats[];
+	below: UserGameStats[];
+	users: UserDocument[];
+	thisUsersStats: UserGameStats;
 	thisUsersRanking: {
 		outOf: integer;
 		ranking: integer;
@@ -56,133 +56,140 @@ export interface UGPTLeaderboardAdjacent {
 }
 
 export interface GPTLeaderboard {
-	gameStats: MONGO_UserGameStats[];
-	users: MONGO_UserDocument[];
+	gameStats: UserGameStats[];
+	users: UserDocument[];
 }
 
 export type UGPTPreferenceStatsReturn =
 	| {
 			related: {
-				chart: MONGO_ChartDocument;
-				song: MONGO_SongDocument;
+				chart: ChartDocument;
+				song: SongDocument;
 			};
-			result: { value: number | null };
+			result: { pb: PBScoreDocument | null; playcount: number };
 			stat: ShowcaseStatChart;
 	  }
 	| {
-			related: { folder: MONGO_FolderDocument };
+			related: { folder: FolderDocument };
 			result: { outOf: integer; value: integer };
 			stat: ShowcaseStatFolder;
 	  };
 
-export type UGPTHistory = Omit<
-	MONGO_UserGameStatsSnapshotDocument,
-	"game" | "playtype" | "userID"
->[];
+export type UGPTPreferenceChartStatsReturn = Extract<
+	UGPTPreferenceStatsReturn,
+	{ stat: ShowcaseStatChart }
+>;
 
-export interface SessionReturns<GPT extends GPTString = GPTString> {
-	session: MONGO_SessionDocument;
-	scores: MONGO_ScoreDocument[];
+export type UGPTPreferenceFolderStatsReturn = Extract<
+	UGPTPreferenceStatsReturn,
+	{ stat: ShowcaseStatFolder }
+>;
+
+export type UGPTHistory = Omit<UserGameStatsSnapshotDocument, "game" | "playtype" | "userID">[];
+
+export interface SessionReturns<GPT extends V3Game = V3Game> {
+	session: SessionDocument;
+	scores: ScoreDocument[];
 	scoreInfo: Array<SessionScoreInfo>;
-	songs: MONGO_SongDocument<GPTStringToGame[GPT]>[];
-	charts: MONGO_ChartDocument<GPT>[];
-	user: MONGO_UserDocument;
+	songs: SongDocument<GameGroup>[];
+	charts: ChartDocument<GPT>[];
+	user: UserDocument;
 }
 
-export interface UGPTChartPBComposition<GPT extends GPTString = GPTString> {
-	scores: MONGO_ScoreDocument<GPT>[];
-	chart: MONGO_ChartDocument<GPT>;
-	pb: MONGO_PBScoreDocument<GPT>;
+export interface UGPTChartPBComposition<GPT extends V3Game = V3Game> {
+	scores: ScoreDocument<GPT>[];
+	chart: ChartDocument<GPT>;
+	pb: PBScoreDocument<GPT>;
 }
 
-export type UGSWithRankingData<GPT extends GPTString = GPTString> = {
+export type UGSWithRankingData<GPT extends V3Game = V3Game> = {
 	__rankingData: Record<ProfileRatingAlgorithms[GPT], { outOf: number; ranking: number }>;
-} & MONGO_UserGameStats;
+} & UserGameStats;
 
-export interface SongChartsSearch<GPT extends GPTString = GPTString> {
-	songs: MONGO_SongDocument<GPTStringToGame[GPT]>[];
-	charts: MONGO_ChartDocument<GPT>[];
+export interface SongChartsSearch<GPT extends V3Game = V3Game> {
+	songs: SongDocument<GameGroup>[];
+	charts: ChartDocument<GPT>[];
 }
 
 export interface FolderStatsInfo {
 	stats: Record<string, Record<string, integer>>;
-	folderID: string;
+	slug: string;
 	chartCount: integer;
 }
 
 export interface UGPTFolderSearch {
-	folders: MONGO_FolderDocument[];
+	folders: FolderDocument[];
 	stats: FolderStatsInfo[];
 }
 
 export interface UGPTTableReturns {
-	folders: MONGO_FolderDocument[];
+	folders: FolderDocument[];
 	stats: FolderStatsInfo[];
-	table: MONGO_TableDocument;
+	table: TableDocument;
 }
 
-export interface UGPTFolderReturns<GPT extends GPTString = GPTString> {
-	folder: MONGO_FolderDocument;
-	songs: MONGO_SongDocument<GPTStringToGame[GPT]>[];
-	charts: MONGO_ChartDocument<GPT>[];
-	pbs: MONGO_PBScoreDocument<GPT>[];
+export interface UGPTFolderReturns<GPT extends V3Game = V3Game> {
+	folder: FolderDocument;
+	songs: SongDocument<GameGroup>[];
+	charts: ChartDocument<GPT>[];
+	pbs: PBScoreDocument<GPT>[];
 }
 
-export interface GPTFolderReturns<GPT extends GPTString = GPTString> {
-	folder: MONGO_FolderDocument;
-	songs: MONGO_SongDocument<GPTStringToGame[GPT]>[];
-	charts: MONGO_ChartDocument<GPT>[];
+export interface GPTFolderReturns<GPT extends V3Game = V3Game> {
+	folder: FolderDocument;
+	songs: SongDocument<GameGroup>[];
+	charts: ChartDocument<GPT>[];
 }
 
 export interface GPTStatsReturn {
-	config: GamePTConfig;
+	config: GameConfig;
 	playerCount: integer;
 	chartCount: integer;
 	scoreCount: integer;
 }
 
 export interface RecentClassesReturn {
-	classes: MONGO_ClassAchievementDocument[];
-	users: MONGO_UserDocument[];
+	classes: ClassAchievementDocument[];
+	users: UserDocument[];
 }
 
-export interface SongsReturn<GPT extends GPTString = GPTString> {
-	song: MONGO_SongDocument<GPTStringToGame[GPT]>;
-	charts: MONGO_ChartDocument<GPT>[];
+export interface SongsReturn<GPT extends V3Game = V3Game> {
+	song: SongDocument<GameGroup>;
+	charts: ChartDocument<GPT>[];
 }
 
-export interface ChartPBLeaderboardReturn<GPT extends GPTString = GPTString> {
-	users: MONGO_UserDocument[];
-	pbs: MONGO_PBScoreDocument<GPT>[];
+export interface ChartPBLeaderboardReturn<GPT extends V3Game = V3Game> {
+	users: UserDocument[];
+	pbs: PBScoreDocument<GPT>[];
 }
 
-export interface UGPTChartLeaderboardAdjacent<GPT extends GPTString = GPTString> {
-	users: MONGO_UserDocument[];
-	pb: MONGO_PBScoreDocument<GPT>;
-	adjacentAbove: MONGO_PBScoreDocument<GPT>[];
-	adjacentBelow: MONGO_PBScoreDocument<GPT>[];
+export interface UGPTChartLeaderboardAdjacent<GPT extends V3Game = V3Game> {
+	users: UserDocument[];
+	pb: PBScoreDocument<GPT>;
+	adjacentAbove: PBScoreDocument<GPT>[];
+	adjacentBelow: PBScoreDocument<GPT>[];
 }
 
-export interface ScoreLeaderboardReturns<GPT extends GPTString = GPTString> {
-	users: MONGO_UserDocument[];
-	songs: MONGO_SongDocument<GPTStringToGame[GPT]>[];
-	charts: MONGO_ChartDocument<GPT>[];
-	pbs: MONGO_PBScoreDocument<GPT>[];
+export interface ScoreLeaderboardReturns<GPT extends V3Game = V3Game> {
+	users: UserDocument[];
+	songs: SongDocument<GameGroup>[];
+	charts: ChartDocument<GPT>[];
+	pbs: PBScoreDocument<GPT>[];
 }
 
 export interface UserLeaderboardReturns {
-	users: MONGO_UserDocument[];
-	gameStats: MONGO_UserGameStats[];
+	users: UserDocument[];
+	gameStats: UserGameStats[];
 }
 
 export interface UserRecentSummary {
 	recentPlaycount: integer;
-	recentSessions: MONGO_SessionDocument[];
-	recentFolders: MONGO_FolderDocument[];
+	recentSessions: SessionDocument[];
+	recentFolders: FolderDocument[];
 	recentFolderStats: FolderStatsInfo[];
-	recentGoals: MONGO_GoalDocument[];
-	recentImprovedGoals: MONGO_GoalSubscriptionDocument[];
-	recentAchievedGoals: MONGO_GoalSubscriptionDocument[];
+	recentGoals: GoalDocument[];
+	recentImprovedGoals: GoalSubscriptionDocument[];
+	recentAchievedGoals: GoalSubscriptionDocument[];
 }
 
 export interface ServerStatus {
@@ -194,101 +201,101 @@ export interface ServerStatus {
 }
 
 export interface ChallengeSubsReturn {
-	rivals: Array<MONGO_UserDocument>;
-	pbs: Array<MONGO_PBScoreDocument>;
-	challengeSubs: Array<MONGO_ChallengeSubscriptionDocument>;
-	songs: Array<MONGO_SongDocument>;
-	charts: Array<MONGO_ChartDocument>;
+	rivals: Array<UserDocument>;
+	pbs: Array<PBScoreDocument>;
+	challengeSubs: Array<ChallengeSubscriptionDocument>;
+	songs: Array<SongDocument>;
+	charts: Array<ChartDocument>;
 }
 
 export interface ChartRivalsReturn {
-	rivals: Array<MONGO_UserDocument>;
-	pbs: Array<MONGO_PBScoreDocument>;
+	rivals: Array<UserDocument>;
+	pbs: Array<PBScoreDocument>;
 }
 
 export interface ImportIDReturn {
-	scores: MONGO_ScoreDocument[];
-	songs: MONGO_SongDocument[];
-	charts: MONGO_ChartDocument[];
-	sessions: MONGO_SessionDocument[];
-	import: MONGO_ImportDocument;
-	user: MONGO_UserDocument;
+	scores: ScoreDocument[];
+	songs: SongDocument[];
+	charts: ChartDocument[];
+	sessions: SessionDocument[];
+	import: ImportDocument;
+	user: UserDocument;
 }
 
 export interface FailedImportsReturn {
 	failedImports: Array<ImportTrackerFailed>;
-	users: Array<MONGO_UserDocument>;
+	users: Array<UserDocument>;
 }
 
 export interface ImportsReturn {
-	imports: Array<MONGO_ImportDocument>;
-	users: Array<MONGO_UserDocument>;
+	imports: Array<ImportDocument>;
+	users: Array<UserDocument>;
 }
 
 export interface ActivityReturn {
-	recentSessions: Array<MONGO_SessionDocument>;
+	recentSessions: Array<SessionDocument>;
 
-	songs: Array<MONGO_SongDocument>;
-	charts: Array<MONGO_ChartDocument>;
-	recentlyHighlightedScores: Array<MONGO_ScoreDocument>;
-	achievedClasses: Array<MONGO_ClassAchievementDocument>;
+	songs: Array<SongDocument>;
+	charts: Array<ChartDocument>;
+	recentlyHighlightedScores: Array<ScoreDocument>;
+	achievedClasses: Array<ClassAchievementDocument>;
 
-	goals: Array<MONGO_GoalDocument>;
-	quests: Array<MONGO_QuestDocument>;
+	goals: Array<GoalDocument>;
+	quests: Array<QuestDocument>;
 
 	// recently achieved goal/quest subs
-	goalSubs: Array<MONGO_GoalSubscriptionDocument>;
-	questSubs: Array<MONGO_QuestSubscriptionDocument>;
+	goalSubs: Array<GoalSubscriptionDocument>;
+	questSubs: Array<QuestSubscriptionDocument>;
 
-	users: Array<MONGO_UserDocument>;
+	users: Array<UserDocument>;
 }
 
-export type RecordActivityReturn = Partial<Record<GPTString, ActivityReturn>>;
+export type RecordActivityReturn = Partial<Record<V3Game, ActivityReturn>>;
 
 export interface GoalsOnChartReturn {
-	goals: Array<MONGO_GoalDocument>;
-	goalSubs: Array<MONGO_GoalSubscriptionDocument>;
-	quests: Array<MONGO_QuestDocument>;
-	questSubs: Array<MONGO_QuestSubscriptionDocument>;
+	goals: Array<GoalDocument>;
+	goalSubs: Array<GoalSubscriptionDocument>;
+	quests: Array<QuestDocument>;
+	questSubs: Array<QuestSubscriptionDocument>;
 }
 
 export type GoalsOnFolderReturn = GoalsOnChartReturn;
 export type AllUGPTGoalsReturn = GoalsOnChartReturn;
 
 export interface RecentlyAchievedOrRaisedTargets {
-	goals: Array<MONGO_GoalDocument>;
-	quests: Array<MONGO_QuestDocument>;
-	goalSubs: Array<MONGO_GoalSubscriptionDocument>;
-	questSubs: Array<MONGO_QuestSubscriptionDocument>;
-	user: MONGO_UserDocument;
+	goals: Array<GoalDocument>;
+	quests: Array<QuestDocument>;
+	goalSubs: Array<GoalSubscriptionDocument>;
+	questSubs: Array<QuestSubscriptionDocument>;
+	user: UserDocument;
 }
 
 export interface GPTQuestsReturn {
-	goals: Array<MONGO_GoalDocument>;
-	quests: Array<MONGO_QuestDocument>;
+	goals: Array<GoalDocument>;
+	quests: Array<QuestDocument>;
 }
 
 export interface UGPTTargetSubs {
-	goalSubs: Array<MONGO_GoalSubscriptionDocument>;
-	questSubs: Array<MONGO_QuestSubscriptionDocument>;
+	goalSubs: Array<GoalSubscriptionDocument>;
+	questSubs: Array<QuestSubscriptionDocument>;
 }
 
 export interface QuestlineReturn {
-	questline: MONGO_QuestlineDocument;
-	quests: Array<MONGO_QuestDocument>;
-	goals: Array<MONGO_GoalDocument>;
+	questline: QuestlineDocument;
+	quests: Array<QuestDocument>;
+	goals: Array<GoalDocument>;
 }
 
 export interface QuestReturn {
-	quest: MONGO_QuestDocument;
-	questSubs: Array<MONGO_QuestSubscriptionDocument>;
-	users: Array<MONGO_UserDocument>;
-	goals: Array<MONGO_GoalDocument>;
-	parentQuestlines: Array<MONGO_QuestlineDocument>;
+	quest: QuestDocument;
+	questSubs: Array<QuestSubscriptionDocument>;
+	users: Array<UserDocument>;
+	goals: Array<GoalDocument>;
+	parentQuestlines: Array<QuestlineDocument>;
 }
 
 export type SessionFolderRaises = {
-	folder: MONGO_FolderDocument;
+	folder: FolderDocument;
 	previousCount: integer; // how many AAAs/HARD CLEARs/whatevers was on this
 	raisedCharts: Array<string>; // Array<chartID>;
 	// folder before this session?

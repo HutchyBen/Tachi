@@ -9,9 +9,9 @@ import { type TextColour } from "#types/bootstrap";
 import { RFA } from "#util/misc";
 import { heySplashes } from "#util/splashes";
 import React, { useState } from "react";
-import { type MONGO_UserDocument, UserAuthLevels } from "tachi-common";
+import { UserAuthLevels, type UserDocument } from "tachi-common";
 
-function UserProfileDropdownToggle({ user }: { user: MONGO_UserDocument }) {
+function UserProfileDropdownToggle({ user }: { user: UserDocument }) {
 	const [heySplash] = useState(RFA(heySplashes));
 	return (
 		<>
@@ -64,7 +64,7 @@ export function UserProfileDropdown({
 	style,
 }: {
 	style?: React.CSSProperties;
-	user: MONGO_UserDocument;
+	user: UserDocument;
 }) {
 	return (
 		<QuickDropdown

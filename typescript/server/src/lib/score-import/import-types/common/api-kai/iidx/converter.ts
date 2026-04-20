@@ -1,22 +1,21 @@
-import type { integer, Versions } from "tachi-common";
+import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
+import type { GamesForGroup, integer, Versions } from "tachi-common";
 import type { GetEnumValue } from "tachi-common/types/metrics";
-
-import { FormatPrError } from "#utils/prudence";
-import { FindIIDXChartOnInGameIDVersion } from "#utils/queries/charts";
-import { FindSongOnID } from "#utils/queries/songs";
-import { p } from "prudence";
-
-import type { DryScore } from "../../../../framework/common/types";
-import type { ConverterFunction } from "../../types";
-import type { KaiContext, KaiIIDXScore } from "../types";
 
 import {
 	InternalFailure,
 	InvalidScoreFailure,
 	SkipScoreFailure,
 	SongOrChartNotFoundFailure,
-} from "../../../../framework/common/converter-failures";
-import { ParseDateFromString } from "../../../../framework/common/score-utils";
+} from "#lib/score-import/framework/common/converter-failures";
+import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
+import { FormatPrError } from "#utils/prudence";
+import { FindIIDXChartOnInGameIDVersion } from "#utils/queries/charts";
+import { FindSongOnID } from "#utils/queries/songs";
+import { p } from "prudence";
+
+import type { KaiContext, KaiIIDXScore } from "../types";
 
 const PR_KAI_IIDX_SCORE = {
 	music_id: p.isPositiveInteger,
@@ -33,7 +32,7 @@ const PR_KAI_IIDX_SCORE = {
 
 function ResolveKaiLamp(
 	lamp: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7,
-): GetEnumValue<"iidx:DP" | "iidx:SP", "lamp"> {
+): GetEnumValue<GamesForGroup["iidx"], "lamp"> {
 	switch (lamp) {
 		case 0:
 			return "NO PLAY";
@@ -212,7 +211,7 @@ export const ConvertAPIKaiIIDX: ConverterFunction<unknown, KaiContext> = async (
 	// prudence checks this above.
 	const score = data as KaiIIDXScore;
 
-	const playtype = score.play_style === "SINGLE" ? "SP" : "DP";
+	const game = score.play_style === "SINGLE" ? "iidx-sp" : "iidx-dp";
 
 	const version = ConvertVersion(score.version_played);
 
@@ -229,36 +228,31 @@ export const ConvertAPIKaiIIDX: ConverterFunction<unknown, KaiContext> = async (
 		throw new SkipScoreFailure(`We don't support BEGINNER charts. Sorry!`);
 	}
 
-	const chart = await FindIIDXChartOnInGameIDVersion(
-		musicID,
-		playtype,
-		score.difficulty,
-		version,
-	);
+	const chart = await FindIIDXChartOnInGameIDVersion(game, musicID, score.difficulty, version);
 
 	if (!chart) {
 		throw new SongOrChartNotFoundFailure(
-			`Could not find chart with songID ${musicID} (${playtype} ${score.difficulty} - Version ${score.version_played})`,
+			`Could not find chart with songID ${musicID} (${game} ${score.difficulty} - Version ${score.version_played})`,
 			importType,
 			data,
 			context,
 		);
 	}
 
-	const song = await FindSongOnID("iidx", chart.songID);
+	const song = await FindSongOnID("iidx", chart.song.id);
 
 	if (!song) {
-		log.error(`Song-Chart desync with song ID ${chart.songID} (iidx).`);
-		throw new InternalFailure(`Song-Chart desync with song ID ${chart.songID} (iidx).`);
+		log.error(`Song-Chart desync with song ID ${chart.song.id} (iidx).`);
+		throw new InternalFailure(`Song-Chart desync with song ID ${chart.song.id} (iidx).`);
 	}
 
 	const lamp = ResolveKaiLamp(score.lamp);
 
 	const timeAchieved = ParseDateFromString(score.timestamp);
 
-	const dryScore: DryScore<"iidx:DP" | "iidx:SP"> = {
+	const dryScore: DryScore<typeof game> = {
 		comment: null,
-		game: "iidx",
+		game,
 		importType,
 		timeAchieved,
 		service: context.service,
@@ -278,7 +272,7 @@ export const ConvertAPIKaiIIDX: ConverterFunction<unknown, KaiContext> = async (
 	return { song, chart, dryScore };
 };
 
-function ConvertVersion(version: integer): Versions["iidx:DP" | "iidx:SP"] {
+function ConvertVersion(version: integer): Versions[GamesForGroup["iidx"]] {
 	switch (version) {
 		case 20:
 			return "20";

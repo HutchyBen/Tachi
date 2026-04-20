@@ -1,16 +1,18 @@
 import type { KtLogger } from "#lib/log/log";
+import type { ParserFunctionReturns } from "#lib/score-import/import-types/common/types";
 import type { EmptyObject } from "#utils/types";
-import type { integer } from "tachi-common";
+import type { GamesForGroup, integer } from "tachi-common";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
+import {
+	CreateMytTransport,
+	FetchMytTitleAPIID,
+} from "#lib/score-import/import-types/common/api-myt/traverse-api";
 import { GetPlaylogRequestSchema, MaimaiUser } from "#proto/generated/maimai/user_pb";
 import { create } from "@bufbuild/protobuf";
 import { ConnectError, createClient } from "@connectrpc/connect";
 
-import type { ParserFunctionReturns } from "../../common/types";
 import type { MytMaimaiDxScore } from "./types";
-
-import { CreateMytTransport, FetchMytTitleAPIID } from "../../common/api-myt/traverse-api";
 
 async function* streamPlaylog(userID: integer, log: KtLogger): AsyncIterable<MytMaimaiDxScore> {
 	const profileApiId = await FetchMytTitleAPIID(userID, "maimaidx", log);
@@ -41,11 +43,11 @@ async function* streamPlaylog(userID: integer, log: KtLogger): AsyncIterable<Myt
 export default async function ParseMytMaimaiDx(
 	userID: integer,
 	log: KtLogger,
-): Promise<ParserFunctionReturns<MytMaimaiDxScore, EmptyObject>> {
+): Promise<ParserFunctionReturns<MytMaimaiDxScore, EmptyObject, GamesForGroup["maimaidx"]>> {
 	return {
 		iterable: streamPlaylog(userID, log),
 		context: {},
 		classProvider: null,
-		game: "maimaidx",
+		gameGroup: "maimaidx",
 	};
 }

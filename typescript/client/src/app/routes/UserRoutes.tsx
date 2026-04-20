@@ -1,4 +1,3 @@
-import PlaytypeSelect from "#app/pages/dashboard/games/_game/PlaytypeSelect";
 import FoldersMainPage from "#app/pages/dashboard/users/games/_game/_playtype/folders/FoldersMainPage";
 import LeaderboardsPage from "#app/pages/dashboard/users/games/_game/_playtype/LeaderboardsPage";
 import OverviewPage from "#app/pages/dashboard/users/games/_game/_playtype/OverviewPage";
@@ -27,18 +26,11 @@ import { UserContext } from "#context/UserContext";
 import { UserSettingsContext } from "#context/UserSettingsContext";
 import { type UGPTStatsReturn } from "#types/api-returns";
 import { APIFetchV1, type APIFetchV1Return, ToAPIURL } from "#util/api";
-import { IsSupportedGame, IsSupportedPlaytype } from "#util/asserts";
+import { IsSupportedGame } from "#util/asserts";
 import React, { useContext, useEffect } from "react";
 import { useQuery } from "react-query";
 import { Redirect, Route, Switch, useHistory, useParams } from "react-router-dom";
-import {
-	FormatGameGroup,
-	type GameGroup,
-	GetGameGroupConfig,
-	type MONGO_UserDocument,
-	type MONGO_UserGameStats,
-	type Playtype,
-} from "tachi-common";
+import { FormatGame, type UserDocument, type UserGameStats, type V3Game } from "tachi-common";
 
 import ScoresPage from "../pages/dashboard/users/games/_game/_playtype/ScoresPage";
 import UserPage from "../pages/dashboard/users/UserPage";
@@ -48,7 +40,7 @@ export default function UserRoutes() {
 	const { userID } = useParams<{ userID: string }>();
 	const history = useHistory();
 
-	const { data: reqUser, error } = useApiQuery<MONGO_UserDocument>(`/users/${params.userID}`);
+	const { data: reqUser, error } = useApiQuery<UserDocument>(`/users/${params.userID}`);
 
 	const { setBackground } = useContext(BackgroundContext);
 	useEffect(() => {
@@ -105,7 +97,7 @@ export default function UserRoutes() {
 	);
 }
 
-function UserProfileRoutes({ reqUser }: { reqUser: MONGO_UserDocument }) {
+function UserProfileRoutes({ reqUser }: { reqUser: UserDocument }) {
 	const { settings } = useContext(UserSettingsContext);
 
 	return (
@@ -150,81 +142,43 @@ function UserProfileRoutes({ reqUser }: { reqUser: MONGO_UserDocument }) {
 	);
 }
 
-function UserGameRoutes({ reqUser }: { reqUser: MONGO_UserDocument }) {
-	const { game } = useParams<{ game: string }>();
-
-	if (!IsSupportedGame(game)) {
-		return <ErrorPage customMessage={`The game ${game} is not supported.`} statusCode={400} />;
-	}
-
-	const gameConfig = GetGameGroupConfig(game);
-
+function UserGameRoutes({ reqUser }: { reqUser: UserDocument }) {
 	return (
 		<Switch>
-			<Route exact path="/u/:userID/games/:game">
-				{gameConfig.playtypes.length === 1 ? (
-					<Redirect
-						to={`/u/${reqUser.username}/games/${game}/${gameConfig.playtypes[0]}`}
-					/>
-				) : (
-					<PlaytypeSelect
-						base={`/u/${reqUser.username}/games/${game}`}
-						game={game}
-						subheaderCrumbs={["Users", reqUser.username, "Games", gameConfig.name]}
-						subheaderTitle={`${reqUser.username} ${gameConfig.name} Playtype Select`}
-					/>
-				)}
-			</Route>
-
-			<Route path="/u/:userID/games/:game/:playtype">
-				<UGPTContextProvider>
-					<TargetsContextProvider>
-						<UserGamePlaytypeRoutes game={game} reqUser={reqUser} />
-					</TargetsContextProvider>
-				</UGPTContextProvider>
+			<Route path="/u/:userID/games/:game">
+				<V3UserGameRoutes reqUser={reqUser} />
 			</Route>
 		</Switch>
 	);
 }
 
-function UserGamePlaytypeRoutes({
-	reqUser,
-	game,
-}: {
-	game: GameGroup;
-	reqUser: MONGO_UserDocument;
-}) {
-	const { playtype } = useParams<{ playtype: string }>();
+function V3UserGameRoutes({ reqUser }: { reqUser: UserDocument }) {
+	const { game: gameParam } = useParams<{ game: string }>();
 
-	if (!IsSupportedPlaytype(game, playtype)) {
+	if (!IsSupportedGame(gameParam)) {
 		return (
-			<ErrorPage
-				customMessage={`The playtype ${playtype} is not supported.`}
-				statusCode={400}
-			/>
+			<ErrorPage customMessage={`The game ${gameParam} is not supported.`} statusCode={400} />
 		);
 	}
 
-	return <Inner game={game} playtype={playtype} reqUser={reqUser} />;
+	const game = gameParam;
+
+	return (
+		<UGPTContextProvider>
+			<TargetsContextProvider>
+				<Inner game={game} reqUser={reqUser} />
+			</TargetsContextProvider>
+		</UGPTContextProvider>
+	);
 }
 
-function Inner({
-	reqUser,
-	game,
-	playtype,
-}: {
-	game: GameGroup;
-	playtype: Playtype;
-	reqUser: MONGO_UserDocument;
-}) {
+function Inner({ reqUser, game }: { game: V3Game; reqUser: UserDocument }) {
 	const { user } = useContext(UserContext);
 
-	const { data, error } = useQuery<UGPTStatsReturn, APIFetchV1Return<MONGO_UserGameStats>>(
-		[reqUser.id, game, playtype],
+	const { data, error } = useQuery<UGPTStatsReturn, APIFetchV1Return<UserGameStats>>(
+		[reqUser.id, game],
 		async () => {
-			const res = await APIFetchV1<UGPTStatsReturn>(
-				`/users/${reqUser.id}/games/${game}/${playtype}`,
-			);
+			const res = await APIFetchV1<UGPTStatsReturn>(`/users/${reqUser.id}/games/${game}`);
 
 			if (!res.success) {
 				console.error(res);
@@ -255,47 +209,46 @@ function Inner({
 			<LayoutHeaderContainer
 				footer={
 					<UGPTBottomNav
-						baseUrl={`/u/${reqUser.username}/games/${game}/${playtype}`}
+						baseUrl={`/u/${reqUser.username}/games/${game}`}
 						game={game}
 						isRequestedUser={reqUser.id === user?.id}
-						playtype={playtype}
 					/>
 				}
-				header={`${reqUser.username}'s ${FormatGameGroup(game, playtype)} Profile`}
+				header={`${reqUser.username}'s ${FormatGame(game)} Profile`}
 			>
-				<UGPTHeaderBody game={game} playtype={playtype} reqUser={reqUser} stats={stats} />
+				<UGPTHeaderBody game={game} reqUser={reqUser} stats={stats} />
 			</LayoutHeaderContainer>
 			<Switch>
-				<Route exact path="/u/:userID/games/:game/:playtype">
-					<OverviewPage game={game} playtype={playtype} reqUser={reqUser} />
+				<Route exact path="/u/:userID/games/:game">
+					<OverviewPage game={game} reqUser={reqUser} />
 				</Route>
-				<Route path="/u/:userID/games/:game/:playtype/scores">
-					<ScoresPage game={game} playtype={playtype} reqUser={reqUser} />
+				<Route path="/u/:userID/games/:game/scores">
+					<ScoresPage game={game} reqUser={reqUser} />
 				</Route>
-				<Route path="/u/:userID/games/:game/:playtype/folders">
-					<FoldersMainPage game={game} playtype={playtype} reqUser={reqUser} />
+				<Route path="/u/:userID/games/:game/folders">
+					<FoldersMainPage game={game} reqUser={reqUser} />
 				</Route>
-				<Route exact path="/u/:userID/games/:game/:playtype/sessions">
-					<SessionsPage game={game} playtype={playtype} reqUser={reqUser} />
+				<Route exact path="/u/:userID/games/:game/sessions">
+					<SessionsPage game={game} reqUser={reqUser} />
 				</Route>
-				<Route path="/u/:userID/games/:game/:playtype/sessions/:sessionID">
-					<SpecificSessionPage game={game} playtype={playtype} reqUser={reqUser} />
+				<Route path="/u/:userID/games/:game/sessions/:sessionID">
+					<SpecificSessionPage game={game} reqUser={reqUser} />
 				</Route>
-				<Route path="/u/:userID/games/:game/:playtype/rivals">
-					<RivalsMainPage game={game} playtype={playtype} reqUser={reqUser} />
+				<Route path="/u/:userID/games/:game/rivals">
+					<RivalsMainPage game={game} reqUser={reqUser} />
 				</Route>
-				<Route path="/u/:userID/games/:game/:playtype/targets">
-					<TargetsPage game={game} playtype={playtype} reqUser={reqUser} />
+				<Route path="/u/:userID/games/:game/targets">
+					<TargetsPage game={game} reqUser={reqUser} />
 				</Route>
-				<Route exact path="/u/:userID/games/:game/:playtype/leaderboard">
-					<LeaderboardsPage game={game} playtype={playtype} reqUser={reqUser} />
+				<Route exact path="/u/:userID/games/:game/leaderboard">
+					<LeaderboardsPage game={game} reqUser={reqUser} />
 				</Route>
-				<Route path="/u/:userID/games/:game/:playtype/utils">
-					<UGPTUtilsPage game={game} playtype={playtype} reqUser={reqUser} />
+				<Route path="/u/:userID/games/:game/utils">
+					<UGPTUtilsPage game={game} reqUser={reqUser} />
 				</Route>
 				<RequireAuthAsUserParam>
-					<Route exact path="/u/:userID/games/:game/:playtype/settings">
-						<UGPTSettingsPage game={game} playtype={playtype} reqUser={reqUser} />
+					<Route exact path="/u/:userID/games/:game/settings">
+						<UGPTSettingsPage game={game} reqUser={reqUser} />
 					</Route>
 				</RequireAuthAsUserParam>
 				<Route path="*">

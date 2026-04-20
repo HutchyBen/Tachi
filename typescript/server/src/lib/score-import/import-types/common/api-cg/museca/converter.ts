@@ -1,4 +1,5 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
 import type { Difficulties, Versions } from "tachi-common";
 
 import {
@@ -10,7 +11,6 @@ import { MusecaGetLamp, ParseDateFromString } from "#lib/score-import/framework/
 import { FindChartOnInGameIDVersion } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { ConverterFunction } from "../../types";
 import type { CGContext, CGMusecaScore } from "../types";
 
 import { FormatCGService } from "../util";
@@ -24,13 +24,7 @@ export const ConverterAPICGMuseca: ConverterFunction<CGMusecaScore, CGContext> =
 	const difficulty = ConvertDifficulty(data.difficulty);
 	const version = ConvertVersion(data.version);
 
-	const chart = await FindChartOnInGameIDVersion(
-		"museca",
-		data.internalId,
-		"Single",
-		difficulty,
-		version,
-	);
+	const chart = await FindChartOnInGameIDVersion("museca", data.internalId, difficulty, version);
 
 	if (!chart) {
 		throw new SongOrChartNotFoundFailure(
@@ -41,18 +35,18 @@ export const ConverterAPICGMuseca: ConverterFunction<CGMusecaScore, CGContext> =
 		);
 	}
 
-	const song = await FindSongOnID("museca", chart.songID);
+	const song = await FindSongOnID("museca", chart.song.id);
 
 	if (!song) {
-		log.error(`Song-Chart desync with song ID ${chart.songID} (museca).`);
-		throw new InternalFailure(`Song-Chart desync with song ID ${chart.songID} (museca).`);
+		log.error(`Song-Chart desync with song ID ${chart.song.id} (museca).`);
+		throw new InternalFailure(`Song-Chart desync with song ID ${chart.song.id} (museca).`);
 	}
 
 	const lamp = MusecaGetLamp(data.score, data.error);
 
 	const timeAchieved = ParseDateFromString(data.dateTime);
 
-	const dryScore: DryScore<"museca:Single"> = {
+	const dryScore: DryScore<"museca"> = {
 		comment: null,
 		game: "museca",
 		importType,
@@ -76,7 +70,7 @@ export const ConverterAPICGMuseca: ConverterFunction<CGMusecaScore, CGContext> =
 	return { song, chart, dryScore };
 };
 
-function ConvertDifficulty(diff: number): Difficulties["museca:Single"] {
+function ConvertDifficulty(diff: number): Difficulties["museca"] {
 	switch (diff) {
 		case 0:
 			return "Green";
@@ -89,7 +83,7 @@ function ConvertDifficulty(diff: number): Difficulties["museca:Single"] {
 	throw new InvalidScoreFailure(`Invalid difficulty of ${diff} - Could not convert.`);
 }
 
-function ConvertVersion(ver: number): Versions["museca:Single"] {
+function ConvertVersion(ver: number): Versions["museca"] {
 	switch (ver) {
 		case 2:
 			return "1.5-b";

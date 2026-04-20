@@ -11,12 +11,12 @@ import { APIFetchV1 } from "#util/api";
 import { FormatDate } from "#util/time";
 import React, { useContext, useState } from "react";
 import { Button, Form, InputGroup, Modal } from "react-bootstrap";
-import { type MONGO_UserDocument, UserAuthLevels } from "tachi-common";
+import { UserAuthLevels, type UserDocument } from "tachi-common";
 
 import ProfileBadges from "./ProfileBadges";
 import ProfilePicture from "./ProfilePicture";
 
-export function UserHeaderBody({ reqUser }: { reqUser: MONGO_UserDocument }) {
+export function UserHeaderBody({ reqUser }: { reqUser: UserDocument }) {
 	function ConditionalSocialMediaRender({
 		mode,
 		href,
@@ -124,13 +124,7 @@ export function UserHeaderBody({ reqUser }: { reqUser: MONGO_UserDocument }) {
 	);
 }
 
-export function UserBottomNav({
-	baseUrl,
-	reqUser,
-}: {
-	baseUrl: string;
-	reqUser: MONGO_UserDocument;
-}) {
+export function UserBottomNav({ baseUrl, reqUser }: { baseUrl: string; reqUser: UserDocument }) {
 	const { user } = useContext(UserContext);
 
 	const isRequestedUser = !!(user && user.id === reqUser.id);
@@ -177,7 +171,7 @@ export function UserBottomNav({
 	return <Navbar>{navItems}</Navbar>;
 }
 
-function StatusComponent({ reqUser }: { reqUser: MONGO_UserDocument }) {
+function StatusComponent({ reqUser }: { reqUser: UserDocument }) {
 	const { user } = useContext(UserContext);
 
 	const isRequestedUser = user?.id === reqUser.id;
@@ -224,7 +218,7 @@ function ChangeStatusModal({
 	reqUser,
 }: {
 	modalShow: boolean;
-	reqUser: MONGO_UserDocument;
+	reqUser: UserDocument;
 	setModalShow: SetState<boolean>;
 }) {
 	const [status, setStatus] = useState(reqUser.status);

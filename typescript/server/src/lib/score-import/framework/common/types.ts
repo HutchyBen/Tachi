@@ -1,33 +1,32 @@
 import type { Mutable } from "#utils/types";
 import type {
 	ConfProvidedMetrics,
-	GPTString,
 	integer,
 	Judgements,
-	MONGO_ScoreDocument,
 	MongoOptionalMetrics,
-	Playtype,
+	ScoreDocument,
+	V3Game,
 } from "tachi-common";
 import type { MongoExtractMetrics } from "tachi-common/types/metrics";
 
 /**
  * ScoreData, but it's just the provided metrics (and enumIndexes don't exist).
  */
-export type DryScoreData<GPT extends GPTString> = {
-	judgements: Partial<Record<Judgements[GPT], integer | null>>;
-	optional: Mutable<MongoOptionalMetrics[GPT]>;
-} & MongoExtractMetrics<ConfProvidedMetrics[GPT]>;
+export type DryScoreData<TGame extends V3Game> = {
+	judgements: Partial<Record<Judgements[TGame], integer | null>>;
+	optional: Mutable<MongoOptionalMetrics[TGame]>;
+} & MongoExtractMetrics<ConfProvidedMetrics[TGame]>;
 
 /**
  * An intermediate score format that will be fully filled out by
  * HydrateScore.
  */
-export type DryScore<GPT extends GPTString = GPTString> = {
-	scoreData: DryScoreData<GPT>;
+export type DryScore<TGame extends V3Game = V3Game> = {
+	scoreData: DryScoreData<TGame>;
 } & Pick<
-	MONGO_ScoreDocument<GPT>,
+	ScoreDocument<TGame>,
 	"comment" | "game" | "importType" | "scoreMeta" | "service" | "timeAchieved"
 >;
 
-export type ScorePlaytypeMap = Partial<Record<Playtype, Array<MONGO_ScoreDocument>>>;
-export type ChartIDPlaytypeMap = Partial<Record<Playtype, Set<string>>>;
+export type ScoreGameMap = Partial<Record<V3Game, Array<ScoreDocument>>>;
+export type ChartIDGameMap = Partial<Record<V3Game, Set<string>>>;

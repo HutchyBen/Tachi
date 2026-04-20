@@ -1,5 +1,5 @@
 import { type Selection } from "kysely";
-import { type MONGO_QuestlineDocument, V3ToGamePT } from "tachi-common";
+import { type QuestlineDocument } from "tachi-common";
 import { type Database } from "tachi-db";
 
 export const SELECT_QUESTLINE = [
@@ -22,15 +22,12 @@ export type QuestlineRow = Selection<Database, "questline", (typeof SELECT_QUEST
 export function ToQuestlineDocument(
 	row: QuestlineRow,
 	questIdsOrdered: Array<string>,
-): MONGO_QuestlineDocument {
-	const { game, playtype } = V3ToGamePT(row.questline_game);
-
+): QuestlineDocument {
 	return {
 		questlineID: row.questline_id,
 		name: row.questline_name,
 		desc: row.questline_description,
-		game,
-		playtype,
+		game: row.questline_game,
 		quests: questIdsOrdered,
 	};
 }

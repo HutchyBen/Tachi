@@ -12,24 +12,18 @@ import { CreateQuestMap } from "#util/misc";
 import React from "react";
 import { Col, Row } from "react-bootstrap";
 import { Link, useParams } from "react-router-dom";
-import { GetGameGroupConfig } from "tachi-common";
+import { FormatGame } from "tachi-common";
 
-export default function QuestlinePage({ game, playtype }: GamePT) {
+export default function QuestlinePage({ game }: GamePT) {
 	const { questlineID } = useParams<{ questlineID: string }>();
 
 	const { data, error } = useApiQuery<QuestlineReturn>(
-		`/games/${game}/${playtype}/targets/questlines/${questlineID}`,
+		`/games/${game}/targets/questlines/${questlineID}`,
 	);
 
 	useSetSubheader(
-		[
-			"Games",
-			GetGameGroupConfig(game).name,
-			playtype,
-			"Quests",
-			data ? data.questline.name : "Loading...",
-		],
-		[game, playtype, data],
+		["Games", FormatGame(game), "Quests", data ? data.questline.name : "Loading..."],
+		[game, data],
 		data ? data.questline.name : "Loading...",
 	);
 
@@ -48,7 +42,7 @@ export default function QuestlinePage({ game, playtype }: GamePT) {
 	return (
 		<Row>
 			<Col xs={12}>
-				<Link to={`/games/${game}/${playtype}/quests`}>Go back to all questlines...</Link>
+				<Link to={`/games/${game}/quests`}>Go back to all questlines...</Link>
 				<Divider />
 				<Questline questline={data.questline} quests={questMap} />
 				<Divider />

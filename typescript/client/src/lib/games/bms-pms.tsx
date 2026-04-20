@@ -7,12 +7,12 @@ import { type GPTClientImplementation } from "#lib/types";
 import { IsNullish } from "#util/misc";
 import { NumericSOV } from "#util/sorts";
 import React from "react";
-import { COLOUR_SET, type GPTStrings, IIDXLIKE_GBOUNDARIES } from "tachi-common";
+import { COLOUR_SET, type GamesForGroup, IIDXLIKE_GBOUNDARIES } from "tachi-common";
 import { FormatSieglindeBMS } from "tachi-common/config/game-support/bms";
 
 import { bgc, CreateRatingSys } from "./_util";
 
-const BASE_IMPL: GPTClientImplementation<GPTStrings["bms" | "pms"]> = {
+const BASE_IMPL: GPTClientImplementation<GamesForGroup["bms" | "pms"]> = {
 	sessionImportantScoreCount: 20,
 	difficultyColours: {
 		CHART: COLOUR_SET.gray, // lol
@@ -95,7 +95,7 @@ const BASE_IMPL: GPTClientImplementation<GPTStrings["bms" | "pms"]> = {
 	ratingCell: ({ sc, rating }) => <RatingCell rating={rating} score={sc} />,
 };
 
-export const BMS_7K_IMPL: GPTClientImplementation<"bms:7K"> = {
+export const BMS_7K_IMPL: GPTClientImplementation<"bms-7k"> = {
 	...BASE_IMPL,
 	classColours: {
 		genocideDan: {
@@ -212,7 +212,7 @@ export const BMS_7K_IMPL: GPTClientImplementation<"bms:7K"> = {
 	},
 };
 
-export const BMS_14K_IMPL: GPTClientImplementation<"bms:14K"> = {
+export const BMS_14K_IMPL: GPTClientImplementation<"bms-14k"> = {
 	...BASE_IMPL,
 	classColours: {
 		genocideDan: BMS_7K_IMPL.classColours.genocideDan,
@@ -234,7 +234,7 @@ export const BMS_14K_IMPL: GPTClientImplementation<"bms:14K"> = {
 	},
 };
 
-export const PMS_IMPL: GPTClientImplementation<GPTStrings["pms"]> = {
+export const PMS_IMPL: GPTClientImplementation<GamesForGroup["pms"]> = {
 	...BASE_IMPL,
 	classColours: {
 		dan: {

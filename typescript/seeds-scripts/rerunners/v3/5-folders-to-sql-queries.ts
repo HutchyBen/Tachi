@@ -1,6 +1,15 @@
 import fs from "fs";
 import path from "path";
+import { computeFolderSlug, type SeedFolderRow } from "tachi-common";
 import { fileURLToPath } from "url";
+
+/**
+ * Converts legacy Mongo-style folder `data` into SQL `where` strings, then assigns
+ * `slug` per {@link computeFolderSlug} (required for Postgres `folder.slug`).
+ *
+ * After this, run `6-tables-folder-refs-to-slugs.ts` so `tables.json` lists folder
+ * slugs instead of ids (see `importSeeds` in the server).
+ */
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -424,5 +433,22 @@ for (const entry of folders) {
 	delete entry.type;
 }
 
+const slugKeys = new Map<string, string>();
+
+for (const entry of folders) {
+	const slug = computeFolderSlug(entry as SeedFolderRow);
+	const game = String(entry.game);
+	const key = `${game}\0${slug}`;
+
+	if (slugKeys.has(key)) {
+		throw new Error(
+			`Duplicate slug "${slug}" for game ${game}: "${slugKeys.get(key)}" vs "${String(entry.title)}"`,
+		);
+	}
+
+	slugKeys.set(key, String(entry.title));
+	entry.slug = slug;
+}
+
 fs.writeFileSync(FOLDERS_JSON, `${JSON.stringify(folders, null, "\t")}\n`);
-console.log(`Wrote ${FOLDERS_JSON} (${folders.length} folders).`);
+console.log(`Wrote ${FOLDERS_JSON} (${folders.length} folders, with slugs).`);

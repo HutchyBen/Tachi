@@ -2,16 +2,14 @@ import Icon from "#components/util/Icon";
 import { type SetState } from "#types/react";
 import { FormatGPTScoreRatingName, FormatGPTSessionRatingName } from "#util/misc";
 import React from "react";
-import { type GameGroup, GetGamePTConfig, type GPTString, type Playtypes } from "tachi-common";
+import { GetGameConfig, type V3Game } from "tachi-common";
 
 import { type ZTableTHProps } from "./TachiTable";
 
-// hack to get everything to work
-type AllRatings<_GPT> = any;
+type AllRatings = any;
 
-export default function SelectableRating<GPT extends GPTString>({
+export default function SelectableRating({
 	game,
-	playtype,
 	rating,
 	setRating,
 	changeSort,
@@ -19,13 +17,12 @@ export default function SelectableRating<GPT extends GPTString>({
 	reverseSort,
 	mode = "score",
 }: {
-	game: GameGroup;
+	game: V3Game;
 	mode?: "profile" | "score" | "session";
-	playtype: Playtypes[GameGroup];
-	rating: AllRatings<GPT>;
-	setRating: SetState<AllRatings<GPT>>;
+	rating: AllRatings;
+	setRating: SetState<AllRatings>;
 } & ZTableTHProps) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
 	let key: "profileRatingAlgs" | "scoreRatingAlgs" | "sessionRatingAlgs";
 	if (mode === "score") {
@@ -41,14 +38,14 @@ export default function SelectableRating<GPT extends GPTString>({
 			<div className="vstack gap-1 align-items-center justify-content-center">
 				<select
 					className="border-0 text-body fw-bolder bg-transparent rounded focus-ring focus-ring-light"
-					onChange={(v) => setRating(v.target.value as AllRatings<GPT>)}
+					onChange={(v) => setRating(v.target.value as AllRatings)}
 					value={rating}
 				>
-					{Object.keys(gptConfig[key]).map((s) => (
+					{Object.keys(gameConfig[key]).map((s) => (
 						<option key={s} value={s}>
 							{mode === "session"
-								? FormatGPTSessionRatingName(game, playtype, s)
-								: FormatGPTScoreRatingName(game, playtype, s)}
+								? FormatGPTSessionRatingName(game, s)
+								: FormatGPTScoreRatingName(game, s)}
 						</option>
 					))}
 				</select>

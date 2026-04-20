@@ -15,41 +15,45 @@ import React, { useState } from "react";
 import { Col, Form, Row } from "react-bootstrap";
 import { Route, Switch } from "react-router-dom";
 import {
-	FormatGameGroup,
-	type GameGroup,
+	type ChartDocument,
+	FormatGame,
+	GameToGameGroup,
+	GetGameConfig,
 	GetGameGroupConfig,
-	GetGamePTConfig,
-	type GPTString,
-	type MONGO_ChartDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_ScoreDocument,
-	type MONGO_SongDocument,
-	type MONGO_UserDocument,
+	type PBScoreDocument,
+	type ScoreDocument,
 	type ScoreRatingAlgorithms,
+	type SongDocument,
 	type UnsuccessfulAPIResponse,
+	type UserDocument,
+	type V3Game,
 } from "tachi-common";
 
 export default function ScoresPage({
 	reqUser,
 	game,
-	playtype,
 }: {
-	reqUser: MONGO_UserDocument;
+	reqUser: UserDocument;
 } & GamePT) {
-	const gameConfig = GetGameGroupConfig(game);
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
-	const defaultRating = useScoreRatingAlg(game, playtype);
+	const defaultRating = useScoreRatingAlg(game);
 
 	const [alg, setAlg] = useState(defaultRating);
 
 	useSetSubheader(
-		["Users", reqUser.username, "Games", gameConfig.name, playtype, "Scores"],
+		[
+			"Users",
+			reqUser.username,
+			"Games",
+			GetGameGroupConfig(GameToGameGroup(game)).name,
+			"Scores",
+		],
 		[reqUser],
-		`${reqUser.username}'s ${FormatGameGroup(game, playtype)} Scores`,
+		`${reqUser.username}'s ${FormatGame(game)} Scores`,
 	);
 
-	const base = useUGPTBase({ reqUser, game, playtype });
+	const base = useUGPTBase({ reqUser, game });
 
 	return (
 		<Row xs={{ cols: 1 }}>
@@ -71,39 +75,37 @@ export default function ScoresPage({
 			</Col>
 			<Col className="d-flex flex-column gap-4">
 				<Switch>
-					<Route exact path="/u/:userID/games/:game/:playtype/scores">
+					<Route exact path="/u/:userID/games/:game/scores">
 						<>
-							{Object.keys(gptConfig.scoreRatingAlgs).length > 1 && (
-								<AlgSelector {...{ alg, setAlg, game, playtype }} />
+							{Object.keys(gameConfig.scoreRatingAlgs).length > 1 && (
+								<AlgSelector {...{ alg, setAlg, game }} />
 							)}
 							<PBsOverview
-								url={`/users/${reqUser.id}/games/${game}/${playtype}/pbs/best?alg=${alg}`}
-								{...{ reqUser, game, playtype, alg }}
+								url={`/users/${reqUser.id}/games/${game}/pbs/best?alg=${alg}`}
+								{...{ reqUser, game, alg }}
 							/>
 						</>
 					</Route>
-					<Route path="/u/:userID/games/:game/:playtype/scores/history">
-						<ScoresOverview {...{ reqUser, game, playtype }} />
+					<Route path="/u/:userID/games/:game/scores/history">
+						<ScoresOverview {...{ reqUser, game }} />
 					</Route>
-					<Route path="/u/:userID/games/:game/:playtype/scores/all">
+					<Route path="/u/:userID/games/:game/scores/all">
 						<PBsOverview
 							game={game}
 							indexCol={false}
 							key="all-pbs"
-							playtype={playtype}
 							reqUser={reqUser}
-							url={`/users/${reqUser.id}/games/${game}/${playtype}/pbs/all`}
+							url={`/users/${reqUser.id}/games/${game}/pbs/all`}
 						/>
 					</Route>
-					<Route path="/u/:userID/games/:game/:playtype/scores/most-played">
+					<Route path="/u/:userID/games/:game/scores/most-played">
 						<PBsOverview
 							game={game}
 							indexCol
 							key="most-played-pbs"
-							playtype={playtype}
 							reqUser={reqUser}
 							showPlaycount
-							url={`/users/${reqUser.id}/games/${game}/${playtype}/most-played`}
+							url={`/users/${reqUser.id}/games/${game}/most-played`}
 						/>
 					</Route>
 				</Switch>
@@ -114,21 +116,20 @@ export default function ScoresPage({
 
 function AlgSelector({
 	game,
-	playtype,
 	alg,
 	setAlg,
 }: {
-	alg: ScoreRatingAlgorithms[GPTString];
-	setAlg: SetState<ScoreRatingAlgorithms[GPTString]>;
+	alg: ScoreRatingAlgorithms[V3Game];
+	setAlg: SetState<ScoreRatingAlgorithms[V3Game]>;
 } & GamePT) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 	return (
 		<Form.Group className="d-flex flex-column gap-1">
 			<div>Best 100 PBs according to</div>
 			<Form.Select onChange={(e) => setAlg(e.target.value as any)} value={alg}>
-				{Object.keys(gptConfig.scoreRatingAlgs).map((e) => (
+				{Object.keys(gameConfig.scoreRatingAlgs).map((e) => (
 					<option key={e} value={e}>
-						{FormatGPTScoreRatingName(game, playtype, e)}
+						{FormatGPTScoreRatingName(game, e)}
 					</option>
 				))}
 			</Form.Select>
@@ -136,11 +137,11 @@ function AlgSelector({
 	);
 }
 
-function useFetchPBs(url: string, reqUser: MONGO_UserDocument) {
+function useFetchPBs(url: string, reqUser: UserDocument) {
 	const { data, error } = useApiQuery<{
-		charts: MONGO_ChartDocument[];
-		pbs: MONGO_PBScoreDocument[];
-		songs: MONGO_SongDocument[];
+		charts: ChartDocument[];
+		pbs: PBScoreDocument[];
+		songs: SongDocument[];
 	}>(url);
 
 	return {
@@ -152,15 +153,14 @@ function useFetchPBs(url: string, reqUser: MONGO_UserDocument) {
 function PBsOverview({
 	reqUser,
 	game,
-	playtype,
 	indexCol = true,
 	showPlaycount = false,
 	url,
 	alg,
 }: {
-	alg?: ScoreRatingAlgorithms[GPTString];
+	alg?: ScoreRatingAlgorithms[V3Game];
 	indexCol?: boolean;
-	reqUser: MONGO_UserDocument;
+	reqUser: UserDocument;
 	showPlaycount?: boolean;
 	url: string;
 } & GamePT) {
@@ -184,27 +184,22 @@ function PBsOverview({
 							defaultRankingViewMode={preferredRanking}
 							game={game}
 							indexCol={indexCol}
-							playtype={playtype}
 							showPlaycount={showPlaycount}
 						/>
 					</LoadingWrapper>
 				) : (
-					<PBsSearch {...{ reqUser, game, playtype, search }} />
+					<PBsSearch {...{ reqUser, game, search }} />
 				)}
 			</div>
 		</div>
 	);
 }
 
-function FormatData<
-	D extends MONGO_PBScoreDocument | MONGO_ScoreDocument,
-	GPT extends GPTString = GPTString,
-	G extends GameGroup = GameGroup,
->(
+function FormatData<D extends PBScoreDocument | ScoreDocument>(
 	d: D[],
-	songs: MONGO_SongDocument<G>[],
-	charts: MONGO_ChartDocument<GPT>[],
-	reqUser: MONGO_UserDocument,
+	songs: SongDocument[],
+	charts: ChartDocument[],
+	reqUser: UserDocument,
 ) {
 	const songMap = new Map();
 	const chartMap = new Map();
@@ -230,11 +225,11 @@ function FormatData<
 	return data;
 }
 
-function useFetchScores(url: string, reqUser: MONGO_UserDocument) {
+function useFetchScores(url: string, reqUser: UserDocument) {
 	const { data, error } = useApiQuery<{
-		charts: MONGO_ChartDocument[];
-		scores: MONGO_ScoreDocument[];
-		songs: MONGO_SongDocument[];
+		charts: ChartDocument[];
+		scores: ScoreDocument[];
+		songs: SongDocument[];
 	}>(url);
 
 	return {
@@ -246,37 +241,30 @@ function useFetchScores(url: string, reqUser: MONGO_UserDocument) {
 function PBsSearch({
 	reqUser,
 	game,
-	playtype,
 	search,
 	alg,
 }: {
-	alg?: ScoreRatingAlgorithms[GPTString];
-	reqUser: MONGO_UserDocument;
+	alg?: ScoreRatingAlgorithms[V3Game];
+	reqUser: UserDocument;
 	search: string;
 } & GamePT) {
 	const { data, error } = useFetchPBs(
-		`/users/${reqUser.id}/games/${game}/${playtype}/pbs?search=${search}`,
+		`/users/${reqUser.id}/games/${game}/pbs?search=${search}`,
 		reqUser,
 	);
 
 	return (
 		<LoadingWrapper style={{ height: 500 }} {...{ error, dataset: data }}>
-			<PBTable
-				alg={alg}
-				dataset={data!}
-				game={game}
-				indexCol={false}
-				playtype={playtype as "DP" | "SP"}
-			/>
+			<PBTable alg={alg} dataset={data!} game={game} indexCol={false} />
 		</LoadingWrapper>
 	);
 }
 
-function ScoresOverview({ reqUser, game, playtype }: UGPT) {
+function ScoresOverview({ reqUser, game }: UGPT) {
 	const [search, setSearch] = useState("");
 
 	const { data, error } = useFetchScores(
-		`/users/${reqUser.id}/games/${game}/${playtype}/scores/recent`,
+		`/users/${reqUser.id}/games/${game}/scores/recent`,
 		reqUser,
 	);
 
@@ -292,10 +280,10 @@ function ScoresOverview({ reqUser, game, playtype }: UGPT) {
 			<div className="col-12 mt-4">
 				{search === "" ? (
 					<LoadingWrapper style={{ height: 500 }} {...{ dataset: data, error }}>
-						<ScoreTable dataset={data!} game={game} playtype={playtype as any} />
+						<ScoreTable dataset={data!} game={game} />
 					</LoadingWrapper>
 				) : (
-					<ScoresSearch {...{ reqUser, game, playtype, search }} />
+					<ScoresSearch {...{ reqUser, game, search }} />
 				)}
 			</div>
 		</div>
@@ -305,17 +293,16 @@ function ScoresOverview({ reqUser, game, playtype }: UGPT) {
 function ScoresSearch({
 	reqUser,
 	game,
-	playtype,
 	search,
-}: { reqUser: MONGO_UserDocument; search: string } & GamePT) {
+}: { reqUser: UserDocument; search: string } & GamePT) {
 	const { data, error } = useFetchScores(
-		`/users/${reqUser.id}/games/${game}/${playtype}/scores?search=${search}`,
+		`/users/${reqUser.id}/games/${game}/scores?search=${search}`,
 		reqUser,
 	);
 
 	return (
 		<LoadingWrapper style={{ height: 500 }} {...{ error, dataset: data }}>
-			<ScoreTable dataset={data!} game={game} playtype={playtype as any} />
+			<ScoreTable dataset={data!} game={game} />
 		</LoadingWrapper>
 	);
 }

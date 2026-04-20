@@ -1,13 +1,12 @@
 import type { KtLogger } from "#lib/log/log";
-import type { integer } from "tachi-common";
+import type { ParserFunctionReturns } from "#lib/score-import/import-types/common/types";
+import type { BMSGames, integer } from "tachi-common";
 
+import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { FormatPrError } from "#utils/prudence";
 import { p } from "prudence";
 
-import type { ParserFunctionReturns } from "../../common/types";
 import type { BeatorajaChart, BeatorajaContext, BeatorajaScore } from "./types";
-
-import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 
 const PR_BEATORAJA_SCORE = {
 	// sha256 **MUST** be a 64 char hex string.
@@ -81,7 +80,7 @@ export function ParseBeatorajaSingle(
 	body: Record<string, unknown>,
 	userID: integer,
 	_log: KtLogger,
-): ParserFunctionReturns<BeatorajaScore, BeatorajaContext> {
+): ParserFunctionReturns<BeatorajaScore, BeatorajaContext, BMSGames> {
 	const err = p(
 		body.score,
 		PR_BEATORAJA_SCORE,
@@ -136,7 +135,7 @@ export function ParseBeatorajaSingle(
 			userID,
 			timeReceived: Date.now(),
 		},
-		game: isPMS ? "pms" : "bms",
+		gameGroup: isPMS ? "pms" : "bms",
 		iterable: [score],
 		classProvider: null,
 	};

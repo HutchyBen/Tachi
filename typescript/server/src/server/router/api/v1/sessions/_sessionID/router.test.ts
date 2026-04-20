@@ -3,7 +3,7 @@ import { mongoScoreDataToPg } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import mockApi, { CloseServerConnection } from "#test-utils/mock-api";
 import { seedUser } from "#test-utils/pg-fixtures";
-import { type MONGO_ScoreData } from "tachi-common";
+import { type ScoreData } from "tachi-common";
 import { afterAll, describe, expect, it } from "vitest";
 
 afterAll(() => CloseServerConnection());
@@ -49,14 +49,14 @@ async function seedSessionFixture() {
 		})
 		.execute();
 
-	const { data, derived, judgements } = mongoScoreDataToPg("iidx:SP", {
+	const { data, derived, judgements } = mongoScoreDataToPg("iidx-sp", {
 		grade: "AAA",
 		lamp: "EX HARD CLEAR",
 		percent: 90,
 		score: 1400,
 		optional: {},
 		judgements: {},
-	} as MONGO_ScoreData<"iidx:SP">);
+	} as ScoreData<"iidx-sp">);
 
 	await DB.insertInto("session")
 		.values({
@@ -117,7 +117,7 @@ describe("GET /api/v1/sessions/:sessionID", () => {
 		expect(res.body.body.charts).toHaveLength(1);
 		expect(res.body.body.charts[0].chartID).toBe(CHART_PG);
 		expect(res.body.body.songs).toHaveLength(1);
-		expect(res.body.body.songs[0].id).toBe(SONG_LEGACY);
+		expect(res.body.body.songs[0].id).toBe(SONG_PG);
 		expect(res.body.body.user.id).toBe(userId);
 		expect(Array.isArray(res.body.body.scoreInfo)).toBe(true);
 	});

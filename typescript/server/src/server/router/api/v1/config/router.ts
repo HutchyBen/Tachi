@@ -1,47 +1,24 @@
+import { success } from "#lib/router/typed-router";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
-import { RequireBokutachi } from "#server/middleware/type-require";
-import { Router } from "express";
 
-const router: Router = Router({ mergeParams: true });
+import { API_V1_ROUTER } from "../router";
 
 /**
  * Returns Tachi Configuration info, such as server name, type, supported games
  * and more.
- *
- * @name GET /api/v1/config
  */
-router.get("/", (req, res) =>
-	res.status(200).json({
-		success: true,
-		description: `Returned configuration info.`,
-		body: TachiConfig,
-	}),
-);
+API_V1_ROUTER.add("GET /config", () => success("Returned configuration info.", TachiConfig));
 
 /**
  * Returns the value of the BEATORAJA_QUEUE_SIZE.
- *
- * @name GET /api/v1/config/beatoraja-queue-size
  */
-router.get("/beatoraja-queue-size", RequireBokutachi, (req, res) =>
-	res.status(200).json({
-		success: true,
-		description: `Returned BEATORAJA_QUEUE_SIZE.`,
-		body: ServerConfig.BEATORAJA_QUEUE_SIZE,
-	}),
+API_V1_ROUTER.add("GET /config/beatoraja-queue-size", () =>
+	success("Returned BEATORAJA_QUEUE_SIZE.", ServerConfig.BEATORAJA_QUEUE_SIZE),
 );
 
 /**
  * Returns the maximum amount of rivals a user can have on this instance.
- *
- * @name GET /api/v1/config/max-rivals
  */
-router.get("/max-rivals", (req, res) =>
-	res.status(200).json({
-		success: true,
-		description: `Returned MAX_RIVALS.`,
-		body: ServerConfig.MAX_RIVALS,
-	}),
+API_V1_ROUTER.add("GET /config/max-rivals", () =>
+	success("Returned MAX_RIVALS.", ServerConfig.MAX_RIVALS),
 );
-
-export default router;

@@ -3,7 +3,7 @@ import Muted from "#components/util/Muted";
 import { ToCDNURL } from "#util/api";
 import { CreateChartLink } from "#util/data";
 import React from "react";
-import { type GameGroup, type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
+import { type ChartDocument, type SongDocument, type V3Game } from "tachi-common";
 
 export default function TitleCell({
 	game,
@@ -16,13 +16,13 @@ export default function TitleCell({
 }: {
 	// chart is optional as we overload this titlecell to render pretty song tables
 	// in some places
-	chart?: MONGO_ChartDocument;
+	chart?: ChartDocument;
 	comment?: string | null;
-	game: GameGroup;
+	game: V3Game;
 	noArtist?: boolean;
 	showAltTitles?: boolean;
 	showSearchTerms?: boolean;
-	song: MONGO_SongDocument;
+	song: SongDocument;
 }) {
 	let backgroundImage = undefined;
 	let center = false;
@@ -31,8 +31,8 @@ export default function TitleCell({
 		backgroundImage = `url(${ToCDNURL(
 			`/misc/popn/banners/${(chart as any).data.inGameID}.png`,
 		)})`;
-	} else if (game === "itg" && chart) {
-		const itgChart = chart as MONGO_ChartDocument<"itg:Stamina">;
+	} else if (game === "itg-stamina" && chart) {
+		const itgChart = chart as ChartDocument<"itg-stamina">;
 		const banner = itgChart.data.bannerLocationOverride ?? itgChart.data.originalPack;
 
 		if (banner) {
@@ -56,16 +56,16 @@ export default function TitleCell({
 		>
 			{game === "popn" && (
 				<>
-					{(song as MONGO_SongDocument<"popn">).data.genre === song.title ||
-					(song as MONGO_SongDocument<"popn">).data.genre === null ? (
+					{(song as SongDocument<"popn">).data.genre === song.title ||
+					(song as SongDocument<"popn">).data.genre === null ? (
 						<Muted>Unknown Genre</Muted>
 					) : (
-						(song as MONGO_SongDocument<"popn">).data.genre
+						(song as SongDocument<"popn">).data.genre
 					)}
 					<br />
 				</>
 			)}
-			<GentleLink to={chart ? CreateChartLink(chart, game) : ""}>
+			<GentleLink to={chart ? CreateChartLink(chart) : ""}>
 				{song.title}
 
 				{!noArtist && (

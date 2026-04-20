@@ -2,7 +2,7 @@
 import type { Kysely } from "kysely";
 import type { Database, NewFolderChartLookup } from "tachi-db";
 
-import { computeFolderChartIdsFromFolderSql } from "./folder-query.js";
+import { computeFolderChartIdsFromFolderSql } from "./folder-query";
 
 const INSERT_CHUNK = 500;
 

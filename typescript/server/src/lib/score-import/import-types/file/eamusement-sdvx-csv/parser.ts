@@ -1,12 +1,12 @@
 import type { KtLogger } from "#lib/log/log";
+import type { ParserFunctionReturns } from "#lib/score-import/import-types/common/types";
 import type { EmptyObject } from "#utils/types";
+import type { GamesForGroup } from "tachi-common";
 
+import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { CSVParseError, NaiveCSVParse } from "#utils/naive-csv-parser";
 
-import type { ParserFunctionReturns } from "../../common/types";
 import type { SDVXEamusementCSVData } from "./types";
-
-import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 
 const HEADER_COUNT = 11;
 
@@ -29,7 +29,7 @@ export default function ParseEamusementSDVXCSV(
 	fileData: Express.Multer.File,
 	_body: Record<string, unknown>,
 	log: KtLogger,
-): ParserFunctionReturns<SDVXEamusementCSVData, EmptyObject> {
+): ParserFunctionReturns<SDVXEamusementCSVData, EmptyObject, GamesForGroup["sdvx"]> {
 	let rawHeaders: Array<string>;
 	let rawRows: Array<Array<string>>;
 
@@ -69,7 +69,7 @@ export default function ParseEamusementSDVXCSV(
 	return {
 		iterable,
 		context: {},
-		game: "sdvx",
+		gameGroup: "sdvx",
 		classProvider: null,
 	};
 }

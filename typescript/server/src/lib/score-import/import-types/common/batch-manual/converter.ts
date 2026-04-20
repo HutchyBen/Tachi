@@ -1,5 +1,12 @@
 import type { KtLogger } from "#lib/log/log";
+import type { DryScore } from "#lib/score-import/framework/common/types";
 
+import {
+	InternalFailure,
+	InvalidScoreFailure,
+	SongOrChartNotFoundFailure,
+} from "#lib/score-import/framework/common/converter-failures";
+import { AssertStrAsDifficulty } from "#lib/score-import/framework/common/string-asserts";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { staticAssertUnreachable } from "#utils/misc";
 import {
@@ -8,13 +15,13 @@ import {
 	FindChartOnInGameIDVersion,
 	FindChartOnInGameStrIDPrimary,
 	FindChartOnInGameStrIDVersion,
-	FindChartWithPTDF,
-	FindChartWithPTDFVersion,
+	FindChartWithSongDifficulty,
+	FindChartWithSongDifficultyVersion,
 	FindITGChartOnHash,
 	FindPopnChartOnHashSHA256,
 	FindSDVXChartOnInGameID,
 	FindSDVXChartOnInGameIDVersion,
-	FindUSCChartOnSHA1Playtype,
+	FindUSCChartOnSHA1,
 	SongHasAnyChart,
 } from "#utils/queries/charts";
 import {
@@ -24,32 +31,21 @@ import {
 } from "#utils/queries/songs";
 import {
 	type BatchManualScore,
+	type ChartDocument,
 	type Difficulties,
-	FormatGameGroup,
-	GetGamePTConfig,
-	type GPTString,
+	FormatGame,
+	GetGameConfig,
+	LEGACY_GameToGameGroupPT,
+	LEGACY_GetGamePTConfig,
 	type MatchTypeResolver,
 	type MatchTypeResolverWithDifficulty,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
 	type MongoProvidedMetrics,
-	type Playtypes,
+	type SongDocument,
 	type Versions,
 } from "tachi-common";
 
-import type { DryScore } from "../../../framework/common/types";
 import type { ConverterFunction } from "../types";
 import type { BatchManualContext } from "./types";
-
-import {
-	InternalFailure,
-	InvalidScoreFailure,
-	SongOrChartNotFoundFailure,
-} from "../../../framework/common/converter-failures";
-import {
-	AssertStrAsDifficulty,
-	AssertStrAsPositiveInt,
-} from "../../../framework/common/string-asserts";
 
 // only public because used in tests; ts has no way of doing that
 // lol
@@ -66,7 +62,6 @@ export function BatchManualScoreToResolver(
 		artist: data.artist,
 		version: context.version,
 		game: context.game,
-		playtype: context.playtype,
 	};
 
 	return resolver;
@@ -84,7 +79,7 @@ export const ConverterBatchManual: ConverterFunction<BatchManualScore, BatchManu
 	importType,
 	log,
 ) => {
-	const { game, playtype } = context;
+	const { game } = context;
 
 	const resolver = BatchManualScoreToResolver(data, context);
 
@@ -111,11 +106,11 @@ export const ConverterBatchManual: ConverterFunction<BatchManualScore, BatchManu
 
 	// create the metrics for this score.
 	// @ts-expect-error this is filled out in a second, promise!
-	const metrics: MongoProvidedMetrics[GPTString] = {};
+	const metrics: MongoProvidedMetrics[V3Game] = {};
 
-	const config = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
-	for (const key of Object.keys(config.providedMetrics)) {
+	for (const key of Object.keys(gameConfig.providedMetrics)) {
 		// @ts-expect-error hacky type messery
 		metrics[key] = data[key];
 	}
@@ -149,27 +144,26 @@ export const ConverterBatchManual: ConverterFunction<BatchManualScore, BatchManu
 export async function ResolveSongAndChart(
 	resolver: MatchTypeResolver,
 	log: KtLogger,
-): Promise<{ chart: MONGO_ChartDocument; song: MONGO_SongDocument } | null> {
-	const { game, playtype } = resolver;
+): Promise<{ chart: ChartDocument; song: SongDocument } | null> {
+	const { game } = resolver;
+	const { gameGroup, playtype } = LEGACY_GameToGameGroupPT(game);
 
-	const config = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
-	if (!config.supportedMatchTypes.includes(resolver.matchType)) {
+	if (!gameConfig.supportedMatchTypes.includes(resolver.matchType)) {
 		// special, more helpful error message
 		if (game === "sdvx" && resolver.matchType === "inGameID") {
 			throw new InvalidScoreFailure(
-				`Cannot use matchType ${resolver.matchType} for ${FormatGameGroup(
+				`Cannot use matchType ${resolver.matchType} for ${FormatGame(
 					game,
-					playtype,
 				)}. Use 'sdvxInGameID' instead.`,
 			);
 		}
 
 		throw new InvalidScoreFailure(
-			`Cannot use matchType ${resolver.matchType} for ${FormatGameGroup(
+			`Cannot use matchType ${resolver.matchType} for ${FormatGame(
 				game,
-				playtype,
-			)}. Expected any of ${config.supportedMatchTypes.join(", ")}.`,
+			)}. Expected any of ${gameConfig.supportedMatchTypes.join(", ")}.`,
 		);
 	}
 
@@ -182,18 +176,18 @@ export async function ResolveSongAndChart(
 				return null;
 			}
 
-			if (chart.playtype !== playtype) {
+			if (chart.game !== game) {
 				throw new InvalidScoreFailure(
-					`Chart ${chart.chartID}'s playtype was ${chart.playtype}, but this was not equal to the import playtype of ${playtype}.`,
+					`Chart ${chart.chartID}'s game was ${chart.game}, but this was not equal to the resolver game of ${game}.`,
 				);
 			}
 
-			const song = await FindSongOnID(game, chart.songID);
+			const song = await FindSongOnID(gameGroup, chart.song.id);
 
 			if (!song) {
-				log.error(`BMS songID ${chart.songID} has charts but no parent song.`);
+				log.error(`BMS songID ${chart.song.id} has charts but no parent song.`);
 				throw new InternalFailure(
-					`BMS songID ${chart.songID} has charts but no parent song.`,
+					`BMS songID ${chart.song.id} has charts but no parent song.`,
 				);
 			}
 
@@ -207,12 +201,12 @@ export async function ResolveSongAndChart(
 				return null;
 			}
 
-			const song = await FindSongOnID(game, chart.songID);
+			const song = await FindSongOnID(gameGroup, chart.song.id);
 
 			if (!song) {
-				log.error(`ITG songID ${chart.songID} has charts but no parent song.`);
+				log.error(`ITG songID ${chart.song.id} has charts but no parent song.`);
 				throw new InternalFailure(
-					`ITG songID ${chart.songID} has charts but no parent song.`,
+					`ITG songID ${chart.song.id} has charts but no parent song.`,
 				);
 			}
 
@@ -220,22 +214,22 @@ export async function ResolveSongAndChart(
 		}
 
 		case "popnChartHash": {
-			if (playtype !== "9B") {
-				throw new InvalidScoreFailure(`Invalid playtype '${playtype}', expected 9B.`);
+			if (game !== "popn") {
+				throw new InvalidScoreFailure(`Invalid game '${game}', expected popn.`);
 			}
 
-			const chart = await FindPopnChartOnHashSHA256(resolver.identifier, playtype);
+			const chart = await FindPopnChartOnHashSHA256(resolver.identifier);
 
 			if (!chart) {
 				return null;
 			}
 
-			const song = await FindSongOnID(game, chart.songID);
+			const song = await FindSongOnID(gameGroup, chart.song.id);
 
 			if (!song) {
-				log.error(`Pop'n songID ${chart.songID} has charts but no parent song.`);
+				log.error(`Pop'n songID ${chart.song.id} has charts but no parent song.`);
 				throw new InternalFailure(
-					`Pop'n songID ${chart.songID} has charts but no parent song.`,
+					`Pop'n songID ${chart.song.id} has charts but no parent song.`,
 				);
 			}
 
@@ -243,12 +237,7 @@ export async function ResolveSongAndChart(
 		}
 
 		case "tachiSongID": {
-			const songID = AssertStrAsPositiveInt(
-				resolver.identifier,
-				"Invalid songID - must be a stringified positive integer.",
-			);
-
-			const song = await FindSongOnID(game, songID);
+			const song = await FindSongOnID(gameGroup, resolver.identifier);
 
 			if (!song) {
 				return null;
@@ -265,7 +254,7 @@ export async function ResolveSongAndChart(
 
 		case "songTitle": {
 			const song = await FindSongOnTitleInsensitive(
-				game,
+				gameGroup,
 				resolver.identifier,
 				resolver.artist,
 			);
@@ -284,11 +273,11 @@ export async function ResolveSongAndChart(
 		}
 
 		case "sdvxInGameID": {
-			let chart: MONGO_ChartDocument | null;
+			let chart: ChartDocument | null;
 
 			const identifier = Number(resolver.identifier);
 
-			const config = GetGamePTConfig("sdvx", "Single");
+			const config = LEGACY_GetGamePTConfig("sdvx", "Single");
 
 			if (config.difficulties.type === "DYNAMIC") {
 				log.error(
@@ -314,7 +303,7 @@ export async function ResolveSongAndChart(
 				);
 			}
 
-			const diff = resolver.difficulty as "ANY_INF" | Difficulties["sdvx:Single"];
+			const diff = resolver.difficulty as "ANY_INF" | Difficulties["sdvx"];
 
 			if (resolver.version) {
 				if (!Object.keys(config.versions).includes(resolver.version)) {
@@ -328,7 +317,7 @@ export async function ResolveSongAndChart(
 				chart = await FindSDVXChartOnInGameIDVersion(
 					identifier,
 					diff,
-					resolver.version as Versions["sdvx:Single"],
+					resolver.version as Versions["sdvx"],
 				);
 			} else {
 				chart = await FindSDVXChartOnInGameID(identifier, diff);
@@ -338,10 +327,10 @@ export async function ResolveSongAndChart(
 				return null;
 			}
 
-			const song = await FindSongOnID("sdvx", chart.songID);
+			const song = await FindSongOnID("sdvx", chart.song.id);
 
 			if (!song) {
-				log.error(`Song-Chart desync on ${chart.songID}.`);
+				log.error(`Song-Chart desync on ${chart.song.id}.`);
 				throw new InternalFailure(`Failed to get song for a chart that exists.`);
 			}
 
@@ -351,35 +340,29 @@ export async function ResolveSongAndChart(
 		case "inGameID": {
 			const identifier = Number(resolver.identifier);
 
-			const difficulty = AssertStrAsDifficulty(resolver.difficulty, game, resolver.playtype);
+			const difficulty = AssertStrAsDifficulty(resolver.difficulty, game);
 
-			let chart: MONGO_ChartDocument | null;
+			let chart: ChartDocument | null;
 
 			if (resolver.version) {
 				chart = await FindChartOnInGameIDVersion(
 					game,
 					identifier,
-					resolver.playtype,
 					difficulty,
 					resolver.version,
 				);
 			} else {
-				chart = await FindChartOnInGameIDPrimary(
-					game,
-					identifier,
-					resolver.playtype,
-					difficulty,
-				);
+				chart = await FindChartOnInGameIDPrimary(game, identifier, difficulty);
 			}
 
 			if (!chart) {
 				return null;
 			}
 
-			const song = await FindSongOnID(game, chart.songID);
+			const song = await FindSongOnID(gameGroup, chart.song.id);
 
 			if (!song) {
-				log.error(`Song-Chart desync on ${chart.songID}.`);
+				log.error(`Song-Chart desync on ${chart.song.id}.`);
 				throw new InternalFailure(`Failed to get song for a chart that exists.`);
 			}
 
@@ -387,35 +370,29 @@ export async function ResolveSongAndChart(
 		}
 
 		case "inGameStrID": {
-			const difficulty = AssertStrAsDifficulty(resolver.difficulty, game, resolver.playtype);
+			const difficulty = AssertStrAsDifficulty(resolver.difficulty, game);
 
-			let chart: MONGO_ChartDocument | null;
+			let chart: ChartDocument | null;
 
 			if (resolver.version) {
 				chart = await FindChartOnInGameStrIDVersion(
 					game,
 					resolver.identifier,
-					resolver.playtype,
 					difficulty,
 					resolver.version,
 				);
 			} else {
-				chart = await FindChartOnInGameStrIDPrimary(
-					game,
-					resolver.identifier,
-					resolver.playtype,
-					difficulty,
-				);
+				chart = await FindChartOnInGameStrIDPrimary(game, resolver.identifier, difficulty);
 			}
 
 			if (!chart) {
 				return null;
 			}
 
-			const song = await FindSongOnID(game, chart.songID);
+			const song = await FindSongOnID(gameGroup, chart.song.id);
 
 			if (!song) {
-				log.error(`Song-Chart desync on ${chart.songID}.`);
+				log.error(`Song-Chart desync on ${chart.song.id}.`);
 				throw new InternalFailure(`Failed to get song for a chart that exists.`);
 			}
 
@@ -423,24 +400,24 @@ export async function ResolveSongAndChart(
 		}
 
 		case "uscChartHash": {
-			if (game !== "usc") {
+			if (gameGroup !== "usc") {
 				throw new InvalidScoreFailure(`uscChartHash matchType can only be used on USC.`);
 			}
 
-			if (playtype !== "Controller" && playtype !== "Keyboard") {
+			if (game !== "usc-controller" && game !== "usc-keyboard") {
 				throw new InvalidScoreFailure(`Invalid playtype, expected Keyboard or Controller.`);
 			}
 
-			const chart = await FindUSCChartOnSHA1Playtype(resolver.identifier, playtype);
+			const chart = await FindUSCChartOnSHA1(resolver.identifier, game);
 
 			if (!chart) {
 				return null;
 			}
 
-			const song = await FindSongOnID(game, chart.songID);
+			const song = await FindSongOnID(gameGroup, chart.song.id);
 
 			if (!song) {
-				log.error(`Song-Chart desync on ${chart.songID}.`);
+				log.error(`Song-Chart desync on ${chart.song.id}.`);
 				throw new InternalFailure(`Failed to get song for a chart that exists.`);
 			}
 
@@ -448,11 +425,11 @@ export async function ResolveSongAndChart(
 		}
 
 		case "ddrSongHash": {
-			if (game !== "ddr") {
+			if (gameGroup !== "ddr") {
 				throw new InvalidScoreFailure(`ddrSongHash matchType can only be used on DDR.`);
 			}
 
-			const difficulty = AssertStrAsDifficulty(resolver.difficulty, game, resolver.playtype);
+			const difficulty = AssertStrAsDifficulty(resolver.difficulty, game);
 
 			const song = await FindDDRSongOnDDRSongHash(resolver.identifier);
 
@@ -465,25 +442,17 @@ export async function ResolveSongAndChart(
 				throw new InternalFailure(`Failed to get chart for a song that exists.`);
 			}
 
-			let chart: MONGO_ChartDocument | null;
-
-			type DDRGPT = `ddr:${Playtypes["ddr"]}`;
+			let chart: ChartDocument | null;
 
 			if (resolver.version) {
-				chart = await FindChartWithPTDFVersion(
-					"ddr",
+				chart = await FindChartWithSongDifficultyVersion(
+					game,
 					song.id,
-					resolver.playtype as Playtypes["ddr"],
 					difficulty,
-					resolver.version as Versions[DDRGPT],
+					resolver.version as Versions["ddr-dp" | "ddr-sp"],
 				);
 			} else {
-				chart = await FindChartWithPTDF(
-					"ddr",
-					song.id,
-					resolver.playtype as Playtypes["ddr"],
-					difficulty,
-				);
+				chart = await FindChartWithSongDifficulty(game, song.id, difficulty);
 			}
 
 			if (!chart) {
@@ -500,7 +469,7 @@ export async function ResolveSongAndChart(
 }
 
 export async function ResolveChartFromSong(
-	song: MONGO_SongDocument,
+	song: SongDocument,
 	resolver: MatchTypeResolverWithDifficulty,
 ) {
 	const game = resolver.game;
@@ -511,20 +480,19 @@ export async function ResolveChartFromSong(
 		);
 	}
 
-	const difficulty = AssertStrAsDifficulty(resolver.difficulty, game, resolver.playtype);
+	const difficulty = AssertStrAsDifficulty(resolver.difficulty, game);
 
 	let chart;
 
 	if (resolver.version) {
-		chart = await FindChartWithPTDFVersion(
+		chart = await FindChartWithSongDifficultyVersion(
 			game,
 			song.id,
-			resolver.playtype,
 			difficulty,
 			resolver.version,
 		);
 	} else {
-		chart = await FindChartWithPTDF(game, song.id, resolver.playtype, difficulty);
+		chart = await FindChartWithSongDifficulty(game, song.id, difficulty);
 	}
 
 	if (!chart) {

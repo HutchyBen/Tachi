@@ -1,35 +1,25 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import { SubscribeFailReasons } from "#lib/constants/err-codes.js";
-import { ServerConfig } from "#lib/setup/config.js";
-import { ConstructGoal, SubscribeToGoal } from "#lib/targets/goals.js";
-import DB from "#services/pg/db.js";
-import { IsUserAdmin } from "#utils/user.js";
+import { MakeAction } from "#lib/actions/actions";
+import { SubscribeFailReasons } from "#lib/constants/err-codes";
+import { ServerConfig } from "#lib/setup/config";
+import { ConstructGoal, SubscribeToGoal } from "#lib/targets/goals";
+import DB from "#services/pg/db";
+import { IsUserAdmin } from "#utils/user";
 import { ExpectedErr } from "bliss";
 import { sql } from "kysely";
-import {
-	type GameGroup,
-	GamePTToV3,
-	GetGamePTConfig,
-	type MONGO_GoalDocument,
-	type Playtype,
-} from "tachi-common";
+import { GetGameConfig, type GoalDocument } from "tachi-common";
 
 export const ACTION_AddGoal = MakeAction("ADD_GOAL", async (taker, input) => {
-	const { userID, game: gameStr, playtype: playtypeStr, charts, criteria } = input;
-	const game = gameStr as GameGroup;
-	const playtype = playtypeStr as Playtype;
+	const { userID, game, charts, criteria } = input;
 
 	if (taker.acct.id !== userID && !(await IsUserAdmin(taker.acct.id))) {
 		throw new ExpectedErr(403, "You are not authorised to modify this user's goals.");
 	}
 
-	const v3Game = GamePTToV3(game, playtype);
-
 	const row = await DB.selectFrom("goal_sub")
 		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
 		.select(sql<number>`count(*)::int`.as("c"))
 		.where("goal_sub.user_id", "=", userID)
-		.where("goal.game", "=", v3Game)
+		.where("goal.game", "=", game)
 		.executeTakeFirst();
 
 	const existingGoalsCount = Number(row?.c ?? 0);
@@ -41,11 +31,11 @@ export const ACTION_AddGoal = MakeAction("ADD_GOAL", async (taker, input) => {
 		);
 	}
 
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
 	const validCriteria = [
-		...Object.keys(gptConfig.providedMetrics),
-		...Object.keys(gptConfig.derivedMetrics),
+		...Object.keys(gameConfig.providedMetrics),
+		...Object.keys(gameConfig.derivedMetrics),
 	];
 
 	const criteriaKey = (criteria as { key?: string }).key;
@@ -57,14 +47,13 @@ export const ACTION_AddGoal = MakeAction("ADD_GOAL", async (taker, input) => {
 		);
 	}
 
-	let goal: MONGO_GoalDocument;
+	let goal: GoalDocument;
 
 	try {
 		goal = await ConstructGoal(
-			charts as MONGO_GoalDocument["charts"],
-			criteria as MONGO_GoalDocument["criteria"],
+			charts as GoalDocument["charts"],
+			criteria as GoalDocument["criteria"],
 			game,
-			playtype,
 		);
 	} catch (e) {
 		throw new ExpectedErr(400, (e as Error).message);

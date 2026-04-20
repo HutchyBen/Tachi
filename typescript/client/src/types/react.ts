@@ -9,7 +9,7 @@ import {
 	type FormikState,
 	type FormikTouched,
 } from "formik";
-import { type GameGroup, type MONGO_UserDocument, type Playtype } from "tachi-common";
+import { type UserDocument, type V3Game } from "tachi-common";
 
 export interface JustChildren {
 	children: ReactNode;
@@ -86,12 +86,10 @@ export type UseFormik<Values> = {
 };
 
 export interface GamePT {
-	game: GameGroup;
-	playtype: Playtype;
+	game: V3Game;
 }
 
 export interface UGPT {
-	reqUser: MONGO_UserDocument;
-	game: GameGroup;
-	playtype: Playtype;
+	reqUser: UserDocument;
+	game: V3Game;
 }

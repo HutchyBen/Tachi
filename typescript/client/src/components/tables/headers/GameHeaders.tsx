@@ -12,14 +12,11 @@ import { NumericSOV } from "#util/sorts";
 import React from "react";
 import {
 	type AnyScoreRatingAlg,
-	type GameGroup,
-	GetGamePTConfig,
-	GetGPTString,
-	type GPTString,
-	type MONGO_PBScoreDocument,
-	type MONGO_ScoreDocument,
-	type Playtype,
+	GetGameConfig,
+	type PBScoreDocument,
+	type ScoreDocument,
 	type ScoreRatingAlgorithms,
+	type V3Game,
 } from "tachi-common";
 
 import SelectableRating from "../components/SelectableRating";
@@ -33,22 +30,21 @@ export function GetGPTCoreHeaders<
 		| RivalChartDataset
 		| ScoreDataset,
 >(
-	game: GameGroup,
-	playtype: Playtype,
-	rating: ScoreRatingAlgorithms[GPTString],
-	setRating: SetState<ScoreRatingAlgorithms[GPTString]>,
-	kMapToScoreOrPB: (k: Dataset[0]) => MONGO_PBScoreDocument | MONGO_ScoreDocument | null,
+	game: V3Game,
+	rating: ScoreRatingAlgorithms[V3Game],
+	setRating: SetState<ScoreRatingAlgorithms[V3Game]>,
+	kMapToScoreOrPB: (k: Dataset[0]) => PBScoreDocument | ScoreDocument | null,
 ): Header<Dataset[0]>[] {
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
 	let RatingHeader: Header<Dataset[0]>;
 
-	if (Object.keys(gptConfig.scoreRatingAlgs).length === 1) {
-		const alg = Object.keys(gptConfig.scoreRatingAlgs)[0] as AnyScoreRatingAlg;
+	if (Object.keys(gameConfig.scoreRatingAlgs).length === 1) {
+		const alg = Object.keys(gameConfig.scoreRatingAlgs)[0] as AnyScoreRatingAlg;
 
 		RatingHeader = [
-			FormatGPTScoreRatingName(game, playtype, alg),
-			FormatGPTScoreRatingName(game, playtype, alg),
+			FormatGPTScoreRatingName(game, alg),
+			FormatGPTScoreRatingName(game, alg),
 			NumericSOV((x) => kMapToScoreOrPB(x)?.calculatedData[alg] ?? -Infinity),
 		];
 	} else {
@@ -59,8 +55,7 @@ export function GetGPTCoreHeaders<
 			(thProps: ZTableTHProps) => (
 				<SelectableRating
 					game={game}
-					key={`${game}-${playtype}`}
-					playtype={playtype}
+					key={game}
 					rating={rating}
 					setRating={setRating}
 					{...thProps}
@@ -69,14 +64,12 @@ export function GetGPTCoreHeaders<
 		];
 	}
 
-	const implHeaders = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, playtype)].scoreHeaders;
+	const implHeaders = GPT_CLIENT_IMPLEMENTATIONS[game].scoreHeaders;
 
 	const outHeaders: Array<Header<Dataset[0]>> = [];
 
 	for (const header of implHeaders) {
 		if (header[2]) {
-			// replace the sort function with one that correctly resolves
-			// pbs
 			outHeaders.push([
 				header[0],
 				header[1],
@@ -91,9 +84,6 @@ export function GetGPTCoreHeaders<
 						return Infinity;
 					}
 
-					// typescript is NOT happy with what i've done here
-					// LOL, who cares.
-					// safety is for chumps
 					return (header[2] as any)(pbA, pbB);
 				},
 			]);
@@ -102,7 +92,6 @@ export function GetGPTCoreHeaders<
 		}
 	}
 
-	// all games have a rating header after their impl header.
 	outHeaders.push(RatingHeader);
 
 	return outHeaders;

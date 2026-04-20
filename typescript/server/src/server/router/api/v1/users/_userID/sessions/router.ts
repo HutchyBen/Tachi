@@ -1,32 +1,23 @@
 import { SELECT_SESSION_CALENDAR, ToSessionCalendarDocument } from "#lib/db-formats/session";
+import { withRequestedUser } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
 import DB from "#services/pg/db";
-import { GetUser } from "#utils/req-tachi-data";
-import { Router } from "express";
-
-const router: Router = Router({ mergeParams: true });
 
 /**
  * Returns all sessions, FOR ALL GPTs
- * but with unecessary properties removed so as to reduce
+ * but with unnecessary properties removed so as to reduce
  * bandwidth. This is used for the calendar view in tachi-client, hence the name.
  *
  * @name GET /api/v1/users/:userID/sessions/calendar
  */
-router.get("/calendar", async (req, res) => {
-	const user = GetUser(req);
-
+API_V1_ROUTER.add("GET /users/:userID/sessions/calendar", withRequestedUser, async ({ ctx }) => {
 	const rows = await DB.selectFrom("session")
 		.select(SELECT_SESSION_CALENDAR)
-		.where("user_id", "=", user.id)
+		.where("session.user_id", "=", ctx.requestedUser.id)
 		.execute();
 
 	const sessions = rows.map(ToSessionCalendarDocument);
 
-	return res.status(200).json({
-		success: true,
-		description: `Found ${sessions.length} events.`,
-		body: sessions,
-	});
+	return success(`Found ${sessions.length} events.`, sessions);
 });
-
-export default router;

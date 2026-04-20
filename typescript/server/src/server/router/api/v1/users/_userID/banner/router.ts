@@ -1,16 +1,16 @@
-import { ACTION_ChangeBanner } from "#actions/change-banner.js";
-import { ACTION_DeleteBanner } from "#actions/delete-banner.js";
+import { ACTION_ChangeBanner } from "#actions/change-banner";
+import { ACTION_DeleteBanner } from "#actions/delete-banner";
 import { CDNRedirect } from "#lib/cdn/cdn";
 import { GetProfileBannerURL } from "#lib/cdn/url-format";
 import { ONE_MEGABYTE } from "#lib/constants/filesize";
+import { withAuthedAsUser, withPermission, withRequestedUser } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
 import { RequirePermissions } from "#server/middleware/auth";
 import { CreateMulterSingleUploadMiddleware } from "#server/middleware/multer-upload";
-import { GetTachiData } from "#utils/req-tachi-data";
-import { Router } from "express";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
+import { REQ_GetTachiData } from "#utils/req-tachi-data";
 
-import { RequireAuthedAsUser } from "../middleware";
-
-const router: Router = Router({ mergeParams: true });
+import { GetUserFromParam, RequireAuthedAsUser } from "../middleware";
 
 /**
  * Sets a profile banner.
@@ -21,13 +21,15 @@ const router: Router = Router({ mergeParams: true });
  *
  * @name PUT /api/v1/users/:userID/banner
  */
-router.put(
-	"/",
+API_V1_ROUTER.rawAdd(
+	"PUT",
+	"/users/:userID/banner",
+	GetUserFromParam,
 	RequireAuthedAsUser,
 	RequirePermissions("customise_profile"),
 	CreateMulterSingleUploadMiddleware("banner", ONE_MEGABYTE),
 	async (req, res) => {
-		const user = GetTachiData(req, "requestedUser");
+		const user = REQ_GetTachiData(req, "requestedUser");
 
 		if (!req.file) {
 			return res.status(400).json({
@@ -70,17 +72,18 @@ router.put(
  *
  * @name GET /api/v1/users/:userID/banner
  */
-router.get("/", (req, res) => {
-	const user = GetTachiData(req, "requestedUser");
+API_V1_ROUTER.add("GET /users/:userID/banner", withRequestedUser, ({ ctx, res }) => {
+	const { requestedUser: user } = ctx;
 
 	if (!user.customBannerLocation) {
 		res.setHeader("Content-Type", "image/png");
 		CDNRedirect(res, "/users/default/banner");
-		return;
+		return success("Redirected to default profile banner.", {});
 	}
 
 	// express sniffs whether this is a png or jpg **and** browsers dont care either.
 	CDNRedirect(res, GetProfileBannerURL(user.id, user.customBannerLocation));
+	return success("Redirected to profile banner.", {});
 });
 
 /**
@@ -88,12 +91,13 @@ router.get("/", (req, res) => {
  *
  * @name DELETE /api/v1/users/:userID/banner
  */
-router.delete(
-	"/",
-	RequireAuthedAsUser,
-	RequirePermissions("customise_profile"),
-	async (req, res) => {
-		const user = GetTachiData(req, "requestedUser");
+API_V1_ROUTER.add(
+	"DELETE /users/:userID/banner",
+	withRequestedUser,
+	withAuthedAsUser,
+	withPermission("customise_profile"),
+	async ({ ctx, req }) => {
+		const { requestedUser: user } = ctx;
 
 		await ACTION_DeleteBanner(
 			{
@@ -110,12 +114,6 @@ router.delete(
 			req.session.tachi.user.customBannerLocation = null;
 		}
 
-		return res.status(200).json({
-			success: true,
-			description: `Removed custom profile banner.`,
-			body: {},
-		});
+		return success("Removed custom profile banner.", {});
 	},
 );
-
-export default router;

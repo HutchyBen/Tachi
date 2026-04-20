@@ -1,7 +1,6 @@
+import logger from "#logger";
 import { mkdirSync, writeFileSync } from "fs";
 import path from "path";
-
-import logger from "../../logger";
 
 type MD5 = string;
 type UserId = number;

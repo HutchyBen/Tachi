@@ -5,26 +5,22 @@ import { SELECT_SONG_DOCUMENT, ToSongDocument } from "#lib/db-formats/song";
 import DB from "#services/pg/db";
 import { sql, type SqlBool } from "kysely";
 import {
+	type ChartDocument,
 	type Difficulties,
 	type GameGroup,
-	GamePTToV3,
-	type GPTString,
+	type GamesForGroup,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_ChartDocumentData,
-	type MONGO_SongDocument,
-	type Playtype,
-	type Playtypes,
-	V3ToGamePT,
+	LEGACY_GameGroupPTToGame,
+	type LEGACY_Playtype,
+	type SongDocument,
+	type V3Game,
 	type Versions,
 } from "tachi-common";
 
-export async function FindChartWithChartID(game: GameGroup, chartID: string) {
+export async function FindChartWithChartID(chartID: string) {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
-		.where("song.game_group", "=", game)
 		.where("chart.id", "=", chartID)
 		.executeTakeFirst();
 
@@ -38,22 +34,18 @@ export async function FindChartWithChartID(game: GameGroup, chartID: string) {
 /**
  * Find chart with PlaytypeDifficulty. This only finds charts that have `isPrimary` set to true.
  * If you want to find charts that are not primary, you need to use PTDFVersion.
- * @see FindChartWithPTDFVersion
+ * @see FindChartWithSongDifficultyVersion
  */
-export async function FindChartWithPTDF<
-	G extends GameGroup = GameGroup,
-	P extends Playtypes[G] = Playtypes[G],
-	GPT extends GPTString = GPTString,
->(game: G, songID: integer, playtype: P, difficulty: Difficulties[GPT]) {
-	const v3Game = GamePTToV3(game, playtype) as Game;
-
+export async function FindChartWithSongDifficulty<TGame extends V3Game = V3Game>(
+	game: TGame,
+	songID: string,
+	difficulty: Difficulties[TGame],
+) {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
-		.where("song.game_group", "=", game)
-		.where("song.legacy_id", "=", songID)
-		.where("chart.game", "=", v3Game)
+		.where("song.id", "=", songID)
+		.where("chart.game", "=", game)
 		.where("chart.difficulty", "=", difficulty as string)
 		.where("chart.is_primary", "=", true)
 		.executeTakeFirst();
@@ -69,20 +61,17 @@ export async function FindChartWithPTDF<
  * Find chart with Playtype, Difficulty and a given version. This does not necessarily return a chart that has
  * `isPrimary` set.
  */
-export async function FindChartWithPTDFVersion<
-	G extends GameGroup = GameGroup,
-	P extends Playtypes[G] = Playtypes[G],
-	GPT extends GPTString = GPTString,
->(game: G, songID: integer, playtype: P, difficulty: Difficulties[GPT], version: Versions[GPT]) {
-	const v3Game = GamePTToV3(game, playtype) as Game;
-
+export async function FindChartWithSongDifficultyVersion<TGame extends V3Game = V3Game>(
+	game: TGame,
+	songID: string,
+	difficulty: Difficulties[TGame],
+	version: Versions[TGame],
+) {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
-		.where("song.game_group", "=", game)
-		.where("song.legacy_id", "=", songID)
-		.where("chart.game", "=", v3Game)
+		.where("song.id", "=", songID)
+		.where("chart.game", "=", game)
 		.where("chart.difficulty", "=", difficulty as string)
 		.where(sql<boolean>`${sql.lit(String(version))} = ANY(chart.versions)`)
 		.executeTakeFirst();
@@ -98,7 +87,6 @@ export async function FindITGChartOnHash(hash: string) {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
 		.where("chart.game", "=", "itg-stamina" as Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'hashGSv3') = ${hash}`)
 		.executeTakeFirst();
@@ -118,7 +106,6 @@ export async function FindBMSChartOnHash(hash: string) {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
 		.where("song.game_group", "=", "bms")
 		.where((eb) =>
 			eb.or([
@@ -132,19 +119,17 @@ export async function FindBMSChartOnHash(hash: string) {
 		return null;
 	}
 
-	return ToChartDocument(row) as MONGO_ChartDocument<"bms:7K" | "bms:14K">;
+	return ToChartDocument(row) as ChartDocument<GamesForGroup["bms"]>;
 }
 
 /**
  * BMS charts for a playtype whose chart `data` has sieglinde EC or HC &gt; 0 (GPT sieglinde-charts),
  * with joined song rows (`songs[i]` matches `charts[i]`).
  */
-export async function FindBMSSieglindeRatedCharts(playtype: Playtypes["bms"]): Promise<{
-	charts: Array<MONGO_ChartDocument<"bms:7K" | "bms:14K">>;
-	songs: Array<MONGO_SongDocument<"bms">>;
+export async function FindBMSSieglindeRatedCharts(game: "bms-7k" | "bms-14k"): Promise<{
+	charts: Array<ChartDocument<GamesForGroup["bms"]>>;
+	songs: Array<SongDocument<"bms">>;
 }> {
-	const v3Game = GamePTToV3("bms", playtype) as Game;
-
 	const sglEcPositive = sql<boolean>`(chart.data::jsonb->>'sglEC') IS NOT NULL AND (chart.data::jsonb->>'sglEC') <> '' AND (chart.data::jsonb->>'sglEC')::numeric > 0`;
 	const sglHcPositive = sql<boolean>`(chart.data::jsonb->>'sglHC') IS NOT NULL AND (chart.data::jsonb->>'sglHC') <> '' AND (chart.data::jsonb->>'sglHC')::numeric > 0`;
 
@@ -152,17 +137,17 @@ export async function FindBMSSieglindeRatedCharts(playtype: Playtypes["bms"]): P
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
 		.select(SELECT_SONG_DOCUMENT)
-		.where("chart.game", "=", v3Game)
+		.where("chart.game", "=", game)
 		.where((eb) => eb.or([sglEcPositive, sglHcPositive]))
 		.orderBy("chart.id")
 		.execute();
 
-	const charts: Array<MONGO_ChartDocument<"bms:7K" | "bms:14K">> = [];
-	const songs: Array<MONGO_SongDocument<"bms">> = [];
+	const charts: Array<ChartDocument<GamesForGroup["bms"]>> = [];
+	const songs: Array<SongDocument<"bms">> = [];
 
 	for (const row of rows) {
-		charts.push(ToChartDocument(row) as MONGO_ChartDocument<"bms:7K" | "bms:14K">);
-		songs.push(ToSongDocument(row) as MONGO_SongDocument<"bms">);
+		charts.push(ToChartDocument(row) as ChartDocument<GamesForGroup["bms"]>);
+		songs.push(ToSongDocument(row) as SongDocument<"bms">);
 	}
 
 	return { charts, songs };
@@ -173,7 +158,6 @@ export async function FindBMSChartOnHashInGame(hash: string, v3Game: Game) {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
 		.where("chart.game", "=", v3Game)
 		.where((eb) =>
 			eb.or([
@@ -187,17 +171,14 @@ export async function FindBMSChartOnHashInGame(hash: string, v3Game: Game) {
 		return null;
 	}
 
-	return ToChartDocument(row) as MONGO_ChartDocument<"bms:7K" | "bms:14K">;
+	return ToChartDocument(row) as ChartDocument<GamesForGroup["bms"]>;
 }
 
 /** All BMS charts matching MD5 or SHA256 in chart data. Used by global chart-hash search. */
-export async function FindBMSChartsByHashMd5OrSha256(
-	hash: string,
-): Promise<Array<MONGO_ChartDocument>> {
+export async function FindBMSChartsByHashMd5OrSha256(hash: string): Promise<Array<ChartDocument>> {
 	const rows = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
 		.where("song.game_group", "=", "bms")
 		.where((eb) =>
 			eb.or([
@@ -211,13 +192,10 @@ export async function FindBMSChartsByHashMd5OrSha256(
 }
 
 /** All PMS charts matching MD5 or SHA256 in chart data. Used by global chart-hash search. */
-export async function FindPMSChartsByHashMd5OrSha256(
-	hash: string,
-): Promise<Array<MONGO_ChartDocument>> {
+export async function FindPMSChartsByHashMd5OrSha256(hash: string): Promise<Array<ChartDocument>> {
 	const rows = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
 		.where("song.game_group", "=", "pms")
 		.where((eb) =>
 			eb.or([
@@ -231,11 +209,10 @@ export async function FindPMSChartsByHashMd5OrSha256(
 }
 
 /** All ITG Stamina charts matching hashGSv3. Used by global chart-hash search. */
-export async function FindITGChartsByHashGSv3(hash: string): Promise<Array<MONGO_ChartDocument>> {
+export async function FindITGChartsByHashGSv3(hash: string): Promise<Array<ChartDocument>> {
 	const rows = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
 		.where("chart.game", "=", "itg-stamina" as Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'hashGSv3') = ${hash}`)
 		.execute();
@@ -248,7 +225,7 @@ export async function FindITGChartsByHashGSv3(hash: string): Promise<Array<MONGO
  */
 export async function FindBeatorajaChartOnHashSHA256(
 	hash: string,
-): Promise<MONGO_ChartDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"> | null> {
+): Promise<ChartDocument<GamesForGroup["bms"] | GamesForGroup["pms"]> | null> {
 	const bmsRow = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
@@ -257,7 +234,7 @@ export async function FindBeatorajaChartOnHashSHA256(
 		.executeTakeFirst();
 
 	if (bmsRow) {
-		return ToChartDocument(bmsRow) as MONGO_ChartDocument<"bms:7K" | "bms:14K">;
+		return ToChartDocument(bmsRow) as ChartDocument<GamesForGroup["bms"]>;
 	}
 
 	const pmsRow = await DB.selectFrom("chart")
@@ -271,20 +248,17 @@ export async function FindBeatorajaChartOnHashSHA256(
 		return null;
 	}
 
-	return ToChartDocument(pmsRow) as MONGO_ChartDocument<"pms:Controller" | "pms:Keyboard">;
+	return ToChartDocument(pmsRow) as ChartDocument<GamesForGroup["pms"]>;
 }
 
 /**
  * Find a Pop'n chart by SHA256 hash in chart data (batch-manual `popnChartHash`).
  */
-export async function FindPopnChartOnHashSHA256(hash: string, playtype: Playtypes["popn"]) {
-	const v3Game = GamePTToV3("popn", playtype) as Game;
-
+export async function FindPopnChartOnHashSHA256(hash: string) {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.where("song.game_group", "=", "popn")
-		.where("chart.game", "=", v3Game)
+		.where("chart.game", "=", "popn")
 		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA256') = ${hash}`)
 		.executeTakeFirst();
 
@@ -296,14 +270,14 @@ export async function FindPopnChartOnHashSHA256(hash: string, playtype: Playtype
 }
 
 /**
- * Returns true if at least one chart exists for this song (legacy Tachi song id).
+ * Returns true if at least one chart exists for this song.
  */
-export async function SongHasAnyChart(game: GameGroup, songLegacyId: number): Promise<boolean> {
+export async function SongHasAnyChart(game: GameGroup, songID: string): Promise<boolean> {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select("chart.id")
 		.where("song.game_group", "=", game)
-		.where("song.legacy_id", "=", songLegacyId)
+		.where("song.id", "=", songID)
 		.executeTakeFirst();
 
 	return row !== undefined;
@@ -313,22 +287,14 @@ export async function SongHasAnyChart(game: GameGroup, songLegacyId: number): Pr
  * Find a chart on its in-game-ID, playtype and difficulty.
  */
 export async function FindChartOnInGameID(
-	game: GameGroup,
+	game: V3Game,
 	inGameID: number,
-	playtype: Playtype,
-	difficulty: Difficulties[GPTString],
+	difficulty: Difficulties[V3Game],
 ) {
-	if (game === "bms" || game === "usc") {
-		throw new Error(`Cannot call FindChartOnInGameID for game ${game}.`);
-	}
-
-	const v3Game = GamePTToV3(game, playtype) as Game;
-
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.where("song.game_group", "=", game)
-		.where("chart.game", "=", v3Game)
+		.where("chart.game", "=", game)
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
 		.where("chart.difficulty", "=", difficulty as string)
 		.executeTakeFirst();
@@ -344,22 +310,14 @@ export async function FindChartOnInGameID(
  * Like {@link FindChartOnInGameID}, but only matches charts with `isPrimary` set (batch-manual / legacy Mongo parity).
  */
 export async function FindChartOnInGameIDPrimary(
-	game: GameGroup,
+	game: V3Game,
 	inGameID: number,
-	playtype: Playtype,
-	difficulty: Difficulties[GPTString],
+	difficulty: Difficulties[V3Game],
 ) {
-	if (game === "bms" || game === "usc") {
-		throw new Error(`Cannot call FindChartOnInGameIDPrimary for game ${game}.`);
-	}
-
-	const v3Game = GamePTToV3(game, playtype) as Game;
-
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.where("song.game_group", "=", game)
-		.where("chart.game", "=", v3Game)
+		.where("chart.game", "=", game)
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
 		.where("chart.difficulty", "=", difficulty as string)
 		.where("chart.is_primary", "=", true)
@@ -378,15 +336,12 @@ export async function FindChartOnInGameIDPrimary(
  */
 export async function FindIIDXChartOnInGameID(
 	inGameID: number,
-	playtype: Playtypes["iidx"],
-	difficulty: Difficulties["iidx:DP" | "iidx:SP"],
+	difficulty: Difficulties[GamesForGroup["iidx"]],
 ) {
-	const v3Game = GamePTToV3("iidx", playtype) as Game;
-
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.where("chart.game", "=", v3Game)
+		.where("chart.game", "=", "iidx-sp")
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
 		.where(sql<SqlBool>`(chart.data->>'2dxtraSet') IS NULL`)
 		.where("chart.is_primary", "=", true)
@@ -405,17 +360,15 @@ export async function FindIIDXChartOnInGameID(
  * This explicitly ignores 2dxtra charts, and is necessary to use for iidx to disambiguate.
  */
 export async function FindIIDXChartOnInGameIDVersion(
+	game: "iidx-dp" | "iidx-sp",
 	inGameID: number,
-	playtype: Playtypes["iidx"],
-	difficulty: Difficulties["iidx:DP" | "iidx:SP"],
-	version: Versions["iidx:DP" | "iidx:SP"],
+	difficulty: Difficulties[GamesForGroup["iidx"]],
+	version: Versions[GamesForGroup["iidx"]],
 ) {
-	const v3Game = GamePTToV3("iidx", playtype) as Game;
-
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-		.where("chart.game", "=", v3Game)
+		.where("chart.game", "=", game)
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
 		.where(sql<SqlBool>`(chart.data->>'2dxtraSet') IS NULL`)
 		.where("chart.difficulty", "=", difficulty as string)
@@ -432,21 +385,16 @@ export async function FindIIDXChartOnInGameIDVersion(
 /**
  * Find a chart on its in-game-ID, playtype, difficulty and version.
  */
-export async function FindChartOnInGameIDVersion<GPT extends GPTString = GPTString>(
-	game: GameGroup,
+export async function FindChartOnInGameIDVersion<TGame extends V3Game = V3Game>(
+	game: V3Game,
 	inGameID: number,
-	playtype: Playtype,
-	difficulty: Difficulties[GPT],
-	version: Versions[GPT],
+	difficulty: Difficulties[TGame],
+	version: Versions[TGame],
 ) {
-	const v3Game = GamePTToV3(game, playtype) as Game;
-
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
-		.where("song.game_group", "=", game)
-		.where("chart.game", "=", v3Game)
+		.where("chart.game", "=", game)
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
 		.where("chart.difficulty", "=", difficulty as string)
 		.where(sql<boolean>`${sql.lit(String(version))} = ANY(chart.versions)`)
@@ -463,23 +411,14 @@ export async function FindChartOnInGameIDVersion<GPT extends GPTString = GPTStri
  * Find a chart on its in-game string ID, playtype and difficulty (primary chart only).
  */
 export async function FindChartOnInGameStrIDPrimary(
-	game: GameGroup,
+	game: V3Game,
 	inGameStrID: string,
-	playtype: Playtype,
-	difficulty: Difficulties[GPTString],
+	difficulty: Difficulties[V3Game],
 ) {
-	if (game === "bms" || game === "usc") {
-		throw new Error(`Cannot call FindChartOnInGameStrIDPrimary for game ${game}.`);
-	}
-
-	const v3Game = GamePTToV3(game, playtype) as Game;
-
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
-		.where("song.game_group", "=", game)
-		.where("chart.game", "=", v3Game)
+		.where("chart.game", "=", game)
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameStrID') = ${inGameStrID}`)
 		.where("chart.difficulty", "=", difficulty as string)
 		.where("chart.is_primary", "=", true)
@@ -495,25 +434,16 @@ export async function FindChartOnInGameStrIDPrimary(
 /**
  * Find a chart on its in-game string ID, playtype, difficulty and version.
  */
-export async function FindChartOnInGameStrIDVersion<GPT extends GPTString = GPTString>(
-	game: GameGroup,
+export async function FindChartOnInGameStrIDVersion<TGame extends V3Game = V3Game>(
+	game: V3Game,
 	inGameStrID: string,
-	playtype: Playtype,
-	difficulty: Difficulties[GPT],
-	version: Versions[GPT],
+	difficulty: Difficulties[TGame],
+	version: Versions[TGame],
 ) {
-	if (game === "bms" || game === "usc") {
-		throw new Error(`Cannot call FindChartOnInGameStrIDVersion for game ${game}.`);
-	}
-
-	const v3Game = GamePTToV3(game, playtype) as Game;
-
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
-		.where("song.game_group", "=", game)
-		.where("chart.game", "=", v3Game)
+		.where("chart.game", "=", game)
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameStrID') = ${inGameStrID}`)
 		.where("chart.difficulty", "=", difficulty as string)
 		.where(sql<boolean>`${sql.lit(String(version))} = ANY(chart.versions)`)
@@ -533,7 +463,6 @@ export async function FindIIDXChartWith2DXtraHash(hash: string) {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
 		.where("chart.game", "=", "iidx-sp" as Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA256') = ${hash}`)
 		.executeTakeFirst();
@@ -555,13 +484,12 @@ const SDVX_INF_DIFFS = ["INF", "GRV", "HVN", "VVD", "XCD"] as const;
  */
 export async function FindSDVXChartOnInGameID(
 	inGameID: number,
-	difficulty: "ANY_INF" | Difficulties["sdvx:Single"],
+	difficulty: "ANY_INF" | Difficulties[GamesForGroup["sdvx"]],
 ) {
 	let q = DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
-		.where("chart.game", "=", "sdvx" as Game)
+		.where("chart.game", "=", "sdvx")
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
 		.where("chart.is_primary", "=", true);
 
@@ -581,14 +509,13 @@ export async function FindSDVXChartOnInGameID(
 
 export async function FindSDVXChartOnInGameIDVersion(
 	inGameID: number,
-	difficulty: "ANY_INF" | Difficulties["sdvx:Single"],
-	version: Versions["sdvx:Single"],
+	difficulty: "ANY_INF" | Difficulties[GamesForGroup["sdvx"]],
+	version: Versions[GamesForGroup["sdvx"]],
 ) {
 	let q = DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
-		.where("chart.game", "=", "sdvx" as Game)
+		.where("chart.game", "=", "sdvx")
 		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
 		.where(sql<boolean>`${sql.lit(String(version))} = ANY(chart.versions)`);
 
@@ -607,17 +534,16 @@ export async function FindSDVXChartOnInGameIDVersion(
 }
 
 export async function FindSDVXChartOnDFVersion(
-	songID: integer,
-	difficulty: "ANY_INF" | Difficulties["sdvx:Single"],
-	version: Versions["sdvx:Single"],
+	songID: string,
+	difficulty: "ANY_INF" | Difficulties[GamesForGroup["sdvx"]],
+	version: Versions[GamesForGroup["sdvx"]],
 ) {
 	let q = DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
 		.where("song.game_group", "=", "sdvx")
-		.where("song.legacy_id", "=", songID)
-		.where("chart.game", "=", "sdvx" as Game)
+		.where("song.id", "=", songID)
+		.where("chart.game", "=", "sdvx")
 		.where(sql<boolean>`${sql.lit(String(version))} = ANY(chart.versions)`);
 
 	q =
@@ -642,7 +568,6 @@ export async function FindChartOnSHA256(game: GameGroup, hash: string) {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
 		.where("song.game_group", "=", game)
 		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA256') = ${hash}`)
 		.executeTakeFirst();
@@ -654,17 +579,20 @@ export async function FindChartOnSHA256(game: GameGroup, hash: string) {
 	return ToChartDocument(row);
 }
 
-export async function FindChartOnSHA256Playtype(game: GameGroup, hash: string, playtype: Playtype) {
+export async function FindChartOnSHA256Playtype(
+	game: GameGroup,
+	hash: string,
+	playtype: LEGACY_Playtype,
+) {
 	if (game !== "bms" && game !== "usc" && game !== "iidx" && game !== "pms") {
 		throw new Error(`Cannot call FindChartOnSHA256 for game ${game}.`);
 	}
 
-	const v3Game = GamePTToV3(game, playtype) as Game;
+	const v3Game = LEGACY_GameGroupPTToGame(game, playtype) as Game;
 
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
 		.where("song.game_group", "=", game)
 		.where("chart.game", "=", v3Game)
 		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA256') = ${hash}`)
@@ -681,15 +609,11 @@ export async function FindChartOnSHA256Playtype(game: GameGroup, hash: string, p
  * Find a USC chart on its SHA1 hash (from chart data) and playtype.
  * Used by the USC IR and batch-manual uscChartHash matching.
  */
-export async function FindUSCChartOnSHA1Playtype(hash: string, playtype: Playtypes["usc"]) {
-	const v3Game = GamePTToV3("usc", playtype) as Game;
-
+export async function FindUSCChartOnSHA1(hash: string, game: "usc-controller" | "usc-keyboard") {
 	const row = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
-		.where("song.game_group", "=", "usc")
-		.where("chart.game", "=", v3Game)
+		.where("chart.game", "=", game)
 		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA1') = ${hash}`)
 		.executeTakeFirst();
 
@@ -701,12 +625,11 @@ export async function FindUSCChartOnSHA1Playtype(hash: string, playtype: Playtyp
 }
 
 /** All USC charts matching a SHA1 hash (any playtype). Used by global chart-hash search. */
-export async function FindUSCChartsByHashSHA1(hash: string): Promise<Array<MONGO_ChartDocument>> {
+export async function FindUSCChartsByHashSHA1(hash: string): Promise<Array<ChartDocument>> {
 	const rows = await DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
-
-		.where("song.game_group", "=", "usc")
+		.where("song.game_group", "=", "usc") // OPTIMISATION
 		.where(sql<boolean>`(chart.data::jsonb->>'hashSHA1') = ${hash}`)
 		.execute();
 
@@ -720,41 +643,41 @@ export async function FindUSCChartsByHashSHA1(hash: string): Promise<Array<MONGO
  * @param _scoreCollection — ignored; kept for API compatibility with the old Mongo implementation.
  */
 export async function FindChartsOnPopularity(
-	game: GameGroup,
-	playtype: Playtype,
-	songIDs?: Array<integer>,
+	game: V3Game,
+	filters?: { chartIDs: Array<string> | undefined; songIDs: Array<string> | undefined },
 	skip = 0,
 	limit = 100,
-	_scoreCollection: "personal-bests" | "scores" = "personal-bests",
-): Promise<Array<{ __playcount: integer } & MONGO_ChartDocument>> {
-	const v3Game = GamePTToV3(game, playtype);
-
+): Promise<Array<{ __playcount: integer } & ChartDocument>> {
 	let q = DB.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
 		.leftJoin("score", "score.chart_id", "chart.id")
-		.where("chart.game", "=", v3Game as Game)
+		.where("chart.game", "=", game)
 		.where(sql<SqlBool>`(chart.data->>'2dxtraSet') IS NULL`);
 
-	if (songIDs && songIDs.length > 0) {
-		q = q.where("song.legacy_id", "in", songIDs);
+	if (filters?.chartIDs) {
+		// empty array - should be no matches, just short circuit
+		if (filters.chartIDs.length === 0) {
+			return [];
+		} else {
+			q = q.where("chart.id", "in", filters.chartIDs);
+		}
+	}
+
+	if (filters?.songIDs) {
+		// empty array - should be no matches, just short circuit
+		if (filters.songIDs.length === 0) {
+			return [];
+		} else {
+			q = q.where("song.id", "in", filters.songIDs);
+		}
 	}
 
 	const rows = await q
 		.select([
-			"chart.id",
-			"chart.legacy_id",
-			"chart.game",
-			"chart.song_id",
-			"chart.level",
-			"chart.level_num",
-			"chart.is_primary",
-			"chart.difficulty",
-			"chart.versions",
-			"chart.data",
-			"song.legacy_id as song_legacy_id",
+			...SELECT_CHART, // format-bearing comment
 			sql<number>`count(score.id)::int`.as("playcount"),
 		])
-		.groupBy(["chart.id", "song.legacy_id"])
+		.groupBy(["chart.id", "song.id"])
 		.orderBy(sql`count(score.id)`, "desc")
 		.offset(skip)
 		.limit(limit)
@@ -765,20 +688,10 @@ export async function FindChartsOnPopularity(
 	}
 
 	return rows.map((row) => {
-		const { playtype: chartPlaytype } = V3ToGamePT(row.game);
+		const r = ToChartDocument(row) as { __playcount: integer } & ChartDocument;
 
-		return {
-			chartID: row.id,
-			legacyChartId: row.legacy_id,
-			songID: row.song_legacy_id,
-			level: row.level,
-			levelNum: row.level_num,
-			isPrimary: row.is_primary,
-			difficulty: row.difficulty as Difficulties[GPTString],
-			playtype: chartPlaytype,
-			data: row.data as MONGO_ChartDocumentData[GPTString],
-			versions: row.versions as Versions[GPTString][],
-			__playcount: row.playcount,
-		} as { __playcount: integer } & MONGO_ChartDocument;
+		r.__playcount = row.playcount;
+
+		return r;
 	});
 }

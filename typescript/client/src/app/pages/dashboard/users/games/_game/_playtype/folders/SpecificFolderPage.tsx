@@ -32,19 +32,16 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Col, Form, Row } from "react-bootstrap";
 import { Link, Route, Switch, useParams } from "react-router-dom";
 import {
+	type ChartDocument,
 	COLOUR_SET,
 	FormatDifficultyShort,
-	type GameGroup,
-	GetGamePTConfig,
-	GetGPTString,
+	GetGameConfig,
 	GetScoreEnumConfs,
-	type GPTString,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_ScoreDocument,
-	type MONGO_SongDocument,
-	type MONGO_UserDocument,
-	type Playtype,
+	type ScoreDocument,
+	type SongDocument,
+	type UserDocument,
+	type V3Game,
 } from "tachi-common";
 import { type ConfEnumScoreMetric } from "tachi-common/types/metrics";
 
@@ -52,16 +49,15 @@ import FolderComparePage from "./FolderComparePage";
 import FolderQuestsPage from "./FolderQuestsPage";
 
 interface Props {
-	reqUser: MONGO_UserDocument;
-	game: GameGroup;
-	playtype: Playtype;
+	reqUser: UserDocument;
+	game: V3Game;
 }
 
-export default function SpecificFolderPage({ reqUser, game, playtype }: Props) {
-	const { folderID } = useParams<{ folderID: string }>();
+export default function SpecificFolderPage({ reqUser, game }: Props) {
+	const { folderSlug } = useParams<{ folderSlug: string }>();
 
 	const { data, error } = useApiQuery<UGPTFolderReturns>(
-		`/users/${reqUser.id}/games/${game}/${playtype}/folders/${folderID}`,
+		`/users/${reqUser.id}/games/${game}/folders/${folderSlug}`,
 	);
 
 	const folderDataset = useMemo(() => {
@@ -79,7 +75,7 @@ export default function SpecificFolderPage({ reqUser, game, playtype }: Props) {
 				...chart,
 				__related: {
 					pb: pbMap.get(chart.chartID) ?? null,
-					song: songMap.get(chart.songID)!,
+					song: songMap.get(chart.song.id)!,
 					user: reqUser,
 				},
 			});
@@ -100,13 +96,12 @@ export default function SpecificFolderPage({ reqUser, game, playtype }: Props) {
 				folderDataset={folderDataset}
 				folderTitle={data.folder.title}
 				game={game}
-				playtype={playtype}
 				reqUser={reqUser}
 			/>
 		);
 	}, [folderDataset]);
 
-	const base = `${useUGPTBase({ reqUser, game, playtype })}/folders/${folderID}`;
+	const base = `${useUGPTBase({ reqUser, game })}/folders/${folderSlug}`;
 
 	if (error) {
 		return <ApiError error={error} />;
@@ -116,7 +111,7 @@ export default function SpecificFolderPage({ reqUser, game, playtype }: Props) {
 		return <Loading />;
 	}
 
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[`${game}:${playtype}` as GPTString];
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
 	return (
 		<div className="row">
@@ -131,8 +126,10 @@ export default function SpecificFolderPage({ reqUser, game, playtype }: Props) {
 					</SelectLinkButton>
 					{gptImpl.ratingSystems.length !== 0 &&
 						// temp: tierlist view sucks for BMS and PMS
-						game !== "bms" &&
-						game !== "pms" && (
+						game !== "bms-7k" &&
+						game !== "bms-14k" &&
+						game !== "pms-controller" &&
+						game !== "pms-keyboard" && (
 							<SelectLinkButton className="text-wrap" to={`${base}/tierlist`}>
 								<Icon type="sort-alpha-up" /> Tierlist View
 							</SelectLinkButton>
@@ -154,40 +151,24 @@ export default function SpecificFolderPage({ reqUser, game, playtype }: Props) {
 			<div className="col-12">
 				<Switch>
 					<Route exact path={base}>
-						<FolderTable dataset={folderDataset} game={game} playtype={playtype} />
+						<FolderTable dataset={folderDataset} game={game} />
 					</Route>
 					<Route exact path={`${base}/tierlist`}>
 						<TierlistBreakdown
 							data={data}
 							folderDataset={folderDataset}
 							game={game}
-							playtype={playtype}
 							reqUser={reqUser}
 						/>
 					</Route>
 					<Route exact path={`${base}/timeline`}>
-						<TimelineView
-							folderID={folderID}
-							game={game}
-							playtype={playtype}
-							reqUser={reqUser}
-						/>
+						<TimelineView folderSlug={folderSlug} game={game} reqUser={reqUser} />
 					</Route>
 					<Route exact path={`${base}/compare`}>
-						<FolderComparePage
-							folder={data.folder}
-							game={game}
-							playtype={playtype}
-							reqUser={reqUser}
-						/>
+						<FolderComparePage folder={data.folder} game={game} reqUser={reqUser} />
 					</Route>
 					<Route exact path={`${base}/targets`}>
-						<FolderQuestsPage
-							folder={data.folder}
-							game={game}
-							playtype={playtype}
-							reqUser={reqUser}
-						/>
+						<FolderQuestsPage folder={data.folder} game={game} reqUser={reqUser} />
 					</Route>
 				</Switch>
 			</div>
@@ -195,11 +176,11 @@ export default function SpecificFolderPage({ reqUser, game, playtype }: Props) {
 	);
 }
 
-function TimelineView({ game, playtype, reqUser, folderID }: { folderID: string } & Props) {
-	const gptConfig = GetGamePTConfig(game, playtype);
-	const enumConfs = GetScoreEnumConfs(gptConfig);
+function TimelineView({ game, reqUser, folderSlug }: { folderSlug: string } & Props) {
+	const gameConfig = GetGameConfig(game);
+	const enumConfs = GetScoreEnumConfs(gameConfig);
 
-	const [selectedEnum, setSelectedEnum] = useState<string>(gptConfig.preferredDefaultEnum);
+	const [selectedEnum, setSelectedEnum] = useState<string>(gameConfig.preferredDefaultEnum);
 	const [enumConf, setEnumConf] = useState<ConfEnumScoreMetric<string>>(enumConfs[selectedEnum]!);
 
 	const [value, setValue] = useState<string>(enumConf.minimumRelevantValue);
@@ -237,9 +218,7 @@ function TimelineView({ game, playtype, reqUser, folderID }: { folderID: string 
 				</div>
 			</Card>
 			<hr />
-			<TimelineMain
-				{...{ reqUser, game, playtype, folderID, enumMetric: selectedEnum, value }}
-			/>
+			<TimelineMain {...{ reqUser, game, folderSlug, enumMetric: selectedEnum, value }} />
 		</>
 	);
 }
@@ -247,23 +226,22 @@ function TimelineView({ game, playtype, reqUser, folderID }: { folderID: string 
 function TimelineMain({
 	reqUser,
 	game,
-	playtype,
-	folderID,
+	folderSlug,
 	enumMetric: enumMetric,
 	value,
 }: {
 	enumMetric: string;
-	folderID: string;
+	folderSlug: string;
 	value: string;
 } & Props) {
 	const { data, error } = useApiQuery<{
-		charts: MONGO_ChartDocument[];
-		scores: MONGO_ScoreDocument[];
-		songs: MONGO_SongDocument[];
+		charts: ChartDocument[];
+		scores: ScoreDocument[];
+		songs: SongDocument[];
 	}>(
 		`/users/${
 			reqUser.id
-		}/games/${game}/${playtype}/folders/${folderID}/timeline?criteriaValue=${encodeURIComponent(
+		}/games/${game}/folders/${folderSlug}/timeline?criteriaValue=${encodeURIComponent(
 			value,
 		)}&criteriaType=${encodeURIComponent(enumMetric)}`,
 	);
@@ -369,10 +347,10 @@ function TimelineElement({
 	index: integer;
 	scoreData: {
 		__related: {
-			chart: MONGO_ChartDocument;
-			song: MONGO_SongDocument;
+			chart: ChartDocument;
+			song: SongDocument;
 		};
-	} & MONGO_ScoreDocument;
+	} & ScoreDocument;
 }) {
 	return (
 		<div className="timeline-item">
@@ -423,24 +401,20 @@ type InfoProps = {
 	folderDataset: FolderDataset;
 } & Props;
 
-function TierlistBreakdown({ game, folderDataset, playtype, reqUser }: InfoProps) {
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[`${game}:${playtype}` as GPTString];
+function TierlistBreakdown({ game, folderDataset, reqUser }: InfoProps) {
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
 	const [tierlist, setTierlist] = useState<string>(gptImpl.ratingSystems[0].name);
 	const [useFancyColour, setUseFancyColour] = useState(false);
 	const [forceGridView, setForceGridView] = useState(false);
 
 	const playerStats = useMemo(
-		() => FolderDatasetAchievedStatus(folderDataset, game, playtype, tierlist),
+		() => FolderDatasetAchievedStatus(folderDataset, game, tierlist),
 		[tierlist],
 	);
 
-	// @ts-expect-error Typescript doesn't like our unioning here for some reason
-	// and i can't be bothered to figure it out
-	const tierlistImpl: GPTRatingSystem<GPTString> = gptImpl.ratingSystems.find(
-		// @ts-expect-error Typescript doesn't like our unioning here for some reason
-		// and i can't be bothered to figure it out
-		(rs: GPTRatingSystem<GPTString>) => rs.name === tierlist,
+	const tierlistImpl = (gptImpl.ratingSystems as GPTRatingSystem<V3Game>[]).find(
+		(rs) => rs.name === tierlist,
 	);
 
 	if (!tierlistImpl) {
@@ -501,7 +475,6 @@ function TierlistBreakdown({ game, folderDataset, playtype, reqUser }: InfoProps
 					forceGridView={forceGridView}
 					game={game}
 					playerStats={playerStats}
-					playtype={playtype}
 					reqUser={reqUser}
 					tierlistImpl={tierlistImpl}
 					useFancyColour={useFancyColour}
@@ -514,7 +487,6 @@ function TierlistBreakdown({ game, folderDataset, playtype, reqUser }: InfoProps
 function TierlistInfoLadder({
 	playerStats,
 	game,
-	playtype,
 	reqUser,
 	folderDataset,
 	tierlistImpl,
@@ -523,11 +495,10 @@ function TierlistInfoLadder({
 }: {
 	folderDataset: FolderDataset;
 	forceGridView: boolean;
-	game: GameGroup;
+	game: V3Game;
 	playerStats: Record<string, { score: string | null; status: AchievedStatuses }>;
-	playtype: Playtype;
-	reqUser: MONGO_UserDocument;
-	tierlistImpl: GPTRatingSystem<GPTString>;
+	reqUser: UserDocument;
+	tierlistImpl: GPTRatingSystem<V3Game>;
 	useFancyColour: boolean;
 }) {
 	const buckets: TierlistInfo[][] = useMemo(() => {
@@ -609,7 +580,6 @@ function TierlistInfoLadder({
 							{...{
 								bucket,
 								game,
-								playtype,
 								reqUser,
 								useFancyColour,
 								tierlistImpl,
@@ -625,7 +595,6 @@ function TierlistInfoLadder({
 function TierlistBucket({
 	bucket,
 	game,
-	playtype,
 	reqUser,
 	useFancyColour,
 	forceGridView,
@@ -633,10 +602,9 @@ function TierlistBucket({
 }: {
 	bucket: TierlistInfo[];
 	forceGridView: boolean;
-	game: GameGroup;
-	playtype: Playtype;
-	reqUser: MONGO_UserDocument;
-	tierlistImpl: GPTRatingSystem<GPTString>;
+	game: V3Game;
+	reqUser: UserDocument;
+	tierlistImpl: GPTRatingSystem<V3Game>;
 	useFancyColour: boolean;
 }) {
 	const {
@@ -653,7 +621,6 @@ function TierlistBucket({
 						game={game}
 						i={i}
 						key={`${tierlistInfo.chart.chartID}-${tierlistInfo.text}`}
-						playtype={playtype}
 						reqUser={reqUser}
 						tierlistImpl={tierlistImpl}
 						tierlistInfo={tierlistInfo}
@@ -673,7 +640,6 @@ function TierlistBucket({
 					game={game}
 					i={i}
 					key={`${tierlistInfo.chart.chartID}-${tierlistInfo.text}`}
-					playtype={playtype}
 					reqUser={reqUser}
 					tierlistImpl={tierlistImpl}
 					tierlistInfo={tierlistInfo}
@@ -687,7 +653,6 @@ function TierlistBucket({
 function TierlistInfoBucketValues({
 	tierlistInfo,
 	game,
-	playtype,
 	reqUser,
 	useFancyColour,
 	forceGridView,
@@ -695,11 +660,10 @@ function TierlistInfoBucketValues({
 }: {
 	bucket: TierlistInfo[];
 	forceGridView: boolean;
-	game: GameGroup;
+	game: V3Game;
 	i: integer;
-	playtype: Playtype;
-	reqUser: MONGO_UserDocument;
-	tierlistImpl: GPTRatingSystem<GPTString>;
+	reqUser: UserDocument;
+	tierlistImpl: GPTRatingSystem<V3Game>;
 	tierlistInfo: TierlistInfo;
 	useFancyColour: boolean;
 }) {
@@ -716,7 +680,7 @@ function TierlistInfoBucketValues({
 	let colourCss: string | undefined;
 
 	if (useFancyColour) {
-		const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, playtype)];
+		const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
 		// @ts-expect-error lol
 		colourCss = gptImpl.enumColours[tierlistImpl.enumName][tierlistInfo.score];
@@ -736,7 +700,7 @@ function TierlistInfoBucketValues({
 			<tr>
 				<DifficultyCell alwaysShort chart={tierlistInfo.chart} game={game} noTierlist />
 				<td className="text-start">
-					<Link className="text-decoration-none" to={CreateChartLink(data, game)}>
+					<Link className="text-decoration-none" to={CreateChartLink(data)}>
 						{tierlistInfo.chart.__related.song.title}
 					</Link>{" "}
 					<br />
@@ -771,10 +735,10 @@ function TierlistInfoBucketValues({
 				className={`${colourClass} bg-opacity-50 rounded p-2`}
 				style={{ backgroundColor: colourCss ? ChangeOpacity(colourCss, 0.5) : undefined }}
 			>
-				<Link className="text-decoration-none" to={CreateChartLink(data, game)}>
+				<Link className="text-decoration-none" to={CreateChartLink(data)}>
 					{data.__related.song.title}
 				</Link>{" "}
-				{FormatDifficultyShort(data, game)}
+				{FormatDifficultyShort(data)}
 				<Divider className="my-2" />
 				{tierlistInfo.value} ({tierlistInfo.text ?? "No Info"})
 				{tierlistInfo.idvDiff && (
@@ -851,17 +815,11 @@ enum AchievedStatuses {
 	SCORE_BASED,
 }
 
-function FolderDatasetAchievedStatus(
-	folderDataset: FolderDataset,
-	game: GameGroup,
-	playtype: Playtype,
-	tierlist: string,
-) {
+function FolderDatasetAchievedStatus(folderDataset: FolderDataset, game: V3Game, tierlist: string) {
 	const tierlistInfo: Record<string, { score: string | null; status: AchievedStatuses }> = {};
 
-	const fn = GPT_CLIENT_IMPLEMENTATIONS[`${game}:${playtype}` as GPTString].ratingSystems.find(
-		// @ts-expect-error i'm sick of this language and i'm sick of type hacks
-		(e: GPTRatingSystem<GPTString>) => e.name === tierlist,
+	const fn = (GPT_CLIENT_IMPLEMENTATIONS[game].ratingSystems as GPTRatingSystem<V3Game>[]).find(
+		(e) => e.name === tierlist,
 	)?.achievementFn;
 
 	for (const data of folderDataset) {
@@ -871,8 +829,7 @@ function FolderDatasetAchievedStatus(
 		if (!data.__related.pb) {
 			achieved = AchievedStatuses.NOT_PLAYED;
 		} else if (fn) {
-			// @ts-expect-error i'm sick of this language and i'm sick of type hacks
-			const v = fn(data.__related.pb);
+			const v = fn(data.__related.pb as any);
 
 			achieved = v[1] ? AchievedStatuses.ACHIEVED : AchievedStatuses.FAILED;
 			score = typeof v[0] === "number" ? v[0].toString() : v[0];

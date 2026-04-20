@@ -1,16 +1,19 @@
 import type { KtLogger } from "#lib/log/log";
+import type { ParserFunctionReturns } from "#lib/score-import/import-types/common/types";
 import type { EmptyObject } from "#utils/types";
-import type { integer } from "tachi-common";
+import type { GamesForGroup, integer } from "tachi-common";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
+import {
+	CreateMytTransport,
+	FetchMytTitleAPIID,
+} from "#lib/score-import/import-types/common/api-myt/traverse-api";
 import { PlaylogRequestSchema, WaccaUser } from "#proto/generated/wacca/user_pb";
 import { create } from "@bufbuild/protobuf";
 import { ConnectError, createClient } from "@connectrpc/connect";
 
-import type { ParserFunctionReturns } from "../../common/types";
 import type { MytWaccaScore } from "./types";
 
-import { CreateMytTransport, FetchMytTitleAPIID } from "../../common/api-myt/traverse-api";
 import CreateMytWACCAClassHandler from "./class-handler";
 
 async function* streamPlaylog(apiId: string, log: KtLogger): AsyncIterable<MytWaccaScore> {
@@ -40,7 +43,7 @@ async function* streamPlaylog(apiId: string, log: KtLogger): AsyncIterable<MytWa
 export default async function ParseMytWACCA(
 	userID: integer,
 	log: KtLogger,
-): Promise<ParserFunctionReturns<MytWaccaScore, EmptyObject>> {
+): Promise<ParserFunctionReturns<MytWaccaScore, EmptyObject, GamesForGroup["wacca"]>> {
 	const titleApiId = await FetchMytTitleAPIID(userID, "wacca", log);
 
 	let classProvider;
@@ -56,6 +59,6 @@ export default async function ParseMytWACCA(
 		iterable: streamPlaylog(titleApiId, log),
 		context: {},
 		classProvider,
-		game: "wacca",
+		gameGroup: "wacca",
 	};
 }

@@ -28,10 +28,7 @@ export function ParseDateFromString(str: string | null | undefined): number | nu
  * Museca actually handles clears differently with a bunch of grafica nonsense,
  * but nobody actually cares about it, so...
  */
-export function MusecaGetLamp(
-	score: integer,
-	missCount: integer,
-): GetEnumValue<"museca:Single", "lamp"> {
+export function MusecaGetLamp(score: integer, missCount: integer): GetEnumValue<"museca", "lamp"> {
 	if (score === 1_000_000) {
 		return "PERFECT CONNECT ALL";
 	} else if (missCount === 0) {
@@ -43,10 +40,7 @@ export function MusecaGetLamp(
 	return "FAILED";
 }
 
-export function JubeatGetLamp(
-	score: integer,
-	missCount: integer,
-): GetEnumValue<"jubeat:Single", "lamp"> {
+export function JubeatGetLamp(score: integer, missCount: integer): GetEnumValue<"jubeat", "lamp"> {
 	if (score === 1_000_000) {
 		return "EXCELLENT";
 	} else if (missCount === 0) {

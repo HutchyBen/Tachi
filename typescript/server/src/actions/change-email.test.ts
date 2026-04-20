@@ -1,7 +1,6 @@
-import { ServerConfig } from "#lib/setup/config";
 import DB from "#services/pg/db";
 import { seedUser, seedVerifyEmailToken } from "#test-utils/pg-fixtures";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { ACTION_ChangeEmail } from "./change-email";
 
@@ -129,7 +128,7 @@ describe("ACTION_ChangeEmail", () => {
 		).rejects.toMatchObject({ code: 409 });
 	});
 
-	// ── Success path (no EMAIL_CONFIG) ────────────────────────────────────────
+	// ── Success path ──────────────────────────────────────────────────────────
 
 	it("returns an empty object on success", async () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
@@ -152,7 +151,33 @@ describe("ACTION_ChangeEmail", () => {
 		expect(row.email).toBe(NEW_EMAIL);
 	});
 
-	it("does not insert a verify-email token when EMAIL_CONFIG is absent", async () => {
+	it("inserts a verify-email token for the new address", async () => {
+		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
+
+		await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
+
+		const row = await DB.selectFrom("priv_verify_email_token")
+			.selectAll()
+			.where("user_id", "=", userId)
+			.executeTakeFirstOrThrow();
+
+		expect(row.email).toBe(NEW_EMAIL);
+	});
+
+	it("generates a non-empty hex token", async () => {
+		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
+
+		await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
+
+		const row = await DB.selectFrom("priv_verify_email_token")
+			.select("token")
+			.where("user_id", "=", userId)
+			.executeTakeFirstOrThrow();
+
+		expect(row.token).toMatch(/^[0-9a-f]{40}$/u);
+	});
+
+	it("keeps exactly one token row for the user after the change", async () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
 		await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
@@ -162,7 +187,44 @@ describe("ACTION_ChangeEmail", () => {
 			.where("user_id", "=", userId)
 			.execute();
 
-		expect(rows).toHaveLength(0);
+		expect(rows).toHaveLength(1);
+	});
+
+	it("replaces any pre-existing verify-email token", async () => {
+		await seedVerifyEmailToken(userId, "old@example.com", "OLD_TOKEN_ABCDEF1234");
+
+		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
+
+		await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
+
+		const rows = await DB.selectFrom("priv_verify_email_token")
+			.select(["token", "email"])
+			.where("user_id", "=", userId)
+			.execute();
+
+		expect(rows).toHaveLength(1);
+		expect(rows[0]?.token).not.toBe("OLD_TOKEN_ABCDEF1234");
+		expect(rows[0]?.email).toBe(NEW_EMAIL);
+	});
+
+	it("does not touch verify-email tokens belonging to other users", async () => {
+		const other = await seedUser({
+			username: "other_user",
+			email: "other@example.com",
+			withCredential: true,
+		});
+		await seedVerifyEmailToken(other.id, "other@example.com", "OTHER_TOKEN_XYZ");
+
+		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
+
+		await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
+
+		const row = await DB.selectFrom("priv_verify_email_token")
+			.select("token")
+			.where("user_id", "=", other.id)
+			.executeTakeFirstOrThrow();
+
+		expect(row.token).toBe("OTHER_TOKEN_XYZ");
 	});
 
 	it("does not affect other users' credential rows", async () => {
@@ -182,97 +244,6 @@ describe("ACTION_ChangeEmail", () => {
 			.executeTakeFirstOrThrow();
 
 		expect(row.email).toBe("other@example.com");
-	});
-
-	// ── Success path (with EMAIL_CONFIG) ──────────────────────────────────────
-
-	describe("when EMAIL_CONFIG is set", () => {
-		afterEach(() => {
-			// Restore the config after each test in this group.
-			(ServerConfig as Record<string, unknown>).EMAIL_CONFIG = undefined;
-		});
-
-		beforeEach(() => {
-			(ServerConfig as Record<string, unknown>).EMAIL_CONFIG = {
-				FROM: "noreply@example.com",
-			};
-		});
-
-		it("inserts a verify-email token for the new address", async () => {
-			const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
-
-			await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
-
-			const row = await DB.selectFrom("priv_verify_email_token")
-				.selectAll()
-				.where("user_id", "=", userId)
-				.executeTakeFirstOrThrow();
-
-			expect(row.email).toBe(NEW_EMAIL);
-		});
-
-		it("generates a non-empty hex token", async () => {
-			const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
-
-			await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
-
-			const row = await DB.selectFrom("priv_verify_email_token")
-				.select("token")
-				.where("user_id", "=", userId)
-				.executeTakeFirstOrThrow();
-
-			expect(row.token).toMatch(/^[0-9a-f]{40}$/u);
-		});
-
-		it("keeps exactly one token row for the user after the change", async () => {
-			const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
-
-			await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
-
-			const rows = await DB.selectFrom("priv_verify_email_token")
-				.select("token")
-				.where("user_id", "=", userId)
-				.execute();
-
-			expect(rows).toHaveLength(1);
-		});
-
-		it("replaces any pre-existing verify-email token", async () => {
-			await seedVerifyEmailToken(userId, "old@example.com", "OLD_TOKEN_ABCDEF1234");
-
-			const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
-
-			await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
-
-			const rows = await DB.selectFrom("priv_verify_email_token")
-				.select(["token", "email"])
-				.where("user_id", "=", userId)
-				.execute();
-
-			expect(rows).toHaveLength(1);
-			expect(rows[0]?.token).not.toBe("OLD_TOKEN_ABCDEF1234");
-			expect(rows[0]?.email).toBe(NEW_EMAIL);
-		});
-
-		it("does not touch verify-email tokens belonging to other users", async () => {
-			const other = await seedUser({
-				username: "other_user",
-				email: "other@example.com",
-				withCredential: true,
-			});
-			await seedVerifyEmailToken(other.id, "other@example.com", "OTHER_TOKEN_XYZ");
-
-			const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
-
-			await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
-
-			const row = await DB.selectFrom("priv_verify_email_token")
-				.select("token")
-				.where("user_id", "=", other.id)
-				.executeTakeFirstOrThrow();
-
-			expect(row.token).toBe("OTHER_TOKEN_XYZ");
-		});
 	});
 
 	// ── Audit log ─────────────────────────────────────────────────────────────

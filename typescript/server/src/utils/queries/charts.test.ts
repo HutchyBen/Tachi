@@ -38,13 +38,13 @@ describe("FindChartWithChartID (Postgres)", () => {
 			})
 			.execute();
 
-		const doc = await FindChartWithChartID("ddr", chartId);
+		const doc = await FindChartWithChartID(chartId);
 		expect(doc).not.toBeNull();
 		expect(doc?.chartID).toBe(chartId);
-		expect(doc?.songID).toBe(5_100_000);
+		expect(doc?.song.id).toBe(songId);
 	});
 
 	it("returns null when missing", async () => {
-		expect(await FindChartWithChartID("popn", "no-such-chart")).toBeNull();
+		expect(await FindChartWithChartID("no-such-chart")).toBeNull();
 	});
 });

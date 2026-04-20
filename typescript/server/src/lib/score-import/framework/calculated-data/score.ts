@@ -1,11 +1,9 @@
-import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
+import { GAME_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import {
-	type GameGroup,
-	GetGPTString,
-	type GPTString,
-	type MONGO_ChartDocument,
-	type MONGO_ScoreData,
+	type ChartDocument,
 	type MongoDerivedMetrics,
+	type ScoreData,
+	type V3Game,
 } from "tachi-common";
 
 import type { DryScoreData } from "../common/types";
@@ -14,27 +12,25 @@ import type { DryScoreData } from "../common/types";
  * Create calculated data for a score.
  * @param scores - All of the scores in this session.
  */
-export function CreateScoreCalcData<GPT extends GPTString>(
-	game: GameGroup,
-	scoreData: DryScoreData<GPT> | MONGO_ScoreData<GPT>,
-	chart: MONGO_ChartDocument<GPT>,
+export function CreateScoreCalcData<TGame extends V3Game>(
+	scoreData: DryScoreData<TGame> | ScoreData<TGame>,
+	chart: ChartDocument<TGame>,
 ) {
-	const gptString = GetGPTString(game, chart.playtype);
-	const impl = GPT_SERVER_IMPLEMENTATIONS[gptString];
+	const impl = GAME_IMPLEMENTATIONS[chart.game];
 
 	// Union of per-GPT `scoreDeriver` signatures is not callable with generic `GPT`.
 
 	const derivedData = impl.scoreDeriver(
 		scoreData as any,
 		chart as any,
-	) as MongoDerivedMetrics[GPT];
+	) as MongoDerivedMetrics[TGame];
 
 	// Per-GPT `scoreCalcs` take game-specific score/derived types; at runtime inputs match `gptString`.
 	const scoreCalcs = impl.scoreCalcs as unknown as (
-		scoreData: MONGO_ScoreData<GPT>,
-		derivedData: MongoDerivedMetrics[GPT],
-		chart: MONGO_ChartDocument<GPT>,
+		scoreData: ScoreData<TGame>,
+		derivedData: MongoDerivedMetrics[TGame],
+		chart: ChartDocument<TGame>,
 	) => Record<string, number | null>;
 
-	return scoreCalcs(scoreData as MONGO_ScoreData<GPT>, derivedData, chart);
+	return scoreCalcs(scoreData as ScoreData<TGame>, derivedData, chart);
 }

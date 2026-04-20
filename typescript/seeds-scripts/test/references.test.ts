@@ -2,10 +2,27 @@
 // and no quest-goal desync, etc.
 
 import chalk from "chalk";
-import { type GameGroup, v3AllGames, type V3Game, V3ToGameGroup } from "tachi-common";
+import {
+	ALL_GAMES,
+	computeFolderSlug,
+	type GameGroup,
+	GameToGameGroup,
+	type SeedFolderRow,
+	type V3Game,
+} from "tachi-common";
 
 import { ReadCollection } from "../util";
 import { FormatFunctions } from "./test-utils";
+
+function folderSeedSlug(folder: Record<string, unknown>): string {
+	const f = folder as SeedFolderRow;
+
+	if (typeof f.slug === "string" && f.slug !== "") {
+		return f.slug;
+	}
+
+	return computeFolderSlug(f);
+}
 
 interface ReferenceCheck {
 	base: string;
@@ -17,12 +34,12 @@ interface ReferenceCheck {
 }
 
 const refChecks: Array<ReferenceCheck> = [
-	...v3AllGames.map((game) => ({
+	...ALL_GAMES.map((game) => ({
 		base: `charts-${game}`,
-		parent: `songs-${V3ToGameGroup(game)}`,
+		parent: `songs-${GameToGameGroup(game)}`,
 		baseKey: "songID",
 		parentKey: "id",
-		gameGroup: V3ToGameGroup(game),
+		gameGroup: GameToGameGroup(game),
 		game,
 	})),
 	{
@@ -35,9 +52,9 @@ const refChecks: Array<ReferenceCheck> = [
 	},
 	{
 		base: "tables",
-		baseKey: (table) => table.folders,
+		baseKey: (table) => table.folders.map((slug: string) => `${table.game}:${slug}`),
 		parent: "folders",
-		parentKey: "id",
+		parentKey: (folder) => `${folder.game}:${folderSeedSlug(folder)}`,
 		gameGroup: null,
 		game: null,
 	},

@@ -1,11 +1,11 @@
 import { IsNullish } from "#util/misc";
 import React from "react";
-import { COLOUR_SET, type MONGO_PBScoreDocument, type MONGO_ScoreDocument } from "tachi-common";
+import { COLOUR_SET, type PBScoreDocument, type ScoreDocument } from "tachi-common";
 
 export default function OngekiJudgementCell({
 	score,
 }: {
-	score: MONGO_PBScoreDocument<"ongeki:Single"> | MONGO_ScoreDocument<"ongeki:Single">;
+	score: PBScoreDocument<"ongeki"> | ScoreDocument<"ongeki">;
 }) {
 	const judgements = score.scoreData.judgements;
 

@@ -53,8 +53,8 @@ function TableSort(a, b) {
 }
 
 function BMSCourseSort(a, b) {
-	if (a.playtype !== b.playtype) {
-		return a.playtype.localeCompare(b.playtype);
+	if (a.game !== b.game) {
+		return a.game.localeCompare(b.game);
 	}
 
 	if (a.set !== b.set) {

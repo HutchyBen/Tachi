@@ -60,12 +60,12 @@ async function seedBmsSongAndChart(opts: {
 		})
 		.execute();
 
-	return { chartPgId, songLegacyId: 970_000 + n };
+	return { chartPgId, songPgId: songNewID, songLegacyId: 970_000 + n };
 }
 
-describe("GET /api/v1/games/bms/:playtype/sieglinde-charts", () => {
+describe("GET /api/v1/games/:game/sieglinde-charts", () => {
 	it("returns empty songs and charts when nothing matches", async () => {
-		const res = await mockApi.get("/api/v1/games/bms/7K/sieglinde-charts");
+		const res = await mockApi.get("/api/v1/games/bms-7k/sieglinde-charts");
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
@@ -73,31 +73,31 @@ describe("GET /api/v1/games/bms/:playtype/sieglinde-charts", () => {
 		expect(res.body.body.songs).toEqual([]);
 	});
 
-	it("returns 400 for an invalid playtype", async () => {
-		const res = await mockApi.get("/api/v1/games/bms/99K/sieglinde-charts");
+	it("returns 400 for an invalid game", async () => {
+		const res = await mockApi.get("/api/v1/games/bms-99k/sieglinde-charts");
 
 		expect(res.status).toBe(400);
 		expect(res.body.success).toBe(false);
-		expect(String(res.body.description)).toContain("playtype");
+		expect(String(res.body.description)).toContain("game");
 	});
 
 	it("includes charts with sglEC > 0 and their songs", async () => {
-		const { chartPgId, songLegacyId } = await seedBmsSongAndChart({
+		const { chartPgId, songPgId } = await seedBmsSongAndChart({
 			game: "bms-7k",
 			sglEC: 12,
 			sglHC: null,
 		});
 
-		const res = await mockApi.get("/api/v1/games/bms/7K/sieglinde-charts");
+		const res = await mockApi.get("/api/v1/games/bms-7k/sieglinde-charts");
 
 		expect(res.status).toBe(200);
 		expect(res.body.body.charts).toHaveLength(1);
 		expect(res.body.body.charts[0].chartID).toBe(chartPgId);
-		expect(res.body.body.charts[0].songID).toBe(songLegacyId);
+		expect(res.body.body.charts[0].song.id).toBe(songPgId);
 		expect(res.body.body.charts[0].data.sglEC).toBe(12);
 
 		expect(res.body.body.songs).toHaveLength(1);
-		expect(res.body.body.songs[0].id).toBe(songLegacyId);
+		expect(res.body.body.songs[0].id).toBe(songPgId);
 		expect(res.body.body.songs[0].title).toContain("Sieglinde GPT Test");
 	});
 
@@ -108,7 +108,7 @@ describe("GET /api/v1/games/bms/:playtype/sieglinde-charts", () => {
 			sglHC: 9,
 		});
 
-		const res = await mockApi.get("/api/v1/games/bms/7K/sieglinde-charts");
+		const res = await mockApi.get("/api/v1/games/bms-7k/sieglinde-charts");
 
 		expect(res.status).toBe(200);
 		const withHc = res.body.body.charts.filter((c: { data: { sglHC: number | null } }) =>
@@ -137,7 +137,7 @@ describe("GET /api/v1/games/bms/:playtype/sieglinde-charts", () => {
 			sglHC: null,
 		});
 
-		const res = await mockApi.get("/api/v1/games/bms/7K/sieglinde-charts");
+		const res = await mockApi.get("/api/v1/games/bms-7k/sieglinde-charts");
 
 		expect(res.status).toBe(200);
 		expect(res.body.body.charts).toHaveLength(1);
@@ -151,8 +151,8 @@ describe("GET /api/v1/games/bms/:playtype/sieglinde-charts", () => {
 			sglHC: null,
 		});
 
-		const res7 = await mockApi.get("/api/v1/games/bms/7K/sieglinde-charts");
-		const res14 = await mockApi.get("/api/v1/games/bms/14K/sieglinde-charts");
+		const res7 = await mockApi.get("/api/v1/games/bms-7k/sieglinde-charts");
+		const res14 = await mockApi.get("/api/v1/games/bms-14k/sieglinde-charts");
 
 		expect(res7.status).toBe(200);
 		expect(res14.status).toBe(200);
@@ -166,9 +166,9 @@ describe("GET /api/v1/games/bms/:playtype/sieglinde-charts", () => {
 	});
 });
 
-describe("GET /api/v1/games/bms/:playtype/custom-tables", () => {
-	it("lists public custom tables for the playtype", async () => {
-		const res = await mockApi.get("/api/v1/games/bms/7K/custom-tables");
+describe("GET /api/v1/games/:game/custom-tables", () => {
+	it("lists public custom tables for the game", async () => {
+		const res = await mockApi.get("/api/v1/games/bms-7k/custom-tables");
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);

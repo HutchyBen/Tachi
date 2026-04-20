@@ -1,4 +1,4 @@
-import { allSupportedGameGroups, type GameGroup, v3AllGames } from "tachi-common";
+import { ALL_GAMES, allSupportedGameGroups, type GameGroup } from "tachi-common";
 
 import { ReadCollection } from "../util";
 import { type V3_SCHEMAS } from "./schemas";
@@ -37,7 +37,7 @@ for (const gameGroup of allSupportedGameGroups) {
 	FormatFunctions[`songs-${gameGroup}.json`] = songFormat;
 }
 
-for (const game of v3AllGames) {
+for (const game of ALL_GAMES) {
 	// TODO(zk): again just a part of this shitty hack
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	FormatFunctions[`charts-${game}.json`] = chartFormat as any;

@@ -88,13 +88,13 @@ async function seedIidxChartAndScores(opts: { otherUserId: number; targetUserId:
 	};
 }
 
-describe("GET /api/v1/users/:userID/games/:game/:playtype/scores/:chartID", () => {
+describe("GET /api/v1/users/:userID/games/:game/scores/:chartID", () => {
 	it("returns 404 when the chart does not exist", async () => {
 		const { id } = await seedUser({ username: "ugpt_scores_chart_missing" });
 		await seedIidxSpProfile(id);
 
 		const res = await mockApi.get(
-			`/api/v1/users/${id}/games/iidx/SP/scores/00000000-0000-0000-0000-000000000000`,
+			`/api/v1/users/${id}/games/iidx-sp/scores/00000000-0000-0000-0000-000000000000`,
 		);
 
 		expect(res.status).toBe(404);
@@ -140,7 +140,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/scores/:chartID", () =
 			})
 			.execute();
 
-		const res = await mockApi.get(`/api/v1/users/${targetId}/games/iidx/SP/scores/${chartPg}`);
+		const res = await mockApi.get(`/api/v1/users/${targetId}/games/iidx-sp/scores/${chartPg}`);
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
@@ -167,7 +167,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/scores/:chartID", () =
 			})
 			.execute();
 
-		const res2 = await mockApi.get(`/api/v1/users/${targetId}/games/iidx/SP/scores/${chartPg}`);
+		const res2 = await mockApi.get(`/api/v1/users/${targetId}/games/iidx-sp/scores/${chartPg}`);
 		expect(res2.body.body).toEqual([]);
 	});
 
@@ -181,7 +181,7 @@ describe("GET /api/v1/users/:userID/games/:game/:playtype/scores/:chartID", () =
 			otherUserId: otherId,
 		});
 
-		const res = await mockApi.get(`/api/v1/users/${targetId}/games/iidx/SP/scores/${chartPg}`);
+		const res = await mockApi.get(`/api/v1/users/${targetId}/games/iidx-sp/scores/${chartPg}`);
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);

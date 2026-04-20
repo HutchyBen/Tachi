@@ -1,7 +1,7 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import { ServerConfig } from "#lib/setup/config.js";
-import DB from "#services/pg/db.js";
-import { GetUserWithID } from "#utils/user.js";
+import { MakeAction } from "#lib/actions/actions";
+import { ServerConfig } from "#lib/setup/config";
+import DB from "#services/pg/db";
+import { GetUserWithID } from "#utils/user";
 import { ExpectedErr } from "bliss";
 
 export const ACTION_FollowUser = MakeAction("FOLLOW_USER", async (taker, { userID: toFollow }) => {

@@ -22,13 +22,7 @@ import WaccaJudgementCell from "#components/tables/cells/WACCAJudgementCell";
 import { ChangeOpacity } from "#util/color-opacity";
 import { NumericSOV } from "#util/sorts";
 import React from "react";
-import {
-	COLOUR_SET,
-	GetGPTString,
-	type GPTString,
-	type MONGO_PBScoreDocument,
-	type MONGO_ScoreDocument,
-} from "tachi-common";
+import { COLOUR_SET, type PBScoreDocument, type ScoreDocument, type V3Game } from "tachi-common";
 
 import { bgc, RAINBOW_EX_GRADIENT, RAINBOW_GRADIENT, RAINBOW_SHINY_GRADIENT } from "./games/_util";
 import { ARCAEA_TOUCH_IMPL } from "./games/arcaea";
@@ -40,7 +34,7 @@ import { SDVX_IMPL, USC_IMPL } from "./games/sdvx-usc";
 import { type GPTClientImplementation } from "./types";
 
 type GPTClientImplementations = {
-	[GPT in GPTString]: GPTClientImplementation<GPT>;
+	[GPT in V3Game]: GPTClientImplementation<GPT>;
 };
 
 const defaultEnumIcons = {
@@ -49,11 +43,11 @@ const defaultEnumIcons = {
 } as const;
 
 export const GPT_CLIENT_IMPLEMENTATIONS: GPTClientImplementations = {
-	"iidx:SP": IIDX_SP_IMPL,
-	"iidx:DP": IIDX_DP_IMPL,
-	"ddr:SP": DDR_SP_IMPL,
-	"ddr:DP": DDR_DP_IMPL,
-	"chunithm:Single": {
+	"iidx-sp": IIDX_SP_IMPL,
+	"iidx-dp": IIDX_DP_IMPL,
+	"ddr-sp": DDR_SP_IMPL,
+	"ddr-dp": DDR_DP_IMPL,
+	chunithm: {
 		sessionImportantScoreCount: 50,
 		enumIcons: {
 			grade: "sort-alpha-up",
@@ -166,7 +160,7 @@ export const GPT_CLIENT_IMPLEMENTATIONS: GPTClientImplementations = {
 		),
 		ratingCell: ({ sc, rating }) => <RatingCell rating={rating} score={sc} />,
 	},
-	"jubeat:Single": {
+	jubeat: {
 		sessionImportantScoreCount: 30,
 		enumIcons: defaultEnumIcons,
 		enumColours: {
@@ -225,7 +219,7 @@ export const GPT_CLIENT_IMPLEMENTATIONS: GPTClientImplementations = {
 		),
 		ratingCell: ({ sc }) => <JubilityCell score={sc} />,
 	},
-	"maimai:Single": {
+	maimai: {
 		sessionImportantScoreCount: 30,
 		enumIcons: defaultEnumIcons,
 		enumColours: {
@@ -326,7 +320,7 @@ export const GPT_CLIENT_IMPLEMENTATIONS: GPTClientImplementations = {
 		),
 		ratingCell: ({ sc, rating }) => <RatingCell rating={rating} score={sc} />,
 	},
-	"maimaidx:Single": {
+	maimaidx: {
 		sessionImportantScoreCount: 50,
 		enumIcons: defaultEnumIcons,
 		enumColours: {
@@ -481,7 +475,7 @@ export const GPT_CLIENT_IMPLEMENTATIONS: GPTClientImplementations = {
 		),
 		ratingCell: ({ sc, rating }) => <RatingCell rating={rating} score={sc} />,
 	},
-	"museca:Single": {
+	museca: {
 		sessionImportantScoreCount: 20,
 		enumIcons: defaultEnumIcons,
 		enumColours: {
@@ -529,7 +523,7 @@ export const GPT_CLIENT_IMPLEMENTATIONS: GPTClientImplementations = {
 		),
 		ratingCell: ({ sc, rating }) => <RatingCell rating={rating} score={sc} />,
 	},
-	"popn:9B": {
+	popn: {
 		sessionImportantScoreCount: 20,
 		enumIcons: {
 			grade: "sort-alpha-up",
@@ -605,7 +599,7 @@ export const GPT_CLIENT_IMPLEMENTATIONS: GPTClientImplementations = {
 		),
 		ratingCell: ({ sc, rating }) => <RatingCell rating={rating} score={sc} />,
 	},
-	"wacca:Single": {
+	wacca: {
 		sessionImportantScoreCount: 50,
 		enumIcons: defaultEnumIcons,
 		enumColours: {
@@ -690,7 +684,7 @@ export const GPT_CLIENT_IMPLEMENTATIONS: GPTClientImplementations = {
 		),
 		ratingCell: ({ sc, rating }) => <RatingCell rating={rating} score={sc} />,
 	},
-	"itg:Stamina": {
+	"itg-stamina": {
 		sessionImportantScoreCount: 10,
 		enumIcons: defaultEnumIcons,
 		enumColours: {
@@ -764,7 +758,7 @@ export const GPT_CLIENT_IMPLEMENTATIONS: GPTClientImplementations = {
 			</>
 		),
 	},
-	"ongeki:Single": {
+	ongeki: {
 		sessionImportantScoreCount: 45,
 		enumIcons: {
 			grade: "sort-alpha-up",
@@ -890,23 +884,21 @@ export const GPT_CLIENT_IMPLEMENTATIONS: GPTClientImplementations = {
 			</>
 		),
 	},
-	"arcaea:Touch": ARCAEA_TOUCH_IMPL,
-	"gitadora:Dora": GITADORA_DORA_IMPL,
-	"gitadora:Gita": GITADORA_GITA_IMPL,
-	"bms:14K": BMS_14K_IMPL,
-	"bms:7K": BMS_7K_IMPL,
-	"pms:Controller": PMS_IMPL,
-	"pms:Keyboard": PMS_IMPL,
-	"sdvx:Single": SDVX_IMPL,
-	"usc:Controller": USC_IMPL,
-	"usc:Keyboard": USC_IMPL,
+	arcaea: ARCAEA_TOUCH_IMPL,
+	"gitadora-dora": GITADORA_DORA_IMPL,
+	"gitadora-gita": GITADORA_GITA_IMPL,
+	"bms-14k": BMS_14K_IMPL,
+	"bms-7k": BMS_7K_IMPL,
+	"pms-controller": PMS_IMPL,
+	"pms-keyboard": PMS_IMPL,
+	sdvx: SDVX_IMPL,
+	"usc-controller": USC_IMPL,
+	"usc-keyboard": USC_IMPL,
 };
 
-export function GetEnumColour(
-	score: MONGO_PBScoreDocument | MONGO_ScoreDocument,
-	enumName: string,
-) {
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(score.game, score.playtype)];
+export function GetEnumColour(score: PBScoreDocument | ScoreDocument, enumName: string) {
+	const game = score.game;
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
 	// @ts-expect-error lol
 	return gptImpl.enumColours[enumName][score.scoreData[enumName]];

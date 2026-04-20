@@ -9,7 +9,8 @@
 		"build": "tsgo -b",
 		"start": "tsgo -b && node js/main.js",
 		"typecheck": "tsgo --noEmit",
-		"bench": "vitest bench --passWithNoTests"
+		"test": "vitest",
+		"bench": "vitest bench"
 	},
 	"dependencies": {
 		"kysely": "catalog:"

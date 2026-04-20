@@ -1,5 +1,4 @@
 import { log } from "#lib/log/log";
-import { execSync } from "child_process";
 import { Command } from "commander";
 import monk from "monk";
 

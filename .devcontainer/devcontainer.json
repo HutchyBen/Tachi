@@ -4,7 +4,12 @@
 	"service": "tachi-dev",
 	"workspaceFolder": "/tachi",
 	"containerEnv": {
-		"MINIO_ENDPOINT": "http://tachi-s3:9000"
+		"MINIO_ENDPOINT": "http://tachi-s3:9000",
+		"TACHI_EMAIL_FROM": "dev@localhost",
+		"TACHI_EMAIL_AUTH_POSTMARK": "false",
+		"TACHI_EMAIL_HOST": "tachi-mailpit",
+		"TACHI_EMAIL_PORT": "1025",
+		"TACHI_EMAIL_SECURE": "false"
 	},
 	"postAttachCommand": "./dev/bootstrap.sh",
 	"updateRemoteUserUID": true,

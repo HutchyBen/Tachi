@@ -6,7 +6,7 @@ import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
-import { type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
+import { type ChartDocument, type SongDocument } from "tachi-common";
 
 import { ReadCollection, WriteCollection } from "../../util";
 
@@ -25,8 +25,8 @@ const game = options.game;
 
 const readOpt = async (
 	musicPath: string,
-	charts: MONGO_ChartDocument<"chunithm:Single" | "ongeki:Single">[],
-	songs: MONGO_SongDocument<"chunithm" | "ongeki">[],
+	charts: ChartDocument<"chunithm" | "ongeki">[],
+	songs: SongDocument<"chunithm" | "ongeki">[],
 ) => {
 	let musicDir: string[];
 	try {
@@ -65,7 +65,7 @@ const readOpt = async (
 					}
 					continue;
 				}
-				const song = songs.find((s) => s.id === chart.songID);
+				const song = songs.find((s) => s.id === chart.song.id);
 				if (song === undefined) {
 					console.error(`Song #${id}: orphan`);
 					continue;

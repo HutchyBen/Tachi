@@ -8,7 +8,7 @@ import { UserContext } from "#context/UserContext";
 import { APIFetchV1 } from "#util/api";
 import React, { useContext, useEffect, useMemo } from "react";
 import { Button, Col, Row } from "react-bootstrap";
-import { type MONGO_UserDocument } from "tachi-common";
+import { type UserDocument } from "tachi-common";
 
 export default function NotificationsPage() {
 	const { user } = useContext(UserContext);
@@ -22,7 +22,7 @@ export default function NotificationsPage() {
 	return <NotificationsInnerPage user={user} />;
 }
 
-function NotificationsInnerPage({ user }: { user: MONGO_UserDocument }) {
+function NotificationsInnerPage({ user }: { user: UserDocument }) {
 	const { notifications, reload } = useContext(NotificationsContext);
 
 	const unread = useMemo(() => {

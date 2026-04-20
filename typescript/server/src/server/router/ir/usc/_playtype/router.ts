@@ -4,7 +4,7 @@ import { ONE_MEGABYTE } from "#lib/constants/filesize";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { USCIR_MAX_LEADERBOARD_N } from "#lib/constants/usc-ir";
 import { SELECT_API_TOKEN, ToAPITokenDocument } from "#lib/db-formats/api-token";
-import { LoadPbRankOneOnChartLegacyId, LoadPbsOnChartByRankingValueDesc } from "#lib/db-formats/pb";
+import { LoadPbRankOneOnChartID, LoadPbsOnChartByRankingValueDesc } from "#lib/db-formats/pb";
 import { LoadScoreDocumentById } from "#lib/db-formats/score";
 import { log } from "#lib/log/log";
 import { AssertStrAsPositiveNonZeroInt } from "#lib/score-import/framework/common/string-asserts";
@@ -14,15 +14,16 @@ import { RejectIfBanned, RequirePermissions } from "#server/middleware/auth";
 import { CreateMulterSingleUploadMiddleware } from "#server/middleware/multer-upload";
 import DB from "#services/pg/db";
 import { FormatPrError } from "#utils/prudence";
-import { FindUSCChartOnSHA1Playtype } from "#utils/queries/charts";
-import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
+import { FindUSCChartOnSHA1 } from "#utils/queries/charts";
+import { REQ_AssignToReqTachiData, REQ_GetTachiData } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
 import {
-	type MONGO_ChartDocument,
-	type MONGO_ImportDocument,
-	type MONGO_PBScoreDocument,
-	type Playtypes,
+	type ChartDocument,
+	type ImportDocument,
+	LEGACY_GameGroupPTToGame,
+	type LEGACY_Playtypes,
+	type PBScoreDocument,
 	type SuccessfulAPIResponse,
 } from "tachi-common";
 
@@ -106,7 +107,7 @@ router.use(ValidateUSCRequest);
  * https://uscir.readthedocs.io/en/latest/endpoints/heartbeat.html
  * @name GET /ir/usc/:playtype
  */
-router.get("/", (req, res) =>
+router.get("/", (_req, res) =>
 	res.status(200).json({
 		statusCode: STATUS_CODES.SUCCESS,
 		description: "IR Request Successful.",
@@ -119,10 +120,10 @@ router.get("/", (req, res) =>
 );
 
 const RetrieveChart: RequestHandler = async (req, res, next) => {
-	const chart = await FindUSCChartOnSHA1Playtype(
-		req.params.chartHash,
-		req.params.playtype as Playtypes["usc"],
-	);
+	const playtype = req.params.playtype as LEGACY_Playtypes["usc"];
+	const game = LEGACY_GameGroupPTToGame("usc", playtype) as "usc-controller" | "usc-keyboard";
+
+	const chart = await FindUSCChartOnSHA1(req.params.chartHash, game);
 
 	if (!chart) {
 		return res.status(200).json({
@@ -135,8 +136,8 @@ const RetrieveChart: RequestHandler = async (req, res, next) => {
 		});
 	}
 
-	AssignToReqTachiData(req, {
-		uscChartDoc: chart as MONGO_ChartDocument<"usc:Controller" | "usc:Keyboard">,
+	REQ_AssignToReqTachiData(req, {
+		uscChartDoc: chart as ChartDocument<"usc-controller" | "usc-keyboard">,
 	});
 
 	next();
@@ -147,7 +148,7 @@ const RetrieveChart: RequestHandler = async (req, res, next) => {
  * https://uscir.readthedocs.io/en/latest/endpoints/chart-charthash.html
  * @name GET /ir/usc/:playtype/charts/:chartHash
  */
-router.get("/charts/:chartHash", RetrieveChart, (req, res) =>
+router.get("/charts/:chartHash", RetrieveChart, (_req, res) =>
 	res.status(200).json({
 		statusCode: STATUS_CODES.SUCCESS,
 		description: "This chart is tracked by the IR.",
@@ -161,11 +162,11 @@ router.get("/charts/:chartHash", RetrieveChart, (req, res) =>
  * @name GET /ir/usc/:playtype/charts/:chartHash/record
  */
 router.get("/charts/:chartHash/record", RetrieveChart, async (req, res) => {
-	const chart = GetTachiData(req, "uscChartDoc");
+	const chart = REQ_GetTachiData(req, "uscChartDoc");
 
-	const serverRecord = (await LoadPbRankOneOnChartLegacyId(
-		chart.chartID,
-	)) as MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard"> | null;
+	const serverRecord = (await LoadPbRankOneOnChartID(chart.chartID)) as PBScoreDocument<
+		"usc-controller" | "usc-keyboard"
+	> | null;
 
 	if (!serverRecord) {
 		return res.status(200).json({
@@ -189,7 +190,7 @@ router.get("/charts/:chartHash/record", RetrieveChart, async (req, res) => {
  * @name GET /ir/usc/:playtype/charts/:chartHash/leaderboard
  */
 router.get("/charts/:chartHash/leaderboard", RetrieveChart, async (req, res) => {
-	const chart = GetTachiData(req, "uscChartDoc");
+	const chart = REQ_GetTachiData(req, "uscChartDoc");
 
 	if (!(typeof req.query.mode === "string" && ["best", "rivals"].includes(req.query.mode))) {
 		return res.status(200).json({
@@ -230,7 +231,7 @@ router.get("/charts/:chartHash/leaderboard", RetrieveChart, async (req, res) => 
 	}
 
 	const bestScores = (await LoadPbsOnChartByRankingValueDesc(chart.chartID, n)) as Array<
-		MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard">
+		PBScoreDocument<"usc-controller" | "usc-keyboard">
 	>;
 
 	const serverScores = await Promise.all(bestScores.map(TachiScoreToServerScore));
@@ -259,7 +260,8 @@ const PR_USCIR_CHART_DOC = {
  * @name POST /ir/usc/:playtype/scores
  */
 router.post("/scores", RequirePermissions("submit_score"), async (req, res) => {
-	const playtype = req.params.playtype as Playtypes["usc"];
+	const playtype = req.params.playtype as LEGACY_Playtypes["usc"];
+	const game = LEGACY_GameGroupPTToGame("usc", playtype) as "usc-controller" | "usc-keyboard";
 
 	const chartErr = p(
 		req.safeBody.chart,
@@ -280,10 +282,9 @@ router.post("/scores", RequirePermissions("submit_score"), async (req, res) => {
 
 	const uscChart = req.safeBody.chart as USCClientChart;
 
-	const chartDoc = (await FindUSCChartOnSHA1Playtype(
-		uscChart.chartHash,
-		playtype,
-	)) as MONGO_ChartDocument<"usc:Controller" | "usc:Keyboard"> | null;
+	const chartDoc = (await FindUSCChartOnSHA1(uscChart.chartHash, game)) as ChartDocument<
+		"usc-controller" | "usc-keyboard"
+	> | null;
 
 	const userID = req[SYMBOL_TACHI_API_AUTH].userID!;
 
@@ -305,7 +306,7 @@ router.post("/scores", RequirePermissions("submit_score"), async (req, res) => {
 		});
 	}
 
-	const importDoc = (importRes.body as SuccessfulAPIResponse).body as MONGO_ImportDocument;
+	const importDoc = (importRes.body as SuccessfulAPIResponse).body as ImportDocument;
 
 	// If the import failed, AND the import failure WAS NOT that the chart didnt exist
 	// report that error instead.
@@ -407,7 +408,8 @@ router.post(
 		if (
 			!correspondingScore ||
 			correspondingScore.userID !== req[SYMBOL_TACHI_API_AUTH].userID ||
-			correspondingScore.game !== "usc"
+			(correspondingScore.game !== "usc-controller" &&
+				correspondingScore.game !== "usc-keyboard")
 		) {
 			return res.status(200).json({
 				statusCode: STATUS_CODES.NOT_FOUND,

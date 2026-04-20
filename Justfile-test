@@ -68,7 +68,7 @@ test-typescript FILTER="*":
 	#!/bin/bash
 	set -euo pipefail
 
-	bun run --elide-lines=0 --sequential --filter '{{FILTER}}' test -- --coverage --coverage.reporter=lcov --reporter=default --reporter=junit --outputFile.junit=test-results/junit.xml
+	bun run --elide-lines=0 --sequential --filter '{{FILTER}}' test -- --reporter=default --reporter=junit --outputFile.junit=test-results/junit.xml
 
 # Summarize Vitest v8 coverage across workspaces (see typescript/coverage-tools).
 coverage-report *ARGS:

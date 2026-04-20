@@ -35,11 +35,6 @@ function cmd
 end
 
 function fish_greeting
-	# check $PATH is correct
-	if not contains ~/.local/pnpm $PATH
-		fish_add_path ~/.local/pnpm
-	end
-
 	if test (random 0 100) -lt 10; and test -d /host-pc/dl # entropy
 		perl /tachi/dev/eye.pl
 	end

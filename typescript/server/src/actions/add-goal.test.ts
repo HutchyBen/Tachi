@@ -1,6 +1,6 @@
 import DB from "#services/pg/db";
 import { seedMinimalIidxSpChart, seedUser } from "#test-utils/pg-fixtures";
-import { GetGoalForIDGuaranteed, GetGoalSubscriptionForIDGuaranteed } from "#utils/db.js";
+import { GetGoalForIDGuaranteed, GetGoalSubscriptionForIDGuaranteed } from "#utils/db";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { ACTION_AddGoal } from "./add-goal";
@@ -20,8 +20,7 @@ describe("ACTION_AddGoal", () => {
 		await expect(
 			ACTION_AddGoal(taker, {
 				userID: other.id,
-				game: "iidx",
-				playtype: "SP",
+				game: "iidx-sp",
 				charts: { type: "single", data: "chart" },
 				criteria: { key: "lamp", value: 0, mode: "single" },
 			}),
@@ -34,8 +33,7 @@ describe("ACTION_AddGoal", () => {
 
 		const { goalID } = await ACTION_AddGoal(taker, {
 			userID,
-			game: "iidx",
-			playtype: "SP",
+			game: "iidx-sp",
 			charts: { type: "single", data: chartId },
 			criteria: { key: "lamp", value: 7, mode: "single" },
 		});
@@ -77,8 +75,7 @@ describe("ACTION_AddGoal", () => {
 
 		await ACTION_AddGoal(taker, {
 			userID: userID,
-			game: "iidx",
-			playtype: "SP",
+			game: "iidx-sp",
 			charts: { type: "single", data: chartId },
 			criteria: { key: "lamp", value: 7, mode: "single" },
 		});
@@ -103,8 +100,7 @@ describe("ACTION_AddGoal", () => {
 		await expect(
 			ACTION_AddGoal(taker, {
 				userID: userID,
-				game: "iidx",
-				playtype: "SP",
+				game: "iidx-sp",
 				charts: { type: "single", data: chartId },
 				criteria: { key: "not_a_real_metric", value: 0, mode: "single" },
 			}),
@@ -117,9 +113,8 @@ describe("ACTION_AddGoal", () => {
 		await expect(
 			ACTION_AddGoal(taker, {
 				userID: userID,
-				game: "iidx",
-				playtype: "SP",
-				charts: { type: "single", data: "00000000-0000-0000-0000-00000000dead" },
+				game: "iidx-sp",
+				charts: { type: "single", data: "C_fake" },
 				criteria: { key: "lamp", value: 7, mode: "single" },
 			}),
 		).rejects.toMatchObject({ code: 400 });
@@ -131,8 +126,7 @@ describe("ACTION_AddGoal", () => {
 
 		const input = {
 			userID: userID,
-			game: "iidx" as const,
-			playtype: "SP" as const,
+			game: "iidx-sp" as const,
 			charts: { type: "single" as const, data: chartId },
 			criteria: { key: "lamp" as const, value: 7, mode: "single" as const },
 		};

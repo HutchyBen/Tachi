@@ -1,9 +1,9 @@
-import { type MONGO_ScoreData, type PgScoreData, SDVX_GRADES, SDVX_LAMPS } from "tachi-common";
+import { type PgScoreData, type ScoreData, SDVX_GRADES, SDVX_LAMPS } from "tachi-common";
 import { describe, expect, it } from "vitest";
 
-import { mongoScoreDataToPg, pgScoreDataToMongo } from "./migration-tools.js";
+import { mongoScoreDataToPg, pgScoreDataToMongo } from "./migration-tools";
 
-const sdvxScoreData: MONGO_ScoreData<"sdvx:Single"> = {
+const sdvxScoreData: ScoreData<"sdvx"> = {
 	score: 9_876_543,
 	lamp: "EXCESSIVE CLEAR",
 	grade: "S",
@@ -74,10 +74,8 @@ describe("pgScoreDataToMongo", () => {
 		});
 	});
 
-	it("roundtrips as expected (sdvx:Single)", () => {
-		const gpt = "sdvx:Single";
-
-		const pgScoreData = mongoScoreDataToPg(gpt, sdvxScoreData);
+	it("roundtrips as expected (sdvx)", () => {
+		const pgScoreData = mongoScoreDataToPg("sdvx", sdvxScoreData);
 		const merged = pgScoreDataToMongo("sdvx", pgScoreData);
 
 		expect(merged).toStrictEqual(sdvxScoreData);
@@ -86,9 +84,7 @@ describe("pgScoreDataToMongo", () => {
 
 describe("mongoScoreDataToPg", () => {
 	it("converts nicely", () => {
-		const gpt = "sdvx:Single";
-
-		const { data, derived, judgements } = mongoScoreDataToPg(gpt, sdvxScoreData);
+		const { data, derived, judgements } = mongoScoreDataToPg("sdvx", sdvxScoreData);
 
 		expect(data).toStrictEqual({
 			lamp: SDVX_LAMPS.EXCESSIVE_CLEAR,

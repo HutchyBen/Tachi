@@ -1,4 +1,4 @@
-import type { MONGO_ScoreDocument, MONGO_SessionDocument } from "tachi-common";
+import type { ScoreDocument, SessionDocument } from "tachi-common";
 
 import {
 	type ScoreDocumentJoinRow,
@@ -12,7 +12,7 @@ import DB from "#services/pg/db";
  * Returns all the score documents inside a session.
  * @param session The session to retrieve the score documents of.
  */
-export async function GetScoresFromSession(session: MONGO_SessionDocument) {
+export async function GetScoresFromSession(session: SessionDocument) {
 	if (session.scoreIDs.length === 0) {
 		return [];
 	}
@@ -32,7 +32,7 @@ export async function GetScoresFromSession(session: MONGO_SessionDocument) {
  * Returns the session a score belongs to, if there is one. A score can only be part of one session implicitly.
  * @param score The score to return the associated session of.
  */
-export async function GetSessionFromScore(score: MONGO_ScoreDocument) {
+export async function GetSessionFromScore(score: ScoreDocument) {
 	const row = await DB.selectFrom("score")
 		.select("session_id")
 		.where("id", "=", score.scoreID)

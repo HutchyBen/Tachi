@@ -1,5 +1,5 @@
 import { type Selection } from "kysely";
-import { type MONGO_KsHookSettingsDocument } from "tachi-common";
+import { type KsHookSettingsDocument } from "tachi-common";
 import { type Database } from "tachi-db";
 
 export const SELECT_KSHOOK_SV6C_SETTINGS = [
@@ -13,7 +13,7 @@ export function ToKshookSv6cSettings(
 		"svc_kshook_sv6c_settings",
 		(typeof SELECT_KSHOOK_SV6C_SETTINGS)[number]
 	>,
-): MONGO_KsHookSettingsDocument {
+): KsHookSettingsDocument {
 	return {
 		userID: row.user_id,
 		forceStaticImport: row.force_static_import,

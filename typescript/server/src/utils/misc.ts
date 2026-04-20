@@ -2,17 +2,17 @@ import type { KtLogger } from "#lib/log/log";
 
 import { ONE_MEGABYTE } from "#lib/constants/filesize";
 import { ONE_HOUR, ONE_SECOND } from "#lib/constants/time";
-import { TachiConfig } from "#lib/setup/config";
+import { AllEnabledGames as AllEnabledGames, TachiConfig } from "#lib/setup/config";
 import { exec } from "child_process";
 import crypto from "crypto";
 import {
+	type GameConfig,
 	type GameGroup,
-	type GamePTConfig,
+	GetGameConfig,
 	GetGameGroupConfig,
-	GetGamePTConfig,
-	type GPTString,
 	type integer,
-	type Playtype,
+	type LEGACY_Playtype,
+	type V3Game,
 	type Versions,
 } from "tachi-common";
 import { URL } from "url";
@@ -95,20 +95,24 @@ export function HasOwnProperty<T>(obj: T, key: number | string | symbol): key is
 	return Object.prototype.hasOwnProperty.call(obj, key);
 }
 
-export function IsValidGame(str: string): str is GameGroup {
-	return !!TachiConfig.GAMES.includes(str as GameGroup);
+export function IsEnabledGame(str: string): str is V3Game {
+	return AllEnabledGames().includes(str as V3Game);
 }
 
-export function IsValidPlaytype(game: GameGroup, str: string): str is Playtype {
-	return GetGameGroupConfig(game).playtypes.includes(str as Playtype);
+export function IsEnabledGameGroup(str: string): str is GameGroup {
+	return !!TachiConfig.GAME_GROUPS.includes(str as GameGroup);
+}
+
+export function IsValidPlaytype(gameGroup: GameGroup, str: string): str is LEGACY_Playtype {
+	return GetGameGroupConfig(gameGroup).playtypes.includes(str as LEGACY_Playtype);
 }
 
 export function IsValidScoreAlg(
-	gptConfig: GamePTConfig,
+	gameConfig: GameConfig,
 	str: unknown,
-): str is GamePTConfig["scoreRatingAlgs"][0] {
+): str is GameConfig["scoreRatingAlgs"][0] {
 	// @ts-expect-error i hate this feature
-	return Object.keys(gptConfig.scoreRatingAlgs).includes(str);
+	return Object.keys(gameConfig.scoreRatingAlgs).includes(str);
 }
 
 export function IsString(val: unknown): val is string {
@@ -291,7 +295,7 @@ export function OnlyFloatToDP(num: number, points = 2) {
  * Returns whether this game is supported by this instance of tachi or not.
  */
 export function IsSupported(game: GameGroup) {
-	return TachiConfig.GAMES.includes(game);
+	return TachiConfig.GAME_GROUPS.includes(game);
 }
 
 /**
@@ -367,14 +371,10 @@ export function ClassToObject(cls: unknown) {
 	return JSON.parse(JSON.stringify(cls)) as unknown;
 }
 
-export function StringIsGameVersion(
-	game: GameGroup,
-	playtype: Playtype,
-	version: string,
-): version is Versions[GPTString] {
-	const gptConfig = GetGamePTConfig(game, playtype);
+export function StringIsGameVersion(game: V3Game, version: string): version is Versions[V3Game] {
+	const gameConfig = GetGameConfig(game);
 
-	return Object.keys(gptConfig.versions).includes(version);
+	return Object.keys(gameConfig.versions).includes(version);
 }
 
 /**

@@ -1,4 +1,4 @@
-import type { MONGO_NotificationDocument, NotificationBody } from "tachi-common";
+import type { NotificationBody, NotificationDocument } from "tachi-common";
 
 import { ISO8601ToUnixMilliseconds } from "#utils/time";
 import { type Selection } from "kysely";
@@ -16,7 +16,7 @@ export const SELECT_NOTIFICATION = [
 
 export function ToNotificationDocument(
 	row: Selection<Database, "notification", (typeof SELECT_NOTIFICATION)[number]>,
-): MONGO_NotificationDocument {
+): NotificationDocument {
 	const body = row.payload as NotificationBody;
 
 	return {

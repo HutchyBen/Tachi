@@ -1,11 +1,11 @@
 import { IsNullish } from "#util/misc";
 import React from "react";
-import { COLOUR_SET, type MONGO_PBScoreDocument, type MONGO_ScoreDocument } from "tachi-common";
+import { COLOUR_SET, type PBScoreDocument, type ScoreDocument } from "tachi-common";
 
 export default function ArcaeaJudgementCell({
 	score,
 }: {
-	score: MONGO_PBScoreDocument<"arcaea:Touch"> | MONGO_ScoreDocument<"arcaea:Touch">;
+	score: PBScoreDocument<"arcaea"> | ScoreDocument<"arcaea">;
 }) {
 	// even if we dont have judgement data, we know what they got.
 	if (score.scoreData.lamp === "PURE MEMORY") {

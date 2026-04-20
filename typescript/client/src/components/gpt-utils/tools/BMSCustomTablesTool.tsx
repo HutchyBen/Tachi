@@ -12,7 +12,7 @@ import { CopyToClipboard } from "#util/misc";
 import React from "react";
 import { Col, Row } from "react-bootstrap";
 
-function Component({ game, playtype, reqUser }: UGPT) {
+function Component({ game, reqUser }: UGPT) {
 	const { data, error } = useApiQuery<
 		Array<{
 			description: string;
@@ -21,7 +21,7 @@ function Component({ game, playtype, reqUser }: UGPT) {
 			tableName: string;
 			urlName: string;
 		}>
-	>(`/games/${game}/${playtype}/custom-tables`);
+	>(`/games/${game}/custom-tables`);
 
 	if (error) {
 		return <ApiError error={error} />;
@@ -42,7 +42,7 @@ function Component({ game, playtype, reqUser }: UGPT) {
 				const TABLE_URL = ToAPIURL(
 					`${
 						tbl.forSpecificUser ? `/users/${reqUser.username}` : ""
-					}/games/bms/${playtype}/custom-tables/${tbl.urlName}`,
+					}/games/${game}/custom-tables/${tbl.urlName}`,
 				);
 
 				return (

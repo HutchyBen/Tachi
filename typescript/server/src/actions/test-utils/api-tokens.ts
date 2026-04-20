@@ -1,5 +1,8 @@
 import { SELECT_API_TOKEN } from "#lib/db-formats/api-token";
 import DB from "#services/pg/db";
+import { seedUser } from "#test-utils/pg-fixtures";
+
+export { seedUser };
 
 // ─── seedApiClient ────────────────────────────────────────────────────────────
 

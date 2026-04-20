@@ -6,7 +6,7 @@ These endpoints are related to the Statistic Showcase feature.
 
 ## Evaluate this users set stats
 
-`GET /api/v1/users/:userID/games/:game/:playtype/showcase`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/showcase`
 
 ### Parameters
 
@@ -53,7 +53,7 @@ GET /api/v1/users/1/games/iidx/SP/showcase
 
 ## Replace a user's stat showcase.
 
-`PATCH /api/v1/users/:userID/games/:game/:playtype/showcase`
+`PATCH /api/v1/users/:userID/games/:gameGroup/:playtype/showcase`
 
 ### Permissions
 
@@ -101,7 +101,7 @@ PATCH /api/v1/users/1/games/iidx/SP/showcase
 
 ## Evaluate a custom stat on this user.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/showcase/custom`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/showcase/custom`
 
 ### Parameters
 

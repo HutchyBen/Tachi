@@ -1,53 +1,47 @@
-import { ACTION_UpdateFervidexSettings } from "#actions/update-fervidex-settings.js";
+import { ACTION_UpdateFervidexSettings } from "#actions/update-fervidex-settings";
 import { SELECT_FER_SETTINGS, ToFervidexSettingsDocument } from "#lib/db-formats/fervidex-settings";
-import prValidate from "#server/middleware/prudence-validate";
-import { RequireKamaitachi } from "#server/middleware/type-require";
+import { withKamaitachi, withRequestedUser, withSelf } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
 import DB from "#services/pg/db";
-import { optNull } from "#utils/prudence";
-import { GetTachiData } from "#utils/req-tachi-data";
-import { Router } from "express";
-
-import { RequireSelfRequestFromUser } from "../../middleware";
-
-const router: Router = Router({ mergeParams: true });
-
-router.use(RequireKamaitachi);
-router.use(RequireSelfRequestFromUser);
+import { ExpectedErr } from "bliss";
 
 /**
  * Retrieve your fervidex settings.
  *
  * @name GET /api/v1/users/:userID/integrations/fervidex/settings
  */
-router.get("/settings", async (req, res) => {
-	const user = GetTachiData(req, "requestedUser");
+API_V1_ROUTER.add(
+	"GET /users/:userID/integrations/fervidex/settings",
+	withKamaitachi,
+	withSelf,
+	withRequestedUser,
+	async ({ ctx }) => {
+		const { requestedUser: user } = ctx;
 
-	const row = await DB.selectFrom("svc_fer_settings")
-		.select(SELECT_FER_SETTINGS)
-		.where("user_id", "=", user.id)
-		.executeTakeFirst();
+		const row = await DB.selectFrom("svc_fer_settings")
+			.select(SELECT_FER_SETTINGS)
+			.where("user_id", "=", user.id)
+			.executeTakeFirst();
 
-	if (!row) {
-		return res.status(200).json({
-			success: true,
-			description: `Retrieved Fervidex settings.`,
-			body: null,
-		});
-	}
+		if (!row) {
+			return success("Retrieved Fervidex settings.", {
+				userID: user.id,
+				cards: null,
+				forceStaticImport: false,
+			});
+		}
 
-	const cardRows = await DB.selectFrom("priv_svc_fer_card")
-		.select(["priv_svc_fer_card.card_id"])
-		.where("user_id", "=", user.id)
-		.execute();
+		const cardRows = await DB.selectFrom("priv_svc_fer_card")
+			.select(["priv_svc_fer_card.card_id"])
+			.where("user_id", "=", user.id)
+			.execute();
 
-	const cards = cardRows.length > 0 ? cardRows.map((r) => r.card_id) : null;
+		const cards = cardRows.length > 0 ? cardRows.map((r) => r.card_id) : null;
 
-	return res.status(200).json({
-		success: true,
-		description: `Retrieved Fervidex settings.`,
-		body: ToFervidexSettingsDocument(row, cards),
-	});
-});
+		return success("Retrieved Fervidex settings.", ToFervidexSettingsDocument(row, cards));
+	},
+);
 
 /**
  * Update your fervidex configuration.
@@ -57,48 +51,41 @@ router.get("/settings", async (req, res) => {
  *
  * @name PATCH /api/v1/users/:userID/integrations/fervidex/settings
  */
-router.patch(
-	"/settings",
-	prValidate({ cards: optNull(["string"]), forceStaticImport: "*?boolean" }),
-	async (req, res) => {
-		const body = req.safeBody as {
-			cards?: Array<string> | null;
-			forceStaticImport?: boolean | null;
-		};
+API_V1_ROUTER.add(
+	"PATCH /users/:userID/integrations/fervidex/settings",
+	withKamaitachi,
+	withSelf,
+	withRequestedUser,
+	async ({ input, ctx, req }) => {
+		const hasCardsField = "cards" in input;
+		const hasForceField = "forceStaticImport" in input;
+		const hasBooleanForce = typeof input.forceStaticImport === "boolean";
 
-		const hasCards = body.cards !== undefined;
-		const hasForceStaticImport = typeof body.forceStaticImport === "boolean";
-
-		if (!hasCards && !hasForceStaticImport) {
-			return res.status(400).json({
-				success: false,
-				description: `No modifications sent.`,
-			});
+		if (!hasCardsField && !hasForceField) {
+			throw new ExpectedErr(400, "No modifications sent.");
 		}
 
-		if (body.cards !== null && body.cards !== undefined && body.cards.length > 6) {
-			return res.status(400).json({
-				success: false,
-				description: `You cannot have more than 6 card filters at once.`,
-			});
+		if (hasForceField && !hasBooleanForce && !hasCardsField) {
+			throw new ExpectedErr(400, "No modifications sent.");
 		}
 
-		const user = GetTachiData(req, "requestedUser");
+		const hasCards = input.cards !== undefined;
+		const hasForceStaticImport = hasBooleanForce;
+
+		if (input.cards !== null && input.cards !== undefined && input.cards.length > 6) {
+			throw new ExpectedErr(400, "You cannot have more than 6 card filters at once.");
+		}
+
+		const { requestedUser: user } = ctx;
 		const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
 
 		const result = await ACTION_UpdateFervidexSettings(taker, {
-			cards: body.cards,
+			cards: input.cards,
 			forceStaticImport: hasForceStaticImport
-				? (body.forceStaticImport as boolean)
+				? (input.forceStaticImport as boolean)
 				: undefined,
 		});
 
-		return res.status(200).json({
-			success: true,
-			description: `Successfully updated settings.`,
-			body: result,
-		});
+		return success("Successfully updated settings.", result);
 	},
 );
-
-export default router;

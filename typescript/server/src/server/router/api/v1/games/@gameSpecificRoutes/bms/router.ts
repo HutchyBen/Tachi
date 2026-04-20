@@ -1,5 +1,3 @@
-import type { Playtypes } from "tachi-common";
-
 import {
 	CUSTOM_TACHI_BMS_TABLES,
 	HandleBMSTableBodyRequest,
@@ -7,73 +5,71 @@ import {
 	HandleBMSTableHTMLRequest,
 	type TachiBMSTable,
 } from "#lib/game-specific/custom-bms-tables";
+import { withGame } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
 import { FindBMSSieglindeRatedCharts } from "#utils/queries/charts";
-import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
-import { type RequestHandler, Router } from "express";
+import { ExpectedErr } from "bliss";
+import { type GamesForGroup, GameToGameGroup } from "tachi-common";
 
-import { ValidatePlaytypeFromParamFor } from "../../_game/_playtype/middleware";
-
-const router: Router = Router({ mergeParams: true });
-
-const FindCustomBMSTable: RequestHandler = (req, res, next) => {
-	const { playtype, tableUrlName } = req.params;
-
-	// find the table
+function resolveGamesCustomBMSTableOrThrow(
+	tableUrlName: string,
+	game: GamesForGroup["bms"],
+): TachiBMSTable {
 	const customTable = CUSTOM_TACHI_BMS_TABLES.find((t) => t.urlName === tableUrlName);
 
 	if (!customTable) {
-		return res.status(404).json({
-			success: false,
-			description: `No such table with the ID '${tableUrlName}' exists.`,
-		});
+		throw new ExpectedErr(404, `No such table with the ID '${tableUrlName}' exists.`);
 	}
 
-	if (customTable.playtype && customTable.playtype !== playtype) {
-		return res.status(404).json({
-			success: false,
-			description: `The table '${tableUrlName}' exists, but is for ${customTable.playtype}, not ${playtype}.`,
-		});
+	if (customTable.game && customTable.game !== game) {
+		throw new ExpectedErr(
+			404,
+			`The table '${tableUrlName}' exists, but is for ${customTable.game}, not ${game}.`,
+		);
 	}
 
 	if (customTable.forSpecificUser === true) {
-		return res.status(404).json({
-			success: false,
-			description: `The table '${tableUrlName}' exists, but is user-specific. You should be fetching this table from /api/v1/users/:userID instead of /api/v1/games.`,
-		});
+		throw new ExpectedErr(
+			404,
+			`The table '${tableUrlName}' exists, but is user-specific. You should be fetching this table from /api/v1/users/:userID instead of /api/v1/games.`,
+		);
 	}
 
-	AssignToReqTachiData(req, { customBMSTable: customTable });
-
-	next();
-};
+	return customTable;
+}
 
 /**
  * List all custom BMS tables this instance of Tachi is emitting.
  *
- * @name GET /api/v1/games/bms/:playtype/custom-tables
+ * @name GET /api/v1/games/:game/custom-tables
  */
-router.get("/:playtype/custom-tables", ValidatePlaytypeFromParamFor("bms"), (req, res) => {
-	const tables: Array<
-		Pick<TachiBMSTable, "description" | "forSpecificUser" | "symbol" | "tableName" | "urlName">
-	> = [];
+API_V1_ROUTER.add("GET /games/:game/custom-tables", withGame, ({ ctx }) => {
+	const tables: Array<{
+		description: string;
+		forSpecificUser: boolean;
+		symbol: string;
+		tableName: string;
+		urlName: string;
+	}> = [];
 
-	for (const table of CUSTOM_TACHI_BMS_TABLES.filter(
-		(e) => e.playtype === req.params.playtype || e.playtype === null,
-	)) {
+	const game = ctx.game as GamesForGroup["bms"];
+
+	if (GameToGameGroup(game) !== "bms") {
+		throw new ExpectedErr(404, `No custom tables exist for ${game}.`);
+	}
+
+	for (const table of CUSTOM_TACHI_BMS_TABLES.filter((e) => e.game === game || e.game === null)) {
 		tables.push({
-			forSpecificUser: table.forSpecificUser,
-			urlName: table.urlName,
-			tableName: table.tableName,
-			symbol: table.symbol,
 			description: table.description,
+			forSpecificUser: table.forSpecificUser === true,
+			symbol: table.symbol,
+			tableName: table.tableName,
+			urlName: table.urlName,
 		});
 	}
 
-	return res.status(200).json({
-		success: true,
-		description: `Found ${tables.length} custom table(s).`,
-		body: tables,
-	});
+	return success(`Found ${tables.length} custom table(s).`, tables);
 });
 
 /**
@@ -82,72 +78,79 @@ router.get("/:playtype/custom-tables", ValidatePlaytypeFromParamFor("bms"), (req
  * @note Since this is the GPT route, trying to fetch user specific custom tables
  * will result in a 404. This applies for all subsequent :tableUrlName routes.
  *
- * @name GET /api/v1/games/bms/:playtype/custom-tables/:tableUrlName
+ * @name GET /api/v1/games/:game/custom-tables/:tableUrlName
  */
-router.get(
-	"/:playtype/custom-tables/:tableUrlName",
-	ValidatePlaytypeFromParamFor("bms"),
-	FindCustomBMSTable,
-	(req, res) => {
-		const customTable = GetTachiData(req, "customBMSTable");
+API_V1_ROUTER.add(
+	"GET /games/:game/custom-tables/:tableUrlName",
+	withGame,
+	({ ctx, params, req, res }) => {
+		const game = ctx.game as GamesForGroup["bms"];
 
-		// This handles returning a response for us.
-		return HandleBMSTableHTMLRequest(customTable, req, res);
+		if (GameToGameGroup(game) !== "bms") {
+			throw new ExpectedErr(404, `No custom tables exist for ${game}.`);
+		}
+
+		const customTable = resolveGamesCustomBMSTableOrThrow(params.tableUrlName, game);
+		HandleBMSTableHTMLRequest(customTable, req, res);
+		return success("stub", {});
 	},
 );
 
 /**
  * Return the header.json for this custom table.
  *
- * @name GET /api/v1/games/bms/:playtype/custom-tables/:tableUrlName/header.json
+ * @name GET /api/v1/games/:game/custom-tables/:tableUrlName/header.json
  */
-router.get(
-	"/:playtype/custom-tables/:tableUrlName/header.json",
-	ValidatePlaytypeFromParamFor("bms"),
-	FindCustomBMSTable,
-	(req, res) => {
-		const customTable = GetTachiData(req, "customBMSTable");
+API_V1_ROUTER.add(
+	"GET /games/:game/custom-tables/:tableUrlName/header.json",
+	withGame,
+	async ({ ctx, params, req, res }) => {
+		const game = ctx.game as GamesForGroup["bms"];
 
-		// This handles returning a response for us.
-		return HandleBMSTableHeaderRequest(customTable, req, res);
+		if (GameToGameGroup(game) !== "bms") {
+			throw new ExpectedErr(404, `No custom tables exist for ${game}.`);
+		}
+
+		const customTable = resolveGamesCustomBMSTableOrThrow(params.tableUrlName, game);
+		await HandleBMSTableHeaderRequest(customTable, req, res);
+		return success("stub", {});
 	},
 );
 
 /**
  * Return the body.json for this custom table.
  *
- * @name GET /api/v1/games/bms/:playtype/custom-tables/:tableUrlName/body.json
+ * @name GET /api/v1/games/:game/custom-tables/:tableUrlName/body.json
  */
-router.get(
-	"/:playtype/custom-tables/:tableUrlName/body.json",
-	ValidatePlaytypeFromParamFor("bms"),
-	FindCustomBMSTable,
-	(req, res) => {
-		const customTable = GetTachiData(req, "customBMSTable");
+API_V1_ROUTER.add(
+	"GET /games/:game/custom-tables/:tableUrlName/body.json",
+	withGame,
+	async ({ ctx, params, req, res }) => {
+		const game = ctx.game as GamesForGroup["bms"];
 
-		// This handles returning a response for us.
-		return HandleBMSTableBodyRequest(customTable, req, res);
+		if (GameToGameGroup(game) !== "bms") {
+			throw new ExpectedErr(404, `No custom tables exist for ${game}.`);
+		}
+
+		const customTable = resolveGamesCustomBMSTableOrThrow(params.tableUrlName, game);
+		await HandleBMSTableBodyRequest(customTable, req, res);
+		return success("stub", {});
 	},
 );
 
 /**
  * Return *all* the charts that have defined sieglinde values for this game.
  *
- * @name GET /api/v1/games/bms/:playtype/sieglinde-charts
+ * @name GET /api/v1/games/:game/sieglinde-charts
  */
-router.get("/:playtype/sieglinde-charts", ValidatePlaytypeFromParamFor("bms"), async (req, res) => {
-	const playtype = req.params.playtype as Playtypes["bms"];
+API_V1_ROUTER.add("GET /games/:game/sieglinde-charts", withGame, async ({ ctx }) => {
+	const game = ctx.game as GamesForGroup["bms"];
 
-	const { charts, songs } = await FindBMSSieglindeRatedCharts(playtype);
+	if (GameToGameGroup(game) !== "bms") {
+		throw new ExpectedErr(404, `No sieglinde charts exist for ${game}.`);
+	}
 
-	return res.status(200).json({
-		success: true,
-		description: `Found ${charts.length} chart(s).`,
-		body: {
-			songs,
-			charts,
-		},
-	});
+	const { charts, songs } = await FindBMSSieglindeRatedCharts(game);
+
+	return success(`Found ${charts.length} chart(s).`, { songs, charts });
 });
-
-export default router;

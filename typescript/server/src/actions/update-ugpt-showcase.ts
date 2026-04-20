@@ -1,27 +1,23 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import { GetUGPTSettingsDocument } from "#lib/db-formats/ugpt-settings.js";
-import DB from "#services/pg/db.js";
-import { IsUserAdmin } from "#utils/user.js";
+import { MakeAction } from "#lib/actions/actions";
+import { GetUGPTSettingsDocument } from "#lib/db-formats/ugpt-settings";
+import DB from "#services/pg/db";
+import { IsUserAdmin } from "#utils/user";
 import { ExpectedErr } from "bliss";
-import { type GameGroup, GamePTToV3, type Playtype, type ShowcaseStatDetails } from "tachi-common";
+import { type ShowcaseStatDetails } from "tachi-common";
 
 export const ACTION_UpdateUgptShowcase = MakeAction(
 	"UPDATE_UGPT_SHOWCASE",
 	async (taker, input) => {
-		const { userID, game: gameStr, playtype: playtypeStr, stats } = input;
-		const game = gameStr as GameGroup;
-		const playtype = playtypeStr as Playtype;
+		const { userID, game, stats } = input;
 
 		if (taker.acct.id !== userID && !(await IsUserAdmin(taker.acct.id))) {
 			throw new ExpectedErr(403, "You are not authorised to modify this user's showcase.");
 		}
 
-		const v3Game = GamePTToV3(game, playtype);
-
 		const settingsRow = await DB.selectFrom("game_settings")
 			.select("user_id")
 			.where("user_id", "=", userID)
-			.where("game", "=", v3Game)
+			.where("game", "=", game)
 			.executeTakeFirst();
 
 		if (!settingsRow) {
@@ -33,7 +29,7 @@ export const ACTION_UpdateUgptShowcase = MakeAction(
 		await DB.insertInto("game_settings_showcase")
 			.values({
 				user_id: userID,
-				game: v3Game,
+				game,
 				data: JSON.stringify(payload),
 			})
 			.onConflict((oc) =>
@@ -41,7 +37,7 @@ export const ACTION_UpdateUgptShowcase = MakeAction(
 			)
 			.execute();
 
-		const newSettings = await GetUGPTSettingsDocument(userID, game, playtype);
+		const newSettings = await GetUGPTSettingsDocument(userID, game);
 
 		if (!newSettings) {
 			throw new ExpectedErr(500, "Failed to load settings after updating showcase.");

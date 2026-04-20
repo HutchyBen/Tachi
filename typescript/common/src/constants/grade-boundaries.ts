@@ -1,4 +1,4 @@
-import type { GPTStrings } from "../types/game-config";
+import type { GamesForGroup } from "../types/game-config";
 import type { GetEnumValue } from "../types/metrics";
 
 export interface GradeBoundary<G extends string> {
@@ -20,7 +20,7 @@ export function MakeGradeBoundaries<G extends string>(rec: Record<G, number>) {
 	return out;
 }
 
-export type IIDXLikes = GPTStrings["bms" | "iidx" | "pms"];
+export type IIDXLikes = GamesForGroup["bms" | "iidx" | "pms"];
 
 /**
  * @note - These are *also* grade boundaries for BMS and PMS.
@@ -47,7 +47,7 @@ export const IIDXLIKE_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<IIDXLikes, 
 	MAX: (100 * 9) / 9,
 });
 
-export const CHUNITHM_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"chunithm:Single", "grade">>({
+export const CHUNITHM_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"chunithm", "grade">>({
 	D: 0,
 	C: 500_000,
 	B: 600_000,
@@ -64,7 +64,7 @@ export const CHUNITHM_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"chunithm:S
 	"SSS+": 1_009_000,
 });
 
-export const WACCA_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"wacca:Single", "grade">>({
+export const WACCA_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"wacca", "grade">>({
 	D: 0,
 	C: 1, // LOL
 	B: 300_100,
@@ -80,7 +80,7 @@ export const WACCA_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"wacca:Single"
 	MASTER: 1_000_000,
 });
 
-export const JUBEAT_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"jubeat:Single", "grade">>({
+export const JUBEAT_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"jubeat", "grade">>({
 	E: 0,
 	D: 500_000,
 	C: 700_000,
@@ -92,7 +92,7 @@ export const JUBEAT_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"jubeat:Singl
 	EXC: 1_000_000,
 });
 
-export const ITG_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"itg:Stamina", "grade">>({
+export const ITG_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"itg-stamina", "grade">>({
 	// cannot be achieved. This can only be attained if the player failed the chart.
 	F: -Infinity,
 	D: 0, // The lowest score you can get in ITG is -400%. Scores "can" go negative.
@@ -109,7 +109,7 @@ export const ITG_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"itg:Stamina", "
 });
 
 export const GITADORA_GBOUNDARIES = MakeGradeBoundaries<
-	GetEnumValue<GPTStrings["gitadora"], "grade">
+	GetEnumValue<"gitadora-dora" | "gitadora-gita", "grade">
 >({
 	C: 0,
 	B: 63,
@@ -119,7 +119,7 @@ export const GITADORA_GBOUNDARIES = MakeGradeBoundaries<
 	MAX: 100,
 });
 
-export const MUSECA_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"museca:Single", "grade">>({
+export const MUSECA_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"museca", "grade">>({
 	没: 0,
 	拙: 600_000,
 	凡: 700_000,
@@ -135,7 +135,7 @@ export const MUSECA_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"museca:Singl
  * @note - The SSS+ rank boundary is chart-dependent - it is the maximum percent of a chart.
  * 104 is just the upper limit of the maximum percent.
  */
-export const MAIMAI_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"maimai:Single", "grade">>({
+export const MAIMAI_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"maimai", "grade">>({
 	F: 0,
 	E: 10,
 	D: 20,
@@ -153,7 +153,7 @@ export const MAIMAI_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"maimai:Singl
 	"SSS+": 104,
 });
 
-export const MAIMAIDX_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"maimaidx:Single", "grade">>({
+export const MAIMAIDX_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"maimaidx", "grade">>({
 	D: 0,
 	C: 50,
 	B: 60,
@@ -170,7 +170,7 @@ export const MAIMAIDX_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"maimaidx:S
 	"SSS+": 100.5,
 });
 
-export const POPN_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"popn:9B", "grade">>({
+export const POPN_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"popn", "grade">>({
 	E: 0,
 	D: 50_000,
 	C: 62_000,
@@ -181,7 +181,7 @@ export const POPN_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"popn:9B", "gra
 	S: 98_000,
 });
 
-type SDVXLikes = GPTStrings["sdvx" | "usc"];
+type SDVXLikes = GamesForGroup["sdvx" | "usc"];
 
 export const SDVXLIKE_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<SDVXLikes, "grade">>({
 	D: 0,
@@ -197,7 +197,7 @@ export const SDVXLIKE_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<SDVXLikes, 
 	PUC: 10_000_000,
 });
 
-export const ARCAEA_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"arcaea:Touch", "grade">>({
+export const ARCAEA_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"arcaea", "grade">>({
 	D: 0,
 	C: 8_600_000,
 	B: 8_900_000,
@@ -207,7 +207,7 @@ export const ARCAEA_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"arcaea:Touch
 	"EX+": 9_900_000,
 });
 
-export const ONGEKI_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"ongeki:Single", "grade">>({
+export const ONGEKI_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"ongeki", "grade">>({
 	D: 0,
 	C: 500_000,
 	B: 700_000,
@@ -222,7 +222,7 @@ export const ONGEKI_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"ongeki:Singl
 	"SSS+": 1_007_500,
 });
 
-export const DDR_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<GPTStrings["ddr"], "grade">>({
+export const DDR_GBOUNDARIES = MakeGradeBoundaries<GetEnumValue<"ddr-dp" | "ddr-sp", "grade">>({
 	AAA: 990000,
 	"AA+": 950000,
 	AA: 900000,

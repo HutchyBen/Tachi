@@ -16,35 +16,38 @@ import React, { useContext, useState } from "react";
 import { Alert, Button, Col } from "react-bootstrap";
 import { Prompt } from "react-router-dom";
 import {
-	FormatGameGroup,
-	type GameGroup,
+	FormatGame,
+	GameToGameGroup,
 	GetGameGroupConfig,
 	type integer,
-	type MONGO_UserDocument,
-	type Playtype,
+	type UserDocument,
+	type V3Game,
 } from "tachi-common";
 
 export default function RivalsManagePage({
 	reqUser,
 	game,
-	playtype,
 }: {
-	game: GameGroup;
-	playtype: Playtype;
-	reqUser: MONGO_UserDocument;
+	game: V3Game;
+	reqUser: UserDocument;
 }) {
-	const gameConfig = GetGameGroupConfig(game);
-
 	useSetSubheader(
-		["Users", reqUser.username, "Games", gameConfig.name, playtype, "Rivals", "Manage"],
-		[reqUser, game, playtype],
-		`Managing ${reqUser.username}'s ${FormatGameGroup(game, playtype)} Rivals`,
+		[
+			"Users",
+			reqUser.username,
+			"Games",
+			GetGameGroupConfig(GameToGameGroup(game)).name,
+			"Rivals",
+			"Manage",
+		],
+		[reqUser, game],
+		`Managing ${reqUser.username}'s ${FormatGame(game)} Rivals`,
 	);
 
 	const { settings } = useLUGPTSettings();
 
-	const { data, error } = useApiQuery<MONGO_UserDocument[]>(
-		`/users/${reqUser.id}/games/${game}/${playtype}/rivals`,
+	const { data, error } = useApiQuery<UserDocument[]>(
+		`/users/${reqUser.id}/games/${game}/rivals`,
 		{},
 		[`fetch-rivals-${settings?.rivals.join(",")}`],
 	);
@@ -53,9 +56,7 @@ export default function RivalsManagePage({
 		data: challengers,
 		isLoading: cIsLoading,
 		error: cError,
-	} = useApiQuery<MONGO_UserDocument[]>(
-		`/users/${reqUser.id}/games/${game}/${playtype}/rivals/challengers`,
-	);
+	} = useApiQuery<UserDocument[]>(`/users/${reqUser.id}/games/${game}/rivals/challengers`);
 
 	if (error) {
 		<ApiError error={error} />;
@@ -78,7 +79,6 @@ export default function RivalsManagePage({
 			challengers={challengers}
 			game={game}
 			initialRivals={data}
-			playtype={playtype}
 			reqUser={reqUser}
 		/>
 	);
@@ -87,15 +87,13 @@ export default function RivalsManagePage({
 function RivalsOverviewPage({
 	reqUser,
 	game,
-	playtype,
 	initialRivals,
 	challengers,
 }: {
-	challengers: Array<MONGO_UserDocument>;
-	game: GameGroup;
-	initialRivals: Array<MONGO_UserDocument>;
-	playtype: Playtype;
-	reqUser: MONGO_UserDocument;
+	challengers: Array<UserDocument>;
+	game: V3Game;
+	initialRivals: Array<UserDocument>;
+	reqUser: UserDocument;
 }) {
 	const { user } = useContext(UserContext);
 
@@ -123,7 +121,6 @@ function RivalsOverviewPage({
 
 	return (
 		<>
-			{/* kind of a stupid way to check whether the array has changed or not, but who cares. */}
 			{isRequestingUser && currentRivals.toString() !== rivals.toString() && (
 				<Alert className="vstack" variant="warning">
 					<Prompt
@@ -136,7 +133,7 @@ function RivalsOverviewPage({
 					<Button
 						onClick={async () => {
 							const res = await APIFetchV1(
-								`/users/${reqUser.id}/games/${game}/${playtype}/rivals`,
+								`/users/${reqUser.id}/games/${game}/rivals`,
 								{
 									method: "PUT",
 									body: JSON.stringify({
@@ -168,7 +165,7 @@ function RivalsOverviewPage({
 			<Card header={`${isRequestingUser ? "Your" : `${reqUser.username}'s`} Rivals`}>
 				<Col className="d-flex justify-content-center flex-wrap" xs={12}>
 					{rivals.map((e) => (
-						<UserIcon game={game} key={e.id} playtype={playtype} user={e}>
+						<UserIcon game={game} key={e.id} user={e}>
 							<Button
 								onClick={() => setRivals(rivals.filter((u) => u.id !== e.id))}
 								variant="outline-danger"
@@ -209,7 +206,6 @@ function RivalsOverviewPage({
 								} else {
 									setRivals([...rivals, user]);
 
-									// if we're now at max rivals, exit.
 									if (rivals.length + 1 >= MAX_RIVALS) {
 										setShow(false);
 									}
@@ -219,7 +215,7 @@ function RivalsOverviewPage({
 							excludeSet={rivals.map((e) => e.id)}
 							setShow={setShow}
 							show={show}
-							url={`/games/${game}/${playtype}/players`}
+							url={`/games/${game}/players`}
 						/>
 					</>
 				)}
@@ -246,7 +242,7 @@ function RivalsOverviewPage({
 			>
 				<Col className="d-flex justify-content-center flex-wrap" xs={12}>
 					{challengers.map((e) => (
-						<UserIcon game={game} key={e.id} playtype={playtype} user={e}>
+						<UserIcon game={game} key={e.id} user={e}>
 							{isRequestingUser &&
 								!rivals.map((e) => e.id).includes(e.id) &&
 								(rivals.length < MAX_RIVALS ? (

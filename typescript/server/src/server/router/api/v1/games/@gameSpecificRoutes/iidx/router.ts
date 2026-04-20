@@ -2,73 +2,80 @@ import {
 	CUSTOM_TACHI_IIDX_PLAYLISTS,
 	type TachiIIDXPlaylist,
 } from "#lib/game-specific/iidx-playlists";
-import { Router } from "express";
-
-import { ValidatePlaytypeFromParamFor } from "../../_game/_playtype/middleware";
-
-const router: Router = Router({ mergeParams: true });
+import { withGame } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
+import { ExpectedErr } from "bliss";
+import { type GamesForGroup, GameToGameGroup } from "tachi-common";
 
 /**
  * List all the playlists we have available.
  *
- * @name GET /api/v1/games/iidx/:playtype/playlists
+ * @name GET /api/v1/games/:game/playlists
  */
-router.get("/:playtype/playlists", ValidatePlaytypeFromParamFor("iidx"), (req, res) => {
-	const playlists = CUSTOM_TACHI_IIDX_PLAYLISTS.filter(
-		(e) => e.playtype === null || e.playtype === req.params.playtype,
-	);
+API_V1_ROUTER.add("GET /games/:game/playlists", withGame, ({ ctx }) => {
+	const game = ctx.game as GamesForGroup["iidx"];
 
-	const body = [];
+	if (GameToGameGroup(game) !== "iidx") {
+		throw new ExpectedErr(404, `No playlists exist for ${game}.`);
+	}
+
+	const playlists = CUSTOM_TACHI_IIDX_PLAYLISTS.filter((e) => e.game === null || e.game === game);
+
+	const body: Array<{
+		description: string;
+		forSpecificUser?: boolean;
+		playlistName: string;
+		urlName: string;
+	}> = [];
 
 	for (const playlist of playlists) {
 		body.push({
-			forSpecificUser: playlist.forSpecificUser,
-			urlName: playlist.urlName,
-			playlistName: playlist.playlistName,
 			description: playlist.description,
+			forSpecificUser: playlist.forSpecificUser,
+			playlistName: playlist.playlistName,
+			urlName: playlist.urlName,
 		});
 	}
 
-	return res.status(200).json({
-		success: true,
-		description: `Found ${playlists.length} playlist(s)`,
-		body: playlists,
-	});
+	return success(`Found ${playlists.length} playlist(s)`, body);
 });
 
 /**
  * Retrieve this playlist.
  *
- * @name GET /api/v1/games/iidx/:playtype/playlists/:playlistID
+ * @name GET /api/v1/games/:game/playlists/:playlistID
  */
-router.get(
-	"/:playtype/playlists/:playlistID",
-	ValidatePlaytypeFromParamFor("iidx"),
-	async (req, res) => {
+API_V1_ROUTER.add(
+	"GET /games/:game/playlists/:playlistID",
+	withGame,
+	async ({ ctx, params, res }) => {
+		const game = ctx.game as GamesForGroup["iidx"];
+
+		if (GameToGameGroup(game) !== "iidx") {
+			throw new ExpectedErr(404, `No playlists exist for ${game}.`);
+		}
+
 		const playlist: TachiIIDXPlaylist | undefined = CUSTOM_TACHI_IIDX_PLAYLISTS.find(
-			(e) =>
-				(e.playtype === null || e.playtype === req.params.playtype) &&
-				e.urlName === req.params.playlistID,
+			(e) => (e.game === null || e.game === game) && e.urlName === params.playlistID,
 		);
 
 		if (!playlist) {
-			return res.status(404).json({
-				success: false,
-				description: `No such playlist '${req.params.playlistID}' exists for '${req.params.playtype}'.`,
-			});
+			throw new ExpectedErr(
+				404,
+				`No such playlist '${params.playlistID}' exists for '${game}'.`,
+			);
 		}
 
 		if (playlist.forSpecificUser === true) {
-			return res.status(404).json({
-				success: false,
-				description: `This playlist is for a specific user. Use the /users/:userID endpoint instead.`,
-			});
+			throw new ExpectedErr(
+				404,
+				`This playlist is for a specific user. Use the /users/:userID endpoint instead.`,
+			);
 		}
 
-		const body = await playlist.getPlaylists(req.params.playtype as "DP" | "SP");
-
-		return res.status(200).json(body);
+		const payload = await playlist.getPlaylists(game as "iidx-dp" | "iidx-sp");
+		res.status(200).json(payload);
+		return success("unused", null);
 	},
 );
-
-export default router;

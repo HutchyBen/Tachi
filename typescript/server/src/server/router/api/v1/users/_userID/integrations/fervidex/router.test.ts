@@ -68,14 +68,18 @@ describe("GET /api/v1/users/:userID/integrations/fervidex/settings", () => {
 		expect(res.status).toBe(403);
 	});
 
-	it("returns null body when the user has no settings", async () => {
+	it("returns default settings when the user has no row", async () => {
 		const res = await mockApi
 			.get(`/api/v1/users/${userId}/integrations/fervidex/settings`)
 			.set("Cookie", cookie);
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
-		expect(res.body.body).toBeNull();
+		expect(res.body.body).toEqual({
+			userID: userId,
+			cards: null,
+			forceStaticImport: false,
+		});
 	});
 
 	it("returns the settings document when the user has a row but no cards", async () => {
@@ -119,7 +123,11 @@ describe("GET /api/v1/users/:userID/integrations/fervidex/settings", () => {
 			.set("Cookie", cookie);
 
 		expect(res.status).toBe(200);
-		expect(res.body.body).toBeNull();
+		expect(res.body.body).toEqual({
+			userID: userId,
+			cards: null,
+			forceStaticImport: false,
+		});
 	});
 });
 

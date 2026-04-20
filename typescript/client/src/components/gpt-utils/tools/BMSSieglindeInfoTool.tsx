@@ -13,18 +13,18 @@ import { CreateSongMap } from "#util/data";
 import { NumericSOV, StrSOV } from "#util/sorts";
 import React from "react";
 import { Col, Row } from "react-bootstrap";
-import { BMS_TABLES, type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
+import { BMS_TABLES, type ChartDocument, type SongDocument } from "tachi-common";
 import { FormatSieglindeBMS } from "tachi-common/config/game-support/bms";
 
-type DatasetElement = { __related: { song: MONGO_SongDocument } } & MONGO_ChartDocument<
-	"bms:7K" | "bms:14K"
->;
+type BMSGames = "bms-7k" | "bms-14k";
 
-function Component({ game, playtype }: UGPT) {
+type DatasetElement = { __related: { song: SongDocument } } & ChartDocument<BMSGames>;
+
+function Component({ game }: UGPT) {
 	const { data, error } = useApiQuery<{
-		charts: Array<MONGO_ChartDocument<"bms:7K" | "bms:14K">>;
-		songs: Array<MONGO_SongDocument<"bms">>;
-	}>(`/games/${game}/${playtype}/sieglinde-charts`);
+		charts: Array<ChartDocument<BMSGames>>;
+		songs: Array<SongDocument<"bms">>;
+	}>(`/games/${game}/sieglinde-charts`);
 
 	if (error) {
 		return <ApiError error={error} />;
@@ -39,10 +39,10 @@ function Component({ game, playtype }: UGPT) {
 	const songMap = CreateSongMap(data.songs);
 
 	for (const chart of data.charts) {
-		const song = songMap.get(chart.songID);
+		const song = songMap.get(chart.song.id);
 
 		if (!song) {
-			console.warn(`Couldn't find a parent song for ${chart.songID}? Skipping.`);
+			console.warn(`Couldn't find a parent song for ${chart.song.id}? Skipping.`);
 			continue;
 		}
 
@@ -53,6 +53,8 @@ function Component({ game, playtype }: UGPT) {
 			},
 		});
 	}
+
+	const bmsGame = (game === "bms-7k" || game === "bms-14k" ? game : "bms-7k") as BMSGames;
 
 	return (
 		<Row>
@@ -75,32 +77,45 @@ function Component({ game, playtype }: UGPT) {
 					defaultSortMode="EASY CLEAR Sieglinde"
 					entryName="Charts"
 					headers={[
-						ChartHeader("bms", (k) => k as MONGO_ChartDocument),
+						ChartHeader(bmsGame, (k) => k as ChartDocument),
 						["Song", "Song", StrSOV((x) => x.__related.song.title)],
 						[
 							"EASY CLEAR Sieglinde",
 							"EC sgl.",
-							NumericSOV((x) => x.data.sglEC ?? -Infinity),
+							NumericSOV(
+								(x) => (x as ChartDocument<"bms-7k">).data.sglEC ?? -Infinity,
+							),
 						],
 						[
 							"HARD CLEAR Sieglinde",
 							"EC sgl.",
-							NumericSOV((x) => x.data.sglHC ?? -Infinity),
+							NumericSOV(
+								(x) => (x as ChartDocument<"bms-7k">).data.sglHC ?? -Infinity,
+							),
 						],
 					]}
 					rowFunction={(d) => (
 						<tr>
-							<BMSOrPMSDifficultyCell chart={d} game="bms" />
-							<TitleCell chart={d} game="bms" song={d.__related.song} />
-							<td>{FormatSieglindeBMS(d.data.sglEC ?? 0)}</td>
-							<td>{FormatSieglindeBMS(d.data.sglHC ?? 0)}</td>
+							<BMSOrPMSDifficultyCell
+								chart={d as ChartDocument<BMSGames>}
+								game={bmsGame}
+							/>
+							<TitleCell chart={d} game={bmsGame} song={d.__related.song} />
+							<td>
+								{FormatSieglindeBMS((d as ChartDocument<"bms-7k">).data.sglEC ?? 0)}
+							</td>
+							<td>
+								{FormatSieglindeBMS((d as ChartDocument<"bms-7k">).data.sglHC ?? 0)}
+							</td>
 						</tr>
 					)}
 					searchFunctions={Object.fromEntries(
 						BMS_TABLES.map((e) => [
 							e.asciiPrefix,
 							(d: DatasetElement) =>
-								!!Object.keys(d.data.tableFolders).find((k) => k === e.prefix),
+								!!Object.keys(
+									(d as ChartDocument<"bms-7k">).data.tableFolders,
+								).find((k) => k === e.prefix),
 						]),
 					)}
 				/>

@@ -10,7 +10,7 @@ import { WaccaStageUps } from "tachi-common/config/game-support/wacca";
 export default async function CreateMytWACCAClassHandler(
 	titleApiId: string,
 	transport: Transport,
-): Promise<ClassProvider> {
+): Promise<ClassProvider<"wacca">> {
 	const client = createClient(WaccaUser, transport);
 	const req = create(DataRequestSchema, { apiId: titleApiId });
 	const data = await client.getData(req);

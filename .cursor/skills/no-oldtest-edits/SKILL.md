@@ -1,19 +1,10 @@
 ---
 name: no-oldtest-edits
-description: Treats `*.oldtest.ts` files as read-only legacy snapshots. Never edits them. Use when changing tests, game implementations, or when any path matches `*.oldtest.ts`.
+description: Legacy. `*.oldtest.ts` snapshots were removed from the Tachi server after migration to Vitest `*.test.ts`. No action needed unless oldtest files are reintroduced.
 ---
 
-# No edits to `*.oldtest.ts`
+# Legacy note
 
-## Hard rule
+Server tests live in `*.test.ts` under `typescript/server/src/`. The former Tap `*.oldtest.ts` tree has been deleted.
 
-**Do not modify** any file whose name matches `*.oldtest.ts` (for example `jubeat.oldtest.ts`). These are frozen reference tests.
-
-## What to do instead
-
-- Make test or implementation changes in the corresponding non-`oldtest` files (for example `*.test.ts` next to the implementation, or the main `*.ts` source).
-- If behavior must be verified against old expectations, add or update tests outside `*.oldtest.ts`.
-
-## Checklist before finishing a task
-
-- [ ] No file edited under a `*.oldtest.ts` path.
+If `*.oldtest.ts` files appear again, treat them as read-only snapshots and add or change behavior only in `*.test.ts` or source files.

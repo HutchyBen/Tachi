@@ -105,7 +105,7 @@ function FindSongOnTitle(title) {
 function FindChartWithPTDFVersion(songID, playtype, diff, version) {
 	for (const chart of chartData) {
 		if (
-			chart.songID === songID &&
+			chart.song.id === songID &&
 			chart.playtype === playtype &&
 			chart.difficulty === diff &&
 			chart.versions.includes(version)

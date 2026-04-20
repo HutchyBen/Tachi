@@ -1,7 +1,7 @@
 import DB from "#services/pg/db";
 import mockApi from "#test-utils/mock-api";
 import { seedUser } from "#test-utils/pg-fixtures";
-import { type MONGO_UserDocument } from "tachi-common";
+import { type UserDocument } from "tachi-common";
 import { beforeEach, describe, expect, it } from "vitest";
 
 async function insertUserWithLastSeen(username: string, lastSeenMs: number) {
@@ -41,7 +41,7 @@ describe("GET /api/v1/users", () => {
 		const res = await mockApi.get("/api/v1/users");
 
 		expect(res.status).toBe(200);
-		const usernames = res.body.body.map((u: MONGO_UserDocument) => u.username);
+		const usernames = res.body.body.map((u: UserDocument) => u.username);
 		expect(usernames[0]).toBe("test_user");
 		expect(usernames[1]).toBe("older_user");
 	});
@@ -151,7 +151,7 @@ describe("GET /api/v1/users?online", () => {
 		const res = await mockApi.get("/api/v1/users?online");
 
 		expect(res.status).toBe(200);
-		const usernames = res.body.body.map((u: MONGO_UserDocument) => u.username);
+		const usernames = res.body.body.map((u: UserDocument) => u.username);
 		expect(usernames[0]).toBe("user_a");
 		expect(usernames[1]).toBe("user_b");
 	});

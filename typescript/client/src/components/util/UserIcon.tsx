@@ -2,25 +2,18 @@ import ProfilePicture from "#components/user/ProfilePicture";
 import { type GamePT, type JustChildren } from "#types/react";
 import React from "react";
 import { Link } from "react-router-dom";
-import { type MONGO_UserDocument } from "tachi-common";
+import { type UserDocument } from "tachi-common";
 
 export default function UserIcon({
 	user,
 	children,
 	game,
-	playtype,
-}: { user: MONGO_UserDocument } & Partial<GamePT> & Partial<JustChildren>) {
+}: { user: UserDocument } & Partial<GamePT> & Partial<JustChildren>) {
 	return (
 		<div className="text-center p-8">
-			<ProfilePicture toGPT={game && playtype ? { game, playtype } : undefined} user={user} />
+			<ProfilePicture toGPT={game ? { game } : undefined} user={user} />
 			<h4 className="mt-2">
-				<Link
-					to={
-						game && playtype
-							? `/u/${user.username}/games/${game}/${playtype}`
-							: `/u/${user.username}`
-					}
-				>
+				<Link to={game ? `/u/${user.username}/games/${game}` : `/u/${user.username}`}>
 					{user.username}
 				</Link>
 			</h4>

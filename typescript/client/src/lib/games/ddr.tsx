@@ -1,16 +1,16 @@
+import DDRScoreCell from "#components/tables/cells/DDRScoreCell";
+import FlareCell from "#components/tables/cells/FlareCell";
+import LampCell from "#components/tables/cells/LampCell";
 import RatingCell from "#components/tables/cells/RatingCell";
 import { GetEnumColour } from "#lib/game-implementations";
 import { type GPTClientImplementation } from "#lib/types";
 import { NumericSOV } from "#util/sorts";
 import React from "react";
-import { COLOUR_SET, type GPTStrings } from "tachi-common";
+import { COLOUR_SET, type GamesForGroup } from "tachi-common";
 
-import DDRScoreCell from "../../components/tables/cells/DDRScoreCell";
-import FlareCell from "../../components/tables/cells/FlareCell";
-import LampCell from "../../components/tables/cells/LampCell";
 import { bgc } from "./_util";
 
-const DDR_ENUM_COLOURS: GPTClientImplementation<GPTStrings["ddr"]>["enumColours"] = {
+const DDR_ENUM_COLOURS: GPTClientImplementation<GamesForGroup["ddr"]>["enumColours"] = {
 	grade: {
 		E: COLOUR_SET.gray,
 		D: COLOUR_SET.paleBlue,
@@ -41,7 +41,7 @@ const DDR_ENUM_COLOURS: GPTClientImplementation<GPTStrings["ddr"]>["enumColours"
 	},
 };
 
-const DDR_DIFF_COLOURS: GPTClientImplementation<GPTStrings["ddr"]>["difficultyColours"] = {
+const DDR_DIFF_COLOURS: GPTClientImplementation<GamesForGroup["ddr"]>["difficultyColours"] = {
 	BEGINNER: COLOUR_SET.blue,
 	BASIC: COLOUR_SET.paleGreen,
 	DIFFICULT: COLOUR_SET.red,
@@ -49,13 +49,13 @@ const DDR_DIFF_COLOURS: GPTClientImplementation<GPTStrings["ddr"]>["difficultyCo
 	CHALLENGE: COLOUR_SET.purple,
 };
 
-const DDR_HEADERS: GPTClientImplementation<"ddr:DP" | "ddr:SP">["scoreHeaders"] = [
+const DDR_HEADERS: GPTClientImplementation<"ddr-dp" | "ddr-sp">["scoreHeaders"] = [
 	["Score", "Score", NumericSOV((x) => x.scoreData.score)],
 	["Flare", "Flare", NumericSOV((x) => x.scoreData.optional.enumIndexes.flare ?? 0)],
 	["Lamp", "Lamp", NumericSOV((x) => x.scoreData.enumIndexes.lamp)],
 ];
 
-const DDR_COLOURS: GPTClientImplementation<"ddr:DP" | "ddr:SP">["classColours"] = {
+const DDR_COLOURS: GPTClientImplementation<"ddr-dp" | "ddr-sp">["classColours"] = {
 	flare: {
 		NONE: bgc("gray", "black"),
 		"NONE+": bgc("gray", "black"),
@@ -101,7 +101,7 @@ const DDR_COLOURS: GPTClientImplementation<"ddr:DP" | "ddr:SP">["classColours"] 
 	},
 };
 
-const DDRCoreCells: GPTClientImplementation<GPTStrings["ddr"]>["scoreCoreCells"] = ({
+const DDRCoreCells: GPTClientImplementation<GamesForGroup["ddr"]>["scoreCoreCells"] = ({
 	sc,
 	chart: _chart,
 }) => (
@@ -116,7 +116,7 @@ const DDRCoreCells: GPTClientImplementation<GPTStrings["ddr"]>["scoreCoreCells"]
 	</>
 );
 
-const DDRRatingCell: GPTClientImplementation<GPTStrings["ddr"]>["ratingCell"] = ({
+const DDRRatingCell: GPTClientImplementation<GamesForGroup["ddr"]>["ratingCell"] = ({
 	sc,
 	chart: _chart,
 	rating,
@@ -126,7 +126,7 @@ const DDRRatingCell: GPTClientImplementation<GPTStrings["ddr"]>["ratingCell"] = 
 	</>
 );
 
-export const DDR_SP_IMPL: GPTClientImplementation<"ddr:SP"> = {
+export const DDR_SP_IMPL: GPTClientImplementation<"ddr-sp"> = {
 	sessionImportantScoreCount: 20,
 	difficultyColours: DDR_DIFF_COLOURS,
 	enumColours: DDR_ENUM_COLOURS,
@@ -141,7 +141,7 @@ export const DDR_SP_IMPL: GPTClientImplementation<"ddr:SP"> = {
 	ratingCell: DDRRatingCell,
 };
 
-export const DDR_DP_IMPL: GPTClientImplementation<"ddr:DP"> = {
+export const DDR_DP_IMPL: GPTClientImplementation<"ddr-dp"> = {
 	sessionImportantScoreCount: 20,
 	difficultyColours: DDR_DIFF_COLOURS,
 	enumColours: DDR_ENUM_COLOURS,

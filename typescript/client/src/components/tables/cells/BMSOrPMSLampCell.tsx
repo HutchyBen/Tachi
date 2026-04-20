@@ -2,14 +2,14 @@ import { GetEnumColour } from "#lib/game-implementations";
 import { ChangeOpacity } from "#util/color-opacity";
 import { IsNotNullish } from "#util/misc";
 import React from "react";
-import { type MONGO_PBScoreDocument, type MONGO_ScoreDocument } from "tachi-common";
+import { type PBScoreDocument, type ScoreDocument } from "tachi-common";
+
+type BMSGames = "bms-7k" | "bms-14k" | "pms-controller" | "pms-keyboard";
 
 export default function BMSOrPMSLampCell({
 	score,
 }: {
-	score:
-		| MONGO_PBScoreDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard">
-		| MONGO_ScoreDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard">;
+	score: PBScoreDocument<BMSGames> | ScoreDocument<BMSGames>;
 }) {
 	return (
 		<td

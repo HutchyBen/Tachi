@@ -3,7 +3,7 @@ import { GPT_CLIENT_IMPLEMENTATIONS } from "#lib/game-implementations";
 import { ChangeOpacity } from "#util/color-opacity";
 import { FormatMillions, FormatScoreRating } from "#util/misc";
 import React from "react";
-import { type MONGO_PBScoreDocument, type MONGO_ScoreDocument } from "tachi-common";
+import { type PBScoreDocument, type ScoreDocument } from "tachi-common";
 
 import MiniTable from "../components/MiniTable";
 import LampCell from "./LampCell";
@@ -11,7 +11,7 @@ import LampCell from "./LampCell";
 export default function OngekiScoreRatingCell({
 	score,
 }: {
-	score: MONGO_PBScoreDocument<"ongeki:Single"> | MONGO_ScoreDocument<"ongeki:Single">;
+	score: PBScoreDocument<"ongeki"> | ScoreDocument<"ongeki">;
 }) {
 	const ratingValue = score.calculatedData.scoreRating ?? 0;
 	const noteLamp = score.scoreData.noteLamp;
@@ -19,7 +19,7 @@ export default function OngekiScoreRatingCell({
 	const grade = score.scoreData.grade;
 
 	const gradeColor = ChangeOpacity(
-		GPT_CLIENT_IMPLEMENTATIONS["ongeki:Single"].enumColours.grade[score.scoreData.grade],
+		GPT_CLIENT_IMPLEMENTATIONS.ongeki.enumColours.grade[score.scoreData.grade],
 		0.2,
 	);
 
@@ -54,8 +54,9 @@ export default function OngekiScoreRatingCell({
 							<tr>
 								<LampCell
 									colour={
-										GPT_CLIENT_IMPLEMENTATIONS["ongeki:Single"].enumColours
-											.noteLamp[noteLamp]
+										GPT_CLIENT_IMPLEMENTATIONS.ongeki.enumColours.noteLamp[
+											noteLamp
+										]
 									}
 									lamp={noteLamp}
 								/>
@@ -64,8 +65,9 @@ export default function OngekiScoreRatingCell({
 							<tr>
 								<LampCell
 									colour={
-										GPT_CLIENT_IMPLEMENTATIONS["ongeki:Single"].enumColours
-											.bellLamp[bellLamp]
+										GPT_CLIENT_IMPLEMENTATIONS.ongeki.enumColours.bellLamp[
+											bellLamp
+										]
 									}
 									lamp={bellLamp}
 								/>
@@ -88,7 +90,7 @@ export default function OngekiScoreRatingCell({
 			>
 				<td>
 					<div className="underline-on-hover">
-						{FormatScoreRating(score.game, score.playtype, "scoreRating", ratingValue)}
+						{FormatScoreRating("ongeki", "scoreRating", ratingValue)}
 					</div>
 				</td>
 			</QuickTooltip>

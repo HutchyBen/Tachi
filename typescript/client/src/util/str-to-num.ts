@@ -1,13 +1,9 @@
-import { type GameGroup, GetGamePTConfig, GetScoreMetricConf, type Playtypes } from "tachi-common";
+import { GetGameConfig, GetScoreMetricConf, type V3Game } from "tachi-common";
 
-export function HumanFriendlyStrToEnumIndex(
-	game: GameGroup,
-	playtype: Playtypes[GameGroup],
-	enumMetric: string,
-) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+export function HumanFriendlyStrToEnumIndex(game: V3Game, enumMetric: string) {
+	const gameConfig = GetGameConfig(game);
 
-	const conf = GetScoreMetricConf(gptConfig, enumMetric);
+	const conf = GetScoreMetricConf(gameConfig, enumMetric);
 
 	if (conf?.type !== "ENUM") {
 		return () => 0; // wut

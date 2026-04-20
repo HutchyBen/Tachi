@@ -1,7 +1,7 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import DB from "#services/pg/db.js";
-import { GetClientByID } from "#utils/queries/api-clients.js";
-import { validateWebhookUri } from "#utils/validate-webhook-uri.js";
+import { MakeAction } from "#lib/actions/actions";
+import DB from "#services/pg/db";
+import { GetClientByID } from "#utils/queries/api-clients";
+import { validateWebhookUri } from "#utils/validate-webhook-uri";
 import { ExpectedErr } from "bliss";
 
 export const ACTION_UpdateApiClient = MakeAction(

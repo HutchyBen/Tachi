@@ -1,4 +1,4 @@
-import type { GPTServerImplementation } from "#game-implementations/types";
+import type { GameImplementation } from "#game-implementations/types";
 
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileAvgBestN } from "#game-implementations/utils/profile-calc";
@@ -9,7 +9,7 @@ import { CHUNITHM_GBOUNDARIES, FmtNum, GetGrade } from "tachi-common";
 
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
-export const CHUNITHM_IMPL: GPTServerImplementation<"chunithm:Single"> = {
+export const CHUNITHM_IMPL: GameImplementation<"chunithm"> = {
 	chartSpecificValidators: {},
 	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(CHUNITHM_GBOUNDARIES, scoreData.score),
@@ -28,8 +28,8 @@ export const CHUNITHM_IMPL: GPTServerImplementation<"chunithm:Single"> = {
 	sessionCalcs: (arr) => ({
 		naiveRating: SessionAvgBest10For("rating")(arr),
 	}),
-	profileCalcs: async (game, playtype, userID) => ({
-		naiveRating: await ProfileAvgBestN("rating", 50, false, 100)(game, playtype, userID),
+	profileCalcs: async (game, userID) => ({
+		naiveRating: await ProfileAvgBestN("rating", 50, false, 100)(game, userID),
 	}),
 	classDerivers: (ratings) => {
 		const rating = ratings.naiveRating;
@@ -109,7 +109,7 @@ export const CHUNITHM_IMPL: GPTServerImplementation<"chunithm:Single"> = {
 		),
 	],
 	defaultMergeRefName: "Best Score",
-	derivationRelevantFields: ["levelNum"],
+	chartDataRelevantFields: ["levelNum"],
 	scoreValidators: [
 		(s) => {
 			if (

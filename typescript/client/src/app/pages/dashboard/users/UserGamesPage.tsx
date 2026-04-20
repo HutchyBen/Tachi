@@ -1,9 +1,9 @@
 import useSetSubheader from "#components/layout/header/useSetSubheader";
 import UGPTProfiles from "#components/user/UGPTProfiles";
 import React from "react";
-import { type MONGO_UserDocument } from "tachi-common";
+import { type UserDocument } from "tachi-common";
 
-export default function UserGamesPage({ reqUser }: { reqUser: MONGO_UserDocument }) {
+export default function UserGamesPage({ reqUser }: { reqUser: UserDocument }) {
 	useSetSubheader(
 		["Users", reqUser.username, "Games"],
 		[reqUser],

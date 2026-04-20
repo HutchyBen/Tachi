@@ -14,10 +14,10 @@ import { FormatTime } from "#util/time";
 import React, { useContext, useState } from "react";
 import { Badge, Button } from "react-bootstrap";
 import {
-	FormatGameGroup,
-	type MONGO_GoalDocument,
-	type MONGO_GoalSubscriptionDocument,
-	type MONGO_QuestDocument,
+	FormatGame,
+	type GoalDocument,
+	type GoalSubscriptionDocument,
+	type QuestDocument,
 	type QuestSection,
 } from "tachi-common";
 
@@ -27,8 +27,8 @@ export default function Quest({
 	collapsible = false,
 }: {
 	collapsible?: boolean;
-	goals: Map<string, MONGO_GoalDocument>;
-	quest: MONGO_QuestDocument;
+	goals: Map<string, GoalDocument>;
+	quest: QuestDocument;
 }) {
 	const { user } = useContext(UserContext);
 	const { questSubs, reloadTargets } = useContext(TargetsContext);
@@ -36,6 +36,7 @@ export default function Quest({
 
 	const questSub = questSubs.get(quest.questID);
 	const goalsInQuests = GetGoalIDsFromQuest(quest).length;
+	const v3Game = quest.game;
 
 	// if this is collapsable, show it conditionally. otherwise, always show it.
 	const [show, setShow] = useState(!collapsible);
@@ -48,7 +49,7 @@ export default function Quest({
 
 					<div>{quest.desc}</div>
 					<div className="mt-4">
-						<Muted>Game: {FormatGameGroup(quest.game, quest.playtype)}</Muted>
+						<Muted>Game: {FormatGame(quest.game)}</Muted>
 					</div>
 
 					{questSub && (
@@ -77,7 +78,7 @@ export default function Quest({
 										setSubscribing(true);
 
 										await APIFetchV1(
-											`/users/${user.id}/games/${quest.game}/${quest.playtype}/targets/quests/${quest.questID}`,
+											`/users/${user.id}/games/${v3Game}/targets/quests/${quest.questID}`,
 											{
 												method: "DELETE",
 											},
@@ -106,7 +107,7 @@ export default function Quest({
 										setSubscribing(true);
 
 										await APIFetchV1(
-											`/users/${user.id}/games/${quest.game}/${quest.playtype}/targets/quests/${quest.questID}`,
+											`/users/${user.id}/games/${v3Game}/targets/quests/${quest.questID}`,
 											{
 												method: "PUT",
 											},
@@ -135,12 +136,7 @@ export default function Quest({
 			{show &&
 				quest.questData.map((e, i) => (
 					<React.Fragment key={i}>
-						<QuestSectionComponent
-							game={quest.game}
-							goals={goals}
-							playtype={quest.playtype}
-							section={e}
-						/>
+						<QuestSectionComponent game={quest.game} goals={goals} section={e} />
 						<Divider />
 					</React.Fragment>
 				))}
@@ -160,10 +156,9 @@ export default function Quest({
 function QuestSectionComponent({
 	section,
 	game,
-	playtype,
 	goals,
 }: {
-	goals: Map<string, MONGO_GoalDocument>;
+	goals: Map<string, GoalDocument>;
 	section: QuestSection;
 } & GamePT) {
 	return (
@@ -206,8 +201,8 @@ export function InnerQuestSectionGoal({
 	goalSubOverride,
 }: {
 	dependencies?: string[];
-	goal: MONGO_GoalDocument;
-	goalSubOverride?: MONGO_GoalSubscriptionDocument;
+	goal: GoalDocument;
+	goalSubOverride?: GoalSubscriptionDocument;
 	note?: string;
 }) {
 	const { goalSubs } = useContext(TargetsContext);

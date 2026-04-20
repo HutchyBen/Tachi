@@ -128,7 +128,7 @@ export interface FixedDifficulties<Difficulty extends string> {
 	 *
 	 * For example, in IIDX "ANOTHER" is generally shortened to "A".
 	 */
-	shorthand: Partial<Record<Difficulty, string>>;
+	format: Partial<Record<Difficulty, string>>;
 
 	default: Difficulty;
 }

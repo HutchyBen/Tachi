@@ -8,7 +8,7 @@ import useQueryString from "#components/util/useQueryString";
 import { APIFetchV1 } from "#util/api";
 import React from "react";
 import { Link } from "react-router-dom";
-import { type integer, type MONGO_TachiAPIClientDocument } from "tachi-common";
+import { type integer, type TachiAPIClientDocument } from "tachi-common";
 
 export default function OAuthRequestAuthPage() {
 	const params = useQueryString();
@@ -32,7 +32,7 @@ export default function OAuthRequestAuthPage() {
 }
 
 function OAuthRequestAuthLoader({ clientID }: { clientID: string }) {
-	const { error, data } = useApiQuery<Omit<MONGO_TachiAPIClientDocument, "clientSecret">>(
+	const { error, data } = useApiQuery<Omit<TachiAPIClientDocument, "clientSecret">>(
 		`/clients/${clientID}`,
 	);
 
@@ -61,7 +61,7 @@ function OAuthRequestAuthLoader({ clientID }: { clientID: string }) {
 function OAuthRequestAuthMain({
 	client,
 }: {
-	client: Omit<MONGO_TachiAPIClientDocument, "clientSecret">;
+	client: Omit<TachiAPIClientDocument, "clientSecret">;
 }) {
 	const params = useQueryString();
 

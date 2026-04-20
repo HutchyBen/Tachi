@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 
-import DB from "#services/pg/db.js";
+import DB from "#services/pg/db";
 import { sql } from "kysely";
 
 export const UpdateLastSeen: RequestHandler = (req, _res, next) => {

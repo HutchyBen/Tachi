@@ -8,7 +8,7 @@ import { TachiConfig } from "#lib/config";
 import { APIFetchV1 } from "#util/api";
 import React, { useContext, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { type MONGO_APITokenDocument, type MONGO_TachiAPIClientDocument } from "tachi-common";
+import { type APITokenDocument, type TachiAPIClientDocument } from "tachi-common";
 
 export default function ClientFileFlowPage() {
 	const { clientID } = useParams<{ clientID: string }>();
@@ -17,7 +17,7 @@ export default function ClientFileFlowPage() {
 
 	const { user } = useContext(UserContext);
 
-	const { data, error } = useApiQuery<Omit<MONGO_TachiAPIClientDocument, "clientSecret">>(
+	const { data, error } = useApiQuery<Omit<TachiAPIClientDocument, "clientSecret">>(
 		`/clients/${clientID}`,
 	);
 
@@ -60,7 +60,7 @@ export default function ClientFileFlowPage() {
 						<button
 							className="btn btn-success"
 							onClick={async () => {
-								const res = await APIFetchV1<MONGO_APITokenDocument>(
+								const res = await APIFetchV1<APITokenDocument>(
 									`/users/${user?.id}/api-tokens/create`,
 									{
 										method: "POST",

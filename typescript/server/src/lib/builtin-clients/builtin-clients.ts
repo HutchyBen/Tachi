@@ -2,13 +2,13 @@ import { ACTION_InstallBuiltinClient } from "#actions/install-builtin-client";
 import { log } from "#lib/log/log";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import _ from "lodash";
-import { type APIPermissions, type MONGO_TachiAPIClientDocument } from "tachi-common";
+import { type APIPermissions, type TachiAPIClientDocument } from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import { GetClientByID } from "#utils/queries/api-clients";
 import { GetFirstAdmin } from "#utils/user";
 import fjsh from "fast-json-stable-hash";
 
-type DefaultClients = Array<Omit<MONGO_TachiAPIClientDocument, "author" | "clientSecret">>;
+type DefaultClients = Array<Omit<TachiAPIClientDocument, "author" | "clientSecret">>;
 
 // Defines some Tachi API Clients that should come default with a Tachi
 // environment.

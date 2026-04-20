@@ -1,43 +1,43 @@
 import {
+	type ChartDocument,
+	type ClassAchievementDocument,
+	type GoalDocument,
+	type GoalSubscriptionDocument,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_ClassAchievementDocument,
-	type MONGO_GoalDocument,
-	type MONGO_GoalSubscriptionDocument,
-	type MONGO_QuestDocument,
-	type MONGO_QuestSubscriptionDocument,
-	type MONGO_ScoreDocument,
-	type MONGO_SessionDocument,
-	type MONGO_SongDocument,
+	type QuestDocument,
+	type QuestSubscriptionDocument,
+	type ScoreDocument,
+	type SessionDocument,
+	type SongDocument,
 } from "tachi-common";
 
 export type ClumpedActivityScores = {
 	scores: Array<
 		{
-			__related: { chart: MONGO_ChartDocument; song: MONGO_SongDocument };
-		} & MONGO_ScoreDocument
+			__related: { chart: ChartDocument; song: SongDocument };
+		} & ScoreDocument
 	>;
 	type: "SCORES";
 };
 
 export type ClumpedActivitySession = {
 	type: "SESSION";
-} & MONGO_SessionDocument;
+} & SessionDocument;
 
 export type ClumpedActivityClassAchievement = {
 	type: "CLASS_ACHIEVEMENT";
-} & MONGO_ClassAchievementDocument;
+} & ClassAchievementDocument;
 
 export type ClumpedActivityGoalAchievement = {
-	goals: Array<{ __related: { goal: MONGO_GoalDocument } } & MONGO_GoalSubscriptionDocument>;
+	goals: Array<{ __related: { goal: GoalDocument } } & GoalSubscriptionDocument>;
 	type: "GOAL_ACHIEVEMENTS";
 	// redundant, but convenient.
 	userID: integer;
 };
 
 export type ClumpedActivityQuestAchievement = {
-	quest: MONGO_QuestDocument;
-	sub: MONGO_QuestSubscriptionDocument;
+	quest: QuestDocument;
+	sub: QuestSubscriptionDocument;
 	type: "QUEST_ACHIEVEMENT";
 	userID: integer;
 };
@@ -59,7 +59,7 @@ export type ClumpedActivity = Array<
  */
 export type RawQuestDocument = {
 	rawQuestData: Array<RawQuestSection>;
-} & Omit<MONGO_QuestDocument, "questData" | "questID">;
+} & Omit<QuestDocument, "questData" | "questID">;
 
 export type RawQuestSection = {
 	desc: string;
@@ -68,6 +68,6 @@ export type RawQuestSection = {
 };
 
 export type RawQuestGoal = {
-	goal: Pick<MONGO_GoalDocument, "charts" | "criteria" | "name">;
+	goal: Pick<GoalDocument, "charts" | "criteria" | "name">;
 	note?: string;
 };

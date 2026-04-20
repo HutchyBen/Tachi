@@ -16,24 +16,23 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Alert, ButtonGroup } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
-	type GameGroup,
-	type MONGO_ChartDocument,
-	type MONGO_ImportDocument,
-	type MONGO_ScoreDocument,
-	type MONGO_SessionDocument,
-	type MONGO_SongDocument,
-	type MONGO_UserDocument,
-	type MONGO_UserGameStats,
-	type Playtype,
+	type ChartDocument,
+	type ImportDocument,
+	type ScoreDocument,
+	type SessionDocument,
+	type SongDocument,
+	type UserDocument,
+	type UserGameStats,
+	type V3Game,
 } from "tachi-common";
 
 interface Data {
-	import: MONGO_ImportDocument;
-	scores: MONGO_ScoreDocument[];
-	charts: MONGO_ChartDocument[];
-	songs: MONGO_SongDocument[];
-	sessions: MONGO_SessionDocument[];
-	user: MONGO_UserDocument;
+	import: ImportDocument;
+	scores: ScoreDocument[];
+	charts: ChartDocument[];
+	songs: SongDocument[];
+	sessions: SessionDocument[];
+	user: UserDocument;
 }
 
 export default function ImportInfo({
@@ -54,7 +53,7 @@ export default function ImportInfo({
 			return;
 		}
 
-		APIFetchV1<MONGO_UserGameStats[]>(`/users/${user!.id}/game-stats`).then((r) => {
+		APIFetchV1<UserGameStats[]>(`/users/${user!.id}/game-stats`).then((r) => {
 			if (!r.success) {
 				console.warn(`Can't update user stats post-import. ${r.description}`);
 				return;
@@ -160,7 +159,7 @@ function SessionTab({ data }: { data: Data }) {
 
 	const dataset = [];
 
-	const sessionMap: Map<string, MONGO_SessionDocument> = new Map();
+	const sessionMap: Map<string, SessionDocument> = new Map();
 
 	for (const session of data.sessions) {
 		sessionMap.set(session.sessionID, session);
@@ -187,7 +186,7 @@ function SessionTab({ data }: { data: Data }) {
 					<td>
 						<Link
 							className="text-decoration-none"
-							to={`/u/${r.session.userID}/games/${r.session.game}/${r.session.playtype}/sessions/${r.session.sessionID}`}
+							to={`/u/${r.session.userID}/games/${r.session.game}/sessions/${r.session.sessionID}`}
 						>
 							{r.session.name}
 						</Link>
@@ -203,22 +202,22 @@ function SessionTab({ data }: { data: Data }) {
 function ScoreTab({ data }: { data: Data }) {
 	const importDoc = data.import;
 
-	if (importDoc.playtypes.length === 0) {
+	if (importDoc.games.length === 0) {
 		return (
 			<div className="row mt-4">
 				<span className="w-100 text-center">No scores...</span>
 			</div>
 		);
-	} else if (importDoc.playtypes.length > 1) {
-		const datasets = [];
+	} else if (importDoc.games.length > 1) {
+		const datasets: { data: ScoreDataset; game: V3Game }[] = [];
 
-		for (const playtype of importDoc.playtypes) {
+		for (const game of importDoc.games) {
 			const scoreDataset: ScoreDataset = [];
 
 			const songMap = CreateSongMap(data.songs);
 			const chartMap = CreateChartMap(data.charts);
 
-			for (const [i, score] of data.scores.filter((e) => e.playtype === playtype).entries()) {
+			for (const [i, score] of data.scores.filter((e) => e.game === game).entries()) {
 				scoreDataset.push({
 					...score,
 					__related: {
@@ -230,11 +229,13 @@ function ScoreTab({ data }: { data: Data }) {
 				});
 			}
 
-			datasets.push({ playtype, data: scoreDataset });
+			datasets.push({ game, data: scoreDataset });
 		}
 
-		return <MultiPlaytypeScoreTable datasets={datasets} game={importDoc.game} />;
+		return <MultiPlaytypeScoreTable datasets={datasets} />;
 	}
+
+	const game = importDoc.games[0];
 
 	const scoreDataset: ScoreDataset = [];
 
@@ -253,21 +254,17 @@ function ScoreTab({ data }: { data: Data }) {
 		});
 	}
 
-	return (
-		<ScoreTable
-			dataset={scoreDataset}
-			game={importDoc.game}
-			playtype={importDoc.playtypes[0]}
-		/>
-	);
+	return <ScoreTable dataset={scoreDataset} game={game} />;
 }
 
-type ScoreDatasets = { data: ScoreDataset; playtype: Playtype }[];
+function MultiPlaytypeScoreTable({
+	datasets,
+}: {
+	datasets: { data: ScoreDataset; game: V3Game }[];
+}) {
+	const [selectedGame, setSelectedGame] = useState<V3Game>(datasets[0].game);
 
-function MultiPlaytypeScoreTable({ datasets, game }: { datasets: ScoreDatasets; game: GameGroup }) {
-	const [playtype, setPlaytype] = useState<Playtype>(datasets[0].playtype);
-
-	const content = useMemo(() => datasets.find((e) => e.playtype === playtype)!, [playtype]);
+	const content = useMemo(() => datasets.find((e) => e.game === selectedGame)!, [selectedGame]);
 
 	return (
 		<div className="row">
@@ -275,18 +272,18 @@ function MultiPlaytypeScoreTable({ datasets, game }: { datasets: ScoreDatasets; 
 				<div className="btn-group">
 					{datasets.map((e) => (
 						<SelectButton
-							id={e.playtype}
-							key={e.playtype}
-							setValue={setPlaytype}
-							value={playtype}
+							id={e.game}
+							key={e.game}
+							setValue={setSelectedGame}
+							value={selectedGame}
 						>
-							{e.playtype}
+							{e.game}
 						</SelectButton>
 					))}
 				</div>
 			</div>
 
-			<ScoreTable dataset={content.data} game={game} playtype={content.playtype} />
+			<ScoreTable dataset={content.data} game={content.game} />
 		</div>
 	);
 }

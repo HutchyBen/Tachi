@@ -1,24 +1,27 @@
 import type {
-	GPTStrings,
+	ChartDocument,
+	GamesForGroup,
 	integer,
-	MONGO_ChartDocument,
-	MONGO_PBScoreDocument,
-	MONGO_ScoreDocument,
+	PBScoreDocument,
+	ScoreDocument,
 } from "tachi-common";
 import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import { USCIR_ADJACENT_SCORE_N } from "#lib/constants/usc-ir";
-import { LoadPbsAdjacentByChartRank } from "#lib/db-formats/pb";
+import {
+	GetPBOnChart,
+	GetServerRecordOnChart,
+	LoadPbsAdjacentByChartRank,
+} from "#lib/db-formats/pb";
 import { LoadScoreDocumentById } from "#lib/db-formats/score";
 import { log } from "#lib/log/log";
 import { MStoS } from "#utils/misc";
-import { GetPBOnChart, GetServerRecordOnChart } from "#utils/scores";
 import { GetUsernameFromUserID } from "#utils/user";
 
 import type { USCServerScore } from "./types";
 
 export const TACHI_LAMP_TO_USC: Record<
-	GetEnumValue<GPTStrings["usc"], "lamp">,
+	GetEnumValue<GamesForGroup["usc"], "lamp">,
 	USCServerScore["lamp"]
 > = {
 	// we don't do NO PLAY, so its not handled.
@@ -36,7 +39,7 @@ export const TACHI_LAMP_TO_USC: Record<
  * fields are null.
  */
 export async function TachiScoreToServerScore(
-	tachiScore: MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard">,
+	tachiScore: PBScoreDocument<GamesForGroup["usc"]>,
 ): Promise<USCServerScore> {
 	let username: string;
 	try {
@@ -53,7 +56,7 @@ export async function TachiScoreToServerScore(
 	const firstScoreID = tachiScore.composedFrom[0].scoreID;
 
 	const scorePB = (await LoadScoreDocumentById(firstScoreID)) as
-		| MONGO_ScoreDocument<"usc:Controller" | "usc:Keyboard">
+		| ScoreDocument<GamesForGroup["usc"]>
 		| undefined;
 
 	if (!scorePB) {
@@ -82,11 +85,11 @@ export async function TachiScoreToServerScore(
 
 export async function CreatePOSTScoresResponseBody(
 	userID: integer,
-	chartDoc: MONGO_ChartDocument<"usc:Controller" | "usc:Keyboard">,
+	chartDoc: ChartDocument<GamesForGroup["usc"]>,
 	scoreID: string,
 ): Promise<POSTScoresResponseBody> {
-	const scorePB = (await GetPBOnChart(userID, chartDoc.chartID)) as MONGO_PBScoreDocument<
-		"usc:Controller" | "usc:Keyboard"
+	const scorePB = (await GetPBOnChart(userID, chartDoc.chartID)) as PBScoreDocument<
+		GamesForGroup["usc"]
 	> | null;
 
 	if (!scorePB) {
@@ -102,9 +105,9 @@ export async function CreatePOSTScoresResponseBody(
 		);
 	}
 
-	const ktServerRecord = (await GetServerRecordOnChart(
-		chartDoc.chartID,
-	)) as MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard"> | null;
+	const ktServerRecord = (await GetServerRecordOnChart(chartDoc.chartID)) as PBScoreDocument<
+		GamesForGroup["usc"]
+	> | null;
 
 	// this is impossible to trigger without making a race-condition.
 	/* istanbul ignore next */
@@ -131,7 +134,7 @@ export async function CreatePOSTScoresResponseBody(
 		usersRanking,
 		"above",
 		USCIR_ADJACENT_SCORE_N,
-	)) as Array<MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard">>;
+	)) as Array<PBScoreDocument<GamesForGroup["usc"]>>;
 
 	// The specification enforces that we return them in
 	// ascending order, though, so we reverse this after
@@ -153,7 +156,7 @@ export async function CreatePOSTScoresResponseBody(
 		usersRanking,
 		"below",
 		USCIR_ADJACENT_SCORE_N,
-	)) as Array<MONGO_PBScoreDocument<"usc:Controller" | "usc:Keyboard">>;
+	)) as Array<PBScoreDocument<GamesForGroup["usc"]>>;
 
 	const [score, serverRecord, adjacentAbove, adjacentBelow] = await Promise.all([
 		TachiScoreToServerScore(scorePB),
@@ -163,7 +166,7 @@ export async function CreatePOSTScoresResponseBody(
 	]);
 
 	const originalScore = (await LoadScoreDocumentById(scoreID)) as
-		| MONGO_ScoreDocument<"usc:Controller" | "usc:Keyboard">
+		| ScoreDocument<GamesForGroup["usc"]>
 		| undefined;
 
 	if (!originalScore) {

@@ -1,285 +1,176 @@
-import { ACTION_AddGoal } from "#actions/add-goal";
-import { ACTION_RemoveGoalSubscription } from "#actions/remove-goal-subscription";
 import { SELECT_GOAL, SELECT_GOAL_SUB_WITH_GOAL_GAME } from "#lib/db-formats/goal";
 import { SELECT_QUEST_SUB_WITH_QUEST_GAME } from "#lib/db-formats/quest";
 import {
+	AttachFolderSlugsToGoals,
 	ToGoalDocument,
 	ToGoalSubscriptionDocument,
 	ToQuestSubscriptionDocument,
 } from "#lib/db-formats/target-documents";
-import { GetQuestsThatContainGoal } from "#lib/targets/goals";
+import { withUserGameProfile } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
 import { GetParentQuests } from "#lib/targets/quests";
-import { RequirePermissions } from "#server/middleware/auth";
-import prValidate from "#server/middleware/prudence-validate";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
 import DB from "#services/pg/db";
-import { GetGoalForIDGuaranteed, GetGoalSubscriptionForIDGuaranteed } from "#utils/db";
-import { AssignToReqTachiData, GetTachiData, GetUGPT } from "#utils/req-tachi-data";
-import { type RequestHandler, Router } from "express";
-import { p } from "prudence";
-import { GamePTToV3, type MONGO_GoalDocument, type MONGO_QuestDocument } from "tachi-common";
-
-import { RequireAuthedAsUser } from "../../../../../middleware";
-
-const router: Router = Router({ mergeParams: true });
+import { ExpectedErr } from "bliss";
+import { type GoalDocument } from "tachi-common";
 
 /**
  * Retrieves this user's set goals for this GPT.
  *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/targets/goals
+ * @name GET /api/v1/users/:userID/games/:game/targets/goals
  */
-router.get("/", async (req, res) => {
-	const { user, game, playtype } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/targets/goals",
+	withUserGameProfile,
+	async ({ ctx }) => {
+		const { requestedUser: user, game } = ctx;
 
-	const v3Game = GamePTToV3(game, playtype);
+		const subRows = await DB.selectFrom("goal_sub")
+			.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+			.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
+			.where("goal_sub.user_id", "=", user.id)
+			.where("goal.game", "=", game)
+			.execute();
 
-	const subRows = await DB.selectFrom("goal_sub")
-		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-		.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
-		.where("goal_sub.user_id", "=", user.id)
-		.where("goal.game", "=", v3Game)
-		.execute();
+		const goalSubs = subRows.map((r) => ToGoalSubscriptionDocument(r));
+		const goalIds = goalSubs.map((e) => e.goalID);
 
-	const goalSubs = subRows.map((r) => ToGoalSubscriptionDocument(r));
+		const goalRows =
+			goalIds.length === 0
+				? []
+				: await DB.selectFrom("goal")
+						.select(SELECT_GOAL)
+						.where("goal.id", "in", goalIds)
+						.execute();
 
-	const goalIds = goalSubs.map((e) => e.goalID);
+		const goals = goalRows.map(ToGoalDocument);
+		await AttachFolderSlugsToGoals(goals);
+		const allQuests = await GetParentQuests(user.id, game, goalSubs);
 
-	const goalRows =
-		goalIds.length === 0
-			? []
-			: await DB.selectFrom("goal")
-					.select(SELECT_GOAL)
-					.where("goal.id", "in", goalIds)
-					.execute();
+		const questSubRows = await DB.selectFrom("quest_sub")
+			.innerJoin("quest", "quest.id", "quest_sub.quest_id")
+			.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
+			.where("quest_sub.user_id", "=", user.id)
+			.where("quest.game", "=", game)
+			.execute();
 
-	const goals = goalRows.map(ToGoalDocument);
+		const questSubs = questSubRows.map((r) => ToQuestSubscriptionDocument(r));
+		const questSubIDs = questSubs.map((e) => e.questID);
+		const quests = allQuests.filter((quest) => questSubIDs.includes(quest.questID));
 
-	const allQuests = await GetParentQuests(user.id, game, playtype, goalSubs);
-
-	const questSubRows = await DB.selectFrom("quest_sub")
-		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
-		.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
-		.where("quest_sub.user_id", "=", user.id)
-		.where("quest.game", "=", v3Game)
-		.execute();
-
-	const questSubs = questSubRows.map((r) => ToQuestSubscriptionDocument(r));
-
-	const questSubIDs = questSubs.map((e) => e.questID);
-
-	const quests = allQuests.filter((quest) => questSubIDs.includes(quest.questID));
-
-	return res.status(200).json({
-		success: true,
-		description: `Retrieved ${goalSubs.length} goal(s).`,
-		body: {
-			goals,
+		return success(`Retrieved ${goalSubs.length} goal(s).`, {
 			goalSubs,
-			quests,
+			goals,
 			questSubs,
-		},
-	});
-});
-
-type GoalCreationBody = Pick<MONGO_GoalDocument, "charts" | "criteria">;
+			quests,
+		});
+	},
+);
 
 /**
- * Add a goal to your account. If the goal document already exists, it is subscribed to.
- * Otherwise, that goal document is created, and then subscribed to.
+ * Add a goal to your account.
  *
- * @param criteria.key - The key for the goal to be on. This is stuff like scoreData.percent.
- * @param criteria.value - The value the key must be greater than for it to count as achieved.
- * @param criteria.mode - "single", "absolute" or "proportion". If abs or proportion, countNum
- * must be supplied.
- * @param criteria.countNum - For abs/proportion mode. Atleast N scores must achieve the
- * key:value condition.
- *
- * @param charts.type - "single", "multi" or "folder".
- * @param charts.data - an identifier for the set of charts must be
- * supplied here. For single, this is a chartID. For multi, this is an array of chartIDs.
- * For folder, this is a folderID.
- *
- * @name POST /api/v1/users/:userID/games/:game/:playtype/targets/goals/add-goal
+ * @name POST /api/v1/users/:userID/games/:game/targets/goals/add-goal
  */
-router.post(
-	"/add-goal",
-	RequireAuthedAsUser,
-	RequirePermissions("manage_targets"),
-	prValidate({
-		criteria: {
-			// we do proper validation on this later.
-			key: "string",
-			value: p.gte(0),
-
-			mode: p.isIn("single", "absolute", "proportion"),
-			countNum: (self, parent) => {
-				if (parent.mode === "single") {
-					return (
-						self === undefined ||
-						"Invalid countNum for mode 'single'. Must not have one!"
-					);
-				}
-
-				// proper validation later.
-				return p.gte(0)(self);
-			},
-		},
-		charts: {
-			type: p.isIn("single", "multi", "folder"),
-			data: (self, parent) => {
-				if (parent.type === "single") {
-					return (
-						typeof self === "string" ||
-						"Expected a string in charts.data due to charts.type being 'single'."
-					);
-				} else if (parent.type === "multi") {
-					return (
-						(Array.isArray(self) &&
-							self.every((k) => typeof k === "string") &&
-							self.length <= 10 &&
-							self.length > 1) ||
-						"Expected an array of 2 to 10 strings in charts.data due to charts.type being 'multi'."
-					);
-					/* istanbul ignore next */
-				} else if (parent.type === "folder") {
-					return (
-						typeof self === "string" ||
-						"Expected a string in charts.data due to charts.type being 'folder'."
-					);
-				}
-
-				// impossible to reach, so doesn't count for coverage.
-				/* istanbul ignore next */
-				return "Unknown charts.type.";
-			},
-		},
-	}),
-	async (req, res) => {
-		const { user, game, playtype } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"POST /users/:userID/games/:game/targets/goals/add-goal",
+	withUserGameProfile,
+	async ({ ctx, input, req }) => {
+		const { requestedUser: user, game } = ctx;
 
 		const sessionUser = req.session.tachi?.user;
 
 		if (!sessionUser) {
-			return res.status(401).json({
-				success: false,
-				description: "You are not authenticated.",
-			});
+			throw new ExpectedErr(401, "You are not authenticated.");
 		}
 
-		const data = req.safeBody as GoalCreationBody;
+		const taker = { acct: { id: sessionUser.id, username: sessionUser.username }, ip: req.ip };
 
-		const taker = { ip: req.ip, acct: { id: sessionUser.id, username: sessionUser.username } };
+		const { ACTION_AddGoal } = await import("#actions/add-goal");
+		const { GetGoalForIDGuaranteed, GetGoalSubscriptionForIDGuaranteed } = await import(
+			"#utils/db"
+		);
 
 		const { goalID } = await ACTION_AddGoal(taker, {
-			userID: user.id,
+			charts: input.charts as GoalDocument["charts"],
+			criteria: input.criteria as GoalDocument["criteria"],
 			game,
-			playtype,
-			charts: data.charts,
-			criteria: data.criteria,
+			userID: user.id,
 		});
 
 		const goal = await GetGoalForIDGuaranteed(goalID);
 		const goalSub = await GetGoalSubscriptionForIDGuaranteed(goalID, user.id);
 
-		return res.status(200).json({
-			success: true,
-			description: `Subscribed to ${goal.name}.`,
-			body: {
-				goal,
-				goalSub,
-			},
-		});
+		return success(`Subscribed to ${goal.name}.`, { goal, goalSub });
 	},
 );
-
-const GetGoalSubscription: RequestHandler = async (req, res, next) => {
-	const { user, game, playtype } = GetUGPT(req);
-
-	const v3Game = GamePTToV3(game, playtype);
-
-	const row = await DB.selectFrom("goal_sub")
-		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-		.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
-		.where("goal_sub.user_id", "=", user.id)
-		.where("goal_sub.goal_id", "=", req.params.goalID)
-		.where("goal.game", "=", v3Game)
-		.executeTakeFirst();
-
-	if (!row) {
-		return res.status(404).json({
-			success: false,
-			description: `${user.username} is not subscribed to this goal.`,
-		});
-	}
-
-	const goalSub = ToGoalSubscriptionDocument(row);
-
-	AssignToReqTachiData(req, { goalSubDoc: goalSub });
-
-	next();
-};
 
 /**
  * Reads information about the users subscription to this goal ID.
  *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/targets/goals/:goalID
+ * @name GET /api/v1/users/:userID/games/:game/targets/goals/:goalID
  */
-router.get("/:goalID", GetGoalSubscription, async (req, res) => {
-	const { user } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/targets/goals/:goalID",
+	withUserGameProfile,
+	async ({ ctx, params }) => {
+		const { requestedUser: user, game } = ctx;
 
-	const goalSub = GetTachiData(req, "goalSubDoc");
+		const row = await DB.selectFrom("goal_sub")
+			.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+			.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
+			.where("goal_sub.user_id", "=", user.id)
+			.where("goal_sub.goal_id", "=", params.goalID)
+			.where("goal.game", "=", game)
+			.executeTakeFirst();
 
-	const quests: Array<MONGO_QuestDocument> = await GetQuestsThatContainGoal(goalSub.goalID);
+		if (!row) {
+			throw new ExpectedErr(404, `${user.username} is not subscribed to this goal.`);
+		}
 
-	const goal = await GetGoalForIDGuaranteed(goalSub.goalID);
+		const goalSub = ToGoalSubscriptionDocument(row);
+		const { GetGoalForIDGuaranteed } = await import("#utils/db");
+		const { GetQuestsThatContainGoal } = await import("#lib/targets/goals");
 
-	return res.status(200).json({
-		success: true,
-		description: `Returned information about goal '${goal.name}'.`,
-		body: {
+		const goal = await GetGoalForIDGuaranteed(goalSub.goalID);
+		const quests = await GetQuestsThatContainGoal(goalSub.goalID);
+
+		return success(`Returned information about goal '${goal.name}'.`, {
 			goal,
 			goalSub,
 			quests,
 			user,
-		},
-	});
-});
-
-/**
- * Unsubscribe from a goal.
- *
- * @name DELETE /api/v1/users/:userID/games/:game/:playtype/targets/goals/:goalID
- */
-router.delete(
-	"/:goalID",
-	RequireAuthedAsUser,
-	RequirePermissions("manage_targets"),
-	async (req, res) => {
-		const { user, game, playtype } = GetUGPT(req);
-
-		const sessionUser = req.session.tachi?.user;
-
-		if (!sessionUser) {
-			return res.status(401).json({
-				success: false,
-				description: "You are not authenticated.",
-			});
-		}
-
-		const taker = { ip: req.ip, acct: { id: sessionUser.id, username: sessionUser.username } };
-
-		await ACTION_RemoveGoalSubscription(taker, {
-			userID: user.id,
-			game,
-			playtype,
-			goalID: req.params.goalID,
-		});
-
-		return res.status(200).json({
-			success: true,
-			description: `Removed this goal from your subscriptions.`,
-			body: {},
 		});
 	},
 );
 
-export default router;
+/**
+ * Unsubscribe from a goal.
+ *
+ * @name DELETE /api/v1/users/:userID/games/:game/targets/goals/:goalID
+ */
+API_V1_ROUTER.add(
+	"DELETE /users/:userID/games/:game/targets/goals/:goalID",
+	withUserGameProfile,
+	async ({ ctx, params, req }) => {
+		const { requestedUser: user, game } = ctx;
+
+		const sessionUser = req.session.tachi?.user;
+
+		if (!sessionUser) {
+			throw new ExpectedErr(401, "You are not authenticated.");
+		}
+
+		const taker = { acct: { id: sessionUser.id, username: sessionUser.username }, ip: req.ip };
+
+		const { ACTION_RemoveGoalSubscription } = await import("#actions/remove-goal-subscription");
+
+		await ACTION_RemoveGoalSubscription(taker, {
+			game,
+			goalID: params.goalID,
+			userID: user.id,
+		});
+
+		return success("Removed this goal from your subscriptions.", {});
+	},
+);

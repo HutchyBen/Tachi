@@ -1,9 +1,13 @@
 import type { integer } from "tachi-common";
 
-import { SELECT_FOLDER, ToFolderDocument } from "#lib/db-formats/folders.js";
+import { SELECT_FOLDER, ToFolderDocument } from "#lib/db-formats/folders";
 import { SELECT_GOAL, SELECT_GOAL_SUB_WITH_GOAL_GAME } from "#lib/db-formats/goal";
 import { SELECT_SESSION_DOCUMENT, ToSessionDocument } from "#lib/db-formats/session";
-import { ToGoalDocument, ToGoalSubscriptionDocument } from "#lib/db-formats/target-documents";
+import {
+	AttachFolderSlugsToGoals,
+	ToGoalDocument,
+	ToGoalSubscriptionDocument,
+} from "#lib/db-formats/target-documents";
 import DB from "#services/pg/db";
 import { GetEnumDistForFolders } from "#utils/folder";
 import { GetTimeXHoursAgo } from "#utils/misc";
@@ -114,6 +118,7 @@ export async function GetGoalSummary(userID: integer) {
 					.execute();
 
 	const goals = goalRows.map(ToGoalDocument);
+	await AttachFolderSlugsToGoals(goals);
 
 	return { achievedGoals, improvedGoals, goals };
 }

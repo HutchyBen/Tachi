@@ -1,5 +1,4 @@
 import type { Request, Response } from "express-serve-static-core";
-import type { Game } from "tachi-db";
 
 import {
 	SELECT_CLASS_ACHIEVEMENT_DOCUMENT,
@@ -16,31 +15,26 @@ import {
 import { DedupeArr } from "#utils/misc";
 import { scoreDocumentJoin } from "#utils/queries/scores";
 import { GetScoreIdsGroupedBySessionId } from "#utils/queries/sessions";
-import { GetGPT } from "#utils/req-tachi-data";
+import { REQ_GetGame } from "#utils/req-tachi-data";
 import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { GetUsersWithIDs } from "#utils/user";
 import { sql } from "kysely";
 import {
-	type GameGroup,
-	GamePTToV3,
-	type GPTString,
+	type ChartDocument,
+	type ClassAchievementDocument,
+	type GoalDocument,
+	type GoalSubscriptionDocument,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_ClassAchievementDocument,
-	type MONGO_GoalDocument,
-	type MONGO_GoalSubscriptionDocument,
-	type MONGO_QuestDocument,
-	type MONGO_QuestSubscriptionDocument,
-	type MONGO_ScoreDocument,
-	type MONGO_SessionDocument,
-	type MONGO_SongDocument,
-	type MONGO_UserDocument,
-	type Playtype,
+	type QuestDocument,
+	type QuestSubscriptionDocument,
+	type ScoreDocument,
+	type SessionDocument,
+	type SongDocument,
+	type UserDocument,
+	type V3Game,
 } from "tachi-common";
 
 export type ActivityConstraint = {
-	game: GameGroup;
-	playtype: Playtype;
 	userID?: integer | { $in: Array<integer> };
 };
 
@@ -114,30 +108,29 @@ function whereMsRangeOnColumn(
  * i.e. [1, 2, 3] 3, 3, 3 [4, 5, 6]
  */
 export async function GetRecentActivity(
-	game: GameGroup,
+	game: V3Game,
 	query: ActivityConstraint,
 	sessions = 30,
 	startFrom: number | null = null,
 ): Promise<{
-	achievedClasses: Array<MONGO_ClassAchievementDocument>;
-	charts: Array<MONGO_ChartDocument>;
-	goals: Array<MONGO_GoalDocument>;
-	goalSubs: Array<MONGO_GoalSubscriptionDocument>;
-	quests: Array<MONGO_QuestDocument>;
-	questSubs: Array<MONGO_QuestSubscriptionDocument>;
-	recentlyHighlightedScores: Array<MONGO_ScoreDocument>;
-	recentSessions: Array<MONGO_SessionDocument>;
-	songs: Array<MONGO_SongDocument>;
-	users: Array<MONGO_UserDocument>;
+	achievedClasses: Array<ClassAchievementDocument>;
+	charts: Array<ChartDocument>;
+	goals: Array<GoalDocument>;
+	goalSubs: Array<GoalSubscriptionDocument>;
+	quests: Array<QuestDocument>;
+	questSubs: Array<QuestSubscriptionDocument>;
+	recentlyHighlightedScores: Array<ScoreDocument>;
+	recentSessions: Array<SessionDocument>;
+	songs: Array<SongDocument>;
+	users: Array<UserDocument>;
 }> {
-	const v3Game = GamePTToV3(query.game, query.playtype) as Game;
 	const sessionUserWhere = whereActivityUserId(query.userID, "user_id");
 	const scoreUserWhere = whereActivityUserId(query.userID, "score.user_id");
 	const classUserWhere = whereActivityUserId(query.userID, "user_id");
 
 	let sessionQ = DB.selectFrom("session")
 		.select(SELECT_SESSION_DOCUMENT)
-		.where("session.game", "=", v3Game);
+		.where("session.game", "=", game);
 
 	if (sessionUserWhere) {
 		sessionQ = sessionQ.where(sessionUserWhere);
@@ -183,7 +176,7 @@ export async function GetRecentActivity(
 
 	let classQ = DB.selectFrom("class_achievement")
 		.select(SELECT_CLASS_ACHIEVEMENT_DOCUMENT)
-		.where("class_achievement.game", "=", v3Game)
+		.where("class_achievement.game", "=", game)
 		.where(timeWhereAchieved);
 
 	if (classUserWhere) {
@@ -191,7 +184,7 @@ export async function GetRecentActivity(
 	}
 
 	let highlightQ = scoreDocumentJoin()
-		.where("score.game", "=", v3Game)
+		.where("score.game", "=", game)
 		.where("score.highlight", "=", true)
 		.where(timeWhereScore);
 
@@ -212,7 +205,7 @@ export async function GetRecentActivity(
 		ToScoreDocument(row as ScoreDocumentJoinRow),
 	);
 
-	const { songs, charts } = await GetRelevantSongsAndCharts(recentlyHighlightedScores, game);
+	const { songs, charts } = await GetRelevantSongsAndCharts(recentlyHighlightedScores);
 
 	const userIDs = DedupeArr([
 		...recentSessions.map((e) => e.userID),
@@ -241,29 +234,21 @@ export async function GetRecentActivity(
 /**
  * @see {GetRecentActivity}, but for multiple games. Works pretty much as expected.
  *
- * @param gpts - An array of Game+Playtype combos to fetch from.
+ * @param games - An array of Game+Playtype combos to fetch from.
  */
 export async function GetRecentActivityForMultipleGames(
-	gpts: Array<{ game: GameGroup; playtype: Playtype }>,
+	games: Array<V3Game>,
 	sessions = 30,
 	startFrom: number | null = null,
 ) {
 	// { "iidx:SP": {recentSessions: ..., ...} }
-	const data: Partial<Record<GPTString, Awaited<ReturnType<typeof GetRecentActivity>>>> = {};
+	const data: Partial<Record<V3Game, Awaited<ReturnType<typeof GetRecentActivity>>>> = {};
 
 	await Promise.all(
-		gpts.map(async ({ game, playtype }) => {
-			const activity = await GetRecentActivity(
-				game,
-				{
-					game,
-					playtype,
-				},
-				sessions,
-				startFrom,
-			);
+		games.map(async (game) => {
+			const activity = await GetRecentActivity(game, {}, sessions, startFrom);
 
-			data[`${game}:${playtype}` as GPTString] = activity;
+			data[game] = activity;
 		}),
 	);
 
@@ -273,7 +258,7 @@ export async function GetRecentActivityForMultipleGames(
 	// very far back, resulting in us skipping over data.
 
 	const flatPointer = Object.entries(data) as Array<
-		[GPTString, { recentSessions: Array<MONGO_SessionDocument> }]
+		[V3Game, { recentSessions: Array<SessionDocument> }]
 	>;
 
 	// sort all games data to find the Nth session (where we should set our cutoff).
@@ -309,7 +294,7 @@ export async function GetRecentActivityForMultipleGames(
  */
 export function CreateActivityRouteHandler(query: ActivityConstraint) {
 	return async (req: Request, res: Response) => {
-		const { game } = GetGPT(req);
+		const game = REQ_GetGame(req);
 
 		const qSessions = req.query.sessions;
 		const qStartTime = req.query.startTime;

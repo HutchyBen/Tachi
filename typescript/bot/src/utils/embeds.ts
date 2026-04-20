@@ -1,4 +1,4 @@
-import type { integer, MONGO_ImportDocument, MONGO_UserDocument } from "tachi-common";
+import type { ImportDocument, integer, UserDocument } from "tachi-common";
 
 import { MessageEmbed } from "discord.js";
 
@@ -18,7 +18,7 @@ export function CreateEmbed(userID?: integer) {
 	return embed;
 }
 
-export function CreateImportEmbed(importDoc: MONGO_ImportDocument) {
+export function CreateImportEmbed(importDoc: ImportDocument) {
 	return CreateEmbed()
 		.setTitle(
 			`Imported ${importDoc.scoreIDs.length} ${Pluralise(
@@ -30,11 +30,11 @@ export function CreateImportEmbed(importDoc: MONGO_ImportDocument) {
 		.addField("Errors", importDoc.errors.length.toString(), true)
 		.addField(
 			"Your Profile",
-			`${Env.TACHI_SERVER_LOCATION}/u/${importDoc.userID}/games/${importDoc.game}`,
+			`${Env.TACHI_SERVER_LOCATION}/u/${importDoc.userID}/games/${importDoc.games[0]}`,
 		);
 }
 
-export function CreateUserEmbed(userDoc: MONGO_UserDocument) {
+export function CreateUserEmbed(userDoc: UserDocument) {
 	return CreateEmbed()
 		.setTitle(`${userDoc.username} (ID: ${userDoc.id})`)
 		.setThumbnail(PrependTachiUrl(`/users/${userDoc.id}/pfp`))

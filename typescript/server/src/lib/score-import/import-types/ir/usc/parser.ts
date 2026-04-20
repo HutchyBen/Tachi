@@ -1,14 +1,13 @@
 import type { KtLogger } from "#lib/log/log";
+import type { ParserFunctionReturns } from "#lib/score-import/import-types/common/types";
 import type { USCClientScore } from "#server/router/ir/usc/_playtype/types";
-import type { Playtypes } from "tachi-common";
+import type { GamesForGroup, LEGACY_Playtypes } from "tachi-common";
 
+import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { FormatPrError } from "#utils/prudence";
 import { p, type PrudenceSchema } from "prudence";
 
-import type { ParserFunctionReturns } from "../../common/types";
 import type { IRUSCContext } from "./types";
-
-import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 
 const PR_USCIR_SCORE: PrudenceSchema = {
 	score: p.isBoundedInteger(0, 10_000_000),
@@ -38,9 +37,9 @@ const PR_USCIR_SCORE: PrudenceSchema = {
 export function ParseIRUSC(
 	body: Record<string, unknown>,
 	chartHash: string,
-	playtype: Playtypes["usc"],
+	playtype: LEGACY_Playtypes["usc"],
 	_log: KtLogger,
-): ParserFunctionReturns<USCClientScore, IRUSCContext> {
+): ParserFunctionReturns<USCClientScore, IRUSCContext, GamesForGroup["usc"]> {
 	const err = p(
 		body.score,
 		PR_USCIR_SCORE,
@@ -67,7 +66,7 @@ export function ParseIRUSC(
 			playtype,
 			timeReceived: Date.now(),
 		},
-		game: "usc",
+		gameGroup: "usc",
 		iterable: [score] as Array<USCClientScore>,
 		classProvider: null,
 	};

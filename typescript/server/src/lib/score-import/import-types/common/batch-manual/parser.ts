@@ -1,24 +1,24 @@
 import type { KtLogger } from "#lib/log/log";
 
+import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { TachiConfig } from "#lib/setup/config";
-import { IsRecord, IsValidGame, IsValidPlaytype } from "#utils/misc";
+import { IsEnabledGame, IsEnabledGameGroup, IsRecord, IsValidPlaytype } from "#utils/misc";
 import { FormatPrError } from "#utils/prudence";
 import { p } from "prudence";
 import {
 	type BatchManual,
 	type BatchManualScore,
-	type GameGroup,
+	GameToGameGroup,
 	GetGameGroupConfig,
-	GetGPTString,
 	type ImportTypes,
-	type Playtype,
+	LEGACY_GameGroupPTToGame,
+	type V3Game,
 } from "tachi-common";
 import { PR_BATCH_MANUAL } from "tachi-common/lib/schemas";
 
 import type { ParserFunctionReturns } from "../types";
 import type { BatchManualContext } from "./types";
 
-import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 import { CreateBatchManualClassProvider } from "./class-handler";
 
 /**
@@ -28,10 +28,10 @@ import { CreateBatchManualClassProvider } from "./class-handler";
  */
 export function ParseBatchManualFromObject(
 	object: unknown,
-	importType: ImportTypes,
+	_importType: ImportTypes,
 	inferTimestamp: boolean,
 	_log: KtLogger,
-): ParserFunctionReturns<BatchManualScore, BatchManualContext> {
+): ParserFunctionReturns<BatchManualScore, BatchManualContext, V3Game> {
 	// now to perform some basic validation so we can return
 	// the iterable
 
@@ -47,10 +47,6 @@ export function ParseBatchManualFromObject(
 	// attempt to retrieve game
 	// @ts-expect-error man.
 	const maybeGame = object.meta?.game as unknown;
-
-	// @ts-expect-error man.
-	const maybePlaytype = object.meta?.playtype as unknown;
-
 	if (maybeGame === undefined) {
 		throw new ScoreImportFatalError(
 			400,
@@ -58,43 +54,51 @@ export function ParseBatchManualFromObject(
 		);
 	}
 
+	// @ts-expect-error man.
+	const maybePlaytype = object.meta?.playtype as unknown;
+
+	let game: V3Game;
+
 	if (maybePlaytype === undefined) {
-		throw new ScoreImportFatalError(
-			400,
-			`Could not retrieve meta.playtype - is this valid BATCH-MANUAL?`,
-		);
+		// so, game should be a v3 game.
+
+		if (typeof maybeGame !== "string" || !IsEnabledGame(maybeGame)) {
+			throw new ScoreImportFatalError(
+				400,
+				`Invalid game '${maybeGame}' - expected any of ${TachiConfig.GAME_GROUPS.join(", ")}.`,
+			);
+		}
+
+		game = maybeGame as V3Game;
+	} else {
+		// playtype provided
+
+		const maybeGameGroup = maybeGame;
+
+		if (typeof maybeGameGroup !== "string" || !IsEnabledGameGroup(maybeGameGroup)) {
+			throw new ScoreImportFatalError(
+				400,
+				`Invalid game group '${maybeGameGroup}' - expected any of ${TachiConfig.GAME_GROUPS.join(", ")}.`,
+			);
+		}
+
+		if (typeof maybePlaytype !== "string" || !IsValidPlaytype(maybeGameGroup, maybePlaytype)) {
+			const gameGroupConfig = GetGameGroupConfig(maybeGameGroup);
+			throw new ScoreImportFatalError(
+				400,
+				`Invalid playtype '${maybePlaytype}' - expected any of ${gameGroupConfig.playtypes.join(", ")}.`,
+			);
+		}
+
+		game = LEGACY_GameGroupPTToGame(maybeGameGroup, maybePlaytype);
 	}
-
-	// maybeGame could be a number or really anything.
-	// So we have to check that it's both a string and a valid game.
-	if (!(typeof maybeGame === "string" && IsValidGame(maybeGame))) {
-		throw new ScoreImportFatalError(
-			400,
-			`Invalid game '${maybeGame}' - expected any of ${TachiConfig.GAMES.join(", ")}.`,
-		);
-	}
-
-	const game: GameGroup = maybeGame;
-
-	const gameConfig = GetGameGroupConfig(game);
-
-	if (!(typeof maybePlaytype === "string" && IsValidPlaytype(game, maybePlaytype))) {
-		throw new ScoreImportFatalError(
-			400,
-			`Invalid playtype '${maybePlaytype}' - expected any of ${gameConfig.playtypes.join(
-				", ",
-			)}.`,
-		);
-	}
-
-	const playtype: Playtype = maybePlaytype;
 
 	// now that we have the game, we can validate this against
 	// the prudence schema for batch-manual.
 	// This mostly works as a sanity check, and doesn't
 	// check things like whether a score is > 100%
 	// or something.
-	const err = p(object, PR_BATCH_MANUAL(game, playtype));
+	const err = p(object, PR_BATCH_MANUAL(game));
 
 	if (err) {
 		throw new ScoreImportFatalError(400, FormatPrError(err, "Invalid BATCH-MANUAL"));
@@ -124,11 +128,10 @@ export function ParseBatchManualFromObject(
 	}
 
 	return {
-		game,
+		gameGroup: GameToGameGroup(game),
 		context: {
 			service: batchManual.meta.service,
 			game,
-			playtype,
 			version: batchManual.meta.version ?? null,
 		},
 		iterable: batchManual.scores,
@@ -136,7 +139,7 @@ export function ParseBatchManualFromObject(
 		// if classes are provided, use those as a class handler. Otherwise, we
 		// don't care.
 		classProvider: batchManual.classes
-			? CreateBatchManualClassProvider(GetGPTString(game, playtype), batchManual.classes)
+			? CreateBatchManualClassProvider(game, batchManual.classes)
 			: null,
 	};
 }

@@ -20,8 +20,7 @@ describe("ACTION_RemoveGoalSubscription", () => {
 		await expect(
 			ACTION_RemoveGoalSubscription(taker, {
 				userID: other.id,
-				game: "iidx",
-				playtype: "SP",
+				game: "iidx-sp",
 				goalID: "Gfake",
 			}),
 		).rejects.toMatchObject({ code: 403 });
@@ -33,8 +32,7 @@ describe("ACTION_RemoveGoalSubscription", () => {
 		await expect(
 			ACTION_RemoveGoalSubscription(taker, {
 				userID: userID,
-				game: "iidx",
-				playtype: "SP",
+				game: "iidx-sp",
 				goalID: "Gnonexistent_goal_id_xyz",
 			}),
 		).rejects.toMatchObject({ code: 404 });
@@ -46,16 +44,14 @@ describe("ACTION_RemoveGoalSubscription", () => {
 
 		const { goalID } = await ACTION_AddGoal(taker, {
 			userID,
-			game: "iidx",
-			playtype: "SP",
+			game: "iidx-sp",
 			charts: { type: "single", data: chartId },
 			criteria: { key: "lamp", value: 7, mode: "single" },
 		});
 
 		await ACTION_RemoveGoalSubscription(taker, {
 			userID,
-			game: "iidx",
-			playtype: "SP",
+			game: "iidx-sp",
 			goalID,
 		});
 
@@ -74,16 +70,14 @@ describe("ACTION_RemoveGoalSubscription", () => {
 
 		const { goalID } = await ACTION_AddGoal(taker, {
 			userID: userID,
-			game: "iidx",
-			playtype: "SP",
+			game: "iidx-sp",
 			charts: { type: "single", data: chartId },
 			criteria: { key: "lamp", value: 7, mode: "single" },
 		});
 
 		await ACTION_RemoveGoalSubscription(taker, {
 			userID: userID,
-			game: "iidx",
-			playtype: "SP",
+			game: "iidx-sp",
 			goalID,
 		});
 
@@ -106,8 +100,7 @@ describe("ACTION_RemoveGoalSubscription", () => {
 		await expect(
 			ACTION_RemoveGoalSubscription(taker, {
 				userID: userID,
-				game: "iidx",
-				playtype: "SP",
+				game: "iidx-sp",
 				goalID: "Gmissing_subscription",
 			}),
 		).rejects.toMatchObject({ code: 404 });

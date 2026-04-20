@@ -497,14 +497,14 @@ function addTiers(levelNum, csvData, headerRow, leftOffset, simple) {
 
 				let chart = charts.find(
 					(chart) =>
-						chart.songID === song.id &&
+						chart.song.id === song.id &&
 						chart.levelNum === levelNum &&
 						chart.difficulty === difficulty,
 				);
 				if (!chart) {
 					// Sometimes the difficulty is missing, or straight up wrong (e.g. MXM instead of VVD) so just try without.
 					chart = charts.find(
-						(chart) => chart.songID === song.id && chart.levelNum === levelNum,
+						(chart) => chart.song.id === song.id && chart.levelNum === levelNum,
 					);
 				}
 
@@ -564,7 +564,7 @@ function addTiers(levelNum, csvData, headerRow, leftOffset, simple) {
 		if (missingTiers.length > 0) {
 			console.log(`\nThe following lv${levelNum} charts are still missing a tier:`);
 			for (const chart of missingTiers) {
-				const song = songs.find((song) => song.id === chart.songID);
+				const song = songs.find((song) => song.id === chart.song.id);
 				console.log(
 					`${song.id}: ${song.title} [${chart.difficulty}] (displayVersion: ${song.data.displayVersion})`,
 				);

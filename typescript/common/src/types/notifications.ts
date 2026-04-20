@@ -1,4 +1,4 @@
-import type { GameGroup, integer, Playtype } from "../types";
+import type { integer, V3Game } from "../types";
 
 export interface BaseNotification {
 	title: string;
@@ -13,16 +13,14 @@ export interface BaseNotification {
 export type NotificationBody =
 	| {
 			content: {
-				game: GameGroup;
-				playtype: Playtype;
+				game: V3Game;
 				questID: string;
 			};
 			type: "QUEST_CHANGED"; // Emitted when a quest the user is subscribed to changed.
 	  }
 	| {
 			content: {
-				game: GameGroup;
-				playtype: Playtype;
+				game: V3Game;
 				userID: integer;
 			};
 			type: "RIVALED_BY"; // Emitted when the user is rivalled by someone.

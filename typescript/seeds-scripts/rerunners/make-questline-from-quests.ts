@@ -1,7 +1,7 @@
 import { spawnSync } from "child_process";
 import { Command } from "commander";
 import fs from "fs";
-import { type MONGO_QuestDocument, type MONGO_QuestlineDocument } from "tachi-common";
+import { type QuestDocument, type QuestlineDocument } from "tachi-common";
 
 import { MutateCollection, ReadCollection } from "../util";
 
@@ -25,7 +25,7 @@ const { game, playtype } = options;
 
 const quests = ReadCollection("quests.json").filter(
 	(e) => e.game === game && e.playtype === playtype,
-) as Array<MONGO_QuestDocument>;
+) as Array<QuestDocument>;
 
 if (quests.length === 0) {
 	console.log(`No quests found for game ${game} and playtype ${playtype}.`);
@@ -109,7 +109,7 @@ if (questIDs.length === 0) {
 	process.exit(1);
 }
 
-const questline: MONGO_QuestlineDocument = {
+const questline: QuestlineDocument = {
 	game,
 	playtype,
 	desc,

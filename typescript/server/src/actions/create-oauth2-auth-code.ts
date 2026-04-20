@@ -1,6 +1,6 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import DB from "#services/pg/db.js";
-import { Random20Hex } from "#utils/misc.js";
+import { MakeAction } from "#lib/actions/actions";
+import DB from "#services/pg/db";
+import { Random20Hex } from "#utils/misc";
 
 export const ACTION_CreateOAuth2AuthCode = MakeAction("CREATE_OAUTH2_AUTH_CODE", async (taker) => {
 	const code = Random20Hex();

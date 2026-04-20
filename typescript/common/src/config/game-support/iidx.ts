@@ -1,13 +1,14 @@
 import { p } from "prudence";
 import { z } from "zod";
 
-import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_PT_CONFIG } from "../../types/internals";
+import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
 import { FmtNum, FmtPercent, FmtScoreNoCommas } from "../../utils/util";
 import { ClassValue, zodNonNegativeInt, zodTierlistData } from "../config-utils";
 import { FAST_SLOW_MAXCOMBO } from "./_common";
 
-export const IIDX_CONF = {
+export const GAME_GROUP_IIDX_CONF = {
+	games: ["iidx-sp", "iidx-dp"],
 	name: "beatmania IIDX",
 	playtypes: ["SP", "DP"],
 	songData: z.strictObject({
@@ -19,7 +20,7 @@ export const IIDX_CONF = {
 		eamusementCsvArtist: z.optional(z.string()),
 		eamusementCsvGenre: z.optional(z.string()),
 	}),
-} as const satisfies INTERNAL_GAME_CONFIG;
+} as const satisfies INTERNAL_GAME_GROUP_CONFIG;
 
 export const IIDXDans = [
 	ClassValue("KYU_7", "七級", "7th Kyu"),
@@ -55,7 +56,7 @@ const BASE_IIDX_CHART_DATA = {
 
 const RANDOM_SCHEMA = z.enum(["NONRAN", "MIRROR", "R-RANDOM", "RANDOM", "S-RANDOM"]);
 
-export const IIDX_SP_CONF = {
+export const GAME_IIDX_SP_CONF = {
 	providedMetrics: {
 		score: {
 			type: "INTEGER",
@@ -209,23 +210,23 @@ export const IIDX_SP_CONF = {
 			"Kiraku ANOTHER",
 			"Kiraku LEGGENDARIA",
 		],
-		shorthand: {
-			NORMAL: "N",
-			HYPER: "H",
-			ANOTHER: "A",
-			LEGGENDARIA: "L",
-			"All Scratch NORMAL": "N (Scr.)",
-			"All Scratch HYPER": "H (Scr.)",
-			"All Scratch ANOTHER": "A (Scr.)",
-			"All Scratch LEGGENDARIA": "L (Scr.)",
-			"Kichiku NORMAL": "N (Kc.)",
-			"Kichiku HYPER": "H (Kc.)",
-			"Kichiku ANOTHER": "A (Kc.)",
-			"Kichiku LEGGENDARIA": "L (Kc.)",
-			"Kiraku NORMAL": "N (Kr.)",
-			"Kiraku HYPER": "H (Kr.)",
-			"Kiraku ANOTHER": "A (Kr.)",
-			"Kiraku LEGGENDARIA": "L (Kr.)",
+		format: {
+			NORMAL: "SPN",
+			HYPER: "SPH",
+			ANOTHER: "SPA",
+			LEGGENDARIA: "SPL",
+			"All Scratch NORMAL": "SPN (Scr.)",
+			"All Scratch HYPER": "SPH (Scr.)",
+			"All Scratch ANOTHER": "SPA (Scr.)",
+			"All Scratch LEGGENDARIA": "SPL (Scr.)",
+			"Kichiku NORMAL": "SPN (Kc.)",
+			"Kichiku HYPER": "SPH (Kc.)",
+			"Kichiku ANOTHER": "SPA (Kc.)",
+			"Kichiku LEGGENDARIA": "SPL (Kc.)",
+			"Kiraku NORMAL": "SPN (Kr.)",
+			"Kiraku HYPER": "SPH (Kr.)",
+			"Kiraku ANOTHER": "SPA (Kr.)",
+			"Kiraku LEGGENDARIA": "SPL (Kr.)",
 		},
 		default: "ANOTHER",
 	},
@@ -305,10 +306,10 @@ export const IIDX_SP_CONF = {
 	}),
 
 	supportedMatchTypes: ["inGameID", "tachiSongID", "songTitle"],
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;
 
-export const IIDX_DP_CONF = {
-	...IIDX_SP_CONF,
+export const GAME_IIDX_DP_CONF = {
+	...GAME_IIDX_SP_CONF,
 
 	chartData: z.strictObject({
 		...BASE_IIDX_CHART_DATA,
@@ -322,4 +323,45 @@ export const IIDX_DP_CONF = {
 		range: z.enum(["NONE", "HIDDEN+", "SUDDEN+", "LIFT", "LIFT SUD+", "SUD+ HID+"]).optional(),
 		gauge: z.enum(["ASSISTED EASY", "EASY", "NORMAL", "HARD", "EX-HARD"]).optional(),
 	}),
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+
+	difficulties: {
+		type: "FIXED",
+		order: [
+			"NORMAL",
+			"HYPER",
+			"ANOTHER",
+			"LEGGENDARIA",
+			"All Scratch NORMAL",
+			"All Scratch HYPER",
+			"All Scratch ANOTHER",
+			"All Scratch LEGGENDARIA",
+			"Kichiku NORMAL",
+			"Kichiku HYPER",
+			"Kichiku ANOTHER",
+			"Kichiku LEGGENDARIA",
+			"Kiraku NORMAL",
+			"Kiraku HYPER",
+			"Kiraku ANOTHER",
+			"Kiraku LEGGENDARIA",
+		],
+		format: {
+			NORMAL: "DPN",
+			HYPER: "DPH",
+			ANOTHER: "DPA",
+			LEGGENDARIA: "DPL",
+			"All Scratch NORMAL": "DPN (Scr.)",
+			"All Scratch HYPER": "DPH (Scr.)",
+			"All Scratch ANOTHER": "DPA (Scr.)",
+			"All Scratch LEGGENDARIA": "DPL (Scr.)",
+			"Kichiku NORMAL": "DPN (Kc.)",
+			"Kichiku HYPER": "DPH (Kc.)",
+			"Kichiku ANOTHER": "DPA (Kc.)",
+			"Kichiku LEGGENDARIA": "DPL (Kc.)",
+			"Kiraku NORMAL": "DPN (Kr.)",
+			"Kiraku HYPER": "DPH (Kr.)",
+			"Kiraku ANOTHER": "DPA (Kr.)",
+			"Kiraku LEGGENDARIA": "DPL (Kr.)",
+		},
+		default: "ANOTHER",
+	},
+} as const satisfies INTERNAL_GAME_CONFIG;

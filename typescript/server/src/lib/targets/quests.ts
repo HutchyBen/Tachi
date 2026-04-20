@@ -1,5 +1,3 @@
-import type { Game } from "tachi-db";
-
 import { SubscribeFailReasons } from "#lib/constants/err-codes";
 import { SELECT_GOAL, SELECT_GOAL_SUB_WITH_GOAL_GAME } from "#lib/db-formats/goal";
 import {
@@ -20,14 +18,14 @@ import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { sql } from "kysely";
 import {
 	type GameGroup,
-	GamePTToV3,
+	type GoalDocument,
+	type GoalSubscriptionDocument,
 	type integer,
-	type MONGO_GoalDocument,
-	type MONGO_GoalSubscriptionDocument,
-	type MONGO_QuestDocument,
-	type MONGO_QuestSubscriptionDocument,
-	type Playtype,
-	V3ToGamePT,
+	LEGACY_GameGroupPTToGame,
+	type LEGACY_Playtype,
+	type QuestDocument,
+	type QuestSubscriptionDocument,
+	type V3Game,
 } from "tachi-common";
 
 import {
@@ -42,14 +40,14 @@ import {
  * Retrieves the goalID documents in a single array from the
  * nested structure of quests.
  */
-export function GetGoalIDsFromQuest(quest: MONGO_QuestDocument) {
+export function GetGoalIDsFromQuest(quest: QuestDocument) {
 	return quest.questData.map((e) => e.goals.map((e) => e.goalID)).flat(1);
 }
 
 /**
  * Return all the goals inside this quest.
  */
-export async function GetGoalsInQuest(quest: MONGO_QuestDocument) {
+export async function GetGoalsInQuest(quest: QuestDocument) {
 	const goalIDs = GetGoalIDsFromQuest(quest);
 
 	const goals = await DB.selectFrom("goal")
@@ -80,7 +78,7 @@ export async function GetGoalsInQuest(quest: MONGO_QuestDocument) {
 /**
  * Return all the goals inside these quests
  */
-export async function GetGoalsInQuests(quests: Array<MONGO_QuestDocument>) {
+export async function GetGoalsInQuests(quests: Array<QuestDocument>) {
 	const goalIDs = quests.flatMap((quest) => GetGoalIDsFromQuest(quest));
 
 	if (goalIDs.length === 0) {
@@ -99,7 +97,7 @@ export async function GetGoalsInQuests(quests: Array<MONGO_QuestDocument>) {
  * Work out how many goals need to be achieved for this
  * quest to be considered completed.
  */
-export function CalculateQuestOutOf(quest: MONGO_QuestDocument) {
+export function CalculateQuestOutOf(quest: QuestDocument) {
 	const goalIDs = GetGoalIDsFromQuest(quest);
 
 	return goalIDs.length;
@@ -115,7 +113,7 @@ type EvaluatedGoalResult = { goalID: string } & EvaluatedGoalReturn;
  * their overall progress, what the quest was outOf, and whether they achieved it or
  * not.
  */
-export async function EvaluateQuestProgress(userID: integer, quest: MONGO_QuestDocument) {
+export async function EvaluateQuestProgress(userID: integer, quest: QuestDocument) {
 	const goals = await GetGoalsInQuest(quest);
 
 	const isSubscribedToQuest = await DB.selectFrom("quest_sub")
@@ -124,7 +122,7 @@ export async function EvaluateQuestProgress(userID: integer, quest: MONGO_QuestD
 		.where("quest_sub.user_id", "=", userID)
 		.executeTakeFirst();
 
-	const goalSubMap = new Map<string, MONGO_GoalSubscriptionDocument>();
+	const goalSubMap = new Map<string, GoalSubscriptionDocument>();
 
 	if (isSubscribedToQuest) {
 		const goalSubRows = await DB.selectFrom("goal_sub")
@@ -226,8 +224,8 @@ export async function EvaluateQuestProgress(userID: integer, quest: MONGO_QuestD
 }
 
 interface QuestSubscriptionReturns {
-	questSub: MONGO_QuestSubscriptionDocument;
-	goals: Array<MONGO_GoalDocument>;
+	questSub: QuestSubscriptionDocument;
+	goals: Array<GoalDocument>;
 	goalResults: Array<EvaluatedGoalResult>;
 }
 
@@ -240,12 +238,12 @@ interface QuestSubscriptionReturns {
  */
 export async function SubscribeToQuest(
 	userID: integer,
-	quest: MONGO_QuestDocument,
+	quest: QuestDocument,
 	denyInstantAchievement: false,
 ): Promise<QuestSubscriptionReturns | SubscribeFailReasons.ALREADY_SUBSCRIBED>;
 export async function SubscribeToQuest(
 	userID: integer,
-	quest: MONGO_QuestDocument,
+	quest: QuestDocument,
 	denyInstantAchievement = true,
 ): Promise<
 	| QuestSubscriptionReturns
@@ -277,11 +275,10 @@ export async function SubscribeToQuest(
 		questID: quest.questID,
 		wasInstantlyAchieved: result.achieved,
 		game: quest.game,
-		playtype: quest.playtype,
 		lastInteraction: null,
 	};
 
-	const questSub: MONGO_QuestSubscriptionDocument = result.achieved
+	const questSub: QuestSubscriptionDocument = result.achieved
 		? {
 				...questSubBase,
 				achieved: true,
@@ -339,11 +336,7 @@ export async function UpdateQuestSubscriptions(questID: string) {
 		await DB.deleteFrom("quest_sub").where("quest_sub.quest_id", "=", questID).execute();
 
 		await Promise.all(
-			subscriptions.map((e) => {
-				const { game, playtype } = V3ToGamePT(e.quest_game as Game);
-
-				return UnsubscribeFromOrphanedGoalSubs(e.user_id, game, playtype);
-			}),
+			subscriptions.map((e) => UnsubscribeFromOrphanedGoalSubs(e.user_id, e.quest_game)),
 		);
 
 		log.info(`Quest ${questID} has been deleted. Unsubscribed ${subscriptions.length} users.`);
@@ -367,7 +360,6 @@ export async function UpdateQuestSubscriptions(questID: string) {
 			content: {
 				questID,
 				game: quest.game,
-				playtype: quest.playtype,
 			},
 		},
 	);
@@ -380,8 +372,8 @@ export async function UpdateQuestSubscriptions(questID: string) {
  * Returns nothing.
  */
 export async function UnsubscribeFromQuest(
-	questSub: MONGO_QuestSubscriptionDocument,
-	quest: MONGO_QuestDocument,
+	questSub: QuestSubscriptionDocument,
+	quest: QuestDocument,
 ) {
 	const goalIDs = GetGoalIDsFromQuest(quest);
 
@@ -408,11 +400,9 @@ export async function UnsubscribeFromQuest(
  */
 export async function GetParentQuests(
 	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
-	goalSubs: Array<MONGO_GoalSubscriptionDocument>,
+	game: V3Game,
+	goalSubs: Array<GoalSubscriptionDocument>,
 ) {
-	const v3Game = GamePTToV3(game, playtype);
 	const goalIds = goalSubs.map((e) => e.goalID);
 
 	if (goalIds.length === 0) {
@@ -423,7 +413,7 @@ export async function GetParentQuests(
 		.innerJoin("quest", "quest.id", "quest_sub.quest_id")
 		.select("quest_sub.quest_id")
 		.where("quest_sub.user_id", "=", userID)
-		.where("quest.game", "=", v3Game)
+		.where("quest.game", "=", game)
 		.execute();
 
 	const questSubIDs = questSubRows.map((e) => e.quest_id);
@@ -451,8 +441,8 @@ export async function GetParentQuests(
 /**
  * Find all quests not in any questlines.
  */
-export async function FindStandaloneQuests(game: GameGroup, playtype: Playtype) {
-	const v3Game = GamePTToV3(game, playtype);
+export async function FindStandaloneQuests(game: GameGroup, playtype: LEGACY_Playtype) {
+	const v3Game = LEGACY_GameGroupPTToGame(game, playtype);
 
 	const rows = await DB.selectFrom("quest")
 		.select(SELECT_QUEST)

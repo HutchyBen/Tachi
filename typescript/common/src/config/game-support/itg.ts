@@ -1,20 +1,21 @@
 import { p } from "prudence";
 import { z } from "zod";
 
-import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_PT_CONFIG } from "../../types/internals";
+import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
 import { FmtPercent } from "../../utils/util";
-import { NoDecimalPlace, zodNonNegativeInt } from "../config-utils";
+import { NoDecimalPlace } from "../config-utils";
 
-export const ITG_CONF = {
+export const GAME_GROUP_ITG_CONF = {
 	name: "ITG",
+	games: ["itg-stamina"],
 	playtypes: ["Stamina"],
 	songData: z.strictObject({
 		subtitle: z.string().nullable(),
 	}),
-} as const satisfies INTERNAL_GAME_CONFIG;
+} as const satisfies INTERNAL_GAME_GROUP_CONFIG;
 
-export const ITG_STAMINA_CONF = {
+export const GAME_ITG_STAMINA_CONF = {
 	providedMetrics: {
 		scorePercent: {
 			type: "DECIMAL",
@@ -192,4 +193,4 @@ export const ITG_STAMINA_CONF = {
 	scoreMeta: z.strictObject({}),
 
 	supportedMatchTypes: ["itgChartHash"],
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;

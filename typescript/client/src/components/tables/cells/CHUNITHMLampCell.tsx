@@ -8,9 +8,9 @@ export default function CHUNITHMLampCell({
 	noteLampColour,
 	clearLampColour,
 }: {
-	clearLamp: GetEnumValue<"chunithm:Single", "clearLamp">;
+	clearLamp: GetEnumValue<"chunithm", "clearLamp">;
 	clearLampColour: string;
-	noteLamp: GetEnumValue<"chunithm:Single", "noteLamp">;
+	noteLamp: GetEnumValue<"chunithm", "noteLamp">;
 	noteLampColour: string;
 }) {
 	let content = <div>{clearLamp}</div>;

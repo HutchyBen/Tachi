@@ -3,7 +3,7 @@ import type { RequestHandler } from "express";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { LoadImportDocumentById } from "#lib/db-formats/import-document";
 import { log } from "#lib/log/log";
-import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
+import { REQ_AssignToReqTachiData, REQ_GetTachiData } from "#utils/req-tachi-data";
 import { IsRequesterAdmin } from "#utils/user";
 
 export const GetImportFromParam: RequestHandler = async (req, res, next) => {
@@ -16,13 +16,13 @@ export const GetImportFromParam: RequestHandler = async (req, res, next) => {
 		});
 	}
 
-	AssignToReqTachiData(req, { importDoc });
+	REQ_AssignToReqTachiData(req, { importDoc });
 
 	next();
 };
 
 export const RequireOwnershipOfImportOrAdmin: RequestHandler = async (req, res, next) => {
-	const importDoc = GetTachiData(req, "importDoc");
+	const importDoc = REQ_GetTachiData(req, "importDoc");
 	const userID = req[SYMBOL_TACHI_API_AUTH].userID;
 
 	if (userID === null) {

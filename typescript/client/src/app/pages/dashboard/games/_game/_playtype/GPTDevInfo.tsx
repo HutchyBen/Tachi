@@ -7,33 +7,30 @@ import { type GamePT } from "#types/react";
 import React from "react";
 import {
 	type Classes,
-	FormatGameGroup,
+	FormatGame,
+	GameToGameGroup,
+	GetGameConfig,
 	GetGameGroupConfig,
-	GetGamePTConfig,
-	type GPTString,
+	type V3Game,
 } from "tachi-common";
 
-export default function GPTDevInfo({ game, playtype }: GamePT) {
+export default function GPTDevInfo({ game }: GamePT) {
 	useSetSubheader(
-		["Games", GetGameGroupConfig(game).name, playtype, "Dev Info"],
-		[game, playtype],
-		`${FormatGameGroup(game, playtype)} Dev Info`,
+		["Games", GetGameGroupConfig(GameToGameGroup(game)).name, "Dev Info"],
+		[game],
+		`${FormatGame(game)} Dev Info`,
 	);
 
-	const gameConfig = GetGameGroupConfig(game);
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameGroupConfig = GetGameConfig(game);
 
 	return (
 		<>
-			<Card header="Game Configuration">
-				<DebugContent data={gameConfig} />
-			</Card>
-			<Card className="mt-4" header="GPT Configuration">
-				<DebugContent data={gptConfig} />
+			<Card header="GPT Configuration">
+				<DebugContent data={gameGroupConfig} />
 			</Card>
 			<Card className="mt-4" header="Class Badges">
 				<div className="d-flex w-100 justify-content-center" style={{ gap: "30px" }}>
-					{Object.entries(gptConfig.classes).map(([classSet, conf]) => (
+					{Object.entries(gameGroupConfig.classes).map(([classSet, conf]) => (
 						<div key={classSet}>
 							<MiniTable colSpan={2} headers={[classSet]}>
 								{conf.values.map((e) => (
@@ -41,10 +38,9 @@ export default function GPTDevInfo({ game, playtype }: GamePT) {
 										<td>{e.id}</td>
 										<td>
 											<ClassBadge
-												classSet={classSet as Classes[GPTString]}
+												classSet={classSet as Classes[V3Game]}
 												classValue={e.id}
 												game={game}
-												playtype={playtype}
 											/>
 										</td>
 									</tr>

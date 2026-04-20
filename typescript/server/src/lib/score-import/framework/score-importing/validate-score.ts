@@ -1,15 +1,9 @@
 import type { ConfScoreMetric } from "tachi-common/types/metrics";
 
-import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
+import { GAME_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import { RunValidators } from "#game-implementations/games/_common";
 import { ONE_HOUR } from "#lib/constants/time";
-import {
-	GetGPTConfig,
-	GetGPTString,
-	type GPTString,
-	type MONGO_ChartDocument,
-	type MONGO_ScoreDocument,
-} from "tachi-common";
+import { type ChartDocument, GetGameConfig, type ScoreDocument, type V3Game } from "tachi-common";
 
 import { InvalidScoreFailure } from "../common/converter-failures";
 
@@ -18,7 +12,7 @@ import { InvalidScoreFailure } from "../common/converter-failures";
  *
  * @returns nothing. This will throw an InvalidScoreFailure on error.
  */
-export function ValidateScore(score: MONGO_ScoreDocument, chart: MONGO_ChartDocument): void {
+export function ValidateScore(score: ScoreDocument, chart: ChartDocument): void {
 	const leniency = ONE_HOUR * 24;
 
 	if (score.timeAchieved !== null && score.timeAchieved > Date.now() + leniency) {
@@ -28,17 +22,17 @@ export function ValidateScore(score: MONGO_ScoreDocument, chart: MONGO_ChartDocu
 	ValidateScoreGameSpecific(score, chart);
 }
 
-function ValidateScoreGameSpecific(score: MONGO_ScoreDocument, chart: MONGO_ChartDocument): void {
-	const gptString = GetGPTString(score.game, score.playtype);
-	const gptConfig = GetGPTConfig(gptString);
-	const gptImpl = GPT_SERVER_IMPLEMENTATIONS[gptString];
+function ValidateScoreGameSpecific(score: ScoreDocument, chart: ChartDocument): void {
+	const game = score.game;
+	const gameConfig = GetGameConfig(game);
+	const impl = GAME_IMPLEMENTATIONS[game];
 
 	const errs: Array<string> = [];
 
 	ValidateMetrics(
 		errs,
-		gptConfig.providedMetrics,
-		gptString,
+		gameConfig.providedMetrics,
+		game,
 		score,
 		chart,
 		// @ts-expect-error ughhh
@@ -46,8 +40,8 @@ function ValidateScoreGameSpecific(score: MONGO_ScoreDocument, chart: MONGO_Char
 	);
 	ValidateMetrics(
 		errs,
-		gptConfig.derivedMetrics,
-		gptString,
+		gameConfig.derivedMetrics,
+		game,
 		score,
 		chart,
 		// @ts-expect-error ughhh
@@ -56,8 +50,8 @@ function ValidateScoreGameSpecific(score: MONGO_ScoreDocument, chart: MONGO_Char
 
 	ValidateMetrics(
 		errs,
-		gptConfig.optionalMetrics,
-		gptString,
+		gameConfig.optionalMetrics,
+		game,
 		score,
 		chart,
 		// @ts-expect-error ughhh
@@ -65,7 +59,7 @@ function ValidateScoreGameSpecific(score: MONGO_ScoreDocument, chart: MONGO_Char
 		true,
 	);
 
-	const moreErrors = RunValidators(gptImpl.scoreValidators as any, score, chart);
+	const moreErrors = RunValidators(impl.scoreValidators as any, score, chart);
 
 	if (moreErrors) {
 		errs.push(...moreErrors);
@@ -82,13 +76,13 @@ ${errs.join("\n")}`);
 function ValidateMetrics(
 	errs: Array<string>,
 	metrics: Record<string, ConfScoreMetric>,
-	gptString: GPTString,
-	score: MONGO_ScoreDocument,
-	chart: MONGO_ChartDocument,
-	valueGetter: (s: MONGO_ScoreDocument, metric: string) => any,
+	game: V3Game,
+	score: ScoreDocument,
+	chart: ChartDocument,
+	valueGetter: (s: ScoreDocument, metric: string) => any,
 	optional?: boolean,
 ) {
-	const gptImpl = GPT_SERVER_IMPLEMENTATIONS[gptString];
+	const impl = GAME_IMPLEMENTATIONS[game];
 
 	for (const [metric, conf] of Object.entries(metrics)) {
 		const scoreVal: any = valueGetter(score, metric);
@@ -126,7 +120,7 @@ function ValidateMetrics(
 
 				if (conf.chartDependentMax) {
 					// @ts-expect-error hack, this is fine. don't worry.
-					err = gptImpl.chartSpecificValidators[metric](scoreVal, chart);
+					err = impl.chartSpecificValidators[metric](scoreVal, chart);
 				} else {
 					err = conf.validate(scoreVal);
 				}

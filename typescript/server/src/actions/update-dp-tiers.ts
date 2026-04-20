@@ -1,12 +1,12 @@
-import type { MONGO_ChartDocument } from "tachi-common";
+import type { ChartDocument } from "tachi-common";
 
 /* eslint-disable no-await-in-loop */
-import { computeDerivationChecksumForGPT } from "#game-implementations/utils/derivation-checksum";
+import { ComputeChartStabilityChecksum } from "#game-implementations/utils/derivation-checksum";
 import { MakeAction } from "#lib/actions/actions";
 import { log } from "#lib/log/log";
 import DB from "#services/pg/db";
 import fetch from "#utils/fetch";
-import { FindChartWithPTDFVersion } from "#utils/queries/charts";
+import { FindChartWithSongDifficultyVersion } from "#utils/queries/charts";
 import { FindSongOnTitle } from "#utils/queries/songs";
 import { IsUserAdmin } from "#utils/user";
 import { ExpectedErr } from "bliss";
@@ -42,7 +42,7 @@ export async function updateDpTiersCore() {
 
 	log.info(`Got DP tier data. Applying it.`);
 
-	const updatedSongIDs = new Set<number>();
+	const updatedSongIDs = new Set<string>();
 
 	for (const d of parsedData) {
 		const song = await FindSongOnTitle("iidx", d.songTitle);
@@ -57,7 +57,12 @@ export async function updateDpTiersCore() {
 				continue;
 			}
 
-			const chart = await FindChartWithPTDFVersion("iidx", song.id, "DP", difficulty, "29");
+			const chart = await FindChartWithSongDifficultyVersion(
+				"iidx-dp",
+				song.id,
+				difficulty,
+				"29",
+			);
 
 			if (!chart) {
 				log.warn(
@@ -72,7 +77,7 @@ export async function updateDpTiersCore() {
 				individualDifference: false,
 			};
 
-			const dpChart = chart as MONGO_ChartDocument<"iidx:DP">;
+			const dpChart = chart as ChartDocument<"iidx-dp">;
 			const prev = dpChart.data.dpTier;
 
 			if (
@@ -89,8 +94,8 @@ export async function updateDpTiersCore() {
 				dpTier: nextTier,
 			};
 
-			const updatedChart = { ...chart, data: mergedData } as MONGO_ChartDocument;
-			const checksum = computeDerivationChecksumForGPT("iidx:DP", updatedChart);
+			const updatedChart = { ...chart, data: mergedData } as ChartDocument;
+			const checksum = ComputeChartStabilityChecksum("iidx-dp", updatedChart);
 
 			await DB.updateTable("chart")
 				.set({

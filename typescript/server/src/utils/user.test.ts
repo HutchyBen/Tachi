@@ -1,8 +1,17 @@
 import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
+import { type UserDocument } from "tachi-common";
 import { describe, expect, it } from "vitest";
 
-import { GetAllRankings, GetAllUserRivals, GetUsersRanking, GetUsersRankingAndOutOf } from "./user";
+import {
+	FormatUserDoc,
+	GetAllRankings,
+	GetAllUserRivals,
+	GetUserCaseInsensitive,
+	GetUsersRanking,
+	GetUsersRankingAndOutOf,
+	GetUsersWithIDs,
+} from "./user";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -24,8 +33,7 @@ async function seedGameStats(
 function makeStats(userId: number, ktLampRating: number | null) {
 	return {
 		userID: userId,
-		game: "iidx" as const,
-		playtype: "SP" as const,
+		game: "iidx-sp" as const,
 		ratings: { ktLampRating },
 		classes: {},
 	};
@@ -116,7 +124,7 @@ describe("GetUsersRankingAndOutOf", () => {
 		// user2 has higher ktLampRating but lower BPI
 		// Checking BPI ranking for user1: user1 BPI=80, user2 BPI=30, user1 is #1
 		const result = await GetUsersRankingAndOutOf(
-			{ userID: user1.id, game: "iidx", playtype: "SP", ratings: { BPI: 80 }, classes: {} },
+			{ userID: user1.id, game: "iidx-sp", ratings: { BPI: 80 }, classes: {} },
 			"BPI" as never,
 		);
 
@@ -216,8 +224,7 @@ describe("GetAllRankings", () => {
 
 		const stats = {
 			userID: user1.id,
-			game: "iidx" as const,
-			playtype: "SP" as const,
+			game: "iidx-sp" as const,
 			ratings: { ktLampRating: 20, BPI: 50 },
 			classes: {},
 		};
@@ -227,5 +234,76 @@ describe("GetAllRankings", () => {
 		// user1 is #1 in both algorithms
 		expect(result.ktLampRating).toEqual({ ranking: 1, outOf: 2 });
 		expect(result.BPI).toEqual({ ranking: 1, outOf: 2 });
+	});
+});
+
+describe("GetUserCaseInsensitive", () => {
+	it("returns the user for an exact username", async () => {
+		await seedUser({ username: "case_test_user" });
+
+		const result = await GetUserCaseInsensitive("case_test_user");
+
+		expect(result).not.toBeNull();
+		expect(result!.username).toBe("case_test_user");
+		expect(result!).not.toHaveProperty("password");
+		expect(result!).not.toHaveProperty("email");
+	});
+
+	it("returns the user for a differently cased username", async () => {
+		await seedUser({ username: "case_test_user" });
+
+		const result = await GetUserCaseInsensitive("CaSe_TeSt_UsEr");
+
+		expect(result).not.toBeNull();
+		expect(result!.username).toBe("case_test_user");
+	});
+
+	it("returns null when the username does not exist", async () => {
+		const result = await GetUserCaseInsensitive("no_such_user_xyz");
+
+		expect(result).toBeNull();
+	});
+});
+
+describe("GetUsersWithIDs", () => {
+	it("returns an empty array when given no ids", async () => {
+		await expect(GetUsersWithIDs([])).resolves.toEqual([]);
+	});
+
+	it("returns users for the given ids", async () => {
+		const u2 = await seedUser({ username: "gwid_two" });
+		const u3 = await seedUser({ username: "gwid_three" });
+
+		const res = await GetUsersWithIDs([u2.id, u3.id]);
+
+		const byId = new Map(res.map((u) => [u.id, u]));
+		expect(byId.get(u2.id)?.username).toBe("gwid_two");
+		expect(byId.get(u3.id)?.username).toBe("gwid_three");
+	});
+
+	it("accepts duplicate user ids in the input", async () => {
+		const u1 = await seedUser({ username: "gwid_dup_a" });
+		const u2 = await seedUser({ username: "gwid_dup_b" });
+
+		const res = await GetUsersWithIDs([u1.id, u2.id, u1.id]);
+
+		expect(res.map((u) => u.id).sort((a, b) => a - b)).toEqual(
+			[u1.id, u2.id].sort((a, b) => a - b),
+		);
+	});
+
+	it("throws when some user ids do not exist", async () => {
+		const u1 = await seedUser({ username: "gwid_missing_a" });
+		const u2 = await seedUser({ username: "gwid_missing_b" });
+
+		await expect(GetUsersWithIDs([u1.id, u2.id, 9_999_999])).rejects.toThrow(
+			/given 3 userIDs, but only matched 2/u,
+		);
+	});
+});
+
+describe("FormatUserDoc", () => {
+	it("formats username and id for logging", () => {
+		expect(FormatUserDoc({ username: "zkldi", id: 123 } as UserDocument)).toBe("zkldi (#123)");
 	});
 });

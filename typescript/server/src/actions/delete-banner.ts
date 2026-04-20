@@ -1,7 +1,7 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import { CDNDelete } from "#lib/cdn/cdn.js";
-import { GetProfileBannerURL } from "#lib/cdn/url-format.js";
-import DB from "#services/pg/db.js";
+import { MakeAction } from "#lib/actions/actions";
+import { CDNDelete } from "#lib/cdn/cdn";
+import { GetProfileBannerURL } from "#lib/cdn/url-format";
+import DB from "#services/pg/db";
 import { ExpectedErr } from "bliss";
 
 export const ACTION_DeleteBanner = MakeAction("DELETE_BANNER", async (taker) => {

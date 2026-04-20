@@ -12,7 +12,7 @@ import { type SetState } from "#types/react";
 import { APIFetchV1 } from "#util/api";
 import React, { useContext, useMemo, useReducer, useState } from "react";
 import { Button, Form } from "react-bootstrap";
-import { type APIImportTypes, GetGameGroupConfig, type MONGO_MytCardInfo } from "tachi-common";
+import { type APIImportTypes, GetGameGroupConfig, type MytCardInfo } from "tachi-common";
 
 import ImportStateRenderer from "./ImportStateRenderer";
 
@@ -35,7 +35,7 @@ export default function MytIntegrationPage({ game }: Props) {
 	}
 
 	// eslint-disable-next-line react-hooks/rules-of-hooks
-	const { data, error } = useApiQuery<MONGO_MytCardInfo | null>(
+	const { data, error } = useApiQuery<MytCardInfo | null>(
 		`/users/${user.id}/integrations/myt`,
 		undefined,
 		[reload],

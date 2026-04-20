@@ -3,16 +3,15 @@ import type { ZodObject } from "zod";
 
 import type { GradeBoundary, IIDXLikes } from "../constants/grade-boundaries";
 import type {
+	BMSCourseDocument,
+	BMSGames,
+	ChartDocument,
 	GameGroup,
-	GPTString,
-	GPTStrings,
+	GamesForGroup,
 	integer,
-	MONGO_BMSCourseDocument,
-	MONGO_ChartDocument,
-	MONGO_SongDocument,
-	Playtypes,
+	LEGACY_Playtypes,
+	SongDocument,
 	V3Game,
-	V3GameToGPTString,
 } from "../types";
 import type {
 	AllConfMetrics,
@@ -22,22 +21,42 @@ import type {
 } from "../types/metrics";
 
 import {
+	ALL_GAMES,
+	GameToGameGroup,
+	GetGameConfig,
 	GetGameGroupConfig,
-	GetGamePTConfig,
-	GetGPTString,
-	GetSpecificGPTConfig,
-	SplitGPT,
-	V3GetGameConfig,
-	V3ToGPTString,
+	LEGACY_GameToGameGroupPT,
 } from "../config/config";
+
+/**
+ * Stick this in the "default" branch of switch exprs to statically typecheck that your
+ * switch is exhaustive.
+ *
+ * This works because the argument to this function should be "never" because all of its
+ * variants should be exhausted.
+ */
+export function staticAssertUnreachable(_: never): never {
+	throw new Error(`unreachable (Got ${JSON.stringify(_)})`);
+}
 
 export function FormatInt(v: number): string {
 	return Math.floor(v).toFixed(0);
 }
 
-export function FormatDifficulty(chart: MONGO_ChartDocument, game: GameGroup): string {
-	if (game === "bms" || game === "pms") {
-		const bmsChart = chart as MONGO_ChartDocument<"bms:7K" | "bms:14K">;
+export function FormatDifficulty(chart: ChartDocument): string {
+	return FormatDifficultyShort(chart);
+}
+
+/**
+ * Formats a chart's difficulty into a shorter variant. This handles a lot of
+ * game-specific strange edge cases.
+ */
+export function FormatDifficultyShort(chart: ChartDocument): string {
+	const gameGroup = GameToGameGroup(chart.game);
+	const gameConfig = GetGameConfig(chart.game);
+
+	if (gameGroup === "bms" || gameGroup === "pms") {
+		const bmsChart = chart as ChartDocument<BMSGames>;
 
 		return (
 			Object.entries(bmsChart.data.tableFolders)
@@ -45,9 +64,8 @@ export function FormatDifficulty(chart: MONGO_ChartDocument, game: GameGroup): s
 				.join(", ") || "Unrated"
 		);
 	}
-
-	if (game === "itg") {
-		const itgChart = chart as MONGO_ChartDocument<"itg:Stamina">;
+	if (gameGroup === "itg") {
+		const itgChart = chart as ChartDocument<"itg-stamina">;
 
 		const level = itgChart.data.rankedLevel ?? itgChart.data.chartLevel;
 		const unranked = itgChart.data.rankedLevel === null ? "UNRANKED " : "";
@@ -55,111 +73,33 @@ export function FormatDifficulty(chart: MONGO_ChartDocument, game: GameGroup): s
 		return `${unranked}${itgChart.data.difficultyTag} ${level} (${itgChart.data.charter})`;
 	}
 
-	if (game === "gitadora") {
-		const ch = chart as MONGO_ChartDocument<GPTStrings["gitadora"]>;
+	// use the difficulty format there
+	if (gameConfig.difficulties.type === "FIXED") {
+		const diff = gameConfig.difficulties.format[chart.difficulty] ?? chart.difficulty;
 
-		const gptConfig = GetSpecificGPTConfig<GPTStrings["gitadora"]>(
-			GetGPTString(game, chart.playtype) as GPTStrings["gitadora"],
-		);
-
-		// it's complaining that since the dora config doesn't have shorthand for
-		// "BASS BASIC", this assignment may fail.
-		// it's technically correct, but in the worst way, since this isn't
-		// actually possible.
-		// todo: come up with something better.
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-		// @ts-ignore this fails in my IDE but is fine in the compiler, can't use ts-expect-err here.
-		const shortDiff = gptConfig.difficulties.shorthand[ch.difficulty];
-
-		// gitadora should always use short diffs. they just look better.
-		return `${shortDiff} ${chart.level}`;
+		return `${diff} ${chart.level}`;
 	}
 
-	const gameConfig = GetGameGroupConfig(game);
-
-	if (gameConfig.playtypes.length > 1) {
-		return `${chart.playtype} ${chart.difficulty} ${chart.level}`;
-	}
-
+	// TODO cap string length
 	return `${chart.difficulty} ${chart.level}`;
-}
-
-/**
- * Formats a chart's difficulty into a shorter variant. This handles a lot of
- * game-specific strange edge cases.
- */
-export function FormatDifficultyShort(chart: MONGO_ChartDocument, game: GameGroup): string {
-	const gameConfig = GetGameGroupConfig(game);
-	const gptConfig = GetGamePTConfig(game, chart.playtype);
-
-	if (game === "itg") {
-		const itgChart = chart as MONGO_ChartDocument<"itg:Stamina">;
-
-		return `S${itgChart.data.difficultyTag} ${chart.level}`;
-	}
-
-	if (gptConfig.difficulties.type === "DYNAMIC") {
-		// TODO cap string length
-		return `${chart.difficulty} ${chart.level}`;
-	}
-
-	const shortDiff = gptConfig.difficulties.shorthand[chart.difficulty] ?? chart.difficulty;
-
-	if (gameConfig.playtypes.length === 1 || game === "gitadora") {
-		return `${shortDiff} ${chart.level}`;
-	}
-
-	if (game === "usc") {
-		return `${chart.playtype === "Controller" ? "CON" : "KB"} ${shortDiff} ${chart.level}`;
-	}
-
-	return `${chart.playtype}${shortDiff} ${chart.level}`;
 }
 
 /**
  * Formats a chart's difficulty for searching, such as forwarding this query to youtube.
  */
-export function FormatDifficultySearch(chart: MONGO_ChartDocument, game: GameGroup): string | null {
-	const gptConfig = GetGamePTConfig(game, chart.playtype);
-
-	if (game === "itg") {
-		const itgChart = chart as MONGO_ChartDocument<"itg:Stamina">;
-
-		return `S${itgChart.data.difficultyTag} ${chart.level}`;
-	}
-
-	if (gptConfig.difficulties.type === "DYNAMIC") {
-		// TODO cap string length
-		return chart.difficulty;
-	}
-
-	const shortDiff = gptConfig.difficulties.shorthand[chart.difficulty] ?? chart.difficulty;
-
-	switch (game) {
-		case "jubeat":
-		case "maimai":
-		case "museca":
-		case "maimaidx":
-		case "popn":
-		case "sdvx":
-		case "wacca":
-		case "arcaea":
-		case "ongeki":
-		case "chunithm":
-		case "ddr":
-		case "usc":
-			return chart.difficulty;
-		case "iidx":
-			return `${chart.playtype}${shortDiff}`;
-		case "gitadora":
-			return shortDiff;
-		case "bms":
-		case "pms":
-			return null;
-	}
+export function FormatDifficultySearch(chart: ChartDocument): string | null {
+	return FormatDifficulty(chart);
 }
 
-export function FormatGameGroup(game: GameGroup, playtype: Playtypes[GameGroup]): string {
+export function FormatGame(game: V3Game): string {
+	const { gameGroup, playtype } = LEGACY_GameToGameGroupPT(game);
+	return LEGACY_FormatGameGroupPT(gameGroup, playtype);
+}
+
+export function LEGACY_FormatGameGroupPT(
+	game: GameGroup,
+	playtype: LEGACY_Playtypes[GameGroup],
+): string {
 	const gameConfig = GetGameGroupConfig(game);
 
 	if (gameConfig.playtypes.length === 1) {
@@ -173,22 +113,12 @@ export function FormatGameGroup(game: GameGroup, playtype: Playtypes[GameGroup])
 	return `${gameConfig.name} (${playtype})`;
 }
 
-export function V3FormatGame(game: V3Game): string {
-	const [g, p] = SplitGPT(V3ToGPTString(game));
+export function FormatChart(chart: ChartDocument): string {
+	const gameGroup = GameToGameGroup(chart.game);
+	if (gameGroup === "bms") {
+		const tables = (chart as ChartDocument<GamesForGroup["bms"]>).data.tableFolders;
 
-	return FormatGameGroup(g, p);
-}
-
-export function FormatChart(
-	game: GameGroup,
-	song: MONGO_SongDocument,
-	chart: MONGO_ChartDocument,
-	short = false,
-): string {
-	if (game === "bms") {
-		const tables = (chart as MONGO_ChartDocument<GPTStrings["bms"]>).data.tableFolders;
-
-		const bmsSong = song as MONGO_SongDocument<"bms">;
+		const bmsSong = chart.song as SongDocument<"bms">;
 
 		let realTitle = bmsSong.title;
 
@@ -207,13 +137,14 @@ export function FormatChart(
 		return `${realTitle} (${Object.entries(tables)
 			.map(([table, level]) => `${table}${level}`)
 			.join(", ")})`;
-	} else if (game === "usc") {
-		const uscChart = chart as MONGO_ChartDocument<GPTStrings["usc"]>;
+	} else if (gameGroup === "usc") {
+		const uscChart = chart as ChartDocument<GamesForGroup["usc"]>;
+		const inputType = chart.game === "usc-controller" ? "Controller" : "Keyboard";
 
 		// If this chart isn't an official, render it differently
 		if (!uscChart.data.isOfficial) {
 			// Same as BMS. turn this into SongTitle (Keyboard MXM normal1, insane2)
-			return `${song.title} (${chart.playtype} ${chart.difficulty} ${Object.entries(
+			return `${chart.song.title} (${inputType} ${chart.difficulty} ${Object.entries(
 				uscChart.data.tableFolders,
 			)
 				.map(([table, level]) => `${table}${level}`)
@@ -223,7 +154,7 @@ export function FormatChart(
 			// it as so:
 
 			// SongTitle (Keyboard MXM 17, normal1, insane2)
-			return `${song.title} (${chart.playtype} ${chart.difficulty} ${
+			return `${chart.song.title} (${inputType} ${chart.difficulty} ${
 				chart.level
 			}, ${Object.entries(uscChart.data.tableFolders)
 				.map(([table, level]) => `${table}${level}`)
@@ -231,9 +162,9 @@ export function FormatChart(
 		}
 
 		// otherwise, it's just an official and should be rendered like any other game.
-	} else if (game === "itg") {
-		const itgChart = chart as MONGO_ChartDocument<"itg:Stamina">;
-		const itgSong = song as MONGO_SongDocument<"itg">;
+	} else if (gameGroup === "itg") {
+		const itgChart = chart as ChartDocument<GamesForGroup["itg"]>;
+		const itgSong = chart.song as SongDocument<"itg">;
 
 		const level = itgChart.data.rankedLevel ?? `${itgChart.data.chartLevel}?`;
 
@@ -242,43 +173,23 @@ export function FormatChart(
 		} ${level}`;
 	}
 
-	const gameConfig = GetGameGroupConfig(game);
-
-	let playtypeStr = `${chart.playtype}`;
-
-	if (gameConfig.playtypes.length === 1) {
-		playtypeStr = "";
-	}
-
-	const gptConfig = GetGamePTConfig(game, chart.playtype);
+	const gameConfig = GetGameConfig(chart.game);
 
 	let diff: string;
 
-	if (gptConfig.difficulties.type === "DYNAMIC") {
+	if (gameConfig.difficulties.type === "DYNAMIC") {
 		diff = chart.difficulty;
-	} else if (short) {
-		diff = gptConfig.difficulties.shorthand[chart.difficulty] ?? chart.difficulty;
 	} else {
-		diff = chart.difficulty;
-	}
-
-	// iidx formats things like SPA instead of SP A.
-	// this is a hack, this should be part of the gptConfig, tbh.
-	let space = "";
-
-	if ((game === "iidx" && short) || !playtypeStr) {
-		space = "";
-	} else {
-		space = " ";
+		diff = gameConfig.difficulties.format[chart.difficulty] ?? chart.difficulty;
 	}
 
 	// return the most recent version this chart appeared in if it
 	// is not primary.
 	if (!chart.isPrimary) {
-		return `${song.title} (${playtypeStr}${space}${diff} ${chart.level} ${chart.versions[0]})`;
+		return `${chart.song.title} (${diff} ${chart.level} ${chart.versions[0]})`;
 	}
 
-	return `${song.title} (${playtypeStr}${space}${diff} ${chart.level})`;
+	return `${chart.song.title} (${diff} ${chart.level})`;
 }
 
 /**
@@ -446,10 +357,8 @@ export function GetCloserGradeDelta<G extends string>(
 	return lower;
 }
 
-export function CreateSongMap<G extends GameGroup = GameGroup>(
-	songs: Array<MONGO_SongDocument<G>>,
-) {
-	const songMap = new Map<integer, MONGO_SongDocument<G>>();
+export function CreateSongMap<G extends GameGroup = GameGroup>(songs: Array<SongDocument<G>>) {
+	const songMap = new Map<string, SongDocument<G>>();
 
 	for (const song of songs) {
 		songMap.set(song.id, song);
@@ -458,21 +367,14 @@ export function CreateSongMap<G extends GameGroup = GameGroup>(
 	return songMap;
 }
 
-export function CreateChartMap<GPT extends GPTString = GPTString>(
-	charts: Array<MONGO_ChartDocument<GPT>>,
-) {
-	const chartMap = new Map<string, MONGO_ChartDocument<GPT>>();
+export function CreateChartMap<TGame extends V3Game = V3Game>(charts: Array<ChartDocument<TGame>>) {
+	const chartMap = new Map<string, ChartDocument<TGame>>();
 
 	for (const chart of charts) {
 		chartMap.set(chart.chartID, chart);
 	}
 
 	return chartMap;
-}
-
-/** TODO(zk) remove this function */
-export function MongoChartLegacyId(chart: MONGO_ChartDocument): string {
-	return chart.chartID;
 }
 
 /**
@@ -489,10 +391,10 @@ export function FormatPrError(err: PrudenceError, foreword = "Error"): string {
 	return `${foreword}: ${err.keychain} | ${err.message}${receivedText}.`;
 }
 
-export function GetBMSCourseIndex(course: MONGO_BMSCourseDocument) {
-	const gptConf = GetGamePTConfig("bms", course.playtype);
+export function GetBMSCourseIndex(course: BMSCourseDocument) {
+	const gameConfig = GetGameConfig(course.game);
 
-	const cls = gptConf.classes[course.set];
+	const cls = gameConfig.classes[course.set as keyof typeof gameConfig.classes];
 
 	if (!cls) {
 		throw new Error(
@@ -549,10 +451,10 @@ export function IIDXLikeGetGrade(
 }
 
 export function EnumIndexToValue<
-	G extends V3Game,
-	EV extends ExtractEnumMetricNames<AllConfMetrics[V3GameToGPTString[G]]>,
->(game: G, enumMetric: EV, index: integer): GetEnumValue<V3GameToGPTString[G], EV> {
-	const config = V3GetGameConfig(game);
+	TGame extends V3Game,
+	EV extends ExtractEnumMetricNames<AllConfMetrics[TGame]>,
+>(game: TGame, enumMetric: EV, index: integer): GetEnumValue<TGame, EV> {
+	const config = GetGameConfig(game);
 
 	let metric = config.providedMetrics[enumMetric];
 	if (!metric) {
@@ -566,8 +468,9 @@ export function EnumIndexToValue<
 		throw new Error(`Invalid enum metric ${enumMetric} for game ${game}.`);
 	}
 
-	return (metric as ConfEnumScoreMetric<string>).values[index] as GetEnumValue<
-		V3GameToGPTString[G],
-		EV
-	>;
+	return (metric as ConfEnumScoreMetric<string>).values[index] as GetEnumValue<TGame, EV>;
+}
+
+export function IsValidGame(game: string): game is V3Game {
+	return ALL_GAMES.includes(game as unknown as V3Game);
 }

@@ -25,7 +25,17 @@ void (async () => {
 
 	fs.mkdirSync(`${__dirname}/cache`, { recursive: true });
 
-	const tableInfo = await GetTableData(options.playtype as "7K" | "14K");
+	const PLAYTYPE_TO_GAME: Record<string, "bms-7k" | "bms-14k"> = {
+		"7K": "bms-7k",
+		"14K": "bms-14k",
+	};
+	const game = PLAYTYPE_TO_GAME[options.playtype];
+
+	if (!game) {
+		throw new Error(`Unknown playtype '${options.playtype}'. Expected '7K' or '14K'.`);
+	}
+
+	const tableInfo = await GetTableData(game);
 
 	logger.info(`Starting...`);
 

@@ -1,15 +1,15 @@
 import { type GoalsOnChartReturn, type GoalsOnFolderReturn } from "#types/api-returns";
 import {
+	type ChartDocument,
 	type GameGroup,
-	type GPTString,
+	type GoalDocument,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_GoalDocument,
-	type MONGO_QuestDocument,
-	type MONGO_ScoreDocument,
-	type MONGO_SongDocument,
-	type MONGO_UserDocument,
+	type QuestDocument,
+	type ScoreDocument,
 	type SessionScoreInfo,
+	type SongDocument,
+	type UserDocument,
+	type V3Game,
 } from "tachi-common";
 
 export function GetPBs(scoreInfo: SessionScoreInfo[]) {
@@ -28,8 +28,8 @@ export function GetPBs(scoreInfo: SessionScoreInfo[]) {
 	});
 }
 
-export function CreateSongMap<G extends GameGroup = GameGroup>(songs: MONGO_SongDocument<G>[]) {
-	const songMap = new Map<integer, MONGO_SongDocument<G>>();
+export function CreateSongMap<G extends GameGroup = GameGroup>(songs: SongDocument<G>[]) {
+	const songMap = new Map<string, SongDocument<G>>();
 
 	for (const song of songs) {
 		songMap.set(song.id, song);
@@ -38,8 +38,8 @@ export function CreateSongMap<G extends GameGroup = GameGroup>(songs: MONGO_Song
 	return songMap;
 }
 
-export function CreateUserMap(users: MONGO_UserDocument[]) {
-	const userMap = new Map<integer, MONGO_UserDocument>();
+export function CreateUserMap(users: UserDocument[]) {
+	const userMap = new Map<integer, UserDocument>();
 
 	for (const user of users) {
 		userMap.set(user.id, user);
@@ -48,8 +48,8 @@ export function CreateUserMap(users: MONGO_UserDocument[]) {
 	return userMap;
 }
 
-export function CreateGoalMap(goals: MONGO_GoalDocument[]) {
-	const goalMap = new Map<string, MONGO_GoalDocument>();
+export function CreateGoalMap(goals: GoalDocument[]) {
+	const goalMap = new Map<string, GoalDocument>();
 
 	for (const goal of goals) {
 		goalMap.set(goal.goalID, goal);
@@ -68,10 +68,8 @@ export function CreateChartIDMap<T extends { chartID: string }>(arr: T[]): Map<s
 	return map;
 }
 
-export function CreateChartMap<GPT extends GPTString = GPTString>(
-	charts: MONGO_ChartDocument<GPT>[],
-) {
-	const chartMap = new Map<string, MONGO_ChartDocument<GPT>>();
+export function CreateChartMap<GPT extends V3Game = V3Game>(charts: ChartDocument<GPT>[]) {
+	const chartMap = new Map<string, ChartDocument<GPT>>();
 
 	for (const chart of charts) {
 		chartMap.set(chart.chartID, chart);
@@ -80,10 +78,8 @@ export function CreateChartMap<GPT extends GPTString = GPTString>(
 	return chartMap;
 }
 
-export function CreateScoreIDMap<GPT extends GPTString = GPTString>(
-	scores: MONGO_ScoreDocument<GPT>[],
-) {
-	const scoreMap = new Map<string, MONGO_ScoreDocument<GPT>>();
+export function CreateScoreIDMap<GPT extends V3Game = V3Game>(scores: ScoreDocument<GPT>[]) {
+	const scoreMap = new Map<string, ScoreDocument<GPT>>();
 
 	for (const score of scores) {
 		scoreMap.set(score.scoreID, score);
@@ -92,12 +88,12 @@ export function CreateScoreIDMap<GPT extends GPTString = GPTString>(
 	return scoreMap;
 }
 
-export function CreateChartLink(chart: MONGO_ChartDocument, game: GameGroup) {
-	return `/games/${game}/${chart.playtype}/charts/${chart.chartID}`;
+export function CreateChartLink(chart: ChartDocument) {
+	return `/games/${chart.game}/charts/${chart.chartID}`;
 }
 
 // stolen from server
-export function GetGoalIDsFromQuest(quest: MONGO_QuestDocument) {
+export function GetGoalIDsFromQuest(quest: QuestDocument) {
 	// this sucks - maybe a nicer way to do this, because nested
 	// maps are just ugly
 	return quest.questData.map((e) => e.goals.map((e) => e.goalID)).flat(1);
@@ -105,7 +101,7 @@ export function GetGoalIDsFromQuest(quest: MONGO_QuestDocument) {
 
 export function CreateGoalSubDataset(
 	data: GoalsOnChartReturn | GoalsOnFolderReturn,
-	userMap: Map<integer, MONGO_UserDocument>,
+	userMap: Map<integer, UserDocument>,
 ) {
 	const dataset = [];
 	const goalMap = CreateGoalMap(data.goals);

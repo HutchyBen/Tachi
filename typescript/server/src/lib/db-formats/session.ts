@@ -1,7 +1,7 @@
 import DB from "#services/pg/db";
 import { ISO8601ToUnixMilliseconds } from "#utils/time";
 import { type Selection } from "kysely";
-import { type MONGO_SessionDocument, V3ToGamePT } from "tachi-common";
+import { type SessionDocument } from "tachi-common";
 import { type Database } from "tachi-db";
 
 export const SELECT_SESSION_DOCUMENT = [
@@ -20,13 +20,11 @@ export const SELECT_SESSION_DOCUMENT = [
 export function ToSessionDocument(
 	row: Selection<Database, "session", (typeof SELECT_SESSION_DOCUMENT)[number]>,
 	scoreIDs: Array<string>,
-): MONGO_SessionDocument {
-	const { game, playtype } = V3ToGamePT(row.game);
-
+): SessionDocument {
 	const calculatedData =
 		typeof row.calculated_data === "string"
-			? (JSON.parse(row.calculated_data) as MONGO_SessionDocument["calculatedData"])
-			: (row.calculated_data as MONGO_SessionDocument["calculatedData"]);
+			? (JSON.parse(row.calculated_data) as SessionDocument["calculatedData"])
+			: (row.calculated_data as SessionDocument["calculatedData"]);
 
 	return {
 		userID: row.user_id,
@@ -34,8 +32,7 @@ export function ToSessionDocument(
 		scoreIDs,
 		name: row.name,
 		desc: row.description,
-		game,
-		playtype,
+		game: row.game,
 		timeInserted: ISO8601ToUnixMilliseconds(row.time_inserted),
 		timeStarted: ISO8601ToUnixMilliseconds(row.time_started),
 		timeEnded: ISO8601ToUnixMilliseconds(row.time_ended),
@@ -46,7 +43,7 @@ export function ToSessionDocument(
 
 export async function LoadSessionDocumentById(
 	sessionID: string,
-): Promise<MONGO_SessionDocument | undefined> {
+): Promise<SessionDocument | undefined> {
 	const row = await DB.selectFrom("session")
 		.select(SELECT_SESSION_DOCUMENT)
 		.where("id", "=", sessionID)
@@ -78,15 +75,13 @@ export const SELECT_SESSION_CALENDAR = [
 ] as const;
 
 export type SessionCalendarDocument = Pick<
-	MONGO_SessionDocument,
-	"desc" | "game" | "highlight" | "name" | "playtype" | "sessionID" | "timeEnded" | "timeStarted"
+	SessionDocument,
+	"desc" | "game" | "highlight" | "name" | "sessionID" | "timeEnded" | "timeStarted"
 >;
 
 export function ToSessionCalendarDocument(
 	row: Selection<Database, "session", (typeof SELECT_SESSION_CALENDAR)[number]>,
 ): SessionCalendarDocument {
-	const { game, playtype } = V3ToGamePT(row.game);
-
 	return {
 		sessionID: row.id,
 		name: row.name,
@@ -94,7 +89,6 @@ export function ToSessionCalendarDocument(
 		highlight: row.highlight,
 		timeStarted: ISO8601ToUnixMilliseconds(row.time_started),
 		timeEnded: ISO8601ToUnixMilliseconds(row.time_ended),
-		game,
-		playtype,
+		game: row.game,
 	};
 }

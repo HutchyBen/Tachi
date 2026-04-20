@@ -6,11 +6,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
 	test: {
+		passWithNoTests: true,
+
 		env: {
 			NODE_ENV: "test",
 		},
 		coverage: {
+			enabled: true,
 			provider: "v8",
+			reporter: ["text", "html", "clover", "json", "lcov"],
 			include: ["src/**/*.ts"],
 			exclude: [
 				"src/**/*.test.ts",

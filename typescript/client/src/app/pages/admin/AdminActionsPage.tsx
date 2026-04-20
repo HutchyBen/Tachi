@@ -54,22 +54,11 @@ function resultVariant(result: string): "danger" | "secondary" | "success" | "wa
 	return "secondary";
 }
 
-function JsonCell({ label, value }: { label: string; value: unknown }) {
-	if (value === null || value === undefined) {
-		return <span className="text-body-secondary">—</span>;
+function formatJson(value: unknown): string {
+	if (value === undefined) {
+		return "";
 	}
-	const json = JSON.stringify(value, null, 2);
-	return (
-		<details>
-			<summary className="small text-body-secondary">{label}</summary>
-			<pre
-				className="small mb-0 mt-1 p-2 bg-body-secondary rounded"
-				style={{ maxWidth: "20rem" }}
-			>
-				{json}
-			</pre>
-		</details>
-	);
+	return JSON.stringify(value, null, 2);
 }
 
 export default function AdminActionsPage() {
@@ -78,7 +67,21 @@ export default function AdminActionsPage() {
 	const history = useHistory();
 	const apiUrl = `/admin/actions${location.search}`;
 
+	const [expandedIds, setExpandedIds] = React.useState(() => new Set<string>());
+
 	const { data, error, isLoading } = useApiQuery<ActionsResponse>(apiUrl);
+
+	function toggleIoExpanded(rowId: string) {
+		setExpandedIds((prev) => {
+			const next = new Set(prev);
+			if (next.has(rowId)) {
+				next.delete(rowId);
+			} else {
+				next.add(rowId);
+			}
+			return next;
+		});
+	}
 
 	if (error) {
 		return <p className="text-danger">Failed to load actions.</p>;
@@ -159,50 +162,102 @@ export default function AdminActionsPage() {
 							<th>Result</th>
 							<th>User</th>
 							<th>IP</th>
-							<th>Input</th>
-							<th>Output</th>
+							<th className="text-nowrap">Input / output</th>
 						</tr>
 					</thead>
 					<tbody>
 						{actions.items.length === 0 ? (
 							<tr>
-								<td className="text-body-secondary" colSpan={8}>
+								<td className="text-body-secondary" colSpan={7}>
 									No actions found.
 								</td>
 							</tr>
 						) : (
-							actions.items.map((action) => (
-								<tr key={action.row_id}>
-									<td className="small text-nowrap">
-										{MillisToSince(Date.parse(action.ts_start))}
-									</td>
-									<td className="font-monospace small">
-										{durationMs(action.ts_start, action.ts_end)}
-									</td>
-									<td className="small">{action.kind}</td>
-									<td>
-										<Badge bg={resultVariant(action.result)}>
-											{action.result}
-										</Badge>
-									</td>
-									<td>
-										{action.username ? (
-											<Link to={`/u/${action.username}`}>
-												{action.username}
-											</Link>
-										) : (
-											<span className="text-body-secondary">—</span>
+							actions.items.map((action) => {
+								const ioOpen = expandedIds.has(action.row_id);
+								return (
+									<React.Fragment key={action.row_id}>
+										<tr>
+											<td className="small text-nowrap">
+												{MillisToSince(Date.parse(action.ts_start))}
+											</td>
+											<td className="font-monospace small">
+												{durationMs(action.ts_start, action.ts_end)}
+											</td>
+											<td className="small">{action.kind}</td>
+											<td>
+												<Badge bg={resultVariant(action.result)}>
+													{action.result}
+												</Badge>
+											</td>
+											<td>
+												{action.username ? (
+													<Link to={`/u/${action.username}`}>
+														{action.username}
+													</Link>
+												) : (
+													<span className="text-body-secondary">—</span>
+												)}
+											</td>
+											<td className="font-monospace small">
+												{action.ip ?? "—"}
+											</td>
+											<td className="align-middle">
+												<Button
+													aria-expanded={ioOpen}
+													className="text-nowrap"
+													onClick={() => toggleIoExpanded(action.row_id)}
+													size="sm"
+													type="button"
+													variant="outline-secondary"
+												>
+													{ioOpen ? "Hide I/O" : "Show I/O"}
+												</Button>
+											</td>
+										</tr>
+										{ioOpen && (
+											<tr className="table-light">
+												<td className="border-top-0 p-3" colSpan={7}>
+													<div className="d-flex flex-column flex-lg-row gap-3 align-items-stretch">
+														<div className="flex-fill d-flex flex-column min-w-0">
+															<Form.Label className="small mb-1 text-body-secondary">
+																Input
+															</Form.Label>
+															<Form.Control
+																as="textarea"
+																className="font-monospace small"
+																readOnly
+																rows={14}
+																spellCheck={false}
+																value={formatJson(action.input)}
+															/>
+														</div>
+														<div
+															aria-hidden
+															className="d-flex align-items-center justify-content-center px-1 text-body-secondary fs-4"
+														>
+															→
+														</div>
+														<div className="flex-fill d-flex flex-column min-w-0">
+															<Form.Label className="small mb-1 text-body-secondary">
+																Output
+															</Form.Label>
+															<Form.Control
+																as="textarea"
+																className="font-monospace small"
+																readOnly
+																rows={14}
+																spellCheck={false}
+																value={formatJson(action.output)}
+															/>
+														</div>
+													</div>
+												</td>
+											</tr>
 										)}
-									</td>
-									<td className="font-monospace small">{action.ip ?? "—"}</td>
-									<td>
-										<JsonCell label="Input" value={action.input} />
-									</td>
-									<td>
-										<JsonCell label="Output" value={action.output} />
-									</td>
-								</tr>
-							))
+									</React.Fragment>
+								);
+							})
 						)}
 					</tbody>
 				</Table>

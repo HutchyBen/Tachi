@@ -1,5 +1,3 @@
-import type { Game } from "tachi-db";
-
 import { ONE_HOUR } from "#lib/constants/time";
 import { LoadScoreDocumentById } from "#lib/db-formats/score";
 import { LoadSessionDocumentById, SELECT_SESSION_DOCUMENT } from "#lib/db-formats/session";
@@ -8,47 +6,32 @@ import DB from "#services/pg/db";
 import { GetChartForIDGuaranteed } from "#utils/db";
 import { UnixMillisecondsToISO8601 } from "#utils/time";
 import crypto from "crypto";
-import { sql } from "kysely";
 import {
-	type GameGroup,
-	GamePTToV3,
-	GetGamePTConfig,
-	GetGPTString,
+	GetGameConfig,
 	GetScoreMetricConf,
 	GetScoreMetrics,
 	type integer,
-	type MONGO_ScoreDocument,
-	type MONGO_SessionDocument,
-	type Playtype,
+	type ScoreDocument,
+	type SessionDocument,
 	type SessionInfoReturn,
 	type SessionScoreInfo,
+	type V3Game,
 } from "tachi-common";
 
-import type { ScorePlaytypeMap } from "../common/types";
+import type { ScoreGameMap } from "../common/types";
 
 import { CreateSessionCalcData } from "../calculated-data/session";
-import { CreatePBDoc, type MONGO_PBScoreDocumentNoRank } from "../pb/create-pb-doc";
+import { CreatePBDoc, type PBScoreDocumentNoRank } from "../pb/create-pb-doc";
 import { GenerateRandomSessionName } from "./name-generation";
 
 const TWO_HOURS = ONE_HOUR * 2;
 
-export async function CreateSessions(
-	userID: integer,
-	game: GameGroup,
-	scorePtMap: ScorePlaytypeMap,
-	log: KtLogger,
-) {
+export async function CreateSessions(userID: integer, scoreGameMap: ScoreGameMap, log: KtLogger) {
 	const allSessionInfo = [];
 
-	for (const [playtype, scores] of Object.entries(scorePtMap)) {
+	for (const [game, scores] of Object.entries(scoreGameMap)) {
 		// eslint-disable-next-line no-await-in-loop
-		const sessionInfo = await LoadScoresIntoSessions(
-			userID,
-			scores,
-			game,
-			playtype as Playtype,
-			log,
-		);
+		const sessionInfo = await LoadScoresIntoSessions(userID, scores, game as V3Game, log);
 
 		allSessionInfo.push(...sessionInfo);
 	}
@@ -61,8 +44,8 @@ export async function CreateSessions(
  * as a SessionScoreInfo object.
  */
 function ScoreToSessionScoreInfo(
-	score: MONGO_ScoreDocument,
-	previousPB: MONGO_PBScoreDocumentNoRank | undefined,
+	score: ScoreDocument,
+	previousPB: PBScoreDocumentNoRank | undefined,
 ): SessionScoreInfo {
 	if (!previousPB) {
 		return {
@@ -71,14 +54,14 @@ function ScoreToSessionScoreInfo(
 		};
 	}
 
-	const gptConfig = GetGamePTConfig(score.game, score.playtype);
+	const gameConfig = GetGameConfig(score.game);
 
 	const deltas: Record<string, number> = {};
 
-	const scoreMetrics = GetScoreMetrics(gptConfig, ["DECIMAL", "ENUM", "INTEGER"]);
+	const scoreMetrics = GetScoreMetrics(gameConfig, ["DECIMAL", "ENUM", "INTEGER"]);
 
 	for (const metric of scoreMetrics) {
-		const conf = GetScoreMetricConf(gptConfig, metric)!;
+		const conf = GetScoreMetricConf(gameConfig, metric)!;
 
 		if (conf.type === "ENUM") {
 			deltas[metric] =
@@ -102,7 +85,7 @@ function ScoreToSessionScoreInfo(
  * time.
  */
 export async function GetSessionScoreInfo(
-	session: MONGO_SessionDocument,
+	session: SessionDocument,
 ): Promise<Array<SessionScoreInfo>> {
 	const scores = await DB.selectFrom("score")
 		.innerJoin("chart", "chart.id", "score.chart_id")
@@ -113,7 +96,7 @@ export async function GetSessionScoreInfo(
 
 	const scoreIds = scores.map((r) => r.id);
 
-	const gptString = GetGPTString(session.game, session.playtype);
+	const game = session.game;
 
 	const promises = [];
 
@@ -124,9 +107,9 @@ export async function GetSessionScoreInfo(
 					return null;
 				}
 
-				return GetChartForIDGuaranteed(scoreDoc.game, scoreDoc.chartID).then((chart) =>
-					CreatePBDoc(gptString, session.userID, chart, log, session.timeStarted).then(
-						(pb) => ScoreToSessionScoreInfo(scoreDoc, pb),
+				return GetChartForIDGuaranteed(scoreDoc.chartID).then((chart) =>
+					CreatePBDoc(game, session.userID, chart, log, session.timeStarted).then((pb) =>
+						ScoreToSessionScoreInfo(scoreDoc, pb),
 					),
 				);
 			}),
@@ -145,17 +128,14 @@ export function CreateSessionID() {
 }
 
 function UpdateExistingSession(
-	existingSession: MONGO_SessionDocument,
+	existingSession: SessionDocument,
 	newScoreIDs: Array<string>,
-	oldScores: Array<MONGO_ScoreDocument>,
-	newScores: Array<MONGO_ScoreDocument>,
+	oldScores: Array<ScoreDocument>,
+	newScores: Array<ScoreDocument>,
 ) {
 	const allScores = [...oldScores, ...newScores];
 
-	const calculatedData = CreateSessionCalcData(
-		GetGPTString(existingSession.game, existingSession.playtype),
-		allScores,
-	);
+	const calculatedData = CreateSessionCalcData(existingSession.game, allScores);
 
 	existingSession.calculatedData = calculatedData;
 	existingSession.scoreIDs = [...existingSession.scoreIDs, ...newScoreIDs];
@@ -174,13 +154,12 @@ function UpdateExistingSession(
 function CreateSession(
 	userID: integer,
 	scoreIDs: Array<string>,
-	groupScores: Array<MONGO_ScoreDocument>,
-	game: GameGroup,
-	playtype: Playtype,
-): MONGO_SessionDocument {
+	groupScores: Array<ScoreDocument>,
+	game: V3Game,
+): SessionDocument<V3Game> {
 	const name = GenerateRandomSessionName();
 
-	const calculatedData = CreateSessionCalcData(GetGPTString(game, playtype), groupScores);
+	const calculatedData = CreateSessionCalcData(game, groupScores);
 
 	return {
 		userID,
@@ -188,7 +167,6 @@ function CreateSession(
 		sessionID: CreateSessionID(),
 		desc: null,
 		game,
-		playtype,
 		highlight: false,
 		scoreIDs,
 		timeInserted: Date.now(),
@@ -200,14 +178,11 @@ function CreateSession(
 
 export async function LoadScoresIntoSessions(
 	userID: integer,
-	importScores: Array<MONGO_ScoreDocument>,
-	game: GameGroup,
-	playtype: Playtype,
+	importScores: Array<ScoreDocument>,
+	game: V3Game,
 	baseLog: KtLogger,
 ): Promise<Array<SessionInfoReturn>> {
 	const log = AppendLogCtx("Session Generation", baseLog);
-
-	const v3Game = GamePTToV3(game, playtype) as Game;
 
 	const timestampedScores = [];
 
@@ -234,8 +209,8 @@ export async function LoadScoresIntoSessions(
 	// The "Score Groups" for the array of scores provided.
 	// This contains scores split on 2hr margins, which allows for more optimised
 	// session db requests.
-	const sessionScoreGroups: Array<Array<MONGO_ScoreDocument>> = [];
-	let curGroup: Array<MONGO_ScoreDocument> = [];
+	const sessionScoreGroups: Array<Array<ScoreDocument>> = [];
+	let curGroup: Array<ScoreDocument> = [];
 	let lastTimestamp = 0;
 
 	for (const score of timestampedScores) {
@@ -279,7 +254,7 @@ export async function LoadScoresIntoSessions(
 		const nearbySession = await DB.selectFrom("session")
 			.select(SELECT_SESSION_DOCUMENT)
 			.where("session.user_id", "=", userID)
-			.where("session.game", "=", v3Game)
+			.where("session.game", "=", game)
 			.where((eb) =>
 				eb.or([
 					eb.and([
@@ -298,7 +273,7 @@ export async function LoadScoresIntoSessions(
 
 		if (nearbySession) {
 			log.debug(
-				`Found nearby session for ${userID} (${game} ${playtype}) around ${startOfGroup} ${endOfGroup}.`,
+				`Found nearby session for ${userID} (${game}) around ${startOfGroup} ${endOfGroup}.`,
 			);
 
 			const mongoSession = await LoadSessionDocumentById(nearbySession.id);
@@ -329,10 +304,10 @@ export async function LoadScoresIntoSessions(
 				.execute();
 		} else {
 			log.debug(
-				`Creating new session for ${userID} (${game} ${playtype}) around ${startOfGroup} ${endOfGroup}.`,
+				`Creating new session for ${userID} (${game}) around ${startOfGroup} ${endOfGroup}.`,
 			);
 
-			const session = CreateSession(userID, scoreIDs, groupScores, game, playtype);
+			const session = CreateSession(userID, scoreIDs, groupScores, game);
 
 			infoReturn = { sessionID: session.sessionID, type: "Created" };
 
@@ -342,7 +317,7 @@ export async function LoadScoresIntoSessions(
 				.values({
 					id: session.sessionID,
 					user_id: userID,
-					game: v3Game,
+					game,
 					name: session.name,
 					description: session.desc,
 					time_inserted: now,
@@ -366,12 +341,12 @@ export async function LoadScoresIntoSessions(
 	return sessionInfoReturns;
 }
 
-async function loadScoresByIds(ids: Array<string>): Promise<Array<MONGO_ScoreDocument>> {
+async function loadScoresByIds(ids: Array<string>): Promise<Array<ScoreDocument>> {
 	if (ids.length === 0) {
 		return [];
 	}
 
-	const out: Array<MONGO_ScoreDocument> = [];
+	const out: Array<ScoreDocument> = [];
 
 	for (const id of ids) {
 		// eslint-disable-next-line no-await-in-loop

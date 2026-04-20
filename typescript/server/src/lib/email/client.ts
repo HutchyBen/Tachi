@@ -5,20 +5,22 @@ import nodemailer, { type SentMessageInfo, type Transporter } from "nodemailer";
 
 let transporter: Transporter | undefined;
 
-if (ServerConfig.EMAIL_CONFIG) {
-	log.info({ bootInfo: true }, `Connecting to email server...`);
-	const conf = ServerConfig.EMAIL_CONFIG;
+const emailConf = ServerConfig.EMAIL_CONFIG;
+log.info({ bootInfo: true }, `Connecting to email server...`);
 
-	try {
-		transporter = nodemailer.createTransport({
-			newline: "unix",
+try {
+	transporter = nodemailer.createTransport({
+		newline: "unix",
 
-			logger: conf.TRANSPORT_OPS?.debug
-				? bunyan.createLogger({ name: "Email Logger" })
-				: undefined,
-			...(conf.TRANSPORT_OPS ?? {}),
-		});
+		logger: emailConf.TRANSPORT_OPS?.debug
+			? bunyan.createLogger({ name: "Email Logger" })
+			: undefined,
+		...emailConf.TRANSPORT_OPS,
+	});
 
+	if (Env.NODE_ENV === "test") {
+		log.info({ bootInfo: true }, `Skipping SMTP verify in test.`);
+	} else {
 		transporter.verify((err) => {
 			if (err) {
 				log.fatal({ err }, `Could not connect to email server.`);
@@ -27,17 +29,10 @@ if (ServerConfig.EMAIL_CONFIG) {
 				log.info({ bootInfo: true }, `Successfully connected to email server.`);
 			}
 		});
-	} catch (err) {
-		log.fatal({ err }, `Failed to create email client.`);
-		throw err;
 	}
-} else {
-	log.warn(
-		{
-			bootInfo: true,
-		},
-		`No EMAIL_CONFIG present in conf, emails will not be sent from the server.`,
-	);
+} catch (err) {
+	log.fatal({ err }, `Failed to create email client.`);
+	throw err;
 }
 
 export function SendEmail(
@@ -51,8 +46,8 @@ export function SendEmail(
 		return;
 	}
 
-	if (!transporter || !ServerConfig.EMAIL_CONFIG) {
-		log.debug(`Stubbed out SendEmail as no EMAIL_CONFIG was set.`);
+	if (!transporter) {
+		log.debug(`Stubbed out SendEmail as transporter was not initialized.`);
 		return;
 	}
 
@@ -65,7 +60,6 @@ export function SendEmail(
 			subject,
 			html: htmlContent,
 			text: textContent,
-			dkim: ServerConfig.EMAIL_CONFIG.DKIM,
 			headers: transporter.options.headers,
 		})
 		.catch((err: unknown) => {

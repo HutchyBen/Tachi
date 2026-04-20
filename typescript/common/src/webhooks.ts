@@ -1,5 +1,5 @@
-import type { GoalImportStat, integer, QuestImportStat } from "./types";
-import type { Classes, GameGroup, GPTString, Playtypes } from "./types/game-config";
+import type { GoalImportStat, integer, QuestImportStat, V3Game } from "./types";
+import type { Classes } from "./types/game-config";
 
 /**
  * An event fired when a users class improves.
@@ -7,11 +7,10 @@ import type { Classes, GameGroup, GPTString, Playtypes } from "./types/game-conf
 export interface WebhookEventClassUpdateV1 {
 	type: "class-update/v1";
 	content: {
-		game: GameGroup;
+		game: V3Game;
 		new: string;
 		old: string | null;
-		playtype: Playtypes[GameGroup];
-		set: Classes[GPTString];
+		set: Classes[V3Game];
 		userID: integer;
 	};
 }
@@ -22,12 +21,12 @@ export interface WebhookEventClassUpdateV1 {
 export interface WebhookEventGoalAchievedV1 {
 	type: "goals-achieved/v1";
 	content: {
-		game: GameGroup;
+		game: V3Game;
 		goals: Array<{
+			game: V3Game;
 			goalID: string;
 			new: GoalImportStat;
 			old: GoalImportStat;
-			playtype: Playtypes[GameGroup];
 		}>;
 		userID: integer;
 	};
@@ -39,10 +38,9 @@ export interface WebhookEventGoalAchievedV1 {
 export interface WebhookEventQuestAchievedV1 {
 	type: "quest-achieved/v1";
 	content: {
-		game: GameGroup;
+		game: V3Game;
 		new: QuestImportStat;
 		old: QuestImportStat;
-		playtype: Playtypes[GameGroup];
 		questID: string;
 		userID: integer;
 	};

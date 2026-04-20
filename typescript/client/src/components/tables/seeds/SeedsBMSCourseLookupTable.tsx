@@ -13,8 +13,8 @@ export const SeedsBMSCourseLookupHeaders: Header<BMSCourseWithRelated>[] = [
 		"Set (Index)",
 		"Set (Idx)",
 		(a, b) => {
-			const a2 = `${a.playtype} ${a.set}`;
-			const b2 = `${b.playtype} ${b.set}`;
+			const a2 = `${a.game} ${a.set}`;
+			const b2 = `${b.game} ${b.set}`;
 
 			if (a2 === b2) {
 				return GetBMSCourseIndex(a) - GetBMSCourseIndex(b);
@@ -27,10 +27,10 @@ export const SeedsBMSCourseLookupHeaders: Header<BMSCourseWithRelated>[] = [
 
 export const SeedsBMSCourseLookupSearchFns: SearchFunctions<BMSCourseWithRelated> = {
 	title: (x) => x.title,
-	set: (x) => `${x.playtype} ${x.set}`,
+	set: (x) => `${x.game} ${x.set}`,
 	md5: (x) => x.md5sums,
 	value: (x) => x.value,
-	playtype: (x) => x.playtype,
+	game: (x) => x.game,
 	// don't ask
 	// it gets all the songtitles and joins them
 	song: (x) =>
@@ -40,7 +40,7 @@ export const SeedsBMSCourseLookupSearchFns: SearchFunctions<BMSCourseWithRelated
 					return `UNKNOWN CHART (${e})`;
 				}
 
-				return FormatChart("bms", e.song, e.chart);
+				return FormatChart(e.chart);
 			})
 			.join("\n"),
 };
@@ -59,7 +59,7 @@ export const SeedsBMSCourseLookupCells: CellsRenderFN<BMSCourseWithRelated> = ({
 					{typeof e === "string" ? (
 						<span className="text-danger">UNKNOWN CHART</span>
 					) : (
-						<span>{FormatChart("bms", e.song, e.chart)} </span>
+						<span>{FormatChart(e.chart)} </span>
 					)}
 
 					{!compress && (
@@ -71,7 +71,7 @@ export const SeedsBMSCourseLookupCells: CellsRenderFN<BMSCourseWithRelated> = ({
 			))}
 		</td>
 		<td>
-			{data.playtype} {data.set} ({data.value})
+			{data.game} {data.set} ({data.value})
 		</td>
 	</>
 );

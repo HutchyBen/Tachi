@@ -1,14 +1,15 @@
 import { p } from "prudence";
 import { z } from "zod";
 
-import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_PT_CONFIG } from "../../types/internals";
+import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
 import { FmtPercent, FmtScoreNoCommas } from "../../utils/util";
 import { ClassValue, zodNonNegativeInt } from "../config-utils";
 import { FAST_SLOW_MAXCOMBO } from "./_common";
 
-export const BMS_CONF = {
+export const GAME_GROUP_BMS_CONF = {
 	name: "BMS",
+	games: ["bms-7k", "bms-14k"],
 	playtypes: ["7K", "14K"],
 	songData: z.strictObject({
 		genre: z.nullable(z.string()),
@@ -16,7 +17,7 @@ export const BMS_CONF = {
 		subartist: z.nullable(z.string()),
 		tableString: z.nullable(z.string()),
 	}),
-} as const satisfies INTERNAL_GAME_CONFIG;
+} as const satisfies INTERNAL_GAME_GROUP_CONFIG;
 
 export function FormatSieglindeBMS(sgl: number): string {
 	if (sgl < 13) {
@@ -161,7 +162,7 @@ export const BMSScratchDans = [
 
 const RANDOM_SCHEMA = z.enum(["MIRROR", "NONRAN", "R-RANDOM", "RANDOM", "S-RANDOM"]);
 
-export const BMS_7K_CONF = {
+export const GAME_BMS_7K_CONF = {
 	providedMetrics: {
 		score: {
 			type: "INTEGER",
@@ -351,7 +352,7 @@ export const BMS_7K_CONF = {
 		// "CHART" isn't a very creative name, but this is in a similar vein to how
 		// games with no playtypes use the value "Single".
 		order: ["CHART"],
-		shorthand: {},
+		format: {},
 		default: "CHART",
 	},
 
@@ -389,10 +390,10 @@ export const BMS_7K_CONF = {
 	}),
 
 	supportedMatchTypes: ["bmsChartHash", "tachiSongID"],
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;
 
-export const BMS_14K_CONF = {
-	...BMS_7K_CONF,
+export const GAME_BMS_14K_CONF = {
+	...GAME_BMS_7K_CONF,
 
 	classes: {
 		genocideDan: { type: "PROVIDED", values: BMSGenocideDans },
@@ -405,4 +406,4 @@ export const BMS_14K_CONF = {
 		client: z.enum(["lr2oraja", "LR2"]).optional().nullable(),
 		gauge: z.enum(["EASY", "NORMAL", "HARD", "EX-HARD"]).optional().nullable(),
 	}),
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;

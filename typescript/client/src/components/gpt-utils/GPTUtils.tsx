@@ -1,5 +1,5 @@
 import { type GPTUtility } from "#types/ugpt";
-import { type GameGroup, type GPTString, type Playtype } from "tachi-common";
+import { type V3Game } from "tachi-common";
 
 import { JubilityBreakdownInsight } from "./insights/JubilityBreakdownInsight";
 import {
@@ -11,46 +11,39 @@ import { BMSSieglindeInfoTool } from "./tools/BMSSieglindeInfoTool";
 import { IIDXEamusementExportTool } from "./tools/IIDXEamusementExportTool";
 import { IIDXPlaylistsTool } from "./tools/IIDXPlaylistsTool";
 
-// What utils does each game support?
-const GPT_UTILS: Record<GPTString, Array<GPTUtility>> = {
-	"arcaea:Touch": [],
-	"bms:7K": [BMSCustomTablesTool, BMSSieglindeInfoTool],
-	"bms:14K": [BMSCustomTablesTool, BMSSieglindeInfoTool],
-	"chunithm:Single": [],
-	"gitadora:Dora": [],
-	"gitadora:Gita": [],
-	"iidx:DP": [IIDXEamusementExportTool, IIDXPlaylistsTool],
-	"iidx:SP": [IIDXEamusementExportTool, IIDXPlaylistsTool],
-	"itg:Stamina": [],
-	"jubeat:Single": [JubilityBreakdownInsight],
-	"museca:Single": [],
-	"pms:Controller": [],
-	"pms:Keyboard": [],
-	"popn:9B": [],
-	"sdvx:Single": [],
-	"usc:Controller": [],
-	"usc:Keyboard": [],
-	"wacca:Single": [],
-	"maimaidx:Single": [],
-	"maimai:Single": [],
-	"ongeki:Single": [ONGEKIRefreshBreakdownInsight, ONGEKIClassicBreakdownInsight],
-	"ddr:SP": [],
-	"ddr:DP": [],
+const GPT_UTILS: Record<V3Game, Array<GPTUtility>> = {
+	arcaea: [],
+	"bms-7k": [BMSCustomTablesTool, BMSSieglindeInfoTool],
+	"bms-14k": [BMSCustomTablesTool, BMSSieglindeInfoTool],
+	chunithm: [],
+	"gitadora-dora": [],
+	"gitadora-gita": [],
+	"iidx-dp": [IIDXEamusementExportTool, IIDXPlaylistsTool],
+	"iidx-sp": [IIDXEamusementExportTool, IIDXPlaylistsTool],
+	"itg-stamina": [],
+	jubeat: [JubilityBreakdownInsight],
+	museca: [],
+	"pms-controller": [],
+	"pms-keyboard": [],
+	popn: [],
+	sdvx: [],
+	"usc-controller": [],
+	"usc-keyboard": [],
+	wacca: [],
+	maimaidx: [],
+	maimai: [],
+	ongeki: [ONGEKIRefreshBreakdownInsight, ONGEKIClassicBreakdownInsight],
+	"ddr-sp": [],
+	"ddr-dp": [],
 };
 
-export function GetGPTUtils(game: GameGroup, playtype: Playtype) {
-	const idString = `${game}:${playtype}` as GPTString;
-
-	return GPT_UTILS[idString];
+export function GetGPTUtils(game: V3Game) {
+	return GPT_UTILS[game];
 }
 
-export function GetGPTUtilsName(game: GameGroup, playtype: Playtype, isViewingOwnProfile: boolean) {
-	const utils = GetGPTUtils(game, playtype);
+export function GetGPTUtilsName(game: V3Game, isViewingOwnProfile: boolean) {
+	const utils = GetGPTUtils(game);
 
-	// things for personal use only are called "tools"
-	// things everyone might want to view about a person are called "insights".
-	// an example of an insight would be a jubility breakdown
-	// an example of a tool would be a eamusement csv export thing.
 	const tools = utils.filter((e) => e.personalUseOnly);
 	const insights = utils.filter((e) => e.personalUseOnly !== true);
 

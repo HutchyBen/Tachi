@@ -1,12 +1,12 @@
-import type { Difficulties, integer, MONGO_ChartDocument } from "tachi-common";
+import type { ChartDocument, Difficulties, integer } from "tachi-common";
 
 /* eslint-disable no-await-in-loop */
-import { computeDerivationChecksumForGPT } from "#game-implementations/utils/derivation-checksum";
+import { ComputeChartStabilityChecksum } from "#game-implementations/utils/derivation-checksum";
 import { MakeAction } from "#lib/actions/actions";
 import { log } from "#lib/log/log";
 import DB from "#services/pg/db";
 import fetch from "#utils/fetch";
-import { FindChartWithPTDF } from "#utils/queries/charts";
+import { FindChartWithSongDifficulty } from "#utils/queries/charts";
 import { FindSongOnTitle } from "#utils/queries/songs";
 import { IsUserAdmin } from "#utils/user";
 import { ExpectedErr } from "bliss";
@@ -57,7 +57,7 @@ export async function updateSp12DataCore() {
 	const updatedChartIDs: Array<string> = [];
 
 	for (const sh of rj.sheets) {
-		let chart: MONGO_ChartDocument<"iidx:SP">;
+		let chart: ChartDocument<"iidx-sp">;
 
 		try {
 			chart = await HumanisedTitleLookup(sh.title);
@@ -179,8 +179,8 @@ export async function updateSp12DataCore() {
 				},
 			};
 
-			const updatedChart = { ...chart, data: chartData } as MONGO_ChartDocument;
-			const checksum = computeDerivationChecksumForGPT("iidx:SP", updatedChart);
+			const updatedChart = { ...chart, data: chartData } as ChartDocument;
+			const checksum = ComputeChartStabilityChecksum("iidx-sp", updatedChart);
 
 			await DB.updateTable("chart")
 				.set({
@@ -205,7 +205,7 @@ export async function updateSp12DataCore() {
 }
 
 async function HumanisedTitleLookup(originalTitle: string) {
-	let difficulty: Difficulties["iidx:SP"] = "ANOTHER";
+	let difficulty: Difficulties["iidx-sp"] = "ANOTHER";
 
 	let title: string | undefined = originalTitle;
 
@@ -234,7 +234,7 @@ async function HumanisedTitleLookup(originalTitle: string) {
 		);
 	}
 
-	const chart = await FindChartWithPTDF("iidx", song.id, "SP", difficulty);
+	const chart = await FindChartWithSongDifficulty("iidx-sp", song.id, difficulty);
 
 	if (!chart) {
 		throw new Error(
@@ -242,7 +242,7 @@ async function HumanisedTitleLookup(originalTitle: string) {
 		);
 	}
 
-	return chart as MONGO_ChartDocument<"iidx:SP">;
+	return chart as ChartDocument<"iidx-sp">;
 }
 
 export const ACTION_UpdateSp12Data = MakeAction("UPDATE_SP12_DATA", async (taker, _input) => {

@@ -1,21 +1,22 @@
 import { p } from "prudence";
 import { z } from "zod";
 
-import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_PT_CONFIG } from "../../types/internals";
+import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
 import { FmtNum } from "../../utils/util";
 import { ClassValue, ToDecimalPlaces, zodNonNegativeInt } from "../config-utils";
 import { FAST_SLOW_MAXCOMBO } from "./_common";
 
-export const CHUNITHM_CONF = {
+export const GAME_GROUP_CHUNITHM_CONF = {
 	name: "CHUNITHM",
+	games: ["chunithm"],
 	playtypes: ["Single"],
 	songData: z.strictObject({
 		genre: z.string(),
 		displayVersion: z.string(),
 		duration: z.number().optional(),
 	}),
-} as const satisfies INTERNAL_GAME_CONFIG;
+} as const satisfies INTERNAL_GAME_GROUP_CONFIG;
 
 export const CHUNITHMColours = [
 	ClassValue("BLUE", "青", "Blue: 0 - 1.99 Rating"),
@@ -45,7 +46,7 @@ export const CHUNITHMClasses = [
 	ClassValue("DAN_INFINITE", "∞", "Infinite Class"),
 ];
 
-export const CHUNITHM_SINGLE_CONF = {
+export const GAME_CHUNITHM_CONF = {
 	providedMetrics: {
 		score: {
 			type: "INTEGER",
@@ -139,7 +140,7 @@ export const CHUNITHM_SINGLE_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["BASIC", "ADVANCED", "EXPERT", "MASTER", "ULTIMA"],
-		shorthand: {
+		format: {
 			BASIC: "B",
 			ADVANCED: "A",
 			EXPERT: "E",
@@ -203,4 +204,4 @@ export const CHUNITHM_SINGLE_CONF = {
 	scoreMeta: z.strictObject({}),
 
 	supportedMatchTypes: ["inGameID", "songTitle", "tachiSongID"],
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;

@@ -1,32 +1,27 @@
-import { MakeAction } from "#lib/actions/actions.js";
+import { MakeAction } from "#lib/actions/actions";
 import { SELECT_GOAL_SUB_WITH_GOAL_GAME } from "#lib/db-formats/goal";
-import { ToGoalSubscriptionDocument } from "#lib/db-formats/target-documents.js";
-import { UnsubscribeFromGoal } from "#lib/targets/goals.js";
-import DB from "#services/pg/db.js";
-import { staticAssertUnreachable } from "#utils/misc.js";
-import { IsUserAdmin } from "#utils/user.js";
+import { ToGoalSubscriptionDocument } from "#lib/db-formats/target-documents";
+import { UnsubscribeFromGoal } from "#lib/targets/goals";
+import DB from "#services/pg/db";
+import { staticAssertUnreachable } from "#utils/misc";
+import { IsUserAdmin } from "#utils/user";
 import { ExpectedErr } from "bliss";
-import { type GameGroup, GamePTToV3, type Playtype } from "tachi-common";
 
 export const ACTION_RemoveGoalSubscription = MakeAction(
 	"REMOVE_GOAL_SUBSCRIPTION",
 	async (taker, input) => {
-		const { userID, game: gameStr, playtype: playtypeStr, goalID } = input;
-		const game = gameStr as GameGroup;
-		const playtype = playtypeStr as Playtype;
+		const { userID, game, goalID } = input;
 
 		if (taker.acct.id !== userID && !(await IsUserAdmin(taker.acct.id))) {
 			throw new ExpectedErr(403, "You are not authorised to modify this user's goals.");
 		}
-
-		const v3Game = GamePTToV3(game, playtype);
 
 		const row = await DB.selectFrom("goal_sub")
 			.innerJoin("goal", "goal.id", "goal_sub.goal_id")
 			.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
 			.where("goal_sub.user_id", "=", userID)
 			.where("goal_sub.goal_id", "=", goalID)
-			.where("goal.game", "=", v3Game)
+			.where("goal.game", "=", game)
 			.executeTakeFirst();
 
 		if (!row) {

@@ -3,13 +3,11 @@ import { type ScoreDataset } from "#types/tables";
 import { NumericSOV } from "#util/sorts";
 import React, { useState } from "react";
 import {
-	type GameGroup,
-	type GPTString,
+	type ChartDocument,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_ScoreDocument,
-	type Playtype,
+	type ScoreDocument,
 	type ScoreRatingAlgorithms,
+	type V3Game,
 } from "tachi-common";
 
 import DropdownIndicatorCell from "../cells/DropdownIndicatorCell";
@@ -25,21 +23,19 @@ import { EmptyHeader } from "../headers/IndicatorHeader";
 export default function HistoryScoreTable({
 	dataset,
 	pageLen = 10,
-	playtype,
 	game,
 	chart,
 }: {
-	chart: MONGO_ChartDocument;
-	dataset: MONGO_ScoreDocument[];
-	game: GameGroup;
+	chart: ChartDocument;
+	dataset: ScoreDocument[];
+	game: V3Game;
 	pageLen?: integer;
-	playtype: Playtype;
 }) {
-	const defaultRating = useScoreRatingAlg(game, playtype);
+	const defaultRating = useScoreRatingAlg(game);
 
 	const [rating, setRating] = useState(defaultRating);
 
-	const headers = GetGPTCoreHeaders<ScoreDataset>(game, playtype, rating, setRating, (k) => k);
+	const headers = GetGPTCoreHeaders<ScoreDataset>(game, rating, setRating, (k) => k);
 
 	return (
 		<TachiTable
@@ -67,10 +63,10 @@ function Row({
 	rating,
 	game,
 }: {
-	chart: MONGO_ChartDocument;
-	game: GameGroup;
-	rating: ScoreRatingAlgorithms[GPTString];
-	sc: MONGO_ScoreDocument;
+	chart: ChartDocument;
+	game: V3Game;
+	rating: ScoreRatingAlgorithms[V3Game];
+	sc: ScoreDocument;
 }) {
 	return (
 		<DropdownRow
@@ -78,7 +74,7 @@ function Row({
 				<GraphAndJudgementDataComponent
 					chart={chart}
 					score={sc}
-					{...{ ...GPTDropdownSettings(game, chart.playtype) }}
+					{...{ ...GPTDropdownSettings(game) }}
 				/>
 			}
 			nested

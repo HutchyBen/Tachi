@@ -20,17 +20,14 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Col, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
+	type ChartDocument,
 	FormatChart,
-	type GameGroup,
-	type GamePTConfig,
-	GetGamePTConfig,
-	GetGPTString,
+	type GameConfig,
+	GetGameConfig,
 	GetScoreMetricConf,
-	type GPTString,
-	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
-	type MONGO_TableDocument,
+	type SongDocument,
+	type TableDocument,
+	type V3Game,
 } from "tachi-common";
 import { type ConfEnumScoreMetric } from "tachi-common/types/metrics";
 
@@ -43,19 +40,16 @@ export default function SessionFolderRaiseBreakdown({
 	const { settings } = useLUGPTSettings();
 
 	const game = sessionData.session.game;
-	const playtype = sessionData.session.playtype;
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
-	const [selectedTable, setSelectedTable] = useState<"LOADING" | MONGO_TableDocument | null>(
-		"LOADING",
-	);
+	const [selectedTable, setSelectedTable] = useState<"LOADING" | TableDocument | null>("LOADING");
 
 	const { data, error } = useApiQuery<Array<SessionFolderRaises>>(
 		`/sessions/${sessionData.session.sessionID}/folder-raises`,
 	);
 
-	const { data: tableData, error: tableError } = useApiQuery<Array<MONGO_TableDocument>>(
-		`/games/${game}/${playtype}/tables`,
+	const { data: tableData, error: tableError } = useApiQuery<Array<TableDocument>>(
+		`/games/${game}/tables`,
 	);
 
 	useEffect(() => {
@@ -95,7 +89,7 @@ export default function SessionFolderRaiseBreakdown({
 
 		// hide certain folders
 		if (selectedTable && selectedTable !== "LOADING") {
-			folders = folders.filter((e) => selectedTable.folders.includes(e.folderID));
+			folders = folders.filter((e) => selectedTable.folders.includes(e.slug));
 		}
 
 		return folders;
@@ -121,7 +115,7 @@ export default function SessionFolderRaiseBreakdown({
 	const songMap = CreateSongMap(sessionData.songs);
 
 	const preferredScoreBucket =
-		settings?.preferences.preferredDefaultEnum ?? gptConfig.preferredDefaultEnum;
+		settings?.preferences.preferredDefaultEnum ?? gameConfig.preferredDefaultEnum;
 
 	if (selectedTable === "LOADING") {
 		return <Loading />;
@@ -132,7 +126,7 @@ export default function SessionFolderRaiseBreakdown({
 	const filteredTables = tableData
 		// disgusting filter: check if this table has any overlap with any
 		// relevant folders. If not, don't show it.
-		.filter((t) => allFolders.find((e) => t.folders.includes(e.folderID)));
+		.filter((t) => allFolders.find((e) => t.folders.includes(e.slug)));
 
 	if (filteredTables.length === 0) {
 		return null;
@@ -167,7 +161,7 @@ export default function SessionFolderRaiseBreakdown({
 								<h3 className="text-center w-100">
 									<Link
 										className="text-decoration-none"
-										to={`/u/${reqUser.username}/games/${game}/${playtype}/folders/${folder.folderID}`}
+										to={`/u/${reqUser.username}/games/${game}/folders/${folder.slug}`}
 									>
 										{folder.title}
 									</Link>
@@ -177,13 +171,12 @@ export default function SessionFolderRaiseBreakdown({
 							<MiniTable colSpan={100} headers={["New Grades/Lamps (Cumulative)"]}>
 								{data
 									.filter((e) => e.folder.folderID === folder.folderID)
-									.sort(SortRaisesNicely(gptConfig, preferredScoreBucket))
+									.sort(SortRaisesNicely(gameConfig, preferredScoreBucket))
 									.map((folderRaiseInfo, i) => (
 										<FolderRaiseRender
 											chartMap={chartMap}
 											folderRaiseInfo={folderRaiseInfo}
 											game={game}
-											gptString={GetGPTString(game, playtype)}
 											key={i}
 											songMap={songMap}
 										/>
@@ -197,9 +190,9 @@ export default function SessionFolderRaiseBreakdown({
 	);
 }
 
-const SortRaisesNicely = (gptConfig: GamePTConfig, preferredEnum: string) =>
+const SortRaisesNicely = (gameConfig: GameConfig, preferredEnum: string) =>
 	NumericSOV<SessionFolderRaises>((x) => {
-		const conf = GetScoreMetricConf(gptConfig, x.type) as ConfEnumScoreMetric<string>;
+		const conf = GetScoreMetricConf(gameConfig, x.type) as ConfEnumScoreMetric<string>;
 
 		const baseValue = conf.values.indexOf(x.value);
 
@@ -216,19 +209,15 @@ function FolderRaiseRender({
 	game,
 	songMap,
 	chartMap,
-	gptString,
 }: {
-	chartMap: Map<string, MONGO_ChartDocument>;
+	chartMap: Map<string, ChartDocument>;
 	folderRaiseInfo: SessionFolderRaises;
-	game: GameGroup;
-	gptString: GPTString;
-	songMap: Map<integer, MONGO_SongDocument>;
+	game: V3Game;
+	songMap: Map<string, SongDocument>;
 }) {
 	const colour =
 		// @ts-expect-error lazy
-		GPT_CLIENT_IMPLEMENTATIONS[gptString].enumColours[folderRaiseInfo.type][
-			folderRaiseInfo.value
-		];
+		GPT_CLIENT_IMPLEMENTATIONS[game].enumColours[folderRaiseInfo.type][folderRaiseInfo.value];
 
 	const newTotal = folderRaiseInfo.previousCount + folderRaiseInfo.raisedCharts.length;
 
@@ -290,10 +279,10 @@ function ChartRaises({
 	game,
 	raisedCharts,
 }: {
-	chartMap: Map<string, MONGO_ChartDocument>;
-	game: GameGroup;
+	chartMap: Map<string, ChartDocument>;
+	game: V3Game;
 	raisedCharts: Array<string>;
-	songMap: Map<integer, MONGO_SongDocument>;
+	songMap: Map<string, SongDocument>;
 }) {
 	const els = [];
 
@@ -304,17 +293,17 @@ function ChartRaises({
 			console.warn(`No chart '${chartID}' exists? continuing.`);
 			continue;
 		}
-		const song = songMap.get(chart.songID);
+		const song = songMap.get(chart.song.id);
 
 		if (!song) {
-			console.warn(`No song '${chart.songID}' exists, but the chart does?`);
+			console.warn(`No song '${chart.song.id}' exists, but the chart does?`);
 			continue;
 		}
 
 		els.push(
 			<span>
-				<Link className="text-success" to={CreateChartLink(chart, game)}>
-					+ {FormatChart(game, song, chart, true)}
+				<Link className="text-success" to={CreateChartLink(chart)}>
+					+ {FormatChart(chart)}
 				</Link>
 			</span>,
 		);

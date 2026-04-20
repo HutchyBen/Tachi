@@ -7,21 +7,25 @@ import { type UGPT } from "#types/react";
 import React from "react";
 import { Col, Row } from "react-bootstrap";
 import { Route, Switch } from "react-router-dom";
-import { FormatGameGroup, GetGameGroupConfig } from "tachi-common";
+import { FormatGame, GameToGameGroup, GetGameGroupConfig } from "tachi-common";
 
 import UGPTGoalsPage from "./UGPTGoalsPage";
 import UGPTQuestsPage from "./UGPTQuestsPage";
 
-export default function TargetsPage({ reqUser, game, playtype }: UGPT) {
-	const gameConfig = GetGameGroupConfig(game);
-
+export default function TargetsPage({ reqUser, game }: UGPT) {
 	useSetSubheader(
-		["Users", reqUser.username, "Games", gameConfig.name, playtype, "Goals & Quests"],
-		[reqUser, game, playtype],
-		`${reqUser.username}'s ${FormatGameGroup(game, playtype)} Goals & Quests`,
+		[
+			"Users",
+			reqUser.username,
+			"Games",
+			GetGameGroupConfig(GameToGameGroup(game)).name,
+			"Goals & Quests",
+		],
+		[reqUser, game],
+		`${reqUser.username}'s ${FormatGame(game)} Goals & Quests`,
 	);
 
-	const base = useUGPTBase({ reqUser, game, playtype });
+	const base = useUGPTBase({ reqUser, game });
 
 	return (
 		<Row>
@@ -38,11 +42,11 @@ export default function TargetsPage({ reqUser, game, playtype }: UGPT) {
 			</Col>
 			<Col xs={12}>
 				<Switch>
-					<Route exact path="/u/:userID/games/:game/:playtype/targets/goals">
-						<UGPTGoalsPage {...{ reqUser, game, playtype }} />
+					<Route exact path="/u/:userID/games/:game/targets/goals">
+						<UGPTGoalsPage {...{ reqUser, game }} />
 					</Route>
-					<Route exact path="/u/:userID/games/:game/:playtype/targets">
-						<UGPTQuestsPage {...{ reqUser, game, playtype }} />
+					<Route exact path="/u/:userID/games/:game/targets">
+						<UGPTQuestsPage {...{ reqUser, game }} />
 					</Route>
 				</Switch>
 			</Col>

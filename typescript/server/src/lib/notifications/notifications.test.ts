@@ -15,7 +15,7 @@ describe("SendNotification", () => {
 	it("inserts a notification row with expected kind and payload", async () => {
 		await SendNotification("Quest updated", userId, {
 			type: "QUEST_CHANGED",
-			content: { questID: "q1", game: "iidx", playtype: "SP" },
+			content: { questID: "q1", game: "iidx-sp" },
 		});
 
 		const row = await DB.selectFrom("notification")
@@ -28,7 +28,7 @@ describe("SendNotification", () => {
 		expect(row.kind).toBe("quest_changed");
 		expect(row.payload).toEqual({
 			type: "QUEST_CHANGED",
-			content: { questID: "q1", game: "iidx", playtype: "SP" },
+			content: { questID: "q1", game: "iidx-sp" },
 		});
 	});
 });

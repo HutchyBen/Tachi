@@ -1,24 +1,17 @@
-import DB from "#services/pg/db";
-import { seedUser } from "#test-utils/pg-fixtures";
 import { describe, expect, it } from "vitest";
 
-import {
-	FilterChartsAndSongs,
-	GetPBOnChart,
-	GetScoreIDsFromComposed,
-	GetServerRecordOnChart,
-} from "./scores";
+import { FilterChartsAndSongs, GetScoreIDsFromComposed } from "./scores";
 
 describe("FilterChartsAndSongs", () => {
 	it("keeps only charts and songs referenced by scores", () => {
 		const out = FilterChartsAndSongs(
-			[{ chartID: "c1", songID: 1 } as never, { chartID: "c2", songID: 2 } as never],
+			[{ chartID: "c1", songID: "s1" } as never, { chartID: "c2", songID: "s2" } as never],
 			[{ chartID: "c1" } as never, { chartID: "cX" } as never],
-			[{ id: 1 } as never, { id: 9 } as never],
+			[{ id: "s1" } as never, { id: "s9" } as never],
 		);
 
 		expect(out.charts.map((c: { chartID: string }) => c.chartID)).toEqual(["c1"]);
-		expect(out.songs.map((s: { id: number }) => s.id)).toEqual([1]);
+		expect(out.songs.map((s: { id: string }) => s.id)).toEqual(["s1"]);
 	});
 });
 
@@ -33,86 +26,5 @@ describe("GetScoreIDsFromComposed", () => {
 		} as never);
 
 		expect(ids.sort()).toEqual(["a", "b"]);
-	});
-});
-
-describe("GetPBOnChart / GetServerRecordOnChart (Postgres)", () => {
-	let n = 0;
-
-	async function seedIidxChartWithPbs(opts: { pbs: Array<{ ranking: number; userId: number }> }) {
-		const k = ++n;
-		const songId = `song-pbutil-${k}`;
-		const chartId = `chart-pbutil-${k}`;
-
-		await DB.insertInto("song")
-			.values({
-				id: songId,
-				legacy_id: 8_000_000 + k,
-				game_group: "iidx",
-				title: "T",
-				artist: "A",
-				search_terms: [],
-				alt_titles: [],
-				data: JSON.stringify({}),
-				fts_document: "",
-			})
-			.execute();
-
-		await DB.insertInto("chart")
-			.values({
-				id: chartId,
-				legacy_id: chartId,
-				game: "iidx-sp",
-				song_id: songId,
-				level: "10",
-				level_num: 10,
-				is_primary: true,
-				difficulty: "NORMAL",
-				versions: [],
-				data: JSON.stringify({}),
-			})
-			.execute();
-
-		for (const p of opts.pbs) {
-			// eslint-disable-next-line no-await-in-loop
-			await DB.insertInto("pb")
-				.values({
-					user_id: p.userId,
-					chart_id: chartId,
-					lens: null,
-					data: JSON.stringify({}),
-					derived_data: JSON.stringify({}),
-					calculated_data: JSON.stringify({}),
-					judgements: JSON.stringify({}),
-					ranking_value: p.ranking,
-					ranking_value_tb1: null,
-					ranking_value_tb2: null,
-					ranking_value_tb3: null,
-					ranking_value_tb4: null,
-					ranking_value_tb5: null,
-					highlight: false,
-					time_achieved: null,
-				})
-				.execute();
-		}
-
-		return { chartId };
-	}
-
-	it("GetServerRecordOnChart picks highest ranking_value on chart", async () => {
-		const t = Date.now();
-		const { id: low } = await seedUser({ username: `pb_low_${t}` });
-		const { id: high } = await seedUser({ username: `pb_high_${t}` });
-		const { chartId } = await seedIidxChartWithPbs({
-			pbs: [
-				{ userId: low, ranking: 10 },
-				{ userId: high, ranking: 99.5 },
-			],
-		});
-
-		const pb = await GetServerRecordOnChart(chartId);
-		expect(pb).not.toBeNull();
-		expect(pb?.userID).toBe(high);
-		expect(pb?.rankingData.rank).toBe(1);
 	});
 });

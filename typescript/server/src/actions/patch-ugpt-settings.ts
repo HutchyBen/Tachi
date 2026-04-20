@@ -1,32 +1,23 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import { SELECT_GAME_SETTINGS } from "#lib/db-formats/ugpt-settings";
-import DB from "#services/pg/db.js";
-import { IsUserAdmin } from "#utils/user.js";
+import { MakeAction } from "#lib/actions/actions";
+import { GetUGPTSettingsDocument, SELECT_GAME_SETTINGS } from "#lib/db-formats/ugpt-settings";
+import DB from "#services/pg/db";
+import { IsUserAdmin } from "#utils/user";
 import { ExpectedErr } from "bliss";
-import {
-	type GameGroup,
-	GamePTToV3,
-	type MONGO_UGPTSettingsDocument,
-	type Playtype,
-} from "tachi-common";
+import { type UGPTSettingsDocument } from "tachi-common";
 import { type GameSettingsUpdate } from "tachi-db";
 
 export const ACTION_PatchUGPTSettings = MakeAction("PATCH_UGPT_SETTINGS", async (taker, input) => {
-	const { userID, game: gameStr, playtype: playtypeStr, preferences } = input;
-	const game = gameStr as GameGroup;
-	const playtype = playtypeStr as Playtype;
-	const body = preferences as Partial<MONGO_UGPTSettingsDocument["preferences"]>;
+	const { userID, game, preferences } = input;
+	const body = preferences as Partial<UGPTSettingsDocument["preferences"]>;
 
 	if (taker.acct.id !== userID && !(await IsUserAdmin(taker.acct.id))) {
 		throw new ExpectedErr(403, "You are not authorised to modify this user's settings.");
 	}
 
-	const v3Game = GamePTToV3(game, playtype);
-
 	if (typeof body.defaultTable === "string") {
 		const table = await DB.selectFrom("table")
 			.select("id")
-			.where("game", "=", v3Game)
+			.where("game", "=", game)
 			.where("legacy_id", "=", body.defaultTable)
 			.executeTakeFirst();
 
@@ -54,13 +45,17 @@ export const ACTION_PatchUGPTSettings = MakeAction("PATCH_UGPT_SETTINGS", async 
 		hasGameSpecificKeys;
 
 	if (!hasUpdates) {
-		return {};
+		const settings = await GetUGPTSettingsDocument(userID, game);
+		if (!settings) {
+			throw new ExpectedErr(404, "You do not have an account for this game.");
+		}
+		return { settings };
 	}
 
 	const row = await DB.selectFrom("game_settings")
 		.select(SELECT_GAME_SETTINGS)
 		.where("game_settings.user_id", "=", userID)
-		.where("game_settings.game", "=", v3Game)
+		.where("game_settings.game", "=", game)
 		.executeTakeFirst();
 
 	if (!row) {
@@ -97,14 +92,22 @@ export const ACTION_PatchUGPTSettings = MakeAction("PATCH_UGPT_SETTINGS", async 
 	}
 
 	if (Object.keys(set).length === 0) {
-		return {};
+		const settings = await GetUGPTSettingsDocument(userID, game);
+		if (!settings) {
+			throw new ExpectedErr(404, "You do not have an account for this game.");
+		}
+		return { settings };
 	}
 
 	await DB.updateTable("game_settings")
 		.set(set)
 		.where("user_id", "=", userID)
-		.where("game", "=", v3Game)
+		.where("game", "=", game)
 		.execute();
 
-	return {};
+	const settings = await GetUGPTSettingsDocument(userID, game);
+	if (!settings) {
+		throw new ExpectedErr(500, "Settings were updated but could not be reloaded.");
+	}
+	return { settings };
 });

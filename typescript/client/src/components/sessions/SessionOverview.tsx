@@ -16,18 +16,17 @@ import { Badge, Col, Row } from "react-bootstrap";
 import { Route, Switch } from "react-router-dom";
 import {
 	type AnySessionRatingAlg,
-	GetGamePTConfig,
-	GetGPTString,
-	type MONGO_PBScoreDocument,
-	type MONGO_ScoreDocument,
-	type MONGO_SessionDocument,
-	type MONGO_UserDocument,
+	GetGameConfig,
+	type PBScoreDocument,
+	type ScoreDocument,
+	type SessionDocument,
+	type UserDocument,
 } from "tachi-common";
 
 import SessionFolderRaiseBreakdown from "./SessionFolderRaiseBreakdown";
 import SessionRaiseBreakdown from "./SessionRaiseBreakdown";
 
-type PBsData = { pbs: Array<MONGO_PBScoreDocument> };
+type PBsData = { pbs: Array<PBScoreDocument> };
 
 export default function SessionOverview({
 	sessionData,
@@ -35,17 +34,18 @@ export default function SessionOverview({
 	scoreDataset,
 	reqUser,
 }: {
-	reqUser: MONGO_UserDocument;
+	reqUser: UserDocument;
 	scoreDataset: ScoreDataset;
 	sessionData: SessionReturns;
 	setSessionData: SetState<SessionReturns>;
 }) {
 	const { scores, session } = sessionData;
-	const gptConfig = GetGamePTConfig(session.game, session.playtype);
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(session.game, session.playtype)];
+	const game = session.game;
+	const gameConfig = GetGameConfig(game);
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 	const MAX_SCORES = gptImpl.sessionImportantScoreCount;
 
-	const setScores = (scores: MONGO_ScoreDocument[]) => {
+	const setScores = (scores: ScoreDocument[]) => {
 		setSessionData({
 			...sessionData,
 			scores,
@@ -54,14 +54,13 @@ export default function SessionOverview({
 
 	const [importantScores, setImportantScores] = useState<ScoreDataset | null>(null);
 
-	const scoreRatingAlgsKeys = Object.keys(gptConfig.scoreRatingAlgs);
+	const scoreRatingAlgsKeys = Object.keys(gameConfig.scoreRatingAlgs);
 
 	const query =
 		scoreRatingAlgsKeys.length === 1
-			? `/users/${reqUser.id}/games/${session.game}/${session.playtype}/pbs/best?alg=${scoreRatingAlgsKeys[0]}`
+			? `/users/${reqUser.id}/games/${game}/pbs/best?alg=${scoreRatingAlgsKeys[0]}`
 			: scoreRatingAlgsKeys.map(
-					(alg) =>
-						`/users/${reqUser.id}/games/${session.game}/${session.playtype}/pbs/best?alg=${alg}`,
+					(alg) => `/users/${reqUser.id}/games/${game}/pbs/best?alg=${alg}`,
 				);
 
 	const { data } = useApiQuery<PBsData | PBsData[]>(query);
@@ -95,7 +94,7 @@ export default function SessionOverview({
 		setImportantScores(scoreDataset.filter((e) => important.includes(e.scoreID)));
 	}, [data]);
 
-	const base = useUGPTBase({ game: session.game, playtype: session.playtype, reqUser });
+	const base = useUGPTBase({ game, reqUser });
 	const baseUrl = `${base}/sessions/${session.sessionID}`;
 
 	const highlightedScores = scoreDataset.filter((e) => e.highlight);
@@ -148,7 +147,7 @@ export default function SessionOverview({
 
 			<Col xs={12}>
 				<Switch>
-					<Route exact path="/u/:userID/games/:game/:playtype/sessions/:sessionID">
+					<Route exact path="/u/:userID/games/:game/sessions/:sessionID">
 						<Card header="Raise Breakdown">
 							<Row>
 								<SessionRaiseBreakdown
@@ -159,42 +158,28 @@ export default function SessionOverview({
 						</Card>
 					</Route>
 
-					<Route
-						exact
-						path="/u/:userID/games/:game/:playtype/sessions/:sessionID/folders"
-					>
+					<Route exact path="/u/:userID/games/:game/sessions/:sessionID/folders">
 						<SessionFolderRaiseBreakdown sessionData={sessionData} />
 					</Route>
 
-					<Route
-						exact
-						path="/u/:userID/games/:game/:playtype/sessions/:sessionID/important"
-					>
+					<Route exact path="/u/:userID/games/:game/sessions/:sessionID/important">
 						{importantScores && importantScores.length > 0 && (
 							<Card header={`Scores in ${reqUser.username}'s top ${MAX_SCORES}!`}>
-								<ScoreTable
-									dataset={importantScores}
-									game={session.game}
-									playtype={session.playtype}
-								/>
+								<ScoreTable dataset={importantScores} game={game} />
 							</Card>
 						)}
 						{importantScores &&
 							importantScores?.length > 0 &&
 							highlightedScores.length > 0 && <Divider />}
 						<Card header="Highlighted Scores">
-							<ScoreTable
-								dataset={highlightedScores}
-								game={session.game}
-								playtype={session.playtype}
-							/>
+							<ScoreTable dataset={highlightedScores} game={game} />
 						</Card>
 					</Route>
 
-					<Route exact path="/u/:userID/games/:game/:playtype/sessions/:sessionID/scores">
+					<Route exact path="/u/:userID/games/:game/sessions/:sessionID/scores">
 						<ScoreTable
 							dataset={scoreDataset}
-							game={session.game}
+							game={game}
 							onScoreUpdate={(sc) => {
 								const newScores = [
 									...sessionData.scores.filter((e) => e.scoreID !== sc.scoreID),
@@ -206,7 +191,6 @@ export default function SessionOverview({
 									scores: newScores,
 								});
 							}}
-							playtype={session.playtype}
 						/>
 					</Route>
 				</Switch>
@@ -217,8 +201,9 @@ export default function SessionOverview({
 
 // Temporarily shoved to the bottom, as it needs to be significantly improved,
 // but we can't really just remove it lol.
-function RatingsOverview({ session }: { session: MONGO_SessionDocument }) {
-	const gptConfig = GetGamePTConfig(session.game, session.playtype);
+function RatingsOverview({ session }: { session: SessionDocument }) {
+	const game = session.game;
+	const gameConfig = GetGameConfig(game);
 
 	function Thing({ value, name }: { name: string; value: number | string }) {
 		return (
@@ -235,17 +220,12 @@ function RatingsOverview({ session }: { session: MONGO_SessionDocument }) {
 
 	return (
 		<div className="d-flex text-center" style={{ justifyContent: "space-evenly", gap: "1rem" }}>
-			{Object.keys(gptConfig.sessionRatingAlgs).map((e) => (
+			{Object.keys(gameConfig.sessionRatingAlgs).map((e) => (
 				<Thing
 					key={e}
-					name={`Average ${FormatGPTSessionRatingName(
-						session.game,
-						session.playtype,
-						e,
-					)}`}
+					name={`Average ${FormatGPTSessionRatingName(game, e)}`}
 					value={FormatSessionRating(
-						session.game,
-						session.playtype,
+						game,
 						e as AnySessionRatingAlg,
 						session.calculatedData[e as AnySessionRatingAlg],
 					)}

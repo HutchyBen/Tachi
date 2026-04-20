@@ -38,10 +38,10 @@ import { Button, Col, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
 	FormatChart,
-	FormatGameGroup,
-	GetGamePTConfig,
+	FormatGame,
+	GetGameConfig,
 	GetScoreEnumConfs,
-	type MONGO_UserDocument,
+	type UserDocument,
 } from "tachi-common";
 
 // Records activity for a group of users on a GPT. Also used for single users.
@@ -57,7 +57,7 @@ export default function Activity({
 	url: string;
 }) {
 	const [clumped, setClumped] = useState<ClumpedActivity>([]);
-	const [users, setUsers] = useState<Array<MONGO_UserDocument>>([]);
+	const [users, setUsers] = useState<Array<UserDocument>>([]);
 	const [shouldShowGame, setShouldShowGame] = useState(false);
 	const [exhausted, setExhausted] = useState(false);
 
@@ -132,7 +132,7 @@ function ActivityInner({
 	exhausted: boolean;
 	fetchMoreFrom: (start: number) => void;
 	shouldShowGame: boolean;
-	users: Array<MONGO_UserDocument>;
+	users: Array<UserDocument>;
 }) {
 	const userMap = CreateUserMap(users);
 
@@ -250,11 +250,11 @@ function ScoresActivity({
 }: {
 	data: ClumpedActivityScores;
 	shouldShowGame: boolean;
-	user: MONGO_UserDocument;
+	user: UserDocument;
 }) {
-	const { game, playtype } = data.scores[0];
+	const game = data.scores[0].game;
 
-	const prettyGame = shouldShowGame ? `${FormatGameGroup(game, playtype)} ` : "";
+	const prettyGame = shouldShowGame ? `${FormatGame(game)} ` : "";
 
 	const [show, setShow] = useState(false);
 
@@ -264,12 +264,7 @@ function ScoresActivity({
 	if (data.scores.length === 1) {
 		const score0 = data.scores[0];
 
-		subMessage = `a ${prettyGame}score on ${FormatChart(
-			score0.game,
-			score0.__related.song,
-			score0.__related.chart,
-			true,
-		)}`;
+		subMessage = `a ${prettyGame}score on ${FormatChart(score0.__related.chart)}`;
 
 		if (score0.comment) {
 			mutedText = `"${score0.comment}"`;
@@ -278,9 +273,7 @@ function ScoresActivity({
 		subMessage = `${data.scores.length} ${prettyGame}scores`;
 
 		mutedText = TruncateString(
-			data.scores
-				.map((e) => FormatChart(e.game, e.__related.song, e.__related.chart, true))
-				.join(", "),
+			data.scores.map((e) => FormatChart(e.__related.chart)).join(", "),
 			100,
 		);
 	}
@@ -301,7 +294,7 @@ function ScoresActivity({
 				<div className="timeline-content-inner" onClick={() => setShow(!show)}>
 					<div className="timeline-content-title">
 						<span className="me-2">
-							<ProfilePicture size="sm" toGPT={{ game, playtype }} user={user} />
+							<ProfilePicture size="sm" toGPT={{ game }} user={user} />
 						</span>
 						<Icon
 							style={{
@@ -310,8 +303,7 @@ function ScoresActivity({
 							type={`chevron-${show ? "down" : "right"}`}
 						/>
 						<span className="ms-2" style={{ fontSize: "1.15rem" }}>
-							<UGPTLink game={game} playtype={playtype} reqUser={user} /> highlighted{" "}
-							{subMessage}!
+							<UGPTLink game={game} reqUser={user} /> highlighted {subMessage}!
 						</span>
 						{mutedText && (
 							<>
@@ -333,12 +325,7 @@ function ScoresActivity({
 				{show && (
 					<>
 						<Divider />
-						<ScoreTable
-							dataset={dataset}
-							game={game}
-							noTopDisplayStr
-							playtype={playtype}
-						/>
+						<ScoreTable dataset={dataset} game={game} noTopDisplayStr />
 					</>
 				)}
 			</div>
@@ -353,11 +340,11 @@ function GoalActivity({
 }: {
 	data: ClumpedActivityGoalAchievement;
 	shouldShowGame: boolean;
-	user: MONGO_UserDocument;
+	user: UserDocument;
 }) {
-	const { game, playtype } = data.goals[0];
+	const game = data.goals[0].game;
 
-	const prettyGame = shouldShowGame ? `${FormatGameGroup(game, playtype)} ` : "";
+	const prettyGame = shouldShowGame ? `${FormatGame(game)} ` : "";
 
 	const [show, setShow] = useState(false);
 
@@ -368,7 +355,7 @@ function GoalActivity({
 		const goal0 = data.goals[0];
 
 		subMessage = `${goal0.__related.goal.name}${
-			shouldShowGame ? ` in ${FormatGameGroup(game, playtype)}` : ""
+			shouldShowGame ? ` in ${FormatGame(game)}` : ""
 		}!`;
 	} else {
 		subMessage = `${data.goals.length} ${prettyGame}goals`;
@@ -383,7 +370,7 @@ function GoalActivity({
 				<div className="timeline-content-inner" onClick={() => setShow(!show)}>
 					<div className="timeline-content-title">
 						<span className="me-2">
-							<ProfilePicture size="sm" toGPT={{ game, playtype }} user={user} />
+							<ProfilePicture size="sm" toGPT={{ game }} user={user} />
 						</span>
 						<Icon
 							style={{
@@ -392,8 +379,7 @@ function GoalActivity({
 							type={`chevron-${show ? "down" : "right"}`}
 						/>
 						<span className="ms-2" style={{ fontSize: "1.15rem" }}>
-							<UGPTLink game={game} playtype={playtype} reqUser={user} /> achieved{" "}
-							{subMessage}!
+							<UGPTLink game={game} reqUser={user} /> achieved {subMessage}!
 						</span>
 						{mutedText && (
 							<>
@@ -438,11 +424,11 @@ function QuestActivity({
 }: {
 	data: ClumpedActivityQuestAchievement;
 	shouldShowGame: boolean;
-	user: MONGO_UserDocument;
+	user: UserDocument;
 }) {
-	const { game, playtype } = data.quest;
+	const game = data.quest.game;
 
-	const prettyGame = shouldShowGame ? FormatGameGroup(game, playtype) : "";
+	const prettyGame = shouldShowGame ? FormatGame(game) : "";
 
 	return (
 		<div className="timeline-item timeline-hover my-4">
@@ -452,13 +438,12 @@ function QuestActivity({
 					<div className="timeline-content-title">
 						<span style={{ fontSize: "1.15rem" }}>
 							<span className="me-2">
-								<ProfilePicture size="sm" toGPT={{ game, playtype }} user={user} />
+								<ProfilePicture size="sm" toGPT={{ game }} user={user} />
 							</span>
-							<UGPTLink game={game} playtype={playtype} reqUser={user} /> completed
-							the{" "}
+							<UGPTLink game={game} reqUser={user} /> completed the{" "}
 							<Link
 								className="text-decoration-none"
-								to={`/games/${game}/${playtype}/quests/${data.quest.questID}`}
+								to={`/games/${game}/quests/${data.quest.questID}`}
 							>
 								{data.quest.name}
 							</Link>{" "}
@@ -486,16 +471,15 @@ function SessionActivity({
 }: {
 	data: ClumpedActivitySession;
 	shouldShowGame: boolean;
-	user: MONGO_UserDocument;
+	user: UserDocument;
 }) {
 	const [show, setShow] = useState(false);
 	const { user: loggedInUser } = useContext(UserContext);
 
-	const prettyGame = shouldShowGame ? `${FormatGameGroup(data.game, data.playtype)} ` : "";
+	const game = data.game;
+	const prettyGame = shouldShowGame ? `${FormatGame(game)} ` : "";
 
 	const isProbablyActive = Date.now() - data.timeEnded < ONE_HOUR;
-
-	const { game, playtype } = data;
 
 	return (
 		<div className="timeline-item timeline-hover">
@@ -504,7 +488,7 @@ function SessionActivity({
 				<div className="timeline-content-inner" onClick={() => setShow(!show)}>
 					<div className="timeline-content-title">
 						<span className="me-2">
-							<ProfilePicture size="sm" toGPT={{ game, playtype }} user={user} />
+							<ProfilePicture size="sm" toGPT={{ game }} user={user} />
 						</span>
 						<Icon
 							style={{
@@ -520,7 +504,7 @@ function SessionActivity({
 							}}
 						>
 							{/* worst string formatting ever */}
-							<UGPTLink game={data.game} playtype={data.playtype} reqUser={user} />{" "}
+							<UGPTLink game={game} reqUser={user} />{" "}
 							{isProbablyActive
 								? user.id === loggedInUser?.id
 									? "are having"
@@ -564,7 +548,8 @@ function SessionShower({ sessionID }: { sessionID: string }) {
 
 	const scoreMap = CreateScoreIDMap(data.scores);
 
-	const gptConfig = GetGamePTConfig(data.session.game, data.session.playtype);
+	const sessionGame = data.session.game;
+	const gameConfig = GetGameConfig(sessionGame);
 
 	const raises = data.scoreInfo.filter((e) => {
 		const score = scoreMap.get(e.scoreID);
@@ -574,7 +559,7 @@ function SessionShower({ sessionID }: { sessionID: string }) {
 			return false;
 		}
 
-		const enumMetrics = GetScoreEnumConfs(gptConfig);
+		const enumMetrics = GetScoreEnumConfs(gameConfig);
 
 		// for all enum metrics, check if this score beats the minimum relevant enum
 		// and is a raise.
@@ -601,7 +586,7 @@ function SessionShower({ sessionID }: { sessionID: string }) {
 					<div className="mb-4">This session had no raises.</div>
 					<div>
 						<LinkButton
-							to={`/u/${data.user.username}/games/${data.session.game}/${data.session.playtype}/sessions/${sessionID}`}
+							to={`/u/${data.user.username}/games/${sessionGame}/sessions/${sessionID}`}
 							variant="outline-primary"
 						>
 							View Full Session
@@ -620,7 +605,7 @@ function SessionShower({ sessionID }: { sessionID: string }) {
 			</Col>
 			<div className="d-flex w-100 justify-content-center">
 				<LinkButton
-					to={`/u/${data.user.username}/games/${data.session.game}/${data.session.playtype}/sessions/${sessionID}`}
+					to={`/u/${data.user.username}/games/${sessionGame}/sessions/${sessionID}`}
 					variant="outline-primary"
 				>
 					View Full Session
@@ -637,7 +622,7 @@ function ClassAchievementActivity({
 }: {
 	data: ClumpedActivityClassAchievement;
 	shouldShowGame: boolean;
-	user: MONGO_UserDocument;
+	user: UserDocument;
 }) {
 	return (
 		<div className="timeline-item timeline-hover">
@@ -645,35 +630,39 @@ function ClassAchievementActivity({
 			<div className="timeline-content">
 				<div className="timeline-content-inner">
 					<div className="timeline-content-title">
-						<span className="me-2">
-							<ProfilePicture
-								size="sm"
-								toGPT={{ game: data.game, playtype: data.playtype }}
-								user={user}
-							/>
-						</span>
-						<UGPTLink game={data.game} playtype={data.playtype} reqUser={user} />{" "}
-						achieved{" "}
-						<ClassBadge
-							classSet={data.classSet}
-							classValue={data.classValue}
-							game={data.game}
-							playtype={data.playtype}
-						/>
-						{shouldShowGame && ` in ${FormatGameGroup(data.game, data.playtype)}`}!
-						{data.classOldValue !== null && (
-							<>
-								{" "}
-								(Raised from{" "}
-								<ClassBadge
-									classSet={data.classSet}
-									classValue={data.classOldValue}
-									game={data.game}
-									playtype={data.playtype}
-								/>
-								)
-							</>
-						)}
+						{(() => {
+							const classGame = data.game;
+							return (
+								<>
+									<span className="me-2">
+										<ProfilePicture
+											size="sm"
+											toGPT={{ game: classGame }}
+											user={user}
+										/>
+									</span>
+									<UGPTLink game={classGame} reqUser={user} /> achieved{" "}
+									<ClassBadge
+										classSet={data.classSet}
+										classValue={data.classValue}
+										game={classGame}
+									/>
+									{shouldShowGame && ` in ${FormatGame(classGame)}`}!
+									{data.classOldValue !== null && (
+										<>
+											{" "}
+											(Raised from{" "}
+											<ClassBadge
+												classSet={data.classSet}
+												classValue={data.classOldValue}
+												game={classGame}
+											/>
+											)
+										</>
+									)}
+								</>
+							);
+						})()}
 					</div>
 
 					<div className="timeline-content-timestamp">
@@ -689,15 +678,11 @@ function ClassAchievementActivity({
 	);
 }
 
-function UGPTLink({ reqUser, game, playtype }: UGPT) {
-	// currently
+function UGPTLink({ reqUser, game }: UGPT) {
 	const { user } = useContext(UserContext);
 
 	return (
-		<Link
-			className="text-decoration-none fw-bold"
-			to={`/u/${reqUser.username}/games/${game}/${playtype}`}
-		>
+		<Link className="text-decoration-none fw-bold" to={`/u/${reqUser.username}/games/${game}`}>
 			{user?.id === reqUser.id ? "You" : reqUser.username}
 			{reqUser?.isSupporter ? (
 				<>

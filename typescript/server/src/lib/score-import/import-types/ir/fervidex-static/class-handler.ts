@@ -1,21 +1,24 @@
 import type { ClassProvider } from "#lib/score-import/framework/calculated-data/types";
-import type { integer } from "tachi-common";
+import type { GamesForGroup, integer } from "tachi-common";
 
+import { staticAssertUnreachable } from "#utils/misc";
 import { IIDXDans } from "tachi-common/config/game-support/iidx";
 
-export function CreateFerStaticClassProvider(body: Record<string, unknown>): ClassProvider {
-	return (gptString, userID, ratings, log) => {
+export function CreateFerStaticClassProvider(
+	body: Record<string, unknown>,
+): ClassProvider<GamesForGroup["iidx"]> {
+	return (game, _userID, _ratings, log) => {
 		let index;
 
-		if (gptString === "iidx:SP") {
-			index = body.sp_dan;
-		} else if (gptString === "iidx:DP") {
-			index = body.dp_dan;
-		} else {
-			log.warn(
-				`Invalid gptString ${gptString} passed to FerStaticClassProvider. Attempting to continue.`,
-			);
-			return;
+		switch (game) {
+			case "iidx-sp":
+				index = body.sp_dan;
+				break;
+			case "iidx-dp":
+				index = body.dp_dan;
+				break;
+			default:
+				staticAssertUnreachable(game);
 		}
 
 		if (index === undefined) {
@@ -23,7 +26,7 @@ export function CreateFerStaticClassProvider(body: Record<string, unknown>): Cla
 		}
 
 		if (!Number.isInteger(index)) {
-			log.info({ body }, `received invalid fer-static class of ${index} (${gptString}).`);
+			log.info({ body }, `received invalid fer-static class of ${index} (${game}).`);
 			return;
 		}
 

@@ -1,8 +1,8 @@
-import { CreateActivityRouteHandler } from "#lib/activity/activity";
+import { GetRecentActivity } from "#lib/activity/activity";
 import { PasswordCompare, ValidatePassword } from "#lib/auth/auth";
 import { ONE_MONTH, ONE_WEEK, ONE_YEAR } from "#lib/constants/time";
-import { GetChartsByIds } from "#lib/db-formats/chart.js";
-import { SELECT_GAME_PROFILE, ToGameStatsDocument } from "#lib/db-formats/game-profiles.js";
+import { GetChartsByIds } from "#lib/db-formats/chart";
+import { SELECT_GAME_PROFILE, ToGameStatsDocument } from "#lib/db-formats/game-profiles";
 import {
 	type PbDocumentJoinRow,
 	SELECT_PB_DOCUMENT_WITH_LEADERBOARD,
@@ -13,13 +13,14 @@ import {
 	SELECT_SCORE_DOCUMENT,
 	ToScoreDocument,
 } from "#lib/db-formats/score";
-import { GetSongsByLegacyIDs } from "#lib/db-formats/song.js";
+import { GetSongsByIDs } from "#lib/db-formats/song";
 import { log } from "#lib/log/log";
-import prValidate from "#server/middleware/prudence-validate";
+import { withUserGameProfile } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
 import DB from "#services/pg/db";
 import { IsString } from "#utils/misc";
-import { GetTachiData, GetUGPT } from "#utils/req-tachi-data";
-import DestroyUserGameProfile from "#utils/reset-state/destroy-user-game-profile.js";
+import DestroyUserGameProfile from "#utils/reset-state/destroy-user-game-profile";
 import { CheckStrProfileAlg } from "#utils/string-checks";
 import { ISO8601ToUnixMilliseconds, UnixMillisecondsToISO8601 } from "#utils/time";
 import {
@@ -30,45 +31,25 @@ import {
 	GetUsersRankingAndOutOf,
 	GetUsersWithIDs,
 } from "#utils/user";
-import { Router } from "express";
+import { ExpectedErr } from "bliss";
 import { sql, type SqlBool } from "kysely";
-import { p } from "prudence";
 import {
-	FormatGameGroup,
-	GamePTToV3,
-	GetGamePTConfig,
-	type GPTString,
+	GetGameConfig,
 	type integer,
-	type MONGO_PBScoreDocument,
-	type MONGO_UserGameStatsSnapshotDocument,
-	type ProfileRatingAlgorithms,
+	LEGACY_FormatGameGroupPT,
+	LEGACY_GameToGameGroupPT,
+	type PBScoreDocument,
+	type UserGameStatsSnapshotDocument,
 } from "tachi-common";
-
-import { RequireAuthedAsUser, RequireSelfRequestFromUser } from "../../../middleware";
-import foldersRouter from "./folders/router";
-import { CheckUserPlayedGamePlaytype } from "./middleware";
-import pbsRouter from "./pbs/router";
-import rivalsRouter from "./rivals/router";
-import scoresRouter from "./scores/router";
-import sessionsRouter from "./sessions/router";
-import settingsRouter from "./settings/router";
-import showcaseRouter from "./showcase/router";
-import tablesRouter from "./tables/router";
-import targetsRouter from "./targets/router";
-
-const router: Router = Router({ mergeParams: true });
-
-router.use(CheckUserPlayedGamePlaytype);
 
 /**
  * Returns information about a user for this game + playtype.
- * @name GET /api/v1/users/:userID/games/:game/:playtype
+ *
+ * @name GET /api/v1/users/:userID/games/:game
  */
-router.get("/", async (req, res) => {
-	const { game, playtype, user } = GetUGPT(req);
-
-	const stats = GetTachiData(req, "requestedUserGameStats");
-	const v3Game = GamePTToV3(game, playtype);
+API_V1_ROUTER.add("GET /users/:userID/games/:game", withUserGameProfile, async ({ ctx }) => {
+	const { requestedUser: user, game, userGameStats: stats } = ctx;
+	const { gameGroup, playtype } = LEGACY_GameToGameGroupPT(game);
 
 	const scoreJoin = () =>
 		DB.selectFrom("score")
@@ -76,14 +57,14 @@ router.get("/", async (req, res) => {
 			.innerJoin("song", "song.id", "chart.song_id")
 			.leftJoin("import", "import.id", "score.import_id")
 			.where("score.user_id", "=", user.id)
-			.where("score.game", "=", v3Game)
+			.where("score.game", "=", game)
 			.where("score.time_achieved", "is not", null);
 
 	const [totalScores, firstRow, recentRow, rankingData, playtimeRow] = await Promise.all([
 		DB.selectFrom("score")
 			.select((eb) => eb.fn.countAll().as("c"))
 			.where("user_id", "=", user.id)
-			.where("game", "=", v3Game)
+			.where("game", "=", game)
 			.executeTakeFirst()
 			.then((r) => Number(r?.c ?? 0)),
 		scoreJoin()
@@ -102,346 +83,302 @@ router.get("/", async (req, res) => {
 				),
 			)
 			.where("user_id", "=", user.id)
-			.where("game", "=", v3Game)
+			.where("game", "=", game)
 			.executeTakeFirst(),
 	]);
 
 	const firstScore = firstRow ? ToScoreDocument(firstRow as ScoreDocumentJoinRow) : null;
 	const mostRecentScore = recentRow ? ToScoreDocument(recentRow as ScoreDocumentJoinRow) : null;
 
-	return res.status(200).json({
-		success: true,
-		description: `Retrieved user statistics for ${user.username} (${game} ${playtype})`,
-		body: {
-			gameStats: stats,
-			firstScore,
-			mostRecentScore,
-			totalScores,
-			rankingData,
-			playtime: Math.round(Number(playtimeRow?.playtime ?? 0)),
-		},
+	return success(`Retrieved user statistics for ${user.username} (${gameGroup} ${playtype})`, {
+		firstScore,
+		gameStats: stats,
+		mostRecentScore,
+		playtime: Math.round(Number(playtimeRow?.playtime ?? 0)),
+		rankingData,
+		totalScores,
 	});
 });
 
 /**
  * Returns a users game-stats for the past 90 days.
  *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/history
+ * @name GET /api/v1/users/:userID/games/:game/history
  */
-router.get(
-	"/history",
-	prValidate({
-		duration: p.optional(p.isIn("week", "month", "3mo", "year")),
-	}),
-	async (req, res) => {
-		const duration = req.query.duration as "3mo" | "month" | "week" | "year" | undefined;
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/history",
+	withUserGameProfile,
+	async ({ ctx, input }) => {
+		const { game, requestedUser: user, userGameStats: stats } = ctx;
+		const duration = input.duration;
 
-		let time = Date.now();
+		let time: number | null = Date.now();
 
 		switch (duration) {
 			case "year": {
-				time = time - ONE_YEAR;
+				time -= ONE_YEAR;
 				break;
 			}
-
-			// if the user doesn't define anything, default to 3month
 			case "3mo":
 			case undefined: {
-				time = time - ONE_MONTH * 3;
+				time -= ONE_MONTH * 3;
 				break;
 			}
-
 			case "month": {
-				time = time - ONE_MONTH;
+				time -= ONE_MONTH;
 				break;
 			}
-
-			case "week":
-				time = time - ONE_WEEK;
+			case "week": {
+				time -= ONE_WEEK;
+				break;
+			}
+			case "all": {
+				time = null;
+				break;
+			}
 		}
 
-		const { game, playtype, user } = GetUGPT(req);
-
-		const stats = GetTachiData(req, "requestedUserGameStats");
-		const v3Game = GamePTToV3(game, playtype);
-
 		const snapshotRows = await DB.selectFrom("game_stats_snapshot")
-			.select(["timestamp", "playcount", "ratings", "classes", "rankings"])
-			.where("user_id", "=", user.id)
-			.where("game", "=", v3Game)
-			.where("timestamp", ">=", UnixMillisecondsToISO8601(time))
-			.orderBy("timestamp", "desc")
+			.select([
+				"game_stats_snapshot.timestamp",
+				"game_stats_snapshot.playcount",
+				"game_stats_snapshot.ratings",
+				"game_stats_snapshot.classes",
+				"game_stats_snapshot.rankings",
+			])
+			.where("game_stats_snapshot.user_id", "=", user.id)
+			.where("game_stats_snapshot.game", "=", game)
+			.$if(time !== null, (qb) =>
+				qb.where("game_stats_snapshot.timestamp", ">=", UnixMillisecondsToISO8601(time!)),
+			)
+			.orderBy("game_stats_snapshot.timestamp", "desc")
 			.execute();
 
 		const snapshots = snapshotRows.map(
 			(row) =>
 				({
 					classes: row.classes,
-					ratings: row.ratings,
-					timestamp: ISO8601ToUnixMilliseconds(row.timestamp),
 					playcount: row.playcount,
 					rankings: row.rankings,
-				}) as Omit<MONGO_UserGameStatsSnapshotDocument, "game" | "playtype" | "userID">,
+					ratings: row.ratings,
+					timestamp: ISO8601ToUnixMilliseconds(row.timestamp),
+				}) as Omit<UserGameStatsSnapshotDocument, "game" | "playtype" | "userID">,
 		);
 
-		const currentSnapshot: Omit<
-			MONGO_UserGameStatsSnapshotDocument,
-			"game" | "playtype" | "userID"
-		> = {
-			classes: stats.classes,
-			ratings: stats.ratings,
+		const currentSnapshot: Omit<UserGameStatsSnapshotDocument, "game" | "playtype" | "userID"> =
+			{
+				classes: stats.classes,
+				playcount: await GetUGPTPlaycount(user.id, game),
+				rankings: await GetAllRankings(stats),
+				ratings: stats.ratings,
+				timestamp: Date.now(),
+			};
 
-			// lazy, should probably be this midnight
-			timestamp: Date.now(),
-			playcount: await GetUGPTPlaycount(user.id, game, playtype),
-			rankings: await GetAllRankings(stats),
-		};
-
-		return res.status(200).json({
-			success: true,
-			description: `Successfully returned history for the past ${snapshots.length} days.`,
-			body: [currentSnapshot, ...snapshots],
-		});
+		return success(`Successfully returned history for the past ${snapshots.length} days.`, [
+			currentSnapshot,
+			...snapshots,
+		]);
 	},
 );
 
 /**
  * Returns the users most played charts by playcount.
  *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/most-played
+ * @name GET /api/v1/users/:userID/games/:game/most-played
  */
-router.get("/most-played", async (req, res) => {
-	const { game, playtype, user } = GetUGPT(req);
-	const v3Game = GamePTToV3(game, playtype);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/most-played",
+	withUserGameProfile,
+	async ({ ctx }) => {
+		const { requestedUser: user, game } = ctx;
 
-	const mostPlayed = await DB.selectFrom("score")
-		.innerJoin("chart", "chart.id", "score.chart_id")
-		.innerJoin("song", "song.id", "chart.song_id")
-		.select([
-			"chart.id as chart_id",
-			"song.legacy_id as song_legacy_id",
-			sql<number>`count(*)::int`.as("playcount"),
-		])
-		.where("score.user_id", "=", user.id)
-		.where("score.game", "=", v3Game)
-		.groupBy(["chart.id", "song.legacy_id"])
-		.orderBy("playcount", "desc")
-		.limit(100)
-		.execute();
+		const mostPlayed = await DB.selectFrom("score")
+			.innerJoin("chart", "chart.id", "score.chart_id")
+			.innerJoin("song", "song.id", "chart.song_id")
+			.select([
+				"chart.id as chart_id",
+				"song.id as song_id",
+				sql<number>`count(*)::int`.as("playcount"),
+			])
+			.where("score.user_id", "=", user.id)
+			.where("score.game", "=", game)
+			.groupBy(["chart.id", "song.id"])
+			.orderBy("playcount", "desc")
+			.limit(100)
+			.execute();
 
-	const chartIDs = mostPlayed.map((e) => e.chart_id);
-	const songIDs = mostPlayed.map((e) => e.song_legacy_id);
+		const chartIDs = mostPlayed.map((e) => e.chart_id);
+		const songIDs = mostPlayed.map((e) => e.song_id);
 
-	const [songs, charts, pbRows] = await Promise.all([
-		GetSongsByLegacyIDs(game, songIDs),
-		GetChartsByIds(game, chartIDs),
-		chartIDs.length === 0
-			? Promise.resolve([] as Array<PbDocumentJoinRow>)
-			: DB.selectFrom("pb")
-					.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
-					.innerJoin("chart", "chart.id", "pb.chart_id")
-					.innerJoin("song", "song.id", "chart.song_id")
-					.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
-					.where("pb.user_id", "=", user.id)
-					.where("chart.id", "in", chartIDs)
-					.execute()
-					.then((rows) => rows as Array<PbDocumentJoinRow>),
-	]);
+		const [songs, charts, pbRows] = await Promise.all([
+			GetSongsByIDs(songIDs),
+			GetChartsByIds(chartIDs),
+			chartIDs.length === 0
+				? Promise.resolve([] as Array<PbDocumentJoinRow>)
+				: DB.selectFrom("pb")
+						.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
+						.innerJoin("chart", "chart.id", "pb.chart_id")
+						.innerJoin("song", "song.id", "chart.song_id")
+						.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
+						.where("pb.user_id", "=", user.id)
+						.where("chart.id", "in", chartIDs)
+						.execute()
+						.then((rows) => rows as Array<PbDocumentJoinRow>),
+		]);
 
-	const playcountMap = new Map<string, integer>();
+		const playcountMap = new Map<string, integer>();
 
-	for (const doc of mostPlayed) {
-		playcountMap.set(doc.chart_id, doc.playcount);
-	}
+		for (const doc of mostPlayed) {
+			playcountMap.set(doc.chart_id, doc.playcount);
+		}
 
-	const playcountPBs = (await Promise.all(pbRows.map((row) => ToPbScoreDocument(row)))) as Array<
-		{ __playcount: integer } & MONGO_PBScoreDocument
-	>;
+		const playcountPBs = (await Promise.all(
+			pbRows.map((row) => ToPbScoreDocument(row)),
+		)) as Array<{ __playcount: integer } & PBScoreDocument>;
 
-	for (const pb of playcountPBs) {
-		pb.__playcount = playcountMap.get(pb.chartID) ?? 0;
-	}
+		for (const pb of playcountPBs) {
+			pb.__playcount = playcountMap.get(pb.chartID) ?? 0;
+		}
 
-	playcountPBs.sort((a, b) => b.__playcount - a.__playcount);
+		playcountPBs.sort((a, b) => b.__playcount - a.__playcount);
 
-	return res.status(200).json({
-		success: true,
-		description: `Returned ${playcountPBs.length} scores.`,
-		body: {
-			songs,
+		return success(`Returned ${playcountPBs.length} scores.`, {
 			charts,
 			pbs: playcountPBs,
-		},
-	});
-});
+			songs,
+		});
+	},
+);
 
 /**
  * Returns the users around the given user on the leaderboard.
  *
- * @param alg - Optional, the algorithm to use.
- *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/leaderboard-adjacent
+ * @name GET /api/v1/users/:userID/games/:game/leaderboard-adjacent
  */
-router.get("/leaderboard-adjacent", async (req, res) => {
-	const { game, playtype, user } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/leaderboard-adjacent",
+	withUserGameProfile,
+	async ({ ctx, input }) => {
+		const { requestedUser: user, game, userGameStats: thisUsersStats } = ctx;
+		const gameConfig = GetGameConfig(game);
 
-	const gptConfig = GetGamePTConfig(game, playtype);
+		let alg = gameConfig.defaultProfileRatingAlg;
 
-	let alg = gptConfig.defaultProfileRatingAlg;
+		if (IsString(input.alg)) {
+			const temp = CheckStrProfileAlg(game, input.alg);
 
-	if (IsString(req.query.alg)) {
-		const temp = CheckStrProfileAlg(game, playtype, req.query.alg);
+			if (temp === null) {
+				throw new ExpectedErr(
+					400,
+					`Invalid value of ${input.alg} for alg. Expected one of ${Object.keys(gameConfig.profileRatingAlgs).join(", ")}`,
+				);
+			}
 
-		if (temp === null) {
-			return res.status(400).json({
-				success: false,
-				description: `Invalid value of ${
-					req.query.alg
-				} for alg. Expected one of ${Object.keys(gptConfig.profileRatingAlgs).join(", ")}`,
-			});
+			alg = temp;
 		}
 
-		alg = temp;
-	}
+		const userRating = thisUsersStats.ratings[alg] ?? 0;
+		const ratingCol = sql<number>`coalesce((game_profile.ratings::jsonb->>${sql.lit(alg)})::numeric, 0)`;
 
-	const thisUsersStats = GetTachiData(req, "requestedUserGameStats");
-	const v3Game = GamePTToV3(game, playtype);
-	const userRating = thisUsersStats.ratings[alg] ?? 0;
-	const ratingCol = sql<number>`coalesce((game_profile.ratings::jsonb->>${sql.lit(alg)})::numeric, 0)`;
+		const [aboveRows, belowRows] = await Promise.all([
+			DB.selectFrom("game_profile")
+				.select(SELECT_GAME_PROFILE)
+				.where("game", "=", game)
+				.where("user_id", "<>", user.id)
+				.where(sql<SqlBool>`${ratingCol} > ${userRating}`)
+				.orderBy(ratingCol, "asc")
+				.limit(5)
+				.execute(),
+			DB.selectFrom("game_profile")
+				.select(SELECT_GAME_PROFILE)
+				.where("game", "=", game)
+				.where("user_id", "<>", user.id)
+				.where(sql<SqlBool>`${ratingCol} <= ${userRating}`)
+				.orderBy(ratingCol, "desc")
+				.limit(5)
+				.execute(),
+		]);
 
-	const [aboveRows, belowRows] = await Promise.all([
-		DB.selectFrom("game_profile")
-			.select(SELECT_GAME_PROFILE)
-			.where("game", "=", v3Game)
-			.where("user_id", "<>", user.id)
-			.where(sql<SqlBool>`${ratingCol} > ${userRating}`)
-			.orderBy(ratingCol, "asc")
-			.limit(5)
-			.execute(),
-		DB.selectFrom("game_profile")
-			.select(SELECT_GAME_PROFILE)
-			.where("game", "=", v3Game)
-			.where("user_id", "<>", user.id)
-			.where(sql<SqlBool>`${ratingCol} <= ${userRating}`)
-			.orderBy(ratingCol, "desc")
-			.limit(5)
-			.execute(),
-	]);
+		const above = aboveRows.map(ToGameStatsDocument);
+		const below = belowRows.map(ToGameStatsDocument);
 
-	const above = aboveRows.map(ToGameStatsDocument);
-	const below = belowRows.map(ToGameStatsDocument);
+		const users = await GetUsersWithIDs([
+			...aboveRows.map((e) => e.user_id),
+			...belowRows.map((e) => e.user_id),
+		]);
 
-	const users = await GetUsersWithIDs([
-		...aboveRows.map((e) => e.user_id),
-		...belowRows.map((e) => e.user_id),
-	]);
+		const thisUsersRanking = await GetUsersRankingAndOutOf(thisUsersStats, alg);
 
-	const thisUsersRanking = await GetUsersRankingAndOutOf(thisUsersStats, alg);
-
-	return res.status(200).json({
-		success: true,
-		description: `Returned ${above.length + below.length} nearby stats.`,
-		body: {
+		return success(`Returned ${above.length + below.length} nearby stats.`, {
 			above: above.reverse(),
 			below,
-			users,
-			thisUsersStats,
 			thisUsersRanking,
-		},
-	});
-});
+			thisUsersStats,
+			users,
+		});
+	},
+);
 
 /**
  * Retrieve activity for this user.
  *
- * @param session - See CreateActivityRouteHandler
- * @param startTime - See CreateActivityRouteHandler
- *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/activity
+ * @name GET /api/v1/users/:userID/games/:game/activity
  */
-router.get("/activity", (req, res) => {
-	const { game, playtype, user } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/activity",
+	withUserGameProfile,
+	async ({ ctx, input }) => {
+		const { requestedUser: user, game } = ctx;
 
-	const route = CreateActivityRouteHandler({
-		userID: user.id,
-		game,
-		playtype,
-	});
+		const data = await GetRecentActivity(
+			game,
+			{ userID: user.id },
+			input.sessions ?? 30,
+			input.startTime ?? null,
+		);
 
-	// this handles responding
-	void route(req, res);
-});
+		return success("Retrieved activity.", data);
+	},
+);
 
 /**
- * Completely wipe this profile.
- * Requires a self-request from this user, and also checks that the user knows their
- * password. This is one of the most bolted down endpoints in the site, for obvious
- * reasons.
+ * Completely wipe this profile. Requires the user's password.
  *
- * @param !password - This user's password.
- *
- * @name DELETE /api/v1/users/:userID/games/:game/:playtype
+ * @name DELETE /api/v1/users/:userID/games/:game
  */
-router.delete(
-	"/",
-	RequireSelfRequestFromUser,
-	RequireAuthedAsUser,
-	prValidate({
-		"!password": ValidatePassword,
-	}),
-	async (req, res) => {
-		const { user, game, playtype } = GetUGPT(req);
-		const body = req.safeBody as {
-			"!password": string;
-		};
+API_V1_ROUTER.add(
+	"DELETE /users/:userID/games/:game",
+	withUserGameProfile,
+	async ({ ctx, input }) => {
+		const { game: v3Game, requestedUser: user } = ctx;
+		const { gameGroup, playtype } = LEGACY_GameToGameGroupPT(v3Game);
 
 		log.info(
-			`Recieved request to delete UGPT ${FormatUserDoc(user)} ${FormatGameGroup(game, playtype)}`,
+			`Recieved request to delete UGPT ${FormatUserDoc(user)} ${LEGACY_FormatGameGroupPT(gameGroup, playtype)}`,
 		);
 
 		const privateInfo = await GetUserPrivateInfo(user.id);
 
 		if (!privateInfo) {
-			log.error(
-				{ user },
-				`State desync for user ${FormatUserDoc(
-					user,
-				)}. This user has no password/email information?`,
-			);
-
-			return res.status(500).json({
-				success: false,
-				description: `An internal server error has occured.`,
-			});
+			log.error({ user }, `State desync for user ${FormatUserDoc(user)}.`);
+			throw new ExpectedErr(500, "An internal server error has occured.");
 		}
 
-		const passwordMatch = await PasswordCompare(body["!password"], privateInfo.password);
+		const password = input["!password"] as string;
+		const isValidPassword = ValidatePassword(password);
+
+		if (isValidPassword !== true) {
+			throw new ExpectedErr(400, "Invalid password format.");
+		}
+
+		const passwordMatch = await PasswordCompare(password, privateInfo.password);
 
 		if (!passwordMatch) {
-			return res.status(403).json({
-				success: false,
-				description: `Invalid password.`,
-			});
+			throw new ExpectedErr(403, "Invalid password.");
 		}
 
-		await DestroyUserGameProfile(user.id, game, playtype);
+		await DestroyUserGameProfile(user.id, gameGroup, playtype);
 
-		return res.status(200).json({
-			success: true,
-			description: `Destroyed profile.`,
-			body: {},
-		});
+		return success("Destroyed profile.", {});
 	},
 );
-
-router.use("/pbs", pbsRouter);
-router.use("/scores", scoresRouter);
-router.use("/sessions", sessionsRouter);
-router.use("/tables", tablesRouter);
-router.use("/showcase", showcaseRouter);
-router.use("/settings", settingsRouter);
-router.use("/folders", foldersRouter);
-router.use("/targets", targetsRouter);
-router.use("/rivals", rivalsRouter);
-
-export default router;

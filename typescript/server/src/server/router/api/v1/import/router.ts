@@ -1,9 +1,10 @@
 import type { ScoreImportJobData } from "#lib/score-import/worker/types";
-import type { APIImportTypes, FileUploadImportTypes } from "tachi-common";
+import type { FileUploadImportTypes } from "tachi-common";
 
 import { SIXTEEN_MEGABTYES } from "#lib/constants/filesize";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log";
+import { success } from "#lib/router/typed-router";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import { DeorphanScores } from "#lib/score-import/framework/orphans/orphans";
 import { MakeScoreImport } from "#lib/score-import/framework/score-import";
@@ -14,26 +15,26 @@ import prValidate from "#server/middleware/prudence-validate";
 import { ScoreImportRateLimiter } from "#server/middleware/rate-limiter";
 import { Random20Hex } from "#utils/misc";
 import { FormatUserDoc, GetUserWithIDGuaranteed } from "#utils/user";
-import { Router } from "express";
 import { p } from "prudence";
 
-const router: Router = Router({ mergeParams: true });
+import { API_V1_ROUTER } from "../router";
 
 const ParseMultipartScoredata = CreateMulterSingleUploadMiddleware("scoreData", SIXTEEN_MEGABTYES);
 
 const fileImportTypes = TachiConfig.IMPORT_TYPES.filter((e) => e.startsWith("file/"));
-const apiImportTypes = TachiConfig.IMPORT_TYPES.filter((e) => e.startsWith("api/"));
 
 /**
- * Import scores from a file. Expects the post request to be multipart, and to provide a scoreData file.
+ * Import scores from a file. Expects the post request to be multipart,
+ * and to provide a scoreData file.
  *
  * @param importType - The import type for this file.
  * @param file - The actual file. Should be passed as multipart.
  *
  * @name POST /api/v1/import/file
  */
-router.post(
-	"/file",
+API_V1_ROUTER.rawAdd(
+	"POST",
+	"/import/file",
 	RequirePermissions("submit_score"),
 	ScoreImportRateLimiter,
 	ParseMultipartScoredata,
@@ -95,61 +96,53 @@ router.post(
 
 /**
  * Import scores from another API. This typically will perform a full sync.
+ *
  * @name POST /api/v1/import/from-api
  */
-router.post(
-	"/from-api",
-	RequirePermissions("submit_score"),
-	prValidate(
-		{
-			importType: p.isIn(apiImportTypes),
-		},
-		{},
-		{ allowExcessKeys: true },
-	),
-	async (req, res) => {
-		const importType = req.safeBody.importType as APIImportTypes;
+API_V1_ROUTER.add("POST /import/from-api", async ({ input, req }) => {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const importType = input.importType as any;
+	const importID = Random20Hex();
+	const userID = req[SYMBOL_TACHI_API_AUTH].userID!;
+	const userIntent = req.header("X-User-Intent")?.toLowerCase() === "true";
 
-		const importID = Random20Hex();
-
-		const userID = req[SYMBOL_TACHI_API_AUTH].userID!;
-
-		const userIntent = req.header("X-User-Intent")?.toLowerCase() === "true";
-
-		if (ServerConfig.USE_EXTERNAL_SCORE_IMPORT_WORKER) {
-			const job: ScoreImportJobData<APIImportTypes> = {
-				importID,
-				userID,
-				userIntent,
-				importType,
-				parserArguments: [userID],
-			};
-
-			// Fire the score import, but make no guarantees about its state.
-			void MakeScoreImport<APIImportTypes>(job);
-
-			return res.status(202).json({
-				success: true,
-				description:
-					"Import loaded into queue. You can poll the provided URL for information on when its complete.",
-				body: {
-					url: `${ServerConfig.OUR_URL}/api/v1/imports/${importID}/poll-status`,
-					importID,
-				},
-			});
-		}
-
-		// Fire the score import and wait for it to finish!
-		const importResponse = await ExpressWrappedScoreImportMain<APIImportTypes>(
+	if (ServerConfig.USE_EXTERNAL_SCORE_IMPORT_WORKER) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		void (MakeScoreImport as any)({
+			importID,
+			importType,
+			parserArguments: [userID],
 			userID,
 			userIntent,
-			importType,
-			[userID],
-		);
+		});
 
-		return res.status(importResponse.statusCode).json(importResponse.body);
-	},
-);
+		return {
+			$status: 202,
+			body: {
+				importID,
+				url: `${ServerConfig.OUR_URL}/api/v1/imports/${importID}/poll-status`,
+			},
+			description:
+				"Import loaded into queue. You can poll the provided URL for information on when its complete.",
+			success: true,
+		};
+	}
+
+	const importResponse = await ExpressWrappedScoreImportMain(
+		userID,
+		userIntent,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		importType as any,
+		[userID],
+	);
+
+	return {
+		$status: importResponse.statusCode,
+		body: importResponse.body,
+		description: "Import complete.",
+		success: true,
+	};
+});
 
 /**
  * Force Tachi to reprocess your orphaned scores. This is automatically done
@@ -157,30 +150,22 @@ router.post(
  *
  * @name POST /api/v1/import/orphans
  */
-router.post("/orphans", RequirePermissions("submit_score"), async (req, res) => {
+API_V1_ROUTER.add("POST /import/orphans", async ({ req }) => {
 	const userDoc = await GetUserWithIDGuaranteed(req[SYMBOL_TACHI_API_AUTH].userID!);
 
 	log.info(`User ${FormatUserDoc(userDoc)} forced an orphan sync.`);
 
-	const { processed, removed, failed, success } = await DeorphanScores(
-		{ userID: userDoc.id },
-		log,
-	);
+	const {
+		processed,
+		removed,
+		failed,
+		success: orphanSuccess,
+	} = await DeorphanScores({ userID: userDoc.id }, log);
 
-	log.info(`Finished attempting deorphaning.`);
-
-	log.info(`Success: ${success} | Failed ${failed} | Removed ${removed}.`);
-
-	return res.status(200).json({
-		success: true,
-		description: `Reprocessed ${processed} orphan scores.`,
-		body: {
-			processed,
-			failed,
-			success,
-			removed,
-		},
+	return success(`Reprocessed ${processed} orphan scores.`, {
+		failed,
+		processed,
+		removed,
+		success: orphanSuccess,
 	});
 });
-
-export default router;

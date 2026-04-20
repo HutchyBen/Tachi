@@ -1,4 +1,4 @@
-import type { integer, Versions } from "tachi-common";
+import type { GamesForGroup, integer, Versions } from "tachi-common";
 
 export interface FervidexStaticScore {
 	clear_type: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -11,7 +11,7 @@ export interface FervidexStaticScore {
 }
 
 export interface FervidexStaticContext {
-	version: Versions["iidx:DP" | "iidx:SP"];
+	version: Versions[GamesForGroup["iidx"]];
 }
 
 export interface FervidexStaticHeaders {

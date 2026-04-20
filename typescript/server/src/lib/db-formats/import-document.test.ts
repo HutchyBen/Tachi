@@ -11,7 +11,7 @@ describe("LoadImportDocumentById", () => {
 		expect(doc).toBeUndefined();
 	});
 
-	it("composes an MONGO_ImportDocument from Postgres rows", async () => {
+	it("composes an ImportDocument from Postgres rows", async () => {
 		const { id: userId } = await seedUser();
 		const importId = `import-fmt-${Date.now()}`;
 		const now = new Date().toISOString();
@@ -40,15 +40,13 @@ describe("LoadImportDocumentById", () => {
 		expect(doc).toMatchObject({
 			importID: importId,
 			userID: userId,
-			game: "iidx",
+			gameGroup: "iidx",
+			games: ["iidx-sp"],
 			importType: "ir/direct-manual",
 			userIntent: true,
 			errors: [{ type: "T", message: "m" }],
-			gptStrings: expect.arrayContaining(["iidx:SP"]),
 			goalInfo: [],
 			questInfo: [],
 		});
-
-		expect(doc?.playtypes).toContain("SP");
 	});
 });

@@ -1,15 +1,15 @@
 import type { KtLogger } from "#lib/log/log";
 
-import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
+import { GAME_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import {
-	GetGPTConfig,
-	type GPTString,
+	type ChartDocument,
+	GetGameConfig,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_ScoreData,
 	type MongoDerivedMetrics,
 	type OptionalEnumIndexes,
+	type ScoreData,
 	type ScoreEnumIndexes,
+	type V3Game,
 } from "tachi-common";
 
 import type { DryScore, DryScoreData } from "../common/types";
@@ -20,26 +20,25 @@ import { InternalFailure } from "../common/converter-failures";
  * Given the providedMetrics and chart this score is on, derive the rest of the metrics
  * we want to store.
  */
-function DeriveMetrics<GPT extends GPTString>(
-	gpt: GPT,
-	metrics: DryScoreData<GPT>,
-	chart: MONGO_ChartDocument<GPT>,
+function DeriveMetrics<TGame extends V3Game>(
+	metrics: DryScoreData<TGame>,
+	chart: ChartDocument<TGame>,
 ) {
-	return GPT_SERVER_IMPLEMENTATIONS[gpt].scoreDeriver(
-		metrics as MONGO_ScoreData<GPT>,
+	return GAME_IMPLEMENTATIONS[chart.game].scoreDeriver(
+		metrics as ScoreData<TGame>,
 		chart,
-	) as MongoDerivedMetrics[GPT];
+	) as MongoDerivedMetrics[TGame];
 }
 
-export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any, log: KtLogger) {
-	const gptConfig = GetGPTConfig(gpt);
+export function CreateEnumIndexes<TGame extends V3Game>(game: TGame, metrics: any, log: KtLogger) {
+	const gameConfig = GetGameConfig(game);
 
 	const indexes: Record<string, integer> = {};
 	const optionalIndexes: Record<string, integer> = {};
 
 	for (const [key, conf] of [
-		...Object.entries(gptConfig.providedMetrics),
-		...Object.entries(gptConfig.derivedMetrics),
+		...Object.entries(gameConfig.providedMetrics),
+		...Object.entries(gameConfig.derivedMetrics),
 	]) {
 		if (conf.type !== "ENUM") {
 			continue;
@@ -50,11 +49,11 @@ export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any,
 		if (index === -1) {
 			log.error(
 				{ metrics, key, conf },
-				`Got an invalid enum value of ${metrics[key]} for ${gpt} ${key} on DryScore. Can't add indexes?`,
+				`Got an invalid enum value of ${metrics[key]} for ${game} ${key} on DryScore. Can't add indexes?`,
 			);
 
 			throw new InternalFailure(
-				`Got an invalid enum value of ${metrics[key]} for ${gpt} ${key} on DryScore. Can't add indexes?`,
+				`Got an invalid enum value of ${metrics[key]} for ${game} ${key} on DryScore. Can't add indexes?`,
 			);
 		}
 
@@ -62,8 +61,8 @@ export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any,
 	}
 
 	for (const [key, conf] of [
-		...Object.entries(gptConfig.providedMetrics),
-		...Object.entries(gptConfig.derivedMetrics),
+		...Object.entries(gameConfig.providedMetrics),
+		...Object.entries(gameConfig.derivedMetrics),
 	]) {
 		if (conf.type !== "ENUM") {
 			continue;
@@ -79,11 +78,11 @@ export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any,
 		if (index === -1) {
 			log.error(
 				{ metrics, key, conf },
-				`Got an invalid enum value of ${metrics.optional[key]} for ${gpt} optional.${key} on DryScore. Can't add indexes?`,
+				`Got an invalid enum value of ${metrics.optional[key]} for ${game} optional.${key} on DryScore. Can't add indexes?`,
 			);
 
 			throw new InternalFailure(
-				`Got an invalid enum value of ${metrics.optional[key]} for ${gpt} optional.${key} on DryScore. Can't add indexes?`,
+				`Got an invalid enum value of ${metrics.optional[key]} for ${game} optional.${key} on DryScore. Can't add indexes?`,
 			);
 		}
 
@@ -91,29 +90,28 @@ export function CreateEnumIndexes<GPT extends GPTString>(gpt: GPT, metrics: any,
 	}
 
 	return {
-		indexes: indexes as ScoreEnumIndexes<GPT>,
-		optionalIndexes: optionalIndexes as OptionalEnumIndexes<GPT>,
+		indexes: indexes as ScoreEnumIndexes<TGame>,
+		optionalIndexes: optionalIndexes as OptionalEnumIndexes<TGame>,
 	};
 }
 
 /**
  * Return a full piece of scoreData.
  */
-export function CreateFullScoreData<GPT extends GPTString>(
-	gpt: GPT,
-	dryScoreData: DryScore<GPT>["scoreData"],
-	chart: MONGO_ChartDocument<GPT>,
+export function CreateFullScoreData<TGame extends V3Game>(
+	dryScoreData: DryScore<TGame>["scoreData"],
+	chart: ChartDocument<TGame>,
 	log: KtLogger,
 ) {
-	const derivedMetrics = DeriveMetrics(gpt, dryScoreData, chart);
+	const derivedMetrics = DeriveMetrics(dryScoreData, chart);
 
 	const scoreData = {
 		...dryScoreData,
 		...derivedMetrics,
-	} as unknown as MONGO_ScoreData<GPT>;
+	} as unknown as ScoreData<TGame>;
 	// ^ hacky force-cast because these types are *really* unstable.
 
-	const { indexes, optionalIndexes } = CreateEnumIndexes(gpt, scoreData, log);
+	const { indexes, optionalIndexes } = CreateEnumIndexes(chart.game, scoreData, log);
 
 	// again, silly hacks aorund typesafety here because to be honest
 	// this stuff is more generic than TS really should ever have to implement.

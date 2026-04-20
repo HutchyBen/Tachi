@@ -35,7 +35,7 @@ const existingChartDocs = ReadCollection("charts-wacca.json");
 const inGameIDToSongIDMap = new Map();
 
 for (const chart of existingChartDocs) {
-	inGameIDToSongIDMap.set(chart.data.inGameID, chart.songID);
+	inGameIDToSongIDMap.set(chart.data.inGameID, chart.song.id);
 }
 
 for (const song of songdata) {

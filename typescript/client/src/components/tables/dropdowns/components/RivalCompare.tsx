@@ -10,47 +10,31 @@ import { NumericSOV } from "#util/sorts";
 import React, { useContext } from "react";
 import { Col } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import {
-	type GameGroup,
-	GetGamePTConfig,
-	type MONGO_ChartDocument,
-	type MONGO_UserDocument,
-	type Playtype,
-} from "tachi-common";
+import { type ChartDocument, GetGameConfig, type UserDocument, type V3Game } from "tachi-common";
 
-export default function RivalCompare({
-	chart,
-	game,
-}: {
-	chart: MONGO_ChartDocument;
-	game: GameGroup;
-}) {
+export default function RivalCompare({ chart, game }: { chart: ChartDocument; game: V3Game }) {
 	const { user: currentUser } = useContext(UserContext);
-
-	const playtype = chart.playtype;
 
 	if (!currentUser) {
 		return <div>You're not signed in. How did you even get to this page?</div>;
 	}
 
-	return <Inner chart={chart} currentUser={currentUser} game={game} playtype={playtype} />;
+	return <Inner chart={chart} currentUser={currentUser} game={game} />;
 }
 
 function Inner({
 	currentUser,
 	game,
-	playtype,
 	chart,
 }: {
-	chart: MONGO_ChartDocument;
-	currentUser: MONGO_UserDocument;
-	game: GameGroup;
-	playtype: Playtype;
+	chart: ChartDocument;
+	currentUser: UserDocument;
+	game: V3Game;
 }) {
-	const base = useUGPTBase({ reqUser: currentUser, game, playtype });
+	const base = useUGPTBase({ reqUser: currentUser, game });
 
 	const { data, error } = useApiQuery<ChartRivalsReturn>(
-		`/users/${currentUser.id}/games/${game}/${playtype}/pbs/${chart.chartID}/rivals`,
+		`/users/${currentUser.id}/games/${game}/pbs/${chart.chartID}/rivals`,
 	);
 
 	if (!data) {
@@ -71,7 +55,7 @@ function Inner({
 		);
 	}
 
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
 	const rivalDataset: RivalChartDataset = [...data.rivals, currentUser]
 		.map((u) => ({
@@ -83,7 +67,7 @@ function Inner({
 		.sort(
 			NumericSOV(
 				// @ts-expect-error this access is obviously legal
-				(x) => x.__related.pb?.scoreData[gptConfig.defaultMetric] ?? -Infinity,
+				(x) => x.__related.pb?.scoreData[gameConfig.defaultMetric] ?? -Infinity,
 				true,
 			),
 		)

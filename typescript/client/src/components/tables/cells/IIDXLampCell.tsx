@@ -4,17 +4,18 @@ import { ChangeOpacity } from "#util/color-opacity";
 import { IsNotNullish } from "#util/misc";
 import React from "react";
 import {
-	type MONGO_ChartDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_ScoreDocument,
+	type ChartDocument,
+	type GamesForGroup,
+	type PBScoreDocument,
+	type ScoreDocument,
 } from "tachi-common";
 
 export default function IIDXLampCell({
 	sc,
 	chart,
 }: {
-	chart: MONGO_ChartDocument<"iidx:DP" | "iidx:SP">;
-	sc: MONGO_PBScoreDocument<"iidx:DP" | "iidx:SP"> | MONGO_ScoreDocument<"iidx:DP" | "iidx:SP">;
+	chart: ChartDocument<GamesForGroup["iidx"]>;
+	sc: PBScoreDocument<GamesForGroup["iidx"]> | ScoreDocument<GamesForGroup["iidx"]>;
 }) {
 	let gaugeText = null;
 

@@ -1,5 +1,5 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import DB from "#services/pg/db.js";
+import { MakeAction } from "#lib/actions/actions";
+import DB from "#services/pg/db";
 
 export const ACTION_UpdateKshookSv6cSettings = MakeAction(
 	"UPDATE_KSHOOK_SV6C_SETTINGS",

@@ -72,7 +72,7 @@ describe("profile-calc (Postgres)", () => {
 		await seedChunithmChartsWithPbs(userId, Array(50).fill(17.15));
 
 		const fn = ProfileAvgBestN("rating", 50, false, 100);
-		const result = await fn("chunithm", "Single", userId);
+		const result = await fn("chunithm", userId);
 
 		expect(result).toBe(17.15);
 	});
@@ -82,7 +82,7 @@ describe("profile-calc (Postgres)", () => {
 		await seedChunithmChartsWithPbs(userId, [16, 16, 16, 16]);
 
 		const fn = ProfileAvgBestN("rating", 50, false, 100);
-		const result = await fn("chunithm", "Single", userId);
+		const result = await fn("chunithm", userId);
 
 		expect(result).toBe(1.28);
 	});
@@ -92,7 +92,7 @@ describe("profile-calc (Postgres)", () => {
 		await seedChunithmChartsWithPbs(userId, [16, 16, 16, 16]);
 
 		const fn = ProfileAvgBestN("rating", 50, true, 100);
-		const result = await fn("chunithm", "Single", userId);
+		const result = await fn("chunithm", userId);
 
 		expect(result).toBeNull();
 	});
@@ -102,7 +102,7 @@ describe("profile-calc (Postgres)", () => {
 		await seedChunithmChartsWithPbs(userId, [10, 20, 30]);
 
 		const fn = ProfileSumBestN("rating", 2);
-		const result = await fn("chunithm", "Single", userId);
+		const result = await fn("chunithm", userId);
 
 		expect(result).toBe(50);
 	});
@@ -163,7 +163,7 @@ describe("profile-calc (Postgres)", () => {
 			.execute();
 
 		const fn = ProfileSumBestN("rating", 5);
-		const result = await fn("chunithm", "Single", userId);
+		const result = await fn("chunithm", userId);
 
 		expect(result).toBeNull();
 	});

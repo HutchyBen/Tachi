@@ -1,12 +1,11 @@
 import { type UGPTStatsReturn } from "#types/api-returns";
 import { APIFetchV1 } from "#util/api";
 import {
-	FormatGameGroup,
-	type GameGroup,
-	type MONGO_UGPTSettingsDocument,
-	type MONGO_UserDocument,
-	type MONGO_UserGameStats,
-	type Playtype,
+	FormatGame,
+	type UGPTSettingsDocument,
+	type UserDocument,
+	type UserGameStats,
+	type V3Game,
 } from "tachi-common";
 
 /**
@@ -15,11 +14,10 @@ import {
  * It's worth keeping this around for both the currently-viewed user and the currently-logged-in user.
  */
 export interface UGPTData {
-	settings: MONGO_UGPTSettingsDocument | null;
-	stats: MONGO_UserGameStats;
-	game: GameGroup;
-	playtype: Playtype;
-	user: MONGO_UserDocument;
+	settings: UGPTSettingsDocument | null;
+	stats: UserGameStats;
+	game: V3Game;
+	user: UserDocument;
 }
 
 /**
@@ -28,12 +26,9 @@ export interface UGPTData {
  */
 export default async function fetchUGPTData(
 	userID: number | string,
-	game: GameGroup,
-	playtype: Playtype,
+	game: V3Game,
 ): Promise<UGPTData | null> {
-	const statsRes = await APIFetchV1<UGPTStatsReturn>(
-		`/users/${userID}/games/${game}/${playtype}`,
-	);
+	const statsRes = await APIFetchV1<UGPTStatsReturn>(`/users/${userID}/games/${game}`);
 
 	// user doesn't exist or something?
 	if (statsRes.statusCode === 404) {
@@ -42,25 +37,23 @@ export default async function fetchUGPTData(
 
 	if (!statsRes.success) {
 		throw new Error(
-			`Failed to fetch data for ${userID} (${FormatGameGroup(game, playtype)}): ${
-				statsRes.description
-			}`,
+			`Failed to fetch data for ${userID} (${FormatGame(game)}): ${statsRes.description}`,
 		);
 	}
 
-	const settingsRes = await APIFetchV1<MONGO_UGPTSettingsDocument | null>(
-		`/users/${userID}/games/${game}/${playtype}/settings`,
+	const settingsRes = await APIFetchV1<UGPTSettingsDocument | null>(
+		`/users/${userID}/games/${game}/settings`,
 	);
 
 	if (!settingsRes.success) {
 		throw new Error(
-			`Failed to fetch settings for ${userID} (${FormatGameGroup(game, playtype)}): ${
+			`Failed to fetch settings for ${userID} (${FormatGame(game)}): ${
 				settingsRes.description
 			}`,
 		);
 	}
 
-	const userRes = await APIFetchV1<MONGO_UserDocument>(`/users/${userID}`);
+	const userRes = await APIFetchV1<UserDocument>(`/users/${userID}`);
 
 	if (!userRes.success) {
 		throw new Error(`Failed to fetch user info for ${userID}: ${userRes.description}`);
@@ -68,7 +61,6 @@ export default async function fetchUGPTData(
 
 	return {
 		game,
-		playtype,
 		settings: settingsRes.body,
 		stats: statsRes.body.gameStats,
 		user: userRes.body,

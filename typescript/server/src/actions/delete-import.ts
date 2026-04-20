@@ -1,7 +1,7 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import { LoadImportDocumentById } from "#lib/db-formats/import-document.js";
-import { RevertImport } from "#lib/imports/imports.js";
-import { IsUserAdmin } from "#utils/user.js";
+import { MakeAction } from "#lib/actions/actions";
+import { LoadImportDocumentById } from "#lib/db-formats/import-document";
+import { RevertImport } from "#lib/imports/imports";
+import { IsUserAdmin } from "#utils/user";
 import { ExpectedErr } from "bliss";
 
 export const ACTION_DeleteImport = MakeAction("DELETE_IMPORT", async (taker, { id }) => {

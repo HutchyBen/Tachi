@@ -1,23 +1,14 @@
 import MiniTable from "#components/tables/components/MiniTable";
 import { ChangeOpacity } from "#util/color-opacity";
 import React from "react";
-import {
-	COLOUR_SET,
-	GetGamePTConfig,
-	type MONGO_PBScoreDocument,
-	type MONGO_ScoreDocument,
-} from "tachi-common";
+import { COLOUR_SET, GetGameConfig, type PBScoreDocument, type ScoreDocument } from "tachi-common";
 
-export default function JudgementTable({
-	score,
-}: {
-	score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
-}) {
-	const gptConfig = GetGamePTConfig(score.game, score.playtype);
+export default function JudgementTable({ score }: { score: PBScoreDocument | ScoreDocument }) {
+	const gameConfig = GetGameConfig(score.game);
 
 	return (
 		<MiniTable className="text-center table-sm" colSpan={2} headers={["Judgements"]}>
-			{gptConfig.orderedJudgements.map((j) => (
+			{gameConfig.orderedJudgements.map((j) => (
 				<tr key={j}>
 					<td>{j.toUpperCase()}</td>
 					{/* @ts-expect-error fine access */}

@@ -14,19 +14,19 @@ import { NumericSOV } from "#util/sorts";
 import React from "react";
 import { Col, Row } from "react-bootstrap";
 import {
+	type ChartDocument,
 	CreateSongMap,
-	type MONGO_ChartDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_SongDocument,
+	type PBScoreDocument,
+	type SongDocument,
 } from "tachi-common";
 
-function Component({ game, playtype, reqUser }: UGPT) {
+function Component({ game, reqUser }: UGPT) {
 	const { data, error } = useApiQuery<{
-		charts: Array<MONGO_ChartDocument>;
-		other: Array<MONGO_PBScoreDocument>;
-		pickUp: Array<MONGO_PBScoreDocument>;
-		songs: Array<MONGO_SongDocument>;
-	}>(`/users/${reqUser.id}/games/${game}/${playtype}/jubility`);
+		charts: Array<ChartDocument>;
+		other: Array<PBScoreDocument>;
+		pickUp: Array<PBScoreDocument>;
+		songs: Array<SongDocument>;
+	}>(`/users/${reqUser.id}/games/${game}/jubility`);
 
 	const preferredRanking = usePreferredRanking();
 
@@ -107,7 +107,6 @@ function Component({ game, playtype, reqUser }: UGPT) {
 						defaultRankingViewMode={preferredRanking}
 						game={game}
 						indexCol
-						playtype={playtype}
 					/>
 				</Card>
 				<Divider />
@@ -123,7 +122,6 @@ function Component({ game, playtype, reqUser }: UGPT) {
 						defaultRankingViewMode={preferredRanking}
 						game={game}
 						indexCol
-						playtype={playtype}
 					/>
 				</Card>
 			</Col>

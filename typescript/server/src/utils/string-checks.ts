@@ -2,9 +2,8 @@ import {
 	type AnyProfileRatingAlg,
 	type AnyScoreRatingAlg,
 	type AnySessionRatingAlg,
-	type GameGroup,
-	GetGamePTConfig,
-	type Playtype,
+	GetGameConfig,
+	type V3Game,
 } from "tachi-common";
 
 import { IsString } from "./misc";
@@ -51,33 +50,33 @@ export function ParseStrPositiveNonZeroInt(val: unknown) {
 	return v;
 }
 
-export function CheckStrProfileAlg(game: GameGroup, playtype: Playtype, strVal: string) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+export function CheckStrProfileAlg(game: V3Game, strVal: string) {
+	const gameConfig = GetGameConfig(game);
 
 	// @hack
-	if (!Object.keys(gptConfig.profileRatingAlgs).includes(strVal as AnyProfileRatingAlg)) {
+	if (!Object.keys(gameConfig.profileRatingAlgs).includes(strVal as AnyProfileRatingAlg)) {
 		return null;
 	}
 
 	return strVal as AnyProfileRatingAlg;
 }
 
-export function CheckStrScoreAlg(game: GameGroup, playtype: Playtype, strVal: string) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+export function CheckStrScoreAlg(game: V3Game, strVal: string) {
+	const gameConfig = GetGameConfig(game);
 
 	// @hack
-	if (!Object.keys(gptConfig.scoreRatingAlgs).includes(strVal as AnyScoreRatingAlg)) {
+	if (!Object.keys(gameConfig.scoreRatingAlgs).includes(strVal as AnyScoreRatingAlg)) {
 		return null;
 	}
 
 	return strVal as AnyScoreRatingAlg;
 }
 
-export function CheckStrSessionAlg(game: GameGroup, playtype: Playtype, strVal: string) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+export function CheckStrSessionAlg(game: V3Game, strVal: string) {
+	const gameConfig = GetGameConfig(game);
 
 	// @hack
-	if (!Object.keys(gptConfig.sessionRatingAlgs).includes(strVal as AnySessionRatingAlg)) {
+	if (!Object.keys(gameConfig.sessionRatingAlgs).includes(strVal as AnySessionRatingAlg)) {
 		return null;
 	}
 

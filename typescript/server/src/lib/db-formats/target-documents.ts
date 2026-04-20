@@ -1,37 +1,58 @@
+import { LoadFolderDocumentsByIds } from "#lib/db-formats/folders";
 import { ISO8601ToUnixMilliseconds } from "#utils/time";
 import {
-	type MONGO_GoalDocument,
-	type MONGO_GoalSubscriptionDocument,
-	type MONGO_QuestDocument,
-	type MONGO_QuestSubscriptionDocument,
-	V3ToGamePT,
+	type GoalDocument,
+	type GoalSubscriptionDocument,
+	type QuestDocument,
+	type QuestSubscriptionDocument,
 } from "tachi-common";
-import { type Game } from "tachi-db";
 
 import { type GoalRow, type GoalSubWithGoalGameRow } from "./goal";
 import { type QuestRow, type QuestSubWithQuestGameRow } from "./quest";
 
-export function ToGoalDocument(row: GoalRow): MONGO_GoalDocument {
-	const { game, playtype } = V3ToGamePT(row.game);
+/**
+ * Enriches folder-type goals with `charts.folderSlug` for API consumers (navigation).
+ * `charts.data` remains the internal folder id.
+ */
+export async function AttachFolderSlugsToGoals(goals: Array<GoalDocument>): Promise<void> {
+	const ids: string[] = [];
 
-	return {
-		goalID: row.id,
-		game,
-		playtype,
-		name: row.name,
-		charts: row.charts as MONGO_GoalDocument["charts"],
-		criteria: row.criteria as MONGO_GoalDocument["criteria"],
-	} as MONGO_GoalDocument;
+	for (const g of goals) {
+		if (g.charts.type === "folder") {
+			ids.push(g.charts.data);
+		}
+	}
+
+	if (ids.length === 0) {
+		return;
+	}
+
+	const map = await LoadFolderDocumentsByIds(ids);
+
+	for (const g of goals) {
+		if (g.charts.type === "folder") {
+			const folder = map.get(g.charts.data);
+
+			if (folder) {
+				g.charts.folderSlug = folder.slug;
+			}
+		}
+	}
 }
 
-export function ToGoalSubscriptionDocument(
-	row: GoalSubWithGoalGameRow,
-): MONGO_GoalSubscriptionDocument {
-	const { game, playtype } = V3ToGamePT(row.goal_game as Game);
+export function ToGoalDocument(row: GoalRow): GoalDocument {
+	return {
+		goalID: row.id,
+		game: row.game,
+		name: row.name,
+		charts: row.charts as GoalDocument["charts"],
+		criteria: row.criteria as GoalDocument["criteria"],
+	} as GoalDocument;
+}
 
+export function ToGoalSubscriptionDocument(row: GoalSubWithGoalGameRow): GoalSubscriptionDocument {
 	const base = {
-		game,
-		playtype,
+		game: row.goal_game,
 		goalID: row.goal_id,
 		userID: row.user_id,
 		lastInteraction: row.last_interaction
@@ -56,27 +77,21 @@ export function ToGoalSubscriptionDocument(
 	};
 }
 
-export function ToQuestDocument(row: QuestRow): MONGO_QuestDocument {
-	const { game, playtype } = V3ToGamePT(row.game);
-
+export function ToQuestDocument(row: QuestRow): QuestDocument {
 	return {
 		questID: row.id,
-		game,
-		playtype,
+		game: row.game,
 		name: row.name,
 		desc: row.description,
-		questData: row.quest_data as MONGO_QuestDocument["questData"],
+		questData: row.quest_data as QuestDocument["questData"],
 	};
 }
 
 export function ToQuestSubscriptionDocument(
 	row: QuestSubWithQuestGameRow,
-): MONGO_QuestSubscriptionDocument {
-	const { game, playtype } = V3ToGamePT(row.quest_game as Game);
-
+): QuestSubscriptionDocument {
 	const base = {
-		game,
-		playtype,
+		game: row.quest_game,
 		questID: row.quest_id,
 		userID: row.user_id,
 		progress: row.progress,

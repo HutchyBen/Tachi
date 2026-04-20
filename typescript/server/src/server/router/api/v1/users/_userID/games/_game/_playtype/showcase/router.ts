@@ -1,368 +1,170 @@
 import { ACTION_UpdateUgptShowcase as ACTION_UpdateUGPTShowcase } from "#actions/update-ugpt-showcase";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { GetChartById } from "#lib/db-formats/chart";
-import { LoadFolderDocumentById, LoadFolderDocumentsByIds } from "#lib/db-formats/folders";
-import { GetUGPTSettingsDocument } from "#lib/db-formats/ugpt-settings.js";
+import { LoadFolderDocumentByGameAndSlug } from "#lib/db-formats/folders";
+import { GetUGPTSettingsDocument } from "#lib/db-formats/ugpt-settings";
+import { withUserGameProfile } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
 import { EvaluateShowcaseStat } from "#lib/showcase/evaluator";
 import { GetRelatedStatDocuments } from "#lib/showcase/get-related";
 import { EvaluateUsersStatsShowcase } from "#lib/showcase/get-stats";
-import { RequirePermissions } from "#server/middleware/auth";
-import { RequireAuthedAsUser } from "#server/router/api/v1/users/_userID/middleware";
-import { IsRecord } from "#utils/misc";
-import { FormatPrError } from "#utils/prudence";
-import { GetUGPT } from "#utils/req-tachi-data";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
 import { GetUserWithIDGuaranteed, ResolveUser } from "#utils/user";
-import { Router } from "express";
-import { p } from "prudence";
+import { ExpectedErr } from "bliss";
 import {
-	FormatGameGroup,
-	GamePTToV3,
-	GetGamePTConfig,
-	GetGPTString,
+	FormatGame,
+	GetGameConfig,
 	GetScoreMetrics,
+	type integer,
 	type ShowcaseStatDetails,
 } from "tachi-common";
-
-const router: Router = Router({ mergeParams: true });
 
 /**
  * Evaluate this users set stats.
  *
- * @param projectUser - Project another user's stats instead of their set stats.
- *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/showcase
+ * @name GET /api/v1/users/:userID/games/:game/showcase
  */
-router.get("/", async (req, res) => {
-	const { user, game, playtype } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/showcase",
+	withUserGameProfile,
+	async ({ ctx, input }) => {
+		const { requestedUser: user, game } = ctx;
 
-	let projectUser;
+		let projectUser: integer | undefined;
 
-	if (typeof req.query.projectUser === "string") {
-		const user = await ResolveUser(req.query.projectUser);
+		if (typeof input.projectUser === "string") {
+			const resolved = await ResolveUser(input.projectUser);
 
-		if (!user) {
-			return res.status(404).json({
-				success: false,
-				description: `The projected user ${req.query.projectUser} does not exist.`,
-			});
+			if (!resolved) {
+				throw new ExpectedErr(
+					404,
+					`The projected user ${input.projectUser} does not exist.`,
+				);
+			}
+
+			projectUser = resolved.id;
 		}
 
-		projectUser = user.id;
-	}
+		const results = await EvaluateUsersStatsShowcase(user.id, game, projectUser);
 
-	const results = await EvaluateUsersStatsShowcase(user.id, game, playtype, projectUser);
-
-	return res.status(200).json({
-		success: true,
-		description: `Evaluated ${results.length} stats.`,
-		body: results,
-	});
-});
+		return success(`Evaluated ${results.length} stats.`, results);
+	},
+);
 
 /**
- * Evalulate a custom stat on this user.
+ * Evaluate a single custom folder or chart stat.
  *
- * @param mode - "folder" or "chart"
- * @param metric - "any score metric for this game (i.e. non-optional).
- * Also, "playcount" if mode is chart.
- * @param chartID - If mode is "chart" this must contain the chartID the stat is referencing.
- * @param folderID - If mode is "folder" this must contain the folderID the stat is referencing.
- * @param gte - If mode is "folder" this must contain the value the metric must be greater than.
- *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/showcase/custom
+ * @name GET /api/v1/users/:userID/games/:game/showcase/custom
  */
-router.get("/custom", async (req, res) => {
-	const { user, game, playtype } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/showcase/custom",
+	withUserGameProfile,
+	async ({ ctx, input }) => {
+		const { requestedUser, game } = ctx;
+		const gameConfig = GetGameConfig(game);
+		const availableMetrics = GetScoreMetrics(gameConfig, ["DECIMAL", "ENUM", "INTEGER"]);
 
-	const gptConfig = GetGamePTConfig(game, playtype);
-	const v3Game = GamePTToV3(game, playtype);
+		let stat: ShowcaseStatDetails;
 
-	let stat: ShowcaseStatDetails;
+		if (input.mode === "folder") {
+			if (!input.folderSlug) {
+				throw new ExpectedErr(400, "folderSlug is required for folder mode.");
+			}
 
-	const availableMetrics = GetScoreMetrics(gptConfig, ["DECIMAL", "ENUM", "INTEGER"]);
+			if (input.gte === undefined) {
+				throw new ExpectedErr(400, "gte is required for folder mode.");
+			}
 
-	if (req.query.mode === "folder") {
-		const err = p(
-			req.query,
-			{
-				mode: p.is("folder"),
-				metric: p.isIn(availableMetrics),
-				folderID: "string",
+			if (input.metric === undefined || input.metric === "") {
+				throw new ExpectedErr(400, "metric is required for folder mode.");
+			}
 
-				// lazy regex for matching strings that look like numbers
-				gte: p.regex(/^[0-9]*(.[0-9])?$/u),
-			},
-			{},
-			{ allowExcessKeys: true },
-		);
+			if (!availableMetrics.includes(input.metric)) {
+				throw new ExpectedErr(
+					400,
+					`Invalid metric ${input.metric}. Expected any of ${availableMetrics.join(", ")}.`,
+				);
+			}
 
-		if (err) {
-			return res.status(400).json({
-				success: false,
-				description: FormatPrError(err, "Invalid folder stat"),
-			});
+			const folder = await LoadFolderDocumentByGameAndSlug(game, input.folderSlug);
+
+			if (!folder || folder.game !== game) {
+				throw new ExpectedErr(
+					400,
+					`Invalid folderSlug - all folders must be for ${FormatGame(game)}, and exist.`,
+				);
+			}
+
+			stat = {
+				slug: folder.slug,
+				gte: input.gte,
+				metric: input.metric,
+				mode: "folder",
+			};
+		} else {
+			if (!input.chartID) {
+				throw new ExpectedErr(400, "chartID is required for chart mode.");
+			}
+
+			const chart = await GetChartById(input.chartID);
+
+			if (!chart || chart.game !== game) {
+				throw new ExpectedErr(400, "Chart does not exist, or is not for this game.");
+			}
+
+			stat = {
+				chartID: input.chartID,
+				mode: "chart",
+			};
 		}
 
-		const folderID = req.query.folderID as string;
+		const result = await EvaluateShowcaseStat(game, stat, requestedUser.id);
+		const related = await GetRelatedStatDocuments(stat, game);
 
-		const folder = await LoadFolderDocumentById(folderID);
-
-		if (!folder || folder.game !== game || folder.playtype !== playtype) {
-			return res.status(400).json({
-				success: false,
-				description: `Invalid folderID - all folders must be for ${FormatGameGroup(
-					game,
-					playtype,
-				)}, and exist.`,
-			});
-		}
-
-		stat = {
-			mode: "folder",
-			metric: req.query.metric as string,
-			folderID,
-			gte: Number(req.query.gte),
-		};
-	} else if (req.query.mode === "chart") {
-		const err = p(
-			req.query,
-			{
-				mode: p.is("chart"),
-				metric: p.isIn(...availableMetrics, "playcount"),
-				chartID: "string",
-			},
-			{},
-			{ allowExcessKeys: true },
-		);
-
-		if (err) {
-			return res.status(400).json({
-				success: false,
-				description: FormatPrError(err, "Invalid chart stat"),
-			});
-		}
-
-		const chart = await GetChartById(v3Game, req.query.chartID as string);
-
-		if (!chart || chart.playtype !== playtype) {
-			return res.status(400).json({
-				success: false,
-				description: `Chart does not exist, or is not for this game and playtype.`,
-			});
-		}
-
-		stat = {
-			mode: "chart",
-			metric: req.query.metric as string,
-			chartID: req.query.chartID as string,
-		};
-	} else {
-		return res.status(400).json({
-			success: false,
-			description: `Invalid stat mode - expected either 'chart' or 'folder'.`,
-		});
-	}
-
-	const gpt = GetGPTString(game, playtype);
-
-	const result = await EvaluateShowcaseStat(gpt, stat, user.id);
-
-	const related = await GetRelatedStatDocuments(stat, game);
-
-	return res.status(200).json({
-		success: true,
-		description: `Evaluated Stat for ${user.username}`,
-		body: { stat, result, related },
-	});
-});
+		return success(`Evaluated Stat for ${requestedUser.username}`, { related, result, stat });
+	},
+);
 
 /**
  * Replaces a user's stat showcase.
  *
- * @name PUT /api/v1/users/:userID/games/:game/:playtype/showcase
+ * @name PUT /api/v1/users/:userID/games/:game/showcase
  */
-router.put("/", RequireAuthedAsUser, RequirePermissions("customise_profile"), async (req, res) => {
-	const { user, game, playtype } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"PUT /users/:userID/games/:game/showcase",
+	withUserGameProfile,
+	async ({ ctx, input, req }) => {
+		const { requestedUser: user, game } = ctx;
 
-	const gptConfig = GetGamePTConfig(game, playtype);
-	const v3Game = GamePTToV3(game, playtype);
+		const showcase = input.showcase;
 
-	if (!Array.isArray(req.safeBody)) {
-		return res.status(400).json({
-			success: false,
-			description: `No stats provided, or was not an array.`,
-		});
-	}
-
-	if (req.safeBody.length > 6) {
-		return res.status(400).json({
-			success: false,
-			description: `You are only allowed 6 stats at once.`,
-		});
-	}
-
-	const stats = req.safeBody as Array<unknown>;
-
-	const availableMetrics = GetScoreMetrics(gptConfig, ["DECIMAL", "ENUM", "INTEGER"]);
-
-	for (const unvalidatedStat of stats) {
-		let err;
-
-		if (!IsRecord(unvalidatedStat)) {
-			return res.status(400).json({
-				success: false,
-				description: `Invalid stat -- got null or a non-object.`,
-			});
+		if (!Array.isArray(showcase)) {
+			throw new ExpectedErr(400, "No stats provided, or was not an array.");
 		}
 
-		if (unvalidatedStat.mode === "chart") {
-			err = p(unvalidatedStat, {
-				chartID: "string",
-				mode: p.is("chart"),
-				metric: p.isIn(...availableMetrics, "playcount"),
-			});
-		} else if (unvalidatedStat.mode === "folder") {
-			err = p(unvalidatedStat, {
-				folderID: (self) => {
-					if (typeof self === "string") {
-						return true;
-					} else if (Array.isArray(self)) {
-						return self.length <= 6 && self.every((r) => typeof r === "string");
-					}
+		const stats = showcase as Array<unknown>;
 
-					return false;
-				},
-				mode: p.is("folder"),
-				metric: p.isIn(availableMetrics),
-
-				gte: (self, parent) => {
-					if (typeof self !== "number") {
-						return "Expected a number.";
-					}
-
-					if (typeof parent.metric !== "string") {
-						return `Expected parent.metric to be a string.`;
-					}
-
-					const conf =
-						gptConfig.providedMetrics[parent.metric] ??
-						gptConfig.derivedMetrics[parent.metric];
-
-					if (!conf) {
-						return `Invalid metric ${
-							parent.metric
-						}, Expected any of ${availableMetrics.join(", ")}.`;
-					}
-
-					if (conf.type === "ENUM") {
-						return p.isBoundedInteger(0, conf.values.length - 1)(self);
-					}
-
-					if (conf.type === "GRAPH" || conf.type === "NULLABLE_GRAPH") {
-						return "Cannot set a showcase stat for this metric.";
-					}
-
-					if (conf.chartDependentMax) {
-						return `Cannot set a folder showcase goal for this metric as it is chart dependent.`;
-					}
-
-					return conf.validate(self);
-				},
-			});
-		} else {
-			return res.status(400).json({
-				success: false,
-				description: `Invalid stat - Expected mode to be 'chart' or 'folder').`,
-			});
+		if (stats.length > 6) {
+			throw new ExpectedErr(400, "You are only allowed 6 stats at once.");
 		}
 
-		if (err) {
-			return res.status(400).json({
-				success: false,
-				description: FormatPrError(err, "Invalid stat."),
-			});
+		const authUserID = req[SYMBOL_TACHI_API_AUTH].userID;
+
+		if (authUserID === null) {
+			throw new ExpectedErr(401, "Authentication is required.");
 		}
 
-		const stat = unvalidatedStat as unknown as ShowcaseStatDetails;
+		const authedUser = await GetUserWithIDGuaranteed(authUserID);
+		const taker = { acct: { id: authedUser.id, username: authedUser.username }, ip: req.ip };
 
-		if (stat.mode === "chart") {
-			// eslint-disable-next-line no-await-in-loop
-			const chart = await GetChartById(v3Game, stat.chartID);
-
-			if (!chart || chart.playtype !== playtype) {
-				return res.status(400).json({
-					success: false,
-					description: `Invalid chartID - must be a chart for this game and playtype.`,
-				});
-			}
-		} else if (unvalidatedStat.mode === "folder") {
-			const folderIDs = Array.isArray(unvalidatedStat.folderID)
-				? unvalidatedStat.folderID
-				: [unvalidatedStat.folderID];
-
-			// eslint-disable-next-line no-await-in-loop
-			const folderMap = await LoadFolderDocumentsByIds(folderIDs);
-
-			if (folderMap.size !== folderIDs.length) {
-				return res.status(400).json({
-					success: false,
-
-					// this error message is kinda lazy.
-					description: `Invalid folderID - must be a folder for this game and playtype.`,
-				});
-			}
-
-			if (
-				!folderIDs.every((id) => {
-					const f = folderMap.get(id);
-					return f !== undefined && f.game === game && f.playtype === playtype;
-				})
-			) {
-				return res.status(400).json({
-					success: false,
-
-					// this error message is kinda lazy.
-					description: `Invalid folderID - must be a folder for this game and playtype.`,
-				});
-			}
-		}
-	}
-
-	const authUserID = req[SYMBOL_TACHI_API_AUTH].userID;
-
-	if (authUserID === null) {
-		return res.status(401).json({
-			success: false,
-			description: "Authentication is required for this endpoint.",
+		await ACTION_UpdateUGPTShowcase(taker, {
+			game,
+			stats: stats as Array<ShowcaseStatDetails>,
+			userID: user.id,
 		});
-	}
 
-	const authedUser = await GetUserWithIDGuaranteed(authUserID);
-	const taker = { ip: req.ip, acct: { id: authedUser.id, username: authedUser.username } };
+		const settings = await GetUGPTSettingsDocument(user.id, game);
 
-	const statsPayload = req.safeBody as ShowcaseStatDetails[];
-
-	await ACTION_UpdateUGPTShowcase(taker, {
-		userID: user.id,
-		game,
-		playtype,
-		stats: statsPayload,
-	});
-
-	const newSettings = await GetUGPTSettingsDocument(user.id, game, playtype);
-
-	if (!newSettings) {
-		return res.status(500).json({
-			success: false,
-			description: `Failed to load settings after updating showcase.`,
-		});
-	}
-
-	return res.status(200).json({
-		success: true,
-		description: `Updated stat showcase.`,
-		body: newSettings,
-	});
-});
-
-export default router;
+		return success("Updated showcase.", settings);
+	},
+);

@@ -30,31 +30,38 @@ import { Alert, Button, Col, Form, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
 	BMS_TABLES,
-	FormatGameGroup,
+	FormatGame,
+	GameToGameGroup,
+	GetGameConfig,
 	GetGameGroupConfig,
-	GetGamePTConfig,
 	GetScoreMetrics,
-	type MONGO_TableDocument,
-	type MONGO_UGPTSettingsDocument,
-	type MONGO_UserDocument,
 	type ShowcaseStatDetails,
+	type TableDocument,
+	type UGPTSettingsDocument,
+	type UserDocument,
 } from "tachi-common";
 
-export default function UGPTSettingsPage({ reqUser, game, playtype }: UGPT) {
+export default function UGPTSettingsPage({ reqUser, game }: UGPT) {
 	const query = useQueryString();
 
 	const [page, setPage] = useState<"manage" | "preferences" | "showcase">(
 		query.get("showcase") ? "showcase" : "preferences",
 	);
-	const gameConfig = GetGameGroupConfig(game);
+	const gameConfig = GetGameConfig(game);
 
 	useSetSubheader(
-		["Users", reqUser.username, "Games", gameConfig.name, playtype, "Settings"],
+		[
+			"Users",
+			reqUser.username,
+			"Games",
+			GetGameGroupConfig(GameToGameGroup(game)).name,
+			"Settings",
+		],
 		[reqUser],
-		`${reqUser.username}'s ${FormatGameGroup(game, playtype)} Settings`,
+		`${reqUser.username}'s ${FormatGame(game)} Settings`,
 	);
 
-	const UGPT = { reqUser, game, playtype };
+	const UGPT = { reqUser, game };
 
 	const { loggedInData } = useContext(UGPTContext);
 	if (!loggedInData) {
@@ -139,33 +146,32 @@ export default function UGPTSettingsPage({ reqUser, game, playtype }: UGPT) {
 function PreferencesForm({
 	reqUser,
 	game,
-	playtype,
 	loggedInData,
-}: { loggedInData: { settings: MONGO_UGPTSettingsDocument } & UGPTData } & UGPT) {
+}: { loggedInData: { settings: UGPTSettingsDocument } & UGPTData } & UGPT) {
 	const { setLoggedInData } = useContext(UGPTContext);
 
 	const settings = loggedInData.settings;
 
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
 	const formik = useFormik({
 		initialValues: {
 			preferredScoreAlg:
-				settings.preferences.preferredScoreAlg || gptConfig.defaultScoreRatingAlg,
+				settings.preferences.preferredScoreAlg || gameConfig.defaultScoreRatingAlg,
 			preferredProfileAlg:
-				settings.preferences.preferredProfileAlg || gptConfig.defaultProfileRatingAlg,
+				settings.preferences.preferredProfileAlg || gameConfig.defaultProfileRatingAlg,
 			preferredSessionAlg:
-				settings.preferences.preferredSessionAlg || gptConfig.defaultSessionRatingAlg,
+				settings.preferences.preferredSessionAlg || gameConfig.defaultSessionRatingAlg,
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			gameSpecific: settings.preferences.gameSpecific as any,
 			defaultTable: settings.preferences.defaultTable,
 			preferredDefaultEnum:
-				settings.preferences.preferredDefaultEnum ?? gptConfig.preferredDefaultEnum,
+				settings.preferences.preferredDefaultEnum ?? gameConfig.preferredDefaultEnum,
 			preferredRanking: settings.preferences.preferredRanking ?? "global",
 		},
 		onSubmit: async (values) => {
-			const rj = await APIFetchV1<MONGO_UserDocument>(
-				`/users/${reqUser.id}/games/${game}/${playtype}/settings`,
+			const rj = await APIFetchV1<UserDocument>(
+				`/users/${reqUser.id}/games/${game}/settings`,
 				{
 					method: "PATCH",
 					body: JSON.stringify(values),
@@ -180,7 +186,7 @@ function PreferencesForm({
 			if (rj.success) {
 				setLoggedInData({
 					...loggedInData,
-					settings: deepmerge(settings as MONGO_UGPTSettingsDocument, {
+					settings: deepmerge(settings as UGPTSettingsDocument, {
 						preferences: values,
 					}),
 				});
@@ -188,8 +194,8 @@ function PreferencesForm({
 		},
 	});
 
-	const { data: tables, error } = useApiQuery<MONGO_TableDocument[]>(
-		`/games/${game}/${playtype}/tables?showInactive=true`,
+	const { data: tables, error } = useApiQuery<TableDocument[]>(
+		`/games/${game}/tables?showInactive=true`,
 	);
 
 	if (error) {
@@ -208,7 +214,7 @@ function PreferencesForm({
 
 	return (
 		<Form className="d-flex flex-column gap-4" onSubmit={formik.handleSubmit}>
-			{Object.keys(gptConfig.scoreRatingAlgs).length > 1 && (
+			{Object.keys(gameConfig.scoreRatingAlgs).length > 1 && (
 				<Form.Group className={formGroupClassNames}>
 					<Form.Label>Preferred Score Algorithm</Form.Label>
 					<Form.Select
@@ -216,9 +222,9 @@ function PreferencesForm({
 						onChange={formik.handleChange}
 						value={formik.values.preferredScoreAlg}
 					>
-						{Object.keys(gptConfig.scoreRatingAlgs).map((e) => (
+						{Object.keys(gameConfig.scoreRatingAlgs).map((e) => (
 							<option key={e} value={e}>
-								{FormatGPTScoreRatingName(game, playtype, e)}
+								{FormatGPTScoreRatingName(game, e)}
 							</option>
 						))}
 					</Form.Select>
@@ -228,7 +234,7 @@ function PreferencesForm({
 					</Form.Text>
 				</Form.Group>
 			)}
-			{Object.keys(gptConfig.sessionRatingAlgs).length > 1 && (
+			{Object.keys(gameConfig.sessionRatingAlgs).length > 1 && (
 				<Form.Group className={formGroupClassNames}>
 					<Form.Label>Preferred Session Algorithm</Form.Label>
 					<Form.Select
@@ -236,9 +242,9 @@ function PreferencesForm({
 						onChange={formik.handleChange}
 						value={formik.values.preferredSessionAlg}
 					>
-						{Object.keys(gptConfig.sessionRatingAlgs).map((e) => (
+						{Object.keys(gameConfig.sessionRatingAlgs).map((e) => (
 							<option key={e} value={e}>
-								{FormatGPTSessionRatingName(game, playtype, e)}
+								{FormatGPTSessionRatingName(game, e)}
 							</option>
 						))}
 					</Form.Select>
@@ -248,7 +254,7 @@ function PreferencesForm({
 					</Form.Text>
 				</Form.Group>
 			)}
-			{Object.keys(gptConfig.profileRatingAlgs).length > 1 && (
+			{Object.keys(gameConfig.profileRatingAlgs).length > 1 && (
 				<Form.Group className={formGroupClassNames}>
 					<Form.Label>Preferred Profile Algorithm</Form.Label>
 					<Form.Select
@@ -256,9 +262,9 @@ function PreferencesForm({
 						onChange={formik.handleChange}
 						value={formik.values.preferredProfileAlg}
 					>
-						{Object.keys(gptConfig.profileRatingAlgs).map((e) => (
+						{Object.keys(gameConfig.profileRatingAlgs).map((e) => (
 							<option key={e} value={e}>
-								{FormatGPTProfileRatingName(game, playtype, e)}
+								{FormatGPTProfileRatingName(game, e)}
 							</option>
 						))}
 					</Form.Select>
@@ -275,7 +281,7 @@ function PreferencesForm({
 					onChange={formik.handleChange}
 					value={formik.values.preferredDefaultEnum}
 				>
-					{GetScoreMetrics(gptConfig, "ENUM").map((e) => (
+					{GetScoreMetrics(gameConfig, "ENUM").map((e) => (
 						<option key={e} value={e}>
 							{UppercaseFirst(e)}
 						</option>
@@ -322,7 +328,7 @@ function PreferencesForm({
 					What folders would you like to see by default?
 				</Form.Text>
 			</Form.Group>
-			{game === "iidx" && (
+			{(game === "iidx-sp" || game === "iidx-dp") && (
 				<>
 					<Form.Group className={formGroupClassNames}>
 						<Form.Check
@@ -356,7 +362,7 @@ function PreferencesForm({
 					</Form.Group>
 				</>
 			)}
-			{(game === "sdvx" || game === "usc") && (
+			{(game === "sdvx" || game === "usc-controller" || game === "usc-keyboard") && (
 				<Form.Group className={formGroupClassNames}>
 					<Form.Label>VF6 Target</Form.Label>
 					<Form.Control
@@ -379,11 +385,11 @@ function PreferencesForm({
 					</Form.Text>
 				</Form.Group>
 			)}
-			{game === "bms" && (
+			{(game === "bms-7k" || game === "bms-14k") && (
 				<Form.Group className={formGroupClassNames}>
 					<Form.Label>Preferred Tables</Form.Label>
 
-					{BMS_TABLES.filter((e) => e.playtype === playtype).map((e) => (
+					{BMS_TABLES.filter((e) => e.game === game).map((e) => (
 						<Form.Check
 							checked={
 								formik.values.gameSpecific.displayTables?.includes(e.prefix) ??
@@ -394,9 +400,9 @@ function PreferencesForm({
 							onChange={(event) => {
 								const base: Array<string> =
 									formik.values.gameSpecific.displayTables ??
-									BMS_TABLES.filter(
-										(e) => e.playtype === playtype && !e.notDefault,
-									).map((e) => e.prefix);
+									BMS_TABLES.filter((e) => e.game === game && !e.notDefault).map(
+										(e) => e.prefix,
+									);
 
 								if (event.target.checked) {
 									formik.setFieldValue("gameSpecific.displayTables", [
@@ -429,9 +435,8 @@ function PreferencesForm({
 function ShowcaseForm({
 	reqUser,
 	game,
-	playtype,
 	loggedInData,
-}: { loggedInData: { settings: MONGO_UGPTSettingsDocument } & UGPTData } & UGPT) {
+}: { loggedInData: { settings: UGPTSettingsDocument } & UGPTData } & UGPT) {
 	const { setLoggedInData } = useContext(UGPTContext);
 
 	const settings = loggedInData.settings;
@@ -440,11 +445,11 @@ function ShowcaseForm({
 	const [show, setShow] = useState(false);
 
 	const SaveChanges = async () => {
-		const r = await APIFetchV1<MONGO_UGPTSettingsDocument>(
-			`/users/${reqUser.id}/games/${game}/${playtype}/showcase`,
+		const r = await APIFetchV1<UGPTSettingsDocument>(
+			`/users/${reqUser.id}/games/${game}/showcase`,
 			{
 				method: "PUT",
-				body: JSON.stringify(stats),
+				body: JSON.stringify({ showcase: stats }),
 				headers: { "Content-Type": "application/json" },
 			},
 			true,
@@ -478,13 +483,12 @@ function ShowcaseForm({
 					</Button>
 				</div>
 			)}
-			<RenderCurrentStats {...{ reqUser, game, playtype, stats, setStats }} />
+			<RenderCurrentStats {...{ reqUser, game, stats, setStats }} />
 			<UGPTStatCreator
 				game={game}
 				onCreate={(stat) => {
 					setStats([...stats, stat]);
 				}}
-				playtype={playtype}
 				reqUser={reqUser}
 				setShow={setShow}
 				show={show}
@@ -498,7 +502,6 @@ function RenderCurrentStats({
 	setStats,
 	reqUser,
 	game,
-	playtype,
 }: {
 	setStats: SetState<ShowcaseStatDetails[]>;
 	stats: ShowcaseStatDetails[];
@@ -519,7 +522,7 @@ function RenderCurrentStats({
 		<Row className="w-100 row-gap-4" lg={{ cols: 2 }}>
 			{stats.map((e, i) => (
 				<Col className="d-flex flex-column gap-4" key={i}>
-					<UGPTStatContainer game={game} playtype={playtype} reqUser={reqUser} stat={e} />
+					<UGPTStatContainer game={game} reqUser={reqUser} stat={e} />
 					<Button className="w-100" onClick={() => RemoveStatAtIndex(i)} variant="danger">
 						Delete
 					</Button>
@@ -529,7 +532,7 @@ function RenderCurrentStats({
 	);
 }
 
-function ManageAccount({ reqUser, game, playtype }: UGPT) {
+function ManageAccount({ reqUser, game }: UGPT) {
 	const [password, setPassword] = useState("");
 	const [deleting, setDeleting] = useState(false);
 
@@ -549,13 +552,12 @@ function ManageAccount({ reqUser, game, playtype }: UGPT) {
 			<Col className="mt-8" xs={12}>
 				<h3>Completely Wipe Profile</h3>
 				If you've <i>really</i> messed up, you can wipe your entire profile for{" "}
-				{FormatGameGroup(game, playtype)}.
+				{FormatGame(game)}.
 				<br />
 				<Alert className="mt-4" style={{ fontSize: "1.5rem" }} variant="warning">
 					It is very important to know that this is <b>NOT REVERSIBLE.</b> Wiping your
-					profile will <b>COMPLETELY DELETE</b> all of your{" "}
-					{FormatGameGroup(game, playtype)} scores from our server. We will not be able to
-					retrieve them.
+					profile will <b>COMPLETELY DELETE</b> all of your {FormatGame(game)} scores from
+					our server. We will not be able to retrieve them.
 				</Alert>
 				<br />
 				<Form.Group>
@@ -573,16 +575,13 @@ function ManageAccount({ reqUser, game, playtype }: UGPT) {
 					onClick={async () => {
 						if (
 							confirm(
-								`You are really about to delete all of your ${FormatGameGroup(
-									game,
-									playtype,
-								)} scores. This is your last chance to turn back.`,
+								`You are really about to delete all of your ${FormatGame(game)} scores. This is your last chance to turn back.`,
 							)
 						) {
 							setDeleting(true);
 
 							const res = await APIFetchV1(
-								`/users/${reqUser.id}/games/${game}/${playtype}`,
+								`/users/${reqUser.id}/games/${game}`,
 								{
 									method: "DELETE",
 									body: JSON.stringify({ "!password": password }),
@@ -597,14 +596,13 @@ function ManageAccount({ reqUser, game, playtype }: UGPT) {
 							setDeleting(false);
 
 							if (res.success) {
-								// bye!
 								window.location.href = "/";
 							}
 						}
 					}}
 					variant="outline-danger"
 				>
-					Yes, I want to delete my {FormatGameGroup(game, playtype)} account.
+					Yes, I want to delete my {FormatGame(game)} account.
 				</Button>
 				{deleting && (
 					<>

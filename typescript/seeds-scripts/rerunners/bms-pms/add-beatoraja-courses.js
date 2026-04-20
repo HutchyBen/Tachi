@@ -37,7 +37,7 @@ if (
 
 			courses.push({
 				md5sums,
-				playtype: options.playtype,
+				game: options.playtype === "7K" ? "bms-7k" : "bms-14k",
 				set: options.set,
 				title: d.name,
 				value: Number(options.index) + i,

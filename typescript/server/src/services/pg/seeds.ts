@@ -1,13 +1,15 @@
 import {
-	type MONGO_BMSCourseDocument,
-	type MONGO_ChartDocument,
-	type MONGO_FolderDocument,
-	type MONGO_GoalDocument,
-	type MONGO_QuestDocument,
-	type MONGO_QuestlineDocument,
-	type MONGO_SongDocument,
-	type MONGO_TableDocument,
-	V3ToGPTString,
+	type BMSCourseDocument,
+	type ChartDocument,
+	computeFolderSlug,
+	type FolderDocument,
+	type GoalDocument,
+	type QuestDocument,
+	type QuestlineDocument,
+	type SeedFolderRow,
+	type SongDocument,
+	type TableDocument,
+	type V3Game,
 } from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import type {
@@ -26,40 +28,42 @@ import type {
 	Game as PgGame,
 } from "tachi-db";
 
-import { computeDerivationChecksumForGPT } from "#game-implementations/utils/derivation-checksum";
-import { rebuildFolderChartLookup } from "#lib/folders/rebuild-folder-chart-lookup.js";
+import { ComputeChartStabilityChecksum } from "#game-implementations/utils/derivation-checksum";
+import { rebuildFolderChartLookup } from "#lib/folders/rebuild-folder-chart-lookup";
 import fs from "fs";
 import { type Insertable, type Kysely, sql } from "kysely";
 import path from "path";
 
 // ── Seed types ─────────────────────────────────────────────────────────────
 
-type SeedSong = { id: string; legacySongID?: number } & Omit<MONGO_SongDocument, "id">;
+type SeedSong = { id: string; legacySongID?: number } & Omit<SongDocument, "id">;
 // songID is now a hex string (migrated from the old integer FK).
 type SeedChart = {
 	id: string;
 	legacyChartID?: string;
 	songID: string;
-} & Omit<MONGO_ChartDocument, "songID">;
+} & Omit<ChartDocument, "songID">;
 // After 3-migrate-folders-tables.ts: folderID → legacyFolderID + id, game+playtype → game.
 // After 5-folders-to-sql-queries.ts: `where` is the SQL predicate (no leading WHERE).
 type SeedFolder = {
 	game: string;
 	id: string;
 	legacyFolderID?: string;
+	/** URL slug; becomes `folder.slug`. */
+	slug?: string;
 	/** Chart version filter; becomes `folder.version_filter`. */
 	versionFilter?: Array<string>;
 	/** SQL WHERE body from `5-folders-to-sql-queries.ts`; becomes `folder.where`. */
 	where: string;
-} & Omit<MONGO_FolderDocument, "data" | "folderID" | "game" | "playtype" | "type">;
-// After 3-migrate-folders-tables.ts: tableID → legacyTableID + id, game+playtype → game,
-// folders array now contains new hex ids.
+} & Omit<FolderDocument, "data" | "folderID" | "game" | "playtype" | "type">;
+// After 3-migrate-folders-tables.ts: tableID → legacyTableID + id, game+playtype → game.
+// `folders` entries are folder slugs (unique per game); see `6-tables-folder-refs-to-slugs.ts`.
 type SeedTable = {
 	folders: Array<string>;
 	game: string;
 	id: string;
 	legacyTableID?: string;
-} & Omit<MONGO_TableDocument, "folders" | "game" | "playtype" | "tableID">;
+} & Omit<TableDocument, "folders" | "game" | "playtype" | "tableID">;
 
 const INSERT_CHUNK = 500;
 
@@ -70,6 +74,40 @@ function seedFolderVersionFilter(f: SeedFolder): Array<string> | null {
 	}
 
 	return null;
+}
+
+/** Canonical folder slug for a seed row (matches `folder.slug` in Postgres). */
+function seedFolderResolvedSlug(f: SeedFolder): string {
+	const seedRow: SeedFolderRow = {
+		game: f.game,
+		id: f.id,
+		title: f.title,
+		versionFilter: f.versionFilter,
+		where: f.where,
+		slug: f.slug,
+	};
+
+	return f.slug ?? computeFolderSlug(seedRow);
+}
+
+/** Maps `game\\0slug` → folder id for resolving `tables.json` folder refs. */
+function buildFolderGameSlugToIdMap(folders: Array<SeedFolder>): Map<string, string> {
+	const m = new Map<string, string>();
+
+	for (const f of folders) {
+		const slug = seedFolderResolvedSlug(f);
+		const key = `${f.game}\0${slug}`;
+
+		if (m.has(key)) {
+			throw new Error(
+				`Duplicate folder slug ${JSON.stringify(slug)} for game ${JSON.stringify(f.game)}`,
+			);
+		}
+
+		m.set(key, f.id);
+	}
+
+	return m;
 }
 
 function readJsonSeed<T>(seedsDir: string, filename: string): Array<T> {
@@ -165,7 +203,7 @@ async function upsertSongsForGameGroup(
 
 async function upsertChartsForPgGame(
 	pg: Kysely<Database>,
-	pgGame: PgGame,
+	game: V3Game,
 	charts: Array<SeedChart>,
 ): Promise<void> {
 	if (charts.length === 0) {
@@ -174,28 +212,26 @@ async function upsertChartsForPgGame(
 
 	const chartRows: Array<NewChart> = [];
 
-	const gpt = V3ToGPTString(pgGame);
-
 	for (const c of charts) {
 		if (!c.id) {
 			throw new Error(
 				`Chart ${c.legacyChartID ?? "(unknown)"}` +
-					` (${pgGame}) is missing an id. Run 1-migrate-to-pg-style.ts first.`,
+					` (${game}) is missing an id. Run 1-migrate-to-pg-style.ts first.`,
 			);
 		}
 
 		if (!c.legacyChartID) {
 			throw new Error(
-				`Chart ${c.id} (${pgGame}) is missing legacyChartID. Run 1-migrate-to-pg-style.ts first.`,
+				`Chart ${c.id} (${game}) is missing legacyChartID. Run 1-migrate-to-pg-style.ts first.`,
 			);
 		}
 
-		const checksum = computeDerivationChecksumForGPT(gpt, c as unknown as MONGO_ChartDocument);
+		const checksum = ComputeChartStabilityChecksum(game, c as unknown as ChartDocument);
 
 		chartRows.push({
 			id: c.id,
 			legacy_id: c.legacyChartID,
-			game: pgGame,
+			game: game,
 			song_id: c.songID,
 			level: c.level,
 			level_num: c.levelNum,
@@ -276,37 +312,14 @@ export async function importSeedsSubset(
 		const filesForGame = chartFiles.filter((f) => f.startsWith(`charts-${gg}`));
 
 		for (const file of filesForGame) {
-			const pgGame = file.replace(/^charts-/u, "").replace(/\.json$/u, "") as PgGame;
+			const game = file.replace(/^charts-/u, "").replace(/\.json$/u, "") as V3Game;
 			const charts = readJsonSeed<SeedChart>(seedsDir, file).filter((c) =>
 				loadedSongIds.has(c.songID),
 			);
 
-			await upsertChartsForPgGame(pg, pgGame, charts);
+			await upsertChartsForPgGame(pg, game, charts);
 		}
 	}
-}
-
-// ── Game helpers ───────────────────────────────────────────────────────────
-
-const SINGLE_PT_GAMES = new Set([
-	"arcaea",
-	"chunithm",
-	"jubeat",
-	"maimai",
-	"maimaidx",
-	"museca",
-	"ongeki",
-	"popn",
-	"sdvx",
-	"wacca",
-]);
-
-export function toPgGame(gameGroup: string, legacyPlaytype: string): PgGame {
-	if (SINGLE_PT_GAMES.has(gameGroup)) {
-		return gameGroup as PgGame;
-	}
-
-	return `${gameGroup}-${legacyPlaytype.toLowerCase()}` as PgGame;
 }
 
 // ── Chart ID map ───────────────────────────────────────────────────────────
@@ -389,15 +402,25 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 	}
 
 	// ── folders ────────────────────────────────────────────────────────────
+	let folderSeedList: Array<SeedFolder> | undefined;
+
 	if (files.has("folders.json")) {
 		console.log("[folder]");
-		const folders = readCollection<SeedFolder>("folders.json");
+		folderSeedList = readCollection<SeedFolder>("folders.json");
 
-		const folderRows: Array<NewFolder> = folders.map((f) => {
+		const folderRows: Array<NewFolder> = folderSeedList.map((f) => {
 			if (typeof f.where !== "string" || f.where.trim() === "") {
 				throw new Error(
 					`Folder "${f.title}" (${f.id}) has no non-empty "where" SQL string. ` +
 						`Run seeds-scripts/rerunners/v3/5-folders-to-sql-queries.ts on folders.json.`,
+				);
+			}
+
+			const slug = seedFolderResolvedSlug(f);
+
+			if (f.slug !== undefined && f.slug !== slug) {
+				throw new Error(
+					`Folder "${f.title}" (${f.id}): folders.json slug ${JSON.stringify(f.slug)} does not match computed ${JSON.stringify(slug)}`,
 				);
 			}
 
@@ -413,6 +436,7 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 				game: f.game as PgGame,
 				inactive: f.inactive,
 				title: f.title,
+				slug,
 				where: f.where,
 				version_filter: seedFolderVersionFilter(f),
 				search_terms: f.searchTerms ?? [],
@@ -429,6 +453,7 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 					oc.column("id").doUpdateSet({
 						inactive: sql`excluded.inactive`,
 						title: sql`excluded.title`,
+						slug: sql`excluded.slug`,
 						where: sql`excluded.where`,
 						version_filter: sql`excluded.version_filter`,
 						search_terms: sql`excluded.search_terms`,
@@ -437,12 +462,20 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 				.execute();
 		}
 
-		console.log(`  ${folders.length} folders\n`);
+		console.log(`  ${folderSeedList.length} folders\n`);
 	}
 
 	// ── tables ─────────────────────────────────────────────────────────────
 	if (files.has("tables.json")) {
 		console.log("[table / table_folder]");
+
+		if (folderSeedList === undefined) {
+			throw new Error(
+				"tables.json requires folders.json to resolve folder slugs to ids for table_folder rows.",
+			);
+		}
+
+		const folderSlugToId = buildFolderGameSlugToIdMap(folderSeedList);
 		const tables = readCollection<SeedTable>("tables.json");
 
 		const tableRows: Array<NewTable> = tables.map((t) => ({
@@ -481,7 +514,21 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 		await chunkedDeletePg(pg, "table_folder", "table_id", tableIds);
 
 		const tfRows: Array<NewTableFolder> = tables.flatMap((t) =>
-			t.folders.map((folderId) => ({ table_id: t.id, folder_id: folderId })),
+			t.folders.map((folderSlug, ordering) => {
+				const folderId = folderSlugToId.get(`${t.game}\0${folderSlug}`);
+
+				if (folderId === undefined) {
+					throw new Error(
+						`Table "${t.title}" (${t.id}): unknown folder slug ${JSON.stringify(folderSlug)} for game ${JSON.stringify(t.game)} (check tables.json / folders.json; run seeds-scripts/rerunners/v3/6-tables-folder-refs-to-slugs.ts if migrating from folder ids).`,
+					);
+				}
+
+				return {
+					table_id: t.id,
+					folder_id: folderId,
+					ordering,
+				};
+			}),
 		);
 
 		await batchIgnorePg(pg, "table_folder", tfRows);
@@ -491,13 +538,13 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 	// ── bms_course_lookup ──────────────────────────────────────────────────
 	if (files.has("bms-course-lookup.json")) {
 		console.log("[bms_course_lookup]");
-		const courses = readCollection<MONGO_BMSCourseDocument>("bms-course-lookup.json");
+		const courses = readCollection<BMSCourseDocument>("bms-course-lookup.json");
 
 		const courseRows: Array<NewBmsCourseLookup> = courses.map((c) => ({
 			md5sums: c.md5sums,
 			title: c.title,
 			set: c.set as string,
-			playtype: c.playtype as string,
+			game: c.game as PgGame,
 			value: c.value as string,
 		}));
 
@@ -508,11 +555,11 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 	// ── goals ──────────────────────────────────────────────────────────────
 	if (files.has("goals.json")) {
 		console.log("[goal]");
-		const goals = readCollection<MONGO_GoalDocument>("goals.json");
+		const goals = readCollection<GoalDocument>("goals.json");
 
 		const goalRows: Array<NewGoal> = goals.map((g) => ({
 			id: g.goalID,
-			game: toPgGame(g.game, g.playtype),
+			game: g.game,
 			name: g.name,
 			charts: JSON.stringify(g.charts),
 			criteria: JSON.stringify(g.criteria),
@@ -526,11 +573,11 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 	// ── quests ─────────────────────────────────────────────────────────────
 	if (files.has("quests.json")) {
 		console.log("[quest]");
-		const quests = readCollection<MONGO_QuestDocument>("quests.json");
+		const quests = readCollection<QuestDocument>("quests.json");
 
 		const questRows: Array<NewQuest> = quests.map((q) => ({
 			id: q.questID,
-			game: toPgGame(q.game, q.playtype),
+			game: q.game,
 			name: q.name,
 			description: q.desc,
 			quest_data: JSON.stringify(q.questData),
@@ -558,11 +605,11 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 	// ── questlines ─────────────────────────────────────────────────────────
 	if (files.has("questlines.json")) {
 		console.log("[questline / questline_quest]");
-		const questlines = readCollection<MONGO_QuestlineDocument>("questlines.json");
+		const questlines = readCollection<QuestlineDocument>("questlines.json");
 
 		const qlRows: Array<NewQuestline> = questlines.map((ql) => ({
 			id: ql.questlineID,
-			game: toPgGame(ql.game, ql.playtype),
+			game: ql.game,
 			name: ql.name,
 			description: ql.desc,
 		}));

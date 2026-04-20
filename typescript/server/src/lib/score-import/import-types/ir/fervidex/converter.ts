@@ -1,20 +1,20 @@
-import { CreateScoreID } from "#lib/score-import/framework/score-importing/score-id";
-import DB from "#services/pg/db";
-import { DeleteUndefinedProps, IsNullishOrEmptyStr } from "#utils/misc";
-import { FindIIDXChartOnInGameIDVersion, FindIIDXChartWith2DXtraHash } from "#utils/queries/charts";
-import { FindSongOnID } from "#utils/queries/songs";
-import { type Difficulties, GetGPTString, MongoChartLegacyId, type Playtypes } from "tachi-common";
-
-import type { DryScore } from "../../../framework/common/types";
-import type { ConverterFunction } from "../../common/types";
-import type { FervidexContext, FervidexScore } from "./types";
+import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
 
 import {
 	InternalFailure,
 	InvalidScoreFailure,
 	SkipScoreFailure,
 	SongOrChartNotFoundFailure,
-} from "../../../framework/common/converter-failures";
+} from "#lib/score-import/framework/common/converter-failures";
+import { CreateScoreID } from "#lib/score-import/framework/score-importing/score-id";
+import DB from "#services/pg/db";
+import { DeleteUndefinedProps, IsNullishOrEmptyStr } from "#utils/misc";
+import { FindIIDXChartOnInGameIDVersion, FindIIDXChartWith2DXtraHash } from "#utils/queries/charts";
+import { FindSongOnID } from "#utils/queries/songs";
+import { type Difficulties, type GamesForGroup } from "tachi-common";
+
+import type { FervidexContext, FervidexScore } from "./types";
 
 export const FERVIDEX_LAMP_LOOKUP = {
 	0: "NO PLAY",
@@ -29,7 +29,7 @@ export const FERVIDEX_LAMP_LOOKUP = {
 
 export function TachifyAssist(
 	assist: Required<FervidexScore>["option"]["assist"],
-): DryScore<"iidx:DP" | "iidx:SP">["scoreMeta"]["assist"] {
+): DryScore<GamesForGroup["iidx"]>["scoreMeta"]["assist"] {
 	switch (assist) {
 		case "FULL_ASSIST":
 		case "ASCR_LEGACY":
@@ -46,7 +46,7 @@ export function TachifyAssist(
 
 export function TachifyGauge(
 	gauge: Required<FervidexScore>["option"]["gauge"],
-): DryScore<"iidx:DP" | "iidx:SP">["scoreMeta"]["gauge"] {
+): DryScore<GamesForGroup["iidx"]>["scoreMeta"]["gauge"] {
 	switch (gauge) {
 		case "ASSISTED_EASY":
 			return "ASSISTED EASY";
@@ -69,7 +69,7 @@ export function TachifyGauge(
 
 export function TachifyRange(
 	gauge: Required<FervidexScore>["option"]["range"],
-): DryScore<"iidx:DP" | "iidx:SP">["scoreMeta"]["range"] {
+): DryScore<GamesForGroup["iidx"]>["scoreMeta"]["range"] {
 	switch (gauge) {
 		case "HIDDEN_PLUS":
 			return "HIDDEN+";
@@ -104,15 +104,15 @@ export function TachifyRandom(gauge: Required<FervidexScore>["option"]["style"])
 }
 
 export function SplitFervidexChartRef(ferDif: FervidexScore["chart"]) {
-	let playtype: Playtypes["iidx"];
+	let game: "iidx-dp" | "iidx-sp";
 
 	if (ferDif.startsWith("sp")) {
-		playtype = "SP";
+		game = "iidx-sp";
 	} else {
-		playtype = "DP";
+		game = "iidx-dp";
 	}
 
-	let difficulty: Difficulties["iidx:DP" | "iidx:SP"];
+	let difficulty: Difficulties[GamesForGroup["iidx"]];
 
 	switch (ferDif[ferDif.length - 1]) {
 		case "b":
@@ -142,7 +142,7 @@ export function SplitFervidexChartRef(ferDif: FervidexScore["chart"]) {
 			throw new InternalFailure(`Invalid fervidex difficulty of ${ferDif}`);
 	}
 
-	return { playtype, difficulty };
+	return { game, difficulty };
 }
 
 export const ConverterIRFervidex: ConverterFunction<FervidexScore, FervidexContext> = async (
@@ -152,7 +152,7 @@ export const ConverterIRFervidex: ConverterFunction<FervidexScore, FervidexConte
 	log,
 ) => {
 	// eslint-disable-next-line prefer-const
-	let { difficulty, playtype } = SplitFervidexChartRef(data.chart);
+	let { difficulty, game } = SplitFervidexChartRef(data.chart);
 
 	// Scripted Long used to be an ANOTHER with id 21201
 	//
@@ -173,8 +173,8 @@ export const ConverterIRFervidex: ConverterFunction<FervidexScore, FervidexConte
 		chart = await FindIIDXChartWith2DXtraHash(data.chart_sha256);
 	} else {
 		chart = await FindIIDXChartOnInGameIDVersion(
+			game,
 			data.entry_id,
-			playtype,
 			difficulty,
 			context.version,
 		);
@@ -182,18 +182,18 @@ export const ConverterIRFervidex: ConverterFunction<FervidexScore, FervidexConte
 
 	if (!chart) {
 		throw new SongOrChartNotFoundFailure(
-			`Could not find chart with songID ${data.entry_id} (${playtype} ${difficulty} [${context.version}])`,
+			`Could not find chart with songID ${data.entry_id} (${game} ${difficulty} [${context.version}])`,
 			importType,
 			data,
 			context,
 		);
 	}
 
-	const song = await FindSongOnID("iidx", chart.songID);
+	const song = await FindSongOnID("iidx", chart.song.id);
 
 	if (!song) {
-		log.error(`Song ${chart.songID} (iidx) has no parent song?`);
-		throw new InternalFailure(`Song ${chart.songID} (iidx) has no parent song?`);
+		log.error(`Song ${chart.song.id} (iidx) has no parent song?`);
+		throw new InternalFailure(`Song ${chart.song.id} (iidx) has no parent song?`);
 	}
 
 	const gaugeHistory = data.gauge.map((e) => (e > 200 ? null : e));
@@ -212,8 +212,8 @@ export const ConverterIRFervidex: ConverterFunction<FervidexScore, FervidexConte
 		bp = null;
 	}
 
-	const dryScore: DryScore<"iidx:DP" | "iidx:SP"> = {
-		game: "iidx",
+	const dryScore: DryScore<typeof game> = {
+		game,
 		service: "Fervidex",
 		comment: null,
 		importType: "ir/fervidex",
@@ -248,7 +248,7 @@ export const ConverterIRFervidex: ConverterFunction<FervidexScore, FervidexConte
 			gauge: TachifyGauge(data.option?.gauge),
 
 			random:
-				chart.playtype === "SP"
+				game === "iidx-sp"
 					? TachifyRandom(data.option?.style)
 					: [TachifyRandom(data.option?.style), TachifyRandom(data.option?.style_2p)],
 			range: TachifyRange(data.option?.range),
@@ -262,12 +262,7 @@ export const ConverterIRFervidex: ConverterFunction<FervidexScore, FervidexConte
 	// marked as a duplicate, but with highlight set. As such, we should highlight
 	// the score this is for.
 	if (data.highlight === true) {
-		const scoreID = CreateScoreID(
-			GetGPTString("iidx", chart.playtype),
-			context.userID,
-			dryScore,
-			MongoChartLegacyId(chart),
-		);
+		const scoreID = CreateScoreID(game, context.userID, dryScore, chart.chartID);
 
 		await DB.transaction().execute(async (trx) => {
 			const scoreRow = await trx

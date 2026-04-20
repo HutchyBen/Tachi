@@ -1,15 +1,21 @@
-import { GetChartById } from "#lib/db-formats/chart";
-import { LoadFolderDocumentById } from "#lib/db-formats/folders";
+import { GetChartByIdForGame } from "#lib/db-formats/chart";
+import { LoadFolderDocumentByGameAndSlug } from "#lib/db-formats/folders";
 import { SELECT_GOAL, SELECT_GOAL_SUB_WITH_GOAL_GAME } from "#lib/db-formats/goal";
-import { SELECT_QUEST_SUB_WITH_QUEST_GAME } from "#lib/db-formats/quest";
+import { SELECT_QUEST, SELECT_QUEST_SUB_WITH_QUEST_GAME } from "#lib/db-formats/quest";
 import {
+	AttachFolderSlugsToGoals,
 	ToGoalDocument,
 	ToGoalSubscriptionDocument,
+	ToQuestDocument,
 	ToQuestSubscriptionDocument,
 } from "#lib/db-formats/target-documents";
+import { GetFolderChartIDs } from "#lib/folders/folders";
 import { log } from "#lib/log/log";
+import { withUserGameProfile } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
 import { GetRelevantGoals } from "#lib/targets/goals";
 import { GetParentQuests } from "#lib/targets/quests";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
 import DB from "#services/pg/db";
 import {
 	GetRecentlyAchievedGoals,
@@ -17,260 +23,234 @@ import {
 	GetRecentlyInteractedGoals,
 	GetRecentlyInteractedQuests,
 } from "#utils/db";
-import { GetFolderChartIDs } from "#utils/folder";
-import { GetUGPT } from "#utils/req-tachi-data";
-import { Router } from "express";
-import { GamePTToV3, MongoChartLegacyId } from "tachi-common";
-
-import goalsRouter from "./goals/router";
-import questsRouter from "./quests/router";
-
-const router: Router = Router({ mergeParams: true });
+import { ExpectedErr } from "bliss";
+import { LEGACY_GameToGameGroupPT } from "tachi-common";
 
 /**
  * Return a user's recently achieved goals and quests.
  *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/targets/recently-achieved
+ * @name GET /api/v1/users/:userID/games/:game/targets/recently-achieved
  */
-router.get("/recently-achieved", async (req, res) => {
-	const { game, playtype, user } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/targets/recently-achieved",
+	withUserGameProfile,
+	async ({ ctx }) => {
+		const { requestedUser: user, game } = ctx;
+		const { gameGroup, playtype } = LEGACY_GameToGameGroupPT(game);
 
-	const userID = user.id;
+		const [{ goals, goalSubs }, { quests, questSubs }] = await Promise.all([
+			GetRecentlyAchievedGoals({ game: gameGroup, playtype, userID: user.id }),
+			GetRecentlyAchievedQuests({ game: gameGroup, playtype, userID: user.id }),
+		]);
 
-	const [{ goals, goalSubs }, { quests, questSubs }] = await Promise.all([
-		GetRecentlyAchievedGoals({ userID, game, playtype }),
-		GetRecentlyAchievedQuests({ userID, game, playtype }),
-	]);
-
-	return res.status(200).json({
-		success: true,
-		description: `Returned ${user.username}'s recently achieved targets.`,
-		body: {
-			goals,
-			quests,
+		return success(`Returned ${user.username}'s recently achieved targets.`, {
 			goalSubs,
+			goals,
 			questSubs,
+			quests,
 			user,
-		},
-	});
-});
+		});
+	},
+);
 
 /**
- * Returns a user's recently interacted with (raised, etc.) goals and quests.
- * Note that this does not include recently achieved.
+ * Returns a user's recently interacted with goals and quests.
  *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/targets/recently-raised
+ * @name GET /api/v1/users/:userID/games/:game/targets/recently-raised
  */
-router.get("/recently-raised", async (req, res) => {
-	const { game, playtype, user } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/targets/recently-raised",
+	withUserGameProfile,
+	async ({ ctx }) => {
+		const { requestedUser: user, game } = ctx;
+		const { gameGroup, playtype } = LEGACY_GameToGameGroupPT(game);
 
-	const userID = user.id;
+		const [{ goals, goalSubs }, { quests, questSubs }] = await Promise.all([
+			GetRecentlyInteractedGoals({ game: gameGroup, playtype, userID: user.id }),
+			GetRecentlyInteractedQuests({ game: gameGroup, playtype, userID: user.id }),
+		]);
 
-	const [{ goals, goalSubs }, { quests, questSubs }] = await Promise.all([
-		GetRecentlyInteractedGoals({ userID, game, playtype }),
-		GetRecentlyInteractedQuests({ userID, game, playtype }),
-	]);
-
-	return res.status(200).json({
-		success: true,
-		description: `Returned ${user.username}'s recently achieved targets.`,
-		body: {
-			goals,
-			quests,
+		return success(`Returned ${user.username}'s recently achieved targets.`, {
 			goalSubs,
+			goals,
 			questSubs,
+			quests,
 			user,
-		},
-	});
-});
+		});
+	},
+);
 
 /**
- * Find what unachieved targets this user has set that consider this chart.
+ * Find what targets this user has set that consider this chart.
  *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/targets/on-chart/:chartID
+ * @name GET /api/v1/users/:userID/games/:game/targets/on-chart/:chartID
  */
-router.get("/on-chart/:chartID", async (req, res) => {
-	const { game, playtype, user } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/targets/on-chart/:chartID",
+	withUserGameProfile,
+	async ({ ctx, params }) => {
+		const { requestedUser: user, game } = ctx;
 
-	const chartIDParam = req.params.chartID;
+		const chart = await GetChartByIdForGame(game, params.chartID);
 
-	const chart = await GetChartById(GamePTToV3(game, playtype), chartIDParam);
-
-	if (!chart) {
-		return res.status(404).json({
-			success: false,
-			description: `Failed to find a chart with chartID '${chartIDParam}'.`,
-		});
-	}
-
-	const { goals, goalSubsMap } = await GetRelevantGoals(
-		game,
-		user.id,
-		new Set([MongoChartLegacyId(chart)]),
-		log,
-		false,
-	);
-
-	const goalSubs = [...goalSubsMap.values()];
-
-	const quests = await GetParentQuests(user.id, game, playtype, goalSubs);
-
-	const v3Game = GamePTToV3(game, playtype);
-	const questIds = quests.map((e) => e.questID);
-
-	const questSubRows =
-		questIds.length === 0
-			? []
-			: await DB.selectFrom("quest_sub")
-					.innerJoin("quest", "quest.id", "quest_sub.quest_id")
-					.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
-					.where("quest_sub.user_id", "=", user.id)
-					.where("quest.game", "=", v3Game)
-					.where("quest_sub.quest_id", "in", questIds)
-					.execute();
-
-	const questSubs = questSubRows.map((r) => ToQuestSubscriptionDocument(r));
-
-	return res.status(200).json({
-		success: true,
-		description: `Found pertinent goals`,
-		body: {
-			goals,
-			goalSubs,
-			quests,
-			questSubs,
-		},
-	});
-});
-
-/**
- * Find what unachieved targets this user has set that involve this folder.
- *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/targets/on-folder/:folderID
- */
-router.get("/on-folder/:folderID", async (req, res) => {
-	const { game, playtype, user } = GetUGPT(req);
-
-	const folderID = req.params.folderID;
-
-	const folder = await LoadFolderDocumentById(folderID);
-
-	if (!folder || folder.game !== game || folder.playtype !== playtype) {
-		return res.status(404).json({
-			success: false,
-			description: `Failed to find a folder with folderID '${folderID}'.`,
-		});
-	}
-
-	const folderChartIDs = await GetFolderChartIDs(folderID);
-
-	const v3Game = GamePTToV3(game, playtype);
-
-	const allSubRows = await DB.selectFrom("goal_sub")
-		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-		.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
-		.where("goal_sub.user_id", "=", user.id)
-		.where("goal.game", "=", v3Game)
-		.execute();
-
-	const allGoalSubs = allSubRows.map((r) => ToGoalSubscriptionDocument(r));
-
-	const goalIDs = allGoalSubs.map((e) => e.goalID);
-
-	const goalDocRows =
-		goalIDs.length === 0
-			? []
-			: await DB.selectFrom("goal")
-					.select(SELECT_GOAL)
-					.where("goal.id", "in", goalIDs)
-					.execute();
-
-	const goals: Array<ReturnType<typeof ToGoalDocument>> = [];
-
-	for (const row of goalDocRows) {
-		const g = ToGoalDocument(row);
-
-		if (g.charts.type === "single" && folderChartIDs.includes(g.charts.data)) {
-			goals.push(g);
-		} else if (
-			g.charts.type === "multi" &&
-			g.charts.data.some((c: string) => folderChartIDs.includes(c))
-		) {
-			goals.push(g);
-		} else if (g.charts.type === "folder" && g.charts.data === folderID) {
-			goals.push(g);
+		if (!chart) {
+			throw new ExpectedErr(404, `Failed to find a chart with chartID '${params.chartID}'.`);
 		}
-	}
 
-	const active = new Set(goals.map((g) => g.goalID));
-	const goalSubs = allGoalSubs.filter((s) => active.has(s.goalID));
+		const { goals, goalSubsMap } = await GetRelevantGoals(
+			game,
+			user.id,
+			new Set([chart.chartID]),
+			log,
+			false,
+		);
 
-	const quests = await GetParentQuests(user.id, game, playtype, goalSubs);
+		const goalSubs = [...goalSubsMap.values()];
+		const quests = await GetParentQuests(user.id, game, goalSubs);
+		const questIds = quests.map((e) => e.questID);
 
-	const questIds = quests.map((e) => e.questID);
+		const questSubRows =
+			questIds.length === 0
+				? []
+				: await DB.selectFrom("quest_sub")
+						.innerJoin("quest", "quest.id", "quest_sub.quest_id")
+						.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
+						.where("quest_sub.user_id", "=", user.id)
+						.where("quest.game", "=", game)
+						.where("quest_sub.quest_id", "in", questIds)
+						.execute();
 
-	const questSubRows =
-		questIds.length === 0
-			? []
-			: await DB.selectFrom("quest_sub")
-					.innerJoin("quest", "quest.id", "quest_sub.quest_id")
-					.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
-					.where("quest_sub.user_id", "=", user.id)
-					.where("quest.game", "=", v3Game)
-					.where("quest_sub.quest_id", "in", questIds)
-					.execute();
+		const questSubs = questSubRows.map((r) => ToQuestSubscriptionDocument(r));
 
-	const questSubs = questSubRows.map((r) => ToQuestSubscriptionDocument(r));
+		await AttachFolderSlugsToGoals(goals);
 
-	return res.status(200).json({
-		success: true,
-		description: `Found pertinent goals`,
-		body: {
-			goals,
-			goalSubs,
-			quests,
-			questSubs,
-		},
-	});
-});
+		return success("Found pertinent goals", { goalSubs, goals, questSubs, quests });
+	},
+);
 
 /**
- * Retrieve all of this user's target subscriptions.
+ * Find what targets this user has set that involve this folder.
  *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/targets/all-subs
+ * @name GET /api/v1/users/:userID/games/:game/targets/on-folder/:folderSlug
  */
-router.get("/all-subs", async (req, res) => {
-	const { user, game, playtype } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/targets/on-folder/:folderSlug",
+	withUserGameProfile,
+	async ({ ctx, params }) => {
+		const { requestedUser, game } = ctx;
 
-	const v3Game = GamePTToV3(game, playtype);
+		const folder = await LoadFolderDocumentByGameAndSlug(game, params.folderSlug);
 
-	const [goalSubRows, questSubRows] = await Promise.all([
-		DB.selectFrom("goal_sub")
+		if (!folder || folder.game !== game) {
+			throw new ExpectedErr(404, `Failed to find a folder with slug '${params.folderSlug}'.`);
+		}
+
+		const folderChartIDs = await GetFolderChartIDs(folder.folderID);
+
+		const allSubRows = await DB.selectFrom("goal_sub")
 			.innerJoin("goal", "goal.id", "goal_sub.goal_id")
 			.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
-			.where("goal_sub.user_id", "=", user.id)
-			.where("goal.game", "=", v3Game)
-			.execute(),
-		DB.selectFrom("quest_sub")
-			.innerJoin("quest", "quest.id", "quest_sub.quest_id")
-			.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
-			.where("quest_sub.user_id", "=", user.id)
-			.where("quest.game", "=", v3Game)
-			.execute(),
-	]);
+			.where("goal_sub.user_id", "=", requestedUser.id)
+			.where("goal.game", "=", game)
+			.execute();
 
-	const goalSubs = goalSubRows.map((r) => ToGoalSubscriptionDocument(r));
+		const allGoalSubs = allSubRows.map((r) => ToGoalSubscriptionDocument(r));
+		const goalIDs = allGoalSubs.map((e) => e.goalID);
 
-	const questSubs = questSubRows.map((r) => ToQuestSubscriptionDocument(r));
+		const goalDocRows =
+			goalIDs.length === 0
+				? []
+				: await DB.selectFrom("goal")
+						.select(SELECT_GOAL)
+						.where("goal.id", "in", goalIDs)
+						.execute();
 
-	return res.status(200).json({
-		success: true,
-		description: `Returned all target subscriptions.`,
-		body: { goalSubs, questSubs },
-	});
-});
+		const goals: Array<ReturnType<typeof ToGoalDocument>> = [];
 
-router.use("/goals", goalsRouter);
-router.use("/quests", questsRouter);
+		for (const row of goalDocRows) {
+			const g = ToGoalDocument(row);
 
-export default router;
+			if (g.charts.type === "single" && folderChartIDs.includes(g.charts.data)) {
+				goals.push(g);
+			} else if (
+				g.charts.type === "multi" &&
+				g.charts.data.some((c: string) => folderChartIDs.includes(c))
+			) {
+				goals.push(g);
+			} else if (g.charts.type === "folder" && g.charts.data === folder.folderID) {
+				goals.push(g);
+			}
+		}
+
+		const filteredGoalSubs = allGoalSubs.filter((s) =>
+			goals.find((g) => g.goalID === s.goalID),
+		);
+
+		await AttachFolderSlugsToGoals(goals);
+
+		return success("Found pertinent goals.", {
+			folder,
+			goalSubs: filteredGoalSubs,
+			goals,
+		});
+	},
+);
+
+/**
+ * Retrieve all of this user's goal and quest subscriptions.
+ *
+ * @name GET /api/v1/users/:userID/games/:game/targets/all-subs
+ */
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/targets/all-subs",
+	withUserGameProfile,
+	async ({ ctx }) => {
+		const { requestedUser: user, game } = ctx;
+
+		const [goalSubRows, questSubRows] = await Promise.all([
+			DB.selectFrom("goal_sub")
+				.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+				.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
+				.where("goal_sub.user_id", "=", user.id)
+				.where("goal.game", "=", game)
+				.execute(),
+			DB.selectFrom("quest_sub")
+				.innerJoin("quest", "quest.id", "quest_sub.quest_id")
+				.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
+				.where("quest_sub.user_id", "=", user.id)
+				.where("quest.game", "=", game)
+				.execute(),
+		]);
+
+		const goalSubs = goalSubRows.map(ToGoalSubscriptionDocument);
+		const questSubs = questSubRows.map(ToQuestSubscriptionDocument);
+
+		const goalIds = goalSubs.map((e) => e.goalID);
+		const goalRows =
+			goalIds.length === 0
+				? []
+				: await DB.selectFrom("goal")
+						.select(SELECT_GOAL)
+						.where("goal.id", "in", goalIds)
+						.execute();
+		const goals = goalRows.map(ToGoalDocument);
+		await AttachFolderSlugsToGoals(goals);
+
+		const questIds = questSubs.map((e) => e.questID);
+		const questRows =
+			questIds.length === 0
+				? []
+				: await DB.selectFrom("quest")
+						.select(SELECT_QUEST)
+						.where("quest.id", "in", questIds)
+						.execute();
+		const quests = questRows.map(ToQuestDocument);
+
+		return success("Returned all target subscriptions.", {
+			goalSubs,
+			goals,
+			questSubs,
+			quests,
+		});
+	},
+);

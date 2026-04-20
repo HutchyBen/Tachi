@@ -12,31 +12,28 @@ export default function UGPTStatContainer({
 	stat,
 	reqUser,
 	game,
-	playtype,
 	shouldFetchCompareID,
 }: { shouldFetchCompareID?: integer; stat: ShowcaseStatDetails } & UGPT) {
 	const searchParams = new URLSearchParams();
 
 	searchParams.set("mode", stat.mode);
-	searchParams.set("metric", stat.metric);
+
+	if (stat.mode === "folder") {
+		searchParams.set("metric", stat.metric);
+	}
 
 	if (stat.mode === "chart") {
 		searchParams.set("chartID", stat.chartID);
 	} else if (stat.mode === "folder") {
-		searchParams.set(
-			"folderID",
-			Array.isArray(stat.folderID) ? stat.folderID.join(",") : stat.folderID,
-		);
+		searchParams.set("folderSlug", Array.isArray(stat.slug) ? stat.slug.join(",") : stat.slug);
 		searchParams.set("gte", stat.gte.toString());
 	}
 
 	const { data, error } = useQuery(
-		`/users/${reqUser.id}/games/${game}/${playtype}/showcase/custom?${searchParams.toString()}`,
+		`/users/${reqUser.id}/games/${game}/showcase/custom?${searchParams.toString()}`,
 		async () => {
 			const res = await APIFetchV1<UGPTPreferenceStatsReturn>(
-				`/users/${
-					reqUser.id
-				}/games/${game}/${playtype}/showcase/custom?${searchParams.toString()}`,
+				`/users/${reqUser.id}/games/${game}/showcase/custom?${searchParams.toString()}`,
 			);
 
 			if (!res.success) {
@@ -45,7 +42,7 @@ export default function UGPTStatContainer({
 
 			if (shouldFetchCompareID) {
 				const res2 = await APIFetchV1<UGPTPreferenceStatsReturn>(
-					`/users/${shouldFetchCompareID}/games/${game}/${playtype}/showcase/custom?${searchParams.toString()}`,
+					`/users/${shouldFetchCompareID}/games/${game}/showcase/custom?${searchParams.toString()}`,
 				);
 
 				if (!res2.success) {
@@ -71,7 +68,6 @@ export default function UGPTStatContainer({
 		<StatDisplay
 			compareData={data.compareData}
 			game={game}
-			playtype={playtype}
 			reqUser={reqUser}
 			statData={data.data}
 		/>

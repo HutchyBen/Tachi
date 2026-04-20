@@ -18,9 +18,18 @@ try {
 	}
 } catch (err) {
 	const statusHelpUrl = ToAbsoluteAPIURLForHelpLink("/status");
-	document.open();
-	document.write(`
-	<style>
+
+	// Do NOT use document.open() / document.write() / document.close() here.
+	// document.open() fires unload/beforeunload/pagehide events, which Vite's HMR
+	// client intercepts to close its WebSocket. The HMR reconnection logic then
+	// triggers a full page reload, re-running this module, failing again — an
+	// infinite refresh loop.
+	//
+	// Do NOT throw either — an uncaught module-evaluation error is another signal
+	// that Vite HMR uses to trigger a reload.
+	//
+	// Instead, use direct DOM mutation (no unload events) and console.error.
+	document.head.innerHTML = `<style>
 		.box {
 			display: flex;
 			justify-content: center;
@@ -35,9 +44,9 @@ try {
 		ul {
 			text-align: left;
 		}
-	</style>
-	<div class="box">
+	</style>`;
 
+	document.body.innerHTML = `<div class="box">
 		${
 			import.meta.env.VITE_IS_LOCAL_DEV
 				? `
@@ -45,7 +54,8 @@ try {
 			<h1><b>Couldn't connect to the server.</b></h1>
 			<h3>You are in local development mode.</h3>
 			<ul style="font-size: 2rem;">
-				<li>Is the backend running on <code>http://localhost:8080</code>? Try <a href="${statusHelpUrl}">the status endpoint</a>. With the default Vite proxy, the API is also available at <code>http://localhost:3000/api/v1/...</code>.</li>
+				<li>The backend appears to be down. Try <a href="${statusHelpUrl}">the status endpoint</a>.</li>
+				<li>Are there any errors in your terminal?</li>
 			</ul>
 		`
 				: `<h1>Failed to connect!</h1>
@@ -54,13 +64,19 @@ try {
 		<div style="font-size: 1.25rem; margin-top: 1rem; margin-bottom: 1rem;">
 			Please be patient, <a href="https://github.com/zkldi/Tachi">Tachi is maintained by a very small team.</a>
 		</div>
-		<div>An error message can be found in the console. (<code>Ctrl-Shift-I</code>)</div>`
+		<div>An error message can be found in the browser console. (<code>Ctrl-Shift-I</code>)</div>`
 		}
-	</div>
-	`);
-	document.close();
+	</div>`;
+
 	// alert(`Fatal Error: Site is (probably) down. Sorry. (${(err as Error).message})`);
-	throw new Error(`Site is (probably) down. Sorry. (${(err as Error).message})`);
+	console.error(`Site is (probably) down. Sorry. (${(err as Error).message})`);
+	// Prevent the rest of this module from executing (configRes.body would throw),
+	// but do so with a promise that never settles rather than a throw or a busy-loop.
+	// Top-level await is valid in ES modules; this pauses execution without blocking
+	// the thread and without signalling a module error to Vite HMR.
+	await new Promise<never>(() => {
+		/* intentionally never resolves */
+	});
 }
 
 const conf: TachiServerCoreConfig = configRes.body;

@@ -1,15 +1,11 @@
-import type { integer } from "../types";
+import type { GameGroupFromGame, integer, LEGACY_Playtypes, V3Game } from "../types";
 import type {
 	ConfOptionalMetrics,
 	ConfProvidedMetrics,
 	Difficulties,
 	ExtractedClasses,
 	GameGroup,
-	GPTString,
-	GPTStringToGame,
-	GPTStringToPlaytype,
 	Judgements,
-	Playtype,
 	ScoreMeta,
 	Versions,
 } from "./game-config";
@@ -31,9 +27,8 @@ type MatchTypesWithDifficulty =
 export type MatchTypes = MatchTypesNoDifficulty | MatchTypesWithDifficulty;
 
 interface MatchTypeBase {
-	game: GameGroup;
-	playtype: Playtype;
-	version: Versions[GPTString] | null;
+	game: V3Game;
+	version: Versions[V3Game] | null;
 	identifier: string;
 	artist?: string | null;
 }
@@ -49,22 +44,22 @@ export type MatchTypeResolverNoDifficulty = {
 
 export type MatchTypeResolver = MatchTypeResolverNoDifficulty | MatchTypeResolverWithDifficulty;
 
-export type BatchManualScore<GPT extends GPTString = GPTString> = {
+export type BatchManualScore<TGame extends V3Game = V3Game> = {
 	artist?: string | null;
 	comment?: string | null;
 	/**
 	 * @deprecated Use `optional` instead.
 	 */
-	hitMeta?: AllFieldsNullableOptional<MongoExtractMetrics<ConfOptionalMetrics[GPT]>>;
+	hitMeta?: AllFieldsNullableOptional<MongoExtractMetrics<ConfOptionalMetrics[TGame]>>;
 	identifier: string;
-	judgements?: Record<Judgements[GPT], integer>;
-	optional?: AllFieldsNullableOptional<MongoExtractMetrics<ConfOptionalMetrics[GPT]>>;
+	judgements?: Record<Judgements[TGame], integer>;
+	optional?: AllFieldsNullableOptional<MongoExtractMetrics<ConfOptionalMetrics[TGame]>>;
 
-	scoreMeta?: Partial<ScoreMeta[GPT]>;
+	scoreMeta?: Partial<ScoreMeta[TGame]>;
 	timeAchieved?: number | null;
 } & (
 	| {
-			difficulty: Difficulties[GPT];
+			difficulty: Difficulties[TGame];
 			matchType: MatchTypesWithDifficulty;
 	  }
 	| {
@@ -72,15 +67,15 @@ export type BatchManualScore<GPT extends GPTString = GPTString> = {
 			matchType: MatchTypesNoDifficulty;
 	  }
 ) &
-	MongoExtractMetrics<ConfProvidedMetrics[GPT]>;
+	MongoExtractMetrics<ConfProvidedMetrics[TGame]>;
 
-export interface BatchManual<GPT extends GPTString = GPTString> {
+export interface BatchManual<TGame extends V3Game = V3Game> {
 	meta: {
-		game: GPTStringToGame[GPT];
-		playtype: GPTStringToPlaytype[GPT];
+		game: GameGroupFromGame[TGame];
+		playtype: LEGACY_Playtypes[GameGroup];
 		service: string;
-		version?: Versions[GPT];
+		version?: Versions[TGame];
 	};
-	scores: Array<BatchManualScore<GPT>>;
-	classes?: ExtractedClasses[GPT] | null;
+	scores: Array<BatchManualScore<TGame>>;
+	classes?: ExtractedClasses[TGame] | null;
 }

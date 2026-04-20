@@ -1,6 +1,6 @@
 import type { Database } from "tachi-db";
 
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { type Kysely, sql } from "kysely";
 
 /**

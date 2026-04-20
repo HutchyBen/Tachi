@@ -5,26 +5,25 @@ import Divider from "#components/util/Divider";
 import Loading from "#components/util/Loading";
 import useApiQuery from "#components/util/query/useApiQuery";
 import { TargetsContext } from "#context/TargetsContext";
-import { type GoalsOnChartReturn, type GoalsOnFolderReturn } from "#types/api-returns";
+import { type GoalsOnFolderReturn } from "#types/api-returns";
 import { type UGPT } from "#types/react";
 import { CreateGoalSubDataset, CreateUserMap } from "#util/data";
 import React, { useContext, useReducer, useState } from "react";
 import { Button, Col } from "react-bootstrap";
-import { type MONGO_FolderDocument } from "tachi-common";
+import { type FolderDocument } from "tachi-common";
 
 export default function FolderQuestsPage({
 	folder,
 	game,
-	playtype,
 	reqUser,
 }: {
-	folder: MONGO_FolderDocument;
+	folder: FolderDocument;
 } & UGPT) {
 	const [refresh, forceRefresh] = useReducer((x) => x + 1, 0);
 	const { reloadTargets } = useContext(TargetsContext);
 
-	const { data, error } = useApiQuery<GoalsOnChartReturn>(
-		`/users/${reqUser.id}/games/${game}/${playtype}/targets/on-folder/${folder.folderID}`,
+	const { data, error } = useApiQuery<GoalsOnFolderReturn>(
+		`/users/${reqUser.id}/games/${game}/targets/on-folder/${folder.slug}`,
 		undefined,
 		[refresh],
 	);
@@ -40,15 +39,11 @@ export default function FolderQuestsPage({
 			</Col>
 			<Divider />
 			{error && <ApiError error={error} />}
-			{data ? (
-				<FolderQuestsInner {...{ reqUser, game, playtype, folder, data }} />
-			) : (
-				<Loading />
-			)}
+			{data ? <FolderQuestsInner {...{ reqUser, game, folder, data }} /> : <Loading />}
 
 			{show && (
 				<SetNewGoalModal
-					{...{ game, playtype, reqUser, show, setShow }}
+					{...{ game, reqUser, show, setShow }}
 					onNewGoalSet={() => {
 						forceRefresh();
 						reloadTargets();
@@ -63,20 +58,13 @@ export default function FolderQuestsPage({
 function FolderQuestsInner({
 	reqUser,
 	game,
-	playtype,
 	folder,
 	data,
 }: {
 	data: GoalsOnFolderReturn;
-	folder: MONGO_FolderDocument;
+	folder: FolderDocument;
 } & UGPT) {
 	const userMap = CreateUserMap([reqUser]);
 
-	return (
-		<GoalSubInfo
-			dataset={CreateGoalSubDataset(data, userMap)}
-			game={game}
-			playtype={playtype}
-		/>
-	);
+	return <GoalSubInfo dataset={CreateGoalSubDataset(data, userMap)} game={game} />;
 }

@@ -1,6 +1,6 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import { ONE_SECOND } from "#lib/constants/time.js";
-import DB from "#services/pg/db.js";
+import { MakeAction } from "#lib/actions/actions";
+import { ONE_SECOND } from "#lib/constants/time";
+import DB from "#services/pg/db";
 
 export const ACTION_MarkAllNotificationsRead = MakeAction(
 	"MARK_ALL_NOTIFICATIONS_READ",

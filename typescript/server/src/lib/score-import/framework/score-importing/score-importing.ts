@@ -1,3 +1,7 @@
+import type {
+	ConverterFnSuccessReturn,
+	ConverterFunction,
+} from "#lib/score-import/import-types/common/types";
 import type { ScoreImportJob } from "#lib/score-import/worker/types";
 
 import { AppendLogCtx, type KtLogger } from "#lib/log/log";
@@ -5,18 +9,15 @@ import { mongoScoreDocumentToNewScoreRow } from "#lib/score-import/framework/pg/
 import DB from "#services/pg/db";
 import { ClassToObject } from "#utils/misc";
 import {
+	type ChartDocument,
 	type GameGroup,
-	GetGPTString,
 	type ImportProcessingInfo,
 	type ImportTypes,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_ScoreDocument,
-	type MONGO_SongDocument,
-	MongoChartLegacyId,
+	type ScoreDocument,
+	type SongDocument,
 } from "tachi-common";
 
-import type { ConverterFnSuccessReturn, ConverterFunction } from "../../import-types/common/types";
 import type { DryScore } from "../common/types";
 
 import {
@@ -344,23 +345,17 @@ export async function ProcessSuccessfulConverterReturn(
 async function HydrateCheckAndInsertScore(
 	userID: integer,
 	dryScore: DryScore,
-	chart: MONGO_ChartDocument,
-	song: MONGO_SongDocument,
+	chart: ChartDocument,
+	song: SongDocument,
 	blacklist: Array<string>,
 	importLog: KtLogger,
 	importId: string | null,
 	force = false,
 	directCommit = false,
-): Promise<MONGO_ScoreDocument | null> {
-	const gptString = GetGPTString(dryScore.game, chart.playtype);
+): Promise<ScoreDocument | null> {
+	const game = dryScore.game;
 
-	const scoreID = CreateScoreID(
-		gptString,
-		userID,
-		dryScore,
-		MongoChartLegacyId(chart),
-		importLog,
-	);
+	const scoreID = CreateScoreID(game, userID, dryScore, chart.chartID, importLog);
 
 	// sub-context thelog so the below logs are more accurate
 	const log = AppendLogCtx(scoreID, importLog);

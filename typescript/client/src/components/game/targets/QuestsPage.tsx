@@ -12,33 +12,28 @@ import React from "react";
 import { Col, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
-	FormatGameGroup,
-	GetGameGroupConfig,
-	type MONGO_GoalDocument,
-	type MONGO_QuestDocument,
-	type MONGO_QuestlineDocument,
+	FormatGame,
+	type GoalDocument,
+	type QuestDocument,
+	type QuestlineDocument,
 } from "tachi-common";
 
-export default function QuestsPage({ game, playtype }: GamePT) {
-	useSetSubheader(
-		["Games", GetGameGroupConfig(game).name, playtype, "Quests"],
-		[game, playtype],
-		`${FormatGameGroup(game, playtype)} Quests`,
-	);
+export default function QuestsPage({ game }: GamePT) {
+	useSetSubheader(["Games", FormatGame(game), "Quests"], [game], `${FormatGame(game)} Quests`);
 
 	return (
 		<div>
-			<QuestlineSelector game={game} playtype={playtype} />
+			<QuestlineSelector game={game} />
 		</div>
 	);
 }
 
-function QuestlineSelector({ game, playtype }: GamePT) {
+function QuestlineSelector({ game }: GamePT) {
 	const { data, error } = useApiQuery<{
-		questlines: Array<MONGO_QuestlineDocument>;
-		standalone: Array<MONGO_QuestDocument>;
-		standaloneGoals: Array<MONGO_GoalDocument>;
-	}>(`/games/${game}/${playtype}/targets/questlines`);
+		questlines: Array<QuestlineDocument>;
+		standalone: Array<QuestDocument>;
+		standaloneGoals: Array<GoalDocument>;
+	}>(`/games/${game}/targets/questlines`);
 
 	if (error) {
 		return <ApiError error={error} />;

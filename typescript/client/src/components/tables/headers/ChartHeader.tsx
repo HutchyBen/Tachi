@@ -1,16 +1,12 @@
 import { GPT_CLIENT_IMPLEMENTATIONS } from "#lib/game-implementations";
 import { type GPTRatingSystem } from "#lib/types";
 import { IsNullish } from "#util/misc";
-import { type GameGroup, GetGPTString, type MONGO_ChartDocument } from "tachi-common";
+import { type ChartDocument, type V3Game } from "tachi-common";
 
 import { type Header } from "../components/TachiTable";
 
-export function CascadingRatingValue(
-	game: GameGroup,
-	chartA: MONGO_ChartDocument,
-	chartB: MONGO_ChartDocument,
-) {
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, chartA.playtype)];
+export function CascadingRatingValue(game: V3Game, chartA: ChartDocument, chartB: ChartDocument) {
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
 	if (chartA.levelNum !== chartB.levelNum) {
 		return chartA.levelNum - chartB.levelNum;
@@ -35,8 +31,8 @@ export function CascadingRatingValue(
 }
 
 export default function ChartHeader<D>(
-	game: GameGroup,
-	chartGetter: (k: D) => MONGO_ChartDocument,
+	game: V3Game,
+	chartGetter: (k: D) => ChartDocument,
 ): Header<D> {
 	return ["Chart", "Chart", (a, b) => CascadingRatingValue(game, chartGetter(a), chartGetter(b))];
 }

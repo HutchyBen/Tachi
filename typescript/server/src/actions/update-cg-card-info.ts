@@ -1,5 +1,5 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import DB from "#services/pg/db.js";
+import { MakeAction } from "#lib/actions/actions";
+import DB from "#services/pg/db";
 
 export const ACTION_UpdateCgCardInfo = MakeAction(
 	"UPDATE_CG_CARD_INFO",

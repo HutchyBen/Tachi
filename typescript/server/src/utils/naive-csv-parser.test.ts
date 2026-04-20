@@ -1,4 +1,4 @@
-import { log } from "#lib/log/log.js";
+import { log } from "#lib/log/log";
 import { TestingIIDXEamusementCSV27 } from "#test-utils/test-data";
 import { describe, expect, it } from "vitest";
 

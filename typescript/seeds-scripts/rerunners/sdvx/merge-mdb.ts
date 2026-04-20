@@ -3,10 +3,10 @@ import { XMLParser } from "fast-xml-parser";
 import fs from "fs";
 import { decode } from "iconv-lite";
 import {
+	type ChartDocument,
 	type Difficulties,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
+	type SongDocument,
 } from "tachi-common";
 
 import {
@@ -66,10 +66,10 @@ interface MDBEntry {
 const existingChartDocs = ReadCollection("charts-sdvx.json");
 
 const inGameIDToSongIDMap = new Map<number, number>();
-const existingCharts = new Map<string, MONGO_ChartDocument<"sdvx:Single">>();
+const existingCharts = new Map<string, ChartDocument<"sdvx">>();
 
 for (const chart of existingChartDocs) {
-	inGameIDToSongIDMap.set(chart.data.inGameID, chart.songID);
+	inGameIDToSongIDMap.set(chart.data.inGameID, chart.song.id);
 	existingCharts.set(`${chart.data.inGameID}-${chart.difficulty}`, chart);
 }
 
@@ -99,7 +99,7 @@ function convertVersion(input: number) {
 function convertDiff(
 	diffString: keyof MDBEntry["difficulty"],
 	infVer: integer,
-): Difficulties["sdvx:Single"] {
+): Difficulties["sdvx"] {
 	switch (diffString) {
 		case "novice":
 			return "NOV";
@@ -130,8 +130,8 @@ function convertDiff(
 	}
 }
 
-const newSongs: Array<MONGO_SongDocument<"sdvx">> = [];
-const newCharts: Array<MONGO_ChartDocument<"sdvx:Single">> = [];
+const newSongs: Array<SongDocument<"sdvx">> = [];
+const newCharts: Array<ChartDocument<"sdvx">> = [];
 
 // anything we don't want to include?
 const blacklist = [1259, 1491, 1438, 1490];
@@ -217,7 +217,7 @@ for (const entry of data.mdb.music as Array<MDBEntry>) {
 		}
 
 		// new song, add to seeds.
-		const songDoc: MONGO_SongDocument<"sdvx"> = {
+		const songDoc: SongDocument<"sdvx"> = {
 			title: fixedTitle,
 			artist: fixString(entry.info.artist_name),
 			searchTerms: [entry.info.ascii],
@@ -277,9 +277,10 @@ for (const entry of data.mdb.music as Array<MDBEntry>) {
 			continue;
 		}
 
-		const chartDoc: MONGO_ChartDocument<"sdvx:Single"> = {
+		const chartDoc: ChartDocument<"sdvx"> = {
 			chartID: CreateChartID(),
 			songID,
+			game: "sdvx",
 			difficulty,
 			isPrimary: true,
 			level: maybeEntry.difnum["#text"].toString(),

@@ -124,12 +124,7 @@ describe("GetRecentActivity (Postgres)", () => {
 			timeEndedMs: base + 6000,
 		});
 
-		const result = await GetRecentActivity(
-			"iidx",
-			{ game: "iidx", playtype: "SP", userID: userId },
-			2,
-			null,
-		);
+		const result = await GetRecentActivity("iidx-sp", { userID: userId }, 2, null);
 
 		expect(result.recentSessions).toHaveLength(2);
 		expect(result.recentSessions[0]?.sessionID).toBe(`act-s3-${base}`);
@@ -176,12 +171,7 @@ describe("GetRecentActivity (Postgres)", () => {
 			timeAddedMs: base - 5000,
 		});
 
-		const result = await GetRecentActivity(
-			"iidx",
-			{ game: "iidx", playtype: "SP", userID: userId },
-			2,
-			null,
-		);
+		const result = await GetRecentActivity("iidx-sp", { userID: userId }, 2, null);
 
 		const ids = result.recentlyHighlightedScores.map((s) => s.scoreID);
 		expect(ids).toContain(`sc-in-${base}`);
@@ -212,12 +202,7 @@ describe("GetRecentActivity (Postgres)", () => {
 			})
 			.execute();
 
-		const result = await GetRecentActivity(
-			"iidx",
-			{ game: "iidx", playtype: "SP", userID: userId },
-			10,
-			null,
-		);
+		const result = await GetRecentActivity("iidx-sp", { userID: userId }, 10, null);
 
 		expect(result.achievedClasses).toHaveLength(1);
 		expect(result.achievedClasses[0]?.classOldValue).toBe(null);
@@ -225,12 +210,7 @@ describe("GetRecentActivity (Postgres)", () => {
 	});
 
 	it("returns no sessions, scores, or class rows when userID $in is empty", async () => {
-		const result = await GetRecentActivity(
-			"iidx",
-			{ game: "iidx", playtype: "SP", userID: { $in: [] } },
-			10,
-			null,
-		);
+		const result = await GetRecentActivity("iidx-sp", { userID: { $in: [] } }, 10, null);
 
 		expect(result.recentSessions).toHaveLength(0);
 		expect(result.recentlyHighlightedScores).toHaveLength(0);
@@ -240,7 +220,7 @@ describe("GetRecentActivity (Postgres)", () => {
 	});
 });
 
-describe("GET /api/v1/games/:game/:playtype/activity (smoke)", () => {
+describe("GET /api/v1/games/:gameGroup/:playtype/activity (smoke)", () => {
 	it("returns success with seeded iidx SP activity", async () => {
 		const { id: userId } = await seedUser({
 			username: `act_api_${Date.now()}`,
@@ -262,11 +242,11 @@ describe("GET /api/v1/games/:game/:playtype/activity (smoke)", () => {
 			})
 			.execute();
 
-		const res = await mockApi.get("/api/v1/games/iidx/SP/activity");
+		const res = await mockApi.get("/api/v1/games/iidx-sp/activity");
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
-		expect(res.body.body.recentSessions).toEqual(
+		expect(res.body.body["iidx-sp"].recentSessions).toEqual(
 			expect.arrayContaining([expect.objectContaining({ sessionID: `act-api-s-${base}` })]),
 		);
 	});

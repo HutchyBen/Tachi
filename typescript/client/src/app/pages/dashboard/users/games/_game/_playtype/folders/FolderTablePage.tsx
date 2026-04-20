@@ -2,7 +2,6 @@ import { BarChartTooltip } from "#components/charts/ChartTooltip";
 import Card from "#components/layout/page/Card";
 import TachiTable from "#components/tables/components/TachiTable";
 import ApiError from "#components/util/ApiError";
-import DebugContent from "#components/util/DebugContent";
 import Divider from "#components/util/Divider";
 import Icon from "#components/util/Icon";
 import LinkButton from "#components/util/LinkButton";
@@ -25,29 +24,24 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import {
-	type GameGroup,
-	type GamePTConfig,
-	GetGamePTConfig,
-	GetGPTString,
+	type FolderDocument,
+	type GameConfig,
+	GetGameConfig,
 	GetScoreMetricConf,
 	GetScoreMetrics,
-	type MONGO_FolderDocument,
-	type MONGO_TableDocument,
-	type MONGO_UserDocument,
-	type Playtype,
+	type TableDocument,
+	type UserDocument,
+	type V3Game,
 } from "tachi-common";
 import { type ConfEnumScoreMetric } from "tachi-common/types/metrics";
 
 interface Props {
-	reqUser: MONGO_UserDocument;
-	game: GameGroup;
-	playtype: Playtype;
+	reqUser: UserDocument;
+	game: V3Game;
 }
 
-export default function FolderTablePage({ reqUser, game, playtype }: Props) {
-	const { data, error } = useApiQuery<MONGO_TableDocument[]>(
-		`/games/${game}/${playtype}/tables?showInactive=true`,
-	);
+export default function FolderTablePage({ reqUser, game }: Props) {
+	const { data, error } = useApiQuery<TableDocument[]>(`/games/${game}/tables?showInactive=true`);
 
 	const { settings } = useLUGPTSettings();
 
@@ -114,24 +108,19 @@ export default function FolderTablePage({ reqUser, game, playtype }: Props) {
 				</Form.Select>
 			</InputGroup>
 			<Divider />
-			{table && <TableFolderViewer {...{ reqUser, game, playtype, table }} />}
+			{table && <TableFolderViewer {...{ reqUser, game, table }} />}
 		</>
 	);
 }
 
 interface UGPTFolderStats {
-	folder: MONGO_FolderDocument;
+	folder: FolderDocument;
 	stats: FolderStatsInfo;
 }
 
-function TableFolderViewer({
-	reqUser,
-	game,
-	playtype,
-	table,
-}: { table: MONGO_TableDocument } & Props) {
+function TableFolderViewer({ reqUser, game, table }: { table: TableDocument } & Props) {
 	const { data, error } = useApiQuery<UGPTTableReturns>(
-		`/users/${reqUser.id}/games/${game}/${playtype}/tables/${table.tableID}`,
+		`/users/${reqUser.id}/games/${game}/tables/${table.tableID}`,
 	);
 
 	const [dataMap, setDataMap] = useState<Map<string, UGPTFolderStats>>(new Map());
@@ -141,13 +130,13 @@ function TableFolderViewer({
 		if (data) {
 			const statMap = new Map();
 			for (const stat of data.stats) {
-				statMap.set(stat.folderID, stat);
+				statMap.set(stat.slug, stat);
 			}
 
 			const newMap = new Map();
 			for (const folder of data.folders) {
-				const stats = statMap.get(folder.folderID)!;
-				newMap.set(folder.folderID, { folder, stats });
+				const stats = statMap.get(folder.slug)!;
+				newMap.set(folder.slug, { folder, stats });
 			}
 			setDataMap(newMap);
 			setHasLoadedFolderMap(true);
@@ -166,13 +155,7 @@ function TableFolderViewer({
 		<>
 			<TableBarChart dataMap={dataMap} table={table} />
 			<Divider />
-			<TableFolderTable
-				dataMap={dataMap}
-				game={game}
-				playtype={playtype}
-				reqUser={reqUser}
-				table={table}
-			/>
+			<TableFolderTable dataMap={dataMap} game={game} reqUser={reqUser} table={table} />
 		</>
 	);
 }
@@ -182,10 +165,9 @@ function TableFolderTable({
 	dataMap,
 	reqUser,
 	game,
-	playtype,
 }: {
 	dataMap: Map<string, UGPTFolderStats>;
-	table: MONGO_TableDocument;
+	table: TableDocument;
 } & Props) {
 	const dataset = useMemo(() => {
 		const arr = [];
@@ -224,12 +206,12 @@ function TableFolderTable({
 							onClick={() => {
 								if (user?.id === reqUser.id) {
 									APIFetchV1(
-										`/users/${reqUser.id}/games/${game}/${playtype}/folders/${data.folder.folderID}/viewed`,
+										`/users/${reqUser.id}/games/${game}/folders/${data.folder.slug}/viewed`,
 										{ method: "POST" },
 									);
 								}
 							}}
-							to={`/u/${reqUser.username}/games/${game}/${playtype}/folders/${data.folder.folderID}`}
+							to={`/u/${reqUser.username}/games/${game}/folders/${data.folder.slug}`}
 						>
 							View Breakdown
 						</LinkButton>
@@ -250,23 +232,23 @@ function TableBarChart({
 	dataMap,
 }: {
 	dataMap: Map<string, UGPTFolderStats>;
-	table: MONGO_TableDocument;
+	table: TableDocument;
 }) {
-	const gptConfig = GetGamePTConfig(table.game, table.playtype);
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(table.game, table.playtype)];
+	const tableGame = table.game;
+	const gameConfig = GetGameConfig(tableGame);
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[tableGame];
 
-	const bucket = useBucket(table.game, table.playtype);
+	const bucket = useBucket(tableGame);
 
 	const [enumMetric, setEnumMetric] = useState<string>(bucket);
 
-	// @ts-expect-error hack!
-	const colours = useMemo(() => gptImpl.enumColours[enumMetric], [enumMetric]);
+	const colours = useMemo(() => (gptImpl.enumColours as any)[enumMetric], [enumMetric]);
 
 	const dataset = useMemo(() => {
 		const arr = [];
 
-		for (const folderID of table.folders) {
-			const data = dataMap.get(folderID)!;
+		for (const folderSlug of table.folders) {
+			const data = dataMap.get(folderSlug)!;
 
 			if (!data) {
 				continue;
@@ -301,7 +283,7 @@ function TableBarChart({
 			<div className="row">
 				<div className="col-12 d-flex justify-content-center">
 					<div className="btn-group">
-						{GetScoreMetrics(gptConfig, "ENUM").map((e) => (
+						{GetScoreMetrics(gameConfig, "ENUM").map((e) => (
 							<SelectButton
 								id={e}
 								key={e}
@@ -327,7 +309,7 @@ function TableBarChart({
 						<OverviewBarChart
 							colours={colours}
 							dataset={dataset}
-							gptConfig={gptConfig}
+							gameConfig={gameConfig}
 							// This hack is necessary because otherwise nivo gets caught in a render loop and dies
 							key={enumMetric}
 							mode={enumMetric}
@@ -340,14 +322,14 @@ function TableBarChart({
 }
 
 function OverviewBarChart({
-	gptConfig,
+	gameConfig,
 	mode: metric,
 	dataset,
 	colours,
 }: {
 	colours: any;
 	dataset: any;
-	gptConfig: GamePTConfig;
+	gameConfig: GameConfig;
 	mode: string;
 }) {
 	const longestTitle = useMemo(
@@ -360,7 +342,7 @@ function OverviewBarChart({
 		[dataset],
 	);
 
-	const conf = GetScoreMetricConf(gptConfig, metric) as ConfEnumScoreMetric<string>;
+	const conf = GetScoreMetricConf(gameConfig, metric) as ConfEnumScoreMetric<string>;
 
 	return (
 		<ResponsiveBar

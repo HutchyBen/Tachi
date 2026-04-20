@@ -1,5 +1,5 @@
 import type { LR2HookScore } from "#lib/score-import/import-types/ir/lr2hook/types";
-import type { Classes, GPTString, Playtypes } from "tachi-common";
+import type { Classes, GamesForGroup } from "tachi-common";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
@@ -58,7 +58,7 @@ router.post(
 		}
 
 		const course = await DB.selectFrom("bms_course_lookup")
-			.select(["set", "playtype", "value"])
+			.select(["set", "game", "value"])
 			.where("md5sums", "=", score.md5)
 			.executeTakeFirst();
 
@@ -73,9 +73,8 @@ router.post(
 
 		const result = await UpdateClassIfGreater(
 			userID,
-			"bms",
-			course.playtype as Playtypes["bms"],
-			course.set as Classes[GPTString],
+			course.game,
+			course.set as Classes[GamesForGroup["bms"]],
 			course.value,
 		);
 

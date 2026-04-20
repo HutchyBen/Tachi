@@ -1,21 +1,20 @@
+import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
 import type { Versions } from "tachi-common";
 import type { GetEnumValue } from "tachi-common/types/metrics";
-
-import { FormatPrError } from "#utils/prudence";
-import { FindSDVXChartOnInGameIDVersion } from "#utils/queries/charts";
-import { FindSongOnID } from "#utils/queries/songs";
-import { p } from "prudence";
-
-import type { DryScore } from "../../../../framework/common/types";
-import type { ConverterFunction } from "../../types";
-import type { KaiContext, KaiSDVXScore } from "../types";
 
 import {
 	InternalFailure,
 	InvalidScoreFailure,
 	SongOrChartNotFoundFailure,
-} from "../../../../framework/common/converter-failures";
-import { ParseDateFromString } from "../../../../framework/common/score-utils";
+} from "#lib/score-import/framework/common/converter-failures";
+import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
+import { FormatPrError } from "#utils/prudence";
+import { FindSDVXChartOnInGameIDVersion } from "#utils/queries/charts";
+import { FindSongOnID } from "#utils/queries/songs";
+import { p } from "prudence";
+
+import type { KaiContext, KaiSDVXScore } from "../types";
 
 const PR_KAI_SDVX_SCORE = {
 	music_id: p.isPositiveInteger,
@@ -62,18 +61,18 @@ export const ConvertAPIKaiSDVX: ConverterFunction<unknown, KaiContext> = async (
 		);
 	}
 
-	const song = await FindSongOnID("sdvx", chart.songID);
+	const song = await FindSongOnID("sdvx", chart.song.id);
 
 	if (!song) {
-		log.error(`Song-Chart desync with song ID ${chart.songID} (sdvx).`);
-		throw new InternalFailure(`Song-Chart desync with song ID ${chart.songID} (sdvx).`);
+		log.error(`Song-Chart desync with song ID ${chart.song.id} (sdvx).`);
+		throw new InternalFailure(`Song-Chart desync with song ID ${chart.song.id} (sdvx).`);
 	}
 
 	const lamp = ResolveKaiLamp(score.clear_type);
 
 	const timeAchieved = ParseDateFromString(score.timestamp);
 
-	const dryScore: DryScore<"sdvx:Single"> = {
+	const dryScore: DryScore<"sdvx"> = {
 		comment: null,
 		game: "sdvx",
 		importType,
@@ -117,7 +116,7 @@ export function ConvertDifficulty(diff: number) {
 	throw new InvalidScoreFailure(`Invalid difficulty of ${diff} - Could not convert.`);
 }
 
-export function ConvertVersion(ver: number): Versions["sdvx:Single"] {
+export function ConvertVersion(ver: number): Versions["sdvx"] {
 	switch (ver) {
 		case 1:
 			return "booth";
@@ -136,7 +135,7 @@ export function ConvertVersion(ver: number): Versions["sdvx:Single"] {
 	throw new InvalidScoreFailure(`Unknown Game Version ${ver}.`);
 }
 
-export function ResolveKaiLamp(clear: number): GetEnumValue<"sdvx:Single", "lamp"> {
+export function ResolveKaiLamp(clear: number): GetEnumValue<"sdvx", "lamp"> {
 	switch (clear) {
 		case 1:
 			return "FAILED";

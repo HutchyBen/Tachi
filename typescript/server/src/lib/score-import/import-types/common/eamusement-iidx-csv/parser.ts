@@ -1,19 +1,12 @@
 import type { KtLogger } from "#lib/log/log";
 
-import { StringIsGameVersion } from "#utils/misc";
+import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
+import { staticAssertUnreachable, StringIsGameVersion } from "#utils/misc";
 import { CSVParseError, NaiveCSVParse } from "#utils/naive-csv-parser";
-import {
-	GetGamePTConfig,
-	type integer,
-	Playtype,
-	type Playtypes,
-	type Versions,
-} from "tachi-common";
+import { type GamesForGroup, type V3Game, type Versions } from "tachi-common";
 
 import type { ParserFunctionReturns } from "../types";
 import type { EamusementScoreData, IIDXEamusementCSVContext, IIDXEamusementCSVData } from "./types";
-
-import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 
 export enum EAM_VERSION_NAMES {
 	"1st&substream" = 1,
@@ -107,7 +100,7 @@ export function ResolveHeaders(headers: Array<string>, log: KtLogger) {
 	);
 }
 
-export function IIDXCSVParse(csvBuffer: Buffer, playtype: Playtypes["iidx"], log: KtLogger) {
+export function IIDXCSVParse(csvBuffer: Buffer, playtype: "DP" | "SP", log: KtLogger) {
 	let rawHeaders: Array<string>;
 	let rawRows: Array<Array<string>>;
 
@@ -181,7 +174,19 @@ export function IIDXCSVParse(csvBuffer: Buffer, playtype: Playtypes["iidx"], log
 		);
 	}
 
-	if (!StringIsGameVersion("iidx", playtype, gameVersion.toString())) {
+	let game: V3Game;
+	switch (playtype) {
+		case "SP":
+			game = "iidx-sp";
+			break;
+		case "DP":
+			game = "iidx-dp";
+			break;
+		default:
+			staticAssertUnreachable(playtype);
+	}
+
+	if (!StringIsGameVersion(game, gameVersion.toString())) {
 		throw new ScoreImportFatalError(
 			400,
 			`Unsupported version '${gameVersion}'. Is your CSV properly filled out?`,
@@ -190,7 +195,7 @@ export function IIDXCSVParse(csvBuffer: Buffer, playtype: Playtypes["iidx"], log
 
 	return {
 		iterableData,
-		version: gameVersion.toString() as Versions["iidx:DP" | "iidx:SP"],
+		version: gameVersion.toString() as Versions[GamesForGroup["iidx"]],
 		hasBeginnerAndLegg,
 	};
 }
@@ -205,7 +210,7 @@ function GenericParseEamIIDXCSV(
 	body: Record<string, unknown>,
 	service: string,
 	log: KtLogger,
-): ParserFunctionReturns<IIDXEamusementCSVData, IIDXEamusementCSVContext> {
+): ParserFunctionReturns<IIDXEamusementCSVData, IIDXEamusementCSVContext, GamesForGroup["iidx"]> {
 	let playtype: "DP" | "SP";
 
 	if (body.playtype === "SP") {
@@ -256,7 +261,7 @@ function GenericParseEamIIDXCSV(
 	return {
 		iterable: iterableData,
 		context,
-		game: "iidx",
+		gameGroup: "iidx",
 		classProvider: null,
 	};
 }

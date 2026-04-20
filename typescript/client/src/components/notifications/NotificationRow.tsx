@@ -2,9 +2,9 @@ import TimestampCell from "#components/tables/cells/TimestampCell";
 import Icon from "#components/util/Icon";
 import React from "react";
 import { Link } from "react-router-dom";
-import { type MONGO_NotificationDocument } from "tachi-common";
+import { type NotificationDocument } from "tachi-common";
 
-export default function NotificationRow({ notif }: { notif: MONGO_NotificationDocument }) {
+export default function NotificationRow({ notif }: { notif: NotificationDocument }) {
 	const url = NotifToURL(notif);
 
 	return (
@@ -32,15 +32,15 @@ export default function NotificationRow({ notif }: { notif: MONGO_NotificationDo
 	);
 }
 
-function NotifToURL(notif: MONGO_NotificationDocument) {
+function NotifToURL(notif: NotificationDocument) {
 	switch (notif.body.type) {
 		case "QUEST_CHANGED": {
-			const { game, playtype, questID } = notif.body.content;
+			const { game, questID } = notif.body.content;
 
-			return `/games/${game}/${playtype}/quests/${questID}`;
+			return `/games/${game}/quests/${questID}`;
 		}
 		case "RIVALED_BY":
-			return `/u/${notif.body.content.userID}/games/${notif.body.content.game}/${notif.body.content.playtype}`;
+			return `/u/${notif.body.content.userID}/games/${notif.body.content.game}`;
 		case "SITE_ANNOUNCEMENT":
 			return null;
 	}

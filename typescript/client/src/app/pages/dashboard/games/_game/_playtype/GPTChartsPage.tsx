@@ -14,18 +14,19 @@ import { NumericSOV, StrSOV } from "#util/sorts";
 import React, { useState } from "react";
 import { Col, Row } from "react-bootstrap";
 import {
-	FormatGameGroup,
+	type ChartDocument,
+	FormatGame,
+	GameToGameGroup,
 	GetGameGroupConfig,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
+	type SongDocument,
 } from "tachi-common";
 
-export default function GPTChartsPage({ game, playtype }: GamePT) {
+export default function GPTChartsPage({ game }: GamePT) {
 	useSetSubheader(
-		["Games", GetGameGroupConfig(game).name, playtype, "Songs"],
-		[game, playtype],
-		`${FormatGameGroup(game, playtype)} Songs`,
+		["Games", GetGameGroupConfig(GameToGameGroup(game)).name, "Songs"],
+		[game],
+		`${FormatGame(game)} Songs`,
 	);
 
 	const [search, setSearch] = useState("");
@@ -37,19 +38,19 @@ export default function GPTChartsPage({ game, playtype }: GamePT) {
 				<Divider />
 			</Col>
 			<Col xs={12}>
-				<SearchSongsTable game={game} playtype={playtype} search={search} />
+				<SearchSongsTable game={game} search={search} />
 			</Col>
 		</Row>
 	);
 }
 
-function SearchSongsTable({ game, playtype, search }: { search: string } & GamePT) {
+function SearchSongsTable({ game, search }: { search: string } & GamePT) {
 	const params = new URLSearchParams({ search });
 
 	const { data, error } = useApiQuery<{
-		charts: ({ __playcount: integer } & MONGO_ChartDocument)[];
-		songs: MONGO_SongDocument[];
-	}>(`/games/${game}/${playtype}/charts${search !== "" ? `?${params.toString()}` : ""}`);
+		charts: ({ __playcount: integer } & ChartDocument)[];
+		songs: SongDocument[];
+	}>(`/games/${game}/charts${search !== "" ? `?${params.toString()}` : ""}`);
 
 	if (error) {
 		return <ApiError error={error} />;
@@ -67,7 +68,7 @@ function SearchSongsTable({ game, playtype, search }: { search: string } & GameP
 		dataset.push({
 			...chart,
 			__related: {
-				song: songMap.get(chart.songID)!,
+				song: songMap.get(chart.song.id)!,
 			},
 		});
 	}
@@ -76,7 +77,7 @@ function SearchSongsTable({ game, playtype, search }: { search: string } & GameP
 		<>
 			{search === "" && (
 				<div className="w-100 text-center">
-					<h4>Displaying the most played charts for {FormatGameGroup(game, playtype)}</h4>
+					<h4>Displaying the most played charts for {FormatGame(game)}</h4>
 					<Divider />
 				</div>
 			)}

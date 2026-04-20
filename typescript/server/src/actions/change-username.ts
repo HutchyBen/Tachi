@@ -1,8 +1,8 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import { PasswordCompare } from "#lib/auth/auth.js";
-import DB from "#services/pg/db.js";
-import { NowISO8601 } from "#utils/time.js";
-import { CanChangeUsername } from "#utils/user.js";
+import { MakeAction } from "#lib/actions/actions";
+import { PasswordCompare } from "#lib/auth/auth";
+import DB from "#services/pg/db";
+import { NowISO8601 } from "#utils/time";
+import { CanChangeUsername } from "#utils/user";
 import { ExpectedErr } from "bliss";
 
 export const ACTION_ChangeUsername = MakeAction(

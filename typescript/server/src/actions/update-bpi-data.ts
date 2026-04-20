@@ -1,25 +1,27 @@
 /* eslint-disable no-await-in-loop */
-import type { Difficulties, integer, MONGO_ChartDocument, Playtypes } from "tachi-common";
+import type { ChartDocument, Difficulties, GamesForGroup, integer } from "tachi-common";
 
-import { computeDerivationChecksumForGPT } from "#game-implementations/utils/derivation-checksum";
+import { ComputeChartStabilityChecksum } from "#game-implementations/utils/derivation-checksum";
 import { MakeAction } from "#lib/actions/actions";
 import { log } from "#lib/log/log";
 import DB from "#services/pg/db";
 import fetch from "#utils/fetch";
-import { FindChartWithPTDFVersion } from "#utils/queries/charts";
+import { FindChartWithSongDifficultyVersion } from "#utils/queries/charts";
 import { FindSongOnTitle } from "#utils/queries/songs";
 import { IsUserAdmin } from "#utils/user";
 import { ExpectedErr } from "bliss";
 
-const difficultyResolve: Record<string, [Playtypes["iidx"], Difficulties["iidx:DP" | "iidx:SP"]]> =
-	{
-		3: ["SP", "HYPER"],
-		4: ["SP", "ANOTHER"],
-		8: ["DP", "HYPER"],
-		9: ["DP", "ANOTHER"],
-		10: ["SP", "LEGGENDARIA"],
-		11: ["DP", "LEGGENDARIA"],
-	};
+const difficultyResolve: Record<
+	string,
+	[GamesForGroup["iidx"], Difficulties[GamesForGroup["iidx"]]]
+> = {
+	3: ["iidx-sp", "HYPER"],
+	4: ["iidx-sp", "ANOTHER"],
+	8: ["iidx-dp", "HYPER"],
+	9: ["iidx-dp", "ANOTHER"],
+	10: ["iidx-sp", "LEGGENDARIA"],
+	11: ["iidx-dp", "LEGGENDARIA"],
+};
 
 interface PoyashiProxyBPIInfo {
 	title: string;
@@ -55,14 +57,14 @@ export async function updateBpiDataCore() {
 	const updatedChartIDs: Array<string> = [];
 
 	for (const d of data.body) {
-		const res: ["DP" | "SP", Difficulties["iidx:DP" | "iidx:SP"]] | undefined =
+		const res: [GamesForGroup["iidx"], Difficulties[GamesForGroup["iidx"]]] | undefined =
 			difficultyResolve[d.difficulty];
 
 		if (!res) {
 			throw new Error(`Unknown difficulty ${d.difficulty}`);
 		}
 
-		const [playtype, diff] = res;
+		const [game, diff] = res;
 
 		const tachiSong = await FindSongOnTitle("iidx", d.title);
 
@@ -71,25 +73,18 @@ export async function updateBpiDataCore() {
 			continue;
 		}
 
-		const tachiChart = await FindChartWithPTDFVersion(
-			"iidx",
-			tachiSong.id,
-			playtype,
-			diff,
-			"29",
-		);
+		// TODO(zk): why 29? shouldn't this be updated by now?
+		const tachiChart = await FindChartWithSongDifficultyVersion(game, tachiSong.id, diff, "29");
 
 		if (!tachiChart) {
-			log.warn(
-				`Cannot find chart ${tachiSong.title} (${tachiSong.id}) ${playtype}, ${diff}?`,
-			);
+			log.warn(`Cannot find chart ${tachiSong.title} (${tachiSong.id}) ${game}, ${diff}?`);
 			continue;
 		}
 
 		const kavg = Number(d.avg);
 
 		if (kavg < 0) {
-			log.warn(`${tachiSong.title} (${playtype} ${diff}). Invalid kavg ${d.avg}, Skipping.`);
+			log.warn(`${tachiSong.title} (${game} ${diff}). Invalid kavg ${d.avg}, Skipping.`);
 			continue;
 		}
 
@@ -102,9 +97,7 @@ export async function updateBpiDataCore() {
 		const newKavg = Number(d.avg);
 		const newWR = Number(d.wr);
 
-		const iidxChart = tachiChart as
-			| MONGO_ChartDocument<"iidx:DP">
-			| MONGO_ChartDocument<"iidx:SP">;
+		const iidxChart = tachiChart as ChartDocument<GamesForGroup["iidx"]>;
 
 		if (
 			iidxChart.data.bpiCoefficient !== newCoef ||
@@ -120,9 +113,8 @@ export async function updateBpiDataCore() {
 				worldRecord: newWR,
 			};
 
-			const gpt = `iidx:${playtype}` as const;
-			const updatedChart = { ...tachiChart, data: mergedData } as MONGO_ChartDocument;
-			const checksum = computeDerivationChecksumForGPT(gpt, updatedChart);
+			const updatedChart = { ...tachiChart, data: mergedData } as ChartDocument;
+			const checksum = ComputeChartStabilityChecksum(game, updatedChart);
 
 			await DB.updateTable("chart")
 				.set({

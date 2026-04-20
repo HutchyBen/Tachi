@@ -1,14 +1,14 @@
 import type { KtLogger } from "#lib/log/log";
+import type { ParserFunctionReturns } from "#lib/score-import/import-types/common/types";
 import type { EmptyObject } from "#utils/types";
+import type { GamesForGroup } from "tachi-common";
 
+import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { FormatPrError } from "#utils/prudence";
 import { XMLParser } from "fast-xml-parser";
 import { p, type PrudenceSchema } from "prudence";
 
-import type { ParserFunctionReturns } from "../../common/types";
 import type { S3Score } from "./types";
-
-import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 
 const PR_SOLID_STATE: PrudenceSchema = {
 	s3data: {
@@ -74,7 +74,7 @@ export function ParseSolidStateXML(
 	fileData: Express.Multer.File,
 	body: Record<string, unknown>,
 	log: KtLogger,
-): ParserFunctionReturns<S3Score, EmptyObject> {
+): ParserFunctionReturns<S3Score, EmptyObject, GamesForGroup["iidx"]> {
 	let parsedXML;
 
 	try {
@@ -137,6 +137,6 @@ export function ParseSolidStateXML(
 		classProvider: null,
 		context: {},
 		iterable: scoreData as Array<S3Score>,
-		game: "iidx",
+		gameGroup: "iidx",
 	};
 }

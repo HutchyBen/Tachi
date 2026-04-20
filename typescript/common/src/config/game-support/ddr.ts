@@ -1,7 +1,7 @@
 import { p } from "prudence";
 import { z } from "zod";
 
-import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_PT_CONFIG } from "../../types/internals";
+import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
 import { FmtNum, FmtScoreNoCommas } from "../../utils/util";
 import { ClassValue, zodNonNegativeInt } from "../config-utils";
@@ -55,8 +55,9 @@ export const DDRFlare = [
 	ClassValue("WORLD", "世界 / WORLD"),
 ];
 
-export const DDR_CONF = {
+export const GAME_GROUP_DDR_CONF = {
 	name: "DDR",
+	games: ["ddr-sp", "ddr-dp"],
 	playtypes: ["SP", "DP"],
 	songData: z.strictObject({
 		inGameID: zodNonNegativeInt,
@@ -64,9 +65,9 @@ export const DDR_CONF = {
 		basename: z.string().optional(),
 		ddrSongHash: z.string().optional(), // optional because konaste-only songs have no hashes
 	}),
-} as const satisfies INTERNAL_GAME_CONFIG;
+} as const satisfies INTERNAL_GAME_GROUP_CONFIG;
 
-export const DDR_SP_CONF = {
+export const GAME_DDR_SP_CONF = {
 	providedMetrics: {
 		score: {
 			type: "INTEGER",
@@ -174,7 +175,7 @@ export const DDR_SP_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: DDR_DIFFICULTIES,
-		shorthand: {
+		format: {
 			BEGINNER: "BEG",
 			BASIC: "BAS",
 			DIFFICULT: "DIF",
@@ -212,8 +213,8 @@ export const DDR_SP_CONF = {
 	scoreMeta: z.strictObject({}),
 
 	supportedMatchTypes: ["inGameID", "songTitle", "tachiSongID", "ddrSongHash"],
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;
 
-export const DDR_DP_CONF = {
-	...DDR_SP_CONF,
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+export const GAME_DDR_DP_CONF = {
+	...GAME_DDR_SP_CONF,
+} as const satisfies INTERNAL_GAME_CONFIG;

@@ -2,7 +2,7 @@ import useScoreRatingAlg from "#components/util/useScoreRatingAlg";
 import { type RivalChartDataset } from "#types/tables";
 import { NumericSOV, StrSOV } from "#util/sorts";
 import React, { useState } from "react";
-import { type AnyScoreRatingAlg, type GameGroup, type MONGO_ChartDocument } from "tachi-common";
+import { type AnyScoreRatingAlg, type ChartDocument, type V3Game } from "tachi-common";
 
 import IndexCell from "../cells/IndexCell";
 import RankingCell, { type RankingViewMode } from "../cells/RankingCell";
@@ -21,13 +21,11 @@ export default function RivalChartTable({
 	game,
 	chart,
 }: {
-	chart: MONGO_ChartDocument;
+	chart: ChartDocument;
 	dataset: RivalChartDataset;
-	game: GameGroup;
+	game: V3Game;
 }) {
-	const playtype = chart.playtype;
-
-	const defaultRating = useScoreRatingAlg(game, playtype);
+	const defaultRating = useScoreRatingAlg(game);
 
 	const [rating, setRating] = useState(defaultRating);
 	const [rankingViewMode, setRankingViewMode] = useState<RankingViewMode>("global");
@@ -35,13 +33,7 @@ export default function RivalChartTable({
 	const headers: Header<RivalChartDataset[0]>[] = [
 		["#", "#", NumericSOV((x) => x.__related.index)],
 		["User", "User", StrSOV((x) => x.username)],
-		...GetGPTCoreHeaders<RivalChartDataset>(
-			game,
-			playtype,
-			rating,
-			setRating,
-			(x) => x.__related.pb,
-		),
+		...GetGPTCoreHeaders<RivalChartDataset>(game, rating, setRating, (x) => x.__related.pb),
 		CreateRankingHeader(
 			rankingViewMode,
 			setRankingViewMode,
@@ -78,9 +70,9 @@ function Row({
 	chart,
 	rankingViewMode,
 }: {
-	chart: MONGO_ChartDocument;
+	chart: ChartDocument;
 	data: RivalChartDataset[0];
-	game: GameGroup;
+	game: V3Game;
 	rankingViewMode: RankingViewMode;
 	rating: AnyScoreRatingAlg;
 }) {
@@ -90,7 +82,7 @@ function Row({
 		return (
 			<tr>
 				<td>N/A</td>
-				<UserCell game={game} playtype={chart.playtype} user={data} />
+				<UserCell game={game} user={data} />
 				<td colSpan={7}>Not Played.</td>
 			</tr>
 		);
@@ -102,13 +94,13 @@ function Row({
 				<GraphAndJudgementDataComponent
 					chart={chart}
 					score={data.__related.pb}
-					{...{ ...GPTDropdownSettings(game, chart.playtype) }}
+					{...{ ...GPTDropdownSettings(game) }}
 				/>
 			}
 			nested
 		>
 			<IndexCell index={data.__related.index} />
-			<UserCell game={game} playtype={chart.playtype} user={data} />
+			<UserCell game={game} user={data} />
 			<ScoreCoreCells chart={chart} game={game} rating={rating} score={pb} />
 			<RankingCell
 				rankingData={pb.rankingData}

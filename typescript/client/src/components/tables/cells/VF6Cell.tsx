@@ -4,14 +4,13 @@ import { IsNullish } from "#util/misc";
 import React, { useContext } from "react";
 import { Volforce } from "rg-stats";
 import {
-	GetGPTString,
-	GetSpecificGPTConfig,
-	type MONGO_ChartDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_ScoreDocument,
+	type ChartDocument,
+	GetSpecificGameConfig,
+	type PBScoreDocument,
+	type ScoreDocument,
 } from "tachi-common";
 
-type VF6GPTString = "sdvx:Single" | "usc:Controller" | "usc:Keyboard";
+type VF6Game = "sdvx" | "usc-controller" | "usc-keyboard";
 
 const SHORT_LAMPS = {
 	CLEAR: "CLR",
@@ -24,11 +23,11 @@ export default function VF6Cell({
 	score,
 	chart,
 }: {
-	chart: MONGO_ChartDocument<VF6GPTString>;
-	score: MONGO_PBScoreDocument<VF6GPTString> | MONGO_ScoreDocument<VF6GPTString>;
+	chart: ChartDocument<VF6Game>;
+	score: PBScoreDocument<VF6Game> | ScoreDocument<VF6Game>;
 }) {
 	const { user } = useContext(UserContext);
-	const { settings } = useLUGPTSettings<VF6GPTString>();
+	const { settings } = useLUGPTSettings<VF6Game>();
 
 	if (IsNullish(score.calculatedData.VF6)) {
 		return <td>N/A</td>;
@@ -36,9 +35,8 @@ export default function VF6Cell({
 
 	const vf6Target = settings?.preferences.gameSpecific.vf6Target;
 
-	const gptConfig = GetSpecificGPTConfig<VF6GPTString>(
-		GetGPTString(score.game, score.playtype) as VF6GPTString,
-	);
+	const game = score.game as VF6Game;
+	const gameConfig = GetSpecificGameConfig(game);
 
 	const targets: Record<string, number | null> = {};
 
@@ -46,7 +44,7 @@ export default function VF6Cell({
 		for (const lamp of ["CLEAR", "EXCESSIVE CLEAR", "ULTIMATE CHAIN"] as const) {
 			if (
 				score.scoreData.enumIndexes.lamp <=
-				gptConfig.providedMetrics.lamp.values.indexOf(lamp)
+				gameConfig.providedMetrics.lamp.values.indexOf(lamp)
 			) {
 				const expectedScore = InverseVF6(vf6Target, lamp, chart.levelNum);
 

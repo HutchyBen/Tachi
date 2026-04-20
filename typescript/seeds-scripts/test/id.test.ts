@@ -2,12 +2,12 @@ import chalk from "chalk";
 import fjsh from "fast-json-stable-hash";
 import get from "lodash.get";
 import {
+	ALL_GAMES,
 	allSupportedGameGroups,
 	type GameGroup,
+	GameToGameGroup,
 	type integer,
-	v3AllGames,
 	type V3Game,
-	V3ToGameGroup,
 } from "tachi-common";
 
 import { GetChartCollectionGame, GetSongCollectionGame, ReadCollection } from "../util";
@@ -32,12 +32,12 @@ for (const gameGroup of allSupportedGameGroups) {
 	SongChartKeys[`songs-${gameGroup}`] = ["id", "legacySongID"];
 }
 
-for (const v3Game of v3AllGames) {
+for (const v3Game of ALL_GAMES) {
 	SongChartKeys[`charts-${v3Game}`] = chartDupKeyDecls();
 }
 
 const UniqueKeys: Record<string, DuplicateKeyDecl[]> = {
-	"bms-course-lookup": [["set", "playtype", "value"]],
+	"bms-course-lookup": [["set", "game", "value"]],
 	folders: ["id", "legacyFolderID"],
 	tables: ["id", "legacyTableID"],
 	questlines: ["questlineID"],
@@ -110,7 +110,7 @@ function gameGroupForFormat(collection: string): GameGroup {
 	if (collection.startsWith("charts-")) {
 		const v3Game = GetChartCollectionGame(`${collection}.json`) as V3Game;
 
-		return V3ToGameGroup(v3Game);
+		return GameToGameGroup(v3Game);
 	}
 
 	throw new Error(`Expected songs-* or charts-* collection, got ${collection}`);

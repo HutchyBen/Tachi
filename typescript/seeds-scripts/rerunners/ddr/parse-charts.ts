@@ -1,6 +1,6 @@
 import { Parser } from "binary-parser";
 import fs from "fs";
-import { type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
+import { type ChartDocument, type SongDocument } from "tachi-common";
 
 import { ReadCollection, WriteCollection } from "../../util";
 
@@ -169,8 +169,7 @@ class SSQParser {
 }
 
 class DataUpdater {
-	existingChartDocs: MONGO_ChartDocument<"ddr:DP" | "ddr:SP">[] =
-		ReadCollection("charts-ddr.json");
+	existingChartDocs: ChartDocument<"ddr-dp" | "ddr-sp">[] = ReadCollection("charts-ddr.json");
 	songs = ReadCollection("songs-ddr.json");
 
 	saveCharts() {
@@ -182,15 +181,15 @@ class DataUpdater {
 
 	updateStepCounts(basename: string, stepDataArray: StepData[]) {
 		for (const stepData of stepDataArray) {
-			const song: MONGO_SongDocument<"ddr"> = this.songs.find(
-				(s: MONGO_SongDocument<"ddr">) => s.data.basename === basename,
+			const song: SongDocument<"ddr"> = this.songs.find(
+				(s: SongDocument<"ddr">) => s.data.basename === basename,
 			);
 			if (!song) {
 				break;
 			}
 			for (const chart of this.existingChartDocs) {
 				if (
-					song.id === chart.songID &&
+					song.id === chart.song.id &&
 					chart.playtype === stepData.style &&
 					chart.difficulty === stepData.difficulty
 				) {

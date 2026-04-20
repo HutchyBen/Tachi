@@ -1,29 +1,21 @@
-import type { GameGroup, ShowcaseStatDetails } from "tachi-common";
+import type { ShowcaseStatDetails, V3Game } from "tachi-common";
 
-import { LoadFolderDocumentById } from "#lib/db-formats/folders";
+import { LoadFolderDocumentByGameAndSlug } from "#lib/db-formats/folders";
 import { log } from "#lib/log/log";
 import { GetChartForIDGuaranteed, GetSongForIDGuaranteed } from "#utils/db";
 
-export async function GetRelatedStatDocuments(stat: ShowcaseStatDetails, game: GameGroup) {
+export async function GetRelatedStatDocuments(stat: ShowcaseStatDetails, game: V3Game) {
 	switch (stat.mode) {
 		case "chart": {
-			const chart = await GetChartForIDGuaranteed(game, stat.chartID);
+			const chart = await GetChartForIDGuaranteed(stat.chartID);
 
-			const song = await GetSongForIDGuaranteed(game, chart.songID);
+			const song = await GetSongForIDGuaranteed(chart.song.id);
 
 			return { song, chart };
 		}
 
 		case "folder": {
-			if (Array.isArray(stat.folderID)) {
-				log.warn(
-					{ stat },
-					`This stat is corrupt and attempted to use multiple folderIDs. This is no longer supported. Check that migrations have ran.`,
-				);
-				throw new Error(`Legacy FolderIDs used in showcase stat.`);
-			}
-
-			const folder = await LoadFolderDocumentById(stat.folderID);
+			const folder = await LoadFolderDocumentByGameAndSlug(game, stat.slug);
 
 			if (!folder) {
 				log.error({ stat }, `This stat refers to a folder that does not exist?`);

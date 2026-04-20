@@ -8,7 +8,7 @@ import { type FolderDataset } from "#types/tables";
 import { ToFixedFloor, UppercaseFirst } from "#util/misc";
 import { NumericSOV } from "#util/sorts";
 import React, { useMemo } from "react";
-import { GetGamePTConfig } from "tachi-common";
+import { GetGameConfig } from "tachi-common";
 import {
 	type ConfDecimalScoreMetric,
 	type ConfIntegerScoreMetric,
@@ -17,13 +17,12 @@ import {
 export default function FolderScoreAverages({
 	folderDataset,
 	game,
-	playtype,
 }: { folderDataset: FolderDataset } & UGPT) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
 	const metrics = {
-		...gptConfig.providedMetrics,
-		...gptConfig.derivedMetrics,
+		...gameConfig.providedMetrics,
+		...gameConfig.derivedMetrics,
 	};
 
 	const entries = Object.entries(metrics);

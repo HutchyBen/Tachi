@@ -2,9 +2,9 @@ import { APIFetchV1 } from "#util/api";
 import { DelayedPageReload } from "#util/misc";
 import React, { useMemo, useReducer } from "react";
 import { Button } from "react-bootstrap";
-import { type MONGO_ImportDocument } from "tachi-common";
+import { type ImportDocument } from "tachi-common";
 
-export default function ManageImport({ importDoc }: { importDoc: MONGO_ImportDocument }) {
+export default function ManageImport({ importDoc }: { importDoc: ImportDocument }) {
 	const [warn, upgWarn] = useReducer((r) => r + 1, 0);
 	const message = useMemo(() => {
 		if (warn === 0) {

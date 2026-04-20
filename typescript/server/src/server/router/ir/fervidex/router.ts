@@ -12,10 +12,11 @@ import { IsNullishOrEmptyStr } from "#utils/misc";
 import { type RequestHandler, Router } from "express";
 import { p } from "prudence";
 import {
-	GetGamePTConfig,
+	type GamesForGroup,
 	type integer,
-	type Playtypes,
-	type SpecificGamePTConfig,
+	LEGACY_GetGamePTConfig,
+	type LEGACY_Playtypes,
+	type SpecificGameConfig,
 } from "tachi-common";
 
 const router: Router = Router({ mergeParams: true });
@@ -317,10 +318,12 @@ router.post("/class/submit", ValidateModelHeader, async (req, res) => {
 	}
 
 	// is 0 or 1.
-	const playtype: Playtypes["iidx"] = body.play_style === 0 ? "SP" : "DP";
+	const playtype: LEGACY_Playtypes["iidx"] = body.play_style === 0 ? "SP" : "DP";
 
 	const dans = (
-		GetGamePTConfig("iidx", playtype) as unknown as SpecificGamePTConfig<"iidx:DP" | "iidx:SP">
+		LEGACY_GetGamePTConfig("iidx", playtype) as unknown as SpecificGameConfig<
+			GamesForGroup["iidx"]
+		>
 	).classes.dan.values;
 
 	const dan = dans[body.course_id];
@@ -332,13 +335,9 @@ router.post("/class/submit", ValidateModelHeader, async (req, res) => {
 		});
 	}
 
-	const r = await UpdateClassIfGreater(
-		req[SYMBOL_TACHI_API_AUTH].userID!,
-		"iidx",
-		playtype,
-		"dan",
-		dan.id,
-	);
+	const game = playtype === "SP" ? "iidx-sp" : "iidx-dp";
+
+	const r = await UpdateClassIfGreater(req[SYMBOL_TACHI_API_AUTH].userID!, game, "dan", dan.id);
 
 	return res.status(200).json({
 		success: true,

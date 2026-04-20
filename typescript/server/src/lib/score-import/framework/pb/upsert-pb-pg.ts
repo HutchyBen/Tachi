@@ -1,13 +1,13 @@
 import type { Kysely } from "kysely";
 import type { Database } from "tachi-db";
 
-import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
+import { GAME_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import { mongoScoreDataToPg } from "#lib/v3/migration-tools";
 import { UnixMillisecondsToISO8601 } from "#utils/time";
-import { GetGPTString, type GPTString, type MONGO_PBScoreDocument } from "tachi-common";
+import { type PBScoreDocument, type V3Game } from "tachi-common";
 
-export type MONGO_PBScoreDocumentNoRank<GPT extends GPTString = GPTString> = Omit<
-	MONGO_PBScoreDocument<GPT>,
+export type PBScoreDocumentNoRank<TGame extends V3Game = V3Game> = Omit<
+	PBScoreDocument<TGame>,
 	"rankingData"
 >;
 
@@ -16,12 +16,12 @@ export type MONGO_PBScoreDocumentNoRank<GPT extends GPTString = GPTString> = Omi
  */
 export async function upsertPbFromMongoDoc(
 	db: Kysely<Database>,
-	pbDoc: MONGO_PBScoreDocumentNoRank,
+	pbDoc: PBScoreDocumentNoRank,
 ): Promise<void> {
-	const gpt = GetGPTString(pbDoc.game, pbDoc.playtype);
-	const { data, derived, judgements } = mongoScoreDataToPg(gpt, pbDoc.scoreData);
+	const game = pbDoc.game;
+	const { data, derived, judgements } = mongoScoreDataToPg(game, pbDoc.scoreData);
 	const judgementsJson = JSON.stringify(judgements);
-	const ranking = GPT_SERVER_IMPLEMENTATIONS[gpt].pbRankingValues(pbDoc as never);
+	const ranking = GAME_IMPLEMENTATIONS[game].pbRankingValues(pbDoc as never);
 
 	const calc = { ...(pbDoc.calculatedData as Record<string, unknown>) };
 	delete calc.rank;
@@ -96,13 +96,15 @@ export async function upsertPbFromMongoDoc(
 
 	await db.deleteFrom("pb_composed_from").where("pb_id", "=", pbId).execute();
 
-	for (const ref of pbDoc.composedFrom) {
+	if (pbDoc.composedFrom.length > 0) {
 		await db
 			.insertInto("pb_composed_from")
-			.values({
-				pb_id: pbId,
-				score_id: ref.scoreID,
-			})
+			.values(
+				pbDoc.composedFrom.map((ref) => ({
+					pb_id: pbId,
+					score_id: ref.scoreID,
+				})),
+			)
 			.execute();
 	}
 }

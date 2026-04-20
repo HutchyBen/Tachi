@@ -1,6 +1,13 @@
 import { log } from "#lib/log/log";
 import { loadServerEnvFile } from "#lib/setup/load-server-env";
-import { allSupportedGameGroups, type GameGroup, type ImportTypes } from "tachi-common";
+import {
+	ALL_GAMES,
+	allSupportedGameGroups,
+	type GameGroup,
+	GameToGameGroup,
+	type ImportTypes,
+	type V3Game,
+} from "tachi-common";
 import { allImportTypes } from "tachi-common/constants/import-types";
 import { z } from "zod";
 
@@ -54,13 +61,10 @@ const configSchema = z.object({
 	EXTERNAL_SCORE_IMPORT_WORKER_CONCURRENCY: z.number().int().positive().optional(),
 	ALLOW_RUNNING_OFFLINE: z.boolean().optional(),
 	ENABLE_METRICS: z.boolean().default(true),
-	EMAIL_CONFIG: z
-		.object({
-			FROM: z.string(),
-			DKIM: z.any().optional(),
-			TRANSPORT_OPS: z.any().optional(),
-		})
-		.optional(),
+	EMAIL_CONFIG: z.object({
+		FROM: z.string(),
+		TRANSPORT_OPS: z.any(),
+	}),
 	USC_QUEUE_SIZE: z.number().int().gte(2).default(3),
 	BEATORAJA_QUEUE_SIZE: z.number().int().gte(2).default(3),
 	MAX_GOAL_SUBSCRIPTIONS: z.number().int().positive().default(1_000),
@@ -80,7 +84,7 @@ const configSchema = z.object({
 	TACHI_CONFIG: z.object({
 		NAME: z.string(),
 		TYPE: z.enum(["kamai", "boku", "omni"]),
-		GAMES: z.array(z.enum(allSupportedGameGroups as [GameGroup, ...GameGroup[]])),
+		GAME_GROUPS: z.array(z.enum(allSupportedGameGroups as [GameGroup, ...GameGroup[]])),
 		IMPORT_TYPES: z.array(z.enum(allImportTypes as [ImportTypes, ...ImportTypes[]])),
 		SIGNUPS_ENABLED: z.boolean().default(true),
 	}),
@@ -236,26 +240,115 @@ function seedsConfig(): TachiServerConfig["SEEDS_CONFIG"] {
 	throw new Error(`Invalid TACHI_SEEDS_TYPE "${type}". Expected LOCAL_FILES or GIT_REPO.`);
 }
 
-function emailConfig(): TachiServerConfig["EMAIL_CONFIG"] {
-	const from = opt("TACHI_EMAIL_FROM");
-	if (from === undefined) {
+function envOptFrom(env: NodeJS.ProcessEnv, key: string): string | undefined {
+	const v = env[key];
+	if (v === undefined || v === "") {
 		return undefined;
 	}
-	const dkimRaw = opt("TACHI_EMAIL_DKIM_JSON");
-	const transportRaw = opt("TACHI_EMAIL_TRANSPORT_OPS_JSON");
-	let dkim: unknown;
-	let transportOps: unknown;
-	if (dkimRaw !== undefined) {
-		dkim = JSON.parse(dkimRaw) as unknown;
+	return v;
+}
+
+function envBoolFrom(env: NodeJS.ProcessEnv, key: string, defaultVal: boolean): boolean {
+	const v = envOptFrom(env, key);
+	if (v === undefined) {
+		return defaultVal;
 	}
-	if (transportRaw !== undefined) {
-		transportOps = JSON.parse(transportRaw) as unknown;
+	if (v === "true" || v === "1") {
+		return true;
 	}
+	if (v === "false" || v === "0") {
+		return false;
+	}
+	return defaultVal;
+}
+
+/**
+ * SMTP settings from env. Required for every deployment.
+ *
+ * - `TACHI_EMAIL_FROM` — `From` header (must match Postmark sender when using Postmark).
+ * - `TACHI_EMAIL_AUTH_POSTMARK` — if `true`, uses Postmark SMTP; set `TACHI_EMAIL_AUTH_USER` /
+ *   `TACHI_EMAIL_AUTH_PASS` to your server token (both are the token for Postmark).
+ * - Otherwise: `TACHI_EMAIL_HOST`, `TACHI_EMAIL_PORT`, `TACHI_EMAIL_SECURE`, and optionally
+ *   `TACHI_EMAIL_AUTH_USER` / `TACHI_EMAIL_AUTH_PASS` (e.g. Mailpit: no auth).
+ *
+ * @internal Exported for unit tests.
+ */
+export function buildEmailConfig(env: NodeJS.ProcessEnv): TachiServerConfig["EMAIL_CONFIG"] {
+	const from = envOptFrom(env, "TACHI_EMAIL_FROM");
+	if (from === undefined) {
+		throw new Error(`TACHI_EMAIL_FROM is required.`);
+	}
+
+	if (envBoolFrom(env, "TACHI_EMAIL_AUTH_POSTMARK", false)) {
+		const pass = envOptFrom(env, "TACHI_EMAIL_AUTH_PASS");
+		const user = envOptFrom(env, "TACHI_EMAIL_AUTH_USER");
+		const token = pass ?? user;
+		if (token === undefined) {
+			throw new Error(
+				`TACHI_EMAIL_AUTH_PASS or TACHI_EMAIL_AUTH_USER is required when TACHI_EMAIL_AUTH_POSTMARK is true.`,
+			);
+		}
+		const authUser = user ?? token;
+		const authPass = pass ?? token;
+		return {
+			FROM: from,
+			TRANSPORT_OPS: {
+				host: "smtp.postmarkapp.com",
+				port: 587,
+				secure: false,
+				auth: {
+					user: authUser,
+					pass: authPass,
+				},
+			},
+		};
+	}
+
+	const host = envOptFrom(env, "TACHI_EMAIL_HOST");
+	if (host === undefined) {
+		throw new Error(`TACHI_EMAIL_HOST is required when TACHI_EMAIL_AUTH_POSTMARK is false.`);
+	}
+
+	const portRaw = envOptFrom(env, "TACHI_EMAIL_PORT");
+	if (portRaw === undefined) {
+		throw new Error(`TACHI_EMAIL_PORT is required when TACHI_EMAIL_AUTH_POSTMARK is false.`);
+	}
+	const port = Number.parseInt(portRaw, 10);
+	if (Number.isNaN(port)) {
+		throw new Error(`TACHI_EMAIL_PORT must be a number, got "${portRaw}".`);
+	}
+
+	const secure = envBoolFrom(env, "TACHI_EMAIL_SECURE", false);
+	const authUser = envOptFrom(env, "TACHI_EMAIL_AUTH_USER");
+	const authPass = envOptFrom(env, "TACHI_EMAIL_AUTH_PASS");
+
+	const transportOps: Record<string, unknown> = {
+		host,
+		port,
+		secure,
+	};
+	if (authUser !== undefined || authPass !== undefined) {
+		transportOps.auth = {
+			user: authUser ?? "",
+			pass: authPass ?? "",
+		};
+	}
+
 	return {
 		FROM: from,
-		...(dkim !== undefined ? { DKIM: dkim } : {}),
-		...(transportOps !== undefined ? { TRANSPORT_OPS: transportOps } : {}),
+		TRANSPORT_OPS: transportOps,
 	};
+}
+
+function emailConfig(): TachiServerConfig["EMAIL_CONFIG"] {
+	try {
+		return buildEmailConfig(process.env);
+	} catch (err) {
+		const msg = err instanceof Error ? err.message : String(err);
+		log.error({ err, bootInfo: true }, `Invalid email configuration: ${msg}`);
+		process.exit(1);
+		throw new Error("unreachable");
+	}
 }
 
 function inviteCodeConfig(): TachiServerConfig["INVITE_CODE_CONFIG"] {
@@ -288,7 +381,7 @@ function clientDevServer(): string | null | undefined {
 	return v;
 }
 
-const games = parseCsv("TACHI_GAMES", allSupportedGameGroups as readonly GameGroup[]);
+const gameGroups = parseCsv("TACHI_GAME_GROUPS", allSupportedGameGroups as readonly GameGroup[]);
 const importTypes = parseCsv("TACHI_IMPORT_TYPES", allImportTypes as readonly ImportTypes[]);
 
 const cgDev = cgOptional("DEV");
@@ -333,7 +426,7 @@ const configFromEnv: unknown = {
 	),
 	ALLOW_RUNNING_OFFLINE: parseBool("TACHI_ALLOW_RUNNING_OFFLINE"),
 	ENABLE_METRICS: parseBool("TACHI_ENABLE_METRICS", true) ?? true,
-	...(emailCfg !== undefined ? { EMAIL_CONFIG: emailCfg } : {}),
+	EMAIL_CONFIG: emailCfg,
 	USC_QUEUE_SIZE: parseIntEnv("TACHI_USC_QUEUE_SIZE", 3),
 	BEATORAJA_QUEUE_SIZE: parseIntEnv("TACHI_BEATORAJA_QUEUE_SIZE", 3),
 	MAX_GOAL_SUBSCRIPTIONS: parseIntEnv("TACHI_MAX_GOAL_SUBSCRIPTIONS", 1_000),
@@ -345,7 +438,7 @@ const configFromEnv: unknown = {
 	TACHI_CONFIG: {
 		NAME: req("TACHI_NAME"),
 		TYPE: req("TACHI_TYPE"),
-		GAMES: games,
+		GAME_GROUPS: gameGroups,
 		IMPORT_TYPES: importTypes,
 		SIGNUPS_ENABLED: parseBool("TACHI_SIGNUPS_ENABLED", true) ?? true,
 	},
@@ -365,6 +458,10 @@ if (!result.success) {
 
 export const TachiConfig = result.data.TACHI_CONFIG;
 export const ServerConfig: TachiServerConfig = result.data;
+
+export function AllEnabledGames(): Array<V3Game> {
+	return ALL_GAMES.filter((g) => TachiConfig.GAME_GROUPS.includes(GameToGameGroup(g)));
+}
 
 // Environment Variable Validation
 
@@ -403,7 +500,7 @@ if (!["dev", "production", "staging", "test"].includes(NODE_ENV)) {
 	process.exit(1);
 }
 
-if (TachiConfig.GAMES.includes("bms") !== TachiConfig.GAMES.includes("pms")) {
+if (TachiConfig.GAME_GROUPS.includes("bms") !== TachiConfig.GAME_GROUPS.includes("pms")) {
 	log.error(`BMS and PMS MUST be enabled at the same time, due to how the beatoraja IR works.`);
 
 	process.exit(1);
@@ -431,18 +528,18 @@ if (!MIGRATIONS_DIR) {
 	process.exit(1);
 }
 
-const VERSION = process.env.VERSION;
+let version = process.env.VERSION;
 
-if (!VERSION) {
-	log.error(`No VERSION specified in environment. Terminating.`);
-	process.exit(1);
+if (!version) {
+	log.error(`No VERSION specified in environment. defaulting to 0.0.0.`);
+	version = "0.0.0";
 }
 
-const COMMIT_HASH = process.env.COMMIT_HASH;
+let commitHash = process.env.COMMIT_HASH;
 
-if (!COMMIT_HASH) {
-	log.error(`No COMMIT_HASH specified in environment. Terminating.`);
-	process.exit(1);
+if (!commitHash) {
+	log.error(`No COMMIT_HASH specified in environment. defaulting to unknown commit.`);
+	commitHash = "unknown";
 }
 
 export const Env = {
@@ -451,8 +548,8 @@ export const Env = {
 	MONGO_URL,
 	POSTGRES_URL,
 	MIGRATIONS_DIR,
-	VERSION,
-	COMMIT_HASH,
+	VERSION: version,
+	COMMIT_HASH: commitHash,
 	NODE_ENV: NODE_ENV as "dev" | "production" | "staging" | "test",
 	LOG_LEVEL: logLevel as "crit" | "debug" | "error" | "info" | "severe" | "verbose" | "warn",
 };

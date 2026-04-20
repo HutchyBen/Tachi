@@ -1,4 +1,4 @@
-import { BuildFolderQuery } from "#lib/folders/folders.js";
+import { BuildFolderQuery } from "#lib/folders/folders";
 import DB from "#services/pg/db";
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
@@ -77,7 +77,7 @@ describe("POC: tautological folder.where via sql.raw", () => {
 				game: "iidx-sp",
 				inactive: false,
 				title: "POC tautology",
-				slug: null,
+				slug: folderId,
 				where: "true",
 				version_filter: null,
 				search_terms: [],

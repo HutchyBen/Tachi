@@ -3,21 +3,17 @@ import type { KtLogger } from "#lib/log/log";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
 import DB from "#services/pg/db";
 import { ReturnClassIfGreater } from "#utils/class";
-import { UnixMillisecondsToISO8601 } from "#utils/time.js";
+import { UnixMillisecondsToISO8601 } from "#utils/time";
 import deepmerge from "deepmerge";
 import {
 	type AnyClasses,
 	type ClassDelta,
 	type Classes,
 	type ExtractedClasses,
-	type GameGroup,
-	GamePTToV3,
-	GetGamePTConfig,
-	GetGPTString,
-	type GPTString,
+	GetGameConfig,
 	type integer,
-	type MONGO_UserGameStats,
-	type Playtype,
+	type UserGameStats,
+	type V3Game,
 } from "tachi-common";
 
 import type { ClassProvider } from "../calculated-data/types";
@@ -46,23 +42,20 @@ import { CalculateDerivedClasses } from "../calculated-data/profile-classes";
  * defaults.
  */
 export async function CalculateUGPTClasses(
-	game: GameGroup,
-	playtype: Playtype,
+	game: V3Game,
 	userID: integer,
 	ratings: Record<string, number | null>,
-	ClassProvider: ClassProvider | null,
+	ClassProvider: ClassProvider<V3Game> | null,
 	log: KtLogger,
-): Promise<ExtractedClasses[GPTString]> {
-	const gptString = GetGPTString(game, playtype);
-
+): Promise<ExtractedClasses[V3Game]> {
 	// Derive all classes first.
-	let classes = CalculateDerivedClasses(gptString, ratings);
+	let classes = CalculateDerivedClasses(game, ratings);
 
 	// If this import method is providing us classes, merge those with the
 	// other classes we have.
 	if (ClassProvider) {
 		log.debug(`Calling custom class handler.`);
-		const customClasses = (await ClassProvider(gptString, userID, ratings, log)) ?? {};
+		const customClasses = (await ClassProvider(game, userID, ratings, log)) ?? {};
 
 		classes = deepmerge(customClasses, classes);
 	}
@@ -83,23 +76,20 @@ export async function CalculateUGPTClasses(
  * This function emits webhook events and inserts classachieved documents into the DB!
  */
 export async function ProcessClassDeltas(
-	game: GameGroup,
-	playtype: Playtype,
+	game: V3Game,
 	classes: AnyClasses,
-	userGameStats: MONGO_UserGameStats | null,
+	userGameStats: UserGameStats | null,
 	userID: integer,
 	log: KtLogger,
 ): Promise<Array<ClassDelta>> {
-	const gptString = GetGPTString(game, playtype);
-
 	const deltas: Array<ClassDelta> = [];
 
 	const achievementOps = [];
 
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
 	for (const s of Object.keys(classes)) {
-		const classSet = s as Classes[GPTString];
+		const classSet = s as Classes[V3Game];
 		const classVal = classes[classSet];
 
 		if (classVal === undefined || classVal === null) {
@@ -107,10 +97,10 @@ export async function ProcessClassDeltas(
 			continue;
 		}
 
-		const classConfig = gptConfig.classes[classSet]!;
+		const classConfig = gameConfig.classes[classSet]!;
 
 		try {
-			const isGreater = ReturnClassIfGreater(gptString, classSet, classVal, userGameStats);
+			const isGreater = ReturnClassIfGreater(game, classSet, classVal, userGameStats);
 
 			// if this was worse, and this class is PROVIDED (i.e. it's a dan)
 			// then don't do anything
@@ -126,7 +116,6 @@ export async function ProcessClassDeltas(
 					delta = {
 						game,
 						set: classSet,
-						playtype,
 						old: null,
 						new: classVal,
 					};
@@ -134,7 +123,6 @@ export async function ProcessClassDeltas(
 					delta = {
 						game,
 						set: classSet,
-						playtype,
 						old: userGameStats!.classes[classSet]!,
 						new: classVal,
 					};
@@ -144,7 +132,13 @@ export async function ProcessClassDeltas(
 				if (isGreater !== false) {
 					void EmitWebhookEvent({
 						type: "class-update/v1",
-						content: { userID, ...delta },
+						content: {
+							userID,
+							game,
+							set: delta.set,
+							old: delta.old,
+							new: delta.new,
+						},
 					});
 
 					achievementOps.push({
@@ -153,7 +147,6 @@ export async function ProcessClassDeltas(
 						classOldValue: delta.old,
 						classValue: delta.new,
 						game,
-						playtype,
 						timeAchieved: Date.now(),
 					});
 				}
@@ -172,7 +165,7 @@ export async function ProcessClassDeltas(
 					class_prev_value: op.classOldValue ?? "",
 					class_set: op.classSet,
 					class_value: op.classValue,
-					game: GamePTToV3(op.game, op.playtype),
+					game,
 					timestamp: UnixMillisecondsToISO8601(op.timeAchieved),
 					user_id: op.userID,
 				})),

@@ -1,14 +1,15 @@
 import { p } from "prudence";
 import { z } from "zod";
 
-import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_PT_CONFIG } from "../../types/internals";
+import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
 import { FmtPercent, FmtScoreNoCommas } from "../../utils/util";
 import { ClassValue, zodNonNegativeInt } from "../config-utils";
-import { BMS_7K_CONF } from "./bms";
+import { GAME_BMS_7K_CONF } from "./bms";
 
-export const PMS_CONF = {
+export const GAME_PMS_CONF = {
 	name: "PMS",
+	games: ["pms-controller", "pms-keyboard"],
 	playtypes: ["Controller", "Keyboard"],
 	songData: z.strictObject({
 		genre: z.nullable(z.string()),
@@ -16,7 +17,7 @@ export const PMS_CONF = {
 		subartist: z.nullable(z.string()),
 		tableString: z.nullable(z.string()),
 	}),
-} as const satisfies INTERNAL_GAME_CONFIG;
+} as const satisfies INTERNAL_GAME_GROUP_CONFIG;
 
 const PMSDans = [
 	ClassValue("INSANE_1", "●1", "Insane 1st Dan"),
@@ -42,7 +43,7 @@ function FormatSieglindePMS(sgl: number): string {
 	return `●${(sgl - 12).toFixed(2)}`;
 }
 
-export const PMS_CONTROLLER_CONF = {
+export const GAME_PMS_CONTROLLER_CONF = {
 	providedMetrics: {
 		score: {
 			type: "INTEGER",
@@ -93,7 +94,7 @@ export const PMS_CONTROLLER_CONF = {
 	preferredDefaultEnum: "lamp",
 
 	optionalMetrics: {
-		...BMS_7K_CONF.optionalMetrics,
+		...GAME_BMS_7K_CONF.optionalMetrics,
 	},
 
 	scoreRatingAlgs: {
@@ -125,7 +126,7 @@ export const PMS_CONTROLLER_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["CHART"],
-		shorthand: {},
+		format: {},
 		default: "CHART",
 	},
 
@@ -154,6 +155,6 @@ export const PMS_CONTROLLER_CONF = {
 	}),
 
 	supportedMatchTypes: ["bmsChartHash", "tachiSongID"],
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;
 
-export const PMS_KEYBOARD_CONF = PMS_CONTROLLER_CONF;
+export const GAME_PMS_KEYBOARD_CONF = GAME_PMS_CONTROLLER_CONF;

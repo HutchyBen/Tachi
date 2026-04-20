@@ -1,11 +1,11 @@
 import Activity from "#components/activity/Activity";
 import { AllLUGPTStatsContext } from "#context/AllLUGPTStatsContext";
 import React, { useContext } from "react";
-import { type MONGO_UserDocument } from "tachi-common";
+import { type UserDocument } from "tachi-common";
 
 import { DashboardLoggedInNoScores } from "./DashboardLoggedInNoScores";
 
-export default function DashboardActivity({ user }: { user: MONGO_UserDocument }) {
+export default function DashboardActivity({ user }: { user: UserDocument }) {
 	const { ugs } = useContext(AllLUGPTStatsContext);
 
 	if (ugs?.length === 0) {

@@ -3,7 +3,7 @@ import { type GamePT } from "#types/react";
 import { type FolderDataset } from "#types/tables";
 import { CountElements, Reverse } from "#util/misc";
 import React, { useMemo } from "react";
-import { GetGamePTConfig, GetGPTString, GetScoreMetricConf } from "tachi-common";
+import { GetGameConfig, GetScoreMetricConf } from "tachi-common";
 import { type ConfEnumScoreMetric } from "tachi-common/types/metrics";
 
 import FolderDistributionTable from "./FolderDistributionTable";
@@ -13,16 +13,11 @@ type Props = {
 	view: string;
 } & GamePT;
 
-export default function FolderScoreDistributionChart({
-	game,
-	playtype,
-	folderDataset,
-	view: metric,
-}: Props) {
-	const gptConfig = GetGamePTConfig(game, playtype);
-	const conf = GetScoreMetricConf(gptConfig, metric) as ConfEnumScoreMetric<string>;
+export default function FolderScoreDistributionChart({ game, folderDataset, view: metric }: Props) {
+	const gameConfig = GetGameConfig(game);
+	const conf = GetScoreMetricConf(gameConfig, metric) as ConfEnumScoreMetric<string>;
 
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, playtype)];
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
 	const values = useMemo(
 		// @ts-expect-error hack

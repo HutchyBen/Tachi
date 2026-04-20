@@ -228,30 +228,27 @@ How many unique players have to have played a chart on the beatoraja IR for it t
 - Type: String
 
 Where *this* server is hosted. This is used to
-provide callback URLs inside emails. You may stub
-it out if emails are unsupported.
+provide callback URLs inside emails.
 
 ### EMAIL_CONFIG
 
-- Type: EMAIL_CONFIG | undefined.
+- Type: EMAIL_CONFIG (required)
 
-Configures how emails will be sent by Tachi.
-If not present, email calls will become no-ops, and
-certain features (such as resetting passwords)
-will be disabled.
+SMTP is always configured. Set:
 
-`FROM` determines the email `From` header, and optionally
-`SENDMAIL_BIN` can override the location of the `sendmail`
-binary. Defaults to `/usr/bin/sendmail`, but some distros
-may have it in `sbin`.
+- `TACHI_EMAIL_FROM` — `From` header (must match a verified sender when using Postmark).
+- `TACHI_EMAIL_AUTH_POSTMARK` — `true` or `false`. When `true`, uses Postmark’s SMTP
+  endpoint; set `TACHI_EMAIL_AUTH_USER` and `TACHI_EMAIL_AUTH_PASS` to your server API token
+  (both are the token for Postmark SMTP).
+- When Postmark is `false`: `TACHI_EMAIL_HOST`, `TACHI_EMAIL_PORT`, `TACHI_EMAIL_SECURE`
+  (`true` / `false`), and optionally `TACHI_EMAIL_AUTH_USER` / `TACHI_EMAIL_AUTH_PASS`
+  for servers that require auth (local Mailpit typically needs no auth).
 
-`TRANSPORT_OPS` Passes a set of options to the email transport. For more
-information, see the nodemailer documentation for SMTPTransport.Options.
+`TRANSPORT_OPS` is derived from these variables and passed to Nodemailer.
 
 ```ts
 interface EMAIL_CONFIG {
 	FROM: string;
-	SENDMAIL_BIN?: string
 	TRANSPORT_OPS: any;
 }
 ```

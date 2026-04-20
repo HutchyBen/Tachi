@@ -1,15 +1,15 @@
 import { GetEnumColour } from "#lib/game-implementations";
 import { ChangeOpacity } from "#util/color-opacity";
 import React from "react";
-import { type MONGO_PBScoreDocument, type MONGO_ScoreDocument } from "tachi-common";
+import { type PBScoreDocument, type ScoreDocument } from "tachi-common";
 
 // Lamp cell, but if the lamp is FAILED, display it slightly differently.
 export default function SDVXLampCell({
 	score,
 }: {
 	score:
-		| MONGO_PBScoreDocument<"sdvx:Single" | "usc:Controller" | "usc:Keyboard">
-		| MONGO_ScoreDocument<"sdvx:Single" | "usc:Controller" | "usc:Keyboard">;
+		| PBScoreDocument<"sdvx" | "usc-controller" | "usc-keyboard">
+		| ScoreDocument<"sdvx" | "usc-controller" | "usc-keyboard">;
 }) {
 	return (
 		<td

@@ -2,13 +2,10 @@ import { type PbDocumentJoinRow, ToPbScoreDocument } from "#lib/db-formats/pb";
 import DB from "#services/pg/db";
 import { sql } from "kysely";
 import {
-	type GameGroup,
-	GamePTToV3,
-	type GPTString,
 	type integer,
-	type MONGO_PBScoreDocument,
-	type Playtype,
+	type PBScoreDocument,
 	type ScoreRatingAlgorithms,
+	type V3Game,
 } from "tachi-common";
 
 /**
@@ -23,21 +20,19 @@ import {
  * @returns - Number if the user has scores with that rating algorithm, null if they have
  * no scores with this rating algorithm that are non-null.
  */
-function CalcN<GPT extends GPTString>(
-	key: ScoreRatingAlgorithms[GPT],
+function CalcN<TGame extends V3Game>(
+	key: ScoreRatingAlgorithms[TGame],
 	n: integer,
 	returnMean = false,
 	nullIfNotEnoughScores = false,
 	multiplier = 1,
 ) {
-	return async (game: GameGroup, playtype: Playtype, userID: integer) => {
-		const v3Game = GamePTToV3(game, playtype);
-
+	return async (game: TGame, userID: integer) => {
 		const rows = await DB.selectFrom("pb")
 			.innerJoin("chart", "chart.id", "pb.chart_id")
 			.select("pb.calculated_data")
 			.where("pb.user_id", "=", userID)
-			.where("chart.game", "=", v3Game)
+			.where("chart.game", "=", game)
 			.where("chart.is_primary", "=", true)
 			.where((eb) =>
 				eb(
@@ -83,8 +78,8 @@ function CalcN<GPT extends GPTString>(
 	};
 }
 
-export function ProfileSumBestN<GPT extends GPTString>(
-	key: ScoreRatingAlgorithms[GPT],
+export function ProfileSumBestN<TGame extends V3Game>(
+	key: ScoreRatingAlgorithms[TGame],
 	n: integer,
 	nullIfNotEnoughScores = false,
 	multiplier = 1,
@@ -92,8 +87,8 @@ export function ProfileSumBestN<GPT extends GPTString>(
 	return CalcN(key, n, false, nullIfNotEnoughScores, multiplier);
 }
 
-export function ProfileAvgBestN<GPT extends GPTString>(
-	key: ScoreRatingAlgorithms[GPT],
+export function ProfileAvgBestN<TGame extends V3Game>(
+	key: ScoreRatingAlgorithms[TGame],
 	n: integer,
 	nullIfNotEnoughScores = false,
 	multiplier = 1,
@@ -104,16 +99,13 @@ export function ProfileAvgBestN<GPT extends GPTString>(
 export async function GetBestRatingOnSongs(
 	songIDs: Array<integer>,
 	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
+	game: V3Game,
 	ratingProp: "skill",
 	limit: integer,
-): Promise<Array<MONGO_PBScoreDocument>> {
+): Promise<Array<PBScoreDocument>> {
 	if (songIDs.length === 0) {
 		return [];
 	}
-
-	const v3Game = GamePTToV3(game, playtype);
 
 	const rows = await sql<PbDocumentJoinRow>`
 		WITH filtered AS (
@@ -126,8 +118,8 @@ export async function GetBestRatingOnSongs(
 			INNER JOIN chart ON chart.id = pb.chart_id
 			INNER JOIN song ON song.id = chart.song_id
 			WHERE pb.user_id = ${userID}
-				AND chart.game = ${v3Game}
-				AND song.legacy_id in (${sql.join(songIDs)})
+				AND chart.game = ${game}
+				AND song.id in (${sql.join(songIDs)})
 		)
 		SELECT
 			pb.row_id,
@@ -145,7 +137,7 @@ export async function GetBestRatingOnSongs(
 			pb.ranking_value_tb5,
 			pb.highlight,
 			pb.time_achieved,
-			song.legacy_id as song_legacy_id,
+			song.id as song_id,
 			chart.game as chart_game,
 			chart.is_primary as is_primary,
 			chart_leaderboard.rank AS leaderboard_rank,

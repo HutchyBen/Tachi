@@ -1,4 +1,4 @@
-import type { GPTServerImplementation } from "#game-implementations/types";
+import type { GameImplementation } from "#game-implementations/types";
 
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileSumBestN } from "#game-implementations/utils/profile-calc";
@@ -9,7 +9,7 @@ import { FmtNum, GetGrade, WACCA_GBOUNDARIES } from "tachi-common";
 
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
-export const WACCA_IMPL: GPTServerImplementation<"wacca:Single"> = {
+export const WACCA_IMPL: GameImplementation<"wacca"> = {
 	chartSpecificValidators: {},
 	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(WACCA_GBOUNDARIES, scoreData.score),
@@ -28,8 +28,8 @@ export const WACCA_IMPL: GPTServerImplementation<"wacca:Single"> = {
 	sessionCalcs: (arr) => ({
 		rate: SessionAvgBest10For("rate")(arr),
 	}),
-	profileCalcs: async (game, playtype, userID) => ({
-		naiveRate: await ProfileSumBestN("rate", 50)(game, playtype, userID),
+	profileCalcs: async (game, userID) => ({
+		naiveRate: await ProfileSumBestN("rate", 50)(game, userID),
 	}),
 	classDerivers: (ratings) => {
 		const rate = ratings.naiveRate;
@@ -86,7 +86,7 @@ export const WACCA_IMPL: GPTServerImplementation<"wacca:Single"> = {
 		),
 	],
 	defaultMergeRefName: "Best Score",
-	derivationRelevantFields: ["levelNum"],
+	chartDataRelevantFields: ["levelNum"],
 
 	scoreValidators: [
 		(s) => {

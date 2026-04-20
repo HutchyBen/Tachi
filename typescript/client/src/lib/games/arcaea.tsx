@@ -6,19 +6,20 @@ import { GetEnumColour } from "#lib/game-implementations";
 import { type GPTClientImplementation } from "#lib/types";
 import { NumericSOV } from "#util/sorts";
 import React from "react";
-import { COLOUR_SET, type GPTStrings } from "tachi-common";
+import { COLOUR_SET, type GamesForGroup } from "tachi-common";
 
 import { bgc } from "./_util";
 
-const ARCAEA_DIFFICULTY_COLORS: GPTClientImplementation<GPTStrings["arcaea"]>["difficultyColours"] =
-	{
-		Past: COLOUR_SET.paleBlue,
-		Present: COLOUR_SET.paleGreen,
-		Future: COLOUR_SET.purple,
-		Beyond: COLOUR_SET.vibrantRed,
-	};
+const ARCAEA_DIFFICULTY_COLORS: GPTClientImplementation<
+	GamesForGroup["arcaea"]
+>["difficultyColours"] = {
+	Past: COLOUR_SET.paleBlue,
+	Present: COLOUR_SET.paleGreen,
+	Future: COLOUR_SET.purple,
+	Beyond: COLOUR_SET.vibrantRed,
+};
 
-const ARCAEA_ENUM_COLORS: GPTClientImplementation<GPTStrings["arcaea"]>["enumColours"] = {
+const ARCAEA_ENUM_COLORS: GPTClientImplementation<GamesForGroup["arcaea"]>["enumColours"] = {
 	lamp: {
 		LOST: COLOUR_SET.red,
 		"EASY CLEAR": COLOUR_SET.green,
@@ -38,7 +39,7 @@ const ARCAEA_ENUM_COLORS: GPTClientImplementation<GPTStrings["arcaea"]>["enumCol
 	},
 };
 
-const ARCAEA_COLORS: GPTClientImplementation<GPTStrings["arcaea"]>["classColours"] = {
+const ARCAEA_COLORS: GPTClientImplementation<GamesForGroup["arcaea"]>["classColours"] = {
 	badge: {
 		BLUE: bgc("midnightblue", "var(--bs-light)"),
 		GREEN: bgc("darkgreen", "var(--bs-light)"),
@@ -64,13 +65,13 @@ const ARCAEA_COLORS: GPTClientImplementation<GPTStrings["arcaea"]>["classColours
 	},
 };
 
-const ARCAEA_SCORE_HEADERS: GPTClientImplementation<GPTStrings["arcaea"]>["scoreHeaders"] = [
+const ARCAEA_SCORE_HEADERS: GPTClientImplementation<GamesForGroup["arcaea"]>["scoreHeaders"] = [
 	["Score", "Score", NumericSOV((x) => x.scoreData.score)],
 	["Far - Lost", "Far - Lost", NumericSOV((x) => x.scoreData.score)],
 	["Lamp", "Lamp", NumericSOV((x) => x.scoreData.enumIndexes.lamp)],
 ];
 
-const ArcaeaCoreCells: GPTClientImplementation<GPTStrings["arcaea"]>["scoreCoreCells"] = ({
+const ArcaeaCoreCells: GPTClientImplementation<GamesForGroup["arcaea"]>["scoreCoreCells"] = ({
 	sc,
 }) => (
 	<>
@@ -84,12 +85,12 @@ const ArcaeaCoreCells: GPTClientImplementation<GPTStrings["arcaea"]>["scoreCoreC
 	</>
 );
 
-const ArcaeaRatingCell: GPTClientImplementation<GPTStrings["arcaea"]>["ratingCell"] = ({
+const ArcaeaRatingCell: GPTClientImplementation<GamesForGroup["arcaea"]>["ratingCell"] = ({
 	sc,
 	rating,
 }) => <RatingCell rating={rating} score={sc} />;
 
-export const ARCAEA_TOUCH_IMPL: GPTClientImplementation<"arcaea:Touch"> = {
+export const ARCAEA_TOUCH_IMPL: GPTClientImplementation<"arcaea"> = {
 	sessionImportantScoreCount: 30,
 	ratingSystems: [],
 	enumIcons: {

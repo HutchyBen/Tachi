@@ -4,7 +4,7 @@ import { NumericSOV } from "#util/sorts";
 import { CreateDefaultPBSearchParams } from "#util/tables/create-search";
 import { GetPBLeadingHeaders } from "#util/tables/get-pb-leaders";
 import React, { useState } from "react";
-import { type AnyScoreRatingAlg, type GameGroup, type Playtype } from "tachi-common";
+import { type AnyScoreRatingAlg, type V3Game } from "tachi-common";
 
 import DropdownIndicatorCell from "../cells/DropdownIndicatorCell";
 import IndexCell from "../cells/IndexCell";
@@ -26,23 +26,21 @@ export default function PBTable({
 	game,
 	indexCol = true,
 	showPlaycount = false,
-	showUser = false,
 	showChart = true,
-	playtype,
 	alg,
 	defaultRankingViewMode,
+	showUser,
 }: {
 	alg?: AnyScoreRatingAlg;
 	dataset: PBDataset;
 	defaultRankingViewMode?: RankingViewMode | null;
-	game: GameGroup;
+	game: V3Game;
 	indexCol?: boolean;
-	playtype: Playtype;
 	showChart?: boolean;
 	showPlaycount?: boolean;
 	showUser?: boolean;
 }) {
-	const defaultRating = useScoreRatingAlg(game, playtype);
+	const defaultRating = useScoreRatingAlg(game);
 
 	const [rating, setRating] = useState(alg ?? defaultRating);
 	const [rankingViewMode, setRankingViewMode] = useState<RankingViewMode>(
@@ -51,12 +49,12 @@ export default function PBTable({
 
 	const headers: Header<PBDataset[0]>[] = [
 		...GetPBLeadingHeaders(
-			showUser,
+			showUser ?? false,
 			showChart,
 			ChartHeader(game, (k) => k.__related.chart),
 		),
 		EmptyHeader,
-		...GetGPTCoreHeaders<PBDataset>(game, playtype, rating, setRating, (x) => x),
+		...GetGPTCoreHeaders<PBDataset>(game, rating, setRating, (x) => x),
 		CreateRankingHeader(rankingViewMode, setRankingViewMode, (k) => k.rankingData),
 		["Last Raised", "Last Raised", NumericSOV((x) => x.timeAchieved ?? 0)],
 		EmptyHeader,
@@ -65,7 +63,6 @@ export default function PBTable({
 	if (showPlaycount) {
 		headers.pop();
 
-		// Put this just before the empty header.
 		headers.push(["Playcount", "Plays", NumericSOV((x) => x.__playcount ?? 0)]);
 		headers.push(EmptyHeader);
 	}
@@ -86,15 +83,14 @@ export default function PBTable({
 					indexCol={indexCol}
 					key={`${pb.chartID}:${pb.userID}`}
 					pb={pb}
-					playtype={playtype}
 					rankingViewMode={rankingViewMode}
 					rating={rating}
 					showChart={showChart}
 					showPlaycount={showPlaycount}
-					showUser={showUser}
+					showUser={showUser ?? false}
 				/>
 			)}
-			searchFunctions={CreateDefaultPBSearchParams(game, playtype)}
+			searchFunctions={CreateDefaultPBSearchParams(game)}
 		/>
 	);
 }
@@ -109,10 +105,9 @@ function Row({
 	rating,
 	rankingViewMode,
 }: {
-	game: GameGroup;
+	game: V3Game;
 	indexCol: boolean;
 	pb: PBDataset[0];
-	playtype: Playtype;
 	rankingViewMode: RankingViewMode;
 	// ts bug?
 	rating: any; // ScoreRatingAlgorithms[I];
@@ -127,8 +122,7 @@ function Row({
 			dropdown={
 				<PBDropdown
 					chart={pb.__related.chart}
-					game={pb.game}
-					playtype={pb.playtype}
+					game={game}
 					scoreState={scoreState}
 					song={pb.__related.song}
 					userID={pb.userID}

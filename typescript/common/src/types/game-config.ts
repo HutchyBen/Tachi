@@ -1,6 +1,6 @@
 import type { z, ZodObject } from "zod";
 
-import type { GAME_GROUP_CONFIGS, GAME_PT_CONFIGS } from "../config/config";
+import type { GAME_CONFIGS, GAME_GROUP_CONFIGS } from "../config/config";
 import type { integer } from "../types";
 import type { MatchTypes } from "./batch-manual";
 import type {
@@ -9,7 +9,7 @@ import type {
 	ProfileRatingAlgorithmConfig,
 	RatingAlgorithmConfig,
 } from "./game-config-utils";
-import type { INTERNAL_GAME_PT_CONFIG } from "./internals";
+import type { INTERNAL_GAME_CONFIG } from "./internals";
 import type {
 	ExtractEnumMetricNames,
 	MongoExtractMetrics as MongoExtractMetrics,
@@ -18,11 +18,15 @@ import type {
 import type { AllFieldsNullableOptional, ExtractArrayElementType } from "./utils";
 
 /**
- * All the games Tachi supports.
+ * All the game groups Tachi supports.
  */
 export type GameGroup = keyof typeof GAME_GROUP_CONFIGS;
 
 /**
+ * LEGACY. Game + Playtype was the v2 way of identifying games.
+ *
+ * ---
+ *
  * What game + playtypes does Tachi support? We typically shorten this concept
  * to a "GPT", or Game+Playtype.
  *
@@ -36,15 +40,19 @@ export type GameGroup = keyof typeof GAME_GROUP_CONFIGS;
  *
  * For games that don't really have a meaningful concept of "playtypes", "Single"
  * is the go-to.
+ *
+ * @deprecated
  */
-export type Playtypes = {
+export type LEGACY_Playtypes = {
 	[G in GameGroup]: (typeof GAME_GROUP_CONFIGS)[G]["playtypes"][number];
 };
 
 /**
- * Expresses any playtype (for any game). Alias for Playtypes[Game].
+ * Expresses any playtype (for any game). Alias for LEGACY_Playtypes[Game].
+ *
+ * @deprecated
  */
-export type Playtype = Playtypes[GameGroup];
+export type LEGACY_Playtype = LEGACY_Playtypes[GameGroup];
 
 export type SongDocumentData = {
 	[G in GameGroup]: z.infer<(typeof GAME_GROUP_CONFIGS)[G]["songData"]>;
@@ -55,27 +63,43 @@ export type SongDocumentData = {
  * and what playtypes it supports.
  */
 export interface GameGroupConfig<G extends GameGroup = GameGroup> {
-	readonly name: string;
-	readonly playtypes: ReadonlyArray<Playtypes[G]>;
-
 	/**
-	 * Song documents get their own game-specific record that they use for whatever
-	 * they want. IIDX song documents store genres, etc.
+	 * A pretty name for this game group.
+	 */
+	readonly name: string;
+	/**
+	 * In tachi 2, games were identified by a GameGroup + playtype. In Tachi 3,
+	 * games are just identified by the Game.
+	 *
+	 * This is for backwards compatibility with the old system, and the v1 api.
+	 *
+	 * @deprecated Use `games` instead.
+	 */
+	readonly playtypes: ReadonlyArray<LEGACY_Playtypes[G]>;
+	/**
+	 * What games are in this group?
+	 */
+	readonly games: ReadonlyArray<V3Game>;
+	/**
+	 * Songs are the only thing that are meaningfully part of a "game group" but not a game
+	 * itself - basically, for sharing song data between games.
 	 */
 	readonly songData: ZodObject;
 }
 
 /**
- * GPTStrings are an internal (ish) identifier used to identify Game + Playtype combos.
+ * GPTStrings are an legacy identifier used to identify GameGroup + Playtype combos.
  *
  * These are used in places where we want to switch over all supported game + playtype
  * combos.
  *
  * The below type magic automatically creates all combinations like iidx:SP, iidx:DP...
  * using the `Playtypes` thing above.
+ *
+ * @deprecated Use V3Game instead.
  */
-export type GPTString = keyof {
-	[G in GameGroup as `${G}:${Playtypes[G]}`]: never;
+export type LEGACY_GPTString = keyof {
+	[G in GameGroup as `${G}:${LEGACY_Playtypes[G]}`]: never;
 };
 
 export type V3Game =
@@ -102,6 +126,32 @@ export type V3Game =
 	| "usc-controller"
 	| "usc-keyboard"
 	| "wacca";
+
+export interface GameGroupFromGame {
+	arcaea: "arcaea";
+	"bms-7k": "bms";
+	"bms-14k": "bms";
+	chunithm: "chunithm";
+	"ddr-dp": "ddr";
+	"ddr-sp": "ddr";
+	"gitadora-dora": "gitadora";
+	"gitadora-gita": "gitadora";
+	"iidx-dp": "iidx";
+	"iidx-sp": "iidx";
+	"itg-stamina": "itg";
+	jubeat: "jubeat";
+	maimai: "maimai";
+	maimaidx: "maimaidx";
+	museca: "museca";
+	ongeki: "ongeki";
+	"pms-controller": "pms";
+	"pms-keyboard": "pms";
+	popn: "popn";
+	sdvx: "sdvx";
+	"usc-controller": "usc";
+	"usc-keyboard": "usc";
+	wacca: "wacca";
+}
 
 export type V3GameToGPTString = {
 	arcaea: "arcaea:Touch";
@@ -155,138 +205,150 @@ export type GPTStringToV3Game = {
 	"wacca:Single": "wacca";
 };
 
-export type GPTStrings = {
-	[G in GameGroup]: `${G}:${Playtypes[G]}`;
+/// Get all the games that exist for this game group.
+export type GamesForGroup = {
+	[G in GameGroup]: (typeof GAME_GROUP_CONFIGS)[G]["games"][number];
 };
 
-export type GetGameFromGPTString<GPT extends GPTString> = GPT extends `${infer G}:${infer _}`
-	? G
-	: never;
-export type GetPlaytypeFromGPTString<GPT extends GPTString> = GPT extends `${infer _}:${infer PT}`
-	? PT
-	: never;
+/**
+ * @deprecated Use V3Game instead.
+ */
+export type LEGACY_GPTStrings = {
+	[G in GameGroup]: `${G}:${LEGACY_Playtypes[G]}`;
+};
+
+export type GetGameGroupFromGPTString<GPT extends LEGACY_GPTString> =
+	GPT extends `${infer G}:${infer _}` ? G : never;
+export type GetPlaytypeFromGPTString<GPT extends LEGACY_GPTString> =
+	GPT extends `${infer _}:${infer PT}` ? PT : never;
 
 // Now that we've got GPTString defined, we can define "lookup types" for things about this GPT.
 // For example, if we have a function that works with IIDX's difficulties, we want a type like
 // Difficulties["iidx:SP"] which expresses those difficulties.
 
-export type GPTStringToGame = {
-	[GPT in GPTString]: GetGameFromGPTString<GPT>;
+export type LEGACY_GPTStringToGameGroup = {
+	[GPT in LEGACY_GPTString]: GetGameGroupFromGPTString<GPT>;
 };
 
-export type GPTStringToPlaytype = {
-	[GPT in GPTString]: GetPlaytypeFromGPTString<GPT>;
+export type LEGACY_GPTStringToPlaytype = {
+	[GPT in LEGACY_GPTString]: GetPlaytypeFromGPTString<GPT>;
+};
+
+export type LEGACY_GameToPlaytype = {
+	[TGame in V3Game]: LEGACY_Playtypes[GetGameGroupFromGPTString<V3GameToGPTString[TGame]>];
 };
 
 export type Difficulties = {
 	// If this game has fixed difficulties, infer what they are
 	// otherwise, difficulties are an arbitrary string
-	[G in GPTString]: (typeof GAME_PT_CONFIGS)[G]["difficulties"] extends FixedDifficulties<infer D>
+	[TGame in V3Game]: (typeof GAME_CONFIGS)[TGame]["difficulties"] extends FixedDifficulties<
+		infer D
+	>
 		? D
 		: string;
 };
 
 export type DifficultyConfigs = {
-	[G in GPTString]: (typeof GAME_PT_CONFIGS)[G]["difficulties"];
+	[TGame in V3Game]: (typeof GAME_CONFIGS)[TGame]["difficulties"];
 };
 
 export type Judgements = {
-	[G in GPTString]: ExtractArrayElementType<(typeof GAME_PT_CONFIGS)[G]["orderedJudgements"]>;
+	[TGame in V3Game]: ExtractArrayElementType<(typeof GAME_CONFIGS)[TGame]["orderedJudgements"]>;
 };
 
 export type Versions = {
 	// https://stackoverflow.com/questions/51808160/keyof-inferring-string-number-when-key-is-only-a-string
-	[G in GPTString]: keyof (typeof GAME_PT_CONFIGS)[G]["versions"] & string;
+	[TGame in V3Game]: keyof (typeof GAME_CONFIGS)[TGame]["versions"] & string;
 };
 
 export type ScoreRatingAlgorithms = {
-	[G in GPTString]: keyof (typeof GAME_PT_CONFIGS)[G]["scoreRatingAlgs"] & string;
+	[TGame in V3Game]: keyof (typeof GAME_CONFIGS)[TGame]["scoreRatingAlgs"] & string;
 };
 
 export type SessionRatingAlgorithms = {
-	[G in GPTString]: keyof (typeof GAME_PT_CONFIGS)[G]["sessionRatingAlgs"] & string;
+	[TGame in V3Game]: keyof (typeof GAME_CONFIGS)[TGame]["sessionRatingAlgs"] & string;
 };
 
 export type ProfileRatingAlgorithms = {
-	[G in GPTString]: keyof (typeof GAME_PT_CONFIGS)[G]["profileRatingAlgs"] & string;
+	[TGame in V3Game]: keyof (typeof GAME_CONFIGS)[TGame]["profileRatingAlgs"] & string;
 };
 
-export type AnyScoreRatingAlg = ScoreRatingAlgorithms[GPTString];
-export type AnySessionRatingAlg = SessionRatingAlgorithms[GPTString];
-export type AnyProfileRatingAlg = ProfileRatingAlgorithms[GPTString];
+export type AnyScoreRatingAlg = ScoreRatingAlgorithms[V3Game];
+export type AnySessionRatingAlg = SessionRatingAlgorithms[V3Game];
+export type AnyProfileRatingAlg = ProfileRatingAlgorithms[V3Game];
 
 export type ConfProvidedMetrics = {
-	[G in GPTString]: (typeof GAME_PT_CONFIGS)[G]["providedMetrics"];
+	[TGame in V3Game]: (typeof GAME_CONFIGS)[TGame]["providedMetrics"];
 };
 
 export type ConfDerivedMetrics = {
-	[G in GPTString]: (typeof GAME_PT_CONFIGS)[G]["derivedMetrics"];
+	[TGame in V3Game]: (typeof GAME_CONFIGS)[TGame]["derivedMetrics"];
 };
 
 export type ConfOptionalMetrics = {
-	[G in GPTString]: (typeof GAME_PT_CONFIGS)[G]["optionalMetrics"];
+	[TGame in V3Game]: (typeof GAME_CONFIGS)[TGame]["optionalMetrics"];
 };
 
 export type ConfScoreMetrics = {
-	[G in GPTString]: ConfDerivedMetrics[G] & ConfProvidedMetrics[G];
+	[TGame in V3Game]: ConfDerivedMetrics[TGame] & ConfProvidedMetrics[TGame];
 };
 
 export type ExtractedClasses = {
-	[G in GPTString]: ExtractClassValues<(typeof GAME_PT_CONFIGS)[G]["classes"]>;
+	[TGame in V3Game]: ExtractClassValues<(typeof GAME_CONFIGS)[TGame]["classes"]>;
 };
 
 export type AnyClasses = {
-	[C in Classes[GPTString]]?: string | null;
+	[C in Classes[V3Game]]?: string | null;
 };
 
 export type Classes = {
-	[G in GPTString]: keyof (typeof GAME_PT_CONFIGS)[G]["classes"] & string;
+	[TGame in V3Game]: keyof (typeof GAME_CONFIGS)[TGame]["classes"] & string;
 };
 
 export type ClassConfigs = {
-	[G in GPTString]: (typeof GAME_PT_CONFIGS)[G]["classes"];
+	[TGame in V3Game]: (typeof GAME_CONFIGS)[TGame]["classes"];
 };
 
-export type MONGO_ChartDocumentData = {
-	[G in GPTString]: z.infer<(typeof GAME_PT_CONFIGS)[G]["chartData"]>;
+export type ChartDocumentData = {
+	[TGame in V3Game]: z.infer<(typeof GAME_CONFIGS)[TGame]["chartData"]>;
 };
 
 export type Preferences = {
-	[G in GPTString]: z.infer<(typeof GAME_PT_CONFIGS)[G]["preferences"]>;
+	[TGame in V3Game]: z.infer<(typeof GAME_CONFIGS)[TGame]["preferences"]>;
 };
 
 export type ScoreMeta = {
-	[G in GPTString]: z.infer<(typeof GAME_PT_CONFIGS)[G]["scoreMeta"]>;
+	[TGame in V3Game]: z.infer<(typeof GAME_CONFIGS)[TGame]["scoreMeta"]>;
 };
 
 export type MongoProvidedMetrics = {
-	[G in GPTString]: MongoExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["providedMetrics"]>;
+	[TGame in V3Game]: MongoExtractMetrics<(typeof GAME_CONFIGS)[TGame]["providedMetrics"]>;
 };
 
 export type MongoDerivedMetrics = {
-	[G in GPTString]: MongoExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["derivedMetrics"]>;
+	[TGame in V3Game]: MongoExtractMetrics<(typeof GAME_CONFIGS)[TGame]["derivedMetrics"]>;
 };
 
 export type PgProvidedMetrics = {
-	[G in GPTString]: PgExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["providedMetrics"]>;
+	[TGame in V3Game]: PgExtractMetrics<(typeof GAME_CONFIGS)[TGame]["providedMetrics"]>;
 };
 export type PgOptionalMetrics = {
-	[G in GPTString]: PgExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["optionalMetrics"]>;
+	[TGame in V3Game]: PgExtractMetrics<(typeof GAME_CONFIGS)[TGame]["optionalMetrics"]>;
 };
 export type PgDerivedMetrics = {
-	[G in GPTString]: PgExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["derivedMetrics"]>;
+	[TGame in V3Game]: PgExtractMetrics<(typeof GAME_CONFIGS)[TGame]["derivedMetrics"]>;
 };
 
 /**
  * Top level metrics on a score.
  */
 export type MongoScoreMetrics = {
-	[G in GPTString]: MongoDerivedMetrics[G] & MongoProvidedMetrics[G];
+	[TGame in V3Game]: MongoDerivedMetrics[TGame] & MongoProvidedMetrics[TGame];
 };
 
 export type MongoOptionalMetrics = {
-	[G in GPTString]: AllFieldsNullableOptional<
-		MongoExtractMetrics<(typeof GAME_PT_CONFIGS)[G]["optionalMetrics"]>
+	[TGame in V3Game]: AllFieldsNullableOptional<
+		MongoExtractMetrics<(typeof GAME_CONFIGS)[TGame]["optionalMetrics"]>
 	>;
 };
 
@@ -294,37 +356,37 @@ export type MongoOptionalMetrics = {
  * Alongside strings, we want to store integers to represent the integer value
  * of enums.
  */
-export type ScoreEnumIndexes<GPT extends GPTString> = Record<
-	ExtractEnumMetricNames<ConfDerivedMetrics[GPT] & ConfProvidedMetrics[GPT]>,
+export type ScoreEnumIndexes<TGame extends V3Game> = Record<
+	ExtractEnumMetricNames<ConfDerivedMetrics[TGame] & ConfProvidedMetrics[TGame]>,
 	integer
 >;
 
 /**
  * Same as ScoreEnumIndexes but for the optional properties on a score.
  */
-export type OptionalEnumIndexes<GPT extends GPTString> = Partial<
-	Record<ExtractEnumMetricNames<ConfOptionalMetrics[GPT]>, integer>
+export type OptionalEnumIndexes<TGame extends V3Game> = Partial<
+	Record<ExtractEnumMetricNames<ConfOptionalMetrics[TGame]>, integer>
 >;
 
 /**
- * A generic GamePTConfig. This type is significantly less specific than the
- * "SpecificGamePTConfig", which only really works as a type if you know *what*
- * GamePTConfig you're working with.
+ * A generic GameConfig. This type is significantly less specific than the
+ * "SpecificGameConfig", which only really works as a type if you know *what*
+ * GameConfig you're working with.
  */
-export type GamePTConfig = {
-	defaultProfileRatingAlg: ProfileRatingAlgorithms[GPTString];
-	defaultScoreRatingAlg: ScoreRatingAlgorithms[GPTString];
-	defaultSessionRatingAlg: SessionRatingAlgorithms[GPTString];
-} & INTERNAL_GAME_PT_CONFIG;
+export type GameConfig = {
+	defaultProfileRatingAlg: ProfileRatingAlgorithms[V3Game];
+	defaultScoreRatingAlg: ScoreRatingAlgorithms[V3Game];
+	defaultSessionRatingAlg: SessionRatingAlgorithms[V3Game];
+} & INTERNAL_GAME_CONFIG;
 
 /**
  * Configuration for a GPT. This declares *almost everything* about how this game is
  * implemented in Tachi, such as what metrics it supports, how it handles chart
  * difficulties, etc.
  *
- * To get a GamePTConfig for a given Game + Playtype, @see {GetGamePTConfig}
+ * To get a GameConfig for a given Game + Playtype, @see {GetGameConfig}
  */
-export interface SpecificGamePTConfig<GPT extends GPTString> {
+export interface SpecificGameConfig<TGame extends V3Game> {
 	/**
 	 * What metrics **must** be provided in order for this score to be usable by
 	 * Tachi?
@@ -332,7 +394,7 @@ export interface SpecificGamePTConfig<GPT extends GPTString> {
 	 * This is intended for things like Score, Lamp, etc. Things that quite fundamentally
 	 * *are* the metrics of the score.
 	 */
-	providedMetrics: ConfProvidedMetrics[GPT];
+	providedMetrics: ConfProvidedMetrics[TGame];
 
 	/**
 	 * What metrics do we want to exist on score documents, but don't need to be
@@ -354,7 +416,7 @@ export interface SpecificGamePTConfig<GPT extends GPTString> {
 	 * Another good example would be "Grade" for most games, as a grade is often just
 	 * cutoffs applied on score values.
 	 */
-	derivedMetrics: ConfDerivedMetrics[GPT];
+	derivedMetrics: ConfDerivedMetrics[TGame];
 
 	/**
 	 * What's the default metric for this GPT?
@@ -363,7 +425,7 @@ export interface SpecificGamePTConfig<GPT extends GPTString> {
 	 *
 	 * @note This **MUST** be one of the mandatory or derived keys.
 	 */
-	defaultMetric: keyof ConfDerivedMetrics[GPT] | keyof ConfProvidedMetrics[GPT];
+	defaultMetric: keyof ConfDerivedMetrics[TGame] | keyof ConfProvidedMetrics[TGame];
 
 	/**
 	 * What's the preferred default enum for this GPT?
@@ -374,7 +436,7 @@ export interface SpecificGamePTConfig<GPT extends GPTString> {
 	 * @note This **MUST** be one of the mandatory or derived keys.
 	 */
 	preferredDefaultEnum: ExtractEnumMetricNames<
-		ConfDerivedMetrics[GPT] & ConfProvidedMetrics[GPT]
+		ConfDerivedMetrics[TGame] & ConfProvidedMetrics[TGame]
 	>;
 
 	/**
@@ -387,7 +449,7 @@ export interface SpecificGamePTConfig<GPT extends GPTString> {
 	 * The idea of additionalMetrics allow us to store useful metrics about scores
 	 * without necessitating that they exist on arrival. Incredibly convenient.
 	 */
-	additionalMetrics: ConfOptionalMetrics[GPT];
+	additionalMetrics: ConfOptionalMetrics[TGame];
 
 	/**
 	 * What rating algorithms may a score have attached onto it for this GPT?
@@ -396,7 +458,7 @@ export interface SpecificGamePTConfig<GPT extends GPTString> {
 	 * server config. By defining them here, the typesystem will enforce that you
 	 * implement them elsewhere.
 	 */
-	scoreRatingAlgs: Record<ScoreRatingAlgorithms[GPT], RatingAlgorithmConfig>;
+	scoreRatingAlgs: Record<ScoreRatingAlgorithms[TGame], RatingAlgorithmConfig>;
 
 	/**
 	 * What rating algorithms may a session have attached onto it for this GPT?
@@ -405,7 +467,7 @@ export interface SpecificGamePTConfig<GPT extends GPTString> {
 	 * server config. By defining them here, the typesystem will enforce that you
 	 * implement them elsewhere.
 	 */
-	sessionRatingAlgs: Record<SessionRatingAlgorithms[GPT], RatingAlgorithmConfig>;
+	sessionRatingAlgs: Record<SessionRatingAlgorithms[TGame], RatingAlgorithmConfig>;
 
 	/**
 	 * What rating algorithms may a profile have attached onto it for this GPT?
@@ -425,7 +487,7 @@ export interface SpecificGamePTConfig<GPT extends GPTString> {
 	 * server config. By defining them here, the typesystem will enforce that you
 	 * implement them elsewhere.
 	 */
-	profileRatingAlgs: Record<ProfileRatingAlgorithms[GPT], ProfileRatingAlgorithmConfig>;
+	profileRatingAlgs: Record<ProfileRatingAlgorithms[TGame], ProfileRatingAlgorithmConfig>;
 
 	/**
 	 * What classes may a profile have attached onto it for this GPT?
@@ -436,28 +498,28 @@ export interface SpecificGamePTConfig<GPT extends GPTString> {
 	 * or they may be provided by score imports, such as "dans", which cannot be
 	 * derived from a player's scores or profile ratings.
 	 */
-	classes: ClassConfigs[GPT];
+	classes: ClassConfigs[TGame];
 
 	/**
 	 * What's the default score rating algorithm for this GPT?
 	 *
 	 * @note This should be one of the keys in scoreRatingAlgs.
 	 */
-	defaultScoreRatingAlg: ScoreRatingAlgorithms[GPT];
+	defaultScoreRatingAlg: ScoreRatingAlgorithms[TGame];
 
 	/**
 	 * What's the default session rating algorithm for this GPT?
 	 *
 	 * @note This should be one of the keys in sessionRatingAlgs.
 	 */
-	defaultSessionRatingAlg: SessionRatingAlgorithms[GPT];
+	defaultSessionRatingAlg: SessionRatingAlgorithms[TGame];
 
 	/**
 	 * What's the default profile rating algorithm for this GPT1?
 	 *
 	 * @note This should be one of the keys in sessionRatingAlgs.
 	 */
-	defaultProfileRatingAlg: ProfileRatingAlgorithms[GPT];
+	defaultProfileRatingAlg: ProfileRatingAlgorithms[TGame];
 
 	/**
 	 * How does this GPT handle difficulties?
@@ -470,14 +532,14 @@ export interface SpecificGamePTConfig<GPT extends GPTString> {
 	 * allowing any string (as long as its unique.)
 	 *
 	 */
-	difficulties: DifficultyConfigs[GPT];
+	difficulties: DifficultyConfigs[TGame];
 
 	/**
 	 * What judgements does this GPT have? These are typically timing-window names.
 	 *
 	 * These should be ordered from **best to worst**.
 	 */
-	orderedJudgements: ReadonlyArray<Judgements[GPT]>;
+	orderedJudgements: ReadonlyArray<Judgements[TGame]>;
 
 	/**
 	 * What versions do we support for this GPT?
@@ -500,7 +562,7 @@ export interface SpecificGamePTConfig<GPT extends GPTString> {
 	 * version this score was on. That way, we can make sure they resolve to the right
 	 * chart.
 	 */
-	versions: Record<Versions[GPT], string>;
+	versions: Record<Versions[TGame], string>;
 
 	/**
 	 * Chart documents get their own GPT-specific record that they use for whatever
@@ -532,3 +594,6 @@ export interface SpecificGamePTConfig<GPT extends GPTString> {
 	 */
 	supportedMatchTypes: ReadonlyArray<MatchTypes>;
 }
+
+// Games that are BMS-like.
+export type BMSGames = GamesForGroup["bms" | "pms"];

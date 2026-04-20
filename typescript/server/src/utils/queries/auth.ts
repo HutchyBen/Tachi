@@ -1,5 +1,5 @@
 import type { KtLogger } from "#lib/log/log";
-import type { integer, MONGO_KaiAuthDocument } from "tachi-common";
+import type { integer, KaiAuthDocument } from "tachi-common";
 
 import { SELECT_KAI_AUTH_TOKEN, ToKaiAuthDocument } from "#lib/db-formats/kai-auth-token";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
@@ -8,7 +8,7 @@ import DB from "#services/pg/db";
 export async function GetKaiAuth(
 	userID: integer,
 	service: "EAG" | "FLO" | "MIN",
-): Promise<MONGO_KaiAuthDocument | null> {
+): Promise<KaiAuthDocument | null> {
 	const row = await DB.selectFrom("priv_svc_kai_auth_token")
 		.select(SELECT_KAI_AUTH_TOKEN)
 		.where("user_id", "=", userID)

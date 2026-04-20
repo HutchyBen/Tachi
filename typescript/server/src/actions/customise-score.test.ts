@@ -1,8 +1,8 @@
-import { LoadScoreDocumentById } from "#lib/db-formats/score.js";
+import { LoadScoreDocumentById } from "#lib/db-formats/score";
 import { mongoScoreDataToPg, pgScoreDataToMongo } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
-import { type MONGO_ScoreData } from "tachi-common";
+import { type ScoreData } from "tachi-common";
 import { describe, expect, it } from "vitest";
 
 import { ACTION_CustomiseScore } from "./customise-score";
@@ -17,9 +17,9 @@ describe("mergeScoreDataFromPg", () => {
 			percent: 50,
 			score: 200,
 			optional: {},
-		} as MONGO_ScoreData<"iidx:SP">;
+		} as ScoreData<"iidx-sp">;
 
-		const pg = mongoScoreDataToPg("iidx:SP", { ...original, judgements: {} });
+		const pg = mongoScoreDataToPg("iidx-sp", { ...original, judgements: {} });
 		const back = pgScoreDataToMongo("iidx-sp", pg);
 
 		expect(back).toMatchObject({
@@ -72,14 +72,14 @@ describe("ACTION_CustomiseScore", () => {
 			})
 			.execute();
 
-		const { data, derived, judgements } = mongoScoreDataToPg("iidx:SP", {
+		const { data, derived, judgements } = mongoScoreDataToPg("iidx-sp", {
 			grade: "F",
 			lamp: "FAILED",
 			percent: 0,
 			score: 100,
 			optional: {},
 			judgements: {},
-		} as MONGO_ScoreData<"iidx:SP">);
+		} as ScoreData<"iidx-sp">);
 
 		await DB.insertInto("score")
 			.values({

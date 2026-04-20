@@ -1,9 +1,8 @@
 import type { KtLogger } from "#lib/log/log";
 import type { integer } from "tachi-common";
 
+import { ParseKaiIIDX } from "#lib/score-import/import-types/common/api-kai/iidx/parser";
 import { GetKaiAuthGuaranteed } from "#utils/queries/auth";
-
-import { ParseKaiIIDX } from "../../common/api-kai/iidx/parser";
 
 export async function ParseEagIIDX(userID: integer, log: KtLogger) {
 	const authDoc = await GetKaiAuthGuaranteed(userID, "EAG", log);

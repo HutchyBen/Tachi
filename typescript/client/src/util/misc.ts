@@ -6,16 +6,14 @@ import {
 	type AnyProfileRatingAlg,
 	type AnySessionRatingAlg,
 	type APIPermissions,
-	type GameGroup,
-	type GamePTConfig,
-	GetGamePTConfig,
-	GetGPTString,
+	type ChartDocument,
+	type GameConfig,
+	GetGameConfig,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_QuestDocument,
-	type MONGO_QuestSubscriptionDocument,
-	type MONGO_ScoreDocument,
-	type Playtype,
+	type QuestDocument,
+	type QuestSubscriptionDocument,
+	type ScoreDocument,
+	type V3Game,
 } from "tachi-common";
 
 export function RFA<T>(arr: T[]): T {
@@ -57,8 +55,7 @@ export function FormatTables(tables: Record<string, string>) {
 }
 
 export function FormatGPTProfileRating(
-	game: GameGroup,
-	playtype: Playtype,
+	game: V3Game,
 	key: AnyProfileRatingAlg,
 	value: number | null,
 ) {
@@ -66,18 +63,17 @@ export function FormatGPTProfileRating(
 		return "No Data.";
 	}
 
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
-	if (gptConfig.profileRatingAlgs[key].formatter) {
-		return gptConfig.profileRatingAlgs[key].formatter!(value);
+	if (gameConfig.profileRatingAlgs[key].formatter) {
+		return gameConfig.profileRatingAlgs[key].formatter!(value);
 	}
 
 	return ToFixedFloor(value, 2);
 }
 
 export function FormatGPTSessionRating(
-	game: GameGroup,
-	playtype: Playtype,
+	game: V3Game,
 	key: AnySessionRatingAlg,
 	value: number | null | undefined,
 ) {
@@ -85,28 +81,28 @@ export function FormatGPTSessionRating(
 		return "No Data.";
 	}
 
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
-	if (gptConfig.sessionRatingAlgs[key].formatter) {
-		return gptConfig.sessionRatingAlgs[key].formatter!(value);
+	if (gameConfig.sessionRatingAlgs[key].formatter) {
+		return gameConfig.sessionRatingAlgs[key].formatter!(value);
 	}
 
 	return value.toFixed(2);
 }
 
-export function FormatGPTProfileRatingName(game: GameGroup, playtype: Playtype, key: string) {
-	const gptConfig = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, playtype)];
-	return gptConfig.ratingAlgNameOverrides?.profile?.[key] ?? UppercaseFirst(key);
+export function FormatGPTProfileRatingName(game: V3Game, key: string) {
+	const gameConfig = GPT_CLIENT_IMPLEMENTATIONS[game];
+	return gameConfig.ratingAlgNameOverrides?.profile?.[key] ?? UppercaseFirst(key);
 }
 
-export function FormatGPTSessionRatingName(game: GameGroup, playtype: Playtype, key: string) {
-	const gptConfig = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, playtype)];
-	return gptConfig.ratingAlgNameOverrides?.session?.[key] ?? UppercaseFirst(key);
+export function FormatGPTSessionRatingName(game: V3Game, key: string) {
+	const gameConfig = GPT_CLIENT_IMPLEMENTATIONS[game];
+	return gameConfig.ratingAlgNameOverrides?.session?.[key] ?? UppercaseFirst(key);
 }
 
-export function FormatGPTScoreRatingName(game: GameGroup, playtype: Playtype, key: string) {
-	const gptConfig = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, playtype)];
-	return gptConfig.ratingAlgNameOverrides?.score?.[key] ?? UppercaseFirst(key);
+export function FormatGPTScoreRatingName(game: V3Game, key: string) {
+	const gameConfig = GPT_CLIENT_IMPLEMENTATIONS[game];
+	return gameConfig.ratingAlgNameOverrides?.score?.[key] ?? UppercaseFirst(key);
 }
 
 export function ReverseStr(str: string) {
@@ -183,9 +179,9 @@ export function ComposeLogFn(base: number) {
 }
 
 export function SelectRightChart(
-	_gptConfig: GamePTConfig,
+	_gameConfig: GameConfig,
 	chartID: string,
-	charts: MONGO_ChartDocument[],
+	charts: ChartDocument[],
 ) {
 	// try matching difficulty names, if it's not any of those, it's probably a chartID.
 	for (const chart of charts) {
@@ -261,16 +257,15 @@ export function CountElements<T>(data: T[], collector: (element: T) => string | 
 }
 
 export function FormatScoreRating(
-	game: GameGroup,
-	playtype: Playtype,
-	rating: keyof MONGO_ScoreDocument["calculatedData"],
+	game: V3Game,
+	rating: keyof ScoreDocument["calculatedData"],
 	value: number | null | undefined,
 ) {
 	if (value === null || value === undefined) {
 		return "No Data.";
 	}
 
-	const formatter = GetGamePTConfig(game, playtype).scoreRatingAlgs[rating].formatter;
+	const formatter = GetGameConfig(game).scoreRatingAlgs[rating].formatter;
 
 	if (!formatter) {
 		return value.toFixed(2);
@@ -280,8 +275,7 @@ export function FormatScoreRating(
 }
 
 export function FormatSessionRating(
-	game: GameGroup,
-	playtype: Playtype,
+	game: V3Game,
 	rating: AnySessionRatingAlg,
 	value: number | null | undefined,
 ) {
@@ -289,7 +283,7 @@ export function FormatSessionRating(
 		return "No Data.";
 	}
 
-	const formatter = GetGamePTConfig(game, playtype).sessionRatingAlgs[rating].formatter;
+	const formatter = GetGameConfig(game).sessionRatingAlgs[rating].formatter;
 
 	if (!formatter) {
 		return value.toFixed(2);
@@ -421,7 +415,7 @@ export function FlattenValue(
 	];
 }
 
-export function ExtractGameFromFile(file: string): GameGroup {
+export function ExtractGameFromFile(file: string): V3Game {
 	const match = /-(.*?).json$/u.exec(file);
 
 	if (match === null) {
@@ -430,7 +424,7 @@ export function ExtractGameFromFile(file: string): GameGroup {
 
 	const [_, game] = match;
 
-	return game as GameGroup;
+	return game as V3Game;
 }
 
 /**
@@ -550,8 +544,8 @@ export function clamp(a: number, low: number, up: number) {
 	return a;
 }
 
-export function CreateQuestMap(quests: Array<MONGO_QuestDocument>) {
-	const map = new Map<string, MONGO_QuestDocument>();
+export function CreateQuestMap(quests: Array<QuestDocument>) {
+	const map = new Map<string, QuestDocument>();
 
 	for (const q of quests) {
 		map.set(q.questID, q);
@@ -560,8 +554,8 @@ export function CreateQuestMap(quests: Array<MONGO_QuestDocument>) {
 	return map;
 }
 
-export function CreateQuestSubMap(questSubs: Array<MONGO_QuestSubscriptionDocument>) {
-	const map = new Map<string, MONGO_QuestSubscriptionDocument>();
+export function CreateQuestSubMap(questSubs: Array<QuestSubscriptionDocument>) {
+	const map = new Map<string, QuestSubscriptionDocument>();
 
 	for (const q of questSubs) {
 		map.set(q.questID, q);

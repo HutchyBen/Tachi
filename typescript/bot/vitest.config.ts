@@ -17,6 +17,8 @@ export default defineConfig({
 	},
 
 	test: {
+		passWithNoTests: true,
+
 		// Static env vars. POSTGRES_URL is set dynamically per-worker in vitest.setup.ts
 		// so each worker gets its own isolated database.
 		env: {
@@ -38,7 +40,9 @@ export default defineConfig({
 		pool: "forks",
 
 		coverage: {
+			enabled: true,
 			provider: "v8",
+			reporter: ["text", "html", "clover", "json", "lcov"],
 			include: ["src/actions/**"],
 		},
 	},

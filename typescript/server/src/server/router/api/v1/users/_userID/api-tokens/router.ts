@@ -1,15 +1,10 @@
-import { ACTION_CreateApiToken } from "#actions/create-api-token.js";
-import { ACTION_DeleteApiToken } from "#actions/delete-api-token.js";
+import { ACTION_CreateApiToken } from "#actions/create-api-token";
+import { ACTION_DeleteApiToken } from "#actions/delete-api-token";
 import { SELECT_API_TOKEN, ToAPITokenDocument } from "#lib/db-formats/api-token";
+import { withRequestedUser, withSelf } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
 import DB from "#services/pg/db";
-import { GetTachiData } from "#utils/req-tachi-data";
-import { Router } from "express";
-
-import { RequireSelfRequestFromUser } from "../middleware";
-
-const router: Router = Router({ mergeParams: true });
-
-router.use(RequireSelfRequestFromUser);
 
 /**
  * Retrieve this user's API tokens.
@@ -17,19 +12,13 @@ router.use(RequireSelfRequestFromUser);
  *
  * @name GET /api/v1/users/:userID/api-tokens
  */
-router.get("/", async (req, res) => {
-	const user = GetTachiData(req, "requestedUser");
-
-	const keys = await DB.selectFrom("priv_api_token")
+API_V1_ROUTER.add("GET /users/:userID/api-tokens", withRequestedUser, withSelf, async ({ ctx }) => {
+	const rows = await DB.selectFrom("priv_api_token")
 		.select(SELECT_API_TOKEN)
-		.where("user_id", "=", user.id)
+		.where("priv_api_token.user_id", "=", ctx.requestedUser.id)
 		.execute();
 
-	return res.status(200).json({
-		success: true,
-		description: `Returned ${keys.length} keys.`,
-		body: keys.map(ToAPITokenDocument),
-	});
+	return success(`Returned ${rows.length} keys.`, rows.map(ToAPITokenDocument));
 });
 
 /**
@@ -42,66 +31,53 @@ router.get("/", async (req, res) => {
  *
  * @name POST /api/v1/users/:userID/api-tokens/create
  */
-router.post("/create", async (req, res) => {
-	const user = GetTachiData(req, "requestedUser");
+API_V1_ROUTER.add(
+	"POST /users/:userID/api-tokens/create",
+	withRequestedUser,
+	withSelf,
+	async ({ input, ctx, req }) => {
+		const { requestedUser: user } = ctx;
 
-	const body = req.body as {
-		clientID?: string;
-		identifier?: string;
-		permissions?: Array<string>;
-	};
-
-	const { token, wasExisting } = await ACTION_CreateApiToken(
-		{
-			acct: {
-				id: user.id,
-				username: user.username,
+		const { token, wasExisting } = await ACTION_CreateApiToken(
+			{ acct: { id: user.id, username: user.username }, ip: req.ip },
+			{
+				clientID: input.clientID,
+				identifier: input.identifier,
+				permissions: input.permissions
+					? Object.keys(input.permissions).filter((k) => input.permissions![k])
+					: undefined,
 			},
-			ip: req.ip,
-		},
-		{
-			clientID: body.clientID,
-			permissions: body.permissions,
-			identifier: body.identifier,
-		},
-	);
+		);
 
-	const tokenRow = await DB.selectFrom("priv_api_token")
-		.select(SELECT_API_TOKEN)
-		.where("token", "=", token)
-		.executeTakeFirstOrThrow();
+		const tokenRow = await DB.selectFrom("priv_api_token")
+			.select(SELECT_API_TOKEN)
+			.where("priv_api_token.token", "=", token)
+			.executeTakeFirstOrThrow();
 
-	return res.status(200).json({
-		success: true,
-		description: wasExisting ? "Returned existing key." : "Successfully created new API Token.",
-		body: ToAPITokenDocument(tokenRow),
-	});
-});
+		return success(
+			wasExisting ? "Returned existing key." : "Successfully created new API Token.",
+			ToAPITokenDocument(tokenRow),
+		);
+	},
+);
 
 /**
  * Delete this token.
  *
  * @name DELETE /api/v1/users/:userID/api-tokens/:token
  */
-router.delete("/:token", async (req, res) => {
-	const user = GetTachiData(req, "requestedUser");
+API_V1_ROUTER.add(
+	"DELETE /users/:userID/api-tokens/:token",
+	withRequestedUser,
+	withSelf,
+	async ({ params, ctx, req }) => {
+		const { requestedUser: user } = ctx;
 
-	await ACTION_DeleteApiToken(
-		{
-			acct: {
-				id: user.id,
-				username: user.username,
-			},
-			ip: req.ip,
-		},
-		{ token: req.params.token },
-	);
+		await ACTION_DeleteApiToken(
+			{ acct: { id: user.id, username: user.username }, ip: req.ip },
+			{ token: params.token },
+		);
 
-	return res.status(200).json({
-		success: true,
-		description: `Removed Token.`,
-		body: {},
-	});
-});
-
-export default router;
+		return success("Removed Token.", {});
+	},
+);

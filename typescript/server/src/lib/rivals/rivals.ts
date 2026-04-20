@@ -8,39 +8,27 @@ import { pgScoreDataToMongo } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import { ArrayDiff } from "#utils/misc";
 import { GetUsersWithIDs, GetUserWithIDGuaranteed } from "#utils/user";
-import {
-	FormatGameGroup,
-	type GameGroup,
-	GamePTToV3,
-	GetGamePTConfig,
-	type integer,
-	type PgScoreData,
-	type Playtype,
-} from "tachi-common";
+import { GetGameConfig, type integer, type PgScoreData, type V3Game } from "tachi-common";
 
 /**
  * Retrieve all of a user's set rival IDs.
  * Throws if the user hasn't played the GPT in question.
  */
-export async function GetRivalIDs(userID: integer, game: GameGroup, playtype: Playtype) {
-	const v3Game = GamePTToV3(game, playtype);
-
+export async function GetRivalIDs(userID: integer, game: V3Game) {
 	const settings = await DB.selectFrom("game_settings")
 		.select("user_id")
 		.where("user_id", "=", userID)
-		.where("game", "=", v3Game)
+		.where("game", "=", game)
 		.executeTakeFirst();
 
 	if (!settings) {
-		throw new Error(
-			`User ${userID} has not played ${FormatGameGroup(game, playtype)}. Cannot retrieve rivals.`,
-		);
+		throw new Error(`User ${userID} has not played ${game}. Cannot retrieve rivals.`);
 	}
 
 	const rivalRows = await DB.selectFrom("game_rival")
 		.select("rival")
 		.where("user_id", "=", userID)
-		.where("game", "=", v3Game)
+		.where("game", "=", game)
 		.execute();
 
 	return rivalRows.map((r) => r.rival);
@@ -50,8 +38,8 @@ export async function GetRivalIDs(userID: integer, game: GameGroup, playtype: Pl
  * Get the user documents of the rivals for this UGPT.
  * Throws if the user hasn't played the GPT in question.
  */
-export async function GetRivalUsers(userID: integer, game: GameGroup, playtype: Playtype) {
-	const rivalIDs = await GetRivalIDs(userID, game, playtype);
+export async function GetRivalUsers(userID: integer, game: V3Game) {
+	const rivalIDs = await GetRivalIDs(userID, game);
 
 	const rivals = await GetUsersWithIDs(rivalIDs);
 
@@ -62,15 +50,10 @@ export async function GetRivalUsers(userID: integer, game: GameGroup, playtype: 
  * Retrieve *all* rival IDs for people on this game. Used to recalculate rival movements on charts,
  * since that is stored and cached.
  */
-export async function GetEveryonesRivalIDs(
-	game: GameGroup,
-	playtype: Playtype,
-): Promise<Record<number, Array<number>>> {
-	const v3Game = GamePTToV3(game, playtype) as Game;
-
+export async function GetEveryonesRivalIDs(game: V3Game): Promise<Record<number, Array<number>>> {
 	const rows = await DB.selectFrom("game_rival")
 		.select(["user_id", "rival"])
-		.where("game", "=", v3Game)
+		.where("game", "=", game)
 		.execute();
 
 	const lookupTable: Record<integer, Array<integer>> = {};
@@ -108,8 +91,7 @@ function metricValueFromPbRow(
  */
 export async function setRivalsWithResult(
 	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
+	game: V3Game,
 	newRivals: Array<integer>,
 ): Promise<SetRivalsFailReasons | null> {
 	if (newRivals.length > ServerConfig.MAX_RIVALS) {
@@ -120,11 +102,9 @@ export async function setRivalsWithResult(
 		return SetRivalsFailReasons.RIVALED_SELF;
 	}
 
-	const v3Game = GamePTToV3(game, playtype) as Game;
-
 	const { count } = await DB.selectFrom("game_settings")
 		.select(DB.fn.countAll().as("count"))
-		.where("game", "=", v3Game)
+		.where("game", "=", game)
 		.where("user_id", "in", newRivals)
 		.executeTakeFirstOrThrow();
 
@@ -137,39 +117,31 @@ export async function setRivalsWithResult(
 	const currentGameSettings = await DB.selectFrom("game_settings")
 		.select("user_id")
 		.where("user_id", "=", userID)
-		.where("game", "=", v3Game)
+		.where("game", "=", game)
 		.executeTakeFirst();
 
 	if (!currentGameSettings) {
 		log.error(
-			`User ${userID} attempted to set rivals for ${FormatGameGroup(
-				game,
-				playtype,
-			)}, but doesn't have game settings. Was their account deleted in midair?`,
+			`User ${userID} attempted to set rivals for ${game}, but doesn't have game settings. Was their account deleted in midair?`,
 		);
 
 		throw new Error(
-			`User ${userID} attempted to set rivals for ${FormatGameGroup(
-				game,
-				playtype,
-			)}, but doesn't have game settings. Was their account deleted in midair?`,
+			`User ${userID} attempted to set rivals for ${game}, but doesn't have game settings. Was their account deleted in midair?`,
 		);
 	}
 
-	const currentRivalIDs = await GetRivalIDs(userID, game, playtype);
+	const currentRivalIDs = await GetRivalIDs(userID, game);
 	const newSubs = ArrayDiff(currentRivalIDs, newRivals);
 
 	const user = await GetUserWithIDGuaranteed(userID);
 
-	await Promise.all(
-		newSubs.map((toUserID) => SendSetRivalNotification(toUserID, user, game, playtype)),
-	);
+	await Promise.all(newSubs.map((toUserID) => SendSetRivalNotification(toUserID, user, game)));
 
 	await DB.transaction().execute(async (trx) => {
 		await trx
 			.deleteFrom("game_rival")
 			.where("user_id", "=", userID)
-			.where("game", "=", v3Game)
+			.where("game", "=", game)
 			.execute();
 
 		if (newRivals.length > 0) {
@@ -178,7 +150,7 @@ export async function setRivalsWithResult(
 				.values(
 					newRivals.map((rival) => ({
 						user_id: userID,
-						game: v3Game,
+						game,
 						rival,
 					})),
 				)
@@ -186,34 +158,28 @@ export async function setRivalsWithResult(
 		}
 	});
 
-	await UpdatePlayersRivalRankings(userID, game, playtype);
+	await UpdatePlayersRivalRankings(userID, game);
 
 	return null;
 }
 
 export function SetRivals(
 	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
+	game: V3Game,
 	newRivals: Array<integer>,
 ): Promise<SetRivalsFailReasons | null> {
-	return setRivalsWithResult(userID, game, playtype, newRivals);
+	return setRivalsWithResult(userID, game, newRivals);
 }
 
 /**
  * Add a single new rival by their userID.
  */
-export async function AddRival(
-	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
-	newRival: integer,
-) {
-	const rivalIDs = await GetRivalIDs(userID, game, playtype);
+export async function AddRival(userID: integer, game: V3Game, newRival: integer) {
+	const rivalIDs = await GetRivalIDs(userID, game);
 
 	rivalIDs.push(newRival);
 
-	return setRivalsWithResult(userID, game, playtype, rivalIDs);
+	return setRivalsWithResult(userID, game, rivalIDs);
 }
 
 /**
@@ -222,13 +188,8 @@ export async function AddRival(
  * @returns null if this UGPT is not rivals with the user, and therefore there is
  * nothing to change.
  */
-export async function RemoveRival(
-	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
-	toRemove: integer,
-) {
-	const rivalIDs = await GetRivalIDs(userID, game, playtype);
+export async function RemoveRival(userID: integer, game: V3Game, toRemove: integer) {
+	const rivalIDs = await GetRivalIDs(userID, game);
 
 	const filteredRivals = rivalIDs.filter((e) => e !== toRemove);
 
@@ -236,18 +197,16 @@ export async function RemoveRival(
 		return null;
 	}
 
-	return setRivalsWithResult(userID, game, playtype, filteredRivals);
+	return setRivalsWithResult(userID, game, filteredRivals);
 }
 
 /**
  * Get all of the userIDs of people who rival the userID for this GPT.
  */
-export async function GetChallengerIDs(userID: integer, game: GameGroup, playtype: Playtype) {
-	const v3Game = GamePTToV3(game, playtype) as Game;
-
+export async function GetChallengerIDs(userID: integer, game: V3Game) {
 	const result = await DB.selectFrom("game_rival")
 		.select("user_id")
-		.where("game", "=", v3Game)
+		.where("game", "=", game)
 		.where("rival", "=", userID)
 		.execute();
 
@@ -257,8 +216,8 @@ export async function GetChallengerIDs(userID: integer, game: GameGroup, playtyp
 /**
  * Get the user documents of everyone who is rivalling this userID for this GPT.
  */
-export async function GetChallengerUsers(userID: integer, game: GameGroup, playtype: Playtype) {
-	const challengerIDs = await GetChallengerIDs(userID, game, playtype);
+export async function GetChallengerUsers(userID: integer, game: V3Game) {
+	const challengerIDs = await GetChallengerIDs(userID, game);
 
 	return GetUsersWithIDs(challengerIDs);
 }
@@ -274,21 +233,16 @@ export async function GetChallengerUsers(userID: integer, game: GameGroup, playt
  *
  * this sucks though.
  */
-export async function UpdatePlayersRivalRankings(
-	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
-) {
-	const gptConfig = GetGamePTConfig(game, playtype);
-	const metricKey = String(gptConfig.defaultMetric);
-	const rivalIDs = await GetRivalIDs(userID, game, playtype);
-	const v3Game = GamePTToV3(game, playtype) as Game;
+export async function UpdatePlayersRivalRankings(userID: integer, game: V3Game) {
+	const gameConfig = GetGameConfig(game);
+	const metricKey = String(gameConfig.defaultMetric);
+	const rivalIDs = await GetRivalIDs(userID, game);
 
 	const userPBs = await DB.selectFrom("pb")
 		.innerJoin("chart", "chart.id", "pb.chart_id")
 		.select(["pb.row_id", "pb.chart_id", "pb.data", "pb.derived_data", "pb.calculated_data"])
 		.where("pb.user_id", "=", userID)
-		.where("chart.game", "=", v3Game)
+		.where("chart.game", "=", game)
 		.where("pb.lens", "is", null)
 		.execute();
 
@@ -316,7 +270,7 @@ export async function UpdatePlayersRivalRankings(
 
 	await Promise.all(
 		userPBs.map(async (pb) => {
-			const userVal = metricValueFromPbRow(v3Game, pb.data, pb.derived_data, metricKey);
+			const userVal = metricValueFromPbRow(game, pb.data, pb.derived_data, metricKey);
 			if (userVal === null) {
 				return;
 			}
@@ -326,7 +280,7 @@ export async function UpdatePlayersRivalRankings(
 				if (r.chart_id !== pb.chart_id) {
 					continue;
 				}
-				const rivalVal = metricValueFromPbRow(v3Game, r.data, r.derived_data, metricKey);
+				const rivalVal = metricValueFromPbRow(game, r.data, r.derived_data, metricKey);
 				if (rivalVal !== null && rivalVal > userVal) {
 					betterCount++;
 				}

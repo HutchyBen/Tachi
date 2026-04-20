@@ -1,4 +1,4 @@
-import type { GPTServerImplementation } from "#game-implementations/types";
+import type { GameImplementation } from "#game-implementations/types";
 
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileSumBestN } from "#game-implementations/utils/profile-calc";
@@ -9,7 +9,7 @@ import { GetGrade, ITG_GBOUNDARIES } from "tachi-common";
 
 import { GoalFmtPercent, GradeGoalFormatter } from "./_common";
 
-export const ITG_STAMINA_IMPL: GPTServerImplementation<"itg:Stamina"> = {
+export const ITG_STAMINA_IMPL: GameImplementation<"itg-stamina"> = {
 	chartSpecificValidators: {},
 	scoreDeriver: (scoreData, _chart) => ({
 		// *important*: don't check survivedPercent === 100 — floating point can
@@ -49,10 +49,10 @@ export const ITG_STAMINA_IMPL: GPTServerImplementation<"itg:Stamina"> = {
 	sessionCalcs: (arr) => ({
 		blockRating: SessionAvgBestNFor("blockRating", 5)(arr),
 	}),
-	profileCalcs: async (game, playtype, userID) => {
+	profileCalcs: async (game, userID) => {
 		const [highestBlock, fastest32] = await Promise.all([
-			ProfileSumBestN("blockRating", 1, true)(game, playtype, userID),
-			ProfileSumBestN("fastest32", 1, true)(game, playtype, userID),
+			ProfileSumBestN("blockRating", 1, true)(game, userID),
+			ProfileSumBestN("fastest32", 1, true)(game, userID),
 		]);
 
 		return { highestBlock, fastest32 };
@@ -125,7 +125,7 @@ export const ITG_STAMINA_IMPL: GPTServerImplementation<"itg:Stamina"> = {
 
 	// this name sucks, what should we do instead? TODO.
 	defaultMergeRefName: "Best Result",
-	derivationRelevantFields: ["data.rankedLevel", "data.notesPerMeasure", "data.npsPerMeasure"],
+	chartDataRelevantFields: ["data.rankedLevel", "data.notesPerMeasure", "data.npsPerMeasure"],
 
 	scoreValidators: [
 		(s) => {

@@ -1,26 +1,23 @@
 import QuickTooltip from "#components/layout/misc/QuickTooltip";
 import Icon from "#components/util/Icon";
 import { GPT_CLIENT_IMPLEMENTATIONS } from "#lib/game-implementations";
-import { type GPTClientImplementation } from "#lib/types";
 import { ChangeOpacity } from "#util/color-opacity";
 import { FormatTables } from "#util/misc";
 import React from "react";
-import { COLOUR_SET, type MONGO_ChartDocument } from "tachi-common";
+import { type ChartDocument, COLOUR_SET } from "tachi-common";
 
 import RatingSystemPart from "./RatingSystemPart";
 
-export default function USCDifficultyCell({
-	chart,
-}: {
-	chart: MONGO_ChartDocument<"usc:Controller" | "usc:Keyboard">;
-}) {
+type USCGame = "usc-controller" | "usc-keyboard";
+
+export default function USCDifficultyCell({ chart }: { chart: ChartDocument<USCGame> }) {
+	const game: USCGame = chart.game as USCGame;
+
 	const levelText = chart.data.isOfficial
 		? `${chart.difficulty} ${chart.level}`
 		: FormatTables(chart.data.tableFolders);
 
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[
-		`usc:${chart.playtype}`
-	] as GPTClientImplementation<"usc:Controller">;
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
 	const bgColour = ChangeOpacity(
 		chart.data.isOfficial ? gptImpl.difficultyColours[chart.difficulty]! : COLOUR_SET.teal,
@@ -34,7 +31,7 @@ export default function USCDifficultyCell({
 			}}
 		>
 			<span>{levelText}</span>
-			<RatingSystemPart chart={chart} game="usc" />
+			<RatingSystemPart chart={chart} game={game} />
 			{!chart.isPrimary && (
 				<QuickTooltip tooltipContent="This chart is an alternate, old chart.">
 					<div>

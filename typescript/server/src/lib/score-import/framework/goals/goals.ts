@@ -1,10 +1,4 @@
 import type { KtLogger } from "#lib/log/log";
-import type {
-	GameGroup,
-	integer,
-	MONGO_GoalDocument,
-	MONGO_GoalSubscriptionDocument,
-} from "tachi-common";
 
 import { SELECT_GOAL, SELECT_GOAL_SUB_WITH_GOAL_GAME } from "#lib/db-formats/goal";
 import { ToGoalDocument, ToGoalSubscriptionDocument } from "#lib/db-formats/target-documents";
@@ -13,12 +7,18 @@ import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
 import DB from "#services/pg/db";
 import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { sql } from "kysely";
+import {
+	type GoalDocument,
+	type GoalSubscriptionDocument,
+	type integer,
+	type V3Game,
+} from "tachi-common";
 
 /**
  * Update a user's progress on all of their set goals.
  */
 export async function GetAndUpdateUsersGoals(
-	game: GameGroup,
+	game: V3Game,
 	userID: integer,
 	chartIDs: Set<string>,
 	log: KtLogger,
@@ -35,14 +35,14 @@ export async function GetAndUpdateUsersGoals(
 }
 
 export async function UpdateGoalsForUser(
-	goals: Array<MONGO_GoalDocument>,
-	goalSubsMap: Map<string, MONGO_GoalSubscriptionDocument>,
+	goals: Array<GoalDocument>,
+	goalSubsMap: Map<string, GoalSubscriptionDocument>,
 	userID: integer,
 	log: KtLogger,
 	skipMismatch = false,
 ) {
 	const returns = await Promise.all(
-		goals.map((goal: MONGO_GoalDocument) => {
+		goals.map((goal: GoalDocument) => {
 			const goalSub = goalSubsMap.get(goal.goalID);
 
 			if (!goalSub) {
@@ -98,7 +98,11 @@ export async function UpdateGoalsForUser(
 	if (webhookEventContent.length !== 0 && goals[0]) {
 		await EmitWebhookEvent({
 			type: "goals-achieved/v1",
-			content: { goals: webhookEventContent, userID, game: goals[0].game },
+			content: {
+				goals: webhookEventContent,
+				userID,
+				game: goals[0].game,
+			},
 		});
 	}
 
@@ -112,8 +116,8 @@ export async function UpdateGoalsForUser(
  * to say (i.e. user didnt raise the goal).
  */
 export async function ProcessGoal(
-	goal: MONGO_GoalDocument,
-	goalSub: MONGO_GoalSubscriptionDocument,
+	goal: GoalDocument,
+	goalSub: GoalSubscriptionDocument,
 	userID: integer,
 	log: KtLogger,
 ) {
@@ -150,7 +154,7 @@ export async function ProcessGoal(
 			goalID: goal.goalID,
 			old: oldData,
 			new: newData,
-			playtype: goal.playtype,
+			game: goal.game,
 		};
 	}
 
@@ -238,7 +242,7 @@ export async function UpdateGoalsInFolder(folderID: string, log: KtLogger) {
 
 	const goalSubs = subRows.map((r) => ToGoalSubscriptionDocument(r));
 
-	const ugsMap = new Map<integer, Map<string, MONGO_GoalSubscriptionDocument>>();
+	const ugsMap = new Map<integer, Map<string, GoalSubscriptionDocument>>();
 
 	for (const gSub of goalSubs) {
 		const uid = gSub.userID;

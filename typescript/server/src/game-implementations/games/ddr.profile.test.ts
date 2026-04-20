@@ -84,7 +84,7 @@ describe("DDR profileCalcs (flareSkill, Postgres)", () => {
 	it("returns flareSkill null when the user has no qualifying PBs", async () => {
 		const { id: userId } = await seedUser();
 
-		const result = await DDR_IMPL.profileCalcs("ddr", "SP", userId);
+		const result = await DDR_IMPL.profileCalcs("ddr-sp", userId);
 
 		expect(result).toEqual({ flareSkill: null });
 	});
@@ -93,12 +93,12 @@ describe("DDR profileCalcs (flareSkill, Postgres)", () => {
 		const { id: userId } = await seedUser();
 		await seedDdrPbRow(userId, { flareSkill: 42, flareCategory: "CLASSIC" });
 
-		const result = await DDR_IMPL.profileCalcs("ddr", "SP", userId);
+		const result = await DDR_IMPL.profileCalcs("ddr-sp", userId);
 
 		expect(result).toEqual({ flareSkill: 42 });
 	});
 
-	it("uses ddr-dp charts when playtype is DP", async () => {
+	it("uses ddr-dp charts when game is ddr-dp", async () => {
 		const { id: userId } = await seedUser();
 		await seedDdrPbRow(userId, {
 			flareSkill: 77,
@@ -106,10 +106,10 @@ describe("DDR profileCalcs (flareSkill, Postgres)", () => {
 			game: "ddr-dp",
 		});
 
-		const spOnly = await DDR_IMPL.profileCalcs("ddr", "SP", userId);
+		const spOnly = await DDR_IMPL.profileCalcs("ddr-sp", userId);
 		expect(spOnly).toEqual({ flareSkill: null });
 
-		const dp = await DDR_IMPL.profileCalcs("ddr", "DP", userId);
+		const dp = await DDR_IMPL.profileCalcs("ddr-dp", userId);
 		expect(dp).toEqual({ flareSkill: 77 });
 	});
 
@@ -117,7 +117,7 @@ describe("DDR profileCalcs (flareSkill, Postgres)", () => {
 		const { id: userId } = await seedUser();
 		await seedDdrPbRow(userId, { flareSkill: 999, flareCategory: "OTHER" });
 
-		const result = await DDR_IMPL.profileCalcs("ddr", "SP", userId);
+		const result = await DDR_IMPL.profileCalcs("ddr-sp", userId);
 
 		expect(result).toEqual({ flareSkill: 0 });
 	});
@@ -130,7 +130,7 @@ describe("DDR profileCalcs (flareSkill, Postgres)", () => {
 			calculatedDataOverride: { flareSkill: "not-a-number" },
 		});
 
-		const result = await DDR_IMPL.profileCalcs("ddr", "SP", userId);
+		const result = await DDR_IMPL.profileCalcs("ddr-sp", userId);
 
 		expect(result).toEqual({ flareSkill: null });
 	});
@@ -143,7 +143,7 @@ describe("DDR profileCalcs (flareSkill, Postgres)", () => {
 			isPrimary: false,
 		});
 
-		const result = await DDR_IMPL.profileCalcs("ddr", "SP", userId);
+		const result = await DDR_IMPL.profileCalcs("ddr-sp", userId);
 
 		expect(result).toEqual({ flareSkill: null });
 	});
@@ -158,7 +158,7 @@ describe("DDR profileCalcs (flareSkill, Postgres)", () => {
 			});
 		}
 
-		const result = await DDR_IMPL.profileCalcs("ddr", "SP", userId);
+		const result = await DDR_IMPL.profileCalcs("ddr-sp", userId);
 
 		const expectedSum = Array.from({ length: 30 }, (_, k) => 1031 - k).reduce(
 			(a, b) => a + b,
@@ -174,7 +174,7 @@ describe("DDR profileCalcs (flareSkill, Postgres)", () => {
 		await seedDdrPbRow(userId, { flareSkill: 200, flareCategory: "CLASSIC" });
 		await seedDdrPbRow(userId, { flareSkill: 100, flareCategory: "WHITE" });
 
-		const result = await DDR_IMPL.profileCalcs("ddr", "SP", userId);
+		const result = await DDR_IMPL.profileCalcs("ddr-sp", userId);
 
 		expect(result).toEqual({ flareSkill: 600 });
 	});

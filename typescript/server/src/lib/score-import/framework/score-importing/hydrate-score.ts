@@ -1,12 +1,10 @@
 import type { KtLogger } from "#lib/log/log";
 
 import {
-	GetGPTString,
+	type ChartDocument,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_ScoreDocument,
-	type MONGO_SongDocument,
-	MongoChartLegacyId,
+	type ScoreDocument,
+	type SongDocument,
 } from "tachi-common";
 
 import type { DryScore } from "../common/types";
@@ -22,18 +20,16 @@ import { CreateFullScoreData } from "./derivers";
 export function HydrateScore(
 	userID: integer,
 	dryScore: DryScore,
-	chart: MONGO_ChartDocument,
-	song: MONGO_SongDocument,
+	chart: ChartDocument,
+	song: SongDocument,
 	scoreID: string,
 	log: KtLogger,
-): MONGO_ScoreDocument {
-	const gpt = GetGPTString(dryScore.game, chart.playtype);
+): ScoreDocument {
+	const scoreData = CreateFullScoreData(dryScore.scoreData, chart, log);
 
-	const scoreData = CreateFullScoreData(gpt, dryScore.scoreData, chart, log);
+	const calculatedData = CreateScoreCalcData(scoreData, chart);
 
-	const calculatedData = CreateScoreCalcData(dryScore.game, scoreData, chart);
-
-	const score: MONGO_ScoreDocument = {
+	const score: ScoreDocument = {
 		...dryScore,
 
 		// then push our new score data.
@@ -45,9 +41,8 @@ export function HydrateScore(
 		userID,
 		calculatedData,
 		songID: song.id,
-		chartID: MongoChartLegacyId(chart),
+		chartID: chart.chartID,
 		scoreID,
-		playtype: chart.playtype,
 		isPrimary: chart.isPrimary,
 	};
 

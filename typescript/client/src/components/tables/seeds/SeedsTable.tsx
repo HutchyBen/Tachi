@@ -126,6 +126,10 @@ export function SeedsDiffTable<T extends keyof AllDatabaseSeeds>({
 
 		const dataset: DiffSeedsCollection<any>[] = [];
 
+		if (!headDSet || !baseDSet) {
+			return dataset;
+		}
+
 		for (let i = 0; i < modifiedDiffs.length; i++) {
 			const diff = modifiedDiffs[i]!;
 			const head = headDSet[i]!;

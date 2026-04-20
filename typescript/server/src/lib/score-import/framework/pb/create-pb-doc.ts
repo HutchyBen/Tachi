@@ -1,46 +1,39 @@
 import type { KtLogger } from "#lib/log/log";
-import type { Game } from "tachi-db";
 
-import { GPT_SERVER_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
-import { SELECT_PB_ROW } from "#lib/db-formats/pb";
+import { GAME_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import {
 	type ScoreDocumentJoinRow,
 	SELECT_SCORE_DOCUMENT,
 	ToScoreDocument,
 } from "#lib/db-formats/score";
-import { GetEveryonesRivalIDs } from "#lib/rivals/rivals";
 import DB from "#services/pg/db";
 import { DeleteUndefinedProps } from "#utils/misc";
 import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { sql } from "kysely";
 import {
-	type GameGroup,
-	GamePTToV3,
-	GetGPTConfig,
-	type GPTString,
+	type ChartDocument,
+	GetGameConfig,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_ScoreDocument,
-	MongoChartLegacyId,
-	type Playtype,
+	type ScoreDocument,
+	type V3Game,
 } from "tachi-common";
 
-import type { MONGO_PBScoreDocumentNoRank } from "./upsert-pb-pg";
+import type { PBScoreDocumentNoRank } from "./upsert-pb-pg";
 
 import { CreateScoreCalcData } from "../calculated-data/score";
 import { scoreVisibleSql } from "../pg/score-visibility";
 import { CreateEnumIndexes } from "../score-importing/derivers";
 
-export type { MONGO_PBScoreDocumentNoRank };
+export type { PBScoreDocumentNoRank };
 
 async function findBestScoreForPb(
-	gpt: GPTString,
+	game: V3Game,
 	userID: integer,
-	chart: MONGO_ChartDocument,
+	chart: ChartDocument,
 	asOfTimestamp: number | undefined,
-): Promise<MONGO_ScoreDocument | null> {
-	const gptConfig = GetGPTConfig(gpt);
-	const metricKey = String(gptConfig.defaultMetric);
+): Promise<ScoreDocument | null> {
+	const gameConfig = GetGameConfig(game);
+	const metricKey = String(gameConfig.defaultMetric);
 
 	const sortVal = sql`(score.data::jsonb->>${sql.lit(metricKey)})::double precision`;
 
@@ -75,15 +68,13 @@ async function findBestScoreForPb(
  * timestamp to constrain the generated PB to only one before the provided time.
  */
 export async function CreatePBDoc(
-	gpt: GPTString,
+	game: V3Game,
 	userID: integer,
-	chart: MONGO_ChartDocument,
+	chart: ChartDocument,
 	log: KtLogger,
 	asOfTimestamp?: number,
 ) {
-	const chartID = MongoChartLegacyId(chart);
-
-	const defaultMetricPB = await findBestScoreForPb(gpt, userID, chart, asOfTimestamp);
+	const defaultMetricPB = await findBestScoreForPb(game, userID, chart, asOfTimestamp);
 
 	if (!defaultMetricPB) {
 		if (asOfTimestamp !== undefined) {
@@ -92,7 +83,7 @@ export async function CreatePBDoc(
 
 		log.warn(
 			{
-				chartID,
+				chartID: chart.chartID,
 				userID,
 			},
 			`User ${userID} has no scores on chart, but a PB was attempted to be created?`,
@@ -100,9 +91,9 @@ export async function CreatePBDoc(
 		return;
 	}
 
-	const gptImpl = GPT_SERVER_IMPLEMENTATIONS[gpt];
+	const gptImpl = GAME_IMPLEMENTATIONS[game];
 
-	const pbDoc: MONGO_PBScoreDocumentNoRank = {
+	const pbDoc: PBScoreDocumentNoRank = {
 		composedFrom: [
 			{
 				name: gptImpl.defaultMergeRefName,
@@ -115,13 +106,13 @@ export async function CreatePBDoc(
 		highlight: defaultMetricPB.highlight,
 		timeAchieved: defaultMetricPB.timeAchieved,
 		game: defaultMetricPB.game,
-		playtype: defaultMetricPB.playtype,
 		isPrimary: defaultMetricPB.isPrimary,
 		scoreData: defaultMetricPB.scoreData,
 		calculatedData: defaultMetricPB.calculatedData,
 	};
 
 	for (const mergeFn of gptImpl.pbMergeFunctions) {
+		// eslint-disable-next-line no-await-in-loop
 		const ref = await mergeFn(
 			userID,
 			defaultMetricPB.chartID,
@@ -136,99 +127,18 @@ export async function CreatePBDoc(
 
 	DeleteUndefinedProps(pbDoc.scoreData.optional);
 
-	const { indexes, optionalIndexes } = CreateEnumIndexes(gpt, pbDoc.scoreData, log);
+	const { indexes, optionalIndexes } = CreateEnumIndexes(game, pbDoc.scoreData, log);
 
 	pbDoc.scoreData.enumIndexes = indexes;
 	pbDoc.scoreData.optional.enumIndexes = optionalIndexes;
 
-	pbDoc.calculatedData = CreateScoreCalcData(pbDoc.game, pbDoc.scoreData, chart);
+	pbDoc.calculatedData = CreateScoreCalcData(pbDoc.scoreData, chart);
 
 	return pbDoc;
 }
 
-/**
- * Persists rival-only ranking hints. Global rank / outOf come from `chart_leaderboard` at read time.
- */
-export async function UpdateChartRanking(game: GameGroup, playtype: Playtype, chartID: string) {
-	const userIds = await getSortedPbUserIdsOnChart(game, playtype, chartID);
-
-	const allRivals = await GetEveryonesRivalIDs(game, playtype);
-
-	const seenUserIDs: Array<integer> = [];
-
-	const v3Game = GamePTToV3(game, playtype) as Game;
-
-	const chartRow = await DB.selectFrom("chart")
-		.select("id")
-		.where("chart.id", "=", chartID)
-		.where("chart.game", "=", v3Game)
-		.executeTakeFirst();
-
-	if (!chartRow) {
-		return;
-	}
-
-	for (const userId of userIds) {
-		seenUserIDs.push(userId);
-
-		const thisUsersRivals = allRivals[userId];
-
-		let rivalRank: integer | null = null;
-
-		if (thisUsersRivals && thisUsersRivals.length > 0) {
-			rivalRank = thisUsersRivals.filter((e) => seenUserIDs.includes(e)).length + 1;
-		}
-
-		const pbRow = await DB.selectFrom("pb")
-			.select(SELECT_PB_ROW)
-			.where("pb.user_id", "=", userId)
-			.where("pb.chart_id", "=", chartRow.id)
-			.where("pb.lens", "is", null)
-			.executeTakeFirst();
-
-		if (!pbRow) {
-			continue;
-		}
-
-		const raw = pbRow.calculated_data;
-		const cd =
-			typeof raw === "string"
-				? (JSON.parse(raw) as Record<string, unknown>)
-				: ((raw ?? {}) as Record<string, unknown>);
-		delete cd.rank;
-		delete cd.outOf;
-
-		await DB.updateTable("pb")
-			.set({
-				calculated_data: JSON.stringify({
-					...cd,
-					rivalRank,
-				}),
-			})
-			.where("row_id", "=", pbRow.row_id)
-			.execute();
-	}
-}
-
-async function getSortedPbUserIdsOnChart(game: GameGroup, playtype: Playtype, chartID: string) {
-	const v3Game = GamePTToV3(game, playtype) as Game;
-
-	const rows = await DB.selectFrom("pb")
-		.innerJoin("chart", "chart.id", "pb.chart_id")
-		.innerJoin("song", "song.id", "chart.song_id")
-		.select("pb.user_id")
-		.where((eb) => eb.or([eb("chart.id", "=", chartID), eb("chart.legacy_id", "=", chartID)]))
-		.where("chart.game", "=", v3Game)
-		.orderBy("pb.ranking_value", "desc")
-		.orderBy(sql`pb.ranking_value_tb1 DESC NULLS LAST`)
-		.orderBy(sql`pb.ranking_value_tb2 DESC NULLS LAST`)
-		.orderBy(sql`pb.ranking_value_tb3 DESC NULLS LAST`)
-		.orderBy(sql`pb.ranking_value_tb4 DESC NULLS LAST`)
-		.orderBy(sql`pb.ranking_value_tb5 DESC NULLS LAST`)
-		.orderBy("pb.time_achieved", "asc")
-		.execute();
-
-	return rows.map((r) => r.user_id);
+export async function UpdateChartRanking(_game: V3Game, _chartID: string) {
+	// nothing. rivals don't go in calculated data, thanks claude.
 }
 
 export { upsertPbFromMongoDoc } from "./upsert-pb-pg";

@@ -1,4 +1,4 @@
-import type { GPTServerImplementation } from "#game-implementations/types";
+import type { GameImplementation } from "#game-implementations/types";
 
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileAvgBestN } from "#game-implementations/utils/profile-calc";
@@ -6,17 +6,17 @@ import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
 import { IsNullish } from "#utils/misc";
 import { ONGEKIRating } from "rg-stats";
 import {
+	type ChartDocument,
 	FmtNum,
 	FmtStars,
 	FmtStarsCompact,
 	GetGrade,
-	type MONGO_ChartDocument,
 	ONGEKI_GBOUNDARIES,
 } from "tachi-common";
 
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
-const isUnranked = (chart: MONGO_ChartDocument<"ongeki:Single">) =>
+const isUnranked = (chart: ChartDocument<"ongeki">) =>
 	(chart.data.inGameID >= 7000 && chart.data.inGameID < 8000) || chart.levelNum === 0.0;
 
 const starCount = (platinumScore: number, maxPlatinumScore: number) => {
@@ -25,7 +25,7 @@ const starCount = (platinumScore: number, maxPlatinumScore: number) => {
 	return Math.max(0, Math.min(pct, 99) - 93);
 };
 
-export const ONGEKI_IMPL: GPTServerImplementation<"ongeki:Single"> = {
+export const ONGEKI_IMPL: GameImplementation<"ongeki"> = {
 	chartSpecificValidators: {
 		bellCount: (bellCount) => {
 			if (bellCount < 0) {
@@ -93,11 +93,11 @@ export const ONGEKI_IMPL: GPTServerImplementation<"ongeki:Single"> = {
 		naiveScoreRating: SessionAvgBest10For("scoreRating")(arr),
 		starRating: SessionAvgBest10For("starRating")(arr),
 	}),
-	profileCalcs: async (game, playtype, userID) => {
+	profileCalcs: async (game, userID) => {
 		const [naiveRating, score, star] = await Promise.all([
-			ProfileAvgBestN("rating", 45, false, 100)(game, playtype, userID),
-			ProfileAvgBestN("scoreRating", 60, false, 1000)(game, playtype, userID),
-			ProfileAvgBestN("starRating", 50, false, 1000)(game, playtype, userID),
+			ProfileAvgBestN("rating", 45, false, 100)(game, userID),
+			ProfileAvgBestN("scoreRating", 60, false, 1000)(game, userID),
+			ProfileAvgBestN("starRating", 50, false, 1000)(game, userID),
 		]);
 
 		const score1k = Math.round((score ?? 0) * 1000);
@@ -191,7 +191,7 @@ export const ONGEKI_IMPL: GPTServerImplementation<"ongeki:Single"> = {
 		),
 	],
 	defaultMergeRefName: "Best Score",
-	derivationRelevantFields: ["levelNum", "data.maxPlatScore", "data.inGameID"],
+	chartDataRelevantFields: ["levelNum", "data.maxPlatScore", "data.inGameID"],
 	scoreValidators: [
 		(s, chart) => {
 			let { hit, miss } = s.scoreData.judgements;

@@ -66,31 +66,29 @@ import monk from "monk";
 import path from "path";
 import { Pool } from "pg";
 import {
-	GetGPTString,
-	GPTStringToV3,
-	type MONGO_CGCardInfo,
-	type MONGO_ClassAchievementDocument,
-	type MONGO_FervidexSettingsDocument,
-	type MONGO_GoalSubscriptionDocument,
-	type MONGO_ImportDocument,
-	type MONGO_ImportTimingsDocument,
-	type MONGO_KaiAuthDocument,
-	type MONGO_KsHookSettingsDocument,
-	type MONGO_MytCardInfo,
-	type MONGO_NotificationDocument,
-	type MONGO_OrphanChartDocument,
-	type MONGO_QuestSubscriptionDocument,
-	type MONGO_RecentlyViewedFolderDocument,
-	type MONGO_ScoreDocument,
-	type MONGO_SessionDocument,
-	type MONGO_TachiAPIClientDocument,
-	type MONGO_UGPTSettingsDocument,
-	type MONGO_UserDocument,
-	type MONGO_UserGameStats,
-	type MONGO_UserGameStatsSnapshotDocument,
-	type MONGO_UserNameChangeDocument,
-	type MONGO_UserSettingsDocument,
+	ALL_GAMES,
+	type CGCardInfo,
+	type ClassAchievementDocument,
+	type FervidexSettingsDocument,
+	type GoalSubscriptionDocument,
+	type ImportDocument,
+	type ImportTimingsDocument,
+	type KaiAuthDocument,
+	type KsHookSettingsDocument,
+	type MytCardInfo,
+	type NotificationDocument,
+	type OrphanChartDocument,
+	type QuestSubscriptionDocument,
+	type ScoreDocument,
+	type SessionDocument,
+	type TachiAPIClientDocument,
+	type UGPTSettingsDocument,
 	UserAuthLevels,
+	type UserDocument,
+	type UserGameStats,
+	type UserGameStatsSnapshotDocument,
+	type UserNameChangeDocument,
+	type UserSettingsDocument,
 } from "tachi-common";
 
 import { buildChartIdMap, importSeeds } from "./load-seeds-pg";
@@ -99,7 +97,7 @@ import { buildChartIdMap, importSeeds } from "./load-seeds-pg";
 // Extension types for MongoDB documents that have extra fields not in the TS interface
 // ──────────────────────────────────────────────────────────────────────────────
 
-/** MONGO_InviteCodeDocument extended – always has all fields in practice. */
+/** InviteCodeDocument extended – always has all fields in practice. */
 interface InviteCodeDocumentFull {
 	code: string;
 	createdBy: number;
@@ -173,6 +171,19 @@ function toGame(game: string, playtype: string): PgGame {
 	return `${game}-${playtype.toLowerCase()}` as PgGame;
 }
 
+/**
+ * Handles both legacy Mongo `{ game: GameGroup, playtype }` rows and v3 `{ game: V3Game }` rows.
+ */
+function mongoGameToPg(game: string, playtype?: string): PgGame {
+	if ((ALL_GAMES as readonly string[]).includes(game)) {
+		return game as PgGame;
+	}
+	if (playtype === undefined) {
+		throw new Error(`[migrate] Missing playtype for legacy game group: ${game}`);
+	}
+	return toGame(game, playtype);
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Auth level helper
 // ──────────────────────────────────────────────────────────────────────────────
@@ -228,10 +239,6 @@ const INSERT_CHUNK = 500;
 /** JSON text form of U+0000 that JSON.stringify uses; Postgres jsonb rejects this in strings. */
 const JSON_TEXT_ESCAPE_U0000 = ["\\", "u0000"].join("");
 
-function jsonStringHasPostgresRejectedNul(s: string): boolean {
-	return s.includes("\u0000") || s.includes(JSON_TEXT_ESCAPE_U0000);
-}
-
 /**
  * Some chart_id sha256s in fervidex imports have nulbytes at the end; which are illegal in postgres serializations.
  */
@@ -243,38 +250,6 @@ function sanitizeOrphanScoreJsonForPostgres(value: unknown): unknown {
 	const json = JSON.stringify(value ?? null);
 	const stripped = stripNulBytesIllegalInPostgres(json);
 	return JSON.parse(stripped) as unknown;
-}
-
-/**
- * Logs when a value destined for Postgres (jsonb or text) contains NUL / JSON \\u0000,
- * which Postgres rejects (22P05).
- */
-function logPostgresNulColumnIssue(
-	scopeLabel: string,
-	columnName: string,
-	value: string,
-	meta: Record<string, unknown>,
-): void {
-	const idxLiteral = value.indexOf("\u0000");
-	const idxEscaped = value.indexOf(JSON_TEXT_ESCAPE_U0000);
-	const idx = idxLiteral !== -1 ? idxLiteral : idxEscaped;
-	const kind =
-		idxLiteral !== -1
-			? "literal U+0000 in string"
-			: "JSON \\u0000 escape (disallowed by Postgres jsonb)";
-	const snippet =
-		idx === -1
-			? undefined
-			: value.slice(Math.max(0, idx - 48), Math.min(value.length, idx + 64));
-
-	console.warn(
-		`[${scopeLabel}] column "${columnName}" ${kind} — Postgres will reject this row. Source document:`,
-		{
-			...meta,
-			firstOccurrenceAtIndex: idx,
-			...(snippet !== undefined ? { snippetAroundFirstOccurrence: snippet } : {}),
-		},
-	);
 }
 
 async function batchInsert<T extends keyof Database>(
@@ -406,7 +381,7 @@ async function main(): Promise<void> {
 	// ── account + account_badge ───────────────────────────────────────────────
 	{
 		console.log("\n[account / account_badge]");
-		const users = await mongoDB.get<MONGO_UserDocument>("users").find({});
+		const users = await mongoDB.get<UserDocument>("users").find({});
 
 		const accountRows: Array<NewAccount> = users.map((u) => ({
 			id: u.id,
@@ -442,7 +417,7 @@ async function main(): Promise<void> {
 	// ── orphan_chart + orphan_chart_user ──────────────────────────────────────
 	{
 		console.log("\n[orphan_chart / orphan_chart_user]");
-		const orphans = await mongoDB.get<MONGO_OrphanChartDocument>("orphan-chart-queue").find({});
+		const orphans = await mongoDB.get<OrphanChartDocument>("orphan-chart-queue").find({});
 
 		const orphanRows: Array<NewOrphanChart> = [];
 		const orphanUserRows: Array<NewOrphanChartUser> = [];
@@ -452,7 +427,7 @@ async function main(): Promise<void> {
 
 			orphanRows.push({
 				id: chartId,
-				game: o.gptString as PgGame,
+				game: mongoGameToPg(o.game),
 				chart_doc: JSON.stringify(o.chartDoc),
 				song_doc: JSON.stringify(o.songDoc),
 			});
@@ -524,7 +499,7 @@ async function main(): Promise<void> {
 	// ── account_settings + account_following ──────────────────────────────────
 	{
 		console.log("\n[account_settings / account_following]");
-		const settings = await mongoDB.get<MONGO_UserSettingsDocument>("user-settings").find({});
+		const settings = await mongoDB.get<UserSettingsDocument>("user-settings").find({});
 
 		const settingRows: Array<NewAccountSettings> = settings.map((s) => ({
 			user_id: s.userID,
@@ -552,9 +527,7 @@ async function main(): Promise<void> {
 	// ── account_username_change ───────────────────────────────────────────────
 	{
 		console.log("\n[account_username_change]");
-		const changes = await mongoDB
-			.get<MONGO_UserNameChangeDocument>("user-name-changes")
-			.find({});
+		const changes = await mongoDB.get<UserNameChangeDocument>("user-name-changes").find({});
 
 		const changeRows: Array<NewAccountUsernameChange> = changes.map((c) => ({
 			user_id: c.userID,
@@ -587,7 +560,7 @@ async function main(): Promise<void> {
 	// ── priv_api_client ───────────────────────────────────────────────────────
 	{
 		console.log("\n[priv_api_client]");
-		const clients = await mongoDB.get<MONGO_TachiAPIClientDocument>("api-clients").find({});
+		const clients = await mongoDB.get<TachiAPIClientDocument>("api-clients").find({});
 
 		const clientRows: Array<NewPrivApiClient> = clients.map((c) => {
 			// Old MongoDB data uses dash-separated permission names ("customise-profile"),
@@ -619,7 +592,7 @@ async function main(): Promise<void> {
 	// ── priv_invite ───────────────────────────────────────────────────────────
 	{
 		console.log("\n[priv_invite]");
-		// MONGO_InviteCodeDocument is a discriminated union; use the full flattened type.
+		// InviteCodeDocument is a discriminated union; use the full flattened type.
 		const invites = await mongoDB.get<InviteCodeDocumentFull>("invites").find({});
 
 		const inviteRows: Array<NewPrivInvite> = invites.map((inv) => ({
@@ -638,7 +611,7 @@ async function main(): Promise<void> {
 	// ── priv_svc_kai_auth_token ───────────────────────────────────────────────
 	{
 		console.log("\n[priv_svc_kai_auth_token]");
-		const kaiTokens = await mongoDB.get<MONGO_KaiAuthDocument>("kai-auth-tokens").find({});
+		const kaiTokens = await mongoDB.get<KaiAuthDocument>("kai-auth-tokens").find({});
 
 		const tokenRows: Array<NewPrivSvcKaiAuthToken> = kaiTokens.map((k) => ({
 			user_id: k.userID,
@@ -654,7 +627,7 @@ async function main(): Promise<void> {
 	// ── priv_svc_cg_card_info ─────────────────────────────────────────────────
 	{
 		console.log("\n[priv_svc_cg_card_info]");
-		const cgCards = await mongoDB.get<MONGO_CGCardInfo>("cg-card-info").find({});
+		const cgCards = await mongoDB.get<CGCardInfo>("cg-card-info").find({});
 
 		const cgRows: Array<NewPrivSvcCgCardInfo> = [];
 
@@ -679,7 +652,7 @@ async function main(): Promise<void> {
 	// ── priv_svc_myt_card_info ────────────────────────────────────────────────
 	{
 		console.log("\n[priv_svc_myt_card_info]");
-		const mytCards = await mongoDB.get<MONGO_MytCardInfo>("myt-card-info").find({});
+		const mytCards = await mongoDB.get<MytCardInfo>("myt-card-info").find({});
 
 		const mytRows: Array<NewPrivSvcMytCardInfo> = [];
 
@@ -704,9 +677,7 @@ async function main(): Promise<void> {
 	// ── svc_fer_settings + priv_svc_fer_card ─────────────────────────────────
 	{
 		console.log("\n[svc_fer_settings / priv_svc_fer_card]");
-		const ferSettings = await mongoDB
-			.get<MONGO_FervidexSettingsDocument>("fer-settings")
-			.find({});
+		const ferSettings = await mongoDB.get<FervidexSettingsDocument>("fer-settings").find({});
 
 		const ferRows: Array<NewSvcFerSettings> = ferSettings.map((f) => ({
 			user_id: f.userID,
@@ -731,7 +702,7 @@ async function main(): Promise<void> {
 	{
 		console.log("\n[svc_kshook_sv6c_settings]");
 		const ksSettings = await mongoDB
-			.get<MONGO_KsHookSettingsDocument>("kshook-sv6c-settings")
+			.get<KsHookSettingsDocument>("kshook-sv6c-settings")
 			.find({});
 
 		const ksRows: Array<NewSvcKshookSv6cSettings> = ksSettings.map((k) => ({
@@ -785,9 +756,7 @@ async function main(): Promise<void> {
 	// ── notification ──────────────────────────────────────────────────────────
 	{
 		console.log("\n[notification]");
-		const notifications = await mongoDB
-			.get<MONGO_NotificationDocument>("notifications")
-			.find({});
+		const notifications = await mongoDB.get<NotificationDocument>("notifications").find({});
 
 		const notifRows: Array<NewNotification> = notifications.map((n) => ({
 			title: n.title,
@@ -805,16 +774,14 @@ async function main(): Promise<void> {
 	// ── game_settings + game_settings_showcase + game_rival ──────────────────
 	{
 		console.log("\n[game_settings / game_settings_showcase / game_rival]");
-		const ugptSettings = await mongoDB
-			.get<MONGO_UGPTSettingsDocument>("game-settings")
-			.find({});
+		const ugptSettings = await mongoDB.get<UGPTSettingsDocument>("game-settings").find({});
 
 		const settingsRows: Array<NewGameSettings> = [];
 		const showcaseRows: Array<NewGameSettingsShowcase> = [];
 		const rivalRows: Array<NewGameRival> = [];
 
 		for (const s of ugptSettings) {
-			const game = toGame(s.game, s.playtype);
+			const game = mongoGameToPg(s.game, (s as { playtype?: string }).playtype);
 			const prefs = s.preferences;
 
 			settingsRows.push({
@@ -855,11 +822,11 @@ async function main(): Promise<void> {
 	// ── game_profile ───────────────────────────────────────────────────────────
 	{
 		console.log("\n[game_profile]");
-		const gameStats = await mongoDB.get<MONGO_UserGameStats>("game-stats").find({});
+		const gameStats = await mongoDB.get<UserGameStats>("game-stats").find({});
 
 		const statsRows: Array<NewGameProfile> = gameStats.map((gs) => ({
 			user_id: gs.userID,
-			game: toGame(gs.game, gs.playtype),
+			game: mongoGameToPg(gs.game, (gs as { playtype?: string }).playtype),
 			ratings: JSON.stringify(gs.ratings),
 			classes: JSON.stringify(gs.classes),
 		}));
@@ -870,12 +837,12 @@ async function main(): Promise<void> {
 
 	// ── game_stats_snapshot ───────────────────────────────────────────────────
 	console.log("\n[game_stats_snapshot]");
-	await streamMigrate<MONGO_UserGameStatsSnapshotDocument, NewGameStatsSnapshot>(
+	await streamMigrate<UserGameStatsSnapshotDocument, NewGameStatsSnapshot>(
 		"game-stats-snapshots",
 		"game_stats_snapshot",
 		(snap) => ({
 			user_id: snap.userID,
-			game: toGame(snap.game, snap.playtype),
+			game: mongoGameToPg(snap.game, (snap as { playtype?: string }).playtype),
 			timestamp: tsReq(snap.timestamp),
 			playcount: snap.playcount,
 			ratings: JSON.stringify(snap.ratings),
@@ -888,11 +855,11 @@ async function main(): Promise<void> {
 	{
 		console.log("\n[class_achievement]");
 		const achievements = await mongoDB
-			.get<MONGO_ClassAchievementDocument>("class-achievements")
+			.get<ClassAchievementDocument>("class-achievements")
 			.find({});
 
 		const achievementRows: Array<NewClassAchievement> = achievements.map((a) => ({
-			game: toGame(a.game, a.playtype),
+			game: mongoGameToPg(a.game, (a as { playtype?: string }).playtype),
 			user_id: a.userID,
 			class_set: a.classSet as string,
 			// classOldValue can be null in Mongo; Postgres requires a string — use empty string.
@@ -907,7 +874,7 @@ async function main(): Promise<void> {
 
 	// ── session ───────────────────────────────────────────────────────────────
 	console.log("\n[session]");
-	await streamCollection<{ _id?: unknown } & MONGO_SessionDocument>(
+	await streamCollection<{ _id?: unknown } & SessionDocument>(
 		"sessions",
 		async (docs) => {
 			const rows: Array<NewSession> = [];
@@ -916,7 +883,7 @@ async function main(): Promise<void> {
 				rows.push({
 					id: s.sessionID,
 					user_id: s.userID,
-					game: toGame(s.game, s.playtype),
+					game: mongoGameToPg(s.game, (s as { playtype?: string }).playtype),
 					name: s.name,
 					description: s.desc,
 					time_inserted: tsReq(s.timeInserted),
@@ -945,7 +912,7 @@ async function main(): Promise<void> {
 	);
 
 	console.log("\n[import / import_game / import_error / import_class / import_session]");
-	await streamCollection<MONGO_ImportDocument>(
+	await streamCollection<ImportDocument>(
 		"imports",
 		async (docs) => {
 			const importRows: Array<NewImport> = [];
@@ -963,7 +930,7 @@ async function main(): Promise<void> {
 			const scoreServiceMap = new Map(
 				(
 					await mongoDB
-						.get<MONGO_ScoreDocument>("scores")
+						.get<ScoreDocument>("scores")
 						.find(
 							{ scoreID: { $in: firstScoreIds } },
 							{ projection: { scoreID: 1, service: 1 } },
@@ -981,18 +948,21 @@ async function main(): Promise<void> {
 					user_id: imp.userID,
 					time_started: tsReq(imp.timeStarted),
 					time_finished: tsReq(imp.timeFinished),
-					game_group: imp.game as GameGroup,
+					game_group: imp.gameGroup as GameGroup,
 					import_type: imp.importType as ImportType,
 					user_intent: imp.userIntent,
 					service,
 				});
 
-				// some imports have no gpt strings
+				const games =
+					imp.games.length > 0
+						? imp.games
+						: ((imp as { playtypes?: string[] }).playtypes ?? []).map((pt) =>
+								toGame(imp.gameGroup, pt),
+							);
 
-				const playtypes = imp.playtypes ?? [];
-
-				for (const playtype of playtypes) {
-					importGameRows.push({ id: importId, game: toGame(imp.game, playtype) });
+				for (const g of games) {
+					importGameRows.push({ id: importId, game: mongoGameToPg(g) });
 				}
 
 				for (const err of imp.errors) {
@@ -1006,7 +976,7 @@ async function main(): Promise<void> {
 				for (const delta of imp.classDeltas) {
 					importClassRows.push({
 						import_id: importId,
-						game: toGame(delta.game, delta.playtype),
+						game: delta.game,
 						set: delta.set as string,
 						prev: delta.old,
 						new: delta.new,
@@ -1067,7 +1037,7 @@ async function main(): Promise<void> {
 	// ── goal_sub ──────────────────────────────────────────────────────────────
 	{
 		console.log("\n[goal_sub]");
-		const goalSubs = await mongoDB.get<MONGO_GoalSubscriptionDocument>("goal-subs").find({});
+		const goalSubs = await mongoDB.get<GoalSubscriptionDocument>("goal-subs").find({});
 
 		const uniqueGoalIds = [...new Set(goalSubs.map((gs) => gs.goalID))];
 		const existingGoalIds = new Set(
@@ -1116,7 +1086,7 @@ async function main(): Promise<void> {
 	// ── quest_sub ─────────────────────────────────────────────────────────────
 	{
 		console.log("\n[quest_sub]");
-		const questSubs = await mongoDB.get<MONGO_QuestSubscriptionDocument>("quest-subs").find({});
+		const questSubs = await mongoDB.get<QuestSubscriptionDocument>("quest-subs").find({});
 
 		const questSubRows: Array<NewQuestSub> = questSubs.map((qs) => ({
 			quest_id: qs.questID,
@@ -1135,8 +1105,15 @@ async function main(): Promise<void> {
 	// ── folder_view ───────────────────────────────────────────────────────────
 	{
 		console.log("\n[folder_view]");
+		/** Legacy Mongo `recent-folder-views` stored internal folder ids as `folderID`. */
+		type LegacyRecentFolderViewDoc = {
+			folderID: string;
+			lastViewed: number;
+			userID: number;
+		};
+
 		const folderViews = await mongoDB
-			.get<MONGO_RecentlyViewedFolderDocument>("recent-folder-views")
+			.get<LegacyRecentFolderViewDoc>("recent-folder-views")
 			.find({});
 
 		const uniqueFolderIds = [...new Set(folderViews.map((fv) => fv.folderID))];
@@ -1271,7 +1248,7 @@ async function main(): Promise<void> {
 
 	// ── import_timing ─────────────────────────────────────────────────────────
 	console.log("\n[import_timing]");
-	await streamCollection<MONGO_ImportTimingsDocument>(
+	await streamCollection<ImportTimingsDocument>(
 		"import-timings",
 		async (docs) => {
 			const importIds = docs.map((t) => t.importID);
@@ -1340,7 +1317,7 @@ async function main(): Promise<void> {
 	// ── score ─────────────────────────────────────────────────────────────────
 	console.log("\n[score]");
 
-	await streamCollection<MONGO_ScoreDocument>(
+	await streamCollection<ScoreDocument>(
 		"scores",
 		async (docs) => {
 			const rows: Array<NewScore> = [];
@@ -1408,14 +1385,14 @@ async function main(): Promise<void> {
 					s.scoreData.optional = { enumIndexes: {} };
 				}
 
-				const gpt = GetGPTString(s.game, s.playtype);
-				const { data, derived, judgements } = mongoScoreDataToPg(gpt, s.scoreData);
+				const v3Game = mongoGameToPg(s.game, (s as { playtype?: string }).playtype);
+				const { data, derived, judgements } = mongoScoreDataToPg(v3Game, s.scoreData);
 
 				rows.push({
 					id: s.scoreID,
 					user_id: s.userID,
 					chart_id: chartSid,
-					game: GPTStringToV3(GetGPTString(s.game, s.playtype)),
+					game: v3Game,
 					session_id: sessionId,
 					import_id: importId,
 					data: JSON.stringify(data),

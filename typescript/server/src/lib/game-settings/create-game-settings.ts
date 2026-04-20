@@ -1,31 +1,25 @@
 import { log } from "#lib/log/log";
 import DB from "#services/pg/db";
-import { type GameGroup, GamePTToV3, type integer, type Playtype } from "tachi-common";
+import { type integer, type V3Game } from "tachi-common";
 
 /**
  * Create GameSettings for a UGPT (which contains their preferences).
  */
-export async function CreateGameSettings(userID: integer, game: GameGroup, playtype: Playtype) {
-	const v3Game = GamePTToV3(game, playtype);
-
+export async function CreateGameSettings(userID: integer, game: V3Game) {
 	const exists = await DB.selectFrom("game_settings")
 		.select("user_id")
 		.where("user_id", "=", userID)
-		.where("game", "=", v3Game)
+		.where("game", "=", game)
 		.executeTakeFirst();
 
 	if (exists) {
-		log.error(
-			`Cannot create ${userID} ${game} ${playtype} game-settings as one already exists?`,
-		);
+		log.error(`Cannot create ${userID} ${game} game-settings as one already exists?`);
 
-		throw new Error(
-			`Cannot create ${userID} ${game} ${playtype} game-settings as one already exists?`,
-		);
+		throw new Error(`Cannot create ${userID} ${game} game-settings as one already exists?`);
 	}
 
 	const gameSpecific =
-		game === "iidx"
+		game === "iidx-sp" || game === "iidx-dp"
 			? {
 					display2DXTra: false,
 					bpiTarget: 0,
@@ -35,7 +29,7 @@ export async function CreateGameSettings(userID: integer, game: GameGroup, playt
 	await DB.insertInto("game_settings")
 		.values({
 			data: JSON.stringify(gameSpecific),
-			game: v3Game,
+			game,
 			pf_default_table: null,
 			pf_preferred_default_enum: null,
 			pf_preferred_profile_alg: null,
@@ -46,5 +40,5 @@ export async function CreateGameSettings(userID: integer, game: GameGroup, playt
 		})
 		.execute();
 
-	log.info(`Created game settings for ${userID} (${game} ${playtype}).`);
+	log.info(`Created game settings for ${userID} (${game}).`);
 }

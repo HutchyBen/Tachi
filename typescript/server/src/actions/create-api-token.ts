@@ -1,6 +1,6 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import DB from "#services/pg/db.js";
-import { Random20Hex } from "#utils/misc.js";
+import { MakeAction } from "#lib/actions/actions";
+import DB from "#services/pg/db";
+import { Random20Hex } from "#utils/misc";
 import { ExpectedErr } from "bliss";
 import { ALL_PERMISSIONS } from "tachi-common";
 

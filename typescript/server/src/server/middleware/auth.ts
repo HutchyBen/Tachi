@@ -2,15 +2,15 @@ import type { RequestHandler } from "express";
 import type { Session, SessionData } from "express-session";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { SELECT_API_TOKEN, ToAPITokenDocument } from "#lib/db-formats/api-token.js";
+import { SELECT_API_TOKEN, ToAPITokenDocument } from "#lib/db-formats/api-token";
 import { log } from "#lib/log/log";
 import { TachiConfig } from "#lib/setup/config";
-import DB from "#services/pg/db.js";
+import DB from "#services/pg/db";
 import { IsNullishOrEmptyStr, SplitAuthorizationHeader } from "#utils/misc";
-import { IsUserBanned } from "#utils/user.js";
-import { ALL_PERMISSIONS, type APIPermissions, type MONGO_APITokenDocument } from "tachi-common";
+import { IsUserBanned } from "#utils/user";
+import { ALL_PERMISSIONS, type APIPermissions, type APITokenDocument } from "tachi-common";
 
-const GuestToken: MONGO_APITokenDocument = {
+const GuestToken: APITokenDocument = {
 	token: null,
 	userID: null,
 	identifier: "Guest Token",
@@ -20,7 +20,7 @@ const GuestToken: MONGO_APITokenDocument = {
 
 export const RejectIfBanned: RequestHandler = async (req, res, next) => {
 	// auth might not be defined.
-	const auth = req[SYMBOL_TACHI_API_AUTH] as MONGO_APITokenDocument | undefined;
+	const auth = req[SYMBOL_TACHI_API_AUTH] as APITokenDocument | undefined;
 
 	// this is deliberately not auth?.userID !== null, as that isn't correct.
 	// we need to ignore this if auth doesn't exist and if auth is null.

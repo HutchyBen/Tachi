@@ -3,11 +3,12 @@ import { Command } from "commander";
 import fs from "fs";
 import path from "path";
 import {
+	type ChartDocument,
 	type Difficulties,
-	GetGamePTConfig,
+	type GamesForGroup,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
+	LEGACY_GetGamePTConfig,
+	type SongDocument,
 	type Versions,
 } from "tachi-common";
 
@@ -44,10 +45,10 @@ const options = program.opts() as {
 	force: boolean;
 	index: "0" | "1";
 	omni: boolean;
-	version: Versions["iidx:SP"];
+	version: Versions["iidx-sp"];
 };
 
-const iidxConfig = GetGamePTConfig("iidx", "SP");
+const iidxConfig = LEGACY_GetGamePTConfig("iidx", "SP");
 
 if (!Object.keys(iidxConfig.versions).includes(options.version)) {
 	throw new Error(
@@ -63,10 +64,9 @@ if (options.index !== "0" && options.index !== "1") {
 	throw new Error(`Expected an --index of 0 or 1. Got ${options.index}.`);
 }
 
-const existingCharts: MONGO_ChartDocument<"iidx:DP" | "iidx:SP">[] =
-	ReadCollection("charts-iidx.json");
+const existingCharts: ChartDocument<GamesForGroup["iidx"]>[] = ReadCollection("charts-iidx.json");
 
-const existingSongs: MONGO_SongDocument<"iidx">[] = ReadCollection("songs-iidx.json");
+const existingSongs: SongDocument<"iidx">[] = ReadCollection("songs-iidx.json");
 
 const blacklist = fs
 	.readFileSync(path.join(__dirname, "blacklist.txt"), "utf-8")
@@ -101,10 +101,10 @@ async function ParseIIDXMDB() {
 		options.alwaysExtract,
 	);
 
-	const chartMap = new Map<integer, MONGO_ChartDocument<"iidx:DP" | "iidx:SP">>();
-	const songMap = new Map<integer, MONGO_SongDocument<"iidx">>();
-	const songTitleMap = new Map<string, MONGO_SongDocument<"iidx">>();
-	const chartDiffMap = new Map<string, MONGO_ChartDocument<"iidx:DP" | "iidx:SP">>();
+	const chartMap = new Map<integer, ChartDocument<GamesForGroup["iidx"]>>();
+	const songMap = new Map<integer, SongDocument<"iidx">>();
+	const songTitleMap = new Map<string, SongDocument<"iidx">>();
+	const chartDiffMap = new Map<string, ChartDocument<GamesForGroup["iidx"]>>();
 
 	for (const song of existingSongs) {
 		songMap.set(song.id, song);
@@ -143,7 +143,7 @@ async function ParseIIDXMDB() {
 		}
 
 		const anySongIDMatch = chartMap.get(inp.songID);
-		let song: MONGO_SongDocument<"iidx">;
+		let song: SongDocument<"iidx">;
 
 		if (!anySongIDMatch) {
 			// new song?
@@ -170,7 +170,7 @@ async function ParseIIDXMDB() {
 				searchTerms.push(inp.marquee);
 			}
 
-			const tachiSong: MONGO_SongDocument<"iidx"> = {
+			const tachiSong: SongDocument<"iidx"> = {
 				id: getFreeSongID(),
 				artist: inp.artist,
 				title: inp.title,
@@ -242,13 +242,16 @@ async function ParseIIDXMDB() {
 				}
 
 				// otherwise, make new chart?
-				const tachiChart: MONGO_ChartDocument<"iidx:DP" | "iidx:SP"> = {
+				const playtypeStr = diffName.split("-")[0] as "DP" | "SP";
+				const game: GamesForGroup["iidx"] = playtypeStr === "SP" ? "iidx-sp" : "iidx-dp";
+				const tachiChart: ChartDocument<GamesForGroup["iidx"]> = {
+					game,
 					chartID: CreateChartID(),
-					difficulty: diffName.split("-")[1] as Difficulties["iidx:DP" | "iidx:SP"],
+					difficulty: diffName.split("-")[1] as Difficulties[GamesForGroup["iidx"]],
 					level: level.toString(),
 					levelNum: level,
 					isPrimary: true,
-					playtype: diffName.split("-")[0] as "DP" | "SP",
+					playtype: playtypeStr,
 
 					songID: song.id,
 					versions: [options.version],

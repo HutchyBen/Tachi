@@ -35,31 +35,36 @@ import Stack from "react-bootstrap/Stack";
 import { useQuery } from "react-query";
 import { Link, Route, Switch } from "react-router-dom";
 import {
+	type ChartDocument,
 	FormatDifficulty,
+	GameToGameGroup,
 	GetGameGroupConfig,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_SongDocument,
-	type MONGO_UserDocument,
+	type PBScoreDocument,
+	type SongDocument,
+	type UserDocument,
 } from "tachi-common";
 
-// Wrapper around the chart leaderboard UI; `chart` comes from the `/charts/:chartID` route.
 export default function GPTChartPage({
 	chart,
 	game,
 	song,
-	playtype,
 }: {
-	chart: MONGO_ChartDocument | null;
-	song: MONGO_SongDocument;
+	chart: ChartDocument | null;
+	song: SongDocument;
 } & GamePT) {
 	const formatSongTitle = `${song.artist} - ${song.title}`;
-	const formatDiff = chart ? FormatDifficulty(chart, game) : "Loading...";
+	const formatDiff = chart ? FormatDifficulty(chart) : "Loading...";
 
 	useSetSubheader(
-		["Games", GetGameGroupConfig(game).name, playtype, "Songs", formatSongTitle, formatDiff],
-		[game, playtype, chart],
+		[
+			"Games",
+			GetGameGroupConfig(GameToGameGroup(game)).name,
+			"Songs",
+			formatSongTitle,
+			formatDiff,
+		],
+		[game, chart],
 		`${formatSongTitle} (${formatDiff})`,
 	);
 
@@ -67,7 +72,7 @@ export default function GPTChartPage({
 		return <Loading />;
 	}
 
-	return <InternalGPTChartPage chart={chart} game={game} playtype={playtype} song={song} />;
+	return <InternalGPTChartPage chart={chart} game={game} song={song} />;
 }
 
 interface ChartPBData {
@@ -81,10 +86,9 @@ function InternalGPTChartPage({
 	chart,
 	game,
 	song,
-	playtype,
 }: {
-	chart: MONGO_ChartDocument;
-	song: MONGO_SongDocument;
+	chart: ChartDocument;
+	song: SongDocument;
 } & GamePT) {
 	const { user } = useContext(UserContext);
 
@@ -92,7 +96,7 @@ function InternalGPTChartPage({
 		["PBInfo", chart.chartID],
 		async () => {
 			const lRes = await APIFetchV1<ChartPBLeaderboardReturn>(
-				`/games/${game}/${playtype}/charts/${chart.chartID}/pbs`,
+				`/games/${game}/charts/${chart.chartID}/pbs`,
 			);
 
 			if (!lRes.success) {
@@ -100,7 +104,7 @@ function InternalGPTChartPage({
 			}
 
 			const pRes = await APIFetchV1<{ count: integer }>(
-				`/games/${game}/${playtype}/charts/${chart.chartID}/playcount`,
+				`/games/${game}/charts/${chart.chartID}/playcount`,
 			);
 
 			if (!pRes.success) {
@@ -109,11 +113,11 @@ function InternalGPTChartPage({
 
 			if (user) {
 				const nRes = await APIFetchV1<UGPTChartLeaderboardAdjacent>(
-					`/users/${user.id}/games/${game}/${playtype}/pbs/${chart.chartID}/leaderboard-adjacent`,
+					`/users/${user.id}/games/${game}/pbs/${chart.chartID}/leaderboard-adjacent`,
 				);
 
 				const rRes = await APIFetchV1<ChartRivalsReturn>(
-					`/users/${user.id}/games/${game}/${playtype}/pbs/${chart.chartID}/rivals`,
+					`/users/${user.id}/games/${game}/pbs/${chart.chartID}/rivals`,
 				);
 
 				const returnValue: ChartPBData = {
@@ -163,11 +167,10 @@ function InternalGPTChartPage({
 	}
 
 	if (user) {
-		// Add current user, since there's no guarantee they are returned from either API.
 		userMap.set(user.id, user);
 	}
 
-	const base = CreateChartLink(chart, game);
+	const base = CreateChartLink(chart);
 
 	return (
 		<>
@@ -203,16 +206,15 @@ function InternalGPTChartPage({
 			</Row>
 			<div className="mt-4">
 				<Switch>
-					<Route exact path="/games/:game/:playtype/charts/:chartID/targets">
-						<ChartTargetInfo {...{ chart, game, playtype, song, user: user! }} />
+					<Route exact path="/games/:game/charts/:chartID/targets">
+						<ChartTargetInfo {...{ chart, game, song, user: user! }} />
 					</Route>
 
-					<Route exact path="/games/:game/:playtype/charts/:chartID">
+					<Route exact path="/games/:game/charts/:chartID">
 						<ChartLeaderboardTable
 							{...{
 								data,
 								game,
-								playtype,
 								user,
 								userMap,
 								chart,
@@ -222,12 +224,11 @@ function InternalGPTChartPage({
 						/>
 					</Route>
 
-					<Route exact path="/games/:game/:playtype/charts/:chartID/me">
+					<Route exact path="/games/:game/charts/:chartID/me">
 						<ChartLeaderboardTable
 							{...{
 								data,
 								game,
-								playtype,
 								user,
 								userMap,
 								chart,
@@ -237,12 +238,11 @@ function InternalGPTChartPage({
 						/>
 					</Route>
 
-					<Route exact path="/games/:game/:playtype/charts/:chartID/rivals">
+					<Route exact path="/games/:game/charts/:chartID/rivals">
 						<ChartLeaderboardTable
 							{...{
 								data,
 								game,
-								playtype,
 								user,
 								userMap,
 								chart,
@@ -260,21 +260,19 @@ function InternalGPTChartPage({
 function ChartTargetInfo({
 	user,
 	game,
-	playtype,
 	chart,
 	song,
 }: {
-	chart: MONGO_ChartDocument;
-	song: MONGO_SongDocument;
-	user: MONGO_UserDocument;
+	chart: ChartDocument;
+	song: SongDocument;
+	user: UserDocument;
 } & GamePT) {
 	const { reloadTargets } = useContext(TargetsContext);
 	const [shouldReload, setShouldReload] = useState(0);
 
 	const { error, data } = useApiQuery<GoalsOnChartReturn>(
-		`/users/${user.id ?? ""}/games/${game}/${playtype}/targets/on-chart/${chart.chartID}`,
+		`/users/${user.id ?? ""}/games/${game}/targets/on-chart/${chart.chartID}`,
 		undefined,
-		// force a reload of this data when the user adds a new goal
 		[shouldReload.toString()],
 	);
 
@@ -287,11 +285,9 @@ function ChartTargetInfo({
 					data,
 					error,
 					game,
-					playtype,
 					reqUser: user,
 					song,
 					onGoalSet: () => {
-						// reload local query, then reload global targets.
 						setShouldReload(shouldReload + 1);
 						reloadTargets();
 					},
@@ -306,24 +302,23 @@ function ChartLeaderboardTable({
 	userMap,
 	user: _user,
 	game,
-	playtype,
 	mode,
 	chart,
 	song,
 }: {
-	chart: MONGO_ChartDocument;
+	chart: ChartDocument;
 	data: ChartPBData;
 	mode: "adjacent" | "leaderboard" | "rivals";
-	song: MONGO_SongDocument;
-	user: MONGO_UserDocument | null;
-	userMap: Map<integer, MONGO_UserDocument>;
+	song: SongDocument;
+	user: UserDocument | null;
+	userMap: Map<integer, UserDocument>;
 } & GamePT) {
 	const { settings } = useLUGPTSettings();
 
 	const dataset: PBDataset = useMemo(() => {
 		const ds: PBDataset = [];
 
-		let pbs: Array<MONGO_PBScoreDocument> = [];
+		let pbs: Array<PBScoreDocument> = [];
 		if (mode === "leaderboard") {
 			pbs = data.leaderboard.pbs;
 		} else if (mode === "adjacent") {
@@ -358,7 +353,6 @@ function ChartLeaderboardTable({
 			defaultRankingViewMode={mode === "rivals" ? "global-no-switch" : "both-if-self"}
 			game={game}
 			key={mode}
-			playtype={playtype}
 			showChart={false}
 			showUser
 		/>
@@ -371,20 +365,14 @@ function TopShowcase({
 	userMap,
 	chart,
 }: {
-	chart: MONGO_ChartDocument;
+	chart: ChartDocument;
 	data: ChartPBData;
-	user: MONGO_UserDocument | null;
-	userMap: Map<integer, MONGO_UserDocument>;
+	user: UserDocument | null;
+	userMap: Map<integer, UserDocument>;
 }) {
-	// We have a couple of conditions.
-	// User is #1: col-12 #1,
-	// User has played: col-6 col-6,
-	// User has not played: col-12 #1,
-
 	const bestPlay = data.leaderboard.pbs[0]!;
 	const bestUser = userMap.get(bestPlay.userID)!;
 
-	// User hasn't played, or isn't logged in or something.
 	if (user?.id === bestPlay.userID) {
 		return (
 			<Col xs={12}>
@@ -428,28 +416,29 @@ function PlayCard({
 	name,
 	chart,
 }: {
-	chart: MONGO_ChartDocument;
+	chart: ChartDocument;
 	name: string;
-	pb: MONGO_PBScoreDocument;
-	user: MONGO_UserDocument;
+	pb: PBScoreDocument;
+	user: UserDocument;
 }) {
 	const {
 		breakpoint: { isLg },
 	} = useContext(WindowContext);
+	const pbGame = pb.game;
 	return (
 		<Card cardBodyClassName="vstack gap-4" header={name}>
 			<Stack
 				className="flex-grow-1 align-items-lg-start align-items-center  justify-content-around"
 				direction={isLg ? "horizontal" : "vertical"}
 			>
-				<ProfilePicture toGPT={{ game: pb.game, playtype: pb.playtype }} user={user} />
+				<ProfilePicture toGPT={{ game: pbGame }} user={user} />
 				<div
 					className="d-flex flex-column align-self-stretch justify-content-between align-items-center"
 					style={{ maxHeight: 128, minWidth: 256 }}
 				>
 					<Link
 						className="text-decoration-none fs-4 fw-bold text-break text-center"
-						to={`/u/${user.username}/games/${pb.game}/${pb.playtype}`}
+						to={`/u/${user.username}/games/${pbGame}`}
 					>
 						{user.username}
 					</Link>
@@ -465,7 +454,7 @@ function PlayCard({
 			<Col>
 				<MiniTable colSpan={100} headers={["PB Info"]}>
 					<tr>
-						<ScoreCoreCells chart={chart} game={pb.game} score={pb} short />
+						<ScoreCoreCells chart={chart} game={pbGame} score={pb} short />
 					</tr>
 				</MiniTable>
 				<div className="text-center">

@@ -14,7 +14,7 @@ import { NumericSOV } from "#util/sorts";
 import { ResponsiveBar } from "@nivo/bar";
 import React, { useState } from "react";
 import Form from "react-bootstrap/Form";
-import { COLOUR_SET, CreateSongMap, GetGamePTConfig, type integer } from "tachi-common";
+import { COLOUR_SET, CreateSongMap, GetGameConfig, type integer } from "tachi-common";
 
 const USER_COLOURS = [
 	COLOUR_SET.blue,
@@ -27,22 +27,21 @@ const USER_COLOURS = [
 
 export default function ScoreLeaderboard({
 	game,
-	playtype,
 	url,
 	refreshDeps = [],
 }: { refreshDeps?: Array<string>; url: string } & GamePT) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
-	const defaultAlg = useScoreRatingAlg(game, playtype);
+	const defaultAlg = useScoreRatingAlg(game);
 
 	const [alg, setAlg] = useState(defaultAlg);
 
 	const SelectComponent =
-		Object.keys(gptConfig.scoreRatingAlgs).length > 1 ? (
+		Object.keys(gameConfig.scoreRatingAlgs).length > 1 ? (
 			<Form.Select onChange={(e) => setAlg(e.target.value as any)} value={alg}>
-				{Object.keys(gptConfig.scoreRatingAlgs).map((e) => (
+				{Object.keys(gameConfig.scoreRatingAlgs).map((e) => (
 					<option key={e} value={e}>
-						{FormatGPTScoreRatingName(game, playtype, e)}
+						{FormatGPTScoreRatingName(game, e)}
 					</option>
 				))}
 			</Form.Select>
@@ -102,7 +101,6 @@ export default function ScoreLeaderboard({
 				defaultRankingViewMode="both-if-self"
 				game={game}
 				indexCol
-				playtype={playtype}
 				showChart
 				showUser
 			/>
@@ -111,15 +109,12 @@ export default function ScoreLeaderboard({
 }
 
 function DistributionChart({ dataset }: { dataset: PBDataset }) {
-	// username -> scores in the top N
 	const dist: Record<string, integer> = {};
 
 	for (const pb of dataset) {
 		const key = pb.__related.user?.username;
 
 		if (key === undefined) {
-			// shouldn't be possible, but lets not have the ui crash
-			// because of something so menial
 			continue;
 		}
 

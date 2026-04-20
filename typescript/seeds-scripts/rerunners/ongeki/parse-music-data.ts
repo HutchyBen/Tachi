@@ -1,13 +1,13 @@
 // usage: cd rerunners && npx ts-node ongeki/parse-music-data.ts
 
 import fs from "fs/promises";
-import { type Difficulties, type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
+import { type ChartDocument, type Difficulties, type SongDocument } from "tachi-common";
 
 import { CreateChartID, ReadCollection, WriteCollection } from "../../util";
 
-type OngekiChart = MONGO_ChartDocument<"ongeki:Single">;
-type OngekiSong = MONGO_SongDocument<"ongeki">;
-type Difficulty = Difficulties["ongeki:Single"];
+type OngekiChart = ChartDocument<"ongeki">;
+type OngekiSong = SongDocument<"ongeki">;
+type Difficulty = Difficulties["ongeki"];
 
 const CURRENT_VERSION = "refresh";
 const CURRENT_OMNIMIX = "refreshOmni";
@@ -149,9 +149,10 @@ const main = async () => {
 				if (!ver.startsWith("オンゲキ")) {
 					ver = `オンゲキ ${ver}`;
 				}
-				chart = {
+				const newChart: OngekiChart = {
 					chartID: CreateChartID(),
 					songID: song.id,
+					game: "ongeki",
 					data: {
 						displayVersion: ver as any,
 						inGameID: inputSong.id,
@@ -164,9 +165,10 @@ const main = async () => {
 					playtype: "Single",
 					versions: [CURRENT_VERSION, CURRENT_OMNIMIX],
 				};
-				if (chart.difficulty === "LUNATIC") {
-					chart.data.isReMaster = inputSong.isReMaster;
+				if (newChart.difficulty === "LUNATIC") {
+					newChart.data.isReMaster = inputSong.isReMaster;
 				}
+				chart = newChart;
 				changes.charts.push(`${song.title} ${chart.difficulty} ${chart.level}`);
 				charts.push(chart);
 			}

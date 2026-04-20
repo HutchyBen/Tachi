@@ -3,7 +3,7 @@ import type { RequestHandler } from "express";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { LoadScoreDocumentById } from "#lib/db-formats/score";
 import { log } from "#lib/log/log";
-import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
+import { REQ_AssignToReqTachiData, REQ_GetTachiData } from "#utils/req-tachi-data";
 import { IsRequesterAdmin } from "#utils/user";
 
 export const GetScoreFromParam: RequestHandler = async (req, res, next) => {
@@ -16,13 +16,13 @@ export const GetScoreFromParam: RequestHandler = async (req, res, next) => {
 		});
 	}
 
-	AssignToReqTachiData(req, { scoreDoc: score });
+	REQ_AssignToReqTachiData(req, { scoreDoc: score });
 
 	next();
 };
 
 export const RequireOwnershipOfScoreOrAdmin: RequestHandler = async (req, res, next) => {
-	const score = GetTachiData(req, "scoreDoc");
+	const score = REQ_GetTachiData(req, "scoreDoc");
 	const userID = req[SYMBOL_TACHI_API_AUTH].userID;
 
 	if (userID === null) {

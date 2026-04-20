@@ -2,13 +2,18 @@ import { Command } from "commander";
 import fjsh from "fast-json-stable-hash";
 import fs from "fs";
 import {
+	type ChartDocument,
 	type Difficulties,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
+	type SongDocument,
 } from "tachi-common";
 
-import { CreateChartID, ReadCollection, WriteCollection } from "../../util";
+import {
+	CreateChartID,
+	GetFreshSongIDGenerator,
+	ReadCollection,
+	WriteCollection,
+} from "../../util";
 
 type LocalizedText = { en: string } & Record<string, string>;
 type LocalizedSearchTerms = Record<string, Array<string>>;
@@ -85,7 +90,7 @@ class MultiMapUniqueValues<K, V> {
 	}
 }
 
-function convertDifficulty(input: integer): Difficulties["arcaea:Touch"] {
+function convertDifficulty(input: integer): Difficulties["arcaea"] {
 	switch (input) {
 		case 0:
 			return "Past";
@@ -142,31 +147,30 @@ const packlistContent = fs.readFileSync(options.packlist, { encoding: "utf-8" })
 const packlistData: { packs: Array<PacklistEntry> } = JSON.parse(packlistContent);
 const packsByID = Object.fromEntries(packlistData.packs.map((p) => [p.id, p]));
 
-const existingSongDocsById: Map<number, MONGO_SongDocument<"arcaea">> = new Map(
-	ReadCollection("songs-arcaea.json").map((e: MONGO_SongDocument<"arcaea">) => [e.id, e]),
+const existingSongDocsById: Map<number, SongDocument<"arcaea">> = new Map(
+	ReadCollection("songs-arcaea.json").map((e: SongDocument<"arcaea">) => [e.id, e]),
 );
-const existingChartDocs: Array<MONGO_ChartDocument<"arcaea:Touch">> =
-	ReadCollection("charts-arcaea.json");
+const existingChartDocs: Array<ChartDocument<"arcaea">> = ReadCollection("charts-arcaea.json");
 const inGameIDToSongsMap: MultiMapUniqueValues<
 	string,
-	MONGO_SongDocument<"arcaea">
+	SongDocument<"arcaea">
 > = new MultiMapUniqueValues();
-const existingCharts: Map<string, MONGO_ChartDocument<"arcaea:Touch">> = new Map();
+const existingCharts: Map<string, ChartDocument<"arcaea">> = new Map();
 
 for (const chart of existingChartDocs) {
-	const song = existingSongDocsById.get(chart.songID);
+	const song = existingSongDocsById.get(chart.song.id);
 	if (!song) {
-		console.warn(`Chart ${chart.songID} does not belong to any song?`);
+		console.warn(`Chart ${chart.song.id} does not belong to any song?`);
 		continue;
 	}
-	inGameIDToSongsMap.set(chart.data.inGameID, song);
-	existingCharts.set(`${chart.data.inGameID}-${chart.difficulty}`, chart);
+	inGameIDToSongsMap.set(chart.data.inGameStrID, song);
+	existingCharts.set(`${chart.data.inGameStrID}-${chart.difficulty}`, chart);
 }
 
 const getNewSongID = GetFreshSongIDGenerator("arcaea");
 
-const newSongs: Array<MONGO_SongDocument<"arcaea">> = [];
-const newCharts: Array<MONGO_ChartDocument<"arcaea:Touch">> = [];
+const newSongs: Array<SongDocument<"arcaea">> = [];
+const newCharts: Array<ChartDocument<"arcaea">> = [];
 
 for (const entry of data.songs) {
 	const inGameID = entry.id;
@@ -186,7 +190,7 @@ for (const entry of data.songs) {
 			...new Set(Object.values(entry.title_localized).filter((t) => t !== title)),
 		];
 
-		const songDoc: MONGO_SongDocument<"arcaea"> = {
+		const songDoc: SongDocument<"arcaea"> = {
 			title,
 			artist: entry.artist,
 			altTitles,
@@ -204,7 +208,7 @@ for (const entry of data.songs) {
 	}
 
 	for (const chart of entry.difficulties) {
-		let song: MONGO_SongDocument<"arcaea">;
+		let song: SongDocument<"arcaea">;
 
 		if (chart.hidden_until_unlocked && chart.hidden_until === "always") {
 			// Deactivated difficulty
@@ -238,7 +242,7 @@ for (const entry of data.songs) {
 				...new Set(Object.values(chart.title_localized).filter((t) => t !== title)),
 			];
 
-			const songDoc: MONGO_SongDocument<"arcaea"> = {
+			const songDoc: SongDocument<"arcaea"> = {
 				title,
 				artist: chart.artist ?? entry.artist,
 				altTitles,
@@ -265,7 +269,8 @@ for (const entry of data.songs) {
 			song = possibleSong;
 		}
 
-		const chartDoc: MONGO_ChartDocument<"arcaea:Touch"> = {
+		const chartDoc: ChartDocument<"arcaea"> = {
+			game: "arcaea",
 			chartID: CreateChartID(),
 			songID: song.id,
 			difficulty,
@@ -275,7 +280,7 @@ for (const entry of data.songs) {
 			versions: ["mobile"],
 			playtype: "Touch",
 			data: {
-				inGameID,
+				inGameStrID: inGameID,
 				// Filled in later, but not by this script
 				notecount: 0,
 			},

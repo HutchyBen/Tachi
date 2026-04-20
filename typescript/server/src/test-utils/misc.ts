@@ -2,22 +2,19 @@ import type { DeepPartial } from "#utils/types";
 
 import deepmerge from "deepmerge";
 import {
-	type GameGroup,
-	type GPTString,
+	type ChartDocument,
+	type GoalDocument,
+	type GoalSubscriptionDocument,
+	type ImportDocument,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_GoalDocument,
-	type MONGO_GoalSubscriptionDocument,
-	type MONGO_ImportDocument,
-	type MONGO_NotificationDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_ScoreData,
-	type MONGO_ScoreDocument,
-	type MONGO_UGPTSettingsDocument,
-	type MONGO_UserDocument,
-	type MONGO_UserGameStats,
-	MongoChartLegacyId,
-	type Playtype,
+	type NotificationDocument,
+	type PBScoreDocument,
+	type ScoreData,
+	type ScoreDocument,
+	type UGPTSettingsDocument,
+	type UserDocument,
+	type UserGameStats,
+	type V3Game,
 } from "tachi-common";
 
 import {
@@ -56,7 +53,7 @@ export function dmf<T extends object>(base: T, modifant: DeepPartial<T>): T {
 	// @ts-expect-error LOLDEEPMERGETYPES
 	return deepmerge(base, modifant, {
 		// The new array should replace the former one, instead of joining them together.
-		arrayMerge: (originalArray, newArray) => newArray as Array<unknown>,
+		arrayMerge: (_originalArray, newArray) => newArray as Array<unknown>,
 	});
 }
 
@@ -66,7 +63,7 @@ export function dmf<T extends object>(base: T, modifant: DeepPartial<T>): T {
  *
  * @param userID - The userID this fake user should have.
  */
-export function mkFakeUser(userID: integer, modifant: DeepPartial<MONGO_UserDocument> = {}) {
+export function mkFakeUser(userID: integer, modifant: DeepPartial<UserDocument> = {}) {
 	return dmf(FakeOtherUser, {
 		id: userID,
 		username: `user${userID}`,
@@ -77,63 +74,60 @@ export function mkFakeUser(userID: integer, modifant: DeepPartial<MONGO_UserDocu
 
 export function mkFakeGameSettings(
 	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
-	modifant: DeepPartial<MONGO_UGPTSettingsDocument> = {},
+	game: V3Game,
+	modifant: DeepPartial<UGPTSettingsDocument> = {},
 ) {
 	return dmf(FakeGameSettings, {
 		userID,
 		game,
-		playtype,
 		...modifant,
 	});
 }
 
-export function mkFakeImport(modifant: DeepPartial<MONGO_ImportDocument> = {}) {
+export function mkFakeImport(modifant: DeepPartial<ImportDocument> = {}) {
 	return dmf(FakeImport, modifant);
 }
 
-export function mkFakeScoreIIDXSP(modifant: DeepPartial<MONGO_ScoreDocument<"iidx:SP">> = {}) {
+export function mkFakeScoreIIDXSP(modifant: DeepPartial<ScoreDocument<"iidx-sp">> = {}) {
 	return dmf(TestingIIDXSPScore, modifant);
 }
 
-export function mkFakeScoreSDVX(modifant: DeepPartial<MONGO_ScoreDocument<"sdvx:Single">> = {}) {
+export function mkFakeScoreSDVX(modifant: DeepPartial<ScoreDocument<"sdvx">> = {}) {
 	return dmf(TestingSDVXScore, modifant);
 }
 
-export function mkFakePBIIDXSP(modifant: DeepPartial<MONGO_PBScoreDocument<"iidx:SP">> = {}) {
+export function mkFakePBIIDXSP(modifant: DeepPartial<PBScoreDocument<"iidx-sp">> = {}) {
 	return dmf(TestingIIDXSPScorePB, modifant);
 }
 
-export function mkFakePBDDRSP(modifant: DeepPartial<MONGO_PBScoreDocument<"ddr:SP">> = {}) {
+export function mkFakePBDDRSP(modifant: DeepPartial<PBScoreDocument<"ddr-sp">> = {}) {
 	return dmf(TestingDDRSPScorePB, modifant);
 }
 
-export function mkFakePBJubeat(modifant: DeepPartial<MONGO_PBScoreDocument<"jubeat:Single">> = {}) {
+export function mkFakePBJubeat(modifant: DeepPartial<PBScoreDocument<"jubeat">> = {}) {
 	return dmf(TestingJubeatPB, modifant);
 }
 
-export function mkFakeNotification(modifant: DeepPartial<MONGO_NotificationDocument> = {}) {
+export function mkFakeNotification(modifant: DeepPartial<NotificationDocument> = {}) {
 	return dmf(FakeNotification, modifant);
 }
 
-export function mkFakeGoal(modifant: DeepPartial<MONGO_GoalDocument> = {}) {
+export function mkFakeGoal(modifant: DeepPartial<GoalDocument> = {}) {
 	return dmf(HC511Goal, modifant);
 }
 
-export function mkFakeGoalSub(modifant: DeepPartial<MONGO_GoalSubscriptionDocument> = {}) {
+export function mkFakeGoalSub(modifant: DeepPartial<GoalSubscriptionDocument> = {}) {
 	return dmf(HC511UserGoal, modifant);
 }
 
 export function mkFakeGameStats(
 	userID: integer,
-	modifant: DeepPartial<MONGO_UserGameStats> = {},
-): MONGO_UserGameStats {
+	modifant: DeepPartial<UserGameStats> = {},
+): UserGameStats {
 	return dmf(
 		{
 			userID,
-			game: "iidx",
-			playtype: "SP",
+			game: "iidx-sp",
 			classes: {},
 			ratings: {},
 		},
@@ -144,7 +138,7 @@ export function mkFakeGameStats(
 
 export function mkFakeSDVXChart(
 	chartID: string,
-	modifant: DeepPartial<MONGO_ChartDocument<"sdvx:Single">> = {},
+	modifant: DeepPartial<ChartDocument<"sdvx">> = {},
 ) {
 	return dmf(TestingSDVXAlbidaChart, {
 		chartID,
@@ -152,53 +146,48 @@ export function mkFakeSDVXChart(
 	});
 }
 
-export function mkFakeSDVXPB(modifant: DeepPartial<MONGO_PBScoreDocument<"sdvx:Single">> = {}) {
+export function mkFakeSDVXPB(modifant: DeepPartial<PBScoreDocument<"sdvx">> = {}) {
 	return dmf(TestingSDVXPB, modifant);
 }
 
-export function mkMockPB<GPT extends GPTString>(
-	game: GameGroup,
-	playtype: Playtype,
-	chart: MONGO_ChartDocument<GPT>,
-	scoreData: MONGO_ScoreData<GPT>,
-): MONGO_PBScoreDocument<GPT> {
+export function mkMockPB<TGame extends V3Game>(
+	game: TGame,
+	chart: ChartDocument<TGame>,
+	scoreData: ScoreData<TGame>,
+): PBScoreDocument<TGame> {
 	return {
 		userID: 1,
-		composedFrom: [{ name: "Best Percent", scoreID: `TEST_${game}:${playtype}_SCORE` }],
+		composedFrom: [{ name: "Best Percent", scoreID: `TEST_${game}_SCORE` }],
 		game,
-		playtype,
 		highlight: false,
 		isPrimary: true,
 		rankingData: { outOf: 1, rank: 1, rivalRank: null },
-		songID: chart.songID,
-		chartID: MongoChartLegacyId(chart),
+		songID: chart.song.id,
+		chartID: chart.chartID,
 		calculatedData: {},
 		scoreData,
 		timeAchieved: null,
 	};
 }
 
-export function mkMockScore<GPT extends GPTString>(
-	game: GameGroup,
-	playtype: Playtype,
-	chart: MONGO_ChartDocument<GPT>,
-	scoreData: MONGO_ScoreData<GPT>,
-): MONGO_ScoreDocument<GPT> {
-	// @ts-expect-error whatever lol
+export function mkMockScore<TGame extends V3Game>(
+	game: TGame,
+	chart: ChartDocument<TGame>,
+	scoreData: ScoreData<TGame>,
+): ScoreDocument<TGame> {
 	return {
 		userID: 1,
 		game,
-		playtype,
 		highlight: false,
 		isPrimary: true,
-		songID: chart.songID,
-		chartID: MongoChartLegacyId(chart),
+		songID: chart.song.id,
+		chartID: chart.chartID,
 		calculatedData: {},
 		scoreData,
 		timeAchieved: null,
 		comment: null,
 		importType: null,
-		scoreID: `TEST_${game}:${playtype}_SCORE`,
+		scoreID: `TEST_${game}_SCORE`,
 		scoreMeta: {},
 		service: "TESTING",
 		timeAdded: 1,

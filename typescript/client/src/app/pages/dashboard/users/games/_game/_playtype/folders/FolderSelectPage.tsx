@@ -17,21 +17,20 @@ import { APIFetchV1 } from "#util/api";
 import { Reverse, UppercaseFirst } from "#util/misc";
 import React, { useContext, useMemo, useState } from "react";
 import {
-	GetGamePTConfig,
-	GetGPTString,
+	type FolderDocument,
+	GetGameConfig,
 	GetScoreMetricConf,
 	GetScoreMetrics,
-	type MONGO_FolderDocument,
 } from "tachi-common";
 import { type ConfEnumScoreMetric } from "tachi-common/types/metrics";
 
-export default function FoldersSearch({ reqUser, game, playtype }: UGPT) {
+export default function FoldersSearch({ reqUser, game }: UGPT) {
 	const [search, setSearch] = useState("");
 
 	const params = useMemo(() => new URLSearchParams({ search }), [search]);
 
 	const { data, error } = useApiQuery<UGPTFolderSearch>(
-		`/users/${reqUser.id}/games/${game}/${playtype}/folders?${params.toString()}`,
+		`/users/${reqUser.id}/games/${game}/folders?${params.toString()}`,
 	);
 
 	let body = <></>;
@@ -44,7 +43,7 @@ export default function FoldersSearch({ reqUser, game, playtype }: UGPT) {
 		const statMap = new Map();
 
 		for (const stat of data.stats) {
-			statMap.set(stat.folderID, stat);
+			statMap.set(stat.slug, stat);
 		}
 
 		body = (
@@ -55,10 +54,9 @@ export default function FoldersSearch({ reqUser, game, playtype }: UGPT) {
 				{data.folders.map((e) => (
 					<FolderInfoComponent
 						folder={e}
-						folderStats={statMap.get(e.folderID)!}
+						folderStats={statMap.get(e.slug)!}
 						game={game}
-						key={e.folderID}
-						playtype={playtype}
+						key={e.slug}
 						reqUser={reqUser}
 					/>
 				))}
@@ -81,21 +79,20 @@ export default function FoldersSearch({ reqUser, game, playtype }: UGPT) {
 export function FolderInfoComponent({
 	reqUser,
 	game,
-	playtype,
 	folderStats,
 	folder,
-}: { folder: MONGO_FolderDocument; folderStats: FolderStatsInfo } & UGPT) {
-	const gptConfig = GetGamePTConfig(game, playtype);
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, playtype)];
+}: { folder: FolderDocument; folderStats: FolderStatsInfo } & UGPT) {
+	const gameConfig = GetGameConfig(game);
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
-	const preferredDefaultEnum = useBucket(game, playtype);
+	const preferredDefaultEnum = useBucket(game);
 
 	const [metric, setMetric] = useState<string>(preferredDefaultEnum);
 
-	const base = useUGPTBase({ reqUser, game, playtype });
+	const base = useUGPTBase({ reqUser, game });
 
 	const dataset = useMemo(() => {
-		const conf = GetScoreMetricConf(gptConfig, metric) as ConfEnumScoreMetric<string>;
+		const conf = GetScoreMetricConf(gameConfig, metric) as ConfEnumScoreMetric<string>;
 
 		return (
 			<DistributionTable
@@ -119,12 +116,12 @@ export function FolderInfoComponent({
 							onClick={() => {
 								if (user?.id === reqUser.id) {
 									APIFetchV1(
-										`/users/${reqUser.id}/games/${game}/${playtype}/folders/${folder.folderID}/viewed`,
+										`/users/${reqUser.id}/games/${game}/folders/${folder.slug}/viewed`,
 										{ method: "POST" },
 									);
 								}
 							}}
-							to={`${base}/folders/${folder.folderID}`}
+							to={`${base}/folders/${folder.slug}`}
 							variant="outline-info"
 						>
 							View
@@ -136,7 +133,7 @@ export function FolderInfoComponent({
 				<div className="row text-center">
 					<div className="col-12">
 						<div className="btn-group">
-							{GetScoreMetrics(gptConfig, "ENUM").map((e) => (
+							{GetScoreMetrics(gameConfig, "ENUM").map((e) => (
 								<SelectButton id={e} key={e} setValue={setMetric} value={metric}>
 									{/* @ts-expect-error this access is legal zzz */}
 									<Icon type={gptImpl.enumIcons[e]} /> {UppercaseFirst(e)}s

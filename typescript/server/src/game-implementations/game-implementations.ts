@@ -1,4 +1,4 @@
-import type { GPTImplementations } from "./types";
+import type { GameImplementations } from "./types";
 
 import { ARCAEA_IMPL } from "./games/arcaea";
 import { BMS_7K_IMPL, BMS_14K_IMPL, PMS_CONTROLLER_IMPL, PMS_KEYBOARD_IMPL } from "./games/bms-pms";
@@ -12,7 +12,7 @@ import { MAIMAI_IMPL } from "./games/maimai";
 import { MAIMAIDX_IMPL } from "./games/maimaidx";
 import { MUSECA_IMPL } from "./games/museca";
 import { ONGEKI_IMPL } from "./games/ongeki";
-import { POPN_9B_IMPL } from "./games/popn";
+import { POPN_IMPL } from "./games/popn";
 import { SDVX_IMPL } from "./games/sdvx";
 import { USC_CONTROLLER_IMPL, USC_KEYBOARD_IMPL } from "./games/usc";
 import { WACCA_IMPL } from "./games/wacca";
@@ -25,28 +25,28 @@ import { WACCA_IMPL } from "./games/wacca";
  *
  * Basically, anything that can't be done in the common config, specific to the server.
  */
-export const GPT_SERVER_IMPLEMENTATIONS: GPTImplementations = {
-	"bms:14K": BMS_14K_IMPL,
-	"bms:7K": BMS_7K_IMPL,
-	"pms:Controller": PMS_CONTROLLER_IMPL,
-	"pms:Keyboard": PMS_KEYBOARD_IMPL,
-	"iidx:SP": IIDX_SP_IMPL,
-	"iidx:DP": IIDX_DP_IMPL,
-	"wacca:Single": WACCA_IMPL,
-	"chunithm:Single": CHUNITHM_IMPL,
-	"gitadora:Dora": GITADORA_DORA_IMPL,
-	"gitadora:Gita": GITADORA_GITA_IMPL,
-	"itg:Stamina": ITG_STAMINA_IMPL,
-	"jubeat:Single": JUBEAT_IMPL,
-	"maimai:Single": MAIMAI_IMPL,
-	"maimaidx:Single": MAIMAIDX_IMPL,
-	"museca:Single": MUSECA_IMPL,
-	"popn:9B": POPN_9B_IMPL,
-	"usc:Controller": USC_CONTROLLER_IMPL,
-	"usc:Keyboard": USC_KEYBOARD_IMPL,
-	"sdvx:Single": SDVX_IMPL,
-	"arcaea:Touch": ARCAEA_IMPL,
-	"ongeki:Single": ONGEKI_IMPL,
-	"ddr:SP": DDR_IMPL,
-	"ddr:DP": DDR_IMPL,
+export const GAME_IMPLEMENTATIONS: GameImplementations = {
+	"bms-14k": BMS_14K_IMPL,
+	"bms-7k": BMS_7K_IMPL,
+	"pms-controller": PMS_CONTROLLER_IMPL,
+	"pms-keyboard": PMS_KEYBOARD_IMPL,
+	"iidx-sp": IIDX_SP_IMPL,
+	"iidx-dp": IIDX_DP_IMPL,
+	wacca: WACCA_IMPL,
+	chunithm: CHUNITHM_IMPL,
+	"gitadora-dora": GITADORA_DORA_IMPL,
+	"gitadora-gita": GITADORA_GITA_IMPL,
+	"itg-stamina": ITG_STAMINA_IMPL,
+	jubeat: JUBEAT_IMPL,
+	maimai: MAIMAI_IMPL,
+	maimaidx: MAIMAIDX_IMPL,
+	museca: MUSECA_IMPL,
+	popn: POPN_IMPL,
+	"usc-controller": USC_CONTROLLER_IMPL,
+	"usc-keyboard": USC_KEYBOARD_IMPL,
+	sdvx: SDVX_IMPL,
+	arcaea: ARCAEA_IMPL,
+	ongeki: ONGEKI_IMPL,
+	"ddr-sp": DDR_IMPL,
+	"ddr-dp": DDR_IMPL,
 };

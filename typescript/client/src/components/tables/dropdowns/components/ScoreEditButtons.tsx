@@ -5,15 +5,15 @@ import { type SetState } from "#types/react";
 import { APIFetchV1 } from "#util/api";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Button, Form, InputGroup, Modal } from "react-bootstrap";
-import { type MONGO_ScoreDocument } from "tachi-common";
+import { type ScoreDocument } from "tachi-common";
 
 export default function ScoreEditButtons({
 	score,
 	scoreState,
 	onScoreUpdate,
 }: {
-	onScoreUpdate?: (sc: MONGO_ScoreDocument) => void;
-	score: MONGO_ScoreDocument;
+	onScoreUpdate?: (sc: ScoreDocument) => void;
+	score: ScoreDocument;
 	scoreState: {
 		comment: string | null;
 		highlight: boolean;

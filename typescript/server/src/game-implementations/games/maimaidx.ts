@@ -1,4 +1,4 @@
-import type { GPTServerImplementation } from "#game-implementations/types";
+import type { GameImplementation } from "#game-implementations/types";
 
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileSumBestN } from "#game-implementations/utils/profile-calc";
@@ -9,7 +9,7 @@ import { GetGrade, MAIMAIDX_GBOUNDARIES } from "tachi-common";
 
 import { GoalFmtPercent, GoalOutOfFmtPercent, GradeGoalFormatter } from "./_common";
 
-export const MAIMAIDX_IMPL: GPTServerImplementation<"maimaidx:Single"> = {
+export const MAIMAIDX_IMPL: GameImplementation<"maimaidx"> = {
 	chartSpecificValidators: {},
 	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(MAIMAIDX_GBOUNDARIES, scoreData.percent),
@@ -28,8 +28,8 @@ export const MAIMAIDX_IMPL: GPTServerImplementation<"maimaidx:Single"> = {
 	sessionCalcs: (arr) => ({
 		rate: SessionAvgBest10For("rate")(arr),
 	}),
-	profileCalcs: async (game, playtype, userID) => ({
-		naiveRate: await ProfileSumBestN("rate", 50)(game, playtype, userID),
+	profileCalcs: async (game, userID) => ({
+		naiveRate: await ProfileSumBestN("rate", 50)(game, userID),
 	}),
 	classDerivers: (ratings) => {
 		const rate = ratings.naiveRate;
@@ -91,7 +91,7 @@ export const MAIMAIDX_IMPL: GPTServerImplementation<"maimaidx:Single"> = {
 		),
 	],
 	defaultMergeRefName: "Best Percent",
-	derivationRelevantFields: ["levelNum"],
+	chartDataRelevantFields: ["levelNum"],
 	scoreValidators: [
 		(s) => {
 			if (s.scoreData.lamp === "ALL PERFECT+" && s.scoreData.percent !== 101) {

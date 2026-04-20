@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { type Difficulties, type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
+import { type ChartDocument, type Difficulties, type SongDocument } from "tachi-common";
 
 import { CreateChartID, MutateCollection, ReadCollection, WriteCollection } from "../../util";
 
@@ -14,7 +14,7 @@ if (!CHUNIREC_TOKEN) {
 
 type ShortDifficultyNames = "adv" | "bas" | "exp" | "mas" | "ult";
 
-const DIFFICULTY_MAP = new Map<ShortDifficultyNames, Difficulties["chunithm:Single"]>([
+const DIFFICULTY_MAP = new Map<ShortDifficultyNames, Difficulties["chunithm"]>([
 	["adv", "ADVANCED"],
 	["bas", "BASIC"],
 	["exp", "EXPERT"],
@@ -138,24 +138,24 @@ function releaseDateToVersion(date: Date): string {
 }
 
 (async () => {
-	const chunithmSongs: ChunithmSong[] = await fetch(DATA_URL, {}).then((r: Response) => r.json());
+	const chunithmSongs: ChunithmSong[] = await fetch(DATA_URL, {}).then((r) => r.json());
 	const chunirecSongs: ChunirecSong[] = await fetch(
 		`https://api.chunirec.net/2.0/music/showall.json?token=${CHUNIREC_TOKEN}&region=jp2`,
 		{},
-	).then((r: Response) => r.json());
+	).then((r) => r.json());
 
 	const existingChartDocs = ReadCollection("charts-chunithm.json");
 
 	const inGameIDToSongIDMap = new Map<number, number>();
-	const existingCharts = new Map<string, MONGO_ChartDocument<"chunithm:Single">>();
+	const existingCharts = new Map<string, ChartDocument<"chunithm">>();
 
 	for (const chart of existingChartDocs) {
-		inGameIDToSongIDMap.set(chart.data.inGameID, chart.songID);
+		inGameIDToSongIDMap.set(chart.data.inGameID, chart.song.id);
 		existingCharts.set(`${chart.data.inGameID}-${chart.difficulty}`, chart);
 	}
 
-	const newSongs: Array<MONGO_SongDocument<"chunithm">> = [];
-	const newCharts: Array<MONGO_ChartDocument<"chunithm:Single">> = [];
+	const newSongs: Array<SongDocument<"chunithm">> = [];
+	const newCharts: Array<ChartDocument<"chunithm">> = [];
 
 	for (const chunithmSong of chunithmSongs) {
 		const inGameID = Number(chunithmSong.id);
@@ -224,6 +224,7 @@ function releaseDateToVersion(date: Date): string {
 			}
 
 			newCharts.push({
+				game: "chunithm" as const,
 				chartID: CreateChartID(),
 				data: {
 					inGameID,
@@ -239,7 +240,7 @@ function releaseDateToVersion(date: Date): string {
 		}
 	}
 
-	MutateCollection("songs-chunithm.json", (songs: Array<MONGO_SongDocument<"chunithm">>) => [
+	MutateCollection("songs-chunithm.json", (songs: Array<SongDocument<"chunithm">>) => [
 		...songs,
 		...newSongs,
 	]);

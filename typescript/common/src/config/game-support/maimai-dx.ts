@@ -1,20 +1,21 @@
 import { p } from "prudence";
 import { z } from "zod";
 
-import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_PT_CONFIG } from "../../types/internals";
+import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
 import { FmtPercent } from "../../utils/util";
 import { ClassValue, NoDecimalPlace } from "../config-utils";
 import { FAST_SLOW_MAXCOMBO } from "./_common";
 
-export const MAIMAI_DX_CONF = {
+export const GAME_GROUP_MAIMAI_DX_CONF = {
 	name: "maimai DX",
+	games: ["maimaidx"],
 	playtypes: ["Single"],
 	songData: z.strictObject({
 		genre: z.string(),
 		duration: z.number().optional(),
 	}),
-} as const satisfies INTERNAL_GAME_CONFIG;
+} as const satisfies INTERNAL_GAME_GROUP_CONFIG;
 
 const MaimaiDXDans = [
 	ClassValue("DAN_1", "初段", "1st Dan"),
@@ -66,7 +67,6 @@ const MaimaiDXMatchingClasses = [
 	ClassValue("B1", "B1"),
 
 	ClassValue("A5", "A5"),
-	ClassValue("A5", "A5"),
 	ClassValue("A4", "A4"),
 	ClassValue("A3", "A3"),
 	ClassValue("A2", "A2"),
@@ -93,7 +93,7 @@ const MaimaiDXMatchingClasses = [
 	ClassValue("LEGEND", "Legend"),
 ];
 
-export const MAIMAI_DX_SINGLE_CONF = {
+export const GAME_MAIMAI_DX_CONF = {
 	providedMetrics: {
 		percent: {
 			type: "DECIMAL",
@@ -187,7 +187,7 @@ export const MAIMAI_DX_SINGLE_CONF = {
 			"DX Master",
 			"DX Re:Master",
 		],
-		shorthand: {
+		format: {
 			Basic: "BAS",
 			Advanced: "ADV",
 			Expert: "EXP",
@@ -244,4 +244,4 @@ export const MAIMAI_DX_SINGLE_CONF = {
 	scoreMeta: z.strictObject({}),
 
 	supportedMatchTypes: ["songTitle", "tachiSongID", "inGameID"],
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;

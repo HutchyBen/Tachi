@@ -1,6 +1,7 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
 import type { EmptyObject } from "#utils/types";
-import type { MONGO_ScoreData } from "tachi-common";
+import type { ScoreData } from "tachi-common";
 
 import {
 	InternalFailure,
@@ -16,7 +17,6 @@ import {
 import { FindChartOnInGameID } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { ConverterFunction } from "../../common/types";
 import type { MytOngekiScore } from "./types";
 
 const DIFFICULTIES = {
@@ -32,7 +32,7 @@ function getNoteLamp(
 	comboStatus: number,
 	clearStatus: number,
 	techScore: number,
-): MONGO_ScoreData<"ongeki:Single">["noteLamp"] | undefined {
+): ScoreData<"ongeki">["noteLamp"] | undefined {
 	if (
 		comboStatus === OngekiComboStatus.UNSPECIFIED ||
 		clearStatus === OngekiClearStatus.UNSPECIFIED
@@ -92,7 +92,7 @@ const ConvertAPIMytOngeki: ConverterFunction<MytOngekiScore, EmptyObject> = asyn
 		);
 	}
 
-	const chart = await FindChartOnInGameID("ongeki", data.info.musicId, "Single", difficulty);
+	const chart = await FindChartOnInGameID("ongeki", data.info.musicId, difficulty);
 
 	if (chart === null) {
 		throw new SongOrChartNotFoundFailure(
@@ -103,14 +103,14 @@ const ConvertAPIMytOngeki: ConverterFunction<MytOngekiScore, EmptyObject> = asyn
 		);
 	}
 
-	const song = await FindSongOnID("ongeki", chart.songID);
+	const song = await FindSongOnID("ongeki", chart.song.id);
 
 	if (song === null) {
-		log.error({ chart }, `Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
-		throw new InternalFailure(`Song/chart desync: ${chart.songID} for chart ${chart.chartID}`);
+		log.error({ chart }, `Song/chart desync: ${chart.song.id} for chart ${chart.chartID}`);
+		throw new InternalFailure(`Song/chart desync: ${chart.song.id} for chart ${chart.chartID}`);
 	}
 
-	const dryScore: DryScore<"ongeki:Single"> = {
+	const dryScore: DryScore<"ongeki"> = {
 		service: "MYT",
 		game: "ongeki",
 		scoreMeta: {},

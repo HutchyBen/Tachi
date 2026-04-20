@@ -10,23 +10,22 @@ import { type UnsuccessfulAPIFetchResponse } from "#util/api";
 import { CreateGoalSubDataset, CreateUserMap } from "#util/data";
 import React, { useState } from "react";
 import { Button, Col } from "react-bootstrap";
-import { FormatChart, type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
+import { type ChartDocument, FormatChart, type SongDocument } from "tachi-common";
 
 export default function TargetInfo({
 	data,
 	error,
 	game,
-	playtype,
 	reqUser,
 	chart,
 	song,
 	onGoalSet,
 }: {
-	chart: MONGO_ChartDocument;
+	chart: ChartDocument;
 	data: GoalsOnChartReturn | undefined;
 	error: UnsuccessfulAPIFetchResponse | null;
 	onGoalSet: () => void;
-	song: MONGO_SongDocument;
+	song: SongDocument;
 } & UGPT) {
 	const [show, setShow] = useState(false);
 
@@ -45,11 +44,11 @@ export default function TargetInfo({
 	return (
 		<div className="w-100">
 			<Col xs={12}>
-				<h1>Your Goals involving {FormatChart(game, song, chart)}</h1>
+				<h1>Your Goals involving {FormatChart(chart)}</h1>
 				<Divider />
 			</Col>
 			<Col xs={12}>
-				<GoalSubInfo dataset={dataset} game={game} playtype={playtype} />
+				<GoalSubInfo dataset={dataset} game={game} />
 			</Col>
 
 			<Divider />
@@ -59,7 +58,6 @@ export default function TargetInfo({
 			<SetNewGoalModal
 				game={game}
 				onNewGoalSet={onGoalSet}
-				playtype={playtype}
 				preData={{ chart, song }}
 				reqUser={reqUser}
 				setShow={setShow}

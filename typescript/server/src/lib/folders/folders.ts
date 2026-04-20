@@ -2,43 +2,43 @@ import type { Kysely } from "kysely";
 import type { Database } from "tachi-db";
 
 import { SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart";
-import { LoadFolderDocumentsByIds } from "#lib/db-formats/folders";
+import {
+	LoadFolderDocumentsByGameAndSlugs,
+	LoadFolderDocumentsByIds,
+} from "#lib/db-formats/folders";
 import { LoadPbsForUserOnChartsByPgIds } from "#lib/db-formats/pb";
-import { GetSongsByLegacyIDs } from "#lib/db-formats/song";
+import { GetSongsByIDs } from "#lib/db-formats/song";
 import { LoadTableDocumentByLegacyId } from "#lib/db-formats/table";
 import { log } from "#lib/log/log";
 import { pgScoreDataToMongo } from "#lib/v3/migration-tools";
-import DB from "#services/pg/db.js";
+import DB from "#services/pg/db";
 import { GetFolderForIDGuaranteed } from "#utils/db";
 import { ISO8601ToUnixMilliseconds, UnixMillisecondsToISO8601 } from "#utils/time";
 import fjsh from "fast-json-stable-hash";
 import {
-	FormatGameGroup,
-	type GameGroup,
-	GamePTToV3,
-	GetGamePTConfig,
+	type ChartDocument,
+	type FolderDocument,
+	FormatGame,
+	GetGameConfig,
 	GetScoreEnumConfs,
 	GetScoreMetrics,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_FolderDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_RecentlyViewedFolderDocument,
-	type MONGO_SongDocument,
-	type MONGO_TableDocument,
-	type Playtype,
-	V3ToGamePT,
+	type PBScoreDocument,
+	type RecentlyViewedFolderDocument,
+	type SongDocument,
+	type TableDocument,
+	type V3Game,
 } from "tachi-common";
 
 import {
 	BuildFolderQuery as BuildFolderQueryImpl,
 	GetFolderChartIDs as GetFolderChartIDsImpl,
-} from "./folder-query.js";
+} from "./folder-query";
 
 /** Loads charts for a folder using `folder_chart_lookup` + `chart` / `song` joins. */
 export async function GetFolderCharts(
-	folder: MONGO_FolderDocument,
-): Promise<{ charts: Array<MONGO_ChartDocument> }> {
+	folder: FolderDocument,
+): Promise<{ charts: Array<ChartDocument> }> {
 	const chartIds = await GetFolderChartIDs(folder.folderID);
 
 	if (chartIds.length === 0) {
@@ -57,12 +57,12 @@ export async function GetFolderCharts(
 }
 
 export async function GetFolderChartsAndSongs(
-	folder: MONGO_FolderDocument,
-): Promise<{ charts: Array<MONGO_ChartDocument>; songs: Array<MONGO_SongDocument> }> {
+	folder: FolderDocument,
+): Promise<{ charts: Array<ChartDocument>; songs: Array<SongDocument> }> {
 	const { charts } = await GetFolderCharts(folder);
 
-	const legacyIds = [...new Set(charts.map((e) => e.songID))];
-	const songs = await GetSongsByLegacyIDs(folder.game, legacyIds);
+	const legacyIds = [...new Set(charts.map((e) => e.song.id))];
+	const songs = await GetSongsByIDs(legacyIds);
 
 	return { songs, charts };
 }
@@ -89,12 +89,12 @@ export async function GetFolderIDsForChartId(chartId: string, db: Kysely<Databas
 	return rows.map((r) => r.folder_id);
 }
 
-export async function GetFoldersFromTable(table: MONGO_TableDocument) {
-	const folderMap = await LoadFolderDocumentsByIds(table.folders);
-	const folders: Array<MONGO_FolderDocument> = [];
+export async function GetFoldersFromTable(table: TableDocument) {
+	const folderMap = await LoadFolderDocumentsByGameAndSlugs(table.game, table.folders);
+	const folders: Array<FolderDocument> = [];
 
-	for (const folderID of table.folders) {
-		const doc = folderMap.get(folderID);
+	for (const slug of table.folders) {
+		const doc = folderMap.get(slug);
 
 		if (doc) {
 			folders.push(doc);
@@ -114,26 +114,26 @@ export async function GetFoldersFromTable(table: MONGO_TableDocument) {
 /**
  * Get the names of all the folders in a Tachi Table in-order.
  */
-export async function GetFolderNamesInOrder(table: MONGO_TableDocument): Promise<Array<string>> {
+export async function GetFolderNamesInOrder(table: TableDocument): Promise<Array<string>> {
 	const folders = await GetFoldersFromTable(table);
 
 	// we have to iterate over these folders in the order the table document says
 	// to
 	// as bms tables are somewhat sensitive to being placed in the correct order.
-	const folderMap = new Map<string, MONGO_FolderDocument>();
+	const folderMap = new Map<string, FolderDocument>();
 
 	for (const folder of folders) {
-		folderMap.set(folder.folderID, folder);
+		folderMap.set(folder.slug, folder);
 	}
 
 	const orderedNames = [];
 
-	for (const folderID of table.folders) {
-		const folder = folderMap.get(folderID);
+	for (const slug of table.folders) {
+		const folder = folderMap.get(slug);
 
 		if (!folder) {
 			log.warn(
-				`Table '${table.title}' refers to folder '${folderID}', but no such folder exists? Ignoring.`,
+				`Table '${table.title}' refers to folder '${slug}', but no such folder exists? Ignoring.`,
 			);
 			continue;
 		}
@@ -144,7 +144,7 @@ export async function GetFolderNamesInOrder(table: MONGO_TableDocument): Promise
 	return orderedNames;
 }
 
-export async function GetPBsOnFolder(userID: integer, folder: MONGO_FolderDocument) {
+export async function GetPBsOnFolder(userID: integer, folder: FolderDocument) {
 	const { charts, songs } = await GetFolderChartsAndSongs(folder);
 	const chartIds = charts.map((e) => e.chartID);
 
@@ -159,12 +159,12 @@ export async function GetPBsOnFolder(userID: integer, folder: MONGO_FolderDocume
 /**
  * Get the distribution for this all gpt enums for this user on this folder.
  */
-export async function GetEnumDistForFolder(userID: integer, folder: MONGO_FolderDocument) {
+export async function GetEnumDistForFolder(userID: integer, folder: FolderDocument) {
 	const pbData = await GetPBsOnFolder(userID, folder);
 
-	const gptConfig = GetGamePTConfig(folder.game, folder.playtype);
+	const gameConfig = GetGameConfig(folder.game);
 
-	const enumMetrics = GetScoreMetrics(gptConfig, "ENUM");
+	const enumMetrics = GetScoreMetrics(gameConfig, "ENUM");
 
 	const allEnumDists: Record<string, Record<string, integer>> = {};
 
@@ -174,17 +174,17 @@ export async function GetEnumDistForFolder(userID: integer, folder: MONGO_Folder
 
 	const chartIDs = await GetFolderChartIDs(folder.folderID);
 
-	return { folderID: folder.folderID, chartCount: chartIDs.length, stats: allEnumDists };
+	return { slug: folder.slug, chartCount: chartIDs.length, stats: allEnumDists };
 }
 
 /**
  * Get the distribution for this all gpt enums for this user on all these folders.
  */
-export function GetEnumDistForFolders(userID: integer, folders: Array<MONGO_FolderDocument>) {
+export function GetEnumDistForFolders(userID: integer, folders: Array<FolderDocument>) {
 	return Promise.all(folders.map((folder) => GetEnumDistForFolder(userID, folder)));
 }
 
-function GetEnumDist(pbs: Array<MONGO_PBScoreDocument>, enumMetric: string) {
+function GetEnumDist(pbs: Array<PBScoreDocument>, enumMetric: string) {
 	const enumDist: Record<string, integer> = {};
 
 	for (const pb of pbs) {
@@ -201,50 +201,35 @@ function GetEnumDist(pbs: Array<MONGO_PBScoreDocument>, enumMetric: string) {
 	return enumDist;
 }
 
-export function CreateFolderID(
-	query: Record<string, unknown>,
-	game: GameGroup,
-	playtype: Playtype,
-) {
-	return `F${fjsh.hash({ game, playtype, ...query }, "SHA256")}`;
+export function CreateFolderID(query: Record<string, unknown>, game: V3Game) {
+	return `F${fjsh.hash({ game, ...query }, "SHA256")}`;
 }
 
-export async function GetRecentlyViewedFolders(
-	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
-) {
-	const v3Game = GamePTToV3(game, playtype);
-
+export async function GetRecentlyViewedFolders(userID: integer, game: V3Game) {
 	const rows = await DB.selectFrom("folder_view")
 		.innerJoin("folder", "folder.id", "folder_view.folder_id")
-		.select(["folder_view.folder_id", "folder_view.last_viewed", "folder.game"])
+		.select(["folder_view.folder_id", "folder_view.last_viewed", "folder.game", "folder.slug"])
 		.where("folder_view.user_id", "=", userID)
-		.where("folder.game", "=", v3Game)
+		.where("folder.game", "=", game)
 		.orderBy("folder_view.last_viewed", "desc")
 		.limit(6)
 		.execute();
 
 	if (rows.length === 0) {
-		const emptyViews: Array<MONGO_RecentlyViewedFolderDocument> = [];
+		const emptyViews: Array<RecentlyViewedFolderDocument> = [];
 
 		return { views: emptyViews, folders: [] };
 	}
 
-	const views: Array<MONGO_RecentlyViewedFolderDocument> = rows.map((r) => {
-		const { game: g, playtype: pt } = V3ToGamePT(r.game);
-
-		return {
-			userID,
-			game: g,
-			playtype: pt,
-			folderID: r.folder_id,
-			lastViewed: ISO8601ToUnixMilliseconds(r.last_viewed),
-		};
-	});
+	const views: Array<RecentlyViewedFolderDocument> = rows.map((r) => ({
+		userID,
+		game: r.game,
+		slug: r.slug,
+		lastViewed: ISO8601ToUnixMilliseconds(r.last_viewed),
+	}));
 
 	const folderMap = await LoadFolderDocumentsByIds(rows.map((r) => r.folder_id));
-	const folders: Array<MONGO_FolderDocument> = [];
+	const folders: Array<FolderDocument> = [];
 
 	for (const r of rows) {
 		const doc = folderMap.get(r.folder_id);
@@ -257,7 +242,7 @@ export async function GetRecentlyViewedFolders(
 	return { views, folders };
 }
 
-export async function GetTableForIDGuaranteed(tableID: string): Promise<MONGO_TableDocument> {
+export async function GetTableForIDGuaranteed(tableID: string): Promise<TableDocument> {
 	const table = await LoadTableDocumentByLegacyId(tableID);
 
 	if (!table) {
@@ -283,12 +268,11 @@ export async function GetEnumDistForFolderAsOf(
 ) {
 	const chartIDs = await GetFolderChartIDs(folderID);
 	const folder = await GetFolderForIDGuaranteed(folderID);
-	const { game, playtype } = folder;
 
-	const gptConfig = GetGamePTConfig(folder.game, folder.playtype);
+	const gameConfig = GetGameConfig(folder.game);
 
-	const enumMetrics = GetScoreEnumConfs(gptConfig);
-	const v3Game = GamePTToV3(game, playtype);
+	const enumMetrics = GetScoreEnumConfs(gameConfig);
+	const v3Game = folder.game;
 	const beforeIso = UnixMillisecondsToISO8601(beforeTime);
 
 	const metricKeys = Object.keys(enumMetrics);
@@ -357,10 +341,7 @@ export async function GetEnumDistForFolderAsOf(
 
 			if (!val) {
 				log.warn(
-					`Failed to resolve ${metric} index '${score[metric]}' for ${FormatGameGroup(
-						game,
-						playtype,
-					)}.`,
+					`Failed to resolve ${metric} index '${score[metric]}' for ${FormatGame(v3Game)}.`,
 				);
 				continue;
 			}

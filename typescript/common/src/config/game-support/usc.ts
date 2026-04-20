@@ -1,20 +1,21 @@
 import { p } from "prudence";
 import { z } from "zod";
 
-import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_PT_CONFIG } from "../../types/internals";
+import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
 import { FmtNum, FmtPercent } from "../../utils/util";
 import { ToDecimalPlaces } from "../config-utils";
 import { FAST_SLOW_MAXCOMBO } from "./_common";
 import { SDVXVFClasses } from "./sdvx";
 
-export const USC_CONF = {
+export const GAME_GROUP_USC_CONF = {
 	name: "USC",
+	games: ["usc-controller", "usc-keyboard"],
 	playtypes: ["Controller", "Keyboard"],
 	songData: z.strictObject({}),
-} as const satisfies INTERNAL_GAME_CONFIG;
+} as const satisfies INTERNAL_GAME_GROUP_CONFIG;
 
-export const USC_CONTROLLER_CONF = {
+export const GAME_USC_CONTROLLER_CONF = {
 	providedMetrics: {
 		score: {
 			type: "INTEGER",
@@ -87,7 +88,9 @@ export const USC_CONTROLLER_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["NOV", "ADV", "EXH", "INF"],
-		shorthand: {}, // they're all already short enough.
+		// deliberately not ported to v3 - formatting of charts as
+		// "CON EXH" etc.
+		format: {},
 		default: "EXH",
 	},
 
@@ -117,6 +120,6 @@ export const USC_CONTROLLER_CONF = {
 	}),
 
 	supportedMatchTypes: ["uscChartHash", "tachiSongID"],
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;
 
-export const USC_KEYBOARD_CONF = USC_CONTROLLER_CONF;
+export const GAME_USC_KEYBOARD_CONF = GAME_USC_CONTROLLER_CONF;

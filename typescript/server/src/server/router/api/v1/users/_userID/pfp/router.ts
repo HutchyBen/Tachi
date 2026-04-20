@@ -1,17 +1,17 @@
-import { ACTION_ChangePfp } from "#actions/change-pfp.js";
-import { ACTION_DeletePfp } from "#actions/delete-pfp.js";
+import { ACTION_ChangePfp } from "#actions/change-pfp";
+import { ACTION_DeletePfp } from "#actions/delete-pfp";
 import { CDNRedirect } from "#lib/cdn/cdn";
 import { GetProfilePictureURL } from "#lib/cdn/url-format";
 import { ONE_MEGABYTE } from "#lib/constants/filesize";
 import { log } from "#lib/log/log";
+import { withAuthedAsUser, withPermission, withRequestedUser } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
 import { RequirePermissions } from "#server/middleware/auth";
 import { CreateMulterSingleUploadMiddleware } from "#server/middleware/multer-upload";
-import { GetTachiData } from "#utils/req-tachi-data";
-import { Router } from "express";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
+import { REQ_GetTachiData } from "#utils/req-tachi-data";
 
-import { RequireAuthedAsUser } from "../middleware";
-
-const router: Router = Router({ mergeParams: true });
+import { GetUserFromParam, RequireAuthedAsUser } from "../middleware";
 
 /**
  * Sets a profile picture.
@@ -22,13 +22,15 @@ const router: Router = Router({ mergeParams: true });
  *
  * @name PUT /api/v1/users/:userID/pfp
  */
-router.put(
-	"/",
+API_V1_ROUTER.rawAdd(
+	"PUT",
+	"/users/:userID/pfp",
+	GetUserFromParam,
 	RequireAuthedAsUser,
 	RequirePermissions("customise_profile"),
 	CreateMulterSingleUploadMiddleware("pfp", ONE_MEGABYTE),
 	async (req, res) => {
-		const user = GetTachiData(req, "requestedUser");
+		const user = REQ_GetTachiData(req, "requestedUser");
 
 		if (!req.file) {
 			return res.status(400).json({
@@ -71,18 +73,19 @@ router.put(
  *
  * @name GET /api/v1/users/:userID/pfp
  */
-router.get("/", (req, res) => {
-	const user = GetTachiData(req, "requestedUser");
+API_V1_ROUTER.add("GET /users/:userID/pfp", withRequestedUser, ({ ctx, res }) => {
+	const { requestedUser: user } = ctx;
 
 	log.debug(user, "User Info for /:userID/pfp request is ");
 
 	if (!user.customPfpLocation) {
 		res.setHeader("Content-Type", "image/png");
 		CDNRedirect(res, "/users/default/pfp");
-		return;
+		return success("Redirected to default profile picture.", {});
 	}
 
 	CDNRedirect(res, GetProfilePictureURL(user.id, user.customPfpLocation));
+	return success("Redirected to profile picture.", {});
 });
 
 /**
@@ -90,12 +93,13 @@ router.get("/", (req, res) => {
  *
  * @name DELETE /api/v1/users/:userID/pfp
  */
-router.delete(
-	"/",
-	RequireAuthedAsUser,
-	RequirePermissions("customise_profile"),
-	async (req, res) => {
-		const user = GetTachiData(req, "requestedUser");
+API_V1_ROUTER.add(
+	"DELETE /users/:userID/pfp",
+	withRequestedUser,
+	withAuthedAsUser,
+	withPermission("customise_profile"),
+	async ({ ctx, req }) => {
+		const { requestedUser: user } = ctx;
 
 		await ACTION_DeletePfp(
 			{
@@ -112,12 +116,6 @@ router.delete(
 			req.session.tachi.user.customPfpLocation = null;
 		}
 
-		return res.status(200).json({
-			success: true,
-			description: `Removed custom profile picture.`,
-			body: {},
-		});
+		return success("Removed custom profile picture.", {});
 	},
 );
-
-export default router;

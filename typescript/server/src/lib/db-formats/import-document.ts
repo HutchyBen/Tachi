@@ -24,12 +24,9 @@ export const SELECT_IMPORT_TRACKER = [
 import { ISO8601ToUnixMilliseconds } from "#utils/time";
 import {
 	type ClassDelta,
-	GetGPTString,
-	type GPTString,
+	type ImportDocument,
+	type ImportTrackerDocument,
 	type ImportTypes,
-	type MONGO_ImportDocument,
-	type MONGO_ImportTrackerDocument,
-	V3ToGamePT,
 } from "tachi-common";
 
 function mongoImportDocumentFromParts(
@@ -39,36 +36,15 @@ function mongoImportDocumentFromParts(
 	classes: Array<{ game: Game; new: string; prev: string | null; set: string }>,
 	sessions: Array<{ session_id: string; type: string }>,
 	scoreIds: Array<string>,
-): MONGO_ImportDocument {
-	const gptStringSet = new Set<GPTString>();
+): ImportDocument {
+	const gamesList = [...new Set(games.map((g) => g.game))];
 
-	for (const g of games) {
-		const { game, playtype } = V3ToGamePT(g.game);
-
-		gptStringSet.add(GetGPTString(game, playtype));
-	}
-
-	const gptStrings = [...gptStringSet];
-
-	const playtypeSet = new Set(
-		games.map((g) => {
-			const { playtype } = V3ToGamePT(g.game);
-
-			return playtype;
-		}),
-	);
-
-	const classDeltas: Array<ClassDelta> = classes.map((c) => {
-		const { game, playtype } = V3ToGamePT(c.game);
-
-		return {
-			game,
-			playtype,
-			set: c.set as ClassDelta["set"],
-			old: c.prev,
-			new: c.new,
-		};
-	});
+	const classDeltas: Array<ClassDelta> = classes.map((c) => ({
+		game: c.game,
+		set: c.set as ClassDelta["set"],
+		old: c.prev,
+		new: c.new,
+	}));
 
 	const createdSessions = sessions.map((s) => {
 		const t = s.type;
@@ -85,11 +61,10 @@ function mongoImportDocumentFromParts(
 		userID: base.user_id,
 		timeStarted: ISO8601ToUnixMilliseconds(base.time_started),
 		timeFinished: ISO8601ToUnixMilliseconds(base.time_finished),
-		gptStrings,
 		importID: base.id,
 		scoreIDs: scoreIds,
-		game: base.game_group,
-		playtypes: [...playtypeSet] as MONGO_ImportDocument["playtypes"],
+		gameGroup: base.game_group,
+		games: gamesList,
 		errors: errors.map((e) => ({ message: e.message, type: e.type })),
 		createdSessions,
 		importType: base.import_type as ImportTypes,
@@ -117,10 +92,10 @@ function parseStoredTrackerError(err: unknown): { message: string; statusCode?: 
 }
 
 /**
- * Maps a Postgres `import_tracker` row to the API {@link MONGO_ImportTrackerDocument} shape.
+ * Maps a Postgres `import_tracker` row to the API {@link ImportTrackerDocument} shape.
  * Rows with `error` set are {@link ImportTrackerFailed}; otherwise {@link ImportTrackerOngoing}.
  */
-export function ToImportTrackerDocument(row: ImportTracker): MONGO_ImportTrackerDocument {
+export function ToImportTrackerDocument(row: ImportTracker): ImportTrackerDocument {
 	const base = {
 		timeStarted: ISO8601ToUnixMilliseconds(row.time_started),
 		importID: row.import_id,
@@ -141,12 +116,12 @@ export function ToImportTrackerDocument(row: ImportTracker): MONGO_ImportTracker
 }
 
 /**
- * Build a full {@link MONGO_ImportDocument} from normalized Postgres import tables.
+ * Build a full {@link ImportDocument} from normalized Postgres import tables.
  * `goalInfo` / `questInfo` are always empty (historical import_goal / import_quest were not migrated).
  */
 export async function LoadImportDocumentById(
 	importID: string,
-): Promise<MONGO_ImportDocument | undefined> {
+): Promise<ImportDocument | undefined> {
 	const base = await DB.selectFrom("import")
 		.select(SELECT_IMPORT)
 		.where("import.id", "=", importID)
@@ -188,7 +163,7 @@ export async function ListRecentImportDocuments(opts: {
 	limit: number;
 	userId?: number;
 	userIntent?: boolean;
-}): Promise<MONGO_ImportDocument[]> {
+}): Promise<ImportDocument[]> {
 	let q = DB.selectFrom("import").select(SELECT_IMPORT);
 
 	if (opts.userId !== undefined) {
@@ -302,7 +277,7 @@ export async function ListFailedImportTrackers(opts: {
 	limit: number;
 	userId?: number;
 	userIntent?: boolean;
-}): Promise<MONGO_ImportTrackerDocument[]> {
+}): Promise<ImportTrackerDocument[]> {
 	let q = DB.selectFrom("import_tracker")
 		.select(SELECT_IMPORT_TRACKER)
 		.where("import_tracker.error", "is not", null);
@@ -326,7 +301,7 @@ export async function ListFailedImportTrackers(opts: {
 
 export async function GetImportTrackerByImportId(
 	importID: string,
-): Promise<MONGO_ImportTrackerDocument | undefined> {
+): Promise<ImportTrackerDocument | undefined> {
 	const row = await DB.selectFrom("import_tracker")
 		.select(SELECT_IMPORT_TRACKER)
 		.where("import_tracker.import_id", "=", importID)
@@ -339,4 +314,4 @@ export async function GetImportTrackerByImportId(
 	return ToImportTrackerDocument(row);
 }
 
-type SessionInfoType = MONGO_ImportDocument["createdSessions"][number]["type"];
+type SessionInfoType = ImportDocument["createdSessions"][number]["type"];

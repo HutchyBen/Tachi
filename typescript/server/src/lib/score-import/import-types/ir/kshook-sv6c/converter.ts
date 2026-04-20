@@ -1,4 +1,5 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
 import type { GetEnumValue } from "tachi-common/types/metrics";
 
 import {
@@ -9,7 +10,6 @@ import {
 import { FindSDVXChartOnInGameIDVersion } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { ConverterFunction } from "../../common/types";
 import type { KsHookSV6CContext, KsHookSV6CScore } from "./types";
 
 export const ConverterIRKsHookSV6C: ConverterFunction<KsHookSV6CScore, KsHookSV6CContext> = async (
@@ -31,14 +31,14 @@ export const ConverterIRKsHookSV6C: ConverterFunction<KsHookSV6CScore, KsHookSV6
 		);
 	}
 
-	const song = await FindSongOnID("sdvx", chart.songID);
+	const song = await FindSongOnID("sdvx", chart.song.id);
 
 	if (!song) {
-		log.error(`Song ${chart.songID} (sdvx) has no parent song?`);
-		throw new InternalFailure(`Song ${chart.songID} (sdvx) has no parent song?`);
+		log.error(`Song ${chart.song.id} (sdvx) has no parent song?`);
+		throw new InternalFailure(`Song ${chart.song.id} (sdvx) has no parent song?`);
 	}
 
-	const dryScore: DryScore<"sdvx:Single"> = {
+	const dryScore: DryScore<"sdvx"> = {
 		game: "sdvx",
 		service: "kshook SV6C",
 		comment: null,
@@ -64,9 +64,7 @@ export const ConverterIRKsHookSV6C: ConverterFunction<KsHookSV6CScore, KsHookSV6
 	return { song, chart, dryScore };
 };
 
-export function SV6CConvertLamp(
-	clear: KsHookSV6CScore["clear"],
-): GetEnumValue<"sdvx:Single", "lamp"> {
+export function SV6CConvertLamp(clear: KsHookSV6CScore["clear"]): GetEnumValue<"sdvx", "lamp"> {
 	switch (clear) {
 		case "CLEAR_PLAYED":
 			return "FAILED";

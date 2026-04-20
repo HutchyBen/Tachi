@@ -5,19 +5,13 @@ import { GPT_CLIENT_IMPLEMENTATIONS } from "#lib/game-implementations";
 import { type GPTRatingSystem } from "#lib/types";
 import { IsNotNullish } from "#util/misc";
 import React from "react";
-import { type GameGroup, GetGPTString, type MONGO_ChartDocument } from "tachi-common";
+import { type ChartDocument, type V3Game } from "tachi-common";
 
 import MiniTable from "../components/MiniTable";
 
-export default function RatingSystemPart({
-	chart,
-	game,
-}: {
-	chart: MONGO_ChartDocument;
-	game: GameGroup;
-}) {
+export default function RatingSystemPart({ chart, game }: { chart: ChartDocument; game: V3Game }) {
 	const ratingSystems: Array<GPTRatingSystem<any>> =
-		GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, chart.playtype)].ratingSystems;
+		GPT_CLIENT_IMPLEMENTATIONS[game].ratingSystems;
 
 	// don't render anything if this game has no other rating systems defined
 	// for this chart

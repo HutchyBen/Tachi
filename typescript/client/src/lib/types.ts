@@ -1,34 +1,34 @@
 import { type Header } from "#components/tables/components/TachiTable";
 import { type CSSProperties } from "react";
 import {
+	type ChartDocument,
 	type ClassConfigs,
 	type ConfScoreMetrics,
 	type Difficulties,
-	type GPTString,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_ScoreDocument,
+	type PBScoreDocument,
+	type ScoreDocument,
 	type ScoreRatingAlgorithms,
+	type V3Game,
 } from "tachi-common";
 import { type ExtractEnumMetricNames, type GetEnumValue } from "tachi-common/types/metrics";
 
-export type GPTEnumColours<GPT extends GPTString> = {
+export type GPTEnumColours<GPT extends V3Game> = {
 	// @ts-expect-error this is fine please do not worry
 	[M in ExtractEnumMetricNames<ConfScoreMetrics[GPT]>]: Record<GetEnumValue<GPT, M>, string>;
 };
 
-export type GPTEnumIcons<GPT extends GPTString> = {
+export type GPTEnumIcons<GPT extends V3Game> = {
 	[M in ExtractEnumMetricNames<ConfScoreMetrics[GPT]>]: string;
 };
 
-export type GPTDifficultyColours<GPT extends GPTString> = Record<Difficulties[GPT], string>;
+export type GPTDifficultyColours<GPT extends V3Game> = Record<Difficulties[GPT], string>;
 
 /**
  * Every GPT has to have some sort of "rating system" for charts defined.
  * The UI uses this to handle things like sorting on the difficulty cell.
  */
-export type GPTRatingSystem<GPT extends GPTString> = {
+export type GPTRatingSystem<GPT extends V3Game> = {
 	/**
 	 * What qualifies as "achieving" the band in this rating system?
 	 * For example, a clear tierlist would use this to discriminate clears
@@ -38,9 +38,7 @@ export type GPTRatingSystem<GPT extends GPTString> = {
 	 * end user (i.e. the string lamp when the target is hard clear)
 	 * the second is whether they achieved this or not.
 	 */
-	achievementFn?: (
-		p: MONGO_PBScoreDocument<GPT> | MONGO_ScoreDocument<GPT>,
-	) => [number | string, boolean];
+	achievementFn?: (p: PBScoreDocument<GPT> | ScoreDocument<GPT>) => [number | string, boolean];
 	description: string;
 	enumName: string;
 
@@ -48,15 +46,15 @@ export type GPTRatingSystem<GPT extends GPTString> = {
 	 * Does this rating system say this chart has strong individual differences
 	 * between players?
 	 */
-	idvDifference: (c: MONGO_ChartDocument<GPT>) => boolean | null | undefined;
+	idvDifference: (c: ChartDocument<GPT>) => boolean | null | undefined;
 	name: string;
 
-	toNumber: (c: MONGO_ChartDocument<GPT>) => number | null | undefined;
+	toNumber: (c: ChartDocument<GPT>) => number | null | undefined;
 
-	toString: (c: MONGO_ChartDocument<GPT>) => string | null | undefined;
+	toString: (c: ChartDocument<GPT>) => string | null | undefined;
 };
 
-export type GPTClassColours<GPT extends GPTString> = {
+export type GPTClassColours<GPT extends V3Game> = {
 	[C in keyof ClassConfigs[GPT]]: {
 		// @ts-expect-error it's kinda cool how TS lets me just uhh
 		// ignore, errors
@@ -78,7 +76,7 @@ export type GPTClassColours<GPT extends GPTString> = {
 	};
 };
 
-export interface GPTClientImplementation<GPT extends GPTString = GPTString> {
+export interface GPTClientImplementation<GPT extends V3Game = V3Game> {
 	enumColours: GPTEnumColours<GPT>;
 
 	/**
@@ -111,7 +109,7 @@ export interface GPTClientImplementation<GPT extends GPTString = GPTString> {
 	/**
 	 * What headers should be used when rendering scores in a table for this game?
 	 */
-	scoreHeaders: Array<Header<MONGO_PBScoreDocument<GPT> | MONGO_ScoreDocument<GPT>>>;
+	scoreHeaders: Array<Header<PBScoreDocument<GPT> | ScoreDocument<GPT>>>;
 
 	/**
 	 * How should we render the "core cells" for a score row in this game?
@@ -119,8 +117,8 @@ export interface GPTClientImplementation<GPT extends GPTString = GPTString> {
 	 * This should render exactly the same amount of cells as there are headers.
 	 */
 	scoreCoreCells: (props: {
-		chart: MONGO_ChartDocument<GPT>;
-		sc: MONGO_PBScoreDocument<GPT> | MONGO_ScoreDocument<GPT>;
+		chart: ChartDocument<GPT>;
+		sc: PBScoreDocument<GPT> | ScoreDocument<GPT>;
 	}) => JSX.Element;
 
 	/**
@@ -130,13 +128,13 @@ export interface GPTClientImplementation<GPT extends GPTString = GPTString> {
 	 * necessarily display all four cells at once.
 	 *
 	 * You can use this to stylise certain things about your game's rating system, like
-	 * colouring in jubility with the appropriate colour, or indicating why a user
+	 * colouring in jubility with the important colour, or indicating why a user
 	 * got 0 points on an unranked chart, etc..
 	 */
 	ratingCell: (props: {
-		chart: MONGO_ChartDocument<GPT>;
+		chart: ChartDocument<GPT>;
 		rating: ScoreRatingAlgorithms[GPT];
-		sc: MONGO_PBScoreDocument<GPT> | MONGO_ScoreDocument<GPT>;
+		sc: PBScoreDocument<GPT> | ScoreDocument<GPT>;
 	}) => JSX.Element;
 
 	/**

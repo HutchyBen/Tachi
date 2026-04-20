@@ -11,16 +11,16 @@ import { GetGoalIDsFromQuest } from "#util/data";
 import { FormatTime } from "#util/time";
 import React, { useContext } from "react";
 import { Button, Col } from "react-bootstrap";
-import { type MONGO_QuestDocument, type MONGO_QuestlineDocument } from "tachi-common";
+import { type QuestDocument, type QuestlineDocument } from "tachi-common";
 
 export default function Questline({
 	questline,
 	quests,
 }: {
-	questline: MONGO_QuestlineDocument;
-	quests?: Map<string, MONGO_QuestDocument>;
+	questline: QuestlineDocument;
+	quests?: Map<string, QuestDocument>;
 }) {
-	const { game, playtype } = questline;
+	const v3Game = questline.game;
 
 	return (
 		<Card
@@ -64,9 +64,7 @@ export default function Questline({
 
 			{!quests && (
 				<div className="d-flex w-100 justify-content-end">
-					<LinkButton
-						to={`/games/${game}/${playtype}/questlines/${questline.questlineID}`}
-					>
+					<LinkButton to={`/games/${v3Game}/questlines/${questline.questlineID}`}>
 						View Quests
 					</LinkButton>
 				</div>
@@ -75,11 +73,11 @@ export default function Questline({
 	);
 }
 
-export function InnerQuestInfo({ quest }: { quest: MONGO_QuestDocument }) {
+export function InnerQuestInfo({ quest }: { quest: QuestDocument }) {
 	const { settings } = useLUGPTSettings();
 	const { questSubs, reloadTargets } = useContext(TargetsContext);
 
-	const { game, playtype } = quest;
+	const v3Game = quest.game;
 	const questSub = questSubs.get(quest.questID);
 
 	if (!questSub) {
@@ -102,7 +100,7 @@ export function InnerQuestInfo({ quest }: { quest: MONGO_QuestDocument }) {
 							<Button
 								onClick={async () => {
 									await APIFetchV1(
-										`/users/${settings.userID}/games/${game}/${playtype}/targets/quests/${quest.questID}`,
+										`/users/${settings.userID}/games/${v3Game}/targets/quests/${quest.questID}`,
 										{ method: "PUT" },
 										true,
 										true,

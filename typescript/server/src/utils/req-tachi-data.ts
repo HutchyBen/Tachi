@@ -5,7 +5,7 @@ import deepmerge from "deepmerge";
 
 import type { TachiRequestData } from "./types";
 
-export function AssignToReqTachiData(req: Request, data: Partial<TachiRequestData>) {
+export function REQ_AssignToReqTachiData(req: Request, data: Partial<TachiRequestData>) {
 	if (!req[SYMBOL_TACHI_DATA]) {
 		req[SYMBOL_TACHI_DATA] = data;
 	} else {
@@ -17,7 +17,7 @@ export function AssignToReqTachiData(req: Request, data: Partial<TachiRequestDat
 	}
 }
 
-export function GetTachiData<T extends keyof TachiRequestData>(
+export function REQ_GetTachiData<T extends keyof TachiRequestData>(
 	req: Request,
 	key: T,
 ): Exclude<TachiRequestData[T], undefined> {
@@ -39,23 +39,48 @@ export function GetTachiData<T extends keyof TachiRequestData>(
 	return value as unknown as Exclude<TachiRequestData[T], undefined>;
 }
 
-export function GetUser(req: Request) {
-	const user = GetTachiData(req, "requestedUser");
+export function REQ_GetUser(req: Request) {
+	const user = REQ_GetTachiData(req, "requestedUser");
 
 	return user;
 }
 
-export function GetUGPT(req: Request) {
-	const user = GetTachiData(req, "requestedUser");
-	const game = GetTachiData(req, "game");
-	const playtype = GetTachiData(req, "playtype");
+/**
+ * @deprecated Use REQ_GetUserGame instead.
+ */
+export function LEGACY_REQ_GetUGPT(req: Request) {
+	const user = REQ_GetTachiData(req, "requestedUser");
+	const gameGroup = REQ_GetTachiData(req, "gameGroup");
+	const playtype = REQ_GetTachiData(req, "playtype");
 
-	return { user, game, playtype };
+	return { user, gameGroup, playtype };
 }
 
-export function GetGPT(req: Request) {
-	const game = GetTachiData(req, "game");
-	const playtype = GetTachiData(req, "playtype");
+/**
+ * @deprecated Use REQ_GetGame instead.
+ */
+export function LEGACY_REQ_GetGPT(req: Request) {
+	const gameGroup = REQ_GetTachiData(req, "gameGroup");
+	const playtype = REQ_GetTachiData(req, "playtype");
 
-	return { game, playtype };
+	return { gameGroup, playtype };
+}
+
+export function REQ_GetUserGame(req: Request) {
+	const user = REQ_GetTachiData(req, "requestedUser");
+	const game = REQ_GetTachiData(req, "game");
+
+	return { user, game };
+}
+
+export function REQ_GetGame(req: Request) {
+	const game = REQ_GetTachiData(req, "game");
+
+	return game;
+}
+
+export function REQ_GetGameGroup(req: Request) {
+	const gameGroup = REQ_GetTachiData(req, "gameGroup");
+
+	return gameGroup;
 }

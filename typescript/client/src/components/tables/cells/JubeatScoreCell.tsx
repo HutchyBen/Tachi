@@ -2,20 +2,18 @@ import { GPT_CLIENT_IMPLEMENTATIONS } from "#lib/game-implementations";
 import { ChangeOpacity } from "#util/color-opacity";
 import { FormatMillions, ToFixedFloor } from "#util/misc";
 import React from "react";
-import { type MONGO_PBScoreDocument, type MONGO_ScoreDocument } from "tachi-common";
+import { type PBScoreDocument, type ScoreDocument } from "tachi-common";
 
 export default function JubeatScoreCell({
 	sc,
 }: {
-	sc: MONGO_PBScoreDocument<"jubeat:Single"> | MONGO_ScoreDocument<"jubeat:Single">;
+	sc: PBScoreDocument<"jubeat"> | ScoreDocument<"jubeat">;
 }) {
 	return (
 		<td
 			style={{
 				backgroundColor: ChangeOpacity(
-					GPT_CLIENT_IMPLEMENTATIONS["jubeat:Single"].enumColours.grade[
-						sc.scoreData.grade
-					],
+					GPT_CLIENT_IMPLEMENTATIONS.jubeat.enumColours.grade[sc.scoreData.grade],
 					0.2,
 				),
 			}}

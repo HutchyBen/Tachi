@@ -1,13 +1,11 @@
 import DB from "#services/pg/db";
 import { type Selection } from "kysely";
 import {
-	type GameGroup,
-	GamePTToV3,
 	type integer,
-	type MONGO_UGPTSettingsDocument,
-	type Playtype,
+	type ShowcaseStatChart,
 	type ShowcaseStatDetails,
-	V3ToGamePT,
+	type UGPTSettingsDocument,
+	type V3Game,
 } from "tachi-common";
 import { type Database } from "tachi-db";
 
@@ -33,26 +31,24 @@ export function ToUGPTSettingsDocument(
 	row: GameSettingsRow,
 	rivals: Array<integer>,
 	stats: Array<ShowcaseStatDetails>,
-): MONGO_UGPTSettingsDocument {
-	const { game, playtype } = V3ToGamePT(row.game);
-	const gameSpecific = row.data as MONGO_UGPTSettingsDocument["preferences"]["gameSpecific"];
+): UGPTSettingsDocument {
+	const gameSpecific = row.data as UGPTSettingsDocument["preferences"]["gameSpecific"];
 
 	return {
 		userID: row.user_id,
-		game,
-		playtype,
+		game: row.game,
 		preferences: {
 			defaultTable: row.pf_default_table,
 			gameSpecific,
 			preferredDefaultEnum: row.pf_preferred_default_enum,
 			preferredProfileAlg:
-				row.pf_preferred_profile_alg as MONGO_UGPTSettingsDocument["preferences"]["preferredProfileAlg"],
+				row.pf_preferred_profile_alg as UGPTSettingsDocument["preferences"]["preferredProfileAlg"],
 			preferredRanking:
-				row.pf_preferred_ranking as MONGO_UGPTSettingsDocument["preferences"]["preferredRanking"],
+				row.pf_preferred_ranking as UGPTSettingsDocument["preferences"]["preferredRanking"],
 			preferredScoreAlg:
-				row.pf_preferred_score_alg as MONGO_UGPTSettingsDocument["preferences"]["preferredScoreAlg"],
+				row.pf_preferred_score_alg as UGPTSettingsDocument["preferences"]["preferredScoreAlg"],
 			preferredSessionAlg:
-				row.pf_preferred_session_alg as MONGO_UGPTSettingsDocument["preferences"]["preferredSessionAlg"],
+				row.pf_preferred_session_alg as UGPTSettingsDocument["preferences"]["preferredSessionAlg"],
 			stats,
 		},
 		rivals,
@@ -64,15 +60,12 @@ export function ToUGPTSettingsDocument(
  */
 export async function GetUGPTSettingsDocument(
 	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
-): Promise<MONGO_UGPTSettingsDocument | null> {
-	const v3Game = GamePTToV3(game, playtype);
-
+	game: V3Game,
+): Promise<UGPTSettingsDocument | null> {
 	const row = await DB.selectFrom("game_settings")
 		.select(SELECT_GAME_SETTINGS)
 		.where("game_settings.user_id", "=", userID)
-		.where("game_settings.game", "=", v3Game)
+		.where("game_settings.game", "=", game)
 		.executeTakeFirst();
 
 	if (!row) {
@@ -82,7 +75,7 @@ export async function GetUGPTSettingsDocument(
 	const rivalRows = await DB.selectFrom("game_rival")
 		.select("rival")
 		.where("user_id", "=", userID)
-		.where("game", "=", v3Game)
+		.where("game", "=", game)
 		.execute();
 
 	const rivals = rivalRows.map((r) => r.rival);
@@ -90,10 +83,21 @@ export async function GetUGPTSettingsDocument(
 	const showcaseRow = await DB.selectFrom("game_settings_showcase")
 		.select("data")
 		.where("user_id", "=", userID)
-		.where("game", "=", v3Game)
+		.where("game", "=", game)
 		.executeTakeFirst();
 
 	const stats = showcaseRow ? (showcaseRow.data as Array<ShowcaseStatDetails>) : [];
 
-	return ToUGPTSettingsDocument(row, rivals, stats);
+	return ToUGPTSettingsDocument(row, rivals, normalizeShowcaseStats(stats));
+}
+
+/** Strips legacy `metric` from chart entries stored before chart showcase was PB+playcount-only. */
+function normalizeShowcaseStats(raw: Array<ShowcaseStatDetails>): Array<ShowcaseStatDetails> {
+	return raw.map((stat) => {
+		if (stat.mode === "chart") {
+			const s = stat as { metric?: string } & ShowcaseStatChart;
+			return { mode: "chart", chartID: s.chartID };
+		}
+		return stat;
+	});
 }

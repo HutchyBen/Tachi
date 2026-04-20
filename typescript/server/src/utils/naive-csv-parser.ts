@@ -1,4 +1,4 @@
-import { type KtLogger, log } from "#lib/log/log";
+import { type KtLogger } from "#lib/log/log";
 
 import { IsNonEmptyString } from "./misc";
 

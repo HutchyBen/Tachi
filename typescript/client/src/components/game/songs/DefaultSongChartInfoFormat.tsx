@@ -1,20 +1,15 @@
 import { DisplayLevelNum } from "#components/tables/cells/DifficultyCell";
 import React from "react";
-import {
-	FormatDifficulty,
-	type GameGroup,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
-} from "tachi-common";
+import { type ChartDocument, FormatDifficulty, type SongDocument, type V3Game } from "tachi-common";
 
 export default function DefaultSongChartInfoFormat({
 	song,
 	chart,
 	game,
 }: {
-	chart: MONGO_ChartDocument | null;
-	game: GameGroup;
-	song: MONGO_SongDocument;
+	chart: ChartDocument | null;
+	game: V3Game;
+	song: SongDocument;
 }) {
 	return (
 		<>
@@ -23,7 +18,7 @@ export default function DefaultSongChartInfoFormat({
 			</h4>
 			{chart && (
 				<>
-					<h5>({FormatDifficulty(chart, game)})</h5>
+					<h5>({FormatDifficulty(chart)})</h5>
 					<h6>
 						<DisplayLevelNum
 							game={game}

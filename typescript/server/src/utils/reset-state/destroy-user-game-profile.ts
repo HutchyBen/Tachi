@@ -4,7 +4,12 @@ import { log } from "#lib/log/log";
 import { RecalculatePbsForChartsFromPostgresScores } from "#lib/score-import/framework/pb/process-pbs";
 import DB from "#services/pg/db";
 import { sql } from "kysely";
-import { type GameGroup, GamePTToV3, type integer, type Playtype } from "tachi-common";
+import {
+	type GameGroup,
+	type integer,
+	LEGACY_GameGroupPTToGame,
+	type LEGACY_Playtype,
+} from "tachi-common";
 
 /**
  * Completely resets a user's game profile.
@@ -14,18 +19,18 @@ import { type GameGroup, GamePTToV3, type integer, type Playtype } from "tachi-c
 export default async function DestroyUserGameProfile(
 	userID: integer,
 	game: GameGroup,
-	playtype: Playtype,
+	playtype: LEGACY_Playtype,
 ) {
-	const v3Game = GamePTToV3(game, playtype) as Game;
+	const v3Game = LEGACY_GameGroupPTToGame(game, playtype) as Game;
 
 	await DB.deleteFrom("game_stats_snapshot")
 		.where("user_id", "=", userID)
 		.where("game", "=", v3Game)
 		.execute();
 
-	const chartLegacyRows = await DB.selectFrom("pb")
+	const chartRows = await DB.selectFrom("pb")
 		.innerJoin("chart", "chart.id", "pb.chart_id")
-		.select("chart.legacy_id")
+		.select("chart.id")
 		.where("pb.user_id", "=", userID)
 		.where("chart.game", "=", v3Game)
 		.where("pb.lens", "is", null)
@@ -33,16 +38,13 @@ export default async function DestroyUserGameProfile(
 
 	const scoreChartRows = await DB.selectFrom("score")
 		.innerJoin("chart", "chart.id", "score.chart_id")
-		.select("chart.legacy_id")
+		.select("chart.id")
 		.where("score.user_id", "=", userID)
 		.where("chart.game", "=", v3Game)
 		.execute();
 
-	const chartLegacyIds = [
-		...new Set([
-			...chartLegacyRows.map((r) => r.legacy_id),
-			...scoreChartRows.map((r) => r.legacy_id),
-		]),
+	const chartIDs = [
+		...new Set([...chartRows.map((r) => r.id), ...scoreChartRows.map((r) => r.id)]),
 	];
 
 	const scoreRows = await DB.selectFrom("score")
@@ -75,8 +77,8 @@ export default async function DestroyUserGameProfile(
 		await DB.deleteFrom("pb").where("row_id", "in", pbIds).execute();
 	}
 
-	if (chartLegacyIds.length > 0) {
-		await RecalculatePbsForChartsFromPostgresScores(game, playtype, chartLegacyIds, log);
+	if (chartIDs.length > 0) {
+		await RecalculatePbsForChartsFromPostgresScores(v3Game, chartIDs, log);
 	}
 
 	await DB.deleteFrom("session")

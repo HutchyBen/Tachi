@@ -1,14 +1,14 @@
-import { FindSDVXChartOnInGameIDVersion } from "#utils/queries/charts";
-import { FindSongOnID } from "#utils/queries/songs";
-
-import type { DryScore } from "../../../framework/common/types";
-import type { ConverterFunction } from "../../common/types";
-import type { BarbatosContext, BarbatosScore, BarbatosSDVX6Score } from "./types";
+import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
 
 import {
 	InternalFailure,
 	SongOrChartNotFoundFailure,
-} from "../../../framework/common/converter-failures";
+} from "#lib/score-import/framework/common/converter-failures";
+import { FindSDVXChartOnInGameIDVersion } from "#utils/queries/charts";
+import { FindSongOnID } from "#utils/queries/songs";
+
+import type { BarbatosContext, BarbatosScore, BarbatosSDVX6Score } from "./types";
 
 const LAMP_LOOKUP = {
 	1: "FAILED",
@@ -45,17 +45,17 @@ export const ConverterIRBarbatos: ConverterFunction<
 		);
 	}
 
-	const song = await FindSongOnID("sdvx", chart.songID);
+	const song = await FindSongOnID("sdvx", chart.song.id);
 
 	if (!song) {
-		log.error(`Song ${chart.songID} (sdvx) has no parent song?`);
-		throw new InternalFailure(`Song ${chart.songID} (sdvx) has no parent song?`);
+		log.error(`Song ${chart.song.id} (sdvx) has no parent song?`);
+		throw new InternalFailure(`Song ${chart.song.id} (sdvx) has no parent song?`);
 	}
 
 	const { critical, near, miss } = GetJudgements(data);
 	const { fast, slow } = GetFastSlow(data);
 
-	const dryScore: DryScore<"sdvx:Single"> = {
+	const dryScore: DryScore<"sdvx"> = {
 		game: "sdvx",
 		service: `Barbatos (${context.version})`,
 		comment: null,

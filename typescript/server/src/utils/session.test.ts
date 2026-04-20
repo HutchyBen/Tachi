@@ -31,8 +31,7 @@ describe("GetScoresFromSession (Postgres)", () => {
 			scoreIDs: [],
 			name: "E",
 			desc: null,
-			game: "iidx",
-			playtype: "SP",
+			game: "iidx-sp",
 			timeInserted: 0,
 			timeStarted: 0,
 			timeEnded: 0,
@@ -123,8 +122,7 @@ describe("GetScoresFromSession (Postgres)", () => {
 			scoreIDs: [scoreId],
 			name: "S",
 			desc: null,
-			game: "iidx",
-			playtype: "SP",
+			game: "iidx-sp",
 			timeInserted: 0,
 			timeStarted: 0,
 			timeEnded: 0,
@@ -197,8 +195,7 @@ describe("GetSessionFromScore (Postgres)", () => {
 
 		const session = await GetSessionFromScore({
 			service: "Unknown",
-			game: "iidx",
-			playtype: "SP",
+			game: "iidx-sp",
 			userID: userId,
 			scoreData: {} as never,
 			calculatedData: {} as never,
@@ -209,7 +206,7 @@ describe("GetSessionFromScore (Postgres)", () => {
 			highlight: false,
 			comment: null,
 			chartID: chartId,
-			songID: 9_000_002,
+			songID: "s9_000_002",
 			isPrimary: true,
 			importType: "file/batch-manual",
 		});
@@ -291,8 +288,7 @@ describe("GetSessionFromScore (Postgres)", () => {
 
 		const session = await GetSessionFromScore({
 			service: "Unknown",
-			game: "iidx",
-			playtype: "SP",
+			game: "iidx-sp",
 			userID: userId,
 			scoreData: {} as never,
 			calculatedData: {} as never,
@@ -303,7 +299,7 @@ describe("GetSessionFromScore (Postgres)", () => {
 			highlight: false,
 			comment: null,
 			chartID: chartId,
-			songID: 9_000_003,
+			songID: "s9000003",
 			isPrimary: true,
 			importType: "file/batch-manual",
 		});

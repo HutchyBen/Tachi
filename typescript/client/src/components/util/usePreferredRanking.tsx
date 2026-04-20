@@ -1,9 +1,9 @@
-import { type MONGO_UGPTSettingsDocument } from "tachi-common";
+import { type UGPTSettingsDocument } from "tachi-common";
 
 import useLUGPTSettings from "./useLUGPTSettings";
 
 export default function usePreferredRanking():
-	| MONGO_UGPTSettingsDocument["preferences"]["preferredRanking"]
+	| UGPTSettingsDocument["preferences"]["preferredRanking"]
 	| null {
 	const { settings } = useLUGPTSettings();
 

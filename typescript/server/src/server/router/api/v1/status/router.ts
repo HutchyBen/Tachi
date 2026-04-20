@@ -1,24 +1,21 @@
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { VERSION_PRETTY } from "#lib/constants/version";
-import { Router } from "express";
 
-const router: Router = Router({ mergeParams: true });
+import { API_V1_ROUTER } from "../router";
 
 const startTime = Date.now();
 
 /**
  * Returns the current status of the Tachi Server.
- *
- * @name GET /api/v1/status
  */
-router.get("/", (req, res) => {
+API_V1_ROUTER.add("GET /status", ({ input, req }) => {
 	let echo;
 
-	if (typeof req.query.echo === "string") {
-		echo = req.query.echo;
+	if (typeof input.echo === "string") {
+		echo = input.echo;
 	}
 
-	return res.status(200).json({
+	return {
 		success: true,
 		description: "Status check successful.",
 		body: {
@@ -33,7 +30,7 @@ router.get("/", (req, res) => {
 				.map((e) => e[0]),
 			echo,
 		},
-	});
+	};
 });
 
 /**
@@ -42,14 +39,14 @@ router.get("/", (req, res) => {
  *
  * @name POST /api/v1/status
  */
-router.post("/", (req, res) => {
+API_V1_ROUTER.add("POST /status", ({ input, req }) => {
 	let echo;
 
-	if (typeof req.safeBody.echo === "string") {
-		echo = req.safeBody.echo;
+	if (typeof input.echo === "string") {
+		echo = input.echo;
 	}
 
-	return res.status(200).json({
+	return {
 		success: true,
 		description: "Status check successful.",
 		body: {
@@ -64,7 +61,5 @@ router.post("/", (req, res) => {
 				.map((e) => e[0]),
 			echo,
 		},
-	});
+	};
 });
-
-export default router;

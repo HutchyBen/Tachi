@@ -1,24 +1,14 @@
 import { SELECT_QUESTLINE, ToQuestlineDocument } from "#lib/db-formats/questline";
 import DB from "#services/pg/db";
-import {
-	type GameGroup,
-	GamePTToV3,
-	type MONGO_QuestlineDocument,
-	type Playtype,
-} from "tachi-common";
+import { type QuestlineDocument, type V3Game } from "tachi-common";
 
 /**
- * All questlines for a game/playtype, with `quests` ordered by `questline_quest.sort_order`.
+ * All questlines for a game, with `quests` ordered by `questline_quest.sort_order`.
  */
-export async function GetQuestlinesForGamePlaytype(
-	game: GameGroup,
-	playtype: Playtype,
-): Promise<Array<MONGO_QuestlineDocument>> {
-	const v3Game = GamePTToV3(game, playtype);
-
+export async function GetQuestlinesForGame(game: V3Game): Promise<Array<QuestlineDocument>> {
 	const qlRows = await DB.selectFrom("questline")
 		.select(SELECT_QUESTLINE)
-		.where("questline.game", "=", v3Game)
+		.where("questline.game", "=", game)
 		.execute();
 
 	if (qlRows.length === 0) {
@@ -51,19 +41,16 @@ export async function GetQuestlinesForGamePlaytype(
 }
 
 /**
- * One questline by id, scoped to game/playtype. `quests` are ordered by `questline_quest.sort_order`.
+ * One questline by id, scoped to game. `quests` are ordered by `questline_quest.sort_order`.
  */
 export async function GetQuestlineById(
-	game: GameGroup,
-	playtype: Playtype,
+	game: V3Game,
 	questlineID: string,
-): Promise<MONGO_QuestlineDocument | undefined> {
-	const v3Game = GamePTToV3(game, playtype);
-
+): Promise<QuestlineDocument | undefined> {
 	const row = await DB.selectFrom("questline")
 		.select(SELECT_QUESTLINE)
 		.where("questline.id", "=", questlineID)
-		.where("questline.game", "=", v3Game)
+		.where("questline.game", "=", game)
 		.executeTakeFirst();
 
 	if (!row) {

@@ -1,26 +1,37 @@
 import eslint from "@eslint/js";
 import configPrettier from "eslint-config-prettier";
 import pluginImport from "eslint-plugin-import";
+import pluginTachiImports from "./rules/tachi-imports-plugin.js";
 import pluginJsxA11y from "eslint-plugin-jsx-a11y";
 import pluginPerfectionist from "eslint-plugin-perfectionist";
 import pluginReact from "eslint-plugin-react";
 import pluginReactHooks from "eslint-plugin-react-hooks";
 import pluginReactRefresh from "eslint-plugin-react-refresh";
+import pluginUnusedImports from "eslint-plugin-unused-imports";
 import globals from "globals";
 import tseslint from "typescript-eslint";
+
+const unusedVarsOptions = {
+	args: "all",
+	argsIgnorePattern: "^_",
+	caughtErrors: "all",
+	caughtErrorsIgnorePattern: "^_",
+	destructuredArrayIgnorePattern: "^_",
+	ignoreRestSiblings: true,
+	varsIgnorePattern: "^_",
+};
 
 const base = tseslint.config(
 	eslint.configs.recommended,
 	...tseslint.configs.recommended,
 	pluginPerfectionist.configs["recommended-natural"],
 	{
-		ignores: ["**/*.oldtest.ts"],
-	},
-	{
 		name: "zenith/base",
 		files: ["**/*.{ts,tsx}"],
 		plugins: {
 			import: pluginImport,
+			tachi: pluginTachiImports,
+			"unused-imports": pluginUnusedImports,
 		},
 		languageOptions: {
 			ecmaVersion: 2022,
@@ -44,18 +55,9 @@ const base = tseslint.config(
 			"@typescript-eslint/explicit-function-return-type": "off",
 			"@typescript-eslint/explicit-module-boundary-types": "off",
 			"@typescript-eslint/no-non-null-assertion": "off",
-			"@typescript-eslint/no-unused-vars": [
-				"warn",
-				{
-					args: "all",
-					argsIgnorePattern: "^_",
-					caughtErrors: "all",
-					caughtErrorsIgnorePattern: "^_",
-					destructuredArrayIgnorePattern: "^_",
-					ignoreRestSiblings: true,
-					varsIgnorePattern: "^_",
-				},
-			],
+			"@typescript-eslint/no-unused-vars": "off",
+			"unused-imports/no-unused-imports": "error",
+			"unused-imports/no-unused-vars": ["warn", unusedVarsOptions],
 			"perfectionist/sort-objects": "off",
 			"perfectionist/sort-union-types": [
 				"error",
@@ -122,6 +124,10 @@ const base = tseslint.config(
 			"require-unicode-regexp": "error",
 			"space-before-blocks": "error",
 			yoda: "error",
+			// import/extensions resolves the on-disk file and compares that extension (.ts vs a
+			// written .js), so it often misses redundant `.js` in TypeScript source.
+			"tachi/no-redundant-js-extension": "error",
+			"tachi/prefer-hash-import": "error",
 			// Seems to be broken
 			"import/no-unresolved": "off",
 			"@typescript-eslint/no-explicit-any": "warn",

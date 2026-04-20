@@ -1,5 +1,6 @@
 import type { KtLogger } from "#lib/log/log";
-import type { integer, Versions } from "tachi-common";
+import type { ParserFunctionReturns } from "#lib/score-import/import-types/common/types";
+import type { GamesForGroup, integer, Versions } from "tachi-common";
 
 import {
 	EXT_BISTROVER,
@@ -17,14 +18,12 @@ import {
 	REV_NORMAL,
 	REV_OMNIMIX,
 } from "#lib/constants/ea3id";
+import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ParseEA3SoftID } from "#utils/ea3id";
 import { FormatPrError, optNull } from "#utils/prudence";
 import { p, type PrudenceSchema, type ValidSchemaValue } from "prudence";
 
-import type { ParserFunctionReturns } from "../../common/types";
 import type { FervidexContext, FerHeaders as FervidexHeaders, FervidexScore } from "./types";
-
-import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 
 const PR_FERVIDEX: PrudenceSchema = {
 	chart: p.isIn("spb", "spn", "dpn", "sph", "dph", "spa", "dpa", "spl", "dpl"),
@@ -95,7 +94,7 @@ const PR_FERVIDEX: PrudenceSchema = {
 /**
  * Converts a string of the form LDJ:X:X:X:2020092900 into a game version.
  */
-export function SoftwareIDToVersion(model: string, log: KtLogger): Versions["iidx:DP" | "iidx:SP"] {
+export function SoftwareIDToVersion(model: string, log: KtLogger): Versions[GamesForGroup["iidx"]] {
 	try {
 		const data = ParseEA3SoftID(model);
 
@@ -173,7 +172,7 @@ export function ParseFervidexSingle(
 	headers: FervidexHeaders,
 	userID: integer,
 	log: KtLogger,
-): ParserFunctionReturns<FervidexScore, FervidexContext> {
+): ParserFunctionReturns<FervidexScore, FervidexContext, GamesForGroup["iidx"]> {
 	const version = SoftwareIDToVersion(headers.model, log);
 
 	// more mods may be added in the future, so lets ignore excess keys.
@@ -190,7 +189,7 @@ export function ParseFervidexSingle(
 		// this import method needs to know the user making the request
 		// in order to highlight existing scores. Neat!
 		context: { version, timeReceived: Date.now(), userID },
-		game: "iidx",
+		gameGroup: "iidx",
 		iterable: [score],
 		classProvider: null,
 	};

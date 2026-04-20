@@ -72,7 +72,7 @@ describe("DeorphanBmsIfInOrphanChartPg", () => {
 			})
 			.execute();
 
-		const chart = await DeorphanBmsIfInOrphanChartPg("7K", "md5", md5);
+		const chart = await DeorphanBmsIfInOrphanChartPg("bms-7k", "md5", md5);
 
 		expect(chart).not.toBeNull();
 		expect(chart!.chartID).toBe(orphanChartId);

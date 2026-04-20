@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { GAME_GROUP_CONFIGS, GAME_PT_CONFIGS, GPTStringToV3 } from "tachi-common";
+import { ALL_GAMES, GAME_GROUP_CONFIGS } from "tachi-common";
 
 import { ReadCollection, WriteCollection } from "../../util";
 
@@ -58,9 +58,7 @@ for (const game of Object.keys(GAME_GROUP_CONFIGS)) {
 }
 
 // now, for each collection remove the playtype field.
-for (const gptString of Object.keys(GAME_PT_CONFIGS)) {
-	const nugame = GPTStringToV3(gptString as any);
-
+for (const nugame of ALL_GAMES) {
 	const data = ReadCollection(`charts-${nugame}.json`);
 	for (const entry of data) {
 		delete entry.playtype;

@@ -8,12 +8,7 @@ import { type GamePT } from "#types/react";
 import { type FolderDataset } from "#types/tables";
 import { UppercaseFirst } from "#util/misc";
 import React, { useMemo, useState } from "react";
-import {
-	GetGamePTConfig,
-	GetScoreEnumConfs,
-	type GPTString,
-	type MONGO_UserDocument,
-} from "tachi-common";
+import { GetGameConfig, GetScoreEnumConfs, type UserDocument } from "tachi-common";
 
 import FolderMinimap from "./FolderMinimap";
 import FolderScoreAverages from "./FolderScoreAverages";
@@ -21,25 +16,24 @@ import FolderScoreDistributionChart from "./FolderScoreDistributionChart";
 
 export default function FolderInfoHeader({
 	game,
-	playtype,
 	reqUser,
 	folderDataset,
 	folderTitle,
 }: {
 	folderDataset: FolderDataset;
 	folderTitle: string;
-	reqUser: MONGO_UserDocument;
+	reqUser: UserDocument;
 } & GamePT) {
-	const preferredDefaultEnum = useBucket(game, playtype);
+	const preferredDefaultEnum = useBucket(game);
 
 	const [currentGraph, setCurrentGraph] = useState<string>(`${preferredDefaultEnum}-stats`);
 
 	const enumGraphs = ["minimap", "stats"];
 
-	const gptConfig = GetGamePTConfig(game, playtype);
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[`${game}:${playtype}` as GPTString];
+	const gameConfig = GetGameConfig(game);
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
-	const enumConf = GetScoreEnumConfs(gptConfig);
+	const enumConf = GetScoreEnumConfs(gameConfig);
 
 	const [metric, type] = useMemo(() => currentGraph.split("-"), [currentGraph]);
 
@@ -82,7 +76,6 @@ export default function FolderInfoHeader({
 				<FolderScoreDistributionChart
 					folderDataset={folderDataset}
 					game={game}
-					playtype={playtype}
 					view={metric}
 				/>
 			) : type === "minimap" ? (
@@ -90,16 +83,10 @@ export default function FolderInfoHeader({
 					enumMetric={metric}
 					folderDataset={folderDataset}
 					game={game}
-					playtype={playtype}
 					reqUser={reqUser}
 				/>
 			) : (
-				<FolderScoreAverages
-					folderDataset={folderDataset}
-					game={game}
-					playtype={playtype}
-					reqUser={reqUser}
-				/>
+				<FolderScoreAverages folderDataset={folderDataset} game={game} reqUser={reqUser} />
 			)}
 		</Card>
 	);

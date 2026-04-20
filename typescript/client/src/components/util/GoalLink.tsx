@@ -1,13 +1,14 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { type MONGO_GoalDocument } from "tachi-common";
+import { type GoalDocument } from "tachi-common";
 
 import useLUGPTSettings from "./useLUGPTSettings";
 
-export default function GoalLink({ goal, noPad }: { goal: MONGO_GoalDocument; noPad?: boolean }) {
+export default function GoalLink({ goal, noPad }: { goal: GoalDocument; noPad?: boolean }) {
 	const { settings } = useLUGPTSettings();
 
 	const pad = noPad ? "" : "ms-2";
+	const v3Game = goal.game;
 
 	switch (goal.charts.type) {
 		case "multi":
@@ -16,23 +17,28 @@ export default function GoalLink({ goal, noPad }: { goal: MONGO_GoalDocument; no
 			return (
 				<Link
 					className={`text-decoration-none ${pad}`}
-					to={`/games/${goal.game}/${goal.playtype}/charts/${goal.charts.data}`}
+					to={`/games/${v3Game}/charts/${goal.charts.data}`}
 				>
 					{goal.name}
 				</Link>
 			);
 
-		case "folder":
+		case "folder": {
 			if (!settings) {
 				return <span className={pad}>{goal.name}</span>;
 			}
+			const folderPath =
+				"folderSlug" in goal.charts && goal.charts.folderSlug !== undefined
+					? goal.charts.folderSlug
+					: goal.charts.data;
 			return (
 				<Link
 					className={`text-decoration-none ${pad}`}
-					to={`/u/${settings.userID}/games/${goal.game}/${goal.playtype}/folders/${goal.charts.data}`}
+					to={`/u/${settings.userID}/games/${v3Game}/folders/${folderPath}`}
 				>
 					{goal.name}
 				</Link>
 			);
+		}
 	}
 }

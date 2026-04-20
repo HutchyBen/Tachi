@@ -1,16 +1,10 @@
-import type { ImportTypes } from "tachi-common";
-
 import {
 	ListFailedImportTrackers,
 	ListRecentImportDocuments,
 } from "#lib/db-formats/import-document";
-import { TachiConfig } from "#lib/setup/config";
-import prValidate from "#server/middleware/prudence-validate";
-import { GetTachiData } from "#utils/req-tachi-data";
-import { Router } from "express";
-import { p } from "prudence";
-
-const router: Router = Router({ mergeParams: true });
+import { withRequestedUser } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
 
 /**
  * Query this user's imports. Returns the 500 most recently-finished imports.
@@ -20,35 +14,18 @@ const router: Router = Router({ mergeParams: true });
  *
  * @name GET /api/v1/users/:userID/imports
  */
-router.get(
-	"/",
-	prValidate({
-		importType: p.optional(p.isIn(TachiConfig.IMPORT_TYPES)),
-		userIntent: p.optional(p.isIn("true", "false")),
-	}),
-	async (req, res) => {
-		const userID = GetTachiData(req, "requestedUser").id;
-		const importType = req.query.importType as ImportTypes | undefined;
+API_V1_ROUTER.add("GET /users/:userID/imports", withRequestedUser, async ({ input, ctx }) => {
+	const userIntent = input.userIntent === undefined ? undefined : input.userIntent === "true";
 
-		// all query input ends up as strings, so we need convert it into an optional
-		// boolean
-		const userIntent =
-			req.query.userIntent === undefined ? undefined : req.query.userIntent === "true";
+	const imports = await ListRecentImportDocuments({
+		importType: input.importType as never,
+		limit: 500,
+		userId: ctx.requestedUser.id,
+		userIntent,
+	});
 
-		const imports = await ListRecentImportDocuments({
-			userId: userID,
-			importType,
-			userIntent,
-			limit: 500,
-		});
-
-		return res.status(200).json({
-			success: true,
-			description: `Found ${imports.length} imports.`,
-			body: imports,
-		});
-	},
-);
+	return success(`Found ${imports.length} imports.`, imports);
+});
 
 /**
  * Return this users 500 most recent failed imports.
@@ -58,35 +35,19 @@ router.get(
  *
  * @name GET /api/v1/users/:userID/imports/failed
  */
-router.get(
-	"/failed",
-	prValidate({
-		importType: p.optional(p.isIn(TachiConfig.IMPORT_TYPES)),
-		userIntent: p.optional(p.isIn("true", "false")),
-	}),
-	async (req, res) => {
-		const userID = GetTachiData(req, "requestedUser").id;
-
-		const importType = req.query.importType as ImportTypes | undefined;
-
-		// all query input ends up as strings, so we need convert it into an optional
-		// boolean
-		const userIntent =
-			req.query.userIntent === undefined ? undefined : req.query.userIntent === "true";
+API_V1_ROUTER.add(
+	"GET /users/:userID/imports/failed",
+	withRequestedUser,
+	async ({ input, ctx }) => {
+		const userIntent = input.userIntent === undefined ? undefined : input.userIntent === "true";
 
 		const trackers = await ListFailedImportTrackers({
-			userId: userID,
-			importType,
-			userIntent,
+			importType: input.importType as never,
 			limit: 500,
+			userId: ctx.requestedUser.id,
+			userIntent,
 		});
 
-		return res.status(200).json({
-			success: true,
-			description: `Found ${trackers.length} failed imports.`,
-			body: trackers,
-		});
+		return success(`Found ${trackers.length} failed imports.`, trackers);
 	},
 );
-
-export default router;

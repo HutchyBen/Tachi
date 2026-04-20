@@ -1,4 +1,4 @@
-import type { integer, MONGO_ChartDocument, MONGO_ScoreDocument } from "tachi-common";
+import type { ChartDocument, integer, ScoreDocument } from "tachi-common";
 
 import { log } from "#lib/log/log";
 import { mongoScoreDocumentToNewScoreRow } from "#lib/score-import/framework/pg/mongo-score-to-pg";
@@ -7,7 +7,7 @@ import DB from "#services/pg/db";
 const MAX_PIPELINE_LENGTH = 500;
 
 interface PendingInsert {
-	score: MONGO_ScoreDocument;
+	score: ScoreDocument;
 	chartIdPg: string;
 	committed: boolean;
 	importId: string | null;
@@ -86,8 +86,8 @@ export async function InsertQueue(userID: integer) {
  * the score provided is already loaded.
  */
 export function QueueScoreInsert(
-	score: MONGO_ScoreDocument,
-	chart: MONGO_ChartDocument,
+	score: ScoreDocument,
+	chart: ChartDocument,
 	importId: string | null,
 	committed: boolean,
 ) {

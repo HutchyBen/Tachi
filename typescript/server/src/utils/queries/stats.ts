@@ -7,24 +7,24 @@ import NodeCache from "node-cache";
 import {
 	type Classes,
 	type GameGroup,
-	GamePTToV3,
-	type GPTString,
 	type integer,
-	type Playtype,
+	LEGACY_GameGroupPTToGame,
+	type LEGACY_Playtype,
+	type V3Game,
 } from "tachi-common";
 
 const classDistCache = new NodeCache();
 
 export async function GetClassDistribution(
 	game: GameGroup,
-	playtype: Playtype,
-	className: Classes[GPTString],
+	playtype: LEGACY_Playtype,
+	className: Classes[V3Game],
 ) {
 	const cacheKey = `${game}:${playtype}:${className}`;
 	const cache = classDistCache.get<Record<string, integer>>(cacheKey);
 
 	if (!cache) {
-		const v3Game = GamePTToV3(game, playtype) as Game;
+		const v3Game = LEGACY_GameGroupPTToGame(game, playtype) as Game;
 
 		const rows = await sql<{ cls: string | null; count: number }>`
 			SELECT jsonb_extract_path_text(game_profile.classes::jsonb, ${sql.lit(className)}) AS cls,

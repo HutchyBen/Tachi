@@ -79,8 +79,6 @@ export default function SeedsPicker({
 			} else if (repo.startsWith("GitHub:")) {
 				const repoName = repo.slice("GitHub:".length);
 
-				console.log(repoName);
-
 				const res: Array<{ commit: { sha: string }; name: string }> = await fetch(
 					`https://api.github.com/repos/${repoName}/branches`,
 				).then((r) => r.json());

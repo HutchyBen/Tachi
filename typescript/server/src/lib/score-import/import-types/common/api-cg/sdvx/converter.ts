@@ -1,4 +1,5 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
 import type { Versions } from "tachi-common";
 import type { GetEnumValue } from "tachi-common/types/metrics";
 
@@ -11,7 +12,6 @@ import { ParseDateFromString } from "#lib/score-import/framework/common/score-ut
 import { FindSDVXChartOnInGameIDVersion } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { ConverterFunction } from "../../types";
 import type { CGContext, CGSDVXScore } from "../types";
 
 import { FormatCGService } from "../util";
@@ -36,18 +36,18 @@ export const ConverterAPICGSDVX: ConverterFunction<CGSDVXScore, CGContext> = asy
 		);
 	}
 
-	const song = await FindSongOnID("sdvx", chart.songID);
+	const song = await FindSongOnID("sdvx", chart.song.id);
 
 	if (!song) {
-		log.error(`Song-Chart desync with song ID ${chart.songID} (sdvx).`);
-		throw new InternalFailure(`Song-Chart desync with song ID ${chart.songID} (sdvx).`);
+		log.error(`Song-Chart desync with song ID ${chart.song.id} (sdvx).`);
+		throw new InternalFailure(`Song-Chart desync with song ID ${chart.song.id} (sdvx).`);
 	}
 
 	const lamp = ConvertCGSDVXLamp(data.clearType);
 
 	const timeAchieved = ParseDateFromString(data.dateTime);
 
-	const dryScore: DryScore<"sdvx:Single"> = {
+	const dryScore: DryScore<"sdvx"> = {
 		comment: null,
 		game: "sdvx",
 		importType,
@@ -91,7 +91,7 @@ function ConvertDifficulty(diff: number) {
 	throw new InvalidScoreFailure(`Invalid difficulty of ${diff} - Could not convert.`);
 }
 
-function ConvertVersion(ver: number): Versions["sdvx:Single"] {
+function ConvertVersion(ver: number): Versions["sdvx"] {
 	switch (ver) {
 		case 1:
 			return "booth";
@@ -114,7 +114,7 @@ function ConvertVersion(ver: number): Versions["sdvx:Single"] {
  * Convert CG's clearType enum into a Tachi lamp. Note that what numbers mean what are
  * dependent on what version of the game we're listening for.
  */
-function ConvertCGSDVXLamp(clearType: number): GetEnumValue<"sdvx:Single", "lamp"> {
+function ConvertCGSDVXLamp(clearType: number): GetEnumValue<"sdvx", "lamp"> {
 	switch (clearType) {
 		case 1:
 			return "FAILED";

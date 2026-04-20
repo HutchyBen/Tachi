@@ -2,6 +2,10 @@ import { APIFetchV1, type UnsuccessfulAPIFetchResponse } from "#util/api";
 import { type QueryKey, useQuery } from "react-query";
 import { type SuccessfulAPIResponse } from "tachi-common";
 
+export function UnfuckURLsV3GameToV2Format(url: string) {
+	return url;
+}
+
 export default function useApiQuery<T>(
 	url: string | string[],
 	options?: RequestInit,
@@ -9,6 +13,12 @@ export default function useApiQuery<T>(
 	skip = false,
 ) {
 	const deps = [];
+
+	if (Array.isArray(url)) {
+		url = url.map((u) => UnfuckURLsV3GameToV2Format(u));
+	} else {
+		url = UnfuckURLsV3GameToV2Format(url);
+	}
 
 	if (additionalDeps) {
 		deps.push(...additionalDeps);

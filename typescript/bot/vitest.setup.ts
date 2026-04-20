@@ -11,6 +11,7 @@
  */
 
 import crypto from "node:crypto";
+import { allImportTypes } from "tachi-common/constants/import-types";
 
 const WORKER_ID = crypto.randomUUID().slice(0, 8);
 const WORKER_DB_NAME = `tachi_bot_test_${WORKER_ID}`;
@@ -35,10 +36,10 @@ globalThis.fetch = (url: string | Request | URL): Promise<Response> => {
 					success: true,
 					body: {
 						NAME: "Test Tachi",
-						GAMES: [],
-						VERSIONS: {},
-						SUPPORTS_OAUTH2: false,
-						OAUTH_CLIENT_ID: null,
+						TYPE: "boku",
+						SIGNUPS_ENABLED: true,
+						GAME_GROUPS: ["iidx"],
+						IMPORT_TYPES: [...allImportTypes],
 					},
 				}),
 		} as unknown as Response);

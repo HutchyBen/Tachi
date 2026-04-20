@@ -6,12 +6,12 @@ import { StrSOV } from "#util/sorts";
 import { type SearchFunctions } from "#util/ztable/search";
 import React from "react";
 import { Badge } from "react-bootstrap";
-import { FormatGameGroup, type MONGO_FolderDocument } from "tachi-common";
+import { type FolderDocument, FormatGame } from "tachi-common";
 
 import { type Header } from "../components/TachiTable";
 
 /** v3 `folders.json` omits `type`; infer from SQL body when needed. */
-function folderSeedKindLabel(x: MONGO_FolderDocument): string {
+function folderSeedKindLabel(x: FolderDocument): string {
 	const ext = x as unknown as { type?: string; where?: string };
 
 	if (typeof ext.type === "string") {
@@ -27,20 +27,19 @@ function folderSeedKindLabel(x: MONGO_FolderDocument): string {
 	return "charts";
 }
 
-export const SeedsFolderHeaders: Header<MONGO_FolderDocument>[] = [
+export const SeedsFolderHeaders: Header<FolderDocument>[] = [
 	["ID", "ID", StrSOV((x) => x.folderID)],
 	["Name", "Name", StrSOV((x) => x.title)],
-	["GPT", "GPT", StrSOV((x) => `${x.game} ${x.playtype}`)],
+	["GPT", "GPT", StrSOV((x) => x.game)],
 	["Query", "Query", StrSOV((x) => x.title)],
 ];
 
-export const SeedsFolderSearchFns: SearchFunctions<MONGO_FolderDocument> = {
+export const SeedsFolderSearchFns: SearchFunctions<FolderDocument> = {
 	title: (x) => x.title,
 	folderID: (x) => x.folderID,
 	inactive: (x) => x.inactive,
 	game: (x) => x.game,
-	playtype: (x) => x.playtype,
-	gpt: (x) => FormatGameGroup(x.game, x.playtype),
+	gpt: (x) => FormatGame(x.game),
 	type: (x) => folderSeedKindLabel(x),
 	query: (x) => {
 		const w = (x as { where?: string }).where;
@@ -55,10 +54,10 @@ export const SeedsFolderSearchFns: SearchFunctions<MONGO_FolderDocument> = {
 	},
 };
 
-export const SeedsFolderCells: CellsRenderFN<MONGO_FolderDocument> = ({
+export const SeedsFolderCells: CellsRenderFN<FolderDocument> = ({
 	data,
 }: {
-	data: MONGO_FolderDocument;
+	data: FolderDocument;
 }) => {
 	const whereSql = (data as unknown as { where?: string }).where;
 	const showWhere = typeof whereSql === "string" && whereSql.length > 0;
@@ -83,7 +82,7 @@ export const SeedsFolderCells: CellsRenderFN<MONGO_FolderDocument> = ({
 					</>
 				)}
 			</td>
-			<td>{FormatGameGroup(data.game, data.playtype)}</td>
+			<td>{FormatGame(data.game)}</td>
 			<td>
 				TYPE: <b>{folderSeedKindLabel(data)}</b>
 				<Divider />

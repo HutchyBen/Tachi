@@ -1,11 +1,10 @@
 import type { KtLogger } from "#lib/log/log";
-import type { BatchManualScore } from "tachi-common";
+import type { BatchManualContext } from "#lib/score-import/import-types/common/batch-manual/types";
+import type { ParserFunctionReturns } from "#lib/score-import/import-types/common/types";
+import type { BatchManualScore, V3Game } from "tachi-common";
 
-import type { BatchManualContext } from "../../common/batch-manual/types";
-import type { ParserFunctionReturns } from "../../common/types";
-
-import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
-import { ParseBatchManualFromObject } from "../../common/batch-manual/parser";
+import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
+import { ParseBatchManualFromObject } from "#lib/score-import/import-types/common/batch-manual/parser";
 
 /**
  * Parses a buffer of BATCH-MANUAL data.
@@ -16,7 +15,7 @@ function ParseBatchManual(
 	fileData: Express.Multer.File,
 	body: Record<string, unknown>,
 	log: KtLogger,
-): ParserFunctionReturns<BatchManualScore, BatchManualContext> {
+): ParserFunctionReturns<BatchManualScore, BatchManualContext, V3Game> {
 	let jsonData: unknown;
 
 	try {

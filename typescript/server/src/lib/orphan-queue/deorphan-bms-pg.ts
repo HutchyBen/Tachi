@@ -1,37 +1,25 @@
-import type { Game } from "tachi-db";
-
-import { GetChartById } from "#lib/db-formats/chart";
+import { GetChartByIdForGame } from "#lib/db-formats/chart";
 import { log } from "#lib/log/log";
 import DB from "#services/pg/db";
 import { GetNextBmsPmsSongLegacyId } from "#utils/db";
 import { sql } from "kysely";
 import {
+	type BMSGames,
+	type ChartDocument,
 	CreateSongID,
-	GamePTToV3,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
-	type Playtypes,
+	type GameGroupFromGame,
+	type SongDocument,
 } from "tachi-common";
-
-function parseStoredJson<T>(raw: unknown): T {
-	if (typeof raw === "string") {
-		return JSON.parse(raw) as T;
-	}
-
-	return raw as T;
-}
 
 /**
  * Forcefully de-orphan a BMS song/chart from `orphan_chart` when it matches a hash,
  * inserting into `song` / `chart` in Postgres. Used by BMS table sync (and tests).
  */
 export async function DeorphanBmsIfInOrphanChartPg(
-	playtype: Playtypes["bms"],
+	game: BMSGames,
 	checksumType: "md5" | "sha256",
 	value: string,
-): Promise<MONGO_ChartDocument<"bms:7K" | "bms:14K"> | null> {
-	const v3Game = GamePTToV3("bms", playtype) as Game;
-
+): Promise<ChartDocument<BMSGames> | null> {
 	const hashMatch =
 		checksumType === "md5"
 			? sql<boolean>`(orphan_chart.chart_doc::jsonb->'data'->>'hashMD5') = ${value}`
@@ -39,7 +27,7 @@ export async function DeorphanBmsIfInOrphanChartPg(
 
 	const orphanRow = await DB.selectFrom("orphan_chart")
 		.select(["orphan_chart.id", "orphan_chart.chart_doc", "orphan_chart.song_doc"])
-		.where("orphan_chart.game", "=", v3Game)
+		.where("orphan_chart.game", "=", game)
 		.where(hashMatch)
 		.executeTakeFirst();
 
@@ -47,18 +35,16 @@ export async function DeorphanBmsIfInOrphanChartPg(
 		return null;
 	}
 
-	const chartDoc = parseStoredJson<MONGO_ChartDocument<"bms:7K" | "bms:14K">>(
-		orphanRow.chart_doc,
-	);
-	const songDoc = parseStoredJson<MONGO_SongDocument<"bms">>(orphanRow.song_doc);
+	const chartDoc = orphanRow.chart_doc as ChartDocument<BMSGames>;
+	const songDoc = orphanRow.song_doc as SongDocument<GameGroupFromGame[BMSGames]>;
 
 	log.info(`Song ${songDoc.title} was unorphaned forcefully (Postgres).`);
 
 	const songLegacyId = await GetNextBmsPmsSongLegacyId("bms");
 	const songNewID = CreateSongID();
 
-	songDoc.id = songLegacyId;
-	chartDoc.songID = songLegacyId;
+	songDoc.id = songNewID;
+	chartDoc.song = songDoc;
 
 	const ftsDocument = [...songDoc.searchTerms, ...songDoc.altTitles].filter(Boolean).join(" ");
 
@@ -83,7 +69,7 @@ export async function DeorphanBmsIfInOrphanChartPg(
 			.values({
 				id: chartDoc.chartID,
 				legacy_id: chartDoc.chartID,
-				game: v3Game,
+				game,
 				song_id: songNewID,
 				level: chartDoc.level,
 				level_num: chartDoc.levelNum,
@@ -102,12 +88,12 @@ export async function DeorphanBmsIfInOrphanChartPg(
 		await trx.deleteFrom("orphan_chart").where("id", "=", orphanRow.id).execute();
 	});
 
-	const loaded = await GetChartById(v3Game, chartDoc.chartID);
+	const loaded = await GetChartByIdForGame(game, chartDoc.chartID);
 
 	if (!loaded) {
 		log.error(`Deorphan succeeded but GetChartById failed for ${chartDoc.chartID}.`);
 		return null;
 	}
 
-	return loaded as MONGO_ChartDocument<"bms:7K" | "bms:14K">;
+	return loaded as ChartDocument<BMSGames>;
 }

@@ -51,7 +51,6 @@ export function ParseDirectives(search: string): Directive[] {
 			continue;
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const [wholeMatch, key, mode, value] = ps;
 
 		let v = value;

@@ -1,8 +1,8 @@
 import { type GPTRatingSystem } from "#lib/types";
 import { type CSSProperties } from "react";
-import { type GPTString } from "tachi-common";
+import { type V3Game } from "tachi-common";
 
-export function CreateRatingSys<GPT extends GPTString>(
+export function CreateRatingSys<GPT extends V3Game>(
 	name: string,
 	description: string,
 	enumName: string,

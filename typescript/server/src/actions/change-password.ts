@@ -1,6 +1,6 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import { HashPassword, PasswordCompare } from "#lib/auth/auth.js";
-import DB from "#services/pg/db.js";
+import { MakeAction } from "#lib/actions/actions";
+import { HashPassword, PasswordCompare } from "#lib/auth/auth";
+import DB from "#services/pg/db";
 import { ExpectedErr } from "bliss";
 
 export const ACTION_ChangePassword = MakeAction(

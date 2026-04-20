@@ -1,13 +1,13 @@
 import type {
 	APIPermissions,
-	GPTString,
+	ChartDocument,
+	ImportDocument,
 	integer,
-	MONGO_ChartDocument,
-	MONGO_ImportDocument,
-	MONGO_ScoreDocument,
-	MONGO_SongDocument,
-	MONGO_UserGameStats,
 	ProfileRatingAlgorithms,
+	ScoreDocument,
+	SongDocument,
+	UserGameStats,
+	V3Game,
 } from "tachi-common";
 
 export interface ServerStatus {
@@ -25,7 +25,7 @@ export interface ImportDeferred {
 
 export type ImportPollStatus =
 	| {
-			import: MONGO_ImportDocument;
+			import: ImportDocument;
 			importStatus: "completed";
 	  }
 	| {
@@ -36,15 +36,15 @@ export type ImportPollStatus =
 			};
 	  };
 
-export interface UGPTStats<GPT extends GPTString = GPTString> {
-	gameStats: MONGO_UserGameStats;
-	firstScore: MONGO_ScoreDocument;
-	mostRecentScore: MONGO_ScoreDocument;
+export interface UGPTStats<TGame extends V3Game = V3Game> {
+	gameStats: UserGameStats;
+	firstScore: ScoreDocument;
+	mostRecentScore: ScoreDocument;
 	totalScores: integer;
-	rankingData: Record<ProfileRatingAlgorithms[GPT], { outOf: integer; ranking: integer }>;
+	rankingData: Record<ProfileRatingAlgorithms[TGame], { outOf: integer; ranking: integer }>;
 }
 
 export interface ChartQueryReturns {
-	charts: Array<{ __playcount: integer } & MONGO_ChartDocument>;
-	songs: Array<MONGO_SongDocument>;
+	charts: Array<{ __playcount: integer } & ChartDocument>;
+	songs: Array<SongDocument>;
 }

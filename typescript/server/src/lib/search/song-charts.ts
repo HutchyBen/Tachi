@@ -1,46 +1,27 @@
 import { GetChartsBySongId } from "#lib/db-formats/chart";
+import { AllEnabledGames } from "#lib/setup/config";
 import DB from "#services/pg/db";
 import { sql } from "kysely";
 import {
-	type GameGroup,
-	GamePTToV3,
-	type GPTString,
+	type ChartDocument,
+	GameToGameGroup,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
-	MongoChartLegacyId,
-	type Playtype,
-	SplitGPT,
+	type SongDocument,
+	type V3Game,
 } from "tachi-common";
 
-import { MAX_SONG_SEARCH_RESULTS_PER_GAME, searchSpecificGameSongsWithPgIds } from "./songs.js";
+import { MAX_SONG_SEARCH_RESULTS_PER_GAME, searchSpecificGameSongs } from "./songs";
 
-export async function SearchSpecificGameSongsAndCharts(
-	game: GameGroup,
-	search: string,
-	playtype?: Playtype,
-	limit = 100,
-) {
-	const { songs, pgIdByLegacyId } = await searchSpecificGameSongsWithPgIds(game, search, limit);
+export async function SearchSpecificGameSongsAndCharts(game: V3Game, search: string, limit = 100) {
+	const { songs } = await searchSpecificGameSongs(GameToGameGroup(game), search, limit);
 
-	if (!playtype) {
-		throw new Error("SearchSpecificGameSongsAndCharts requires playtype");
-	}
-
-	const v3Game = GamePTToV3(game, playtype);
-
+	// TODO(zk): this is ridiculously slow. We can do a fucking join.
 	const chartLists = await Promise.all(
-		songs.map((song) => {
-			const songID = pgIdByLegacyId.get(song.id);
-
-			if (!songID) {
-				return Promise.resolve([] as Array<MONGO_ChartDocument>);
-			}
-
-			return GetChartsBySongId(v3Game, songID, {
-				omit2dxtraCharts: game === "iidx",
-			});
-		}),
+		songs.map((song) =>
+			GetChartsBySongId(game, song.id, {
+				omit2dxtraCharts: GameToGameGroup(game) === "iidx",
+			}),
+		),
 	);
 
 	const charts = chartLists.flat();
@@ -55,27 +36,16 @@ export async function SearchSpecificGameSongsAndCharts(
  * N matched songs × charts per song could return a huge payload from `/api/v1/search`.
  */
 export async function SearchGlobalGameSongsAndCharts(
-	game: GameGroup,
+	game: V3Game,
 	search: string,
-	playtype?: Playtype,
 	limit = MAX_SONG_SEARCH_RESULTS_PER_GAME,
-): Promise<Array<{ chart: MONGO_ChartDocument; playcount: integer; song: MONGO_SongDocument }>> {
-	const { songs, pgIdByLegacyId: songIdByLegacyId } = await searchSpecificGameSongsWithPgIds(
-		game,
-		search,
-		limit,
-	);
-
-	if (!playtype) {
-		throw new Error("SearchGlobalGameSongsAndCharts requires playtype");
-	}
-
-	const v3Game = GamePTToV3(game, playtype);
+): Promise<Array<{ chart: ChartDocument; playcount: integer; song: SongDocument }>> {
+	const { songs } = await searchSpecificGameSongs(GameToGameGroup(game), search, limit);
 
 	const output: Array<{
-		chart: MONGO_ChartDocument;
+		chart: ChartDocument;
 		playcount: integer;
-		song: MONGO_SongDocument;
+		song: SongDocument;
 	}> = [];
 
 	for (const song of songs) {
@@ -83,15 +53,9 @@ export async function SearchGlobalGameSongsAndCharts(
 			break;
 		}
 
-		const songID = songIdByLegacyId.get(song.id);
-
-		if (!songID) {
-			continue;
-		}
-
 		// eslint-disable-next-line no-await-in-loop -- stop after enough charts; avoids loading every song's charts when the cap is already reached.
-		const songCharts = await GetChartsBySongId(v3Game, songID, {
-			omit2dxtraCharts: game === "iidx",
+		const songCharts = await GetChartsBySongId(game, song.id, {
+			omit2dxtraCharts: GameToGameGroup(game) === "iidx",
 		});
 
 		for (const chart of songCharts) {
@@ -111,42 +75,37 @@ export async function SearchGlobalGameSongsAndCharts(
 		return [];
 	}
 
-	const chartLegacyIds = output.map((o) => MongoChartLegacyId(o.chart));
+	const chartIDs = output.map((o) => o.chart.chartID);
 
 	const playcountRows = await DB.selectFrom("score")
 		.innerJoin("chart", "chart.id", "score.chart_id")
-		.select(["chart.legacy_id", sql<number>`count(score.id)::int`.as("playcount")])
-		.where("chart.legacy_id", "in", chartLegacyIds)
-		.groupBy("chart.legacy_id")
+		.select(["chart.id", sql<number>`count(score.id)::int`.as("playcount")])
+		.where("chart.id", "in", chartIDs)
+		.groupBy("chart.id")
 		.execute();
 
-	const playcountLookup = Object.fromEntries(
-		playcountRows.map((r) => [r.legacy_id, r.playcount]),
-	);
+	const playcountLookup = Object.fromEntries(playcountRows.map((r) => [r.id, r.playcount]));
 
 	for (const row of output) {
-		row.playcount = playcountLookup[MongoChartLegacyId(row.chart)] ?? 0;
+		row.playcount = playcountLookup[row.chart.chartID] ?? 0;
 	}
 
 	return output;
 }
 
-export async function SearchGamesSongsCharts(search: string, gpts: Array<GPTString>) {
+export async function SearchGamesSongsCharts(search: string, games: Array<V3Game> | null) {
+	games = games ?? AllEnabledGames();
+
 	const promises = [];
 
 	const results: Partial<
-		Record<
-			GPTString,
-			Array<{ chart: MONGO_ChartDocument; playcount: integer; song: MONGO_SongDocument }>
-		>
+		Record<V3Game, Array<{ chart: ChartDocument; playcount: integer; song: SongDocument }>>
 	> = {};
 
-	for (const gpt of gpts) {
-		const [game, playtype] = SplitGPT(gpt);
-
+	for (const game of games) {
 		promises.push(
-			SearchGlobalGameSongsAndCharts(game, search, playtype).then((res) => {
-				results[gpt] = res;
+			SearchGlobalGameSongsAndCharts(game, search).then((res) => {
+				results[game] = res;
 			}),
 		);
 	}

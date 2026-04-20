@@ -1,22 +1,22 @@
 import { type CellsRenderFN } from "#types/seeds";
 import { FlattenValue, StringifyKeyChain } from "#util/misc";
-import { NumericSOV, StrSOV } from "#util/sorts";
+import { StrSOV } from "#util/sorts";
 import { type SearchFunctions } from "#util/ztable/search";
 import React from "react";
-import { type GameGroup, type MONGO_SongDocument } from "tachi-common";
+import { type SongDocument, type V3Game } from "tachi-common";
 
 import ObjCell from "../cells/ObjCell";
 import TitleCell from "../cells/TitleCell";
 import { type Header } from "../components/TachiTable";
 
-export function MakeSeedsSongsControls(game: GameGroup): {
-	Cells: CellsRenderFN<MONGO_SongDocument>;
-	headers: Header<MONGO_SongDocument>[];
-	searchFns: SearchFunctions<MONGO_SongDocument>;
+export function MakeSeedsSongsControls(game: V3Game): {
+	Cells: CellsRenderFN<SongDocument>;
+	headers: Header<SongDocument>[];
+	searchFns: SearchFunctions<SongDocument>;
 } {
 	return {
 		headers: [
-			["ID", "ID", NumericSOV((x) => x.id)],
+			["ID", "ID", StrSOV((x) => x.id)],
 			["Title", "Title", StrSOV((x) => x.title)],
 			["Data", "Data"],
 		],

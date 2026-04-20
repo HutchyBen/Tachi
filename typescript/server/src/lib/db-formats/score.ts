@@ -1,15 +1,10 @@
 import { pgScoreDataToMongo } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import { ISO8601ToUnixMilliseconds } from "#utils/time";
-import {
-	type GameGroup,
-	type ImportTypes,
-	type MONGO_ScoreDocument,
-	V3ToGamePT,
-} from "tachi-common";
+import { type GameGroup, type ImportTypes, type ScoreDocument } from "tachi-common";
 import { type Game } from "tachi-db";
 
-/** Columns from `score` joined with chart/song for a full {@link MONGO_ScoreDocument}. */
+/** Columns from `score` joined with chart/song for a full {@link ScoreDocument}. */
 export const SELECT_SCORE_DOCUMENT = [
 	"score.id as score_id",
 	"score.user_id as score_user_id",
@@ -25,7 +20,7 @@ export const SELECT_SCORE_DOCUMENT = [
 	"score.comment as score_comment",
 	"chart.id as chart_id",
 	"chart.is_primary as chart_is_primary",
-	"song.legacy_id as song_legacy_id",
+	"song.id as song_id",
 	"import.service as import_service",
 	"import.import_type as import_import_type",
 ] as const;
@@ -46,23 +41,21 @@ export interface ScoreDocumentJoinRow {
 	score_comment: string | null;
 	chart_id: string;
 	chart_is_primary: boolean;
-	song_legacy_id: number;
+	song_id: string;
 	import_service: string | null;
 	import_import_type: string | null;
 }
 
-export function ToScoreDocument(row: ScoreDocumentJoinRow): MONGO_ScoreDocument {
-	const { game, playtype } = V3ToGamePT(row.score_game);
-
+export function ToScoreDocument(row: ScoreDocumentJoinRow): ScoreDocument {
 	const scoreData = pgScoreDataToMongo(row.score_game, {
 		data: row.score_data as any,
 		derived: row.score_derived_data as any,
 		judgements: row.score_judgements as any,
 	});
 
-	const scoreMeta = row.score_meta as MONGO_ScoreDocument["scoreMeta"];
+	const scoreMeta = row.score_meta as ScoreDocument["scoreMeta"];
 
-	const calculatedData = row.score_calculated_data as MONGO_ScoreDocument["calculatedData"];
+	const calculatedData = row.score_calculated_data as ScoreDocument["calculatedData"];
 
 	const service =
 		row.import_service !== null &&
@@ -74,8 +67,7 @@ export function ToScoreDocument(row: ScoreDocumentJoinRow): MONGO_ScoreDocument 
 	return {
 		// todo(?)
 		service,
-		game,
-		playtype,
+		game: row.score_game,
 		userID: row.score_user_id,
 		scoreData,
 		scoreMeta: scoreMeta ?? {},
@@ -83,7 +75,7 @@ export function ToScoreDocument(row: ScoreDocumentJoinRow): MONGO_ScoreDocument 
 		timeAchieved: row.score_time_achieved
 			? ISO8601ToUnixMilliseconds(row.score_time_achieved)
 			: null,
-		songID: row.song_legacy_id,
+		songID: row.song_id,
 		chartID: row.chart_id,
 		isPrimary: row.chart_is_primary,
 		highlight: row.score_highlight,
@@ -94,9 +86,7 @@ export function ToScoreDocument(row: ScoreDocumentJoinRow): MONGO_ScoreDocument 
 	};
 }
 
-export async function LoadScoreDocumentById(
-	scoreID: string,
-): Promise<MONGO_ScoreDocument | undefined> {
+export async function LoadScoreDocumentById(scoreID: string): Promise<ScoreDocument | undefined> {
 	const row = await DB.selectFrom("score")
 		.innerJoin("chart", "chart.id", "score.chart_id")
 		.innerJoin("song", "song.id", "chart.song_id")
@@ -113,9 +103,7 @@ export async function LoadScoreDocumentById(
 }
 
 /** All scores linked to a Postgres `import.id` (`score.import_id`). */
-export async function LoadScoreDocumentsForImport(
-	importId: string,
-): Promise<Array<MONGO_ScoreDocument>> {
+export async function LoadScoreDocumentsForImport(importId: string): Promise<Array<ScoreDocument>> {
 	const rows = await DB.selectFrom("score")
 		.innerJoin("chart", "chart.id", "score.chart_id")
 		.innerJoin("song", "song.id", "chart.song_id")
@@ -133,7 +121,7 @@ export async function LoadScoreDocumentsForImport(
 export async function LoadScoreDocumentsByChartKeyAndGameGroup(
 	game: GameGroup,
 	chartID: string,
-): Promise<Array<MONGO_ScoreDocument>> {
+): Promise<Array<ScoreDocument>> {
 	const rows = await DB.selectFrom("score")
 		.innerJoin("chart", "chart.id", "score.chart_id")
 		.innerJoin("song", "song.id", "chart.song_id")

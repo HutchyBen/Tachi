@@ -1,19 +1,9 @@
-import {
-	type Difficulties,
-	type GameGroup,
-	GetGamePTConfig,
-	type GPTString,
-	type Playtype,
-} from "tachi-common";
+import { type Difficulties, FormatGame, GetGameConfig, type V3Game } from "tachi-common";
 
 import { InvalidScoreFailure } from "./converter-failures";
 
-export function AssertStrAsDifficulty(
-	strVal: string,
-	game: GameGroup,
-	playtype: Playtype,
-): Difficulties[GPTString] {
-	const diffConf = GetGamePTConfig(game, playtype).difficulties;
+export function AssertStrAsDifficulty(strVal: string, game: V3Game): Difficulties[V3Game] {
+	const diffConf = GetGameConfig(game).difficulties;
 
 	if (diffConf.type === "DYNAMIC") {
 		// lol
@@ -26,7 +16,7 @@ export function AssertStrAsDifficulty(
 		}
 
 		throw new InvalidScoreFailure(
-			`Invalid Difficulty for ${game} ${playtype} - Expected any of ${diffConf.order.join(
+			`Invalid Difficulty for ${FormatGame(game)} - Expected any of ${diffConf.order.join(
 				", ",
 			)} (Got ${strVal})`,
 		);

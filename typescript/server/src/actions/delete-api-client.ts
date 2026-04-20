@@ -1,5 +1,5 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import DB from "#services/pg/db.js";
+import { MakeAction } from "#lib/actions/actions";
+import DB from "#services/pg/db";
 import { ExpectedErr } from "bliss";
 
 export const ACTION_DeleteApiClient = MakeAction(

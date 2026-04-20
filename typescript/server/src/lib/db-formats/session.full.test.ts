@@ -90,8 +90,7 @@ describe("LoadSessionDocumentById", () => {
 			userID: userId,
 			name: "N",
 			scoreIDs: [scoreId],
-			game: "iidx",
-			playtype: "SP",
+			game: "iidx-sp",
 		});
 	});
 });

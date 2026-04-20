@@ -8,17 +8,15 @@ import { HumanFriendlyStrToEnumIndex } from "#util/str-to-num";
 import { type ValueGetterOrHybrid } from "#util/ztable/search";
 import {
 	BMS_TABLES,
-	type GameGroup,
-	type GamePTConfig,
-	GetGamePTConfig,
-	type GPTString,
-	type MONGO_ChartDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_ScoreDocument,
-	type Playtype,
+	type ChartDocument,
+	type GameConfig,
+	GetGameConfig,
+	type PBScoreDocument,
+	type ScoreDocument,
+	type V3Game,
 } from "tachi-common";
 
-function GetBMSTableVal(chart: MONGO_ChartDocument<"bms:7K" | "bms:14K">, key: string) {
+function GetBMSTableVal(chart: ChartDocument<"bms-7k" | "bms-14k">, key: string) {
 	for (const [table, level] of Object.entries(chart.data.tableFolders)) {
 		if (table === key) {
 			return Number(level);
@@ -28,11 +26,8 @@ function GetBMSTableVal(chart: MONGO_ChartDocument<"bms:7K" | "bms:14K">, key: s
 	return null;
 }
 
-export function CreateDefaultScoreSearchParams<GPT extends GPTString = GPTString>(
-	game: GameGroup,
-	playtype: Playtype,
-) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+export function CreateDefaultScoreSearchParams<GPT extends V3Game = V3Game>(game: GPT) {
+	const gameConfig = GetGameConfig(game);
 
 	const searchFunctions: Record<string, ValueGetterOrHybrid<ScoreDataset<GPT>[0]>> = {
 		artist: (x) => x.__related.song.artist,
@@ -41,32 +36,28 @@ export function CreateDefaultScoreSearchParams<GPT extends GPTString = GPTString
 		level: (x) => x.__related.chart.levelNum,
 		highlight: (x) => !!x.highlight,
 		service: (x) => x.service,
-		...GetMetricSearchParams(game, playtype),
-		...CreateCalcDataSearchFns(gptConfig),
+		...GetMetricSearchParams(game),
+		...CreateCalcDataSearchFns(gameConfig),
 	};
 
-	if (game === "bms") {
-		HandleBMSNonsense(searchFunctions, playtype, (k) => k.__related.chart);
+	if (game === "bms-7k" || game === "bms-14k") {
+		HandleBMSNonsense(searchFunctions, game as "bms-7k" | "bms-14k", (k) => k.__related.chart);
 	}
 
 	return searchFunctions;
 }
 
 export function GetMetricSearchParams(
-	game: GameGroup,
-	playtype: Playtype,
-	kMapper: (v: any) => MONGO_PBScoreDocument | MONGO_ScoreDocument = (v) => v,
+	game: V3Game,
+	kMapper: (v: any) => PBScoreDocument | ScoreDocument = (v) => v,
 ) {
-	const searchFns: Record<
-		string,
-		ValueGetterOrHybrid<MONGO_PBScoreDocument | MONGO_ScoreDocument>
-	> = {};
+	const searchFns: Record<string, ValueGetterOrHybrid<PBScoreDocument | ScoreDocument>> = {};
 
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
 	for (const [metric, conf] of Object.entries({
-		...gptConfig.providedMetrics,
-		...gptConfig.derivedMetrics,
+		...gameConfig.providedMetrics,
+		...gameConfig.derivedMetrics,
 	})) {
 		switch (conf.type) {
 			case "ENUM":
@@ -88,7 +79,7 @@ export function GetMetricSearchParams(
 
 						return [sv, dv];
 					},
-					strToNum: HumanFriendlyStrToEnumIndex(game, playtype, metric),
+					strToNum: HumanFriendlyStrToEnumIndex(game, metric),
 				};
 				break;
 			case "INTEGER":
@@ -101,11 +92,8 @@ export function GetMetricSearchParams(
 	return searchFns;
 }
 
-export function CreateDefaultPBSearchParams<GPT extends GPTString = GPTString>(
-	game: GameGroup,
-	playtype: Playtype,
-) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+export function CreateDefaultPBSearchParams<GPT extends V3Game = V3Game>(game: GPT) {
+	const gameConfig = GetGameConfig(game);
 
 	const searchFunctions: Record<string, ValueGetterOrHybrid<PBDataset<GPT>[0]>> = {
 		artist: (x) => x.__related.song.artist,
@@ -116,21 +104,18 @@ export function CreateDefaultPBSearchParams<GPT extends GPTString = GPTString>(
 		rivalRanking: (x) => x.rankingData.rivalRank,
 		highlight: (x) => !!x.highlight,
 		username: (x) => x.__related.user?.username ?? null,
-		...GetMetricSearchParams(game, playtype),
-		...CreateCalcDataSearchFns(gptConfig),
+		...GetMetricSearchParams(game),
+		...CreateCalcDataSearchFns(gameConfig),
 	};
 
-	if (game === "bms") {
-		HandleBMSNonsense(searchFunctions, playtype, (k) => k.__related.chart);
+	if (game === "bms-7k" || game === "bms-14k") {
+		HandleBMSNonsense(searchFunctions, game as "bms-7k" | "bms-14k", (k) => k.__related.chart);
 	}
 
 	return searchFunctions;
 }
 
-export function CreatePBCompareSearchParams<GPT extends GPTString = GPTString>(
-	game: GameGroup,
-	playtype: Playtype,
-) {
+export function CreatePBCompareSearchParams<GPT extends V3Game = V3Game>(game: GPT) {
 	const searchFunctions: Record<string, ValueGetterOrHybrid<ComparePBsDataset<GPT>[0]>> = {
 		artist: (x) => x.song.artist,
 		title: (x) => x.song.title,
@@ -138,18 +123,15 @@ export function CreatePBCompareSearchParams<GPT extends GPTString = GPTString>(
 		level: (x) => x.chart.levelNum,
 	};
 
-	if (game === "bms") {
-		HandleBMSNonsense(searchFunctions, playtype, (k) => k.chart);
+	if (game === "bms-7k" || game === "bms-14k") {
+		HandleBMSNonsense(searchFunctions, game as "bms-7k" | "bms-14k", (k) => k.chart);
 	}
 
 	return searchFunctions;
 }
 
-export function CreateDefaultFolderSearchParams<GPT extends GPTString = GPTString>(
-	game: GameGroup,
-	playtype: Playtype,
-) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+export function CreateDefaultFolderSearchParams<GPT extends V3Game = V3Game>(game: GPT) {
+	const gameConfig = GetGameConfig(game);
 
 	const searchFunctions: Record<string, ValueGetterOrHybrid<FolderDataset<GPT>[0]>> = {
 		artist: (x) => x.__related.song.artist,
@@ -160,20 +142,20 @@ export function CreateDefaultFolderSearchParams<GPT extends GPTString = GPTStrin
 		rivalRanking: (x) => x.__related.pb?.rankingData.rivalRank ?? null,
 		highlight: (x) => !!x.__related.pb?.highlight,
 		played: (x) => !!x.__related.pb,
-		...GetMetricSearchParams(game, playtype, (k) => k.__related.pb),
-		...CreateFolderCalcDataSearchFns(gptConfig),
+		...GetMetricSearchParams(game, (k) => k.__related.pb),
+		...CreateFolderCalcDataSearchFns(gameConfig),
 	};
 
-	if (game === "bms") {
-		HandleBMSNonsense(searchFunctions, playtype, (k) => k);
+	if (game === "bms-7k" || game === "bms-14k") {
+		HandleBMSNonsense(searchFunctions, game as "bms-7k" | "bms-14k", (k) => k);
 	}
 
 	return searchFunctions;
 }
 
-function CreateFolderCalcDataSearchFns(gptConfig: GamePTConfig) {
+function CreateFolderCalcDataSearchFns(gameConfig: GameConfig) {
 	return Object.fromEntries(
-		Object.keys(gptConfig.scoreRatingAlgs).map((e) => [
+		Object.keys(gameConfig.scoreRatingAlgs).map((e) => [
 			e.toLowerCase(),
 			// @ts-expect-error this is fine please leave me alone
 			(x: FolderDataset[0]) => x.__related.pb?.calculatedData[e] ?? null,
@@ -181,9 +163,9 @@ function CreateFolderCalcDataSearchFns(gptConfig: GamePTConfig) {
 	);
 }
 
-function CreateCalcDataSearchFns(gptConfig: GamePTConfig) {
+function CreateCalcDataSearchFns(gameConfig: GameConfig) {
 	return Object.fromEntries(
-		Object.keys(gptConfig.scoreRatingAlgs).map(
+		Object.keys(gameConfig.scoreRatingAlgs).map(
 			// @ts-expect-error this is fine please leave me alone
 			(e) => [e.toLowerCase(), (x: PBDataset[0]) => x.calculatedData[e]],
 		),
@@ -195,11 +177,11 @@ function CreateCalcDataSearchFns(gptConfig: GamePTConfig) {
  */
 function HandleBMSNonsense(
 	searchFunctions: Record<string, any>,
-	playtype: Playtype,
-	chartGetter: (u: any) => MONGO_ChartDocument<"bms:7K" | "bms:14K">,
+	game: "bms-7k" | "bms-14k",
+	chartGetter: (u: any) => ChartDocument<"bms-7k" | "bms-14k">,
 ) {
 	const appendSearches: Record<string, ValueGetterOrHybrid<any>> = Object.fromEntries(
-		BMS_TABLES.filter((e) => e.playtype === playtype).map((e) => [
+		BMS_TABLES.filter((e) => e.game === game).map((e) => [
 			e.asciiPrefix,
 			(x) => GetBMSTableVal(chartGetter(x), e.prefix),
 		]),

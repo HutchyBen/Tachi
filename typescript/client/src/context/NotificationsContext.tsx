@@ -1,12 +1,12 @@
 import { type JustChildren } from "#types/react";
 import { APIFetchV1 } from "#util/api";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { type MONGO_NotificationDocument } from "tachi-common";
+import { type NotificationDocument } from "tachi-common";
 
 import { UserContext } from "./UserContext";
 
 export const NotificationsContext = createContext<{
-	notifications: Array<MONGO_NotificationDocument>;
+	notifications: Array<NotificationDocument>;
 	reload: () => Promise<void>;
 }>({
 	notifications: [],
@@ -17,7 +17,7 @@ export const NotificationsContext = createContext<{
 export function NotificationsContextProvider({ children }: JustChildren) {
 	const { user } = useContext(UserContext);
 
-	const [notifications, setNotifications] = useState<Array<MONGO_NotificationDocument>>([]);
+	const [notifications, setNotifications] = useState<Array<NotificationDocument>>([]);
 
 	const reload = async () => {
 		if (!user) {
@@ -25,7 +25,7 @@ export function NotificationsContextProvider({ children }: JustChildren) {
 			return;
 		}
 
-		await APIFetchV1<Array<MONGO_NotificationDocument>>(`/users/${user.id}/notifications`).then(
+		await APIFetchV1<Array<NotificationDocument>>(`/users/${user.id}/notifications`).then(
 			(r) => {
 				if (!r.success) {
 					setNotifications([]);

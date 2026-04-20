@@ -1,448 +1,194 @@
-import { ACTION_DeleteScore } from "#actions/delete-score.js";
-import { ACTION_DeleteSession } from "#actions/delete-session.js";
-import { ACTION_RebuildFolderChartLookup } from "#actions/rebuild-folder-chart-lookup.js";
-import { ACTION_SetUserSupporterStatus } from "#actions/set-user-supporter-status.js";
+import { ACTION_DeleteScore } from "#actions/delete-score";
+import { ACTION_DeleteSession } from "#actions/delete-session";
+import { ACTION_RebuildFolderChartLookup } from "#actions/rebuild-folder-chart-lookup";
+import { ACTION_SetUserSupporterStatus } from "#actions/set-user-supporter-status";
 import {
 	GetActions,
 	GetActiveJobs,
 	GetCronTaskExecutions,
 	GetCronTasks,
 	GetJobQueue,
-} from "#lib/admin/admin-queries.js";
+} from "#lib/admin/admin-queries";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
-import { log } from "#lib/log/log";
 import { SendSiteAnnouncementNotification } from "#lib/notifications/notification-wrappers";
+import { withAdmin } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
 import { TachiConfig } from "#lib/setup/config";
-import prValidate from "#server/middleware/prudence-validate";
-import DB from "#services/pg/db.js";
+import DB from "#services/pg/db";
 import { IsValidPlaytype } from "#utils/misc";
-import DestroyUserGameProfile from "#utils/reset-state/destroy-user-game-profile.js";
-import { GetUserWithID, GetUserWithIDGuaranteed, ResolveUser } from "#utils/user";
-import { type RequestHandler, Router } from "express";
-import { p } from "prudence";
+import DestroyUserGameProfile from "#utils/reset-state/destroy-user-game-profile";
+import { GetUserWithIDGuaranteed, ResolveUser } from "#utils/user";
+import { ExpectedErr } from "bliss";
 import {
 	type GameGroup,
-	GamePTToV3,
-	type integer,
-	type Playtype,
-	UserAuthLevels,
+	GameToGameGroup,
+	LEGACY_GameGroupPTToGame,
+	type LEGACY_Playtype,
+	type V3Game,
 } from "tachi-common";
 
-const router: Router = Router({ mergeParams: true });
+import { API_V1_ROUTER } from "../router";
 
-const RequireAdminLevel: RequestHandler = async (req, res, next) => {
-	if (req[SYMBOL_TACHI_API_AUTH].userID === null) {
-		return res.status(401).json({
-			success: false,
-			description: `You are not authenticated.`,
-		});
-	}
-
-	const userDoc = await GetUserWithID(req[SYMBOL_TACHI_API_AUTH].userID);
-
-	if (!userDoc) {
-		log.error(
-			`Api Token ${req[SYMBOL_TACHI_API_AUTH].token} is assigned to ${req[SYMBOL_TACHI_API_AUTH].userID}, who does not exist?`,
-		);
-
-		return res.status(500).json({
-			success: false,
-			description: `An internal error has occured.`,
-		});
-	}
-
-	if (userDoc.authLevel !== UserAuthLevels.ADMIN) {
-		return res.status(403).json({
-			success: false,
-			description: `You are not authorised to perform this.`,
-		});
-	}
-
-	next();
-};
-
-router.use(RequireAdminLevel);
-
-/**
- * @name GET /api/v1/admin/job-queue
- */
-router.get("/job-queue", async (req, res) => {
-	const page = Math.max(0, Number(req.query.page ?? 0));
-	const statusRaw = req.query.status;
+API_V1_ROUTER.add("GET /admin/job-queue", withAdmin, async ({ input }) => {
+	const page = Math.max(0, input.page ?? 0);
+	const statusRaw = input.status;
 	let status: number | undefined;
-	if (typeof statusRaw === "string" && statusRaw !== "") {
+
+	if (statusRaw !== undefined && statusRaw !== "") {
 		const n = Number.parseInt(statusRaw, 10);
+
 		if (!Number.isNaN(n)) {
 			status = n;
 		}
 	}
-	const job_kind =
-		typeof req.query.job_kind === "string" && req.query.job_kind !== ""
-			? req.query.job_kind
-			: undefined;
-	const scope =
-		typeof req.query.scope === "string" && req.query.scope !== "" ? req.query.scope : undefined;
+
+	const jobKind =
+		input.job_kind !== undefined && input.job_kind !== "" ? input.job_kind : undefined;
+	const scope = input.scope !== undefined && input.scope !== "" ? input.scope : undefined;
 
 	const [activeJobs, jobQueue] = await Promise.all([
 		GetActiveJobs(),
-		GetJobQueue({ page, status, job_kind, scope }),
+		GetJobQueue({ job_kind: jobKind, page, scope, status }),
 	]);
 
-	return res.status(200).json({
-		success: true,
-		description: "Done.",
-		body: { activeJobs, jobQueue, filters: { status, job_kind, scope } },
+	return success("Done.", {
+		activeJobs,
+		filters: { job_kind: jobKind, scope, status },
+		jobQueue,
 	});
 });
 
-/**
- * @name GET /api/v1/admin/actions
- */
-router.get("/actions", async (req, res) => {
-	const page = Math.max(0, Number(req.query.page ?? 0));
-	const kind =
-		typeof req.query.kind === "string" && req.query.kind !== "" ? req.query.kind : undefined;
+API_V1_ROUTER.add("GET /admin/actions", withAdmin, async ({ input }) => {
+	const page = Math.max(0, input.page ?? 0);
+	const kind = input.kind !== undefined && input.kind !== "" ? input.kind : undefined;
 	const username =
-		typeof req.query.username === "string" && req.query.username !== ""
-			? req.query.username
-			: undefined;
+		input.username !== undefined && input.username !== "" ? input.username : undefined;
 
 	const actions = await GetActions({ page, kind, username });
 
-	return res.status(200).json({
-		success: true,
-		description: "Done.",
-		body: { actions, filters: { kind, username } },
-	});
+	return success("Done.", { actions, filters: { kind, username } });
 });
 
-/**
- * @name GET /api/v1/admin/cron-tasks
- */
-router.get("/cron-tasks", async (_req, res) => {
+API_V1_ROUTER.add("GET /admin/cron-tasks", withAdmin, async () => {
 	const [tasks, executions] = await Promise.all([GetCronTasks(), GetCronTaskExecutions(100)]);
 
-	return res.status(200).json({
-		success: true,
-		description: "Done.",
-		body: { tasks, executions },
-	});
+	return success("Done.", { executions, tasks });
 });
 
-/**
- * Resynchronises all PBs that match the given query or users.
- *
- * @param userIDs - Optionally, An array of integers of users to resync.
- * @param filter - Optionally, the set of scores to resync.
- *
- * @name POST /api/v1/admin/resync-pbs
- */
-router.post(
-	"/resync-pbs",
-	prValidate({
-		userIDs: p.optional([p.isPositiveInteger]),
-		filter: "*object",
-	}),
-	(_req, res) =>
-		res.status(501).json({
-			success: false,
-			description: `Not implemented.`,
-		}),
-);
+API_V1_ROUTER.add("POST /admin/resync-pbs", withAdmin, () => {
+	throw new ExpectedErr(501, "Not implemented.");
+});
 
-/**
- * Force Delete anyones score.
- *
- * @param scoreID - The scoreID to delete.
- *
- * @name POST /api/v1/admin/delete-score
- */
-router.post("/delete-score", prValidate({ scoreID: "string" }), async (req, res) => {
-	const body = req.safeBody as { scoreID: string };
+API_V1_ROUTER.add("POST /admin/delete-score", withAdmin, async ({ input, req }) => {
+	const adminUserID = req[SYMBOL_TACHI_API_AUTH].userID!;
+	const adminUser = await GetUserWithIDGuaranteed(adminUserID);
+	const taker = { acct: { id: adminUser.id, username: adminUser.username }, ip: req.ip };
 
-	const adminUserID = req[SYMBOL_TACHI_API_AUTH].userID;
+	await ACTION_DeleteScore(taker, { id: input.scoreID });
 
-	if (adminUserID === null) {
-		return res.status(401).json({
-			success: false,
-			description: `You are not authenticated.`,
-		});
+	return success("Removed score.", {});
+});
+
+API_V1_ROUTER.add("POST /admin/delete-session", withAdmin, async ({ input, req }) => {
+	const adminUserID = req[SYMBOL_TACHI_API_AUTH].userID!;
+	const adminUser = await GetUserWithIDGuaranteed(adminUserID);
+	const taker = { acct: { id: adminUser.id, username: adminUser.username }, ip: req.ip };
+
+	await ACTION_DeleteSession(taker, { id: input.sessionID });
+
+	return success("Removed session.", {});
+});
+
+API_V1_ROUTER.add("POST /admin/destroy-ugpt", withAdmin, async ({ input }) => {
+	const gameGroup = input.game as GameGroup;
+	const playtype = input.playtype as LEGACY_Playtype;
+
+	if (!IsValidPlaytype(gameGroup, playtype)) {
+		throw new ExpectedErr(400, `Invalid playtype ${playtype} for game ${gameGroup}.`);
 	}
 
-	const adminUser = await GetUserWithIDGuaranteed(adminUserID);
-	const taker = { ip: req.ip, acct: { id: adminUser.id, username: adminUser.username } };
+	const game = LEGACY_GameGroupPTToGame(gameGroup, playtype);
 
-	await ACTION_DeleteScore(taker, { id: body.scoreID });
+	const ugpt = await DB.selectFrom("game_profile")
+		.where("user_id", "=", input.userID)
+		.where("game", "=", game)
+		.executeTakeFirst();
 
-	return res.status(200).json({
-		success: true,
-		description: `Removed score.`,
-		body: {},
-	});
-});
-
-/**
- * Force Delete anyones session.
- *
- * @param sessionID - The sessionID to delete.
- *
- * @name POST /api/v1/admin/delete-session
- */
-router.post("/delete-session", prValidate({ sessionID: "string" }), async (req, res) => {
-	const body = req.safeBody as { sessionID: string };
-
-	const adminUserID = req[SYMBOL_TACHI_API_AUTH].userID;
-
-	if (adminUserID === null) {
-		return res.status(401).json({
-			success: false,
-			description: `You are not authenticated.`,
-		});
+	if (!ugpt) {
+		throw new ExpectedErr(
+			404,
+			`No stats for ${input.userID} (${gameGroup} ${playtype}) exist.`,
+		);
 	}
 
-	const adminUser = await GetUserWithIDGuaranteed(adminUserID);
-	const taker = { ip: req.ip, acct: { id: adminUser.id, username: adminUser.username } };
+	await DestroyUserGameProfile(input.userID, gameGroup, playtype);
 
-	await ACTION_DeleteSession(taker, { id: body.sessionID });
-
-	return res.status(200).json({
-		success: true,
-		description: `Removed session.`,
-		body: {},
-	});
+	return success(`Completely destroyed UGPT for ${input.userID} (${gameGroup} ${playtype}).`, {});
 });
 
-/**
- * Destroys a users UGPT profile and forces a leaderboard recalc.
- *
- * @param userID - The U...
- * @param game - The G...
- * @param playtype - And the PT to delete.
- *
- * @name POST /api/v1/admin/destroy-ugpt
- */
-router.post(
-	"/destroy-ugpt",
-	prValidate({
-		userID: p.isInteger,
-		game: p.isIn(TachiConfig.GAMES),
-		playtype: (self, parent) => {
-			if (typeof self !== "string") {
-				return "Expected a string for a playtype.";
-			}
+API_V1_ROUTER.add("POST /admin/recalc", withAdmin, () => {
+	throw new ExpectedErr(501, "Not implemented.");
+});
 
-			if (!IsValidPlaytype(parent.game as GameGroup, self)) {
-				return `Invalid playtype of ${self} for game ${parent.game as GameGroup}.`;
-			}
+API_V1_ROUTER.add("POST /admin/announcement", withAdmin, async ({ input }) => {
+	const game = input.game as V3Game | undefined;
 
-			return true;
-		},
-	}),
-	async (req, res) => {
-		const { userID, game, playtype } = req.safeBody as {
-			game: GameGroup;
-			playtype: Playtype;
-			userID: integer;
-		};
-
-		const ugpt = await DB.selectFrom("game_profile")
-			.where("user_id", "=", userID)
-			.where("game", "=", GamePTToV3(game, playtype))
-			.executeTakeFirst();
-
-		if (!ugpt) {
-			return res.status(404).json({
-				success: false,
-				description: `No stats for ${userID} (${game} ${playtype}) exist.`,
-			});
+	if (game) {
+		if (!TachiConfig.GAME_GROUPS.includes(GameToGameGroup(game))) {
+			throw new ExpectedErr(400, `This game is not enabled '${game}'.`);
 		}
+	}
 
-		await DestroyUserGameProfile(userID, game, playtype);
+	await SendSiteAnnouncementNotification(input.title, game);
 
-		return res.status(200).json({
-			success: true,
-			description: `Completely destroyed UGPT for ${userID} (${game} ${playtype}).`,
-			body: {},
-		});
-	},
-);
+	return success(`Sent notification '${input.title}'.`, {});
+});
 
-/**
- * Perform a site recalc on this set of scores.
- *
- * @name POST /api/v1/admin/recalc
- */
-router.post("/recalc", (_req, res) =>
-	res.status(501).json({
-		success: false,
-		description: `Not implemented.`,
-	}),
-);
-
-/**
- * Send an announcement to the site.
- *
- * @name POST /api/v1/admin/announcement
- */
-router.post(
-	"/announcement",
-	prValidate({
-		game: p.optional(p.isIn(TachiConfig.GAMES)),
-		playtype: "*string",
-		title: "string",
-	}),
-	async (req, res) => {
-		const { game, playtype, title } = req.safeBody as {
-			game?: GameGroup;
-			playtype?: string;
-			title: string;
-		};
-
-		let maybePlaytype: Playtype | undefined;
-
-		if (game && playtype) {
-			if (!IsValidPlaytype(game, playtype)) {
-				return res.status(400).json({
-					success: false,
-					description: `Invalid playtype '${playtype}' for game '${game}'.`,
-				});
-			}
-
-			maybePlaytype = playtype;
-		}
-
-		await SendSiteAnnouncementNotification(title, game, maybePlaytype);
-
-		return res.status(200).json({
-			success: true,
-			description: `Sent notification '${title}'.`,
-			body: {},
-		});
-	},
-);
-
-/**
- * Make this user a Tachi supporter.
- *
- * @name POST /api/v1/admin/supporter/:userID
- */
-router.post("/supporter/:userID", async (req, res) => {
-	const target = await ResolveUser(req.params.userID);
+API_V1_ROUTER.add("POST /admin/supporter/:userID", withAdmin, async ({ params, req }) => {
+	const target = await ResolveUser(params.userID);
 
 	if (!target) {
-		return res.status(404).json({
-			success: false,
-			description: `This user does not exist.`,
-		});
+		throw new ExpectedErr(404, "This user does not exist.");
 	}
 
-	const adminUserID = req[SYMBOL_TACHI_API_AUTH].userID;
-
-	if (adminUserID === null) {
-		return res.status(401).json({
-			success: false,
-			description: `You are not authenticated.`,
-		});
-	}
-
+	const adminUserID = req[SYMBOL_TACHI_API_AUTH].userID!;
 	const adminUser = await GetUserWithIDGuaranteed(adminUserID);
-	const taker = { ip: req.ip, acct: { id: adminUser.id, username: adminUser.username } };
+	const taker = { acct: { id: adminUser.id, username: adminUser.username }, ip: req.ip };
 
-	await ACTION_SetUserSupporterStatus(taker, { userID: target.id, isSupporter: true });
+	await ACTION_SetUserSupporterStatus(taker, { isSupporter: true, userID: target.id });
 
-	return res.status(200).json({
-		success: true,
-		description: `Done.`,
-		body: {},
-	});
+	return success("Done.", {});
 });
 
-/**
- * Un-Make this user a Tachi supporter.
- *
- * @name DELETE /api/v1/admin/supporter/:userID
- */
-router.delete("/supporter/:userID", async (req, res) => {
-	const target = await ResolveUser(req.params.userID);
+API_V1_ROUTER.add("DELETE /admin/supporter/:userID", withAdmin, async ({ params, req }) => {
+	const target = await ResolveUser(params.userID);
 
 	if (!target) {
-		return res.status(404).json({
-			success: false,
-			description: `This user does not exist.`,
-		});
+		throw new ExpectedErr(404, "This user does not exist.");
 	}
 
-	const adminUserID = req[SYMBOL_TACHI_API_AUTH].userID;
-
-	if (adminUserID === null) {
-		return res.status(401).json({
-			success: false,
-			description: `You are not authenticated.`,
-		});
-	}
-
+	const adminUserID = req[SYMBOL_TACHI_API_AUTH].userID!;
 	const adminUser = await GetUserWithIDGuaranteed(adminUserID);
-	const taker = { ip: req.ip, acct: { id: adminUser.id, username: adminUser.username } };
+	const taker = { acct: { id: adminUser.id, username: adminUser.username }, ip: req.ip };
 
-	await ACTION_SetUserSupporterStatus(taker, { userID: target.id, isSupporter: false });
+	await ACTION_SetUserSupporterStatus(taker, { isSupporter: false, userID: target.id });
 
-	return res.status(200).json({
-		success: true,
-		description: `Done.`,
-		body: {},
-	});
+	return success("Done.", {});
 });
 
-/**
- * Rebuilds the Postgres `folder_chart_lookup` table (chart → folders cache).
- *
- * @param folderId - If set, only rebuild that folder's rows.
- *
- * @name POST /api/v1/admin/rebuild-folder-chart-lookup
- */
-router.post(
-	"/rebuild-folder-chart-lookup",
-	prValidate({
-		folderId: p.optional("string"),
-	}),
-	async (req, res) => {
-		const userID = req[SYMBOL_TACHI_API_AUTH].userID;
+API_V1_ROUTER.add("POST /admin/rebuild-folder-chart-lookup", withAdmin, async ({ input, req }) => {
+	const adminUserID = req[SYMBOL_TACHI_API_AUTH].userID!;
+	const user = await GetUserWithIDGuaranteed(adminUserID);
+	const taker = { acct: { id: user.id, username: user.username }, ip: req.ip };
 
-		if (userID === null) {
-			return res.status(401).json({
-				success: false,
-				description: `You are not authenticated.`,
-			});
-		}
+	const result = await ACTION_RebuildFolderChartLookup(taker, { folderId: input.folderId });
 
-		const user = await GetUserWithIDGuaranteed(userID);
-		const body = req.safeBody as { folderId?: string };
-		const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
+	return success(
+		`Rebuilt folder_chart_lookup (${result.folderCount} folders, ${result.rowCount} rows).`,
+		result,
+	);
+});
 
-		const result = await ACTION_RebuildFolderChartLookup(taker, {
-			folderId: body.folderId,
-		});
-
-		return res.status(200).json({
-			success: true,
-			description: `Rebuilt folder_chart_lookup (${result.folderCount} folders, ${result.rowCount} rows).`,
-			body: result,
-		});
-	},
-);
-
-/**
- * Reprocess all goals for every user. This should be used to un-screw the site
- * if the server goes down or peoples goals fall out of sync. Obviously, this
- * should never happen, but the error handling around this stuff is really wacky.
- *
- * @name POST /api/v1/admin/reprocess-all-goals
- */
-router.post("/reprocess-all-goals", (_req, res) =>
-	res.status(501).json({
-		success: false,
-		description: `Not implemented.`,
-	}),
-);
-
-export default router;
+API_V1_ROUTER.add("POST /admin/reprocess-all-goals", withAdmin, () => {
+	throw new ExpectedErr(501, "Not implemented.");
+});

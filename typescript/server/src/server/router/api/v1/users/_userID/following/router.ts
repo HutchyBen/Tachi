@@ -1,13 +1,10 @@
 import { ACTION_FollowUser } from "#actions/follow-user";
 import { ACTION_UnfollowUser } from "#actions/unfollow-user";
+import { withRequestedUser, withSelf } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
 import { GetFollowingForUser } from "#utils/queries/settings";
-import { GetUser } from "#utils/req-tachi-data";
 import { GetUsersWithIDs } from "#utils/user";
-import { Router } from "express";
-
-import { RequireSelfRequestFromUser } from "../middleware";
-
-const router: Router = Router({ mergeParams: true });
 
 /**
  * Retrieve who this user is following.
@@ -16,16 +13,12 @@ const router: Router = Router({ mergeParams: true });
  *
  * @name GET /api/v1/users/:userID/following
  */
-router.get("/", async (req, res) => {
-	const user = GetUser(req);
-
-	const followingIDs = await GetFollowingForUser(user.id);
+API_V1_ROUTER.add("GET /users/:userID/following", withRequestedUser, async ({ ctx }) => {
+	const followingIDs = await GetFollowingForUser(ctx.requestedUser.id);
 	const friends = await GetUsersWithIDs(followingIDs);
 
-	return res.status(200).json({
-		success: true,
-		description: `Found ${friends.length} friend${friends.length !== 1 ? "s" : ""}.`,
-		body: { friends },
+	return success(`Found ${friends.length} friend${friends.length !== 1 ? "s" : ""}.`, {
+		friends,
 	});
 });
 
@@ -36,18 +29,19 @@ router.get("/", async (req, res) => {
  *
  * @name POST /api/v1/users/:userID/following/add
  */
-router.post("/add", RequireSelfRequestFromUser, async (req, res) => {
-	const user = req.session.tachi!.user;
-	const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
+API_V1_ROUTER.add(
+	"POST /users/:userID/following/add",
+	withRequestedUser,
+	withSelf,
+	async ({ input, req }) => {
+		const user = req.session.tachi!.user;
+		const taker = { acct: { id: user.id, username: user.username }, ip: req.ip };
 
-	const result = await ACTION_FollowUser(taker, { userID: req.body.userID });
+		const result = await ACTION_FollowUser(taker, { userID: input.userID });
 
-	return res.status(200).json({
-		success: true,
-		description: `Added ${result.username}.`,
-		body: {},
-	});
-});
+		return success(`Added ${result.username}.`, {});
+	},
+);
 
 /**
  * Unfollow a user.
@@ -56,17 +50,16 @@ router.post("/add", RequireSelfRequestFromUser, async (req, res) => {
  *
  * @name POST /api/v1/users/:userID/following/remove
  */
-router.post("/remove", RequireSelfRequestFromUser, async (req, res) => {
-	const user = req.session.tachi!.user;
-	const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
+API_V1_ROUTER.add(
+	"POST /users/:userID/following/remove",
+	withRequestedUser,
+	withSelf,
+	async ({ input, req }) => {
+		const user = req.session.tachi!.user;
+		const taker = { acct: { id: user.id, username: user.username }, ip: req.ip };
 
-	const result = await ACTION_UnfollowUser(taker, { userID: req.body.userID });
+		const result = await ACTION_UnfollowUser(taker, { userID: input.userID });
 
-	return res.status(200).json({
-		success: true,
-		description: `Unfollowed ${result.username}.`,
-		body: {},
-	});
-});
-
-export default router;
+		return success(`Unfollowed ${result.username}.`, {});
+	},
+);

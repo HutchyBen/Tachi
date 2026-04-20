@@ -16,28 +16,27 @@ import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
 	FormatChart,
-	type GameGroup,
-	type GamePTConfig,
-	GetGamePTConfig,
-	GetGPTString,
+	type GameConfig,
+	GetGameConfig,
 	GetScoreMetricConf,
 	IIDX_LAMPS,
-	type MONGO_SessionDocument,
-	type MONGO_UserDocument,
+	type SessionDocument,
 	type SessionScoreInfo,
+	type UserDocument,
+	type V3Game,
 } from "tachi-common";
 
 type Props = {
 	enumMetric: string;
 	folderDataset: FolderDataset;
-	reqUser: MONGO_UserDocument;
+	reqUser: UserDocument;
 } & GamePT;
 
 export default function FolderMinimap(props: Props) {
 	const { data, isLoading, error } = useApiQuery<{
 		scoreInfo: Array<SessionScoreInfo>;
-		session: MONGO_SessionDocument;
-	}>(`/users/${props.reqUser.id}/games/${props.game}/${props.playtype}/sessions/last`);
+		session: SessionDocument;
+	}>(`/users/${props.reqUser.id}/games/${props.game}/sessions/last`);
 
 	const session = useMemo(() => {
 		if (error && error.statusCode === 404) {
@@ -71,17 +70,16 @@ export default function FolderMinimap(props: Props) {
 
 function FolderMinimapMain({
 	game,
-	playtype,
 	folderDataset,
 	enumMetric,
 	recentSession,
 }: {
-	recentSession: { scoreInfo: Array<SessionScoreInfo>; session: MONGO_SessionDocument } | null;
+	recentSession: { scoreInfo: Array<SessionScoreInfo>; session: SessionDocument } | null;
 } & Props) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
 	const getterFn = useMemo<(f: FolderDataset[0]) => number | undefined>(() => {
-		const conf = GetScoreMetricConf(gptConfig, enumMetric);
+		const conf = GetScoreMetricConf(gameConfig, enumMetric);
 
 		if (!conf) {
 			return () => 0; // wut
@@ -133,7 +131,7 @@ function FolderMinimapMain({
 							data={d}
 							enumMetric={enumMetric}
 							game={game}
-							gptConfig={gptConfig}
+							gameConfig={gameConfig}
 							key={d.chartID}
 							wasRecent={
 								(d.__related.pb &&
@@ -154,18 +152,18 @@ function FolderMinimapMain({
 
 function MinimapElement({
 	data,
-	gptConfig,
+	gameConfig,
 	enumMetric,
 	game,
 	wasRecent,
 }: {
 	data: FolderDataset[0];
 	enumMetric: string;
-	game: GameGroup;
-	gptConfig: GamePTConfig;
+	game: V3Game;
+	gameConfig: GameConfig;
 	wasRecent: boolean;
 }) {
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, data.playtype)];
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
 	let icon = "level-up-alt";
 
@@ -188,14 +186,14 @@ function MinimapElement({
 
 		// @ts-expect-error unhinged dynamic access (i dont care)
 		return gptImpl.enumColours[enumMetric][data.__related.pb.scoreData[enumMetric]];
-	}, [data.__related.pb, gptConfig, enumMetric]);
+	}, [data.__related.pb, gameConfig, enumMetric]);
 
 	return (
 		<QuickTooltip
 			max
 			tooltipContent={
 				<div className="w-100">
-					<span>{FormatChart(game, data.__related.song, data)}</span>
+					<span>{FormatChart(data)}</span>
 					<Divider />
 					{wasRecent && (
 						<>
@@ -222,7 +220,7 @@ function MinimapElement({
 				</div>
 			}
 		>
-			<Link to={CreateChartLink(data, game)}>
+			<Link to={CreateChartLink(data)}>
 				<div
 					className={`scoreinfo-grid-minimap-element ${
 						wasRecent ? "scoreinfo-grid-minimap-element-recent" : ""

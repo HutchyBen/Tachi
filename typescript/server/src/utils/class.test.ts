@@ -25,7 +25,7 @@ describe("UpdateClassIfGreater (Postgres)", () => {
 			})
 			.execute();
 
-		const result = await UpdateClassIfGreater(id, "iidx", "SP", "dan", "KYU_7");
+		const result = await UpdateClassIfGreater(id, "iidx-sp", "dan", "KYU_7");
 		expect(result).toBe(false);
 
 		const row = await DB.selectFrom("game_profile")
@@ -49,7 +49,7 @@ describe("UpdateClassIfGreater (Postgres)", () => {
 			})
 			.execute();
 
-		const result = await UpdateClassIfGreater(id, "iidx", "SP", "dan", "DAN_1");
+		const result = await UpdateClassIfGreater(id, "iidx-sp", "dan", "DAN_1");
 		expect(result).toBe(true);
 
 		const row = await DB.selectFrom("game_profile")
@@ -74,7 +74,7 @@ describe("UpdateClassIfGreater (Postgres)", () => {
 	it("creates game_profile and game_settings when none exist (first class)", async () => {
 		const { id } = await seedUser({ username: `cls_new_${Date.now()}` });
 
-		const result = await UpdateClassIfGreater(id, "iidx", "SP", "dan", "DAN_1");
+		const result = await UpdateClassIfGreater(id, "iidx-sp", "dan", "DAN_1");
 		expect(result).toBe(null);
 
 		const profile = await DB.selectFrom("game_profile")

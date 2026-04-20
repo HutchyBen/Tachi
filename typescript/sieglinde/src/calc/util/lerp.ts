@@ -36,7 +36,7 @@
 
 import type { BMSTablesDataset } from "#types";
 
-import { GetBaseline } from "../../util";
+import { GetBaseline } from "#util";
 
 export type EcConstants = Array<{
 	averageSigma: number;

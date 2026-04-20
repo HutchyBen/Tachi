@@ -1,7 +1,7 @@
 import { DisplayLevelNum } from "#components/tables/cells/DifficultyCell";
 import Muted from "#components/util/Muted";
 import React from "react";
-import { type GameGroup, type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
+import { type ChartDocument, GameToGameGroup, type SongDocument, type V3Game } from "tachi-common";
 
 import DefaultSongChartInfoFormat from "./DefaultSongChartInfoFormat";
 import IIDXStyleSongChartInfoFormat from "./IIDXStyleSongChartInfoFormat";
@@ -11,27 +11,29 @@ export default function SongChartInfoFormat({
 	chart,
 	game,
 }: {
-	chart: MONGO_ChartDocument | null;
-	game: GameGroup;
-	song: MONGO_SongDocument;
+	chart: ChartDocument | null;
+	game: V3Game;
+	song: SongDocument;
 }) {
-	if (["bms", "iidx", "pms", "popn"].includes(game)) {
+	const gameGroup = GameToGameGroup(game);
+
+	if (["bms", "iidx", "pms", "popn"].includes(gameGroup)) {
 		return (
 			<IIDXStyleSongChartInfoFormat
 				{...{
-					song: song as MONGO_SongDocument<"bms" | "iidx" | "pms" | "popn">,
+					song: song as SongDocument<"bms" | "iidx" | "pms" | "popn">,
 					chart,
 					game,
 				}}
 			/>
 		);
 	}
-	if (game === "ongeki" || game === "chunithm" || game === "maimaidx") {
+	if (gameGroup === "ongeki" || gameGroup === "chunithm" || gameGroup === "maimaidx") {
 		return (
 			<>
 				<IIDXStyleSongChartInfoFormat
 					{...{
-						song: song as MONGO_SongDocument<"chunithm" | "maimaidx" | "ongeki">,
+						song: song as SongDocument<"chunithm" | "maimaidx" | "ongeki">,
 						chart,
 						game,
 					}}

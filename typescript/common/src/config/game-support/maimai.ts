@@ -1,20 +1,21 @@
 import { z } from "zod";
 
-import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_PT_CONFIG } from "../../types/internals";
+import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
 import { FmtPercent } from "../../utils/util";
 import { ClassValue, ToDecimalPlaces } from "../config-utils";
 import { FAST_SLOW_MAXCOMBO } from "./_common";
 
-export const MAIMAI_CONF = {
+export const GAME_GROUP_MAIMAI_CONF = {
 	name: "maimai",
+	games: ["maimai"],
 	playtypes: ["Single"],
 	songData: z.strictObject({
 		titleJP: z.string(),
 		artistJP: z.string(),
 		displayVersion: z.string(),
 	}),
-} as const satisfies INTERNAL_GAME_CONFIG;
+} as const satisfies INTERNAL_GAME_GROUP_CONFIG;
 
 const MaimaiDans = [
 	ClassValue("DAN_1", "初段", "1st Dan"),
@@ -55,7 +56,7 @@ const MaimaiColours = [
 	ClassValue("RAINBOW", "Rainbow", ">=15 Rating"),
 ];
 
-export const MAIMAI_SINGLE_CONF = {
+export const GAME_MAIMAI_CONF = {
 	providedMetrics: {
 		percent: {
 			type: "DECIMAL",
@@ -130,7 +131,7 @@ export const MAIMAI_SINGLE_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["Easy", "Basic", "Advanced", "Expert", "Master", "Re:Master"],
-		shorthand: {
+		format: {
 			Easy: "ESY",
 			Basic: "BAS",
 			Advanced: "ADV",
@@ -169,4 +170,4 @@ export const MAIMAI_SINGLE_CONF = {
 	scoreMeta: z.strictObject({}),
 
 	supportedMatchTypes: ["songTitle", "tachiSongID", "inGameID", "inGameStrID"],
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;

@@ -1,4 +1,5 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
 import type { EmptyObject } from "#utils/types";
 import type { Difficulties } from "tachi-common";
 import type { GetEnumValue } from "tachi-common/types/metrics";
@@ -8,13 +9,12 @@ import {
 	SongOrChartNotFoundFailure,
 } from "#lib/score-import/framework/common/converter-failures";
 import { AssertStrAsPositiveInt } from "#lib/score-import/framework/common/string-asserts";
-import { FindChartWithPTDF } from "#utils/queries/charts";
+import { FindChartWithSongDifficulty } from "#utils/queries/charts";
 import { FindSongOnTitle } from "#utils/queries/songs";
 
-import type { ConverterFunction } from "../../common/types";
 import type { SDVXEamusementCSVData } from "./types";
 
-const DIFFICULTY_MAP: Map<string, Difficulties["sdvx:Single"]> = new Map([
+const DIFFICULTY_MAP: Map<string, Difficulties["sdvx"]> = new Map([
 	["ADVANCED", "ADV"],
 	["EXCEED", "XCD"],
 	["EXHAUST", "EXH"],
@@ -26,7 +26,7 @@ const DIFFICULTY_MAP: Map<string, Difficulties["sdvx:Single"]> = new Map([
 	["VIVID", "VVD"],
 ]);
 
-const LAMP_MAP: Map<string, GetEnumValue<"sdvx:Single", "lamp">> = new Map([
+const LAMP_MAP: Map<string, GetEnumValue<"sdvx", "lamp">> = new Map([
 	["COMPLETE", "CLEAR"],
 	["EXCESSIVE COMPLETE", "EXCESSIVE CLEAR"],
 	["MAXXIVE COMPLETE", "MAXXIVE CLEAR"],
@@ -61,7 +61,7 @@ const ConvertEamSDVXCSV: ConverterFunction<SDVXEamusementCSVData, EmptyObject> =
 
 	const humanisedChartTitle = `${song.title} [${difficulty}]`;
 
-	const chart = await FindChartWithPTDF("sdvx", song.id, "Single", difficulty);
+	const chart = await FindChartWithSongDifficulty("sdvx", song.id, difficulty);
 
 	if (!chart) {
 		throw new SongOrChartNotFoundFailure(
@@ -108,7 +108,7 @@ const ConvertEamSDVXCSV: ConverterFunction<SDVXEamusementCSVData, EmptyObject> =
 		throw new InvalidScoreFailure(`${humanisedChartTitle} - Invalid lamp of ${data.lamp}.`);
 	}
 
-	const dryScore: DryScore<"sdvx:Single"> = {
+	const dryScore: DryScore<"sdvx"> = {
 		service: "e-amusement",
 		game: "sdvx",
 		scoreMeta: {},

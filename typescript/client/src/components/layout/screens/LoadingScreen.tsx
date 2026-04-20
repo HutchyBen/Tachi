@@ -3,7 +3,7 @@ import { TachiConfig } from "#lib/config";
 import { type JustChildren } from "#types/react";
 import { APIFetchV1 } from "#util/api";
 import React, { useContext, useEffect, useState } from "react";
-import { type MONGO_UserDocument } from "tachi-common";
+import { type UserDocument } from "tachi-common";
 
 import { SplashScreen } from "./SplashScreen";
 
@@ -29,7 +29,7 @@ export function LoadingScreen({ children }: JustChildren) {
 		);
 
 		Promise.all([
-			APIFetchV1<MONGO_UserDocument>("/users/me").then((rj) => {
+			APIFetchV1<UserDocument>("/users/me").then((rj) => {
 				if (rj.success) {
 					setUser(rj.body);
 				} else {

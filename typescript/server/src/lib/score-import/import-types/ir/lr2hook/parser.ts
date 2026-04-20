@@ -1,10 +1,11 @@
 import type { KtLogger } from "#lib/log/log";
+import type { ParserFunctionReturns } from "#lib/score-import/import-types/common/types";
+import type { GamesForGroup } from "tachi-common";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { FormatPrError, optNull } from "#utils/prudence";
 import { p, type PrudenceSchema } from "prudence";
 
-import type { ParserFunctionReturns } from "../../common/types";
 import type { LR2HookContext, LR2HookScore } from "./types";
 
 const SUPPORTED_RANDOMS = ["NORAN", "MIRROR", "RAN", "S-RAN"];
@@ -83,7 +84,7 @@ export const PR_LR2HOOK: PrudenceSchema = {
 export function ParseLR2Hook(
 	body: Record<string, unknown>,
 	_log: KtLogger,
-): ParserFunctionReturns<LR2HookScore, LR2HookContext> {
+): ParserFunctionReturns<LR2HookScore, LR2HookContext, GamesForGroup["bms"]> {
 	// Ignore excess keys, as lr2hook is likely to add more features in the future.
 	const err = p(
 		body,
@@ -107,7 +108,7 @@ export function ParseLR2Hook(
 	const score = body as unknown as LR2HookScore;
 
 	return {
-		game: "bms",
+		gameGroup: "bms",
 		iterable: [score],
 		context: {
 			timeReceived: Date.now(),

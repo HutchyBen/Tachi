@@ -5,12 +5,12 @@ import { type SetState } from "#types/react";
 import React, { useState } from "react";
 import { Nav } from "react-bootstrap";
 import {
+	type ChartDocument,
 	type Difficulties,
-	type MONGO_ChartDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_ScoreData,
-	type MONGO_ScoreDocument,
-	type MONGO_SongDocument,
+	type PBScoreDocument,
+	type ScoreData,
+	type ScoreDocument,
+	type SongDocument,
 } from "tachi-common";
 
 type ChartType = "Life" | "Score";
@@ -19,8 +19,8 @@ export function MaimaiDXGraphsComponent({
 	score,
 	chart,
 }: {
-	chart: MONGO_ChartDocument<"maimaidx:Single">;
-	score: MONGO_PBScoreDocument<"maimaidx:Single"> | MONGO_ScoreDocument<"maimaidx:Single">;
+	chart: ChartDocument<"maimaidx">;
+	score: PBScoreDocument<"maimaidx"> | ScoreDocument<"maimaidx">;
 }) {
 	const [graph, setGraph] = useState<ChartType>("Score");
 	const { percentGraph, lifeGraph } = score.scoreData.optional;
@@ -49,15 +49,15 @@ function Inner({
 	percentGraph,
 	lifeGraph,
 }: {
-	chart: MONGO_ChartDocument<"maimaidx:Single">;
+	chart: ChartDocument<"maimaidx">;
 	graph: ChartType;
 	lifeGraph: (number | null)[] | null | undefined;
 	percentGraph: (number | null)[] | null | undefined;
-	score: MONGO_PBScoreDocument<"maimaidx:Single"> | MONGO_ScoreDocument<"maimaidx:Single">;
+	score: PBScoreDocument<"maimaidx"> | ScoreDocument<"maimaidx">;
 	setGraph: SetState<ChartType>;
 }) {
 	const { data, error } = useApiQuery<{
-		song: MONGO_SongDocument<"maimaidx">;
+		song: SongDocument<"maimaidx">;
 	}>(`/games/maimaidx/Single/songs/${score.songID}`);
 
 	if (error !== null || data === undefined) {
@@ -102,9 +102,9 @@ function GraphComponent({
 	difficulty,
 	type,
 }: {
-	difficulty: Difficulties["maimaidx:Single"];
-	scoreData: MONGO_ScoreData<"maimaidx:Single">;
-	song: MONGO_SongDocument<"maimaidx">;
+	difficulty: Difficulties["maimaidx"];
+	scoreData: ScoreData<"maimaidx">;
+	song: SongDocument<"maimaidx">;
 	type: ChartType;
 }) {
 	const values =

@@ -1,19 +1,17 @@
 import type {
+	GameImplementation,
 	GPTGoalFormatters,
 	GPTGoalProgressFormatters,
 	GPTProfileCalcs,
-	GPTServerImplementation,
 	GPTSessionCalcs,
 	PBMergeFunction,
-	ScoreValidator,
 } from "#game-implementations/types";
 
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileAvgBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
-import { IsNullish } from "#utils/misc";
 import { PoyashiBPI } from "rg-stats";
-import { type GPTStrings, IIDXLIKE_GBOUNDARIES } from "tachi-common";
+import { IIDXLIKE_GBOUNDARIES } from "tachi-common";
 
 import {
 	GoalFmtPercent,
@@ -25,25 +23,24 @@ import {
 	IIDXLIKE_VALIDATORS,
 } from "./_common";
 
-const IIDX_SESSION_CALCS: GPTSessionCalcs<"iidx:DP" | "iidx:SP"> = (arr) => ({
+/** `iidx:SP` / `iidx:DP` as v3 games. */
+type IIDXGames = "iidx-dp" | "iidx-sp";
+
+const IIDX_SESSION_CALCS: GPTSessionCalcs<IIDXGames> = (arr) => ({
 	BPI: SessionAvgBest10For("BPI")(arr),
 	ktLampRating: SessionAvgBest10For("ktLampRating")(arr),
 });
 
-const IIDX_PROFILE_CALCS: GPTProfileCalcs<"iidx:DP" | "iidx:SP"> = async (
-	game,
-	playtype,
-	userID,
-) => {
+const IIDX_PROFILE_CALCS: GPTProfileCalcs<IIDXGames> = async (game, userID) => {
 	const [BPI, ktLampRating] = await Promise.all([
-		ProfileAvgBestN("BPI", 20, true)(game, playtype, userID),
-		ProfileAvgBestN("ktLampRating", 20)(game, playtype, userID),
+		ProfileAvgBestN("BPI", 20, true)(game, userID),
+		ProfileAvgBestN("ktLampRating", 20)(game, userID),
 	]);
 
 	return { BPI, ktLampRating };
 };
 
-const IIDX_MERGERS: Array<PBMergeFunction<GPTStrings["iidx"]>> = [
+const IIDX_MERGERS: Array<PBMergeFunction<IIDXGames>> = [
 	CreatePBMergeFor("largest", { type: "REGULAR", metric: "lamp" }, "Best Lamp", (base, lamp) => {
 		base.scoreData.lamp = lamp.scoreData.lamp;
 
@@ -63,20 +60,20 @@ const IIDX_MERGERS: Array<PBMergeFunction<GPTStrings["iidx"]>> = [
 	}),
 ];
 
-const IIDX_GOAL_FMT: GPTGoalFormatters<"iidx:DP" | "iidx:SP"> = {
+const IIDX_GOAL_FMT: GPTGoalFormatters<IIDXGames> = {
 	percent: GoalFmtPercent,
 
 	// don't want commas
 	score: (v) => `Get a score of ${v} on`,
 };
 
-const IIDX_GOAL_OO_FMT: GPTGoalFormatters<"iidx:DP" | "iidx:SP"> = {
+const IIDX_GOAL_OO_FMT: GPTGoalFormatters<IIDXGames> = {
 	percent: GoalOutOfFmtPercent,
 	// don't insert commas or anything.
 	score: (m) => m.toString(),
 };
 
-const IIDX_GOAL_PG_FMT: GPTGoalProgressFormatters<"iidx:DP" | "iidx:SP"> = {
+const IIDX_GOAL_PG_FMT: GPTGoalProgressFormatters<IIDXGames> = {
 	percent: (pb) => `${pb.scoreData.percent.toFixed(2)}%`,
 
 	// 4519 -> "4519". Don't add commas or anything.
@@ -108,7 +105,7 @@ const IIDX_GOAL_PG_FMT: GPTGoalProgressFormatters<"iidx:DP" | "iidx:SP"> = {
 		),
 };
 
-export const IIDX_SP_IMPL: GPTServerImplementation<"iidx:SP"> = {
+export const IIDX_SP_IMPL: GameImplementation<"iidx-sp"> = {
 	scoreDeriver: IIDXLIKE_SCORE_DERIVER,
 	chartSpecificValidators: IIDXLIKE_VALIDATORS,
 	pbRankingValues: IIDXLIKE_PB_RANKING_VALUES,
@@ -162,7 +159,7 @@ export const IIDX_SP_IMPL: GPTServerImplementation<"iidx:SP"> = {
 	pbMergeFunctions: IIDX_MERGERS,
 	defaultMergeRefName: "Best Score",
 	scoreValidators: IIDXLIKE_SCORE_VALIDATORS,
-	derivationRelevantFields: [
+	chartDataRelevantFields: [
 		"levelNum",
 		"data.notecount",
 		"data.kaidenAverage",
@@ -174,7 +171,7 @@ export const IIDX_SP_IMPL: GPTServerImplementation<"iidx:SP"> = {
 	],
 };
 
-export const IIDX_DP_IMPL: GPTServerImplementation<"iidx:DP"> = {
+export const IIDX_DP_IMPL: GameImplementation<"iidx-dp"> = {
 	scoreDeriver: IIDXLIKE_SCORE_DERIVER,
 	chartSpecificValidators: IIDXLIKE_VALIDATORS,
 	pbRankingValues: IIDXLIKE_PB_RANKING_VALUES,
@@ -219,7 +216,7 @@ export const IIDX_DP_IMPL: GPTServerImplementation<"iidx:DP"> = {
 	pbMergeFunctions: IIDX_MERGERS,
 	defaultMergeRefName: "Best Score",
 	scoreValidators: IIDXLIKE_SCORE_VALIDATORS,
-	derivationRelevantFields: [
+	chartDataRelevantFields: [
 		"levelNum",
 		"data.notecount",
 		"data.kaidenAverage",

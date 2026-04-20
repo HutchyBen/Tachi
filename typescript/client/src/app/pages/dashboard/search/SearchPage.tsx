@@ -19,13 +19,12 @@ import React, { useContext, useEffect, useLayoutEffect, useState } from "react";
 import { Badge, Col, Form, Row } from "react-bootstrap";
 import { Link, useHistory, useLocation } from "react-router-dom";
 import {
-	FormatGameGroup,
-	type GPTString,
+	type ChartDocument,
+	FormatGame,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
-	type MONGO_UserDocument,
-	SplitGPT,
+	type SongDocument,
+	type UserDocument,
+	type V3Game,
 } from "tachi-common";
 
 function parseSearchParams(search: string) {
@@ -48,48 +47,40 @@ export default function SearchPage() {
 	const [hasPlayedGame, setHasPlayedGame] = useState(initialHasPlayed);
 
 	useLayoutEffect(() => {
-		const { q, hasPlayedGame: h } = parseSearchParams(location.search);
-		setSearch(q);
-		setHasPlayedGame(h);
+		const params = parseSearchParams(location.search);
+		setSearch(params.q);
+		setHasPlayedGame(params.hasPlayedGame);
 	}, [location.search]);
 
 	useEffect(() => {
-		const next = new URLSearchParams();
-		if (search) {
-			next.set("q", search);
+		const qs = `?q=${encodeURIComponent(search)}&hasPlayedGame=${hasPlayedGame}`;
+		if (location.search !== qs) {
+			history.replace(`/search${qs}`);
 		}
-		if (!hasPlayedGame) {
-			next.set("hasPlayedGame", "false");
-		}
-		const nextStr = next.toString();
-		const current = new URLSearchParams(history.location.search).toString();
-		if (nextStr !== current) {
-			history.replace({
-				pathname: location.pathname,
-				search: nextStr ? `?${nextStr}` : "",
-			});
-		}
-	}, [search, hasPlayedGame, history, location.pathname]);
+	}, [search, hasPlayedGame]);
 
 	return (
 		<Row>
 			<Col xs={12}>
-				<DebounceSearch
-					autoFocus
-					committedSearch={search}
-					placeholder="Search songs, users..."
-					setSearch={setSearch}
-				/>
-				{user && (
-					<div className="w-100 mt-4 ms-1">
-						<Form.Check
-							checked={hasPlayedGame}
-							label="Hide games you haven't played?"
-							onChange={(e) => setHasPlayedGame(e.target.checked)}
-						/>
-					</div>
-				)}
-				<Divider />
+				<Card className="mt-8" header="Search Tachi">
+					<DebounceSearch
+						autoFocus
+						className="form-control-lg"
+						committedSearch={search}
+						placeholder="Search songs, users..."
+						setSearch={setSearch}
+					/>
+					{user && (
+						<div className="w-100 mt-4 ms-1">
+							<Form.Check
+								checked={hasPlayedGame}
+								label="Hide games you haven't played?"
+								onChange={(e) => setHasPlayedGame(e.target.checked)}
+							/>
+						</div>
+					)}
+					<Divider />
+				</Card>
 			</Col>
 			<Col xs={12}>
 				<SearchResults hasPlayedGame={hasPlayedGame} search={search} />
@@ -100,7 +91,7 @@ export default function SearchPage() {
 
 function SearchResults({ search, hasPlayedGame }: { hasPlayedGame: boolean; search: string }) {
 	const { data, error } = useTachiSearch(search, hasPlayedGame);
-	const [mode, setMode] = useState<"users" | GPTString | null>(null);
+	const [mode, setMode] = useState<"users" | V3Game | null>(null);
 
 	useEffect(() => {
 		if (data) {
@@ -109,7 +100,7 @@ function SearchResults({ search, hasPlayedGame }: { hasPlayedGame: boolean; sear
 				.filter((k) => k[1].length > 0);
 
 			if (thingsWithCharts.length > 0) {
-				setMode(thingsWithCharts[0][0] as GPTString);
+				setMode(thingsWithCharts[0][0] as V3Game);
 			} else if (data.users.length > 0) {
 				setMode("users");
 			} else {
@@ -161,13 +152,11 @@ function SearchResults({ search, hasPlayedGame }: { hasPlayedGame: boolean; sear
 							return null;
 						}
 
-						const gpt = g as GPTString;
-
-						const [game, playtype] = SplitGPT(gpt);
+						const game = g as V3Game;
 
 						return (
-							<SelectButton id={gpt} key={gpt} setValue={setMode} value={mode}>
-								{FormatGameGroup(game, playtype)}
+							<SelectButton id={game} key={game} setValue={setMode} value={mode}>
+								{FormatGame(game)}
 								<Badge bg="secondary" className="ms-2 text-light">
 									{charts.length}
 								</Badge>
@@ -198,7 +187,7 @@ function SearchResults({ search, hasPlayedGame }: { hasPlayedGame: boolean; sear
 					{mode === "users" ? (
 						<UsersView users={data.users} />
 					) : (
-						<ChartView charts={data.charts[mode]!} gpt={mode} />
+						<ChartView charts={data.charts[mode]!} game={mode} />
 					)}
 				</Col>
 			)}
@@ -208,17 +197,15 @@ function SearchResults({ search, hasPlayedGame }: { hasPlayedGame: boolean; sear
 
 function ChartView({
 	charts,
-	gpt,
+	game,
 }: {
 	charts: Array<{
-		chart: MONGO_ChartDocument;
+		chart: ChartDocument;
 		playcount: integer;
-		song: MONGO_SongDocument;
+		song: SongDocument;
 	}>;
-	gpt: GPTString;
+	game: V3Game;
 }) {
-	const [game, playtype] = SplitGPT(gpt);
-
 	return (
 		<TachiTable
 			dataset={charts}
@@ -248,52 +235,72 @@ function ChartView({
 	);
 }
 
-function UsersView({ users }: { users: Array<MONGO_UserDocument> }) {
+function UsersView({ users }: { users: Array<UserDocument> }) {
 	return (
-		<Row>
-			<div
-				className="w-100 d-flex"
-				style={{
-					flexWrap: "wrap",
-				}}
-			></div>
-			{users.map((user) => (
-				<Col key={user.id} lg={6} xs={12}>
-					<Card className="mb-4">
-						<div className="d-flex h-100">
-							<div>
-								<ProfilePicture user={user} />
-							</div>
-							<div
-								className="ms-4 d-flex w-100 h-100"
-								style={{
-									flexWrap: "wrap",
-									flexDirection: "column",
-								}}
-							>
-								<div>
-									<h4>
-										<Link
-											className="text-decoration-none"
-											to={`/u/${user.username}`}
-										>
-											{user.username}
-										</Link>
-									</h4>
-								</div>
-								<div>
-									<Muted>{user.status ?? "I haven't set my status."}</Muted>
-								</div>
-								{Date.now() - user.lastSeen < ONE_MINUTE * 5 && (
-									<div className="mt-2">
-										<Badge bg="success">ONLINE</Badge>
-									</div>
-								)}
-							</div>
-						</div>
-					</Card>
-				</Col>
-			))}
-		</Row>
+		<TachiTable
+			dataset={users}
+			defaultSortMode="Last Seen"
+			entryName="Users"
+			headers={[
+				["User", "User", StrSOV((x) => x.username)],
+				["Status", "Status", StrSOV((x) => x.status ?? "")],
+				["Last Seen", "Last Seen", NumericSOV((x) => x.lastSeen)],
+			]}
+			rowFunction={(u) => (
+				<tr>
+					<td>
+						<Link to={`/u/${u.username}`}>
+							<ProfilePicture size="sm" user={u} />
+							{u.username}
+						</Link>
+					</td>
+					<td>
+						<Muted>{u.status ?? "No status."}</Muted>
+					</td>
+					<td>
+						{u.lastSeen === 0
+							? "Never"
+							: new Date(u.lastSeen).toLocaleDateString("en-GB", {
+									timeZone: "UTC",
+									year: "2-digit",
+									month: "2-digit",
+									day: "2-digit",
+									hour: "2-digit",
+									minute: "2-digit",
+									timeZoneName: "short",
+								})}
+					</td>
+				</tr>
+			)}
+			searchFunctions={{
+				username: (x) => x.username,
+				status: (x) => x.status,
+				lastSeen: (x) => {
+					if (x.lastSeen === 0) {
+						return null;
+					}
+					return new Date(x.lastSeen).toLocaleString("en-GB", {
+						timeZone: "UTC",
+						timeZoneName: "short",
+					});
+				},
+			}}
+		/>
 	);
+}
+
+function LastSeenCell({ time }: { time: number }) {
+	if (time === 0) {
+		return <td>Never</td>;
+	}
+
+	const now = Date.now();
+
+	if (now - time < ONE_MINUTE) {
+		return <td>Just Now</td>;
+	}
+
+	const d = new Date(time);
+
+	return <td>{d.toLocaleDateString("en-GB")}</td>;
 }

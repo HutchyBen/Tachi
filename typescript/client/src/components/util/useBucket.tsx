@@ -1,14 +1,14 @@
-import { type GameGroup, GetGamePTConfig, type Playtype } from "tachi-common";
+import { GetGameConfig, type V3Game } from "tachi-common";
 
 import useLUGPTSettings from "./useLUGPTSettings";
 
-export function useBucket(game: GameGroup, playtype: Playtype) {
+export function useBucket(game: V3Game) {
 	const { settings } = useLUGPTSettings();
 
 	if (!settings?.preferences.preferredDefaultEnum) {
-		const gptConfig = GetGamePTConfig(game, playtype);
+		const gameConfig = GetGameConfig(game);
 
-		return gptConfig.preferredDefaultEnum;
+		return gameConfig.preferredDefaultEnum;
 	}
 
 	return settings.preferences.preferredDefaultEnum;

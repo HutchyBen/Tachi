@@ -1,4 +1,4 @@
-import type { MONGO_KaiAuthDocument } from "tachi-common";
+import type { KaiAuthDocument } from "tachi-common";
 
 import { log } from "#lib/log/log";
 import { ServerConfig } from "#lib/setup/config";
@@ -36,7 +36,7 @@ describe("#CreateKaiReauthFunction", () => {
 			);
 		}
 
-		const authDoc: MONGO_KaiAuthDocument = {
+		const authDoc: KaiAuthDocument = {
 			refreshToken: "REFRESH_TOKEN",
 			service: "FLO",
 			token: "foobar",
@@ -75,7 +75,7 @@ describe("#CreateKaiReauthFunction", () => {
 			);
 		}
 
-		const authDoc: MONGO_KaiAuthDocument = {
+		const authDoc: KaiAuthDocument = {
 			refreshToken: "REFRESH_TOKEN",
 			service: "FLO",
 			token: "foobar",
@@ -107,7 +107,7 @@ describe("#CreateKaiReauthFunction", () => {
 			);
 		}
 
-		const authDoc: MONGO_KaiAuthDocument = {
+		const authDoc: KaiAuthDocument = {
 			refreshToken: "REFRESH_TOKEN",
 			service: "FLO",
 			token: "foobar",

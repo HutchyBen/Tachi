@@ -1,7 +1,7 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import DB from "#services/pg/db.js";
-import { Random20Hex } from "#utils/misc.js";
-import { GetClientByID } from "#utils/queries/api-clients.js";
+import { MakeAction } from "#lib/actions/actions";
+import DB from "#services/pg/db";
+import { Random20Hex } from "#utils/misc";
+import { GetClientByID } from "#utils/queries/api-clients";
 import { ExpectedErr } from "bliss";
 
 export const ACTION_ResetApiClientSecret = MakeAction(

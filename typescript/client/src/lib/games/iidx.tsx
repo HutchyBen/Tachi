@@ -7,11 +7,11 @@ import { GetEnumColour } from "#lib/game-implementations";
 import { type GPTClientImplementation } from "#lib/types";
 import { NumericSOV } from "#util/sorts";
 import React from "react";
-import { COLOUR_SET, type GPTStrings, IIDX_LAMPS, IIDXLIKE_GBOUNDARIES } from "tachi-common";
+import { COLOUR_SET, type GamesForGroup, IIDX_LAMPS, IIDXLIKE_GBOUNDARIES } from "tachi-common";
 
 import { bgc, CreateRatingSys } from "./_util";
 
-const IIDX_ENUM_COLOURS: GPTClientImplementation<GPTStrings["iidx"]>["enumColours"] = {
+const IIDX_ENUM_COLOURS: GPTClientImplementation<GamesForGroup["iidx"]>["enumColours"] = {
 	grade: {
 		F: COLOUR_SET.gray,
 		E: COLOUR_SET.red,
@@ -36,7 +36,7 @@ const IIDX_ENUM_COLOURS: GPTClientImplementation<GPTStrings["iidx"]>["enumColour
 	},
 };
 
-const IIDX_DIFF_COLOURS: GPTClientImplementation<GPTStrings["iidx"]>["difficultyColours"] = {
+const IIDX_DIFF_COLOURS: GPTClientImplementation<GamesForGroup["iidx"]>["difficultyColours"] = {
 	NORMAL: COLOUR_SET.blue,
 	HYPER: COLOUR_SET.orange,
 	ANOTHER: COLOUR_SET.red,
@@ -55,13 +55,13 @@ const IIDX_DIFF_COLOURS: GPTClientImplementation<GPTStrings["iidx"]>["difficulty
 	"Kiraku LEGGENDARIA": COLOUR_SET.purple,
 };
 
-const IIDX_HEADERS: GPTClientImplementation<"iidx:DP" | "iidx:SP">["scoreHeaders"] = [
+const IIDX_HEADERS: GPTClientImplementation<GamesForGroup["iidx"]>["scoreHeaders"] = [
 	["Score", "Score", NumericSOV((x) => x.scoreData.percent)],
 	["Deltas", "Deltas", NumericSOV((x) => x.scoreData.percent)],
 	["Lamp", "Lamp", NumericSOV((x) => x.scoreData.enumIndexes.lamp)],
 ];
 
-const IIDX_COLOURS: GPTClientImplementation<"iidx:DP" | "iidx:SP">["classColours"] = {
+const IIDX_COLOURS: GPTClientImplementation<GamesForGroup["iidx"]>["classColours"] = {
 	dan: {
 		KYU_7: bgc("green", "var(--bs-light)"),
 		KYU_6: bgc("green", "var(--bs-light)"),
@@ -85,7 +85,7 @@ const IIDX_COLOURS: GPTClientImplementation<"iidx:DP" | "iidx:SP">["classColours
 	},
 };
 
-const IIDXCoreCells: GPTClientImplementation<GPTStrings["iidx"]>["scoreCoreCells"] = ({
+const IIDXCoreCells: GPTClientImplementation<GamesForGroup["iidx"]>["scoreCoreCells"] = ({
 	sc,
 	chart,
 }) => (
@@ -114,7 +114,7 @@ const IIDXCoreCells: GPTClientImplementation<GPTStrings["iidx"]>["scoreCoreCells
 	</>
 );
 
-const IIDXRatingCell: GPTClientImplementation<GPTStrings["iidx"]>["ratingCell"] = ({
+const IIDXRatingCell: GPTClientImplementation<GamesForGroup["iidx"]>["ratingCell"] = ({
 	sc,
 	chart,
 	rating,
@@ -128,7 +128,7 @@ const IIDXRatingCell: GPTClientImplementation<GPTStrings["iidx"]>["ratingCell"] 
 	</>
 );
 
-export const IIDX_SP_IMPL: GPTClientImplementation<"iidx:SP"> = {
+export const IIDX_SP_IMPL: GPTClientImplementation<"iidx-sp"> = {
 	sessionImportantScoreCount: 20,
 	difficultyColours: IIDX_DIFF_COLOURS,
 	enumColours: IIDX_ENUM_COLOURS,
@@ -171,7 +171,7 @@ export const IIDX_SP_IMPL: GPTClientImplementation<"iidx:SP"> = {
 	ratingCell: IIDXRatingCell,
 };
 
-export const IIDX_DP_IMPL: GPTClientImplementation<"iidx:DP"> = {
+export const IIDX_DP_IMPL: GPTClientImplementation<"iidx-dp"> = {
 	sessionImportantScoreCount: 20,
 	difficultyColours: IIDX_DIFF_COLOURS,
 	enumColours: IIDX_ENUM_COLOURS,

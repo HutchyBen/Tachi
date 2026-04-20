@@ -1,17 +1,16 @@
 import type { Kysely } from "kysely";
-import type { Database, Game } from "tachi-db";
+import type { Database } from "tachi-db";
 
 import { UnixMillisecondsToISO8601 } from "#utils/time";
 import {
 	type ClassDelta,
 	type GameGroup,
-	GamePTToV3,
 	type GoalImportInfo,
 	type ImportTypes,
 	type integer,
-	type Playtype,
 	type QuestImportInfo,
 	type SessionInfoReturn,
+	type V3Game,
 } from "tachi-common";
 
 type ImportErrRow = { message: string; type: string };
@@ -38,11 +37,12 @@ export async function finalizeImportToPostgres(
 		createdSessions: Array<SessionInfoReturn>;
 		errors: Array<ImportErrRow>;
 		gameGroup: GameGroup;
+		games: Array<V3Game>;
 		goalInfo: Array<GoalImportInfo>;
-		importId: string;
+		importID: string;
 		importType: ImportTypes;
-		playtypes: Array<Playtype>;
 		questInfo: Array<QuestImportInfo>;
+		scoreCount: number;
 		service: string;
 		timeFinishedMs: number;
 		timeStartedMs: number;
@@ -52,20 +52,21 @@ export async function finalizeImportToPostgres(
 	},
 ): Promise<void> {
 	const {
-		importId,
+		importID,
 		gameGroup,
 		importType,
 		userIntent,
 		service,
 		timeStartedMs,
 		timeFinishedMs,
-		playtypes,
+		games,
 		errors,
 		classDeltas,
 		createdSessions,
 		goalInfo,
 		questInfo,
 		timing,
+		scoreCount,
 	} = args;
 
 	const timeStarted = UnixMillisecondsToISO8601(timeStartedMs);
@@ -82,111 +83,119 @@ export async function finalizeImportToPostgres(
 			user_intent: userIntent,
 			service,
 		})
-		.where("id", "=", importId)
+		.where("id", "=", importID)
 		.execute();
 
 	await db
 		.updateTable("score")
 		.set({ committed: true })
-		.where("import_id", "=", importId)
+		.where("import_id", "=", importID)
 		.where("committed", "=", false)
 		.execute();
 
-	await db.deleteFrom("import_game").where("id", "=", importId).execute();
+	await db.deleteFrom("import_game").where("id", "=", importID).execute();
 
-	for (const pt of playtypes) {
-		const v3Game = GamePTToV3(gameGroup, pt) as Game;
-
-		await db.insertInto("import_game").values({ id: importId, game: v3Game }).execute();
+	if (games.length > 0) {
+		await db
+			.insertInto("import_game")
+			.values(games.map((game) => ({ id: importID, game })))
+			.execute();
 	}
 
-	await db.deleteFrom("import_error").where("import_id", "=", importId).execute();
-
-	for (const err of errors) {
+	await db.deleteFrom("import_error").where("import_id", "=", importID).execute();
+	if (errors.length > 0) {
 		await db
 			.insertInto("import_error")
-			.values({
-				import_id: importId,
-				type: err.type,
-				message: err.message,
-			})
+			.values(
+				errors.map((err) => ({
+					import_id: importID,
+					type: err.type,
+					message: err.message,
+				})),
+			)
 			.execute();
 	}
 
-	await db.deleteFrom("import_class").where("import_id", "=", importId).execute();
+	await db.deleteFrom("import_class").where("import_id", "=", importID).execute();
 
-	for (const d of classDeltas) {
-		const v3Game = GamePTToV3(d.game, d.playtype) as Game;
-
+	if (classDeltas.length > 0) {
 		await db
 			.insertInto("import_class")
-			.values({
-				import_id: importId,
-				game: v3Game,
-				set: d.set as string,
-				prev: d.old,
-				new: d.new,
-			})
+			.values(
+				classDeltas.map((d) => ({
+					import_id: importID,
+					game: d.game,
+					set: d.set as string,
+					prev: d.old,
+					new: d.new,
+				})),
+			)
 			.execute();
 	}
 
-	await db.deleteFrom("import_session").where("import_id", "=", importId).execute();
+	await db.deleteFrom("import_session").where("import_id", "=", importID).execute();
 
-	for (const s of createdSessions) {
+	if (createdSessions.length > 0) {
 		await db
 			.insertInto("import_session")
-			.values({
-				import_id: importId,
-				session_id: s.sessionID,
-				type: s.type.toLowerCase() as "appended" | "created",
-			})
+			.values(
+				createdSessions.map((s) => ({
+					import_id: importID,
+					session_id: s.sessionID,
+					type: s.type.toLowerCase() as "appended" | "created",
+				})),
+			)
 			.execute();
 	}
 
-	await db.deleteFrom("import_goal").where("import_id", "=", importId).execute();
+	await db.deleteFrom("import_goal").where("import_id", "=", importID).execute();
 
-	for (const g of goalInfo) {
+	if (goalInfo.length > 0) {
 		await db
 			.insertInto("import_goal")
-			.values({
-				import_id: importId,
-				goal_id: g.goalID,
-				prev_achieved: g.old.achieved,
-				prev_out_of: g.old.outOf,
-				prev_out_of_human: g.old.outOfHuman,
-				prev_progress: g.old.progress,
-				prev_progress_human: g.old.progressHuman,
-				new_achieved: g.new.achieved,
-				new_out_of: g.new.outOf,
-				new_out_of_human: g.new.outOfHuman,
-				new_progress: g.new.progress,
-				new_progress_human: g.new.progressHuman,
-			})
+			.values(
+				goalInfo.map((g) => ({
+					import_id: importID,
+					goal_id: g.goalID,
+					prev_achieved: g.old.achieved,
+					prev_out_of: g.old.outOf,
+					prev_out_of_human: g.old.outOfHuman,
+					prev_progress: g.old.progress,
+					prev_progress_human: g.old.progressHuman,
+					new_achieved: g.new.achieved,
+					new_out_of: g.new.outOf,
+					new_out_of_human: g.new.outOfHuman,
+					new_progress: g.new.progress,
+					new_progress_human: g.new.progressHuman,
+				})),
+			)
 			.execute();
 	}
 
-	await db.deleteFrom("import_quest").where("import_id", "=", importId).execute();
+	await db.deleteFrom("import_quest").where("import_id", "=", importID).execute();
 
-	for (const q of questInfo) {
+	if (questInfo.length > 0) {
 		await db
 			.insertInto("import_quest")
-			.values({
-				import_id: importId,
-				quest_id: q.questID,
-				prev_achieved: q.old.achieved,
-				prev_progress: q.old.progress,
-				new_achieved: q.new.achieved,
-				new_progress: q.new.progress,
-			})
+			.values(
+				questInfo.map((q) => ({
+					import_id: importID,
+					quest_id: q.questID,
+					prev_achieved: q.old.achieved,
+					prev_progress: q.old.progress,
+					new_achieved: q.new.achieved,
+					new_progress: q.new.progress,
+				})),
+			)
 			.execute();
 	}
 
-	const n = Math.max(1, playtypes.length);
+	const n = Math.max(1, scoreCount);
 
 	await db
 		.insertInto("import_timing")
 		.values({
-			id: importId,
+			id: importID,
 			timestamp: tsNow,
 			import_secs_avg: timing.importMs / n,
 			import_parse_secs_avg: timing.importParseMs / n,

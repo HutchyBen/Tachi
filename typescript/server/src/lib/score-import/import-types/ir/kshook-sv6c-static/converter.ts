@@ -1,4 +1,5 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
 import type { EmptyObject } from "#utils/types";
 
 import {
@@ -8,7 +9,6 @@ import {
 import { FindSDVXChartOnInGameIDVersion } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { ConverterFunction } from "../../common/types";
 import type { KsHookSV6CStaticScore } from "./types";
 
 import { SV6CConvertDifficulty, SV6CConvertLamp } from "../kshook-sv6c/converter";
@@ -30,14 +30,14 @@ export const ConverterKsHookSV6CStatic: ConverterFunction<
 		);
 	}
 
-	const song = await FindSongOnID("sdvx", chart.songID);
+	const song = await FindSongOnID("sdvx", chart.song.id);
 
 	if (!song) {
-		log.error(`Song ${chart.songID} (sdvx) has no parent song?`);
-		throw new InternalFailure(`Song ${chart.songID} (sdvx) has no parent song?`);
+		log.error(`Song ${chart.song.id} (sdvx) has no parent song?`);
+		throw new InternalFailure(`Song ${chart.song.id} (sdvx) has no parent song?`);
 	}
 
-	const dryScore: DryScore<"sdvx:Single"> = {
+	const dryScore: DryScore<"sdvx"> = {
 		game: "sdvx",
 		service: "kshook SV6C Static",
 		comment: null,

@@ -1,7 +1,7 @@
 import { Command } from "commander";
-import { GetGamePTConfig, type MONGO_FolderDocument } from "tachi-common";
+import { type FolderDocument, GetGameConfig } from "tachi-common";
 
-import { CreateFolderID, MutateCollection } from "../../util";
+import { CreateLegacyFolderID, MutateCollection } from "../../util";
 
 const LEVELS = [
 	"0",
@@ -36,7 +36,7 @@ const command = new Command().requiredOption("-v, --version <version>").parse(pr
 const options = command.opts();
 const version = options.version;
 
-const tachiVersions = GetGamePTConfig("ongeki", "Single").versions;
+const tachiVersions = GetGameConfig("ongeki").versions;
 const versionName = tachiVersions[version];
 
 if (!versionName) {
@@ -45,7 +45,7 @@ if (!versionName) {
 	);
 }
 
-const newFolders: MONGO_FolderDocument[] = [];
+const newFolders: FolderDocument[] = [];
 const levelFolderIDs: string[] = [];
 const difficultyFolderIDs: string[] = [];
 
@@ -62,7 +62,7 @@ for (const level of LEVELS) {
 			},
 		};
 	}
-	const folderID = CreateFolderID(data, "ongeki", "Single");
+	const folderID = CreateLegacyFolderID(data, "ongeki", "Single");
 
 	levelFolderIDs.push(folderID);
 
@@ -92,7 +92,7 @@ for (const difficulty of DIFFICULTIES) {
 		};
 	}
 
-	const folderID = CreateFolderID(data, "ongeki", "Single");
+	const folderID = CreateLegacyFolderID(data, "ongeki", "Single");
 
 	difficultyFolderIDs.push(folderID);
 

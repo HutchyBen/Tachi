@@ -7,19 +7,15 @@ import DB from "#services/pg/db";
 import { ISO8601ToUnixMilliseconds } from "#utils/time";
 import { type Kysely, sql, type Transaction } from "kysely";
 import {
-	type GameGroup,
-	GamePTToV3,
-	GetGamePTConfig,
-	type GPTString,
+	type APITokenDocument,
+	GetGameConfig,
 	type integer,
-	type MONGO_APITokenDocument,
-	type MONGO_UserDocument,
-	type MONGO_UserGameStats,
-	type MONGO_UserSettingsDocument,
-	type Playtype,
 	type ProfileRatingAlgorithms,
 	UserAuthLevels,
-	V3ToGamePT,
+	type UserDocument,
+	type UserGameStats,
+	type UserSettingsDocument,
+	type V3Game,
 } from "tachi-common";
 import { type Database } from "tachi-db";
 
@@ -44,7 +40,7 @@ export async function GetUsernameFromUserID(userID: integer): Promise<string> {
 /**
  * Gets a user based on their username case-insensitively.
  */
-export function GetUserCaseInsensitive(username: string): Promise<MONGO_UserDocument | null> {
+export function GetUserCaseInsensitive(username: string): Promise<UserDocument | null> {
 	return DB.selectFrom("account")
 		.select(SELECT_USER)
 		.where("normalized_username", "=", username.toLowerCase())
@@ -71,7 +67,7 @@ export function GetUserPrivateInfo(userID: integer) {
 /**
  * Gets a user from their userID.
  */
-export function GetUserWithID(userID: integer): Promise<MONGO_UserDocument | null> {
+export function GetUserWithID(userID: integer): Promise<UserDocument | null> {
 	return DB.selectFrom("account")
 		.select(SELECT_USER)
 		.where("id", "=", userID)
@@ -79,7 +75,7 @@ export function GetUserWithID(userID: integer): Promise<MONGO_UserDocument | nul
 		.then((res) => (res ? ToUserDocument(res) : null));
 }
 
-export async function GetSettingsForUser(userID: integer): Promise<MONGO_UserSettingsDocument> {
+export async function GetSettingsForUser(userID: integer): Promise<UserSettingsDocument> {
 	const following = await GetFollowingForUser(userID);
 
 	return DB.selectFrom("account_settings")
@@ -123,7 +119,7 @@ export async function GetUsersWithIDs(userIDs: Array<integer>) {
  * If the user document is not found, a severe error is logged, and this
  * function throws.
  */
-export async function GetUserWithIDGuaranteed(userID: integer): Promise<MONGO_UserDocument> {
+export async function GetUserWithIDGuaranteed(userID: integer): Promise<UserDocument> {
 	const userDoc = await GetUserWithID(userID);
 
 	if (!userDoc) {
@@ -156,32 +152,30 @@ export function ResolveUser(usernameOrID: string) {
 /**
  * Returns a formatted string indicating the user. This is used for logging.
  */
-export function FormatUserDoc(userdoc: MONGO_UserDocument) {
+export function FormatUserDoc(userdoc: UserDocument) {
 	return `${userdoc.username} (#${userdoc.id})`;
 }
 
-export async function GetUsersRanking(stats: MONGO_UserGameStats) {
+export async function GetUsersRanking(stats: UserGameStats) {
 	const { ranking } = await GetUsersRankingAndOutOf(stats);
 	return ranking;
 }
 
-export function GetUGPTPlaycount(userID: integer, game: GameGroup, playtype: Playtype) {
-	const v3Game = GamePTToV3(game, playtype);
-
+export function GetUGPTPlaycount(userID: integer, game: V3Game) {
 	return DB.selectFrom("score")
 		.select((eb) => eb.fn.countAll().as("playcount"))
 		.where("user_id", "=", userID)
-		.where("game", "=", v3Game)
+		.where("game", "=", game)
 		.executeTakeFirst()
 		.then((res) => Number(res?.playcount ?? 0));
 }
 
-export async function GetAllRankings(stats: MONGO_UserGameStats) {
-	const gptConfig = GetGamePTConfig(stats.game, stats.playtype);
+export async function GetAllRankings(stats: UserGameStats) {
+	const gameConfig = GetGameConfig(stats.game);
 
 	const entries = await Promise.all(
-		Object.keys(gptConfig.profileRatingAlgs).map((k) =>
-			GetUsersRankingAndOutOf(stats, k as ProfileRatingAlgorithms[GPTString]).then((r) => [
+		Object.keys(gameConfig.profileRatingAlgs).map((k) =>
+			GetUsersRankingAndOutOf(stats, k as ProfileRatingAlgorithms[V3Game]).then((r) => [
 				k,
 				r,
 			]),
@@ -189,18 +183,17 @@ export async function GetAllRankings(stats: MONGO_UserGameStats) {
 	);
 
 	return Object.fromEntries(entries) as Record<
-		ProfileRatingAlgorithms[GPTString],
+		ProfileRatingAlgorithms[V3Game],
 		{ outOf: integer; ranking: integer }
 	>;
 }
 
 export async function GetUsersRankingAndOutOf(
-	stats: MONGO_UserGameStats,
-	alg?: ProfileRatingAlgorithms[GPTString],
+	stats: UserGameStats,
+	alg?: ProfileRatingAlgorithms[V3Game],
 ) {
-	const gptConfig = GetGamePTConfig(stats.game, stats.playtype);
-	const ratingAlg = alg ?? gptConfig.defaultProfileRatingAlg;
-	const v3Game = GamePTToV3(stats.game, stats.playtype);
+	const gameConfig = GetGameConfig(stats.game);
+	const ratingAlg = alg ?? gameConfig.defaultProfileRatingAlg;
 	const userRating = stats.ratings[ratingAlg] ?? null;
 
 	const result = await DB.selectFrom("game_profile")
@@ -210,7 +203,7 @@ export async function GetUsersRankingAndOutOf(
 				"ranking_count",
 			),
 		])
-		.where("game", "=", v3Game)
+		.where("game", "=", stats.game)
 		.executeTakeFirstOrThrow();
 
 	return {
@@ -232,7 +225,7 @@ export function GetOnlineCutoff() {
 /**
  * Returns whether a given userID is an administrator or not.
  */
-export async function IsRequesterAdmin(request: MONGO_APITokenDocument) {
+export async function IsRequesterAdmin(request: APITokenDocument) {
 	// API Tokens created on the behalf of an admin do NOT inherit admin permissions.
 	if (request.token !== null) {
 		return false;
@@ -258,7 +251,7 @@ export async function IsUserAdmin(userID: integer) {
 	return exists;
 }
 
-export async function IsUserBanned(userID: integer) {
+export function IsUserBanned(userID: integer) {
 	return DB.selectFrom("account")
 		.select("auth_level")
 		.where("id", "=", userID)
@@ -268,15 +261,15 @@ export async function IsUserBanned(userID: integer) {
 }
 
 /**
- * Return all the GPTs this userID has played.
+ * Return all the games this userID has played.
  */
-export async function GetUserPlayedGPTs(userID: integer) {
+export async function GetUserPlayedGames(userID: integer) {
 	const rows = await DB.selectFrom("game_profile")
 		.select("game")
 		.where("user_id", "=", userID)
 		.execute();
 
-	return rows.map((r) => V3ToGamePT(r.game));
+	return rows.map((r) => r.game);
 }
 
 export async function GetAllUserRivals(userID: integer) {
@@ -327,7 +320,7 @@ export async function GetNextAvailableUsernameChange(
  *
  * In practice, that's how these things work anyway.
  */
-export async function GetFirstAdmin(): Promise<MONGO_UserDocument> {
+export async function GetFirstAdmin(): Promise<UserDocument> {
 	const admin = await DB.selectFrom("account")
 		.select(SELECT_USER)
 		.where("auth_level", "=", "admin")

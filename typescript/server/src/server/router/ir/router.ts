@@ -1,15 +1,15 @@
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log";
-import { FormatUserDoc, GetUserWithID } from "#utils/user";
-import { Router } from "express";
-
 import {
 	FervidexStyleRequireNotGuest,
 	RequireNotGuest,
 	SetFervidexStyleRequestPermissions,
 	SetRequestPermissions,
-} from "../../middleware/auth";
-import { RequireBokutachi, RequireKamaitachi } from "../../middleware/type-require";
+} from "#server/middleware/auth";
+import { RequireBokutachi, RequireKamaitachi } from "#server/middleware/type-require";
+import { FormatUserDoc, GetUserWithID } from "#utils/user";
+import { Router } from "express";
+
 import barbatosIR from "./barbatos/router";
 import beatorajaIR from "./beatoraja/router";
 import directManualIR from "./direct-manual/router";

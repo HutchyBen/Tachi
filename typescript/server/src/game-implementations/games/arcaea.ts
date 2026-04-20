@@ -1,15 +1,14 @@
-import type { GPTServerImplementation } from "#game-implementations/types";
-
+import { type GameImplementation } from "#game-implementations/types";
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileAvgBestN } from "#game-implementations/utils/profile-calc";
 import { SessionAvgBest10For } from "#game-implementations/utils/session-calc";
 import { IsNullish } from "#utils/misc";
 import { Potential } from "rg-stats";
-import { ARCAEA_GBOUNDARIES, FmtNum, GetGrade, type GPTStrings } from "tachi-common";
+import { ARCAEA_GBOUNDARIES, FmtNum, GetGrade } from "tachi-common";
 
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
-export const ARCAEA_IMPL: GPTServerImplementation<GPTStrings["arcaea"]> = {
+export const ARCAEA_IMPL: GameImplementation<"arcaea"> = {
 	chartSpecificValidators: {
 		score: (score, chart) => {
 			if (score < 0) {
@@ -40,8 +39,8 @@ export const ARCAEA_IMPL: GPTServerImplementation<GPTStrings["arcaea"]> = {
 	sessionCalcs: (arr) => ({
 		naivePotential: SessionAvgBest10For("potential")(arr),
 	}),
-	profileCalcs: async (game, playtype, userID) => ({
-		naivePotential: await ProfileAvgBestN("potential", 30)(game, playtype, userID),
+	profileCalcs: async (game, userID) => ({
+		naivePotential: await ProfileAvgBestN("potential", 30)(game, userID),
 	}),
 	classDerivers: (ratings) => {
 		const potential = ratings.naivePotential;
@@ -96,7 +95,7 @@ export const ARCAEA_IMPL: GPTServerImplementation<GPTStrings["arcaea"]> = {
 		),
 	],
 	defaultMergeRefName: "Best Score",
-	derivationRelevantFields: ["levelNum"],
+	chartDataRelevantFields: ["levelNum"],
 	scoreValidators: [
 		(s) => {
 			if (s.scoreData.lamp === "PURE MEMORY" && s.scoreData.score < 10_000_000) {

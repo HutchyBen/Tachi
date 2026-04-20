@@ -2,17 +2,17 @@ import { Command } from "commander";
 import { XMLParser } from "fast-xml-parser";
 import { readFileSync } from "fs";
 import {
+	type ChartDocument,
 	type Difficulties,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
-	type Playtypes,
+	type LEGACY_Playtypes,
+	type SongDocument,
 	type Versions,
 } from "tachi-common";
-import { GITADORA_GITA_CONF } from "tachi-common/config/game-support/gitadora";
+import { GAME_GITADORA_GITA_CONF } from "tachi-common/config/game-support/gitadora";
 
 import { CreateChartID, MutateCollection, ReadCollection, WriteCollection } from "../../util";
 
-const supportedVersions = Object.keys(GITADORA_GITA_CONF.versions);
+const supportedVersions = Object.keys(GAME_GITADORA_GITA_CONF.versions);
 
 const program = new Command();
 program.requiredOption("-i, --input <music_db.xml>");
@@ -30,7 +30,7 @@ if (!supportedVersions.includes(options.version)) {
 	);
 	throw new Error(`Invalid version ${options.version}.`);
 }
-const version: Versions["gitadora:Dora" | "gitadora:Gita"] = options.version;
+const version: Versions["gitadora-dora" | "gitadora-gita"] = options.version;
 
 interface XMLText<T> {
 	"#text": T;
@@ -86,7 +86,7 @@ interface Entry {
 }
 
 // Used for destructuring the difficulty byte array - see implementation for mapping
-const DIFFICULTIES: (Difficulties["gitadora:Dora" | "gitadora:Gita"] | null)[] = [
+const DIFFICULTIES: (Difficulties["gitadora-dora" | "gitadora-gita"] | null)[] = [
 	null,
 	"BASIC",
 	"ADVANCED",
@@ -103,7 +103,7 @@ const DIFFICULTIES: (Difficulties["gitadora:Dora" | "gitadora:Gita"] | null)[] =
 	"BASS EXTREME",
 	"BASS MASTER",
 ];
-const PLAYTYPE_DIFFICULTY_MAP: (Playtypes["gitadora"] | null)[] = [
+const PLAYTYPE_DIFFICULTY_MAP: (LEGACY_Playtypes["gitadora"] | null)[] = [
 	null,
 	"Gita",
 	"Gita",
@@ -121,7 +121,7 @@ const PLAYTYPE_DIFFICULTY_MAP: (Playtypes["gitadora"] | null)[] = [
 	"Gita",
 ];
 
-function buildSong(entry: Entry): MONGO_SongDocument<"gitadora"> {
+function buildSong(entry: Entry): SongDocument<"gitadora"> {
 	return {
 		artist: entry.artist_title_ascii["#text"] || "", // Sometimes artist is just not there - this is valid!
 		title: entry.title_name["#text"],
@@ -135,14 +135,17 @@ function buildSong(entry: Entry): MONGO_SongDocument<"gitadora"> {
 const buildChart = (
 	entry: Entry,
 	difficulty: number,
-	difficultyString: Difficulties["gitadora:Dora" | "gitadora:Gita"],
-	playType: Playtypes["gitadora"],
-): MONGO_ChartDocument<"gitadora:Dora" | "gitadora:Gita"> => {
+	difficultyString: Difficulties["gitadora-dora" | "gitadora-gita"],
+	playType: LEGACY_Playtypes["gitadora"],
+): ChartDocument<"gitadora-dora" | "gitadora-gita"> => {
 	// Comes in a 435, needs to become "4.35"
 	const convertedDifficultyAsFloat = difficulty / 100;
 	const convertedDifficultyAsString = convertedDifficultyAsFloat.toFixed(2);
+	const game: "gitadora-dora" | "gitadora-gita" =
+		playType === "Gita" ? "gitadora-gita" : "gitadora-dora";
 
 	return {
+		game,
 		chartID: CreateChartID(),
 		data: {
 			inGameID: entry.music_id["#text"],
@@ -159,20 +162,20 @@ const buildChart = (
 
 const songs = ReadCollection("songs-gitadora.json");
 const existingChartDocs = ReadCollection("charts-gitadora.json");
-const existingCharts = new Map<string, MONGO_ChartDocument<"gitadora:Dora" | "gitadora:Gita">>();
+const existingCharts = new Map<string, ChartDocument<"gitadora-dora" | "gitadora-gita">>();
 for (const chart of existingChartDocs) {
 	existingCharts.set(`${chart.data.inGameID}-${chart.difficulty}-${chart.playtype}`, chart);
 }
 
-const newSongs: MONGO_SongDocument<"gitadora">[] = [];
-const newCharts: MONGO_ChartDocument<"gitadora:Dora" | "gitadora:Gita">[] = [];
+const newSongs: SongDocument<"gitadora">[] = [];
+const newCharts: ChartDocument<"gitadora-dora" | "gitadora-gita">[] = [];
 for (const entry of data.mdb.mdb_data as Entry[]) {
 	// For logging purposes - song may not exist, not safe to access for logging
 	const mid = entry.music_id["#text"];
 	const title = entry.title_name["#text"];
 	const artist = entry.artist_title_ascii["#text"] || "";
 
-	const song = songs.find((s: MONGO_SongDocument<"gitadora">) => s.id === mid);
+	const song = songs.find((s: SongDocument<"gitadora">) => s.id === mid);
 	if (!song) {
 		const newSong = buildSong(entry);
 		console.log(`New song: ${newSong.artist} - ${newSong.title} (id ${newSong.id})`);
@@ -216,7 +219,7 @@ for (const entry of data.mdb.mdb_data as Entry[]) {
 	}
 }
 
-MutateCollection("songs-gitadora.json", (songs: Array<MONGO_SongDocument<"gitadora">>) => [
+MutateCollection("songs-gitadora.json", (songs: Array<SongDocument<"gitadora">>) => [
 	...songs,
 	...newSongs,
 ]);

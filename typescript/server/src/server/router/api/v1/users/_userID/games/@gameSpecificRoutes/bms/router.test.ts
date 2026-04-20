@@ -3,7 +3,7 @@ import DB from "#services/pg/db";
 import mockApi, { CloseServerConnection } from "#test-utils/mock-api";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { TestingBMS7KScore } from "#test-utils/test-data";
-import { type MONGO_ScoreData } from "tachi-common";
+import { type ScoreData } from "tachi-common";
 import { afterAll, describe, expect, it } from "vitest";
 
 afterAll(() => CloseServerConnection());
@@ -66,8 +66,8 @@ async function seedBmsChartWithHashes(opts: {
 
 async function insertBmsPb(userId: number, chartPgId: string) {
 	const { data, derived, judgements } = mongoScoreDataToPg(
-		"bms:7K",
-		TestingBMS7KScore.scoreData as MONGO_ScoreData<"bms:7K">,
+		"bms-7k",
+		TestingBMS7KScore.scoreData as ScoreData<"bms-7k">,
 	);
 
 	const now = new Date().toISOString();
@@ -93,7 +93,7 @@ async function insertBmsPb(userId: number, chartPgId: string) {
 		.execute();
 }
 
-describe("GET /api/v1/users/:userID/games/bms/:playtype/best-score/:checksum", () => {
+describe("GET /api/v1/users/:userID/games/:game/best-score/:checksum", () => {
 	const md5 = "a1b2c3d4e5f6789012345678abcdef01";
 	const sha256 = "b".repeat(64);
 
@@ -101,7 +101,7 @@ describe("GET /api/v1/users/:userID/games/bms/:playtype/best-score/:checksum", (
 		const { id } = await seedUser({ username: "bms_bs_hex" });
 
 		const res = await mockApi.get(
-			`/api/v1/users/${id}/games/bms/7K/best-score/gggggggggggggggggggggggggggggg`,
+			`/api/v1/users/${id}/games/bms-7k/best-score/gggggggggggggggggggggggggggggg`,
 		);
 
 		expect(res.status).toBe(400);
@@ -113,38 +113,38 @@ describe("GET /api/v1/users/:userID/games/bms/:playtype/best-score/:checksum", (
 		const { id } = await seedUser({ username: "bms_bs_len" });
 
 		const res = await mockApi.get(
-			`/api/v1/users/${id}/games/bms/7K/best-score/${"f".repeat(31)}`,
+			`/api/v1/users/${id}/games/bms-7k/best-score/${"f".repeat(31)}`,
 		);
 
 		expect(res.status).toBe(400);
 		expect(res.body.description).toContain("length");
 	});
 
-	it("returns 400 for an unsupported playtype", async () => {
+	it("returns 400 for an invalid game", async () => {
 		const { id } = await seedUser({ username: "bms_bs_pt" });
 
-		const res = await mockApi.get(`/api/v1/users/${id}/games/bms/99K/best-score/${md5}`);
+		const res = await mockApi.get(`/api/v1/users/${id}/games/bms-99k/best-score/${md5}`);
 
 		expect(res.status).toBe(400);
-		expect(res.body.description).toContain("playtype");
+		expect(res.body.description).toContain("game");
 	});
 
-	it("returns 404 when no chart matches the checksum for this playtype", async () => {
+	it("returns 404 when no chart matches the checksum for this game", async () => {
 		const { id } = await seedUser({ username: "bms_bs_missing" });
 
 		const res = await mockApi.get(
-			`/api/v1/users/${id}/games/bms/7K/best-score/${"e".repeat(32)}`,
+			`/api/v1/users/${id}/games/bms-7k/best-score/${"e".repeat(32)}`,
 		);
 
 		expect(res.status).toBe(404);
 		expect(res.body.description).toContain("No chart found");
 	});
 
-	it("returns 404 when the chart exists for the other BMS playtype", async () => {
+	it("returns 404 when the chart exists for the other BMS game", async () => {
 		const { id } = await seedUser({ username: "bms_bs_wrongpt" });
 		await seedBmsChartWithHashes({ md5, sha256, game: "bms-7k" });
 
-		const res = await mockApi.get(`/api/v1/users/${id}/games/bms/14K/best-score/${md5}`);
+		const res = await mockApi.get(`/api/v1/users/${id}/games/bms-14k/best-score/${md5}`);
 
 		expect(res.status).toBe(404);
 		expect(res.body.description).toContain("No chart found");
@@ -155,7 +155,7 @@ describe("GET /api/v1/users/:userID/games/bms/:playtype/best-score/:checksum", (
 		const upperMd5 = md5.toUpperCase();
 		const { chartPgId } = await seedBmsChartWithHashes({ md5, sha256, game: "bms-7k" });
 
-		const res = await mockApi.get(`/api/v1/users/${id}/games/bms/7K/best-score/${upperMd5}`);
+		const res = await mockApi.get(`/api/v1/users/${id}/games/bms-7k/best-score/${upperMd5}`);
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
@@ -164,7 +164,7 @@ describe("GET /api/v1/users/:userID/games/bms/:playtype/best-score/:checksum", (
 
 		await insertBmsPb(id, chartPgId);
 
-		const res2 = await mockApi.get(`/api/v1/users/${id}/games/bms/7K/best-score/${md5}`);
+		const res2 = await mockApi.get(`/api/v1/users/${id}/games/bms-7k/best-score/${md5}`);
 
 		expect(res2.status).toBe(200);
 		expect(res2.body.description).toBe("Best score found.");
@@ -177,7 +177,7 @@ describe("GET /api/v1/users/:userID/games/bms/:playtype/best-score/:checksum", (
 		const { id } = await seedUser({ username: "bms_bs_sha256" });
 		await seedBmsChartWithHashes({ md5, sha256, game: "bms-7k" });
 
-		const res = await mockApi.get(`/api/v1/users/${id}/games/bms/7K/best-score/${sha256}`);
+		const res = await mockApi.get(`/api/v1/users/${id}/games/bms-7k/best-score/${sha256}`);
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);

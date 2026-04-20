@@ -29,7 +29,7 @@ export default function PBLeadingRows({
 		<>
 			{showUser && showChart && (
 				<>
-					<UserCell game={game} playtype={pb.playtype} user={pb.__related.user!} />
+					<UserCell game={game} user={pb.__related.user!} />
 					{diffCell}
 					<IndicatorsCell highlight={scoreState.highlight} />
 					<TitleCell chart={pb.__related.chart} game={game} song={pb.__related.song} />
@@ -38,7 +38,7 @@ export default function PBLeadingRows({
 			{showUser && !showChart && (
 				<>
 					<IndicatorsCell highlight={scoreState.highlight} />
-					<UserCell game={game} playtype={pb.playtype} user={pb.__related.user!} />
+					<UserCell game={game} user={pb.__related.user!} />
 				</>
 			)}
 			{!showUser && showChart && (

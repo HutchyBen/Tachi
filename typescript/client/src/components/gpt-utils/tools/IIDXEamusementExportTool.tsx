@@ -9,9 +9,9 @@ import { CopyToClipboard } from "#util/misc";
 import React from "react";
 import { Alert, Button, Col, Row } from "react-bootstrap";
 
-function Component({ game, playtype, reqUser }: UGPT) {
+function Component({ game, reqUser }: UGPT) {
 	const { data, error } = useApiQuery<string>(
-		`/users/${reqUser.id}/games/${game}/${playtype}/eamusement-csv`,
+		`/users/${reqUser.id}/games/${game}/eamusement-csv`,
 	);
 
 	if (error) {

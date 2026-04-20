@@ -1,9 +1,9 @@
 import type { KtLogger } from "#lib/log/log";
-import type { MONGO_KaiAuthDocument } from "tachi-common";
+import type { ParserFunctionReturns } from "#lib/score-import/import-types/common/types";
+import type { GamesForGroup, KaiAuthDocument } from "tachi-common";
 
 import nodeFetch from "#utils/fetch";
 
-import type { ParserFunctionReturns } from "../../types";
 import type { KaiContext } from "../types";
 
 import { CreateKaiReauthFunction } from "../reauth";
@@ -13,11 +13,11 @@ import { CreateKaiIIDXClassProvider } from "./class-handler";
 
 export async function ParseKaiIIDX(
 	service: "EAG" | "FLO",
-	authDoc: MONGO_KaiAuthDocument,
+	authDoc: KaiAuthDocument,
 	log: KtLogger,
 	fetch = nodeFetch,
 	reauthFn: (() => Promise<string>) | null = null,
-): Promise<ParserFunctionReturns<unknown, KaiContext>> {
+): Promise<ParserFunctionReturns<unknown, KaiContext, GamesForGroup["iidx"]>> {
 	const baseUrl = KaiTypeToBaseURL(service);
 
 	const resolvedReauthFn = reauthFn ?? CreateKaiReauthFunction(service, authDoc, log, fetch);
@@ -43,6 +43,6 @@ export async function ParseKaiIIDX(
 			resolvedReauthFn,
 			fetch,
 		),
-		game: "iidx",
+		gameGroup: "iidx",
 	};
 }

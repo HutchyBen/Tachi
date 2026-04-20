@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, bench, describe } from "vitest";
 
-import { LoadSongChildrenForPgIds, SearchSongsForGameFtsAndTrgm } from "./songs.js";
+import { LoadSongChildrenForPgIds, SearchSongsForGameFtsAndTrgm } from "./songs";
 
 /** Default: repo `db/seeds` (override with `SEEDS_DIR` for custom trees). */
 const SEEDS_DIR =

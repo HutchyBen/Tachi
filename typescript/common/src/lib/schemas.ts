@@ -8,21 +8,21 @@ import {
 	type ValidationFunctionParentOptionsKeychain,
 	type ValidSchemaValue,
 } from "prudence";
-import { z, type ZodType } from "zod";
 
-import type { GameGroup, Playtype, Playtypes, V3Game } from "../types/game-config";
-import type { INTERNAL_GAME_PT_CONFIG } from "../types/internals";
+import type { GameGroup, LEGACY_Playtypes, V3Game } from "../types/game-config";
 import type { ConfScoreMetric } from "../types/metrics";
 import type { NotificationBody } from "../types/notifications";
 
 import {
 	allGPTStrings,
 	allSupportedGameGroups,
+	GameToGameGroup,
+	GetGameConfig,
 	GetGameGroupConfig,
-	GetGamePTConfig,
-	GetGPTString,
 	GetScoreMetrics,
-	v3AllGames,
+	LEGACY_GameGroupPTToGame,
+	LEGACY_GameToPlaytypeFn,
+	LEGACY_GetGamePTConfig,
 } from "../config/config";
 import { allImportTypes } from "../constants/import-types";
 import { ALL_PERMISSIONS } from "../constants/permissions";
@@ -50,17 +50,15 @@ function prSchemaFnWrap(schema: PrudenceSchema) {
 	};
 }
 
-const PR_GAME_STATS = (
-	game: GameGroup,
-	playtype: Playtypes[GameGroup],
-	gptConfig: INTERNAL_GAME_PT_CONFIG,
-) => ({
+const PR_GAME_STATS = (game: V3Game) => ({
 	userID: p.isPositiveNonZeroInteger,
-	game: p.is(game),
-	playtype: p.is(playtype),
-	ratings: Object.fromEntries(Object.keys(gptConfig.scoreRatingAlgs).map((s) => [s, "*number"])),
+	game: p.is(GameToGameGroup(game)),
+	playtype: p.is(LEGACY_GameToPlaytypeFn(game)),
+	ratings: Object.fromEntries(
+		Object.keys(GetGameConfig(game).scoreRatingAlgs).map((s) => [s, "*number"]),
+	),
 	classes: Object.fromEntries(
-		Object.keys(gptConfig.classes).map((e) => [e, p.optional(p.isInteger)]),
+		Object.keys(GetGameConfig(game).classes).map((e) => [e, p.optional(p.isInteger)]),
 	),
 });
 
@@ -86,7 +84,7 @@ const extractGPTIDString = (self: unknown) => {
 	// if there's no ":" in the string, this returns only one element.
 	const [game, playtype] = s.gptString.split(":") as [string, string | undefined];
 
-	if (!IsValidGame(game)) {
+	if (!IsValidGameGroup(game)) {
 		throw new Error(`Expected valid game -- got ${game} from gptString ${s.gptString}.`);
 	}
 
@@ -100,7 +98,7 @@ const extractGPTIDString = (self: unknown) => {
 	return { game, playtype };
 };
 
-const extractGPT = (self: unknown) => {
+const extractGame = (self: unknown) => {
 	if (typeof self !== "object" || !self) {
 		throw new Error("Expected an object.");
 	}
@@ -115,7 +113,7 @@ const extractGPT = (self: unknown) => {
 		throw new Error(`Expected a string where self.playtype is. Got ${s.playtype}`);
 	}
 
-	if (!IsValidGame(s.game)) {
+	if (!IsValidGameGroup(s.game)) {
 		throw new Error(`Expected valid game -- got ${s.game}.`);
 	}
 
@@ -123,18 +121,22 @@ const extractGPT = (self: unknown) => {
 		throw new Error(`Expected valid playtype -- got ${s.playtype}.`);
 	}
 
-	return { game: s.game, playtype: s.playtype };
+	return {
+		v3Game: LEGACY_GameGroupPTToGame(s.game, s.playtype),
+		gameGroup: s.game,
+		playtype: s.playtype,
+	};
 };
 
-function IsValidPlaytype(game: GameGroup, str: string): str is Playtypes[GameGroup] {
-	return GetGameGroupConfig(game).playtypes.includes(str as Playtypes[GameGroup]);
+function IsValidPlaytype(game: GameGroup, str: string): str is LEGACY_Playtypes[GameGroup] {
+	return GetGameGroupConfig(game).playtypes.includes(str as LEGACY_Playtypes[GameGroup]);
 }
 
-function IsValidGame(str: string): str is GameGroup {
+function IsValidGameGroup(str: string): str is GameGroup {
 	return allSupportedGameGroups.includes(str as GameGroup);
 }
 
-const getPlaytype = (game: GameGroup, self: unknown): Playtypes[GameGroup] => {
+const getPlaytype = (game: GameGroup, self: unknown): LEGACY_Playtypes[GameGroup] => {
 	if (self === null || typeof self !== "object") {
 		throw new Error("Expected an object.");
 	}
@@ -155,7 +157,7 @@ const getPlaytype = (game: GameGroup, self: unknown): Playtypes[GameGroup] => {
 const games = allSupportedGameGroups;
 
 const isValidPlaytype = (self: unknown, parent: Record<string, unknown>) => {
-	if (typeof parent.game !== "string" || !IsValidGame(parent.game)) {
+	if (typeof parent.game !== "string" || !IsValidGameGroup(parent.game)) {
 		throw new Error(`Invalid Schema, need game to base IsValidPlaytype off of.`);
 	}
 
@@ -171,7 +173,7 @@ const isValidPlaytype = (self: unknown, parent: Record<string, unknown>) => {
 };
 
 export const PR_GOAL_SCHEMA = (self: unknown) => {
-	const { game, playtype } = extractGPT(self);
+	const { gameGroup: game, playtype } = extractGame(self);
 
 	return prSchemaFnWrap({
 		game: p.isIn(games),
@@ -182,8 +184,8 @@ export const PR_GOAL_SCHEMA = (self: unknown) => {
 			{
 				mode: p.is("single"),
 				key: (self) => {
-					const gptConfig = GetGamePTConfig(game, playtype);
-					const metrics = GetScoreMetrics(gptConfig);
+					const gameConfig = LEGACY_GetGamePTConfig(game, playtype);
+					const metrics = GetScoreMetrics(gameConfig);
 
 					return p.isIn(metrics)(self);
 				},
@@ -193,8 +195,8 @@ export const PR_GOAL_SCHEMA = (self: unknown) => {
 				mode: p.isIn("absolute", "proportion"),
 				countNum: p.isPositive,
 				key: (self) => {
-					const gptConfig = GetGamePTConfig(game, playtype);
-					const metrics = GetScoreMetrics(gptConfig);
+					const gameConfig = LEGACY_GetGamePTConfig(game, playtype);
+					const metrics = GetScoreMetrics(gameConfig);
 
 					return p.isIn(metrics)(self);
 				},
@@ -234,7 +236,7 @@ const PR_SONG_DOCUMENT = (game: GameGroup): PrudenceSchema => {
 const PR_CHART_DOCUMENT = (game: GameGroup) => (self: unknown) => {
 	const playtype = getPlaytype(game, self);
 
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = LEGACY_GetGamePTConfig(game, playtype);
 
 	return prSchemaFnWrap({
 		songID: p.isPositiveInteger,
@@ -248,18 +250,18 @@ const PR_CHART_DOCUMENT = (game: GameGroup) => (self: unknown) => {
 		playtype: p.is(playtype),
 
 		difficulty:
-			gptConfig.difficulties.type === "DYNAMIC"
+			gameConfig.difficulties.type === "DYNAMIC"
 				? "string"
-				: p.isIn(gptConfig.difficulties.order),
+				: p.isIn(gameConfig.difficulties.order),
 
-		data: PrudenceZodShim(gptConfig.chartData),
+		data: PrudenceZodShim(gameConfig.chartData),
 
 		versions: (self) => {
 			if (!Array.isArray(self)) {
 				return "Expected an array";
 			}
 
-			const versions = Object.keys(gptConfig.versions);
+			const versions = Object.keys(gameConfig.versions);
 
 			if (self.find((k) => !versions.includes(k))) {
 				return "Array contained invalid versions";
@@ -330,14 +332,14 @@ const PRE_SCHEMAS = {
 		},
 		set: (self, pa) => {
 			const parent = pa as any;
-			const config = GetGamePTConfig("bms", parent.playtype);
+			const config = GetGameConfig(parent.game);
 
 			return p.isIn(Object.keys(config.classes))(self);
 		},
-		playtype: p.isIn("7K", "14K"),
+		game: p.isIn("bms-7k", "bms-14k"),
 		value: (self, pa) => {
 			const parent = pa as any;
-			const config = GetGamePTConfig("bms", parent.playtype);
+			const config = GetGameConfig(parent.game);
 
 			return p.isIn(config.classes[parent.set]?.values.map((e) => e.id) ?? [])(self);
 		},
@@ -429,9 +431,9 @@ const PRE_SCHEMAS = {
 	}),
 	goals: PR_GOAL_SCHEMA,
 	scores: (self: unknown) => {
-		const { game, playtype } = extractGPT(self);
+		const { gameGroup: game, playtype } = extractGame(self);
 
-		const gptConfig = GetGamePTConfig(game, playtype);
+		const gameConfig = LEGACY_GetGamePTConfig(game, playtype);
 
 		return prSchemaFnWrap({
 			service: "string",
@@ -448,27 +450,27 @@ const PRE_SCHEMAS = {
 			importType: p.nullable(p.isIn(allImportTypes)),
 			timeAchieved: p.nullable(p.isPositive),
 			scoreData: {
-				...PR_METRICS(gptConfig.providedMetrics),
-				...PR_METRICS(gptConfig.derivedMetrics),
+				...PR_METRICS(gameConfig.providedMetrics),
+				...PR_METRICS(gameConfig.derivedMetrics),
 
 				judgements: Object.fromEntries(
-					gptConfig.orderedJudgements.map((j) => [j, optNull(p.isInteger)]),
+					gameConfig.orderedJudgements.map((j) => [j, optNull(p.isInteger)]),
 				),
 
-				optional: PR_METRICS(gptConfig.optionalMetrics, true),
+				optional: PR_METRICS(gameConfig.optionalMetrics, true),
 			},
 
-			scoreMeta: PrudenceZodShim(gptConfig.scoreMeta),
+			scoreMeta: PrudenceZodShim(gameConfig.scoreMeta),
 
 			calculatedData: Object.fromEntries(
-				Object.keys(gptConfig.scoreRatingAlgs).map((a) => [a, "*?number"]),
+				Object.keys(gameConfig.scoreRatingAlgs).map((a) => [a, "*?number"]),
 			),
 		})(self);
 	},
 	"personal-bests": (self: unknown) => {
-		const { game, playtype } = extractGPT(self);
+		const { gameGroup: game, playtype } = extractGame(self);
 
-		const gptConfig = GetGamePTConfig(game, playtype);
+		const gameConfig = LEGACY_GetGamePTConfig(game, playtype);
 
 		return prSchemaFnWrap({
 			composedFrom: [{ name: "string", scoreID: "string" }],
@@ -485,18 +487,18 @@ const PRE_SCHEMAS = {
 			isPrimary: "boolean",
 			timeAchieved: p.nullable(p.isPositive),
 			scoreData: {
-				...PR_METRICS(gptConfig.providedMetrics),
-				...PR_METRICS(gptConfig.derivedMetrics),
+				...PR_METRICS(gameConfig.providedMetrics),
+				...PR_METRICS(gameConfig.derivedMetrics),
 
 				// TODO ENUMINDEXES
 
 				judgements: Object.fromEntries(
-					gptConfig.orderedJudgements.map((j) => [j, optNull(p.isInteger)]),
+					gameConfig.orderedJudgements.map((j) => [j, optNull(p.isInteger)]),
 				),
-				optional: PR_METRICS(gptConfig.optionalMetrics, true),
+				optional: PR_METRICS(gameConfig.optionalMetrics, true),
 			},
 			calculatedData: Object.fromEntries(
-				Object.keys(gptConfig.scoreRatingAlgs).map((a) => [a, "*?number"]),
+				Object.keys(gameConfig.scoreRatingAlgs).map((a) => [a, "*?number"]),
 			),
 		})(self);
 	},
@@ -512,9 +514,9 @@ const PRE_SCHEMAS = {
 		},
 	}),
 	sessions: (self: unknown) => {
-		const { game, playtype } = extractGPT(self);
+		const { gameGroup: game, playtype } = extractGame(self);
 
-		const gptConfig = GetGamePTConfig(game, playtype);
+		const gameConfig = LEGACY_GetGamePTConfig(game, playtype);
 
 		return prSchemaFnWrap({
 			userID: p.isPositiveNonZeroInteger,
@@ -528,7 +530,7 @@ const PRE_SCHEMAS = {
 			timeStarted: p.isPositiveInteger,
 			highlight: "boolean",
 			calculatedData: Object.fromEntries(
-				Object.keys(gptConfig.sessionRatingAlgs).map((k) => [k, "*?number"]),
+				Object.keys(gameConfig.sessionRatingAlgs).map((k) => [k, "*?number"]),
 			),
 			scoreIDs: ["string"],
 		})(self);
@@ -592,21 +594,17 @@ const PRE_SCHEMAS = {
 		score: p.any,
 	}),
 	"game-stats": (self: unknown) => {
-		const { game, playtype } = extractGPT(self);
+		const { v3Game } = extractGame(self);
 
-		const gptConfig = GetGamePTConfig(game, playtype);
-
-		return prSchemaFnWrap(PR_GAME_STATS(game, playtype, gptConfig))(self);
+		return prSchemaFnWrap(PR_GAME_STATS(v3Game))(self);
 	},
 	"game-stats-snapshots": (self: unknown) => {
-		const { game, playtype } = extractGPT(self);
-
-		const gptConfig = GetGamePTConfig(game, playtype);
+		const { v3Game } = extractGame(self);
 
 		return prSchemaFnWrap(
-			Object.assign(PR_GAME_STATS(game, playtype, gptConfig), {
+			Object.assign(PR_GAME_STATS(v3Game), {
 				rankings: Object.fromEntries(
-					Object.keys(gptConfig.profileRatingAlgs).map((e) => [
+					Object.keys(GetGameConfig(v3Game).profileRatingAlgs).map((e) => [
 						e,
 						{ outOf: p.isPositiveNonZeroInteger, ranking: p.isPositiveNonZeroInteger },
 					]),
@@ -617,19 +615,23 @@ const PRE_SCHEMAS = {
 		)(self);
 	},
 	"game-settings": (s: unknown) => {
-		const { game, playtype } = extractGPT(s);
-
-		const gptConfig = GetGamePTConfig(game, playtype);
+		const { v3Game } = extractGame(s);
 
 		return prSchemaFnWrap({
 			userID: p.isPositiveNonZeroInteger,
-			game: p.is(game),
-			playtype: p.is(playtype),
+			game: p.is(GameToGameGroup(v3Game)),
+			playtype: p.is(LEGACY_GameToPlaytypeFn(v3Game)),
 			rivals: [p.isPositiveNonZeroInteger],
 			preferences: {
-				preferredScoreAlg: p.nullable(p.isIn(Object.keys(gptConfig.scoreRatingAlgs))),
-				preferredSessionAlg: p.nullable(p.isIn(Object.keys(gptConfig.sessionRatingAlgs))),
-				preferredProfileAlg: p.nullable(p.isIn(Object.keys(gptConfig.profileRatingAlgs))),
+				preferredScoreAlg: p.nullable(
+					p.isIn(Object.keys(GetGameConfig(v3Game).scoreRatingAlgs)),
+				),
+				preferredSessionAlg: p.nullable(
+					p.isIn(Object.keys(GetGameConfig(v3Game).sessionRatingAlgs)),
+				),
+				preferredProfileAlg: p.nullable(
+					p.isIn(Object.keys(GetGameConfig(v3Game).profileRatingAlgs)),
+				),
 
 				// ouch
 				stats: p.and(
@@ -654,7 +656,7 @@ const PRE_SCHEMAS = {
 				defaultTable: p.nullable("string"),
 				preferredRanking: p.isIn("global", "rival", null),
 
-				gameSpecific: PrudenceZodShim(gptConfig.preferences),
+				gameSpecific: PrudenceZodShim(GetGameConfig(v3Game).preferences),
 			},
 		})(s);
 	},
@@ -666,12 +668,12 @@ const PRE_SCHEMAS = {
 		game: p.isIn(games),
 		playtype: isValidPlaytype,
 		classSet: (self, parent) => {
-			const gptConfig = GetGamePTConfig(
+			const gameConfig = LEGACY_GetGamePTConfig(
 				parent.game as GameGroup,
-				parent.playtype as Playtypes[GameGroup],
+				parent.playtype as LEGACY_Playtypes[GameGroup],
 			);
 
-			const keys = Object.keys(gptConfig.classes);
+			const keys = Object.keys(gameConfig.classes);
 
 			if (typeof self !== "string") {
 				return "Expected a string.";
@@ -864,11 +866,11 @@ const PRE_SCHEMAS = {
 
 export const SCHEMAS: Record<keyof typeof PRE_SCHEMAS, SchemaValidatorFunction> = PRE_SCHEMAS;
 
-const PR_BATCH_MANUAL_SCORE = (game: GameGroup, playtype: Playtype): PrudenceSchema => {
-	const gptConfig = GetGamePTConfig(game, playtype);
+const PR_BATCH_MANUAL_SCORE = (game: V3Game): PrudenceSchema => {
+	const gameConfig = GetGameConfig(game);
 
 	return {
-		...PR_METRICS(gptConfig.providedMetrics),
+		...PR_METRICS(gameConfig.providedMetrics),
 
 		matchType: p.isIn(
 			"songTitle",
@@ -902,8 +904,8 @@ const PR_BATCH_MANUAL_SCORE = (game: GameGroup, playtype: Playtype): PrudenceSch
 			}
 
 			for (const [key, v] of Object.entries(self)) {
-				if (!gptConfig.orderedJudgements.includes(key)) {
-					return `Invalid Key ${key}. Expected any of ${gptConfig.orderedJudgements.join(
+				if (!gameConfig.orderedJudgements.includes(key)) {
+					return `Invalid Key ${key}. Expected any of ${gameConfig.orderedJudgements.join(
 						", ",
 					)}`;
 				}
@@ -915,9 +917,9 @@ const PR_BATCH_MANUAL_SCORE = (game: GameGroup, playtype: Playtype): PrudenceSch
 
 			return true;
 		}),
-		optional: optNull(PR_METRICS(gptConfig.optionalMetrics, true)),
-		hitMeta: optNull(PR_METRICS(gptConfig.optionalMetrics, true)),
-		scoreMeta: optNull(PrudenceZodShim(gptConfig.scoreMeta)),
+		optional: optNull(PR_METRICS(gameConfig.optionalMetrics, true)),
+		hitMeta: optNull(PR_METRICS(gameConfig.optionalMetrics, true)),
+		scoreMeta: optNull(PrudenceZodShim(gameConfig.scoreMeta)),
 	};
 };
 
@@ -982,8 +984,8 @@ function PR_METRICS(metrics: Record<string, ConfScoreMetric>, shouldAllBeOptNull
 	return schema;
 }
 
-const PR_BATCH_MANUAL_CLASSES = (game: GameGroup, playtype: Playtype): PrudenceSchema => {
-	const config = GetGamePTConfig(game, playtype);
+const PR_BATCH_MANUAL_CLASSES = (game: V3Game): PrudenceSchema => {
+	const config = GetGameConfig(game);
 
 	const schema: PrudenceSchema = {};
 
@@ -998,15 +1000,15 @@ const PR_BATCH_MANUAL_CLASSES = (game: GameGroup, playtype: Playtype): PrudenceS
 	return schema;
 };
 
-export const PR_BATCH_MANUAL = (game: GameGroup, playtype: Playtype): PrudenceSchema => ({
+export const PR_BATCH_MANUAL = (game: V3Game): PrudenceSchema => ({
 	meta: {
 		service: p.isBoundedString(3, 60),
 		game: p.isIn(allSupportedGameGroups),
-		playtype: p.is(playtype),
+		playtype: p.is(LEGACY_GameToPlaytypeFn(game)),
 		version: "*?string",
 	},
-	scores: [PR_BATCH_MANUAL_SCORE(game, playtype)],
-	classes: optNull(PR_BATCH_MANUAL_CLASSES(game, playtype)),
+	scores: [PR_BATCH_MANUAL_SCORE(game)],
+	classes: optNull(PR_BATCH_MANUAL_CLASSES(game)),
 });
 
 export const PR_RESOLVER: PrudenceSchema = {

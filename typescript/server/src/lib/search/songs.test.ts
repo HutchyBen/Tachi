@@ -1,11 +1,11 @@
 import { GetChartsBySongId } from "#lib/db-formats/chart";
-import { SearchGlobalGameSongsAndCharts } from "#lib/search/song-charts.js";
+import { SearchGlobalGameSongsAndCharts } from "#lib/search/song-charts";
 import DB from "#services/pg/db";
 import { importSeedsSubset } from "#services/pg/seeds";
 import { resolveSeedsDir, seedsJsonAvailable } from "#test-utils/seed-paths";
 import { FindChartsOnPopularity } from "#utils/queries/charts";
 import { sql } from "kysely";
-import { GamePTToV3 } from "tachi-common";
+import { LEGACY_GameGroupPTToGame } from "tachi-common";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -14,7 +14,7 @@ import {
 	SearchSongsForGameFtsAndTrgm,
 	SearchSpecificGameSongs,
 	SHORT_QUERY_STRICT_MAX_LEN,
-} from "./songs.js";
+} from "./songs";
 
 function makeSongId(n: number): string {
 	return `S${n.toString(16).padStart(20, "0")}`;
@@ -569,8 +569,8 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 			])
 			.execute();
 
-		const all = await GetChartsBySongId(GamePTToV3("iidx", "SP"), sid);
-		const filtered = await GetChartsBySongId(GamePTToV3("iidx", "SP"), sid, {
+		const all = await GetChartsBySongId(LEGACY_GameGroupPTToGame("iidx", "SP"), sid);
+		const filtered = await GetChartsBySongId(LEGACY_GameGroupPTToGame("iidx", "SP"), sid, {
 			omit2dxtraCharts: true,
 		});
 
@@ -625,12 +625,7 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 			])
 			.execute();
 
-		const rows = await SearchGlobalGameSongsAndCharts(
-			"iidx",
-			"GlobalSearch2dxtraToken",
-			"SP",
-			20,
-		);
+		const rows = await SearchGlobalGameSongsAndCharts("iidx-sp", "GlobalSearch2dxtraToken", 20);
 
 		expect(rows.length).toBeGreaterThan(0);
 		expect(
@@ -644,11 +639,11 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 	});
 
 	it("FindChartsOnPopularity excludes 2dxtra charts for iidx", async () => {
-		const sid = makeSongId(890);
+		const songID = makeSongId(890);
 
 		await DB.insertInto("song")
 			.values({
-				id: sid,
+				id: songID,
 				legacy_id: 9_000_890,
 				game_group: "iidx",
 				title: "Pop2dxtraToken",
@@ -666,7 +661,7 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 					id: makeChartId(890),
 					legacy_id: "1".repeat(40),
 					game: "iidx-sp",
-					song_id: sid,
+					song_id: songID,
 					level: "12",
 					level_num: 12,
 					is_primary: true,
@@ -678,7 +673,7 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 					id: makeChartId(891),
 					legacy_id: "2".repeat(40),
 					game: "iidx-sp",
-					song_id: sid,
+					song_id: songID,
 					level: "11",
 					level_num: 11,
 					is_primary: false,
@@ -689,7 +684,12 @@ describe("IIDX 2dxtraSet exclusion from search", () => {
 			])
 			.execute();
 
-		const charts = await FindChartsOnPopularity("iidx", "SP", [9_000_890], 0, 100);
+		const charts = await FindChartsOnPopularity(
+			"iidx-sp",
+			{ songIDs: [songID], chartIDs: undefined },
+			0,
+			100,
+		);
 
 		expect(charts.length).toBe(1);
 		expect(charts[0]?.difficulty).toBe("HYPER");

@@ -10,11 +10,11 @@ import { type GoalsOnChartReturn, type UGPTChartPBComposition } from "#types/api
 import { type GamePT } from "#types/react";
 import React, { useContext, useMemo, useReducer, useState } from "react";
 import {
+	type ChartDocument,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_ScoreDocument,
-	type MONGO_SongDocument,
+	type PBScoreDocument,
+	type ScoreDocument,
+	type SongDocument,
 } from "tachi-common";
 
 import DocComponentCreator, {
@@ -28,55 +28,52 @@ import TargetInfo from "./components/TargetInfo";
 import { GPTDropdownSettings } from "./GPTDropdownSettings";
 
 export interface ScoreDropdownProps {
-	score: MONGO_PBScoreDocument | MONGO_ScoreDocument;
+	score: PBScoreDocument | ScoreDocument;
 	scoreState: ScoreState;
 	pbData: UGPTChartPBComposition;
-	chart: MONGO_ChartDocument;
+	chart: ChartDocument;
 }
 
 export default function PBDropdown({
 	game,
-	playtype,
 	chart,
 	scoreState,
 	defaultView = "pb",
 	userID,
 	song,
 }: {
-	chart: MONGO_ChartDocument;
+	chart: ChartDocument;
 	defaultView?: "debug" | "history" | "pb" | "rivals" | "targets" | `otherPB::${string}`;
 	scoreState: ScoreState;
-	song: MONGO_SongDocument;
+	song: SongDocument;
 	userID: integer;
 } & GamePT) {
 	const { user: currentUser } = useContext(UserContext);
 
 	const DocComponent: DocumentComponentType = (props) =>
-		DocComponentCreator({ ...props, ...GPTDropdownSettings(game, playtype) });
+		DocComponentCreator({ ...props, ...GPTDropdownSettings(game) });
 
 	const [view, setView] = useState(defaultView);
 
 	const { data, error } = useApiQuery<UGPTChartPBComposition>(
-		`/users/${userID}/games/${game}/${playtype}/pbs/${chart.chartID}?getComposition=true`,
+		`/users/${userID}/games/${game}/pbs/${chart.chartID}?getComposition=true`,
 	);
 
-	const { error: histError, data: histData } = useApiQuery<MONGO_ScoreDocument[]>(
-		`/users/${userID}/games/${game}/${playtype}/scores/${chart.chartID}`,
+	const { error: histError, data: histData } = useApiQuery<ScoreDocument[]>(
+		`/users/${userID}/games/${game}/scores/${chart.chartID}`,
 	);
 
 	const [shouldRefresh, forceRefresh] = useReducer((state) => state + 1, 0);
 
 	// when a user isn't logged in, skip ever making this request.
 	const { error: targetError, data: targetData } = useApiQuery<GoalsOnChartReturn>(
-		`/users/${currentUser?.id ?? ""}/games/${game}/${playtype}/targets/on-chart/${
-			chart.chartID
-		}`,
+		`/users/${currentUser?.id ?? ""}/games/${game}/targets/on-chart/${chart.chartID}`,
 		undefined,
 		[shouldRefresh],
 		currentUser === null,
 	);
 
-	const currentScoreDoc: MONGO_PBScoreDocument | MONGO_ScoreDocument | null = useMemo(() => {
+	const currentScoreDoc: PBScoreDocument | ScoreDocument | null = useMemo(() => {
 		if (!data) {
 			// dont worry about this null, it never gets below the rquery checks
 			return null;
@@ -117,15 +114,7 @@ export default function PBDropdown({
 	let body;
 
 	if (view === "history") {
-		body = (
-			<PlayHistory
-				chart={chart}
-				data={histData}
-				error={histError}
-				game={game}
-				playtype={playtype}
-			/>
-		);
+		body = <PlayHistory chart={chart} data={histData} error={histError} game={game} />;
 	} else if (view === "debug") {
 		body = <DebugContent data={data} />;
 	} else if (view === "rivals") {
@@ -139,7 +128,6 @@ export default function PBDropdown({
 					error={targetError}
 					game={game}
 					onGoalSet={forceRefresh}
-					playtype={playtype}
 					reqUser={currentUser}
 					song={song}
 				/>

@@ -1,20 +1,21 @@
 import { z } from "zod";
 
-import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_PT_CONFIG } from "../../types/internals";
+import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
 import { FmtNum } from "../../utils/util";
 import { ClassValue, ToDecimalPlaces, zodNonNegativeInt } from "../config-utils";
 import { FAST_SLOW_MAXCOMBO } from "./_common";
 
-export const ARCAEA_CONF = {
+export const GAME_GROUP_ARCAEA_CONF = {
 	name: "Arcaea",
+	games: ["arcaea"],
 	// Potential future controller playtype support?
 	playtypes: ["Touch"],
 	songData: z.strictObject({
 		displayVersion: z.string(),
 		songPack: z.string(),
 	}),
-} as const satisfies INTERNAL_GAME_CONFIG;
+} as const satisfies INTERNAL_GAME_GROUP_CONFIG;
 
 const ArcaeaBadges = [
 	ClassValue("BLUE", "Blue", "0.00 - 3.49 Potential"),
@@ -41,7 +42,7 @@ const ArcaeaClasses = [
 	ClassValue("PHASE_11", "Phase 11", "Radiant Genesis"),
 ];
 
-export const ARCAEA_TOUCH_CONF = {
+export const GAME_ARCAEA_CONF = {
 	providedMetrics: {
 		score: {
 			type: "INTEGER",
@@ -100,7 +101,7 @@ export const ARCAEA_TOUCH_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["Past", "Present", "Future", "Beyond"],
-		shorthand: {
+		format: {
 			Past: "PST",
 			Present: "PRS",
 			Future: "FTR",
@@ -136,4 +137,4 @@ export const ARCAEA_TOUCH_CONF = {
 	scoreMeta: z.strictObject({}),
 
 	supportedMatchTypes: ["inGameStrID", "songTitle", "tachiSongID"],
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;

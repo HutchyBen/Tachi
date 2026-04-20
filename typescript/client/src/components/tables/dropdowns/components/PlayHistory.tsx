@@ -3,17 +3,16 @@ import Loading from "#components/util/Loading";
 import { type GamePT } from "#types/react";
 import { type UnsuccessfulAPIFetchResponse } from "#util/api";
 import React from "react";
-import { type MONGO_ChartDocument, type MONGO_ScoreDocument } from "tachi-common";
+import { type ChartDocument, type ScoreDocument } from "tachi-common";
 
 export default function PlayHistory({
 	data,
 	error,
 	game,
-	playtype,
 	chart,
 }: {
-	chart: MONGO_ChartDocument;
-	data?: MONGO_ScoreDocument[];
+	chart: ChartDocument;
+	data?: ScoreDocument[];
 	error: UnsuccessfulAPIFetchResponse | null;
 } & GamePT) {
 	if (error) {
@@ -26,7 +25,7 @@ export default function PlayHistory({
 
 	return (
 		<div className="col-12">
-			<HistoryScoreTable chart={chart} dataset={data} game={game} playtype={playtype} />
+			<HistoryScoreTable chart={chart} dataset={data} game={game} />
 		</div>
 	);
 }

@@ -2,9 +2,9 @@ import { Env } from "#config";
 import { PrependTachiUrl } from "#utils/fetch-tachi";
 import { log } from "#utils/log";
 import {
-	GetGameGroupConfig,
+	FormatGame,
+	type GoalDocument,
 	type integer,
-	type MONGO_GoalDocument,
 	type WebhookEventGoalAchievedV1,
 } from "tachi-common";
 
@@ -32,18 +32,14 @@ export async function HandleGoalAchievedV1(
 	const userDoc = await GetUserInfo(event.userID);
 
 	const goalDocuments = await Promise.all(
-		event.goals.map((e) => GetGoalWithID(e.goalID, game, e.playtype)),
+		event.goals.map((e) => GetGoalWithID(e.goalID, e.game)),
 	);
 
-	const goalMap = new Map<string, MONGO_GoalDocument>();
+	const goalMap = new Map<string, GoalDocument>();
 
 	for (const goalDoc of goalDocuments) {
 		goalMap.set(goalDoc.goalID, goalDoc);
 	}
-
-	const gameConfig = GetGameGroupConfig(game);
-
-	const shouldShowPlaytype = gameConfig.playtypes.length !== 1;
 
 	const embed = CreateEmbed(userDoc.id)
 		.setTitle(
@@ -66,7 +62,7 @@ export async function HandleGoalAchievedV1(
 						: `${e.old.progressHuman}/${e.old.outOfHuman} -> ${e.new.progressHuman}/${e.new.outOfHuman}`;
 
 				return {
-					name: `${goal.name}${shouldShowPlaytype ? ` (${e.playtype})` : ""}`,
+					name: `${goal.name} (${FormatGame(e.game)})`,
 					value,
 				};
 			}),

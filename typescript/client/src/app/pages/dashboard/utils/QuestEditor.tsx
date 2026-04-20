@@ -17,7 +17,7 @@ const LOCAL_QUEST_KEY = "LOCAL_QUESTS";
 const PR_LOCAL_QUESTS_SCHEMA: PrudenceSchema = {
 	json: [
 		{
-			game: p.isIn(TachiConfig.GAMES),
+			game: p.isIn(TachiConfig.GAME_GROUPS),
 			playtype: (self, parent) => {
 				const gameConfig = GetGameGroupConfig(parent.game as any);
 

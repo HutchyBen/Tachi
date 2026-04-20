@@ -1,5 +1,5 @@
 import { type Selection } from "kysely";
-import { type integer, type MONGO_UserSettingsDocument } from "tachi-common";
+import { type integer, type UserSettingsDocument } from "tachi-common";
 import { type Database } from "tachi-db";
 
 export const SELECT_USER_SETTINGS = [
@@ -14,7 +14,7 @@ export const SELECT_USER_SETTINGS = [
 export function ToUserSettingsDocument(
 	following: Array<integer>,
 	row: Selection<Database, "account_settings", (typeof SELECT_USER_SETTINGS)[number]>,
-): MONGO_UserSettingsDocument {
+): UserSettingsDocument {
 	return {
 		userID: row.user_id,
 		following,

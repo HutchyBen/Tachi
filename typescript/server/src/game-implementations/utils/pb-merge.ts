@@ -1,11 +1,11 @@
 import type { PBMergeFunction } from "#game-implementations/types";
-import type { MONGO_PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
+import type { PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
 import type {
 	ConfDerivedMetrics,
 	ConfOptionalMetrics,
 	ConfProvidedMetrics,
-	GPTString,
-	MONGO_ScoreDocument,
+	ScoreDocument,
+	V3Game,
 } from "tachi-common";
 
 import {
@@ -15,21 +15,21 @@ import {
 } from "#lib/db-formats/score";
 import { scoreVisibleSql } from "#lib/score-import/framework/pg/score-visibility";
 import DB from "#services/pg/db";
-import { UnixMillisecondsToISO8601 } from "#utils/time.js";
+import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { sql } from "kysely";
 
 // insane typemagic to get mongodb-safe names for this GPT's metrics.
-type MetricKeys<GPT extends GPTString> =
+type MetricKeys<TGame extends V3Game> =
 	| {
-			metric: keyof ConfDerivedMetrics[GPT];
+			metric: keyof ConfDerivedMetrics[TGame];
 			type: "DERIVED";
 	  }
 	| {
-			metric: keyof ConfOptionalMetrics[GPT] | keyof ConfProvidedMetrics[GPT];
+			metric: keyof ConfOptionalMetrics[TGame] | keyof ConfProvidedMetrics[TGame];
 			type: "REGULAR";
 	  };
 
-function metricSortValueSql<GPT extends GPTString>(metric: MetricKeys<GPT>) {
+function metricSortValueSql<TGame extends V3Game>(metric: MetricKeys<TGame>) {
 	if (metric.type === "DERIVED") {
 		return sql`(score.derived_data::jsonb->>${sql.lit(metric.metric)})::double precision`;
 	}
@@ -37,7 +37,7 @@ function metricSortValueSql<GPT extends GPTString>(metric: MetricKeys<GPT>) {
 	return sql`(score.data::jsonb->>${sql.lit(metric.metric)})::double precision`;
 }
 
-function metricIsNumericSql<GPT extends GPTString>(metric: MetricKeys<GPT>) {
+function metricIsNumericSql<TGame extends V3Game>(metric: MetricKeys<TGame>) {
 	if (metric.type === "DERIVED") {
 		return sql<boolean>`jsonb_typeof(score.derived_data::jsonb -> ${sql.lit(metric.metric)}) = ${sql.lit("number")}`;
 	}
@@ -54,12 +54,12 @@ function metricIsNumericSql<GPT extends GPTString>(metric: MetricKeys<GPT>) {
  *
  * @param direction - Whether to pick the largest value or smallest value for this metric.
  */
-export function CreatePBMergeFor<GPT extends GPTString>(
+export function CreatePBMergeFor<TGame extends V3Game>(
 	direction: "largest" | "smallest",
-	metric: MetricKeys<GPT>,
+	metric: MetricKeys<TGame>,
 	name: string,
-	applicator: (base: MONGO_PBScoreDocumentNoRank<GPT>, score: MONGO_ScoreDocument<GPT>) => void,
-): PBMergeFunction<GPT> {
+	applicator: (base: PBScoreDocumentNoRank<TGame>, score: ScoreDocument<TGame>) => void,
+): PBMergeFunction<TGame> {
 	return async (userID, chartID, asOfTimestamp, base) => {
 		let q = DB.selectFrom("score")
 			.innerJoin("chart", "chart.id", "score.chart_id")
@@ -67,7 +67,7 @@ export function CreatePBMergeFor<GPT extends GPTString>(
 			.leftJoin("import", "import.id", "score.import_id")
 			.select(SELECT_SCORE_DOCUMENT)
 			.where("score.user_id", "=", userID)
-			.where("chart.legacy_id", "=", chartID)
+			.where("chart.id", "=", chartID)
 			.where(metricIsNumericSql(metric))
 			.where(scoreVisibleSql());
 
@@ -95,7 +95,7 @@ export function CreatePBMergeFor<GPT extends GPTString>(
 
 		const bestScoreFor = ToScoreDocument(
 			row as ScoreDocumentJoinRow,
-		) as unknown as MONGO_ScoreDocument<GPT>;
+		) as unknown as ScoreDocument<TGame>;
 
 		applicator(base, bestScoreFor);
 

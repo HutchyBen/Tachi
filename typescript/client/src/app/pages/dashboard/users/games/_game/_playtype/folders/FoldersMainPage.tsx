@@ -1,5 +1,4 @@
 import useSetSubheader from "#components/layout/header/useSetSubheader";
-import Divider from "#components/util/Divider";
 import Icon from "#components/util/Icon";
 import SelectLinkButton from "#components/util/SelectLinkButton";
 import useUGPTBase from "#components/util/useUGPTBase";
@@ -8,32 +7,36 @@ import { UserContext } from "#context/UserContext";
 import { type UGPT } from "#types/react";
 import React, { useContext } from "react";
 import { Route, Switch } from "react-router-dom";
-import { FormatGameGroup, GetGameGroupConfig } from "tachi-common";
+import { FormatGame, GameToGameGroup, GetGameGroupConfig } from "tachi-common";
 
 import FolderSelectPage from "./FolderSelectPage";
 import FolderTablePage from "./FolderTablePage";
 import RecentFoldersPage from "./RecentFoldersPage";
 import SpecificFolderPage from "./SpecificFolderPage";
 
-export default function FoldersMainPage({ reqUser, game, playtype }: UGPT) {
-	const gameConfig = GetGameGroupConfig(game);
-
+export default function FoldersMainPage({ reqUser, game }: UGPT) {
 	const { user } = useContext(UserContext);
 	const { ugs } = useContext(AllLUGPTStatsContext);
 
 	useSetSubheader(
-		["Users", reqUser.username, "Games", gameConfig.name, playtype, "Folders"],
-		[reqUser, game, playtype],
-		`${reqUser.username}'s ${FormatGameGroup(game, playtype)} Folders`,
+		[
+			"Users",
+			reqUser.username,
+			"Games",
+			GetGameGroupConfig(GameToGameGroup(game)).name,
+			"Folders",
+		],
+		[reqUser, game],
+		`${reqUser.username}'s ${FormatGame(game)} Folders`,
 	);
 
-	const base = useUGPTBase({ reqUser, game, playtype });
+	const base = useUGPTBase({ reqUser, game });
 
 	return (
 		<div className="row">
 			<div className="col-12 text-center">
 				<div className="btn-group d-flex justify-content-center mb-8">
-					{user && ugs?.find((x) => x.game === game && x.playtype === playtype) && (
+					{user && ugs?.find((x) => x.game === game) && (
 						<SelectLinkButton className="text-wrap" to={`${base}/folders/recent`}>
 							<Icon type="clock" />{" "}
 							{user.id === reqUser.id
@@ -52,17 +55,17 @@ export default function FoldersMainPage({ reqUser, game, playtype }: UGPT) {
 			</div>
 			<div className="col-12">
 				<Switch>
-					<Route exact path="/u/:userID/games/:game/:playtype/folders">
-						<FolderTablePage {...{ reqUser, game, playtype }} />
+					<Route exact path="/u/:userID/games/:game/folders">
+						<FolderTablePage {...{ reqUser, game }} />
 					</Route>
-					<Route exact path="/u/:userID/games/:game/:playtype/folders/search">
-						<FolderSelectPage {...{ reqUser, game, playtype }} />
+					<Route exact path="/u/:userID/games/:game/folders/search">
+						<FolderSelectPage {...{ reqUser, game }} />
 					</Route>
-					<Route exact path="/u/:userID/games/:game/:playtype/folders/recent">
-						<RecentFoldersPage {...{ reqUser, game, playtype }} />
+					<Route exact path="/u/:userID/games/:game/folders/recent">
+						<RecentFoldersPage {...{ reqUser, game }} />
 					</Route>
-					<Route path="/u/:userID/games/:game/:playtype/folders/:folderID">
-						<SpecificFolderPage {...{ reqUser, game, playtype }} />
+					<Route path="/u/:userID/games/:game/folders/:folderSlug">
+						<SpecificFolderPage {...{ reqUser, game }} />
 					</Route>
 				</Switch>
 			</div>

@@ -18,7 +18,7 @@ import React, { useContext, useMemo, useState } from "react";
 import Button from "react-bootstrap/Button";
 import Row from "react-bootstrap/Row";
 import toast from "react-hot-toast";
-import { type MONGO_SessionDocument } from "tachi-common";
+import { type SessionDocument } from "tachi-common";
 
 export default function SessionCard({ sessionID }: { sessionID: string }) {
 	const { user } = useContext(UserContext);
@@ -64,12 +64,7 @@ export default function SessionCard({ sessionID }: { sessionID: string }) {
 		<Card header={session.name}>
 			<SessionOverview session={session} />
 			<Divider />
-			<ScoreTable
-				dataset={scoreDataset}
-				game={session.game}
-				pageLen={5}
-				playtype={session.playtype}
-			/>
+			<ScoreTable dataset={scoreDataset} game={session.game} pageLen={5} />
 			<Divider />
 			{sessionUser.id === user?.id && (
 				<div className="d-flex w-100 gap-4 justify-content-center">
@@ -107,7 +102,7 @@ export default function SessionCard({ sessionID }: { sessionID: string }) {
 					</Button>
 					<LinkButton
 						className="btn-primary"
-						to={`/u/${sessionUser.username}/games/${session.game}/${session.playtype}/sessions/${session.sessionID}`}
+						to={`/u/${sessionUser.username}/games/${session.game}/sessions/${session.sessionID}`}
 					>
 						View Session
 					</LinkButton>
@@ -117,7 +112,7 @@ export default function SessionCard({ sessionID }: { sessionID: string }) {
 	);
 }
 
-function SessionOverview({ session }: { session: MONGO_SessionDocument }) {
+function SessionOverview({ session }: { session: SessionDocument }) {
 	return (
 		<Row lg={{ cols: 2 }} xs={{ cols: 1 }}>
 			<StatIcon name="Scores" value={session.scoreIDs.length} />

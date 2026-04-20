@@ -8,11 +8,11 @@ import { ChangeOpacity } from "#util/color-opacity";
 import { FormatMillions } from "#util/misc";
 import { NumericSOV } from "#util/sorts";
 import React from "react";
-import { COLOUR_SET, type GPTStrings, SDVX_GRADES, SDVX_LAMPS } from "tachi-common";
+import { COLOUR_SET, type GamesForGroup, SDVX_GRADES, SDVX_LAMPS } from "tachi-common";
 
 import { bgc, CreateRatingSys } from "./_util";
 
-type SDVXLikes = GPTStrings["sdvx" | "usc"];
+type SDVXLikes = GamesForGroup["sdvx" | "usc"];
 
 const SDVXLIKE_ENUM_COLOURS: GPTClientImplementation<SDVXLikes>["enumColours"] = {
 	grade: {
@@ -38,7 +38,7 @@ const SDVXLIKE_ENUM_COLOURS: GPTClientImplementation<SDVXLikes>["enumColours"] =
 	},
 };
 
-const USCCoreCells: GPTClientImplementation<GPTStrings["usc"]>["scoreCoreCells"] = ({ sc }) => (
+const USCCoreCells: GPTClientImplementation<GamesForGroup["usc"]>["scoreCoreCells"] = ({ sc }) => (
 	<>
 		<MillionsScoreCell
 			colour={GetEnumColour(sc, "grade")}
@@ -50,7 +50,7 @@ const USCCoreCells: GPTClientImplementation<GPTStrings["usc"]>["scoreCoreCells"]
 	</>
 );
 
-const SDVXCoreCells: GPTClientImplementation<"sdvx:Single">["scoreCoreCells"] = ({ sc }) => (
+const SDVXCoreCells: GPTClientImplementation<"sdvx">["scoreCoreCells"] = ({ sc }) => (
 	<>
 		<td
 			style={{
@@ -76,7 +76,7 @@ const SDVXRatingCell: GPTClientImplementation<SDVXLikes>["ratingCell"] = ({ sc, 
 	<VF6Cell chart={chart} score={sc} />
 );
 
-export const SDVX_IMPL: GPTClientImplementation<"sdvx:Single"> = {
+export const SDVX_IMPL: GPTClientImplementation<"sdvx"> = {
 	sessionImportantScoreCount: 50,
 	enumColours: SDVXLIKE_ENUM_COLOURS,
 	enumIcons: {
@@ -193,7 +193,7 @@ export const SDVX_IMPL: GPTClientImplementation<"sdvx:Single"> = {
 	scoreCoreCells: SDVXCoreCells,
 	ratingCell: SDVXRatingCell,
 };
-export const USC_IMPL: GPTClientImplementation<GPTStrings["usc"]> = {
+export const USC_IMPL: GPTClientImplementation<GamesForGroup["usc"]> = {
 	sessionImportantScoreCount: 50,
 	enumColours: SDVXLIKE_ENUM_COLOURS,
 	enumIcons: {

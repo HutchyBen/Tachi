@@ -1,4 +1,5 @@
 import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
 import type { Difficulties, integer, Versions } from "tachi-common";
 import type { GetEnumValue } from "tachi-common/types/metrics";
 
@@ -12,7 +13,6 @@ import { ParseDateFromString } from "#lib/score-import/framework/common/score-ut
 import { FindChartOnInGameIDVersion } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
-import type { ConverterFunction } from "../../types";
 import type { CGContext, CGPopnScore } from "../types";
 
 import { FormatCGService } from "../util";
@@ -30,13 +30,7 @@ export const ConverterAPICGPopn: ConverterFunction<CGPopnScore, CGContext> = asy
 		throw new InvalidScoreFailure(`Score is > 100_000 (got ${data.score})`);
 	}
 
-	const chart = await FindChartOnInGameIDVersion(
-		"popn",
-		data.internalId,
-		"9B",
-		difficulty,
-		version,
-	);
+	const chart = await FindChartOnInGameIDVersion("popn", data.internalId, difficulty, version);
 
 	if (!chart) {
 		throw new SongOrChartNotFoundFailure(
@@ -47,18 +41,18 @@ export const ConverterAPICGPopn: ConverterFunction<CGPopnScore, CGContext> = asy
 		);
 	}
 
-	const song = await FindSongOnID("popn", chart.songID);
+	const song = await FindSongOnID("popn", chart.song.id);
 
 	if (!song) {
-		log.error(`Song-Chart desync with song ID ${chart.songID} (popn).`);
-		throw new InternalFailure(`Song-Chart desync with song ID ${chart.songID} (popn).`);
+		log.error(`Song-Chart desync with song ID ${chart.song.id} (popn).`);
+		throw new InternalFailure(`Song-Chart desync with song ID ${chart.song.id} (popn).`);
 	}
 
 	const clearMedal = GetClearMedal(data.clearFlag);
 
 	const timeAchieved = ParseDateFromString(data.dateTime);
 
-	const dryScore: DryScore<"popn:9B"> = {
+	const dryScore: DryScore<"popn"> = {
 		comment: null,
 		game: "popn",
 		importType,
@@ -81,7 +75,7 @@ export const ConverterAPICGPopn: ConverterFunction<CGPopnScore, CGContext> = asy
 	return { song, chart, dryScore };
 };
 
-function ConvertDifficulty(diff: number): Difficulties["popn:9B"] {
+function ConvertDifficulty(diff: number): Difficulties["popn"] {
 	switch (diff) {
 		case 0:
 			return "Easy";
@@ -99,7 +93,7 @@ function ConvertDifficulty(diff: number): Difficulties["popn:9B"] {
 	throw new InvalidScoreFailure(`Invalid difficulty of ${diff} - Could not convert.`);
 }
 
-function ConvertVersion(ver: number): Versions["popn:9B"] {
+function ConvertVersion(ver: number): Versions["popn"] {
 	switch (ver) {
 		case 27:
 			return "unilab";
@@ -112,7 +106,7 @@ function ConvertVersion(ver: number): Versions["popn:9B"] {
 	throw new InvalidScoreFailure(`Unknown/Unsupported Game Version ${ver}.`);
 }
 
-function GetClearMedal(clearFlag: integer): GetEnumValue<"popn:9B", "clearMedal"> {
+function GetClearMedal(clearFlag: integer): GetEnumValue<"popn", "clearMedal"> {
 	switch (clearFlag) {
 		case 1:
 			return "failedCircle";

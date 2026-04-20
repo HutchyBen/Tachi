@@ -1,11 +1,11 @@
-import type { integer, MONGO_PBScoreDocument } from "tachi-common";
+import type { BMSGames, integer, PBScoreDocument } from "tachi-common";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { LoadAllPbsForChartPgId } from "#lib/db-formats/pb";
 import { log } from "#lib/log/log";
 import DB from "#services/pg/db";
 import { FindBeatorajaChartOnHashSHA256 } from "#utils/queries/charts";
-import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
+import { REQ_AssignToReqTachiData, REQ_GetTachiData } from "#utils/req-tachi-data";
 import { type RequestHandler, Router } from "express";
 
 import { TachiScoreDataToBeatorajaFormat } from "./convert-scores";
@@ -23,7 +23,7 @@ const GetChartDocument: RequestHandler = async (req, res, next) => {
 		});
 	}
 
-	AssignToReqTachiData(req, { beatorajaChartDoc: chart });
+	REQ_AssignToReqTachiData(req, { beatorajaChartDoc: chart });
 
 	next();
 };
@@ -36,7 +36,7 @@ router.use(GetChartDocument);
  * @name GET /ir/beatoraja/charts/:chartSHA256/scores
  */
 router.get("/scores", async (req, res) => {
-	const chart = GetTachiData(req, "beatorajaChartDoc");
+	const chart = REQ_GetTachiData(req, "beatorajaChartDoc");
 	const requestingUserID = req[SYMBOL_TACHI_API_AUTH].userID;
 
 	const scores = await LoadAllPbsForChartPgId(chart.chartID);
@@ -69,9 +69,7 @@ router.get("/scores", async (req, res) => {
 
 		beatorajaScores.push(
 			TachiScoreDataToBeatorajaFormat(
-				score as MONGO_PBScoreDocument<
-					"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"
-				>,
+				score as PBScoreDocument<BMSGames>,
 				chart.data.hashSHA256,
 				score.userID === requestingUserID ? "" : username,
 				chart.data.notecount,

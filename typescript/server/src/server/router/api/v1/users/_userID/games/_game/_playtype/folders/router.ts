@@ -1,80 +1,50 @@
-import { SearchFoldersForGameFtsAndTrgm } from "#lib/search/folders.js";
-import { GetEnumDistForFolders, GetRecentlyViewedFolders } from "#utils/folder";
-import { IsString } from "#utils/misc";
-import { GetUGPT } from "#utils/req-tachi-data";
-import { Router } from "express";
-
-import folderIDRouter from "./_folderID/router";
-
-const router: Router = Router({ mergeParams: true });
+import { GetEnumDistForFolders, GetRecentlyViewedFolders } from "#lib/folders/folders";
+import { withUserGameProfile } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
+import { SearchFoldersForGameFtsAndTrgm } from "#lib/search/folders";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
 
 /**
- * Search folders, and supplant a users grade+lamp distribution on that
- * folder as part of the returns.
+ * Search folders with user grade+lamp distribution.
  *
- * This is a "beefed-up" version of GPT /folders, but with this users
- * stats returned at the same time.
- *
- * @param search - What to search for.
- * @param inactive - Also show inactive folders, such as those on old versions.
- *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/folders
+ * @name GET /api/v1/users/:userID/games/:game/folders
  */
-router.get("/", async (req, res) => {
-	const { game, playtype, user } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/folders",
+	withUserGameProfile,
+	async ({ ctx, input }) => {
+		const { requestedUser: user, game } = ctx;
 
-	if (!IsString(req.query.search)) {
-		return res.status(400).json({
-			success: false,
-			description: `Invalid value for search.`,
+		const onlyActiveFolders = input.inactive === undefined;
+		const folders = await SearchFoldersForGameFtsAndTrgm(game, input.search, {
+			limit: 20,
+			onlyActiveFolders,
 		});
-	}
 
-	const onlyActiveFolders = req.query.inactive === undefined;
+		const stats = await GetEnumDistForFolders(user.id, folders);
 
-	const folders = await SearchFoldersForGameFtsAndTrgm(game, playtype, req.query.search, {
-		limit: 20,
-		onlyActiveFolders,
-	});
-
-	const stats = await GetEnumDistForFolders(user.id, folders);
-
-	return res.status(200).json({
-		success: true,
-		description: `Returned ${stats.length} folders.`,
-		body: {
-			folders,
-			stats,
-		},
-	});
-});
+		return success(`Returned ${stats.length} folders.`, { folders, stats });
+	},
+);
 
 /**
  * Get a users most recently interacted with folders.
  *
- * A folder is interacted with if it is directly fetched using a session key.
- * This - in UI terms - is when the user clicks on that folder.
- *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/folders/recent
+ * @name GET /api/v1/users/:userID/games/:game/folders/recent
  */
-router.get("/recent", async (req, res) => {
-	const { game, playtype, user } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/folders/recent",
+	withUserGameProfile,
+	async ({ ctx }) => {
+		const { requestedUser: user, game } = ctx;
 
-	const { views, folders } = await GetRecentlyViewedFolders(user.id, game, playtype);
+		const { views, folders } = await GetRecentlyViewedFolders(user.id, game);
+		const stats = await GetEnumDistForFolders(user.id, folders);
 
-	const stats = await GetEnumDistForFolders(user.id, folders);
-
-	return res.status(200).json({
-		success: true,
-		description: `Returned ${views.length} recently interacted with folders.`,
-		body: {
-			views,
+		return success(`Returned ${views.length} recently interacted with folders.`, {
 			folders,
 			stats,
-		},
-	});
-});
-
-router.use("/:folderID", folderIDRouter);
-
-export default router;
+			views,
+		});
+	},
+);

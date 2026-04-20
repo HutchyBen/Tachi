@@ -3,11 +3,11 @@ import { XMLParser } from "fast-xml-parser";
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import path from "path";
 import {
+	type ChartDocument,
 	type Difficulties,
-	GetGamePTConfig,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
+	LEGACY_GetGamePTConfig,
+	type SongDocument,
 } from "tachi-common";
 
 import { log } from "../../log";
@@ -99,7 +99,7 @@ const program = new Command()
 const options = program.opts();
 
 const baseVersion = options.version.replace(/(-intl|-omni)$/u, "");
-const tachiVersions = Object.keys(GetGamePTConfig("chunithm", "Single").versions);
+const tachiVersions = Object.keys(LEGACY_GetGamePTConfig("chunithm", "Single").versions);
 
 if (!VERSIONS.includes(baseVersion)) {
 	throw new Error(
@@ -120,18 +120,16 @@ if (!tachiVersions.includes(options.version)) {
 const isOmnimixVersion = /-omni$/u.test(options.version);
 const isLatestVersion = VERSIONS.indexOf(baseVersion) === VERSIONS.length - 1;
 
-const existingSongDocs: Array<MONGO_SongDocument<"chunithm">> =
-	ReadCollection("songs-chunithm.json");
-const existingChartDocs: Array<MONGO_ChartDocument<"chunithm:Single">> =
-	ReadCollection("charts-chunithm.json");
+const existingSongDocs: Array<SongDocument<"chunithm">> = ReadCollection("songs-chunithm.json");
+const existingChartDocs: Array<ChartDocument<"chunithm">> = ReadCollection("charts-chunithm.json");
 
 const songMap = new Map(existingSongDocs.map((s) => [s.id, s]));
 const songTitleMap = new Map(existingSongDocs.map((s) => [s.title, s]));
 const inGameIDToSongIDMap = new Map<number, number>();
-const existingCharts = new Map<string, MONGO_ChartDocument<"chunithm:Single">>();
+const existingCharts = new Map<string, ChartDocument<"chunithm">>();
 
 for (const chart of existingChartDocs) {
-	inGameIDToSongIDMap.set(chart.data.inGameID, chart.songID);
+	inGameIDToSongIDMap.set(chart.data.inGameID, chart.song.id);
 	existingCharts.set(`${chart.data.inGameID}-${chart.difficulty}`, chart);
 }
 
@@ -145,8 +143,8 @@ const parser = new XMLParser({
 	},
 });
 
-const newSongs: Array<MONGO_SongDocument<"chunithm">> = [];
-const newCharts: Array<MONGO_ChartDocument<"chunithm:Single">> = [];
+const newSongs: Array<SongDocument<"chunithm">> = [];
+const newCharts: Array<ChartDocument<"chunithm">> = [];
 
 for (const optionsDir of options.input) {
 	for (const option of readdirSync(optionsDir)) {
@@ -253,7 +251,7 @@ for (const optionsDir of options.input) {
 					);
 				}
 
-				const songDoc: MONGO_SongDocument<"chunithm"> = {
+				const songDoc: SongDocument<"chunithm"> = {
 					title: musicData.name.str,
 					altTitles: [],
 					searchTerms: [],
@@ -349,10 +347,11 @@ for (const optionsDir of options.input) {
 					continue;
 				}
 
-				const chartDoc: MONGO_ChartDocument<"chunithm:Single"> = {
+				const chartDoc: ChartDocument<"chunithm"> = {
+					game: "chunithm",
 					chartID: CreateChartID(),
 					songID: tachiSongID,
-					difficulty: difficultyName as Difficulties["chunithm:Single"],
+					difficulty: difficultyName as Difficulties["chunithm"],
 					isPrimary: true,
 					level,
 					levelNum,

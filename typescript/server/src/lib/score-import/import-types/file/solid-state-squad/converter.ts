@@ -1,50 +1,49 @@
+import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
 import type { EmptyObject } from "#utils/types";
-import type { Difficulties, Playtypes, Versions } from "tachi-common";
+import type { Difficulties, GamesForGroup, Versions } from "tachi-common";
 import type { GetEnumValue } from "tachi-common/types/metrics";
-
-import { FindChartWithPTDFVersion } from "#utils/queries/charts";
-import { FindSongOnTitleInsensitive } from "#utils/queries/songs";
-
-import type { DryScore } from "../../../framework/common/types";
-import type { ConverterFunction } from "../../common/types";
-import type { S3Score } from "./types";
 
 import {
 	InvalidScoreFailure,
 	SkipScoreFailure,
 	SongOrChartNotFoundFailure,
-} from "../../../framework/common/converter-failures";
-import { ParseDateFromString } from "../../../framework/common/score-utils";
+} from "#lib/score-import/framework/common/converter-failures";
+import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
+import { FindChartWithSongDifficultyVersion } from "#utils/queries/charts";
+import { FindSongOnTitleInsensitive } from "#utils/queries/songs";
+
+import type { S3Score } from "./types";
 
 export function ParseDifficulty(diff: S3Score["diff"]): {
-	difficulty: Difficulties["iidx:DP" | "iidx:SP"];
-	playtype: Playtypes["iidx"];
+	difficulty: Difficulties[GamesForGroup["iidx"]];
+	game: GamesForGroup["iidx"];
 } {
 	switch (diff) {
 		case "L7":
-			return { playtype: "SP", difficulty: "NORMAL" };
+			return { game: "iidx-sp", difficulty: "NORMAL" };
 		case 7:
-			return { playtype: "SP", difficulty: "HYPER" };
+			return { game: "iidx-sp", difficulty: "HYPER" };
 		case "A":
-			return { playtype: "SP", difficulty: "ANOTHER" };
+			return { game: "iidx-sp", difficulty: "ANOTHER" };
 		case "B":
-			return { playtype: "SP", difficulty: "LEGGENDARIA" };
+			return { game: "iidx-sp", difficulty: "LEGGENDARIA" };
 		case 5:
 			throw new SkipScoreFailure(`5KEY scores are not supported.`);
 		case "L14":
-			return { playtype: "DP", difficulty: "NORMAL" };
+			return { game: "iidx-dp", difficulty: "NORMAL" };
 		case 14:
-			return { playtype: "DP", difficulty: "HYPER" };
+			return { game: "iidx-dp", difficulty: "HYPER" };
 		case "A14":
-			return { playtype: "DP", difficulty: "ANOTHER" };
+			return { game: "iidx-dp", difficulty: "ANOTHER" };
 		case "B14":
-			return { playtype: "DP", difficulty: "LEGGENDARIA" };
+			return { game: "iidx-dp", difficulty: "LEGGENDARIA" };
 		default:
 			throw new InvalidScoreFailure(`Invalid difficulty ${diff}.`);
 	}
 }
 
-export function ResolveS3Lamp(data: S3Score): GetEnumValue<"iidx:DP" | "iidx:SP", "lamp"> {
+export function ResolveS3Lamp(data: S3Score): GetEnumValue<GamesForGroup["iidx"], "lamp"> {
 	switch (data.cleartype) {
 		case "played":
 			return "FAILED";
@@ -72,7 +71,7 @@ export function ResolveS3Lamp(data: S3Score): GetEnumValue<"iidx:DP" | "iidx:SP"
 	}
 }
 
-const S3_VERSION_CONV: Record<string, Versions["iidx:SP"]> = {
+const S3_VERSION_CONV: Record<string, Versions["iidx-sp"]> = {
 	"3rd": "3-cs",
 	"4th": "4-cs",
 	"5th": "5-cs",
@@ -126,14 +125,14 @@ export const ConvertFileS3: ConverterFunction<S3Score, EmptyObject> = async (
 		);
 	}
 
-	const { playtype, difficulty } = ParseDifficulty(data.diff);
+	const { game, difficulty } = ParseDifficulty(data.diff);
 	const version = ConvertVersion(data.styles);
 
-	const chart = await FindChartWithPTDFVersion("iidx", song.id, playtype, difficulty, version);
+	const chart = await FindChartWithSongDifficultyVersion(game, song.id, difficulty, version);
 
 	if (!chart) {
 		throw new SongOrChartNotFoundFailure(
-			`Could not find chart ${data.songname} (${playtype} ${difficulty} version (${version}))`,
+			`Could not find chart ${data.songname} (${game} ${difficulty} version (${version}))`,
 			importType,
 			data,
 			context,
@@ -156,8 +155,8 @@ export const ConvertFileS3: ConverterFunction<S3Score, EmptyObject> = async (
 		};
 	}
 
-	const dryScore: DryScore<"iidx:DP" | "iidx:SP"> = {
-		game: "iidx",
+	const dryScore: DryScore<typeof game> = {
+		game,
 		comment: data.comment ?? null,
 		importType: "file/solid-state-squad",
 		service: "Solid State Squad",

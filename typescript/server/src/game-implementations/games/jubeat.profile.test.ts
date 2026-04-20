@@ -12,17 +12,12 @@ const JUBEAT_HOT_DISPLAY_VERSION = "ave";
 
 let jubeatSeedCounter = 0;
 
-async function seedJubeatSong(args: {
-	displayVersion: string;
-	legacySongId: number;
-}): Promise<{ songId: string }> {
+async function seedJubeatSong(args: { displayVersion: string; songID: string }): Promise<void> {
 	const n = ++jubeatSeedCounter;
-	const songId = `jubeat-prof-song-${n}`;
-
 	await DB.insertInto("song")
 		.values({
-			id: songId,
-			legacy_id: args.legacySongId,
+			id: args.songID,
+			legacy_id: n,
 			game_group: "jubeat",
 			title: "T",
 			artist: "A",
@@ -32,13 +27,11 @@ async function seedJubeatSong(args: {
 			fts_document: "",
 		})
 		.execute();
-
-	return { songId };
 }
 
 async function seedJubeatChartPbOnSong(
 	userId: number,
-	songId: string,
+	songID: string,
 	args: {
 		calculatedDataOverride?: Record<string, unknown>;
 		difficulty: string;
@@ -55,7 +48,7 @@ async function seedJubeatChartPbOnSong(
 			id: chartId,
 			legacy_id: chartId,
 			game: "jubeat",
-			song_id: songId,
+			song_id: songID,
 			level: "10",
 			level_num: 10,
 			is_primary: isPrimary,
@@ -96,43 +89,43 @@ async function seedJubeatSongChartPb(
 		displayVersion: string;
 		isPrimary?: boolean;
 		jubility: number;
-		legacySongId: number;
+		songID: string;
 	},
 ): Promise<void> {
-	const { songId } = await seedJubeatSong({
-		legacySongId: args.legacySongId,
+	await seedJubeatSong({
+		songID: args.songID,
 		displayVersion: args.displayVersion,
 	});
-	await seedJubeatChartPbOnSong(userId, songId, args);
+	await seedJubeatChartPbOnSong(userId, args.songID, args);
 }
 
 describe("GetBestJubilityOnSongs (Postgres)", () => {
 	it("returns [] when songIDs is empty", async () => {
 		const { id: userId } = await seedUser();
 
-		const rows = await GetBestJubilityOnSongs([], userId, "jubeat", "Single", 30);
+		const rows = await GetBestJubilityOnSongs([], userId, "jubeat", 30);
 
 		expect(rows).toEqual([]);
 	});
 
 	it("keeps the highest jubility per (song, bucket); HARD BSC and BSC share the BSC bucket", async () => {
 		const { id: userId } = await seedUser();
-		const legacySongId = 400_001;
+		const songID = "jubeat-prof-song-400001";
 
-		const { songId } = await seedJubeatSong({
-			legacySongId,
+		await seedJubeatSong({
+			songID,
 			displayVersion: JUBEAT_HOT_DISPLAY_VERSION,
 		});
-		await seedJubeatChartPbOnSong(userId, songId, {
+		await seedJubeatChartPbOnSong(userId, songID, {
 			difficulty: "HARD BSC",
 			jubility: 100,
 		});
-		await seedJubeatChartPbOnSong(userId, songId, {
+		await seedJubeatChartPbOnSong(userId, songID, {
 			difficulty: "BSC",
 			jubility: 250,
 		});
 
-		const rows = await GetBestJubilityOnSongs([legacySongId], userId, "jubeat", "Single", 30);
+		const rows = await GetBestJubilityOnSongs([songID], userId, "jubeat", 30);
 
 		expect(rows).toHaveLength(1);
 		expect(rows[0]!.calculatedData.jubility).toBe(250);
@@ -140,22 +133,22 @@ describe("GetBestJubilityOnSongs (Postgres)", () => {
 
 	it("counts separate buckets on the same song as separate rows (BSC + ADV)", async () => {
 		const { id: userId } = await seedUser();
-		const legacySongId = 400_002;
+		const songID = "jubeat-prof-song-400002";
 
-		const { songId } = await seedJubeatSong({
-			legacySongId,
+		await seedJubeatSong({
+			songID,
 			displayVersion: JUBEAT_HOT_DISPLAY_VERSION,
 		});
-		await seedJubeatChartPbOnSong(userId, songId, {
+		await seedJubeatChartPbOnSong(userId, songID, {
 			difficulty: "BSC",
 			jubility: 10,
 		});
-		await seedJubeatChartPbOnSong(userId, songId, {
+		await seedJubeatChartPbOnSong(userId, songID, {
 			difficulty: "ADV",
 			jubility: 500,
 		});
 
-		const rows = await GetBestJubilityOnSongs([legacySongId], userId, "jubeat", "Single", 30);
+		const rows = await GetBestJubilityOnSongs([songID], userId, "jubeat", 30);
 
 		expect(rows).toHaveLength(2);
 		const jubs = rows.map((r) => r.calculatedData.jubility).sort((a, b) => b! - a!);
@@ -165,12 +158,12 @@ describe("GetBestJubilityOnSongs (Postgres)", () => {
 	it("applies a global jubility limit after bucketing", async () => {
 		const { id: userId } = await seedUser();
 		const limit = 5;
-		const songIds = Array.from({ length: 7 }, (_, i) => 400_100 + i);
+		const songIDs = Array.from({ length: 7 }, (_, i) => `jubeat-prof-song-400100${i}`);
 
 		await Promise.all(
-			songIds.map((legacySongId, i) =>
+			songIDs.map((songID, i) =>
 				seedJubeatSongChartPb(userId, {
-					legacySongId,
+					songID,
 					displayVersion: JUBEAT_HOT_DISPLAY_VERSION,
 					difficulty: "EXT",
 					jubility: 100 + i,
@@ -178,7 +171,7 @@ describe("GetBestJubilityOnSongs (Postgres)", () => {
 			),
 		);
 
-		const rows = await GetBestJubilityOnSongs(songIds, userId, "jubeat", "Single", limit);
+		const rows = await GetBestJubilityOnSongs(songIDs, userId, "jubeat", limit);
 
 		expect(rows).toHaveLength(limit);
 		const jubs = rows.map((r) => r.calculatedData.jubility!).sort((a, b) => b - a);
@@ -187,16 +180,16 @@ describe("GetBestJubilityOnSongs (Postgres)", () => {
 
 	it("drops charts whose difficulty does not map to a jubility bucket", async () => {
 		const { id: userId } = await seedUser();
-		const legacySongId = 400_003;
+		const songID = "jubeat-prof-song-400003";
 
 		await seedJubeatSongChartPb(userId, {
-			legacySongId,
+			songID,
 			displayVersion: JUBEAT_HOT_DISPLAY_VERSION,
 			difficulty: "NOT_A_REAL_BUCKET",
 			jubility: 9999,
 		});
 
-		const rows = await GetBestJubilityOnSongs([legacySongId], userId, "jubeat", "Single", 30);
+		const rows = await GetBestJubilityOnSongs([songID], userId, "jubeat", 30);
 
 		expect(rows).toEqual([]);
 	});
@@ -216,13 +209,13 @@ describe("GetPBsForJubility (Postgres)", () => {
 		const { id: userId } = await seedUser();
 
 		await seedJubeatSongChartPb(userId, {
-			legacySongId: 400_200,
+			songID: "jubeat-prof-song-400200",
 			displayVersion: JUBEAT_HOT_DISPLAY_VERSION,
 			difficulty: "EXT",
 			jubility: 50,
 		});
 		await seedJubeatSongChartPb(userId, {
-			legacySongId: 400_201,
+			songID: "jubeat-prof-song-400201",
 			displayVersion: "old",
 			difficulty: "EXT",
 			jubility: 80,
@@ -231,25 +224,24 @@ describe("GetPBsForJubility (Postgres)", () => {
 		const { bestHotScores, bestScores } = await GetPBsForJubility(userId);
 
 		expect(bestHotScores).toHaveLength(1);
-		expect(bestHotScores[0]!.songID).toBe(400_200);
+		expect(bestHotScores[0]!.songID).toBe("jubeat-prof-song-400200");
 		expect(bestHotScores[0]!.calculatedData.jubility).toBe(50);
 
 		expect(bestScores).toHaveLength(1);
-		expect(bestScores[0]!.songID).toBe(400_201);
+		expect(bestScores[0]!.songID).toBe("jubeat-prof-song-400201");
 		expect(bestScores[0]!.calculatedData.jubility).toBe(80);
 	});
 
 	it("treats missing displayVersion as cold (IS DISTINCT FROM ave)", async () => {
 		const { id: userId } = await seedUser();
 		const n = ++jubeatSeedCounter;
-		const songId = `jubeat-prof-song-${n}`;
+		const songID = `jubeat-prof-song-${n}`;
 		const chartId = `jubeat-prof-chart-${n}`;
-		const legacySongId = 400_202;
 
 		await DB.insertInto("song")
 			.values({
-				id: songId,
-				legacy_id: legacySongId,
+				id: songID,
+				legacy_id: n,
 				game_group: "jubeat",
 				title: "T",
 				artist: "A",
@@ -265,7 +257,7 @@ describe("GetPBsForJubility (Postgres)", () => {
 				id: chartId,
 				legacy_id: chartId,
 				game: "jubeat",
-				song_id: songId,
+				song_id: songID,
 				level: "10",
 				level_num: 10,
 				is_primary: true,
@@ -308,19 +300,19 @@ describe("JUBEAT_IMPL.profileCalcs (Postgres)", () => {
 		const { id: userId } = await seedUser();
 
 		await seedJubeatSongChartPb(userId, {
-			legacySongId: 400_300,
+			songID: "jubeat-prof-song-400300",
 			displayVersion: JUBEAT_HOT_DISPLAY_VERSION,
 			difficulty: "EXT",
 			jubility: 100,
 		});
 		await seedJubeatSongChartPb(userId, {
-			legacySongId: 400_301,
+			songID: "jubeat-prof-song-400301",
 			displayVersion: "cold",
 			difficulty: "EXT",
 			jubility: 200,
 		});
 
-		const result = await JUBEAT_IMPL.profileCalcs("jubeat", "Single", userId);
+		const result = await JUBEAT_IMPL.profileCalcs("jubeat", userId);
 
 		expect(result.jubility).toBe(300);
 		expect(result.naiveJubility).toBe(300);
@@ -332,7 +324,7 @@ describe("JUBEAT_IMPL.profileCalcs (Postgres)", () => {
 		await Promise.all(
 			Array.from({ length: 3 }, (_, i) =>
 				seedJubeatSongChartPb(userId, {
-					legacySongId: 400_400 + i,
+					songID: `jubeat-prof-song-400400${i}`,
 					displayVersion: JUBEAT_HOT_DISPLAY_VERSION,
 					difficulty: "EXT",
 					jubility: 10 * (i + 1),
@@ -340,7 +332,7 @@ describe("JUBEAT_IMPL.profileCalcs (Postgres)", () => {
 			),
 		);
 
-		const result = await JUBEAT_IMPL.profileCalcs("jubeat", "Single", userId);
+		const result = await JUBEAT_IMPL.profileCalcs("jubeat", userId);
 
 		expect(result.naiveJubility).toBe(10 + 20 + 30);
 	});
@@ -349,14 +341,14 @@ describe("JUBEAT_IMPL.profileCalcs (Postgres)", () => {
 		const { id: userId } = await seedUser();
 
 		await seedJubeatSongChartPb(userId, {
-			legacySongId: 400_500,
+			songID: "jubeat-prof-song-400500",
 			displayVersion: JUBEAT_HOT_DISPLAY_VERSION,
 			difficulty: "EXT",
 			isPrimary: false,
 			jubility: 5000,
 		});
 
-		const result = await JUBEAT_IMPL.profileCalcs("jubeat", "Single", userId);
+		const result = await JUBEAT_IMPL.profileCalcs("jubeat", userId);
 
 		expect(result.naiveJubility).toBeNull();
 		expect(result.jubility).toBe(5000);
@@ -364,12 +356,12 @@ describe("JUBEAT_IMPL.profileCalcs (Postgres)", () => {
 
 	it("matches weighted jubility when hot pool contributes capped rows", async () => {
 		const { id: userId } = await seedUser();
-		const songIds = Array.from({ length: 31 }, (_, i) => 400_600 + i);
+		const songIDs = Array.from({ length: 31 }, (_, i) => `jubeat-prof-song-400600${i}`);
 
 		await Promise.all(
-			songIds.map((legacySongId, i) =>
+			songIDs.map((songID, i) =>
 				seedJubeatSongChartPb(userId, {
-					legacySongId,
+					songID,
 					displayVersion: JUBEAT_HOT_DISPLAY_VERSION,
 					difficulty: "EXT",
 					jubility: 1000 + i,
@@ -383,7 +375,7 @@ describe("JUBEAT_IMPL.profileCalcs (Postgres)", () => {
 			0,
 		);
 
-		const result = await JUBEAT_IMPL.profileCalcs("jubeat", "Single", userId);
+		const result = await JUBEAT_IMPL.profileCalcs("jubeat", userId);
 
 		expect(bestHotScores).toHaveLength(30);
 		expect(expectedHotSum).toBe(

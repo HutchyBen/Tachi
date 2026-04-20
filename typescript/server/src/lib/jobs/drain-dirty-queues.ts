@@ -2,7 +2,14 @@ import { log } from "#lib/log/log";
 import { ProcessPBs } from "#lib/score-import/framework/pb/process-pbs";
 import { rederiveScoresForChart } from "#lib/score-import/framework/pb/rederive-scores";
 import DB from "#services/pg/db";
-import { type GameGroup, type integer, type Playtype, type V3Game, V3ToGamePT } from "tachi-common";
+import {
+	type GameGroup,
+	type integer,
+	LEGACY_GameGroupPTToGame,
+	LEGACY_GameToGameGroupPT,
+	type LEGACY_Playtype,
+	type V3Game,
+} from "tachi-common";
 
 const PB_DIRTY_BATCH = 1000;
 const SCORE_REDERIVE_BATCH = 50;
@@ -25,11 +32,11 @@ export async function drainPbDirty(): Promise<number> {
 
 	const groups = new Map<
 		string,
-		{ chartIDs: Set<string>; game: GameGroup; playtype: Playtype; userID: integer }
+		{ chartIDs: Set<string>; game: GameGroup; playtype: LEGACY_Playtype; userID: integer }
 	>();
 
 	for (const row of rows) {
-		const { game, playtype } = V3ToGamePT(row.chart_game as V3Game);
+		const { gameGroup: game, playtype } = LEGACY_GameToGameGroupPT(row.chart_game as V3Game);
 		const key = `${game}:${playtype}:${row.user_id}`;
 
 		let group = groups.get(key);
@@ -43,8 +50,9 @@ export async function drainPbDirty(): Promise<number> {
 	}
 
 	for (const group of groups.values()) {
+		const v3Game = LEGACY_GameGroupPTToGame(group.game, group.playtype);
 		// eslint-disable-next-line no-await-in-loop
-		await ProcessPBs(group.game, group.playtype, group.userID, group.chartIDs, log);
+		await ProcessPBs(v3Game, group.userID, group.chartIDs, log);
 	}
 
 	const processedPairs = rows.map((r) => [r.user_id, r.chart_id] as const);

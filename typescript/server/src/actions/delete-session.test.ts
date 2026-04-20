@@ -1,7 +1,7 @@
 import { mongoScoreDataToPg } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
-import { type MONGO_ScoreData } from "tachi-common";
+import { type ScoreData } from "tachi-common";
 import { describe, expect, it } from "vitest";
 
 import { ACTION_DeleteSession } from "./delete-session";
@@ -46,14 +46,14 @@ describe("ACTION_DeleteSession", () => {
 			})
 			.execute();
 
-		const { data, derived, judgements } = mongoScoreDataToPg("iidx:SP", {
+		const { data, derived, judgements } = mongoScoreDataToPg("iidx-sp", {
 			grade: "F",
 			lamp: "FAILED",
 			percent: 0,
 			score: 100,
 			optional: {},
 			judgements: {},
-		} as MONGO_ScoreData<"iidx:SP">);
+		} as ScoreData<"iidx-sp">);
 
 		await DB.insertInto("session")
 			.values({

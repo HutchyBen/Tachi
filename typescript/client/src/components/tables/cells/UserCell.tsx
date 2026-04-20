@@ -3,9 +3,9 @@ import { type GamePT } from "#types/react";
 import { ToAPIURL } from "#util/api";
 import React from "react";
 import { Link } from "react-router-dom";
-import { type MONGO_UserDocument } from "tachi-common";
+import { type UserDocument } from "tachi-common";
 
-export default function UserCell({ user, game, playtype }: { user: MONGO_UserDocument } & GamePT) {
+export default function UserCell({ user, game }: { user: UserDocument } & GamePT) {
 	return (
 		<td
 			className="fading-image-td-right"
@@ -16,10 +16,7 @@ export default function UserCell({ user, game, playtype }: { user: MONGO_UserDoc
 				["--image-url" as string]: `url(${ToAPIURL(`/users/${user.id}/pfp`)})`,
 			}}
 		>
-			<Link
-				className="text-decoration-none"
-				to={`/u/${user.username}/games/${game}/${playtype}`}
-			>
+			<Link className="text-decoration-none" to={`/u/${user.username}/games/${game}`}>
 				{user.username}
 				{user.isSupporter && (
 					<>

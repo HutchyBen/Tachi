@@ -5,7 +5,7 @@ import ScoreImportFatalError from "#lib/score-import/framework/score-importing/s
 import DB from "#services/pg/db";
 import fetch from "node-fetch";
 import { p, type PrudenceSchema } from "prudence";
-import { FormatPrError, type integer } from "tachi-common";
+import { FormatPrError, type integer, type V3Game } from "tachi-common";
 
 import type { ParserFunctionReturns } from "../types";
 import type {
@@ -107,7 +107,10 @@ const CG_SCHEMAS: Record<CGSupportedGames, PrudenceSchema> = {
  * identical, this basically just placeholders cgGame and service.
  */
 export function CreateCGParser<T>(cgGame: CGSupportedGames, service: CGServices) {
-	return async (userID: integer, log: KtLogger): Promise<ParserFunctionReturns<T, CGContext>> => {
+	return async (
+		userID: integer,
+		log: KtLogger,
+	): Promise<ParserFunctionReturns<T, CGContext, V3Game>> => {
 		const row = await DB.selectFrom("priv_svc_cg_card_info")
 			.select(SELECT_CG_CARD_INFO)
 			.where("user_id", "=", userID)
@@ -139,7 +142,7 @@ export function CreateCGParser<T>(cgGame: CGSupportedGames, service: CGServices)
 				service,
 				userID: cardInfo.userID,
 			},
-			game: CGGameToTachiGame(cgGame),
+			gameGroup: CGGameToTachiGame(cgGame),
 			iterable: scores as Array<T>,
 			classProvider: null,
 		};

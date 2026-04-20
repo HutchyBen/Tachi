@@ -1,13 +1,6 @@
 import DB from "#services/pg/db";
 import { sql } from "kysely";
-import {
-	FormatGameGroup,
-	type GameGroup,
-	GamePTToV3,
-	type integer,
-	type MONGO_UserDocument,
-	type Playtype,
-} from "tachi-common";
+import { FormatGame, type integer, type UserDocument, type V3Game } from "tachi-common";
 
 import { BulkSendNotification, SendNotification } from "./notifications";
 
@@ -21,13 +14,12 @@ import { BulkSendNotification, SendNotification } from "./notifications";
  */
 export async function SendSetRivalNotification(
 	toUserID: integer,
-	fromUser: MONGO_UserDocument,
-	game: GameGroup,
-	playtype: Playtype,
+	fromUser: UserDocument,
+	game: V3Game,
 ) {
 	const body = {
 		type: "RIVALED_BY" as const,
-		content: { userID: fromUser.id, game, playtype },
+		content: { userID: fromUser.id, game },
 	};
 
 	const alreadyBeenPinged = await DB.selectFrom("notification")
@@ -42,31 +34,25 @@ export async function SendSetRivalNotification(
 	}
 
 	return SendNotification(
-		`${fromUser.username} just added you as a rival for ${FormatGameGroup(game, playtype)}`,
+		`${fromUser.username} just added you as a rival for ${FormatGame(game)}`,
 		toUserID,
 		{
 			type: "RIVALED_BY",
 			content: {
 				userID: fromUser.id,
 				game,
-				playtype,
 			},
 		},
 	);
 }
 
-export async function SendSiteAnnouncementNotification(
-	title: string,
-	maybeGame?: GameGroup,
-	maybePlaytype?: Playtype,
-) {
+export async function SendSiteAnnouncementNotification(title: string, maybeGame?: V3Game) {
 	let toUserIDs: integer[];
 
-	if (maybeGame && maybePlaytype) {
-		const v3Game = GamePTToV3(maybeGame, maybePlaytype);
+	if (maybeGame) {
 		const rows = await DB.selectFrom("game_profile")
 			.select("user_id")
-			.where("game", "=", v3Game)
+			.where("game", "=", maybeGame)
 			.execute();
 		toUserIDs = rows.map((e) => e.user_id);
 	} else {

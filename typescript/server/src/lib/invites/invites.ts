@@ -1,4 +1,4 @@
-import type { MONGO_UserDocument } from "tachi-common";
+import type { UserDocument } from "tachi-common";
 
 import { ONE_MONTH } from "#lib/constants/time";
 import { log } from "#lib/log/log";
@@ -11,7 +11,7 @@ import { ServerConfig } from "#lib/setup/config";
  * Users get those N additional invites every month since they join.
  * This is capped at INVITE_CAP, which defaults to 100.
  */
-export function GetTotalAllowedInvites(user: MONGO_UserDocument) {
+export function GetTotalAllowedInvites(user: UserDocument) {
 	if (!ServerConfig.INVITE_CODE_CONFIG) {
 		log.warn(`No INVITE_CODE_CONFIG set, but tried to get total allowed invites? Returning 0.`);
 		return 0;

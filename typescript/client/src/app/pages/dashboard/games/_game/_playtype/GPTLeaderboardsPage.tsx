@@ -22,16 +22,19 @@ import React, { useState } from "react";
 import { Col, Form, Row } from "react-bootstrap";
 import {
 	type AnyProfileRatingAlg,
-	FormatGameGroup,
+	type Classes,
+	FormatGame,
+	GameToGameGroup,
+	GetGameConfig,
 	GetGameGroupConfig,
-	GetGamePTConfig,
+	type V3Game,
 } from "tachi-common";
 
-export default function GPTLeaderboardsPage({ game, playtype }: GamePT) {
+export default function GPTLeaderboardsPage({ game }: GamePT) {
 	useSetSubheader(
-		["Games", GetGameGroupConfig(game).name, playtype, "Leaderboards"],
-		[game, playtype],
-		`${FormatGameGroup(game, playtype)} Leaderboards`,
+		["Games", GetGameGroupConfig(GameToGameGroup(game)).name, "Leaderboards"],
+		[game],
+		`${FormatGame(game)} Leaderboards`,
 	);
 
 	const [mode, setMode] = useState<"profile" | "score">("profile");
@@ -51,39 +54,35 @@ export default function GPTLeaderboardsPage({ game, playtype }: GamePT) {
 			<Col xs={12}>
 				<Divider />
 				{mode === "profile" ? (
-					<ProfileLeaderboard game={game} playtype={playtype} />
+					<ProfileLeaderboard game={game} />
 				) : (
-					<ScoreLeaderboard
-						game={game}
-						playtype={playtype}
-						url={`/games/${game}/${playtype}/pb-leaderboard`}
-					/>
+					<ScoreLeaderboard game={game} url={`/games/${game}/pb-leaderboard`} />
 				)}
 			</Col>
 		</Row>
 	);
 }
 
-function ProfileLeaderboard({ game, playtype }: GamePT) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+function ProfileLeaderboard({ game }: GamePT) {
+	const gameConfig = GetGameConfig(game);
 
-	const defaultAlg = useProfileRatingAlg(game, playtype);
+	const defaultAlg = useProfileRatingAlg(game);
 
 	const [alg, setAlg] = useState(defaultAlg);
 
 	const SelectComponent =
-		Object.keys(gptConfig.profileRatingAlgs).length > 1 ? (
+		Object.keys(gameConfig.profileRatingAlgs).length > 1 ? (
 			<Form.Select onChange={(e) => setAlg(e.target.value as any)} value={alg}>
-				{Object.keys(gptConfig.profileRatingAlgs).map((e) => (
+				{Object.keys(gameConfig.profileRatingAlgs).map((e) => (
 					<option key={e} value={e}>
-						{FormatGPTProfileRatingName(game, playtype, e)}
+						{FormatGPTProfileRatingName(game, e)}
 					</option>
 				))}
 			</Form.Select>
 		) : null;
 
 	const { data, error } = useApiQuery<UserLeaderboardReturns>(
-		`/games/${game}/${playtype}/leaderboard?alg=${alg}&limit=500`,
+		`/games/${game}/leaderboard?alg=${alg}&limit=500`,
 	);
 
 	if (error) {
@@ -128,11 +127,13 @@ function ProfileLeaderboard({ game, playtype }: GamePT) {
 				headers={[
 					["Ranking", "Rank", NumericSOV((x) => x.__related.index)],
 					["User", "User", StrSOV((x) => x.__related.user.username)],
-					...(Object.keys(gptConfig.profileRatingAlgs) as Array<AnyProfileRatingAlg>).map(
+					...(
+						Object.keys(gameConfig.profileRatingAlgs) as Array<AnyProfileRatingAlg>
+					).map(
 						(e) =>
 							[
-								FormatGPTProfileRatingName(game, playtype, e),
-								FormatGPTProfileRatingName(game, playtype, e),
+								FormatGPTProfileRatingName(game, e),
+								FormatGPTProfileRatingName(game, e),
 								NumericSOV((x) => x.ratings[e] ?? -Infinity),
 							] as Header<UGSDataset[0]>,
 					),
@@ -141,13 +142,13 @@ function ProfileLeaderboard({ game, playtype }: GamePT) {
 				rowFunction={(r) => (
 					<tr>
 						<IndexCell index={r.__related.index} />
-						<UserCell game={game} playtype={playtype} user={r.__related.user} />
+						<UserCell game={game} user={r.__related.user} />
 						{(
-							Object.keys(gptConfig.profileRatingAlgs) as Array<AnyProfileRatingAlg>
+							Object.keys(gameConfig.profileRatingAlgs) as Array<AnyProfileRatingAlg>
 						).map((e) => (
 							<td key={e}>
 								{r.ratings[e]
-									? FormatGPTProfileRating(game, playtype, e, r.ratings[e]!)
+									? FormatGPTProfileRating(game, e, r.ratings[e]!)
 									: "No Data."}
 							</td>
 						))}
@@ -161,11 +162,10 @@ function ProfileLeaderboard({ game, playtype }: GamePT) {
 										([k, v]) =>
 											v && (
 												<ClassBadge
-													classSet={k as keyof typeof r.classes}
+													classSet={k as Classes[V3Game]}
 													classValue={v}
 													game={game}
 													key={k}
-													playtype={playtype}
 												/>
 											),
 									)

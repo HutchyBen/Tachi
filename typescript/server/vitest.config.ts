@@ -19,6 +19,12 @@ export default defineConfig({
 	},
 
 	test: {
+		passWithNoTests: true,
+
+		// resetDatabase() per test can exceed Vitest defaults under parallel workers.
+		testTimeout: 20_000,
+		hookTimeout: 60_000,
+
 		// `vitest bench` uses this same config: globalSetup + setupFiles + per-worker POSTGRES_URL.
 		// Use for API / DB performance work as well as microbenches (*.bench.ts).
 		//
@@ -44,16 +50,14 @@ export default defineConfig({
 		pool: "forks",
 
 		coverage: {
+			enabled: true,
 			provider: "v8",
+			// Defaults plus lcov; `json` emits coverage-final.json for tachi-coverage-tools.
+			reporter: ["text", "html", "clover", "json", "lcov"],
 			include: coverageSupporterActionOnly
 				? ["src/actions/set-user-supporter-status.ts"]
 				: ["src/**/*.ts"],
-			exclude: [
-				"src/**/*.test.ts",
-				"src/**/*.bench.ts",
-				"src/**/*.oldtest.ts",
-				"src/test-utils/**",
-			],
+			exclude: ["src/**/*.test.ts", "src/**/*.bench.ts", "src/test-utils/**"],
 			...(coverageSupporterActionOnly
 				? {
 						thresholds: {

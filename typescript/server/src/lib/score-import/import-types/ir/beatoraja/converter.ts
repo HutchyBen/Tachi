@@ -1,27 +1,28 @@
 import type { KtLogger } from "#lib/log/log";
+import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ConverterFunction } from "#lib/score-import/import-types/common/types";
 import type { Mutable } from "#utils/types";
 
 import { HandleOrphanQueue } from "#lib/orphan-queue/orphan-queue";
+import {
+	InternalFailure,
+	InvalidScoreFailure,
+	SongOrChartNotFoundFailure,
+} from "#lib/score-import/framework/common/converter-failures";
 import { DeorphanScores } from "#lib/score-import/framework/orphans/orphans";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import { FindChartOnSHA256, FindChartOnSHA256Playtype } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 import {
+	type BMSGames,
+	type ChartDocument,
 	CreateChartID,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
-	type Playtypes,
+	type GamesForGroup,
+	type LEGACY_Playtypes,
+	type SongDocument,
 } from "tachi-common";
 
-import type { DryScore } from "../../../framework/common/types";
-import type { ConverterFunction } from "../../common/types";
 import type { BeatorajaChart, BeatorajaContext, BeatorajaScore } from "./types";
-
-import {
-	InternalFailure,
-	InvalidScoreFailure,
-	SongOrChartNotFoundFailure,
-} from "../../../framework/common/converter-failures";
 
 const LAMP_LOOKUP = {
 	NoPlay: "NO PLAY",
@@ -46,11 +47,11 @@ const RANDOM_LOOKUP = {
 } as const;
 
 async function HandleOrphanChartProcess(
-	game: "bms" | "pms",
+	gameGroup: "bms" | "pms",
 	data: BeatorajaScore,
 	context: BeatorajaContext,
 	log: KtLogger,
-) {
+): Promise<ChartDocument<BMSGames>> {
 	const chartName = `${context.chart.artist} (${context.chart.subartist})- ${context.chart.title} (${context.chart.subtitle})`;
 
 	// -1: unspecified in chart
@@ -73,30 +74,27 @@ async function HandleOrphanChartProcess(
 
 	let chart;
 	let deorphanFilter:
-		| { chartSha256: string; pmsPlaytype: Playtypes["pms"] }
+		| { chartSha256: string; game: GamesForGroup["pms"] }
 		| { chartSha256: string };
 
-	if (game === "bms") {
+	if (gameGroup === "bms") {
 		deorphanFilter = { chartSha256: context.chart.sha256 };
 
-		const gptString = context.chart.mode === "BEAT_7K" ? "bms:7K" : "bms:14K";
+		const game = context.chart.mode === "BEAT_7K" ? "bms-7k" : "bms-14k";
 
-		const { chartDoc, songDoc } = ConvertBeatorajaChartToTachi(
-			context.chart,
-			context.chart.mode === "BEAT_7K" ? "7K" : "14K",
-		);
+		const { chartDoc, songDoc } = ConvertBeatorajaChartToTachi(context.chart, game);
 
 		// only try and insert this in the tachi DB if it has a valid MD5.
 		// beatoraja makes it **perfectly valid** for MD5 to be an empty string
 		// if it doesn't feel like md5ing the chart (for whatever reason)
 		if (chartDoc.data.hashMD5.length === "d0f497c0f955e7edfb0278f446cdb6f8".length) {
 			chart = await HandleOrphanQueue(
-				gptString,
-				"bms",
+				game,
 				chartDoc,
 				songDoc,
 				{
 					"chartDoc.data.hashSHA256": context.chart.sha256,
+					game,
 				},
 				ServerConfig.BEATORAJA_QUEUE_SIZE,
 				context.userID,
@@ -104,27 +102,24 @@ async function HandleOrphanChartProcess(
 			);
 		}
 	} else {
-		const playtype: Playtypes["pms"] =
-			data.deviceType === "BM_CONTROLLER" ? "Controller" : "Keyboard";
+		const game: GamesForGroup["pms"] =
+			data.deviceType === "BM_CONTROLLER" ? "pms-controller" : "pms-keyboard";
 
-		deorphanFilter = { chartSha256: context.chart.sha256, pmsPlaytype: playtype };
+		deorphanFilter = { chartSha256: context.chart.sha256, game };
 
-		const gptString = playtype === "Controller" ? "pms:Controller" : "pms:Keyboard";
-
-		const { chartDoc, songDoc } = ConvertBeatorajaChartToTachi(context.chart, playtype);
+		const { chartDoc, songDoc } = ConvertBeatorajaChartToTachi(context.chart, game);
 
 		// only try and insert this in the tachi DB if it has a valid MD5.
 		// beatoraja makes it **perfectly valid** for MD5 to be an empty string
 		// if it doesn't feel like md5ing the chart (for whatever reason)
 		if (chartDoc.data.hashMD5.length === "d0f497c0f955e7edfb0278f446cdb6f8".length) {
 			chart = await HandleOrphanQueue(
-				gptString,
-				"pms",
+				game,
 				chartDoc,
 				songDoc,
 				{
 					"chartDoc.data.hashSHA256": context.chart.sha256,
-					playtype,
+					game,
 				},
 				ServerConfig.BEATORAJA_QUEUE_SIZE,
 				context.userID,
@@ -172,14 +167,14 @@ export const ConverterIRBeatoraja: ConverterFunction<BeatorajaScore, BeatorajaCo
 
 	const game = context.chart.mode === "POPN_9K" ? "pms" : "bms";
 
-	let chart: MONGO_ChartDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"> | null;
+	let chart: ChartDocument<BMSGames> | null;
 
 	if (game === "bms") {
-		chart = (await FindChartOnSHA256(game, data.sha256)) as MONGO_ChartDocument<
-			"bms:7K" | "bms:14K"
+		chart = (await FindChartOnSHA256(game, data.sha256)) as ChartDocument<
+			GamesForGroup["bms"]
 		> | null;
 	} else {
-		let playtype: Playtypes["pms"];
+		let playtype: LEGACY_Playtypes["pms"];
 
 		// It's still called BM_CONTROLLER even though its popn!
 		if (data.deviceType === "BM_CONTROLLER") {
@@ -190,27 +185,23 @@ export const ConverterIRBeatoraja: ConverterFunction<BeatorajaScore, BeatorajaCo
 			throw new InvalidScoreFailure("MIDI is not allowed for PMS scores.");
 		}
 
-		chart = (await FindChartOnSHA256Playtype(
-			game,
-			data.sha256,
-			playtype,
-		)) as MONGO_ChartDocument<"pms:Controller" | "pms:Keyboard"> | null;
+		chart = (await FindChartOnSHA256Playtype(game, data.sha256, playtype)) as ChartDocument<
+			GamesForGroup["pms"]
+		> | null;
 	}
 
 	if (!chart) {
 		chart = await HandleOrphanChartProcess(game, data, context, log);
 	}
 
-	const song = await FindSongOnID(game, chart.songID);
+	const song = await FindSongOnID(game, chart.song.id);
 
 	if (!song) {
 		log.error(`Song-Chart Desync with ${game} ${chart.chartID}.`);
 		throw new InternalFailure(`Song-Chart Desync with ${game} ${chart.chartID}.`);
 	}
 
-	const optional: Mutable<
-		DryScore<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard">["scoreData"]["optional"]
-	> = {
+	const optional: Mutable<DryScore<BMSGames>["scoreData"]["optional"]> = {
 		bp: data.minbp === -1 ? null : data.minbp,
 		gauge: data.gauge === -1 ? null : data.gauge,
 		gaugeHistoryEasy: data.gaugeHistory?.easy,
@@ -251,7 +242,7 @@ export const ConverterIRBeatoraja: ConverterFunction<BeatorajaScore, BeatorajaCo
 
 	// pms and bms are fine using this randomlookup, except for 14k, which is
 	// broken in beatoraja.
-	if (chart.playtype !== "14K") {
+	if (chart.game !== "bms-14k") {
 		if ([0, 1, 2, 3, 4].includes(data.option)) {
 			random = RANDOM_LOOKUP[data.option as 0 | 1 | 2 | 3 | 4];
 		}
@@ -259,9 +250,9 @@ export const ConverterIRBeatoraja: ConverterFunction<BeatorajaScore, BeatorajaCo
 
 	const lamp = LAMP_LOOKUP[data.clear];
 
-	const dryScore: DryScore<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"> = {
+	const dryScore: DryScore<typeof chart.game> = {
 		comment: null,
-		game,
+		game: chart.game,
 		importType,
 		scoreData: {
 			score: data.exscore,
@@ -287,33 +278,11 @@ export const ConverterIRBeatoraja: ConverterFunction<BeatorajaScore, BeatorajaCo
 	return { song, chart, dryScore };
 };
 
-function ConvertBeatorajaChartToTachi(chart: BeatorajaChart, playtype: Playtypes["bms" | "pms"]) {
-	const chartID = CreateChartID();
-	const chartDoc: MONGO_ChartDocument<"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"> =
-		{
-			chartID,
-			difficulty: "CHART",
-			isPrimary: true,
-			level: "?",
-			levelNum: 0,
-			playtype,
-			songID: 0,
-			versions: [],
-			data: {
-				hashMD5: chart.md5,
-				hashSHA256: chart.sha256,
-				notecount: chart.notes,
-				tableFolders: {},
-				aiLevel: null,
-				sglEC: null,
-				sglHC: null,
-			},
-		};
-
-	const songDoc: MONGO_SongDocument<"bms" | "pms"> = {
+function ConvertBeatorajaChartToTachi(chart: BeatorajaChart, game: BMSGames) {
+	const songDoc: SongDocument<"bms" | "pms"> = {
 		artist: chart.artist,
 		title: chart.title,
-		id: 0,
+		id: "s0",
 		altTitles: [],
 		searchTerms: [],
 		data: {
@@ -321,6 +290,27 @@ function ConvertBeatorajaChartToTachi(chart: BeatorajaChart, playtype: Playtypes
 			subartist: chart.subartist,
 			subtitle: chart.subtitle,
 			tableString: null,
+		},
+	};
+
+	const chartID = CreateChartID();
+	const chartDoc: ChartDocument<BMSGames> = {
+		game,
+		chartID,
+		difficulty: "CHART",
+		isPrimary: true,
+		level: "?",
+		levelNum: 0,
+		song: songDoc,
+		versions: [],
+		data: {
+			hashMD5: chart.md5,
+			hashSHA256: chart.sha256,
+			notecount: chart.notes,
+			tableFolders: {},
+			aiLevel: null,
+			sglEC: null,
+			sglHC: null,
 		},
 	};
 

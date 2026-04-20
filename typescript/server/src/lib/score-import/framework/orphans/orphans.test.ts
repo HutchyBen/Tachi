@@ -1,3 +1,5 @@
+import type { BatchManualContext } from "#lib/score-import/import-types/common/batch-manual/types";
+import type { OrphanScoreDocument } from "#lib/score-import/import-types/common/types";
 import type { BatchManualScore } from "tachi-common";
 
 import { log } from "#lib/log/log";
@@ -7,9 +9,6 @@ import deepmerge from "deepmerge";
 import fjsh from "fast-json-stable-hash";
 import { sql } from "kysely";
 import { describe, expect, it } from "vitest";
-
-import type { BatchManualContext } from "../../import-types/common/batch-manual/types";
-import type { OrphanScoreDocument } from "../../import-types/common/types";
 
 import { OrphanScore, ReprocessOrphan } from "./orphans";
 
@@ -22,8 +21,7 @@ const batchManualScore: BatchManualScore = {
 };
 
 const batchManualContext: BatchManualContext = {
-	game: "iidx",
-	playtype: "SP",
+	game: "iidx-sp",
 	service: "foo",
 	version: "27",
 };

@@ -10,7 +10,7 @@ For user-specific target endpoints, such as subscriptions, see [UGPT-Target Endp
 
 ## Retrieve a user's recently achieved targets.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/targets/recently-achieved`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/targets/recently-achieved`
 
 ### Parameters
 
@@ -30,7 +30,7 @@ None.
 
 ## Retrieve a user's recently raised targets.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/targets/recently-raised`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/targets/recently-raised`
 
 !!! info
 	Recently raised means that the user recently increased their `progress` on the target. It explicitly excludes achieved goals -- only things that they are getting closer to.
@@ -53,7 +53,7 @@ None.
 
 ## Retrieve this user's quest subscriptions.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/targets/quests`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/targets/quests`
 
 ### Parameters
 
@@ -70,7 +70,7 @@ None.
 
 ## Get a user's progress on a specific quest they are subscribed to.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/targets/quests/:questID`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/targets/quests/:questID`
 
 !!! info
 	If you're looking to evaluate a quest against a user, without knowing whether they're
@@ -106,7 +106,7 @@ None.
 
 ## Subscribe to a quest.
 
-`PUT /api/v1/users/:userID/games/:game/:playtype/targets/quests/:questID`
+`PUT /api/v1/users/:userID/games/:gameGroup/:playtype/targets/quests/:questID`
 
 ### Permissions
 
@@ -130,7 +130,7 @@ None. (All relevant info is in the URL.)
 
 ## Unsubscribe from a quest.
 
-`DELETE /api/v1/users/:userID/games/:game/:playtype/targets/quests/:questID`
+`DELETE /api/v1/users/:userID/games/:gameGroup/:playtype/targets/quests/:questID`
 
 ### Permissions
 

@@ -1,4 +1,4 @@
-import type { GPTServerImplementation } from "#game-implementations/types";
+import type { GameImplementation } from "#game-implementations/types";
 
 import { CreatePBMergeFor } from "#game-implementations/utils/pb-merge";
 import { ProfileSumBestN } from "#game-implementations/utils/profile-calc";
@@ -8,7 +8,7 @@ import { FmtNum, GetGrade, MUSECA_GBOUNDARIES } from "tachi-common";
 
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
-export const MUSECA_IMPL: GPTServerImplementation<"museca:Single"> = {
+export const MUSECA_IMPL: GameImplementation<"museca"> = {
 	chartSpecificValidators: {},
 	scoreDeriver: (scoreData, _chart) => ({
 		grade: GetGrade(MUSECA_GBOUNDARIES, scoreData.score),
@@ -27,8 +27,8 @@ export const MUSECA_IMPL: GPTServerImplementation<"museca:Single"> = {
 	sessionCalcs: (arr) => ({
 		curatorSkill: SessionAvgBest10For("curatorSkill")(arr),
 	}),
-	profileCalcs: async (game, playtype, userID) => ({
-		curatorSkill: await ProfileSumBestN("curatorSkill", 20)(game, playtype, userID),
+	profileCalcs: async (game, userID) => ({
+		curatorSkill: await ProfileSumBestN("curatorSkill", 20)(game, userID),
 	}),
 	classDerivers: (_ratings) => ({}),
 	goalCriteriaFormatters: {
@@ -59,7 +59,7 @@ export const MUSECA_IMPL: GPTServerImplementation<"museca:Single"> = {
 		),
 	],
 	defaultMergeRefName: "Best Score",
-	derivationRelevantFields: ["levelNum"],
+	chartDataRelevantFields: ["levelNum"],
 	scoreValidators: [
 		(s) => {
 			if (s.scoreData.lamp === "PERFECT CONNECT ALL" && s.scoreData.score !== 1_000_000) {

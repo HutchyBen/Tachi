@@ -1,8 +1,10 @@
+import type { BMSGames } from "tachi-common";
+
 export interface BMSTablesDataset {
 	url: string;
 	name: string;
 	description: string;
-	playtype: "7K" | "14K";
+	game: BMSGames;
 	prefix: string;
 }
 

@@ -1,5 +1,5 @@
 import type { KtLogger } from "#lib/log/log";
-import type { GameGroup, integer, MONGO_SongDocument } from "tachi-common";
+import type { GameGroup, SongDocument } from "tachi-common";
 
 import { SELECT_SONG_ROW, ToSongDocumentFromRow } from "#lib/db-formats/song";
 import {
@@ -17,12 +17,12 @@ import { EscapeStringRegexp } from "../misc";
  * rather difficult. Prefer other functions!
  * @param game - The game to search upon.
  * @param title - The song title to match.
- * @returns MONGO_SongDocument
+ * @returns SongDocument
  */
 export async function FindSongOnTitle(
 	game: GameGroup,
 	title: string,
-): Promise<MONGO_SongDocument | null> {
+): Promise<SongDocument | null> {
 	const res = await DB.selectFrom("song")
 		.select(SELECT_SONG_ROW)
 		.where("song.game_group", "=", game)
@@ -50,7 +50,7 @@ export async function FindSongOnTitleInsensitive(
 	game: GameGroup,
 	title: string,
 	artist?: string | null,
-): Promise<MONGO_SongDocument | null> {
+): Promise<SongDocument | null> {
 	const titlePat = `^${EscapeStringRegexp(title)}$`;
 	const artistPat = `^${EscapeStringRegexp(artist ?? "")}$`;
 
@@ -88,13 +88,13 @@ export async function FindSongOnTitleInsensitive(
  * also be the in-game-ID.
  * @param game - The game to search upon.
  * @param songID - The song ID to match.
- * @returns MONGO_SongDocument
+ * @returns SongDocument
  */
-export async function FindSongOnID(game: GameGroup, songID: integer) {
+export async function FindSongOnID(game: GameGroup, songID: string) {
 	const row = await DB.selectFrom("song")
 		.select(SELECT_SONG_ROW)
 		.where("song.game_group", "=", game)
-		.where("song.legacy_id", "=", songID)
+		.where("song.id", "=", songID)
 		.executeTakeFirst();
 
 	return row ? ToSongDocumentFromRow(row) : null;
@@ -113,7 +113,7 @@ export async function FindDDRSongOnDDRSongHash(hash: string) {
 	return row ? ToSongDocumentFromRow(row) : null;
 }
 
-export async function FindSongOnIDGuaranteed(game: GameGroup, songID: integer, log: KtLogger) {
+export async function FindSongOnIDGuaranteed(game: GameGroup, songID: string, log: KtLogger) {
 	const song = await FindSongOnID(game, songID);
 
 	if (!song) {

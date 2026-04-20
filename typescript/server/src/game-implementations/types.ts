@@ -1,21 +1,19 @@
-import type { MONGO_PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
+import type { PBScoreDocumentNoRank } from "#lib/score-import/framework/pb/create-pb-doc";
 import type {
+	ChartDocument,
 	ClassConfigs,
 	ConfScoreMetrics,
-	GPTString,
-	GPTStringToGame,
-	GPTStringToPlaytype,
 	integer,
-	MONGO_ChartDocument,
-	MONGO_PBScoreDocument,
-	MONGO_ScoreData,
-	MONGO_ScoreDocument,
-	MONGO_SpecificUserGameStats,
 	MongoDerivedMetrics,
 	PBReference,
+	PBScoreDocument,
 	ProfileRatingAlgorithms,
+	ScoreData,
+	ScoreDocument,
 	ScoreRatingAlgorithms,
 	SessionRatingAlgorithms,
+	SpecificUserGameStats,
+	V3Game,
 } from "tachi-common";
 import type { DerivedClassConfig } from "tachi-common/types/game-config-utils";
 import type { AllConfMetrics, ConfEnumScoreMetric } from "tachi-common/types/metrics";
@@ -24,21 +22,21 @@ import type { AllConfMetrics, ConfEnumScoreMetric } from "tachi-common/types/met
  * Validate this chart-specific metric. This should return a string representing an
  * error message on failure, and null on success.
  */
-export type ChartSpecificMetricValidator<GPT extends GPTString> = (
+export type ChartSpecificMetricValidator<TGame extends V3Game> = (
 	metric: number,
-	chart: MONGO_ChartDocument<GPT>,
+	chart: ChartDocument<TGame>,
 ) => string | true;
 
 interface ChartDependentMax {
 	chartDependentMax: true;
 }
 
-export type SessionCalculator<GPT extends GPTString> = (
-	scoreCalcData: Array<MONGO_ScoreDocument<GPT>["calculatedData"]>,
+export type SessionCalculator<TGame extends V3Game> = (
+	scoreCalcData: Array<ScoreDocument<TGame>["calculatedData"]>,
 ) => number | null;
 
-export type ClassDeriver<GPT extends GPTString, V extends string> = (
-	profileRatings: MONGO_SpecificUserGameStats<GPT>["ratings"],
+export type ClassDeriver<TGame extends V3Game, V extends string> = (
+	profileRatings: SpecificUserGameStats<TGame>["ratings"],
 ) => V | null | undefined;
 
 // absolutely stupid magic.
@@ -50,11 +48,11 @@ export type ClassDeriver<GPT extends GPTString, V extends string> = (
 // {
 //     colour: ClassDeriver<"YELLOW" | "asdf" ...>
 // }
-export type GPTClassDeriverFuncs<GPT extends GPTString> = {
-	[C in keyof ClassConfigs[GPT] as ClassConfigs[GPT][C] extends DerivedClassConfig
+export type GPTClassDeriverFuncs<TGame extends V3Game> = {
+	[C in keyof ClassConfigs[TGame] as ClassConfigs[TGame][C] extends DerivedClassConfig
 		? C
-		: never]: ClassConfigs[GPT][C] extends DerivedClassConfig<infer V>
-		? ClassDeriver<GPT, V>
+		: never]: ClassConfigs[TGame][C] extends DerivedClassConfig<infer V>
+		? ClassDeriver<TGame, V>
 		: never;
 };
 
@@ -68,51 +66,50 @@ export type GPTClassDeriverFuncs<GPT extends GPTString> = {
  * They should then return some information (a name and a scoreID) to indicate
  * what this PB is composed of.
  */
-export type PBMergeFunction<GPT extends GPTString> = (
+export type PBMergeFunction<TGame extends V3Game> = (
 	userID: integer,
 	chartID: string,
 	asOfTimestamp: number | null,
-	existingPB: MONGO_PBScoreDocumentNoRank<GPT>,
+	existingPB: PBScoreDocumentNoRank<TGame>,
 ) => Promise<PBReference | null>;
 
 /**
  * The only metrics that need validators are those that have `chartDependentMax` set.
  * Otherwise, a validator is built into the ConfScoreMetric.
  */
-export type GPTChartSpecificMetricValidators<GPT extends GPTString> = {
-	[M in keyof AllConfMetrics[GPT] as AllConfMetrics[GPT][M] extends ChartDependentMax
+export type GPTChartSpecificMetricValidators<TGame extends V3Game> = {
+	[M in keyof AllConfMetrics[TGame] as AllConfMetrics[TGame][M] extends ChartDependentMax
 		? M
-		: never]: ChartSpecificMetricValidator<GPT>;
+		: never]: ChartSpecificMetricValidator<TGame>;
 };
 
 /** Derives chart-dependent score metrics (grade, percent, …) from provided score data. */
-export type GPTScoreDeriver<GPT extends GPTString> = (
-	scoreData: MONGO_ScoreData<GPT>,
-	chart: MONGO_ChartDocument<GPT>,
-) => MongoDerivedMetrics[GPT];
+export type GPTScoreDeriver<TGame extends V3Game> = (
+	scoreData: ScoreData<TGame>,
+	chart: ChartDocument<TGame>,
+) => MongoDerivedMetrics[TGame];
 
-export type GPTScoreCalcs<GPT extends GPTString> = (
-	scoreData: MONGO_ScoreData<GPT>,
-	derivedData: MongoDerivedMetrics[GPT],
-	chart: MONGO_ChartDocument<GPT>,
-) => Record<ScoreRatingAlgorithms[GPT], number | null>;
+export type GPTScoreCalcs<TGame extends V3Game> = (
+	scoreData: ScoreData<TGame>,
+	derivedData: MongoDerivedMetrics[TGame],
+	chart: ChartDocument<TGame>,
+) => Record<ScoreRatingAlgorithms[TGame], number | null>;
 
 /** Session ratings from the session's score calculated-data: f(scoreCalcData) -> sessionCalcData. */
-export type GPTSessionCalcs<GPT extends GPTString> = (
-	scoreCalcData: Array<MONGO_ScoreDocument<GPT>["calculatedData"]>,
-) => Record<SessionRatingAlgorithms[GPT], number | null>;
+export type GPTSessionCalcs<TGame extends V3Game> = (
+	scoreCalcData: Array<ScoreDocument<TGame>["calculatedData"]>,
+) => Record<SessionRatingAlgorithms[TGame], number | null>;
 
-/** Profile ratings from UGPT: async f(game, playtype, userID) -> profile ratings record. */
-export type GPTProfileCalcs<GPT extends GPTString> = (
-	game: GPTStringToGame[GPT],
-	playtype: GPTStringToPlaytype[GPT],
+/** Profile ratings for a v3 `game`: async f(game, userID) -> profile ratings record. */
+export type GPTProfileCalcs<TGame extends V3Game> = (
+	game: TGame,
 	userID: integer,
-) => Promise<Record<ProfileRatingAlgorithms[GPT], number | null>>;
+) => Promise<Record<ProfileRatingAlgorithms[TGame], number | null>>;
 
 // Class deriver: f(profileRatings) -> derivedClasses (one object with all derived class values).
-export type GPTClassDerivers<GPT extends GPTString> = (
-	profileRatings: MONGO_SpecificUserGameStats<GPT>["ratings"],
-) => { [C in keyof GPTClassDeriverFuncs<GPT>]: ReturnType<GPTClassDeriverFuncs<GPT>[C]> };
+export type GPTClassDerivers<TGame extends V3Game> = (
+	profileRatings: SpecificUserGameStats<TGame>["ratings"],
+) => { [C in keyof GPTClassDeriverFuncs<TGame>]: ReturnType<GPTClassDeriverFuncs<TGame>[C]> };
 
 /**
  * The float values used to rank this PB against others on the same chart.
@@ -134,8 +131,8 @@ export interface RankingValues {
  * Given a fully-merged (but not yet stored) PB, return the ranking values
  * that determine how this PB is ordered against other PBs on the same chart.
  */
-export type PBRankingValuesFunction<GPT extends GPTString> = (
-	pb: MONGO_PBScoreDocumentNoRank<GPT>,
+export type PBRankingValuesFunction<TGame extends V3Game> = (
+	pb: PBScoreDocumentNoRank<TGame>,
 ) => RankingValues;
 
 /**
@@ -149,8 +146,8 @@ export type GoalCriteriaFormatter = (num: number) => string;
  * A record of all non-enum metrics that need formatters. Enums *always* get formatted
  * into their string formats.
  */
-export type GPTGoalFormatters<GPT extends GPTString> = {
-	[K in keyof ConfScoreMetrics[GPT] as ConfScoreMetrics[GPT][K] extends ConfEnumScoreMetric<
+export type GPTGoalFormatters<TGame extends V3Game> = {
+	[K in keyof ConfScoreMetrics[TGame] as ConfScoreMetrics[TGame][K] extends ConfEnumScoreMetric<
 		infer _
 	>
 		? never
@@ -163,56 +160,56 @@ export type GPTGoalFormatters<GPT extends GPTString> = {
  *
  * This only applies to "single" goals, i.e. goals on a single chart.
  */
-export type GoalProgressFormatter<GPT extends GPTString> = (
-	pb: MONGO_PBScoreDocument<GPT>,
+export type GoalProgressFormatter<TGame extends V3Game> = (
+	pb: PBScoreDocument<TGame>,
 	goalValue: integer,
 ) => string;
 
-export type GPTGoalProgressFormatters<GPT extends GPTString> = {
-	[K in keyof ConfScoreMetrics[GPT]]: GoalProgressFormatter<GPT>;
+export type GPTGoalProgressFormatters<TGame extends V3Game> = {
+	[K in keyof ConfScoreMetrics[TGame]]: GoalProgressFormatter<TGame>;
 };
 
 /**
  * Return nothing on success, and a string
  * indicating what the error was on failure.
  */
-export type ScoreValidator<GPT extends GPTString> = (
-	score: MONGO_ScoreDocument<GPT>,
-	chart: MONGO_ChartDocument<GPT>,
+export type ScoreValidator<TGame extends V3Game> = (
+	score: ScoreDocument<TGame>,
+	chart: ChartDocument<TGame>,
 ) => string | undefined;
 
-export interface GPTServerImplementation<GPT extends GPTString> {
+export interface GameImplementation<TGame extends V3Game> {
 	/**
 	 * For any chart-dependent metrics, such as EX Score for IIDX, how should we
 	 * validate they're correct?
 	 */
-	chartSpecificValidators: GPTChartSpecificMetricValidators<GPT>;
+	chartSpecificValidators: GPTChartSpecificMetricValidators<TGame>;
 
 	/**
 	 * How should we derive the derived metrics for this game?
 	 */
-	scoreDeriver: GPTScoreDeriver<GPT>;
+	scoreDeriver: GPTScoreDeriver<TGame>;
 
 	/**
 	 * How should we compute the score rating algorithms for this game?
 	 */
-	scoreCalcs: GPTScoreCalcs<GPT>;
+	scoreCalcs: GPTScoreCalcs<TGame>;
 
 	/**
 	 * How should we compute session ratings for this game?
 	 */
-	sessionCalcs: GPTSessionCalcs<GPT>;
+	sessionCalcs: GPTSessionCalcs<TGame>;
 
 	/**
 	 * How should we compute profile ratings for this game?
 	 */
-	profileCalcs: GPTProfileCalcs<GPT>;
+	profileCalcs: GPTProfileCalcs<TGame>;
 
 	/**
 	 * For any "derived" classes for this game (i.e. classes that are the function
 	 * of the user's state), how should they work?
 	 */
-	classDerivers: GPTClassDerivers<GPT>;
+	classDerivers: GPTClassDerivers<TGame>;
 
 	/**
 	 * When creating a goal, how should we format the title?
@@ -221,7 +218,7 @@ export interface GPTServerImplementation<GPT extends GPTString> {
 	 * ^^^^^^^^^^^^^^^^^^^^^^
 	 * this bit
 	 */
-	goalCriteriaFormatters: GPTGoalFormatters<GPT>;
+	goalCriteriaFormatters: GPTGoalFormatters<TGame>;
 
 	/**
 	 * How should we format the "outOf" part of a goal?
@@ -230,7 +227,7 @@ export interface GPTServerImplementation<GPT extends GPTString> {
 	 *             ^^^^^^^^
 	 *              this bit
 	 */
-	goalOutOfFormatters: GPTGoalFormatters<GPT>;
+	goalOutOfFormatters: GPTGoalFormatters<TGame>;
 
 	/**
 	 * How should we format the progress on a goal?
@@ -239,12 +236,12 @@ export interface GPTServerImplementation<GPT extends GPTString> {
 	 *  ^^^^^^^^
 	 *   this bit
 	 */
-	goalProgressFormatters: GPTGoalProgressFormatters<GPT>;
+	goalProgressFormatters: GPTGoalProgressFormatters<TGame>;
 
 	/**
 	 * How should we mutate PBs (to join best lamps, lowest BPs, etc.) for this GPT?
 	 */
-	pbMergeFunctions: Array<PBMergeFunction<GPT>>;
+	pbMergeFunctions: Array<PBMergeFunction<TGame>>;
 
 	/**
 	 * A PB is always initialised with the best score for this game's default
@@ -258,7 +255,7 @@ export interface GPTServerImplementation<GPT extends GPTString> {
 	 *
 	 * These map to ranking_value + ranking_value_tb1..tb5 in postgres.
 	 */
-	pbRankingValues: PBRankingValuesFunction<GPT>;
+	pbRankingValues: PBRankingValuesFunction<TGame>;
 
 	/**
 	 * There are various things that should be true about scores for each game
@@ -269,18 +266,20 @@ export interface GPTServerImplementation<GPT extends GPTString> {
 	 * incorrectnesses, like working out what the minimum possible full combo score
 	 * could be (which might be chart dependent, etc), don't bother.
 	 */
-	scoreValidators: Array<ScoreValidator<GPT>>;
+	scoreValidators: Array<ScoreValidator<TGame>>;
 
 	/**
-	 * Dot-path keys into MONGO_ChartDocument whose values feed into
-	 * `scoreDeriver` or `scoreCalcs`. When any of these change on a chart,
+	 * Chart field paths whose values feed into
+	 * `scoreDeriver` or `scoreCalcs`.
+	 *
+	 * When any of these change on a chart,
 	 * all scores on that chart must be re-derived.
 	 *
-	 * Used to build a stable derivation checksum stored on `chart.derivation_checksum`.
+	 * Used to build a stable checksum stored on `chart.derivation_checksum`.
 	 */
-	derivationRelevantFields: Array<string>;
+	chartDataRelevantFields: Array<string>;
 }
 
-export type GPTImplementations = {
-	[GPT in GPTString]: GPTServerImplementation<GPT>;
+export type GameImplementations = {
+	[TGame in V3Game]: GameImplementation<TGame>;
 };

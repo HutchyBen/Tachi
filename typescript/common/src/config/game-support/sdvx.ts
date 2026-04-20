@@ -1,19 +1,20 @@
 import { p } from "prudence";
 import { z } from "zod";
 
-import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_PT_CONFIG } from "../../types/internals";
+import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
 import { FmtNum, FmtPercent } from "../../utils/util";
 import { ClassValue, ToDecimalPlaces, zodNonNegativeInt, zodTierlistData } from "../config-utils";
 import { FAST_SLOW_MAXCOMBO } from "./_common";
 
-export const SDVX_CONF = {
+export const GAME_GROUP_SDVX_CONF = {
 	name: "SOUND VOLTEX",
+	games: ["sdvx"],
 	playtypes: ["Single"],
 	songData: z.strictObject({
 		displayVersion: z.string(),
 	}),
-} as const satisfies INTERNAL_GAME_CONFIG;
+} as const satisfies INTERNAL_GAME_GROUP_CONFIG;
 
 export const SDVXDans = [
 	ClassValue("DAN_1", "LV.01", "1st Dan"),
@@ -73,7 +74,7 @@ export const SDVXVFClasses = [
 	ClassValue("IMPERIAL_IV", "Imperial IV", ">23VF"),
 ];
 
-export const SDVX_SINGLE_CONF = {
+export const GAME_SDVX_CONF = {
 	providedMetrics: {
 		score: {
 			type: "INTEGER",
@@ -158,7 +159,7 @@ export const SDVX_SINGLE_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["NOV", "ADV", "EXH", "INF", "GRV", "HVN", "VVD", "XCD", "MXM", "ULT"],
-		shorthand: {}, // they're all already short enough
+		format: {}, // they're all already short enough
 		default: "EXH",
 	},
 
@@ -199,4 +200,4 @@ export const SDVX_SINGLE_CONF = {
 	}),
 
 	supportedMatchTypes: ["sdvxInGameID", "songTitle", "tachiSongID"],
-} as const satisfies INTERNAL_GAME_PT_CONFIG;
+} as const satisfies INTERNAL_GAME_CONFIG;

@@ -5,18 +5,18 @@ import { GPT_CLIENT_IMPLEMENTATIONS } from "#lib/game-implementations";
 import { ChangeOpacity } from "#util/color-opacity";
 import React from "react";
 import {
+	type ChartDocument,
 	FormatDifficulty,
 	FormatDifficultyShort,
-	type GameGroup,
-	GetGamePTConfig,
-	GetGPTString,
-	type MONGO_ChartDocument,
+	type V3Game,
 } from "tachi-common";
 
 import BMSOrPMSDifficultyCell from "./BMSOrPMSDifficultyCell";
 import ITGDifficultyCell from "./ITGDifficultyCell";
 import RatingSystemPart from "./RatingSystemPart";
 import USCDifficultyCell from "./USCDifficultyCell";
+
+type BMSGames = "bms-7k" | "bms-14k" | "pms-controller" | "pms-keyboard";
 
 export default function DifficultyCell({
 	game,
@@ -25,44 +25,28 @@ export default function DifficultyCell({
 	noTierlist,
 }: {
 	alwaysShort?: boolean;
-	chart: MONGO_ChartDocument;
-	game: GameGroup;
+	chart: ChartDocument;
+	game: V3Game;
 	noTierlist?: boolean;
 }) {
-	const gptConfig = GetGamePTConfig(game, chart.playtype);
-
-	if (!gptConfig) {
-		throw new Error(`Was passed nonsense combination of ${game}, ${chart.playtype}`);
+	if (
+		game === "bms-7k" ||
+		game === "bms-14k" ||
+		game === "pms-controller" ||
+		game === "pms-keyboard"
+	) {
+		return <BMSOrPMSDifficultyCell chart={chart as ChartDocument<BMSGames>} game={game} />;
+	} else if (game === "usc-controller" || game === "usc-keyboard") {
+		return (
+			<USCDifficultyCell chart={chart as ChartDocument<"usc-controller" | "usc-keyboard">} />
+		);
+	} else if (game === "itg-stamina") {
+		return <ITGDifficultyCell chart={chart as ChartDocument<"itg-stamina">} />;
 	}
 
-	if (game === "bms" || game === "pms") {
-		return (
-			<BMSOrPMSDifficultyCell
-				chart={
-					chart as MONGO_ChartDocument<
-						"bms:7K" | "bms:14K" | "pms:Controller" | "pms:Keyboard"
-					>
-				}
-				game={game}
-			/>
-		);
-	} else if (game === "usc") {
-		return (
-			<USCDifficultyCell
-				chart={chart as MONGO_ChartDocument<"usc:Controller" | "usc:Keyboard">}
-			/>
-		);
-	} else if (game === "itg") {
-		return <ITGDifficultyCell chart={chart as MONGO_ChartDocument<"itg:Stamina">} />;
-	}
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, chart.playtype)];
-
-	if (game === "iidx" || game === "maimaidx") {
-		// IIDX stuff should always be in the form SPA/SPL to save space.
-		// For the same reason, maimai DX stuff should be using (DX) EXP/MAS/Re:MAS.
-		// All players know what this means.
-
+	if (game === "iidx-sp" || game === "iidx-dp" || game === "maimaidx") {
 		alwaysShort = true;
 	}
 
@@ -75,12 +59,8 @@ export default function DifficultyCell({
 				maxWidth: "100px",
 			}}
 		>
-			{!alwaysShort && (
-				<div className="d-none d-lg-block">{FormatDifficulty(chart, game)}</div>
-			)}
-			<div className={!alwaysShort ? "d-lg-none" : ""}>
-				{FormatDifficultyShort(chart, game)}
-			</div>
+			{!alwaysShort && <div className="d-none d-lg-block">{FormatDifficulty(chart)}</div>}
+			<div className={!alwaysShort ? "d-lg-none" : ""}>{FormatDifficultyShort(chart)}</div>
 			<DisplayLevelNum game={game} level={chart.level} levelNum={chart.levelNum} />
 			{!noTierlist && gptImpl.ratingSystems.length > 0 && (
 				<RatingSystemPart chart={chart} game={game} />
@@ -102,12 +82,11 @@ export function DisplayLevelNum({
 	prefix,
 	game,
 }: {
-	game: GameGroup;
+	game: V3Game;
 	level: string;
 	levelNum: number;
 	prefix?: string;
 }) {
-	// Always display 1dp levelNum for these games
 	if (["chunithm", "maimai", "maimaidx", "ongeki", "wacca"].includes(game)) {
 		return (
 			<Muted>
@@ -117,14 +96,11 @@ export function DisplayLevelNum({
 		);
 	}
 
-	// Don't display levelnum if its identical to the level, the decimal places in the
-	// level end with .0, or the levelNum itself is 0.
 	if (levelNum.toString() === level || level.endsWith(".0") || levelNum === 0) {
 		return null;
 	}
 
-	// or if it's gitadora
-	if (game === "gitadora") {
+	if (game === "gitadora-gita" || game === "gitadora-dora") {
 		return null;
 	}
 

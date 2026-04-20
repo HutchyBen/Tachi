@@ -1,7 +1,7 @@
 import { type ImportIDReturn } from "#types/api-returns";
 import { type ImportStates, NotStartedState } from "#types/import";
 import { useState } from "react";
-import { type integer, type MONGO_ImportDocument } from "tachi-common";
+import { type ImportDocument, type integer } from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import { APIFetchV1 } from "#util/api";
 import { Sleep } from "#util/misc";
@@ -13,7 +13,7 @@ export interface ImportDeferred {
 
 export type ImportPollStatus =
 	| {
-			import: MONGO_ImportDocument;
+			import: ImportDocument;
 			importStatus: "completed";
 	  }
 	| {
@@ -30,7 +30,7 @@ export default function useImport(url: string, options: RequestInit) {
 	const runImport = async (overrideOptions?: RequestInit) => {
 		setImportState({ state: "waiting_init" });
 
-		const initRes = await APIFetchV1<ImportDeferred | MONGO_ImportDocument>(
+		const initRes = await APIFetchV1<ImportDeferred | ImportDocument>(
 			url,
 			overrideOptions ?? options,
 		);

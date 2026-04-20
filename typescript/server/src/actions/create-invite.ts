@@ -1,9 +1,9 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user.js";
-import { GetTotalAllowedInvites } from "#lib/invites/invites.js";
-import DB from "#services/pg/db.js";
-import { Random20Hex } from "#utils/misc.js";
-import { ISO8601ToUnixMilliseconds } from "#utils/time.js";
+import { MakeAction } from "#lib/actions/actions";
+import { SELECT_USER, ToUserDocument } from "#lib/db-formats/user";
+import { GetTotalAllowedInvites } from "#lib/invites/invites";
+import DB from "#services/pg/db";
+import { Random20Hex } from "#utils/misc";
+import { ISO8601ToUnixMilliseconds } from "#utils/time";
 import { ExpectedErr } from "bliss";
 import { sql } from "kysely";
 

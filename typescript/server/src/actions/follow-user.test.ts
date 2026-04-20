@@ -1,7 +1,7 @@
 import { ServerConfig } from "#lib/setup/config";
 import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { ACTION_FollowUser } from "./follow-user";
 
@@ -23,13 +23,13 @@ describe("ACTION_FollowUser", () => {
 	it("throws when userID is 0 (not a positive integer)", async () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		await expect(ACTION_FollowUser(taker, { userID: 0 })).rejects.toThrow("invalid input");
+		await expect(ACTION_FollowUser(taker, { userID: 0 })).rejects.toMatchObject({ code: 400 });
 	});
 
 	it("throws when userID is negative", async () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		await expect(ACTION_FollowUser(taker, { userID: -1 })).rejects.toThrow("invalid input");
+		await expect(ACTION_FollowUser(taker, { userID: -1 })).rejects.toMatchObject({ code: 400 });
 	});
 
 	// ── Self-follow guard ─────────────────────────────────────────────────────

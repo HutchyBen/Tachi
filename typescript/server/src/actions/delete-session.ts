@@ -1,8 +1,8 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import { LoadSessionDocumentById } from "#lib/db-formats/session.js";
-import { DeleteMultipleScores } from "#lib/score-mutation/delete-scores.js";
-import { GetScoresFromSession } from "#utils/session.js";
-import { IsUserAdmin } from "#utils/user.js";
+import { MakeAction } from "#lib/actions/actions";
+import { LoadSessionDocumentById } from "#lib/db-formats/session";
+import { DeleteMultipleScores } from "#lib/score-mutation/delete-scores";
+import { GetScoresFromSession } from "#utils/session";
+import { IsUserAdmin } from "#utils/user";
 import { ExpectedErr } from "bliss";
 
 export const ACTION_DeleteSession = MakeAction("DELETE_SESSION", async (taker, { id }) => {

@@ -1,22 +1,21 @@
-import type { MONGO_ChartDocument } from "tachi-common";
+import type { DryScore } from "#lib/score-import/framework/common/types";
+import type { ChartDocument, GamesForGroup } from "tachi-common";
 import type { GetEnumValue } from "tachi-common/types/metrics";
-
-import { FindChartWithPTDFVersion } from "#utils/queries/charts";
-import { FindSongOnTitle } from "#utils/queries/songs";
-
-import type { DryScore } from "../../../framework/common/types";
-import type { ConverterFunction } from "../types";
-import type { IIDXEamusementCSVContext, IIDXEamusementCSVData } from "./types";
 
 import {
 	InvalidScoreFailure,
 	SkipScoreFailure,
 	SongOrChartNotFoundFailure,
-} from "../../../framework/common/converter-failures";
-import { ParseDateFromString } from "../../../framework/common/score-utils";
-import { AssertStrAsPositiveInt } from "../../../framework/common/string-asserts";
+} from "#lib/score-import/framework/common/converter-failures";
+import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
+import { AssertStrAsPositiveInt } from "#lib/score-import/framework/common/string-asserts";
+import { FindChartWithSongDifficultyVersion } from "#utils/queries/charts";
+import { FindSongOnTitle } from "#utils/queries/songs";
 
-const EAMUSEMENT_LAMP_RESOLVER: Map<string, GetEnumValue<"iidx:DP" | "iidx:SP", "lamp">> = new Map([
+import type { ConverterFunction } from "../types";
+import type { IIDXEamusementCSVContext, IIDXEamusementCSVData } from "./types";
+
+const EAMUSEMENT_LAMP_RESOLVER: Map<string, GetEnumValue<GamesForGroup["iidx"], "lamp">> = new Map([
 	["ASSIST CLEAR", "ASSIST CLEAR"],
 	["CLEAR", "CLEAR"],
 	["EASY CLEAR", "EASY CLEAR"],
@@ -77,13 +76,18 @@ const ConvertEamIIDXCSV: ConverterFunction<
 		eamScore.difficulty = "LEGGENDARIA";
 	}
 
-	const tachiChart = (await FindChartWithPTDFVersion(
-		"iidx",
+	const game = context.playtype === "SP" ? "iidx-sp" : "iidx-dp";
+
+	if (eamScore.difficulty === "BEGINNER") {
+		throw new SkipScoreFailure("BEGINNER charts are not supported.");
+	}
+
+	const tachiChart = (await FindChartWithSongDifficultyVersion(
+		game,
 		tachiSong.id,
-		context.playtype,
 		eamScore.difficulty,
 		context.importVersion,
-	)) as MONGO_ChartDocument<"iidx:DP" | "iidx:SP"> | null;
+	)) as ChartDocument<GamesForGroup["iidx"]> | null;
 
 	if (!tachiChart) {
 		throw new SongOrChartNotFoundFailure(
@@ -134,10 +138,10 @@ const ConvertEamIIDXCSV: ConverterFunction<
 
 	const timestamp = ParseDateFromString(data.timestamp);
 
-	const dryScore: DryScore<"iidx:DP" | "iidx:SP"> = {
+	const dryScore: DryScore<typeof game> = {
 		service: context.service,
 		comment: null,
-		game: "iidx",
+		game,
 		importType,
 		scoreData: {
 			score: exscore,

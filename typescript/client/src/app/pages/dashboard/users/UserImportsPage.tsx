@@ -10,13 +10,9 @@ import SelectLinkButton from "#components/util/SelectLinkButton";
 import { type FailedImportDataset, type ImportDataset } from "#types/tables";
 import React, { useMemo, useState } from "react";
 import { Route, Switch } from "react-router-dom";
-import {
-	type ImportTrackerFailed,
-	type MONGO_ImportDocument,
-	type MONGO_UserDocument,
-} from "tachi-common";
+import { type ImportDocument, type ImportTrackerFailed, type UserDocument } from "tachi-common";
 
-export default function UserImportsPage({ reqUser }: { reqUser: MONGO_UserDocument }) {
+export default function UserImportsPage({ reqUser }: { reqUser: UserDocument }) {
 	useSetSubheader(
 		["Users", reqUser.username, "Imports"],
 		[reqUser],
@@ -73,9 +69,9 @@ function ViewRecentImports({
 	reqUser,
 }: {
 	params: URLSearchParams;
-	reqUser: MONGO_UserDocument;
+	reqUser: UserDocument;
 }) {
-	const { data, error } = useApiQuery<Array<MONGO_ImportDocument>>(
+	const { data, error } = useApiQuery<Array<ImportDocument>>(
 		`/users/${reqUser.id}/imports?${params.toString()}`,
 	);
 
@@ -102,7 +98,7 @@ function ViewRecentFailedImports({
 	reqUser,
 }: {
 	params: URLSearchParams;
-	reqUser: MONGO_UserDocument;
+	reqUser: UserDocument;
 }) {
 	const { data, error } = useApiQuery<Array<ImportTrackerFailed>>(
 		`/users/${reqUser.id}/imports/failed?${params.toString()}`,

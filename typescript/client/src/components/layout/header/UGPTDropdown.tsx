@@ -1,14 +1,8 @@
 import DropdownNavLink from "#components/ui/DropdownNavLink";
 import QuickDropdown from "#components/ui/QuickDropdown";
-import { TachiConfig } from "#lib/config";
 import { type SetState } from "#types/react";
 import React from "react";
-import {
-	FormatGameGroup,
-	GetGameGroupConfig,
-	type MONGO_UserDocument,
-	type MONGO_UserGameStats,
-} from "tachi-common";
+import { ALL_GAMES, FormatGame, type UserDocument, type UserGameStats } from "tachi-common";
 
 export default function UGPTDropdown({
 	user,
@@ -22,37 +16,32 @@ export default function UGPTDropdown({
 	menuClassName?: string;
 	setState?: SetState<boolean>;
 	style?: React.CSSProperties;
-	ugs: MONGO_UserGameStats[];
-	user: MONGO_UserDocument;
+	ugs: UserGameStats[];
+	user: UserDocument;
 }) {
 	const userProfileLinks = [];
 
 	if (user && ugs && ugs.length !== 0) {
-		const ugsMap = new Map();
-		for (const s of ugs) {
-			ugsMap.set(`${s.game}:${s.playtype}`, s);
-		}
+		const ugsMap = new Map(ugs.map((s) => [s.game, s] as const));
 
-		for (const game of TachiConfig.GAMES) {
-			for (const playtype of GetGameGroupConfig(game).playtypes) {
-				const e = ugsMap.get(`${game}:${playtype}`);
+		for (const game of ALL_GAMES) {
+			const e = ugsMap.get(game);
 
-				if (!e) {
-					continue;
-				}
-
-				userProfileLinks.push(
-					<DropdownNavLink
-						key={`${e.game}:${e.playtype}`}
-						onClick={() => {
-							setState?.(false);
-						}}
-						to={`/u/${user.username}/games/${e.game}/${e.playtype}`}
-					>
-						{FormatGameGroup(e.game, e.playtype)}
-					</DropdownNavLink>,
-				);
+			if (!e) {
+				continue;
 			}
+
+			userProfileLinks.push(
+				<DropdownNavLink
+					key={e.game}
+					onClick={() => {
+						setState?.(false);
+					}}
+					to={`/u/${user.username}/games/${e.game}`}
+				>
+					{FormatGame(e.game)}
+				</DropdownNavLink>,
+			);
 		}
 	}
 

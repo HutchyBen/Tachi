@@ -3,7 +3,6 @@ import GPTChartsPage from "#app/pages/dashboard/games/_game/_playtype/GPTChartsP
 import GPTDevInfo from "#app/pages/dashboard/games/_game/_playtype/GPTDevInfo";
 import GPTLeaderboardsPage from "#app/pages/dashboard/games/_game/_playtype/GPTLeaderboardsPage";
 import GPTMainPage from "#app/pages/dashboard/games/_game/_playtype/GPTMainPage";
-import PlaytypeSelect from "#app/pages/dashboard/games/_game/PlaytypeSelect";
 import { ErrorPage } from "#app/pages/ErrorPage";
 import ChartInfoFormat from "#components/game/charts/ChartInfoFormat";
 import { GPTBottomNav } from "#components/game/GPTHeader";
@@ -28,7 +27,7 @@ import { GPT_CLIENT_IMPLEMENTATIONS } from "#lib/game-implementations";
 import { type SongsReturn } from "#types/api-returns";
 import { type GamePT, type SetState } from "#types/react";
 import { ToCDNURL } from "#util/api";
-import { IsSupportedGame, IsSupportedPlaytype } from "#util/asserts";
+import { IsSupportedGame } from "#util/asserts";
 import { ChangeOpacity } from "#util/color-opacity";
 import { CreateChartLink } from "#util/data";
 import { SelectRightChart } from "#util/misc";
@@ -37,109 +36,97 @@ import React, { useContext, useEffect, useState } from "react";
 import { Col, Row } from "react-bootstrap";
 import { Redirect, Route, Switch, useParams } from "react-router-dom";
 import {
+	type ChartDocument,
 	COLOUR_SET,
 	FormatDifficulty,
-	type GameGroup,
-	GetGameGroupConfig,
-	GetGamePTConfig,
-	GetGPTString,
-	type MONGO_ChartDocument,
-	type MONGO_SongDocument,
+	type GamesForGroup,
+	GameToGameGroup,
+	GetGameConfig,
+	type SongDocument,
+	type V3Game,
 } from "tachi-common";
 import { type FixedDifficulties } from "tachi-common/types/game-config-utils";
 
 export default function GameRoutes() {
-	const { game } = useParams<{ game: string }>();
+	const { game: gameParam } = useParams<{ game: string }>();
 	const { setBackground } = useContext(BackgroundContext);
 
 	useEffect(() => {
-		setBackground(ToCDNURL(`/game-banners/${game}`));
-	}, [game, setBackground]);
+		setBackground(ToCDNURL(`/game-banners/${gameParam}`));
+	}, [gameParam, setBackground]);
 
-	if (!IsSupportedGame(game)) {
-		return <ErrorPage customMessage={`The game ${game} is not supported.`} statusCode={404} />;
-	}
-
-	const gameConfig = GetGameGroupConfig(game);
-
+	// Support legacy URLs like /games/iidx/SP → redirect to /games/iidx-sp
 	return (
 		<Switch>
-			<Route exact path="/games/:game">
-				{gameConfig.playtypes.length === 1 ? (
-					<Redirect to={`/games/${game}/${gameConfig.playtypes[0]}`} />
-				) : (
-					<PlaytypeSelect
-						base={`/games/${game}`}
-						game={game}
-						subheaderCrumbs={["Games", gameConfig.name]}
-						subheaderTitle={`${gameConfig.name} Playtype Select`}
-					/>
-				)}
-			</Route>
-
-			<Route path="/games/:game/:playtype">
-				<UGPTContextProvider>
-					<TargetsContextProvider>
-						<GamePlaytypeRoutes game={game} />
-					</TargetsContextProvider>
-				</UGPTContextProvider>
-			</Route>
-
-			<Route path="*">
-				<ErrorPage statusCode={404} />
+			<Route path="/games/:game">
+				<V3GameRoutes />
 			</Route>
 		</Switch>
 	);
 }
 
-function GamePlaytypeRoutes({ game }: { game: GameGroup }) {
-	const { playtype } = useParams<{ playtype: string }>();
+function V3GameRoutes() {
+	const { game: gameParam } = useParams<{ game: string }>();
+	const { setBackground } = useContext(BackgroundContext);
 
-	if (!IsSupportedPlaytype(game, playtype)) {
+	useEffect(() => {
+		setBackground(ToCDNURL(`/game-banners/${gameParam}`));
+	}, [gameParam, setBackground]);
+
+	if (!IsSupportedGame(gameParam)) {
 		return (
-			<ErrorPage
-				customMessage={`The playtype ${playtype} is not supported.`}
-				statusCode={400}
-			/>
+			<ErrorPage customMessage={`The game ${gameParam} is not supported.`} statusCode={404} />
 		);
 	}
 
+	const game = gameParam;
+
+	return (
+		<UGPTContextProvider>
+			<TargetsContextProvider>
+				<GameV3Routes game={game} />
+			</TargetsContextProvider>
+		</UGPTContextProvider>
+	);
+}
+
+function GameV3Routes({ game }: { game: V3Game }) {
 	return (
 		<>
 			<div className="card">
-				<GPTBottomNav baseUrl={`/games/${game}/${playtype}`} />
+				<GPTBottomNav baseUrl={`/games/${game}`} />
 			</div>
 			<Divider />
 			<Switch>
-				<Route exact path="/games/:game/:playtype">
-					<GPTMainPage game={game} playtype={playtype} />
+				<Route exact path="/games/:game">
+					<GPTMainPage game={game} />
 				</Route>
 
-				<Route exact path="/games/:game/:playtype/songs">
-					<Redirect to={`/games/${game}/${playtype}/charts`} />
+				<Route exact path="/games/:game/songs">
+					<Redirect to={`/games/${game}/charts`} />
 				</Route>
 
-				<Route exact path="/games/:game/:playtype/charts">
-					<GPTChartsPage game={game} playtype={playtype} />
+				<Route exact path="/games/:game/charts">
+					<GPTChartsPage game={game} />
 				</Route>
 
-				<Route path="/games/:game/:playtype/charts/:chartID">
-					<ChartPageRoutes game={game} playtype={playtype} />
+				<Route path="/games/:game/charts/:chartID">
+					<ChartPageRoutes game={game} />
 				</Route>
 
-				<Route path="/games/:game/:playtype/songs/:songID">
-					<SongChartRedirectRoutes game={game} playtype={playtype} />
+				<Route path="/games/:game/songs/:songID">
+					<SongChartRedirectRoutes game={game} />
 				</Route>
 
-				<Route path="/games/:game/:playtype/(quests|questlines|goals)">
-					<GPTQuestRoutes game={game} playtype={playtype} />
+				<Route path="/games/:game/(quests|questlines|goals)">
+					<GPTQuestRoutes game={game} />
 				</Route>
 
-				<Route exact path="/games/:game/:playtype/leaderboards">
-					<GPTLeaderboardsPage game={game} playtype={playtype} />
+				<Route exact path="/games/:game/leaderboards">
+					<GPTLeaderboardsPage game={game} />
 				</Route>
-				<Route exact path="/games/:game/:playtype/dev-info">
-					<GPTDevInfo game={game} playtype={playtype} />
+				<Route exact path="/games/:game/dev-info">
+					<GPTDevInfo game={game} />
 				</Route>
 
 				<Route path="*">
@@ -150,46 +137,46 @@ function GamePlaytypeRoutes({ game }: { game: GameGroup }) {
 	);
 }
 
-function GPTQuestRoutes({ game, playtype }: GamePT) {
+function GPTQuestRoutes({ game }: GamePT) {
 	return (
 		<>
 			<Switch>
-				<Route exact path="/games/:game/:playtype/quests">
-					<QuestsPage game={game} playtype={playtype} />
+				<Route exact path="/games/:game/quests">
+					<QuestsPage game={game} />
 				</Route>
 
-				<Route exact path="/games/:game/:playtype/questlines">
-					<Redirect to={`/games/${game}/${playtype}/quests`} />
+				<Route exact path="/games/:game/questlines">
+					<Redirect to={`/games/${game}/quests`} />
 				</Route>
 
-				<Route exact path="/games/:game/:playtype/questlines/:questlineID">
-					<QuestlinePage game={game} playtype={playtype} />
+				<Route exact path="/games/:game/questlines/:questlineID">
+					<QuestlinePage game={game} />
 				</Route>
 
-				<Route exact path="/games/:game/:playtype/quests/:questID">
-					<QuestPage game={game} playtype={playtype} />
+				<Route exact path="/games/:game/quests/:questID">
+					<QuestPage game={game} />
 				</Route>
 
-				<Route exact path="/games/:game/:playtype/goals">
-					<Redirect to={`/games/${game}/${playtype}/quests`} />
+				<Route exact path="/games/:game/goals">
+					<Redirect to={`/games/${game}/quests`} />
 				</Route>
 			</Switch>
 		</>
 	);
 }
 
-function ChartPageRoutes({ game, playtype }: GamePT) {
+function ChartPageRoutes({ game }: GamePT) {
 	const { chartID } = useParams<{ chartID: string }>();
 
 	const { data: singleData, error: chartErr } = useApiQuery<{
-		chart: MONGO_ChartDocument;
-		song: MONGO_SongDocument;
-	}>(`/games/${game}/${playtype}/charts/${chartID}`);
+		chart: ChartDocument;
+		song: SongDocument;
+	}>(`/games/${game}/charts/${chartID}`);
 
 	const songLegacyId = singleData?.song.id;
 
 	const { data: songsData, error: songsErr } = useApiQuery<SongsReturn>(
-		songLegacyId !== undefined ? `/games/${game}/${playtype}/songs/${songLegacyId}` : "",
+		songLegacyId !== undefined ? `/games/${game}/songs/${songLegacyId}` : "",
 		undefined,
 		undefined,
 		songLegacyId === undefined,
@@ -197,7 +184,7 @@ function ChartPageRoutes({ game, playtype }: GamePT) {
 
 	const { settings } = useContext(UserSettingsContext);
 
-	const [activeChart, setActiveChart] = useState<MONGO_ChartDocument | null>(null);
+	const [activeChart, setActiveChart] = useState<ChartDocument | null>(null);
 
 	useEffect(() => {
 		const c = songsData?.charts.find((x) => x.chartID === chartID);
@@ -216,10 +203,7 @@ function ChartPageRoutes({ game, playtype }: GamePT) {
 
 	if (songsData.charts.length === 0) {
 		return (
-			<ErrorPage
-				customMessage={"This song has no charts for this playtype."}
-				statusCode={404}
-			/>
+			<ErrorPage customMessage={"This song has no charts for this game."} statusCode={404} />
 		);
 	}
 
@@ -227,18 +211,12 @@ function ChartPageRoutes({ game, playtype }: GamePT) {
 		<>
 			<SongInfoHeader
 				game={game}
-				playtype={playtype}
 				{...songsData}
 				activeChart={activeChart}
 				setActiveChart={setActiveChart}
 			/>
 			<Divider />
-			<GPTChartPage
-				chart={activeChart}
-				game={game}
-				playtype={playtype}
-				song={songsData.song}
-			/>
+			<GPTChartPage chart={activeChart} game={game} song={songsData.song} />
 			{settings?.preferences.developerMode && (
 				<>
 					<Divider />
@@ -251,10 +229,10 @@ function ChartPageRoutes({ game, playtype }: GamePT) {
 	);
 }
 
-function SongChartRedirectRoutes({ game, playtype }: GamePT) {
+function SongChartRedirectRoutes({ game }: GamePT) {
 	const { songID } = useParams<{ songID: string }>();
 
-	const { data, error } = useApiQuery<SongsReturn>(`/games/${game}/${playtype}/songs/${songID}`);
+	const { data, error } = useApiQuery<SongsReturn>(`/games/${game}/songs/${songID}`);
 
 	if (error) {
 		return <ErrorPage customMessage={error.description} statusCode={error.statusCode} />;
@@ -266,14 +244,11 @@ function SongChartRedirectRoutes({ game, playtype }: GamePT) {
 
 	if (data.charts.length === 0) {
 		return (
-			<ErrorPage
-				customMessage={"This song has no charts for this playtype."}
-				statusCode={404}
-			/>
+			<ErrorPage customMessage={"This song has no charts for this game."} statusCode={404} />
 		);
 	}
 
-	if (data.charts.every((c) => c.playtype !== playtype)) {
+	if (data.charts.every((c) => c.game !== game)) {
 		const c = data.charts[0];
 
 		if (!c.chartID) {
@@ -285,17 +260,17 @@ function SongChartRedirectRoutes({ game, playtype }: GamePT) {
 			);
 		}
 
-		return <Redirect to={`/games/${game}/${c.playtype}/charts/${c.chartID}`} />;
+		return <Redirect to={`/games/${c.game}/charts/${c.chartID}`} />;
 	}
 
 	return (
 		<Switch>
-			<Route exact path="/games/:game/:playtype/songs/:songID">
-				<SongSongIdOnlyRedirect charts={data.charts} game={game} playtype={playtype} />
+			<Route exact path="/games/:game/songs/:songID">
+				<SongSongIdOnlyRedirect charts={data.charts} game={game} />
 			</Route>
 
-			<Route path="/games/:game/:playtype/songs/:songID/:difficulty">
-				<SongDifficultyRedirect data={data} game={game} playtype={playtype} />
+			<Route path="/games/:game/songs/:songID/:difficulty">
+				<SongDifficultyRedirect data={data} game={game} />
 			</Route>
 
 			<Route path="*">
@@ -305,11 +280,7 @@ function SongChartRedirectRoutes({ game, playtype }: GamePT) {
 	);
 }
 
-function SongSongIdOnlyRedirect({
-	charts,
-	game,
-	playtype,
-}: { charts: MONGO_ChartDocument[] } & GamePT) {
+function SongSongIdOnlyRedirect({ charts, game }: { charts: ChartDocument[] } & GamePT) {
 	const hardest = charts.slice(0).sort(NumericSOV((x) => x.levelNum, true))[0];
 
 	if (!hardest.chartID) {
@@ -321,52 +292,53 @@ function SongSongIdOnlyRedirect({
 		);
 	}
 
-	return <Redirect to={`/games/${game}/${playtype}/charts/${hardest.chartID}`} />;
+	return <Redirect to={`/games/${game}/charts/${hardest.chartID}`} />;
 }
 
-function SongDifficultyRedirect({ data, game, playtype }: { data: SongsReturn } & GamePT) {
+function SongDifficultyRedirect({ data, game }: { data: SongsReturn } & GamePT) {
 	const { difficulty: d } = useParams<{ difficulty: string }>();
 	const difficulty = decodeURIComponent(d);
 
-	const gptConfig = GetGamePTConfig(game, playtype);
-	const chart = SelectRightChart(gptConfig, difficulty, data.charts);
+	const gameConfig = GetGameConfig(game);
+	const chart = SelectRightChart(gameConfig, difficulty, data.charts);
 
 	if (!chart?.chartID) {
 		return <ErrorPage customMessage={"Could not resolve this chart."} statusCode={404} />;
 	}
 
-	return <Redirect to={`/games/${game}/${chart.playtype}/charts/${chart.chartID}`} />;
+	return <Redirect to={`/games/${chart.game}/charts/${chart.chartID}`} />;
 }
 
 function SongInfoHeader({
 	game,
-	playtype,
 	song,
 	charts,
 	activeChart,
 	setActiveChart,
 }: {
-	activeChart: MONGO_ChartDocument | null;
-	setActiveChart: SetState<MONGO_ChartDocument | null>;
+	activeChart: ChartDocument | null;
+	setActiveChart: SetState<ChartDocument | null>;
 } & GamePT &
 	SongsReturn) {
-	const gptConfig = GetGamePTConfig(game, playtype);
+	const gameConfig = GetGameConfig(game);
 
 	const sortedCharts = charts.slice(0).sort(
-		gptConfig.difficulties.type === "DYNAMIC"
+		gameConfig.difficulties.type === "DYNAMIC"
 			? StrSOV((x) => x.difficulty)
 			: NumericSOV((x) =>
 					// can TS *really* not infer this?
-					(gptConfig.difficulties as FixedDifficulties<string>).order.indexOf(
+					(gameConfig.difficulties as FixedDifficulties<string>).order.indexOf(
 						x.difficulty,
 					),
 				),
 	);
 
+	const gameGroup = GameToGameGroup(game);
+
 	return (
 		<Card header="Song Info">
 			<Row className="align-items-center justify-content-evenly">
-				{game !== "bms" && game !== "pms" && (
+				{gameGroup !== "bms" && gameGroup !== "pms" && (
 					<Col className="text-center" lg={3} xs={12}>
 						{/* empty padding :) */}
 					</Col>
@@ -374,7 +346,7 @@ function SongInfoHeader({
 				<Col className="text-center" lg={4} xs={12}>
 					<SongChartInfoFormat {...{ game, song, chart: activeChart }} />
 				</Col>
-				{game !== "bms" && game !== "pms" && (
+				{gameGroup !== "bms" && gameGroup !== "pms" && (
 					<Col className="text-center" lg={3} xs={12}>
 						<h5>Charts</h5>
 						<hr />
@@ -382,13 +354,12 @@ function SongInfoHeader({
 							className="btn-group-vertical d-flex justify-content-center"
 							role="group"
 						>
-							{game === "iidx" ? (
+							{gameGroup === "iidx" ? (
 								<IIDXDifficultyList
 									{...{
 										activeChart,
 										charts: sortedCharts,
 										game,
-										playtype,
 										setActiveChart,
 										song,
 									}}
@@ -399,7 +370,6 @@ function SongInfoHeader({
 										activeChart,
 										charts: sortedCharts,
 										game,
-										playtype,
 										setActiveChart,
 										song,
 									}}
@@ -411,12 +381,7 @@ function SongInfoHeader({
 				{activeChart && (
 					<Col xs={12}>
 						<hr />
-						<ChartInfoFormat
-							chart={activeChart}
-							game={game}
-							playtype={playtype}
-							song={song}
-						/>
+						<ChartInfoFormat chart={activeChart} game={game} song={song} />
 					</Col>
 				)}
 			</Row>
@@ -425,9 +390,9 @@ function SongInfoHeader({
 }
 
 type Props = {
-	activeChart: MONGO_ChartDocument | null;
-	setActiveChart: SetState<MONGO_ChartDocument | null>;
-} & { song: MONGO_SongDocument } & GamePT;
+	activeChart: ChartDocument | null;
+	setActiveChart: SetState<ChartDocument | null>;
+} & { song: SongDocument } & GamePT;
 
 const ITG_COLOUR_LOOKUP = {
 	Beginner: COLOUR_SET.paleBlue,
@@ -441,13 +406,13 @@ const ITG_COLOUR_LOOKUP = {
 function DifficultyButton({
 	chart,
 	game,
-	playtype,
 	setActiveChart,
 	activeChart,
-}: { chart: MONGO_ChartDocument } & Props) {
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[GetGPTString(game, playtype)];
+}: { chart: ChartDocument } & Props) {
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
 	const diffTag = chart.difficulty;
+	const gameGroup = GameToGameGroup(game);
 
 	return (
 		<LinkButton
@@ -462,7 +427,7 @@ function DifficultyButton({
 							gptImpl.difficultyColours[diffTag],
 							activeChart?.chartID === chart.chartID ? 0.4 : 0.2,
 						)
-					: game === "itg"
+					: gameGroup === "itg"
 						? ChangeOpacity(
 								// @ts-expect-error hack!
 								ITG_COLOUR_LOOKUP[chart.data.difficultyTag],
@@ -470,19 +435,19 @@ function DifficultyButton({
 							)
 						: undefined,
 			}}
-			to={CreateChartLink(chart, game)}
+			to={CreateChartLink(chart)}
 			variant="secondary"
 		>
 			<div
 				className={activeChart?.chartID === chart.chartID ? "fw-bolder" : ""}
 				style={{
 					color:
-						game === "ongeki" && diffTag === "LUNATIC"
+						gameGroup === "ongeki" && diffTag === "LUNATIC"
 							? "light-dark(rgba(140, 30, 40, 1), rgba(255, 180, 180, 1))"
 							: undefined,
 				}}
 			>
-				{FormatDifficulty(chart, game)}
+				{FormatDifficulty(chart)}
 				{chart.isPrimary ? (
 					""
 				) : (
@@ -502,9 +467,8 @@ function DifficultyList({
 	activeChart,
 	setActiveChart,
 	game,
-	playtype,
 }: {
-	charts: MONGO_ChartDocument[];
+	charts: ChartDocument[];
 } & Props) {
 	return (
 		<>
@@ -514,7 +478,6 @@ function DifficultyList({
 					chart={e}
 					game={game}
 					key={e.chartID}
-					playtype={playtype}
 					setActiveChart={setActiveChart}
 					song={song}
 				/>
@@ -533,16 +496,15 @@ function IIDXDifficultyList({
 	activeChart,
 	setActiveChart,
 	game,
-	playtype,
 }: {
-	charts: MONGO_ChartDocument[];
+	charts: ChartDocument[];
 } & Props) {
-	const { settings } = useLUGPTSettings<"iidx:DP" | "iidx:SP">();
+	const { settings } = useLUGPTSettings<GamesForGroup["iidx"]>();
 
 	const [set, setSet] = useState<"All Scratch" | "Kichiku" | "Kiraku" | null>(null);
 
 	if (
-		!(activeChart as MONGO_ChartDocument<"iidx:DP" | "iidx:SP">)?.data["2dxtraSet"] &&
+		!(activeChart as ChartDocument<GamesForGroup["iidx"]>)?.data["2dxtraSet"] &&
 		!settings?.preferences.gameSpecific.display2DXTra
 	) {
 		return (
@@ -550,14 +512,12 @@ function IIDXDifficultyList({
 				{...{
 					charts: charts.filter(
 						// @ts-expect-error hack
-						(e: MONGO_ChartDocument<"iidx:DP" | "iidx:SP">) =>
-							e.data["2dxtraSet"] === null,
+						(e: ChartDocument<GamesForGroup["iidx"]>) => e.data["2dxtraSet"] === null,
 					),
 					song,
 					activeChart,
 					setActiveChart,
 					game,
-					playtype,
 				}}
 			/>
 		);
@@ -583,14 +543,13 @@ function IIDXDifficultyList({
 				{...{
 					charts: charts.filter(
 						// @ts-expect-error hack
-						(e: MONGO_ChartDocument<"iidx:DP" | "iidx:SP">) =>
+						(e: ChartDocument<GamesForGroup["iidx"]>) =>
 							set ? e.difficulty.startsWith(set) : e.data["2dxtraSet"] === null,
 					),
 					song,
 					activeChart,
 					setActiveChart,
 					game,
-					playtype,
 				}}
 			/>
 		</>

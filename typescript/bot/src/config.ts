@@ -1,4 +1,4 @@
-import type { GameGroup, integer, TachiServerCoreConfig } from "tachi-common";
+import type { GameGroup, integer, TachiServerCoreConfig, V3Game } from "tachi-common";
 
 import { log } from "bliss/log";
 import { config } from "dotenv";
@@ -49,7 +49,7 @@ export interface ProcessEnvironment {
 	OAUTH_CLIENT_SECRET: string;
 	DISCORD_TOKEN: string;
 	DISCORD_SERVER_ID: string;
-	DISCORD_GAME_CHANNELS: Partial<Record<GameGroup, string>>;
+	DISCORD_GAME_CHANNELS: Partial<Record<V3Game, string>>;
 	DISCORD_ADMIN_USERS: string[];
 	DISCORD_APPROVED_ROLE: string | undefined;
 	DISCORD_LIMBO_CHANNEL: string | undefined;
@@ -135,7 +135,7 @@ export const ServerConfig = await GetServerConfig();
 
 // General warnings for config misuse.
 // This warns people if their parent server supports games that they aren't acknowledging.
-for (const game of ServerConfig.GAMES) {
+for (const game of ServerConfig.GAME_GROUPS) {
 	if (!Object.prototype.hasOwnProperty.call(Env.DISCORD_GAME_CHANNELS, game)) {
 		log.warn(
 			`${ServerConfig.NAME} declares support for ${game}, but no channel is mapped to it. Set DISCORD_GAME_CHANNELS to include it.`,

@@ -1,4 +1,4 @@
-import type { integer, Versions } from "tachi-common";
+import type { GamesForGroup, integer, Versions } from "tachi-common";
 
 export interface BarbatosScore {
 	difficulty: 0 | 1 | 2 | 3 | 4;
@@ -52,5 +52,5 @@ export interface BarbatosSDVX6Score {
 
 export interface BarbatosContext {
 	timeReceived: number;
-	version: Versions["sdvx:Single"];
+	version: Versions[GamesForGroup["sdvx"]];
 }

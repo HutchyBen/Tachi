@@ -2,7 +2,7 @@ import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { describe, expect, it } from "vitest";
 
-import { SearchSessionsForUserGptFtsAndTrgm } from "./session-search.js";
+import { SearchSessionsForUserGptFtsAndTrgm } from "./session-search";
 
 describe("SearchSessionsForUserGptFtsAndTrgm", () => {
 	it("returns [] for empty or whitespace query", async () => {

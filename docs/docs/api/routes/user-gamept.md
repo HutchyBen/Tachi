@@ -8,7 +8,7 @@ This scenario appears frequently, and is typically shortened to UGPT.
 
 ## Get information about a user's plays on a game + playtype.
 
-`GET /api/v1/users/:userID/games/:game/:playtype`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype`
 
 ### Parameters
 
@@ -71,7 +71,7 @@ GET /api/v1/users/zkldi/games/iidx/SP
 
 ## Search a user's personal bests.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/pbs`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/pbs`
 
 ### Parameters
 
@@ -125,7 +125,7 @@ GET /api/v1/users/zkldimes/iidx/SP/pbs?search=Verfl
 
 ## Get a user's best 100 personal bests.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/pbs/best`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/pbs/best`
 
 This returns the users' best 100 personal bests according
 to the [Default Rating Algorithm](../../codebase/implementation-details/game-configuration) for this game.
@@ -204,7 +204,7 @@ GET /api/v1/users/zkldimes/iidx/SP/pbs/best?alg=BPI
 
 ## Returns all of a users personal bests.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/pbs/all`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/pbs/all`
 
 ### Parameters
 
@@ -258,7 +258,7 @@ GET /api/v1/users/zkldimes/iidx/SP/pbs/all
 
 ## Get A User's PB for a given chart.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/pbs/:chartID`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/pbs/:chartID`
 
 ### Parameters
 
@@ -302,7 +302,7 @@ GET /api/v1/users/1/games/iidx/SP/pbs/some_chart_id
 
 ## Search a user's individual scores.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/scores`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/scores`
 
 ### Parameters
 
@@ -365,7 +365,7 @@ GET /api/v1/users/zkldimes/iidx/SP/scores?search=Verfl
 
 ## Get a user's most recent 100 scores.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/scores/recent`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/scores/recent`
 
 ### Parameters
 
@@ -419,7 +419,7 @@ GET /api/v1/users/zkldimes/iidx/SP/scores/recent
 
 ## Search a user's sessions.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/sessions`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/sessions`
 
 Searches the names of sessions from a given user. This
 does not search session descriptions, nor does it search
@@ -461,7 +461,7 @@ GET /api/v1/users/zkldimes/iidx/SP/sessions?search=epic%20session
 
 ## Get a user's best 100 sessions.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/sessions/best`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/sessions/best`
 
 Retrieves a user's best 100 sessions according to the
 game + playtypes default algorithm. The algorithm can
@@ -520,7 +520,7 @@ The default rating algorithm for IIDX:SP is `ktRating`.
 
 ## Get a user's most recent 100 sessions.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/sessions/recent`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/sessions/recent`
 
 Retrieves a user's most recent 100 sessions for this game.
 
@@ -540,7 +540,7 @@ None.
 
 ## Get a user's most recent session.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/sessions/last`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/sessions/last`
 
 !!! info
 This endpoint will return 404 if the user has never had a
@@ -576,7 +576,7 @@ GET /api/v1/users/zkldimes/iidx/SP/sessions/last
 
 ## Get a user's most recent 100 highlighted sessions.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/sessions/highlighted`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/sessions/highlighted`
 
 Retrieves a user's most recent 100 highlighted sessions for this game.
 
@@ -622,7 +622,7 @@ GET /api/v1/users/zkldimes/iidx/SP/sessions/highlighted
 
 ## Get a user's most played charts.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/most-played`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/most-played`
 
 ### Parameters
 
@@ -689,7 +689,7 @@ GET /api/v1/users/zkldimes/iidx/SP/most-played
 
 ## Retrieve a leaderboard around a user.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/leaderboard-adjacent`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/leaderboard-adjacent`
 
 ### Parameters
 
@@ -768,7 +768,7 @@ GET /api/v1/users/zkldimes/iidx/SP/leaderboard-adjacent
 
 ## Retrieve this user's GPT stat history.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/history`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/history`
 
 Every day, a user's game stats are snapshotted and saved. This returns the recent ones.
 
@@ -815,7 +815,7 @@ GET /api/v1/users/1/games/iidx/SP/history
 
 ## Retrieve this user's GPT settings.
 
-`GET /api/v1/users/:userID/games/:game/:playtype/settings`
+`GET /api/v1/users/:userID/games/:gameGroup/:playtype/settings`
 
 !!! warning
 Unlike most other applications, your settings are completely public. GPT Settings only concern
@@ -854,7 +854,7 @@ GET /api/v1/users/1/games/iidx/SP/settings
 
 ## Modify your UGPT settings.
 
-`PATCH /api/v1/users/:userID/games/:game/:playtype/settings`
+`PATCH /api/v1/users/:userID/games/:gameGroup/:playtype/settings`
 
 !!! note
 Although `stats` are part of your settings, they are not modifiable under these endpoints,

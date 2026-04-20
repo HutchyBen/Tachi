@@ -1,7 +1,7 @@
-import { MakeAction } from "#lib/actions/actions.js";
-import { rebuildFolderChartLookup } from "#lib/folders/rebuild-folder-chart-lookup.js";
-import DB from "#services/pg/db.js";
-import { IsUserAdmin } from "#utils/user.js";
+import { MakeAction } from "#lib/actions/actions";
+import { rebuildFolderChartLookup } from "#lib/folders/rebuild-folder-chart-lookup";
+import DB from "#services/pg/db";
+import { IsUserAdmin } from "#utils/user";
 import { ExpectedErr } from "bliss";
 
 export const ACTION_RebuildFolderChartLookup = MakeAction(

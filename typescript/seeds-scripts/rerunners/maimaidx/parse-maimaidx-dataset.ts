@@ -1,5 +1,5 @@
 import { log } from "#log";
-import { type Difficulties, type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
+import { type ChartDocument, type Difficulties, type SongDocument } from "tachi-common";
 
 import {
 	CreateChartID,
@@ -71,19 +71,18 @@ const VERSION_MAP = new Map([
 ]);
 const CURRENT_VERSION_NUM = 250;
 const CURRENT_VERSION = "prism";
-const DIFFICULTY_TO_TACHI_DIFFICULTY: Record<MaimaiDXDifficulty, Difficulties["maimaidx:Single"]> =
-	{
-		lev_bas: "Basic",
-		lev_adv: "Advanced",
-		lev_exp: "Expert",
-		lev_mas: "Master",
-		lev_remas: "Re:Master",
-		dx_lev_bas: "DX Basic",
-		dx_lev_adv: "DX Advanced",
-		dx_lev_exp: "DX Expert",
-		dx_lev_mas: "DX Master",
-		dx_lev_remas: "DX Re:Master",
-	} as const;
+const DIFFICULTY_TO_TACHI_DIFFICULTY: Record<MaimaiDXDifficulty, Difficulties["maimaidx"]> = {
+	lev_bas: "Basic",
+	lev_adv: "Advanced",
+	lev_exp: "Expert",
+	lev_mas: "Master",
+	lev_remas: "Re:Master",
+	dx_lev_bas: "DX Basic",
+	dx_lev_adv: "DX Advanced",
+	dx_lev_exp: "DX Expert",
+	dx_lev_mas: "DX Master",
+	dx_lev_remas: "DX Re:Master",
+} as const;
 
 const DX_REGEX = /dx\s*:\s*([01])/u;
 const LV_REGEX = /lv\s*:\s*(\[(?:-?[\d.]+\s*,?\s*)+\])/u;
@@ -151,9 +150,8 @@ async function ParseInternalLevelData(
 }
 
 async function ParseMaimaiDXDataset() {
-	const songs: Array<MONGO_SongDocument<"maimaidx">> = ReadCollection("songs-maimaidx.json");
-	const charts: Array<MONGO_ChartDocument<"maimaidx:Single">> =
-		ReadCollection("charts-maimaidx.json");
+	const songs: Array<SongDocument<"maimaidx">> = ReadCollection("songs-maimaidx.json");
+	const charts: Array<ChartDocument<"maimaidx">> = ReadCollection("charts-maimaidx.json");
 
 	const existingSongMap = new Map(songs.map((s) => [`${s.title}-${s.artist}`, s]));
 	const existingChartMap = new Map(charts.map((c) => [`${c.songID}-${c.difficulty}`, c]));
@@ -206,14 +204,13 @@ async function ParseMaimaiDXDataset() {
 		if (!tachiSongID) {
 			tachiSongID = getFreeSongID();
 
-			const songDoc: MONGO_SongDocument<"maimaidx"> = {
+			const songDoc: SongDocument<"maimaidx"> = {
 				id: tachiSongID,
 				title: data.title.trim(),
 				artist: data.artist.trim(),
 				searchTerms: [],
 				altTitles: [],
 				data: {
-					displayVersion,
 					genre: data.catcode.trim(),
 				},
 			};
@@ -225,7 +222,7 @@ async function ParseMaimaiDXDataset() {
 
 		for (const [key, difficulty] of Object.entries(DIFFICULTY_TO_TACHI_DIFFICULTY) as [
 			MaimaiDXDifficulty,
-			Difficulties["maimaidx:Single"],
+			Difficulties["maimaidx"],
 		][]) {
 			const level = data[key];
 
@@ -276,15 +273,17 @@ async function ParseMaimaiDXDataset() {
 				continue;
 			}
 
-			const chartDoc: MONGO_ChartDocument<"maimaidx:Single"> = {
-				songID: tachiSongID,
+			const chartDoc: ChartDocument<"maimaidx"> = {
+				songID: tachiSongID!,
 				chartID: CreateChartID(),
+				game: "maimaidx",
 				level,
 				levelNum,
 				isPrimary: true,
 				difficulty,
 				playtype: "Single",
 				data: {
+					displayVersion,
 					inGameID: null,
 				},
 				versions: [CURRENT_VERSION],

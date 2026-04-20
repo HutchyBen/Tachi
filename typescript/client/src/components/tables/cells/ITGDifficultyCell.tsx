@@ -3,7 +3,7 @@ import Divider from "#components/util/Divider";
 import Muted from "#components/util/Muted";
 import { ChangeOpacity } from "#util/color-opacity";
 import React from "react";
-import { COLOUR_SET, type MONGO_ChartDocument } from "tachi-common";
+import { type ChartDocument, COLOUR_SET } from "tachi-common";
 
 import MiniTable from "../components/MiniTable";
 
@@ -16,11 +16,7 @@ const COLOUR_LOOKUP = {
 	Edit: COLOUR_SET.gray,
 };
 
-export default function ITGDifficultyCell({
-	chart,
-}: {
-	chart: MONGO_ChartDocument<"itg:Stamina">;
-}) {
+export default function ITGDifficultyCell({ chart }: { chart: ChartDocument<"itg-stamina"> }) {
 	let diff;
 
 	if (chart.data.rankedLevel === null) {

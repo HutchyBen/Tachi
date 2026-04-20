@@ -1,50 +1,45 @@
-import { LoadPbByUserAndChartPgId } from "#lib/db-formats/pb";
+import { GetPBOnChart } from "#lib/db-formats/pb";
 import {
 	CUSTOM_TACHI_BMS_TABLES,
 	HandleBMSTableBodyRequest,
 	HandleBMSTableHeaderRequest,
 	HandleBMSTableHTMLRequest,
+	type TachiBMSTable,
 } from "#lib/game-specific/custom-bms-tables";
-import { ValidatePlaytypeFromParamFor } from "#server/router/api/v1/games/_game/_playtype/middleware";
+import { withGame, withRequestedUserAndReqData } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
 import { FindBMSChartOnHashInGame } from "#utils/queries/charts";
-import { AssignToReqTachiData, GetTachiData, GetUser } from "#utils/req-tachi-data";
-import { type RequestHandler, Router } from "express";
-import { GamePTToV3, type Playtypes } from "tachi-common";
-import { type Game } from "tachi-db";
+import { REQ_GetUser } from "#utils/req-tachi-data";
+import { ExpectedErr } from "bliss";
+import { type GamesForGroup, GameToGameGroup } from "tachi-common";
 
-const router: Router = Router({ mergeParams: true });
-
-const FindCustomBMSTable: RequestHandler = (req, res, next) => {
-	const { playtype, tableUrlName } = req.params;
-
-	// find the table
+function resolveUserCustomBMSTableOrThrow(
+	tableUrlName: string,
+	game: GamesForGroup["bms"],
+): TachiBMSTable {
 	const customTable = CUSTOM_TACHI_BMS_TABLES.find((t) => t.urlName === tableUrlName);
 
 	if (!customTable) {
-		return res.status(404).json({
-			success: false,
-			description: `No such table with the ID '${tableUrlName}' exists.`,
-		});
+		throw new ExpectedErr(404, `No such table with the ID '${tableUrlName}' exists.`);
 	}
 
-	if (customTable.playtype && customTable.playtype !== playtype) {
-		return res.status(404).json({
-			success: false,
-			description: `The table '${tableUrlName}' exists, but is for ${customTable.playtype}, not ${playtype}.`,
-		});
+	if (customTable.game && customTable.game !== game) {
+		throw new ExpectedErr(
+			404,
+			`The table '${tableUrlName}' exists, but is for ${customTable.game}, not ${game}.`,
+		);
 	}
 
 	if (customTable.forSpecificUser !== true) {
-		return res.status(404).json({
-			success: false,
-			description: `The table '${tableUrlName}' exists, but isn't user specific. You should be fetching this table from /api/v1/games instead of /api/v1/users/:userID.`,
-		});
+		throw new ExpectedErr(
+			404,
+			`The table '${tableUrlName}' exists, but isn't user specific. You should be fetching this table from /api/v1/games instead of /api/v1/users/:userID.`,
+		);
 	}
 
-	AssignToReqTachiData(req, { customBMSTable: customTable });
-
-	next();
-};
+	return customTable;
+}
 
 /**
  * Return some HTML for this custom table.
@@ -52,51 +47,66 @@ const FindCustomBMSTable: RequestHandler = (req, res, next) => {
  * @note Since this is the UGPT route, trying to fetch GPT custom tables
  * will result in a 404. This applies for all subsequent :tableUrlName routes.
  *
- * @name GET /api/v1/users/:userID/games/bms/:playtype/custom-tables/:tableUrlName
+ * @name GET /api/v1/users/:userID/games/:game/custom-tables/:tableUrlName
  */
-router.get(
-	"/:playtype/custom-tables/:tableUrlName",
-	ValidatePlaytypeFromParamFor("bms"),
-	FindCustomBMSTable,
-	(req, res) => {
-		const customTable = GetTachiData(req, "customBMSTable");
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/custom-tables/:tableUrlName",
+	withRequestedUserAndReqData,
+	withGame,
+	({ ctx, params, req, res }) => {
+		const game = ctx.game as GamesForGroup["bms"];
 
-		// This handles returning a response for us.
-		return HandleBMSTableHTMLRequest(customTable, req, res);
+		if (GameToGameGroup(game) !== "bms") {
+			throw new ExpectedErr(404, `No custom tables exist for ${game}.`);
+		}
+
+		const customTable = resolveUserCustomBMSTableOrThrow(params.tableUrlName, game);
+		HandleBMSTableHTMLRequest(customTable, req, res);
+		return success("stub", {});
 	},
 );
 
 /**
  * Return the header.json for this custom table.
  *
- * @name GET /api/v1/users/:userID/games/bms/:playtype/custom-tables/:tableUrlName/header.json
+ * @name GET /api/v1/users/:userID/games/:game/custom-tables/:tableUrlName/header.json
  */
-router.get(
-	"/:playtype/custom-tables/:tableUrlName/header.json",
-	ValidatePlaytypeFromParamFor("bms"),
-	FindCustomBMSTable,
-	(req, res) => {
-		const customTable = GetTachiData(req, "customBMSTable");
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/custom-tables/:tableUrlName/header.json",
+	withRequestedUserAndReqData,
+	withGame,
+	async ({ ctx, params, req, res }) => {
+		const game = ctx.game as GamesForGroup["bms"];
 
-		// This handles returning a response for us.
-		return HandleBMSTableHeaderRequest(customTable, req, res);
+		if (GameToGameGroup(game) !== "bms") {
+			throw new ExpectedErr(404, `No custom tables exist for ${game}.`);
+		}
+
+		const customTable = resolveUserCustomBMSTableOrThrow(params.tableUrlName, game);
+		await HandleBMSTableHeaderRequest(customTable, req, res);
+		return success("stub", {});
 	},
 );
 
 /**
  * Return the body.json for this custom table.
  *
- * @name GET /api/v1/users/:userID/games/bms/:playtype/custom-tables/:tableUrlName/body.json
+ * @name GET /api/v1/users/:userID/games/:game/custom-tables/:tableUrlName/body.json
  */
-router.get(
-	"/:playtype/custom-tables/:tableUrlName/body.json",
-	ValidatePlaytypeFromParamFor("bms"),
-	FindCustomBMSTable,
-	(req, res) => {
-		const customTable = GetTachiData(req, "customBMSTable");
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/custom-tables/:tableUrlName/body.json",
+	withRequestedUserAndReqData,
+	withGame,
+	async ({ ctx, params, req, res }) => {
+		const game = ctx.game as GamesForGroup["bms"];
 
-		// This handles returning a response for us.
-		return HandleBMSTableBodyRequest(customTable, req, res);
+		if (GameToGameGroup(game) !== "bms") {
+			throw new ExpectedErr(404, `No custom tables exist for ${game}.`);
+		}
+
+		const customTable = resolveUserCustomBMSTableOrThrow(params.tableUrlName, game);
+		await HandleBMSTableBodyRequest(customTable, req, res);
+		return success("stub", {});
 	},
 );
 
@@ -107,50 +117,48 @@ const SHA256_CHECKSUM_LENGTH = "87428fc522803d31065e7bce3cf03fe475096631e5e07bbd
 /**
  * Get this user's best chart on the given chart MD5 or SHA256.
  *
- * @name GET /api/v1/users/:userID/games/bms/:playtype/best-score/:checksum
+ * @name GET /api/v1/users/:userID/games/:game/best-score/:checksum
  */
-router.get(
-	"/:playtype/best-score/:checksum",
-	ValidatePlaytypeFromParamFor("bms"),
-	async (req, res) => {
-		const user = GetUser(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/best-score/:checksum",
+	withRequestedUserAndReqData,
+	withGame,
+	async ({ ctx, params, req }) => {
+		const user = REQ_GetUser(req);
 
-		if (!req.params.checksum) {
-			return res.status(400).json({ success: false, description: "No checksum provided." });
+		const checksumRaw = params.checksum;
+		if (!checksumRaw) {
+			throw new ExpectedErr(400, "No checksum provided.");
 		}
 
-		const checksum = req.params.checksum.toLowerCase();
+		const checksum = checksumRaw.toLowerCase();
 
 		if (!/^[0-9a-f]+$/u.exec(checksum)) {
-			return res.status(400).json({
-				success: false,
-				description: "Invalid checksum (Was not a MD5 or SHA256 checksum).",
-			});
+			throw new ExpectedErr(400, "Invalid checksum (Was not a MD5 or SHA256 checksum).");
 		}
 
 		if (checksum.length !== MD5_CHECKSUM_LENGTH && checksum.length !== SHA256_CHECKSUM_LENGTH) {
-			return res.status(400).json({
-				success: false,
-				description: "Invalid checksum length (Was not a MD5 or SHA256 checksum).",
-			});
+			throw new ExpectedErr(
+				400,
+				"Invalid checksum length (Was not a MD5 or SHA256 checksum).",
+			);
 		}
 
-		const v3Game = GamePTToV3("bms", req.params.playtype as Playtypes["bms"]) as Game;
+		const v3Game = ctx.game;
+
+		if (GameToGameGroup(v3Game) !== "bms") {
+			throw new ExpectedErr(404, `No BMS charts exist for ${v3Game}.`);
+		}
 
 		const chart = await FindBMSChartOnHashInGame(checksum, v3Game);
 
 		if (!chart) {
-			return res
-				.status(404)
-				.json({ success: false, description: "No chart found with the given checksum." });
+			throw new ExpectedErr(404, "No chart found with the given checksum.");
 		}
 
-		const pb = await LoadPbByUserAndChartPgId(user.id, chart.chartID);
-
+		const pb = await GetPBOnChart(user.id, chart.chartID);
 		const description = pb ? "Best score found." : "Player has not played this chart.";
 
-		return res.status(200).json({ success: true, description, body: pb });
+		return success(description, pb);
 	},
 );
-
-export default router;

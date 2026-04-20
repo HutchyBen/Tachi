@@ -1,38 +1,17 @@
 import type { Game } from "tachi-db";
 
-import { LoadFolderDocumentsByIds } from "#lib/db-formats/folders.js";
-import { SHORT_QUERY_LEN, SHORT_QUERY_STRICT_MAX_LEN } from "#lib/search/songs.js";
+import { LoadFolderDocumentsByIds } from "#lib/db-formats/folders";
+import { SHORT_QUERY_LEN, SHORT_QUERY_STRICT_MAX_LEN } from "#lib/search/songs";
+import { AllEnabledGames } from "#lib/setup/config";
 import DB from "#services/pg/db";
 import { EscapeForILIKE } from "#utils/misc";
 import { sql } from "kysely";
-import {
-	type GameGroup,
-	GamePTToV3,
-	type integer,
-	type MONGO_FolderDocument,
-	type Playtype,
-	v3AllGames,
-	V3ToGamePT,
-} from "tachi-common";
+import { type FolderDocument, type integer, type V3Game } from "tachi-common";
 
 type FolderSearchRow = {
 	id: string;
 	rank: number;
 };
-
-function mongoStyleGamePlaytypeFilterToV3Games(
-	games: GameGroup[],
-	playtypes: Playtype[],
-): Array<Game> {
-	if (games.length === 0 || playtypes.length === 0) {
-		return [];
-	}
-
-	return v3AllGames.filter((v) => {
-		const { game, playtype } = V3ToGamePT(v);
-		return games.includes(game) && playtypes.includes(playtype);
-	}) as Array<Game>;
-}
 
 function gameFilterSql(allowedV3Games: Array<Game> | null) {
 	if (allowedV3Games === null) {
@@ -48,13 +27,13 @@ function gameFilterSql(allowedV3Games: Array<Game> | null) {
 
 async function finalizeFolderSearchRows(
 	rows: Array<FolderSearchRow>,
-): Promise<Array<{ __textScore: number } & MONGO_FolderDocument>> {
+): Promise<Array<{ __textScore: number } & FolderDocument>> {
 	if (rows.length === 0) {
 		return [];
 	}
 
 	const byIdMap = await LoadFolderDocumentsByIds(rows.map((r) => r.id));
-	const out: Array<{ __textScore: number } & MONGO_FolderDocument> = [];
+	const out: Array<{ __textScore: number } & FolderDocument> = [];
 
 	for (const r of rows) {
 		const doc = byIdMap.get(r.id);
@@ -70,11 +49,11 @@ async function finalizeFolderSearchRows(
 async function searchFoldersFtsAndTrgmCore(
 	search: string,
 	opts: {
-		allowedV3Games: Array<Game> | null;
+		games: Array<Game> | null;
 		limit: integer;
 		onlyActiveFolders: boolean;
 	},
-): Promise<Array<{ __textScore: number } & MONGO_FolderDocument>> {
+): Promise<Array<{ __textScore: number } & FolderDocument>> {
 	const q = search.trim();
 
 	if (q.length === 0) {
@@ -83,7 +62,7 @@ async function searchFoldersFtsAndTrgmCore(
 
 	const cap = Math.min(Math.max(1, opts.limit), 500);
 	const inactiveSql = opts.onlyActiveFolders ? sql`AND f.inactive = false` : sql``;
-	const v3FilterSql = gameFilterSql(opts.allowedV3Games);
+	const v3FilterSql = gameFilterSql(opts.games);
 
 	const folderTsvec = sql`(
 			setweight(to_tsvector('simple', coalesce(f.title, '')), 'A') ||
@@ -234,25 +213,19 @@ async function searchFoldersFtsAndTrgmCore(
  *
  * Inactive folders are included (legacy global search behavior).
  */
-export async function SearchFoldersFtsAndTrgmGlobal(
+export function SearchFoldersFtsAndTrgmGlobal(
 	search: string,
 	opts: {
-		games?: GameGroup[];
+		games?: Array<V3Game>;
 		limit?: integer;
-		playtypes?: Playtype[];
 	} = {},
-): Promise<Array<{ __textScore: number } & MONGO_FolderDocument>> {
+): Promise<Array<{ __textScore: number } & FolderDocument>> {
 	const limit = opts.limit ?? 500;
-	let allowedV3Games: Array<Game> | null = null;
-
-	if (opts.games !== undefined && opts.playtypes !== undefined) {
-		allowedV3Games = mongoStyleGamePlaytypeFilterToV3Games(opts.games, opts.playtypes);
-	}
 
 	return searchFoldersFtsAndTrgmCore(search, {
 		limit,
 		onlyActiveFolders: false,
-		allowedV3Games,
+		games: opts.games ?? AllEnabledGames(),
 	});
 }
 
@@ -262,17 +235,14 @@ export async function SearchFoldersFtsAndTrgmGlobal(
  *
  * @param onlyActiveFolders - When true, exclude rows with `inactive = true`. When false, include all.
  */
-export async function SearchFoldersForGameFtsAndTrgm(
-	game: GameGroup,
-	playtype: Playtype,
+export function SearchFoldersForGameFtsAndTrgm(
+	game: V3Game,
 	search: string,
 	opts: { limit: integer; onlyActiveFolders: boolean },
-): Promise<Array<{ __textScore: number } & MONGO_FolderDocument>> {
-	const v3Game = GamePTToV3(game, playtype) as Game;
-
+): Promise<Array<{ __textScore: number } & FolderDocument>> {
 	return searchFoldersFtsAndTrgmCore(search, {
 		limit: opts.limit,
 		onlyActiveFolders: opts.onlyActiveFolders,
-		allowedV3Games: [v3Game],
+		games: [game],
 	});
 }

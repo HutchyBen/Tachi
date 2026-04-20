@@ -58,7 +58,7 @@ That said, if you're against using vscode you can:
 
 If those instructions don't make sense to you, I really recommend just using dev containers.
 
-Alternatively **if you want to work outside of docker you're on your own**. Figure out the correct versions for everything (npm, pnpm, mongo, redis, ts-node...) and `dev/bootstrap.sh`.
+Alternatively **if you want to work outside of docker you're on your own**. Figure out the correct versions for everything (bun, postgres, redis, ts-node...) and `dev/bootstrap.sh`.
 
 ## Repository Info
 

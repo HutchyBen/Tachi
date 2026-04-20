@@ -8,12 +8,13 @@ import { IsNullish } from "#util/misc";
 import React, { useContext } from "react";
 import { PoyashiBPI } from "rg-stats";
 import {
+	type ChartDocument,
+	type GamesForGroup,
 	GetGrade,
 	IIDXLIKE_GBOUNDARIES,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_ScoreDocument,
+	type PBScoreDocument,
+	type ScoreDocument,
 } from "tachi-common";
 
 import MiniTable from "../components/MiniTable";
@@ -24,13 +25,11 @@ export default function BPICell({
 	score,
 	chart,
 }: {
-	chart: MONGO_ChartDocument<"iidx:DP" | "iidx:SP">;
-	score:
-		| MONGO_PBScoreDocument<"iidx:DP" | "iidx:SP">
-		| MONGO_ScoreDocument<"iidx:DP" | "iidx:SP">;
+	chart: ChartDocument<GamesForGroup["iidx"]>;
+	score: PBScoreDocument<GamesForGroup["iidx"]> | ScoreDocument<GamesForGroup["iidx"]>;
 }) {
 	const { user } = useContext(UserContext);
-	const { settings } = useLUGPTSettings<"iidx:DP" | "iidx:SP">();
+	const { settings } = useLUGPTSettings<GamesForGroup["iidx"]>();
 
 	const bpi = score.calculatedData.BPI;
 	const { kaidenAverage, worldRecord, notecount, bpiCoefficient } = chart.data;
@@ -61,21 +60,23 @@ export default function BPICell({
 
 	const kavgDelta = score.scoreData.score - kaidenAverage!;
 
+	const iidxPlaytype: "DP" | "SP" = chart.game === "iidx-sp" ? "SP" : "DP";
+
 	const { score: WRAverageCell, delta: WRDeltaCell } = FormatAverage(
 		worldRecord!,
-		chart.playtype,
+		iidxPlaytype,
 		chart.data.notecount,
 	);
 
 	const { score: KDAverageCell, delta: KDDeltaCell } = FormatAverage(
 		kaidenAverage!,
-		chart.playtype,
+		iidxPlaytype,
 		chart.data.notecount,
 	);
 
 	const { score: TGAverageCell, delta: TGDeltaCell } = FormatAverage(
 		bpiTargetScore,
-		chart.playtype,
+		iidxPlaytype,
 		chart.data.notecount,
 	);
 
@@ -148,10 +149,12 @@ function FormatAverage(score: integer, playtype: "DP" | "SP", notecount: integer
 
 	const grade = GetGrade(IIDXLIKE_GBOUNDARIES, percent);
 
+	const iidxGame = playtype === "SP" ? "iidx-sp" : "iidx-dp";
+
 	return {
 		score: (
 			<ScoreCell
-				colour={GPT_CLIENT_IMPLEMENTATIONS[`iidx:${playtype}`].enumColours.grade[grade]}
+				colour={GPT_CLIENT_IMPLEMENTATIONS[iidxGame].enumColours.grade[grade]}
 				grade={grade}
 				percent={percent}
 				score={score}

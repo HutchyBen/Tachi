@@ -3,7 +3,7 @@ import { type SetState } from "#types/react";
 import { APIFetchV1 } from "#util/api";
 import React, { useEffect, useState } from "react";
 import { Button, Col, Modal, Row } from "react-bootstrap";
-import { type integer, type MONGO_UserDocument } from "tachi-common";
+import { type integer, type UserDocument } from "tachi-common";
 
 import DebounceSearch from "../DebounceSearch";
 import Divider from "../Divider";
@@ -16,7 +16,7 @@ export default function UserSelectModal({
 	excludeSet = [],
 	excludeMsg = "N/A",
 }: {
-	callback: (user: MONGO_UserDocument) => void;
+	callback: (user: UserDocument) => void;
 	excludeMsg?: string;
 	excludeSet?: Array<integer>;
 	setShow: SetState<boolean>;
@@ -24,7 +24,7 @@ export default function UserSelectModal({
 	url?: string;
 }) {
 	const [search, setSearch] = useState("");
-	const [users, setUsers] = useState<Array<MONGO_UserDocument> | null>(null);
+	const [users, setUsers] = useState<Array<UserDocument> | null>(null);
 	const [errMsg, setErrMsg] = useState<string | null>(null);
 
 	useEffect(() => {
@@ -35,7 +35,7 @@ export default function UserSelectModal({
 		const searchParams = new URLSearchParams();
 		searchParams.set("search", search);
 
-		APIFetchV1<MONGO_UserDocument[]>(`${url}?${searchParams.toString()}`).then((res) => {
+		APIFetchV1<UserDocument[]>(`${url}?${searchParams.toString()}`).then((res) => {
 			if (res.success) {
 				setErrMsg(null);
 

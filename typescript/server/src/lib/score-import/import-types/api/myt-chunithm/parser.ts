@@ -1,16 +1,18 @@
 import type { KtLogger } from "#lib/log/log";
+import type { ParserFunctionReturns } from "#lib/score-import/import-types/common/types";
 import type { EmptyObject } from "#utils/types";
-import type { integer } from "tachi-common";
+import type { GamesForGroup, integer } from "tachi-common";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
+import {
+	CreateMytTransport,
+	FetchMytTitleAPIID,
+} from "#lib/score-import/import-types/common/api-myt/traverse-api";
 import { ChunithmUser, GetPlaylogRequestSchema } from "#proto/generated/chunithm/user_pb";
 import { create } from "@bufbuild/protobuf";
 import { ConnectError, createClient } from "@connectrpc/connect";
 
-import type { ParserFunctionReturns } from "../../common/types";
 import type { MytChunithmScore } from "./types";
-
-import { CreateMytTransport, FetchMytTitleAPIID } from "../../common/api-myt/traverse-api";
 
 async function* streamPlaylog(userID: integer, log: KtLogger): AsyncIterable<MytChunithmScore> {
 	const profileApiId = await FetchMytTitleAPIID(userID, "chunithm", log);
@@ -38,14 +40,14 @@ async function* streamPlaylog(userID: integer, log: KtLogger): AsyncIterable<Myt
 	}
 }
 
-export default async function ParseMytChunithm(
+export default function ParseMytChunithm(
 	userID: integer,
 	log: KtLogger,
-): Promise<ParserFunctionReturns<MytChunithmScore, EmptyObject>> {
-	return {
+): Promise<ParserFunctionReturns<MytChunithmScore, EmptyObject, GamesForGroup["chunithm"]>> {
+	return Promise.resolve({
 		iterable: streamPlaylog(userID, log),
 		context: {},
 		classProvider: null,
-		game: "chunithm",
-	};
+		gameGroup: "chunithm",
+	});
 }

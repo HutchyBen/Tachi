@@ -7,15 +7,7 @@ import {
 } from "#lib/db-formats/score";
 import DB from "#services/pg/db";
 import { sql } from "kysely";
-import {
-	type GameGroup,
-	GamePTToV3,
-	GetGPTConfig,
-	GetGPTString,
-	type integer,
-	type MONGO_ScoreDocument,
-	type Playtype,
-} from "tachi-common";
+import { GetGameConfig, type integer, type ScoreDocument, type V3Game } from "tachi-common";
 
 /** Shared score + chart + song + import select used by activity and UGPT score queries. */
 export function scoreDocumentJoin() {
@@ -26,17 +18,10 @@ export function scoreDocumentJoin() {
 		.select(SELECT_SCORE_DOCUMENT);
 }
 
-export async function GetRecentUGPTScores(
-	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
-	limit = 100,
-) {
-	const v3Game = GamePTToV3(game, playtype) as Game;
-
+export async function GetRecentUGScores(userID: integer, game: V3Game, limit = 100) {
 	const rows = await scoreDocumentJoin()
 		.where("score.user_id", "=", userID)
-		.where("score.game", "=", v3Game)
+		.where("score.game", "=", game)
 		.orderBy("score.time_added", "desc")
 		.limit(limit)
 		.execute();
@@ -50,15 +35,12 @@ export async function GetRecentUGPTScores(
  */
 export async function GetRecentUGPTScoresByTimeAchieved(
 	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
+	game: V3Game,
 	limit = 100,
 ) {
-	const v3Game = GamePTToV3(game, playtype) as Game;
-
 	const rows = await scoreDocumentJoin()
 		.where("score.user_id", "=", userID)
-		.where("score.game", "=", v3Game)
+		.where("score.game", "=", game)
 		.orderBy(sql`score.time_achieved desc nulls last`)
 		.limit(limit)
 		.execute();
@@ -67,20 +49,20 @@ export async function GetRecentUGPTScoresByTimeAchieved(
 }
 
 /** Scores for a user on the given Postgres chart ids, ordered by `time_achieved` desc (nulls last). */
-export async function GetScoresForUserOnChartPgIds(
+export async function GetScoresForUserOnChartIDs(
 	userID: integer,
-	v3Game: Game,
-	chartPgIds: string[],
+	game: Game,
+	chartIDs: string[],
 	limit: number,
 ) {
-	if (chartPgIds.length === 0) {
+	if (chartIDs.length === 0) {
 		return [];
 	}
 
 	const rows = await scoreDocumentJoin()
 		.where("score.user_id", "=", userID)
-		.where("score.game", "=", v3Game)
-		.where("chart.id", "in", chartPgIds)
+		.where("score.game", "=", game)
+		.where("chart.id", "in", chartIDs)
 		.orderBy(sql`score.time_achieved desc nulls last`)
 		.limit(limit)
 		.execute();
@@ -89,33 +71,20 @@ export async function GetScoresForUserOnChartPgIds(
 }
 
 /** All scores for a user on primary charts only (`chart.is_primary`), unordered (Mongo `/scores/all` parity). */
-export async function GetPrimaryScoresForUserUGPT(
-	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
-) {
-	const v3Game = GamePTToV3(game, playtype) as Game;
-
+export async function GetPrimaryScoresForUserUGPT(userID: integer, game: Game) {
 	const rows = await scoreDocumentJoin()
 		.where("score.user_id", "=", userID)
-		.where("score.game", "=", v3Game)
+		.where("score.game", "=", game)
 		.where("chart.is_primary", "=", true)
 		.execute();
 
 	return rows.map((row) => ToScoreDocument(row as ScoreDocumentJoinRow));
 }
 
-export async function GetRecentUGPTHighlights(
-	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
-	limit = 100,
-) {
-	const v3Game = GamePTToV3(game, playtype) as Game;
-
+export async function GetRecentUGPTHighlights(userID: integer, game: V3Game, limit = 100) {
 	const rows = await scoreDocumentJoin()
 		.where("score.user_id", "=", userID)
-		.where("score.game", "=", v3Game)
+		.where("score.game", "=", game)
 		.where("score.highlight", "=", true)
 		.orderBy("score.time_added", "desc")
 		.limit(limit)
@@ -131,26 +100,22 @@ export async function GetRecentUGPTHighlights(
  */
 export async function GetFolderTimelineScores(
 	userID: integer,
-	game: GameGroup,
-	playtype: Playtype,
+	game: V3Game,
 	chartIDs: string[],
 	metric: string,
 	criteriaValue: number,
-): Promise<Array<MONGO_ScoreDocument>> {
+): Promise<Array<ScoreDocument>> {
 	if (chartIDs.length === 0) {
 		return [];
 	}
 
-	const gpt = GetGPTString(game, playtype);
-	const gptConfig = GetGPTConfig(gpt);
-	const v3Game = GamePTToV3(game, playtype) as Game;
-
+	const gameConfig = GetGameConfig(game);
 	const jsonBlob =
-		gptConfig.derivedMetrics[metric] !== undefined ? sql`score.derived_data` : sql`score.data`;
+		gameConfig.derivedMetrics[metric] !== undefined ? sql`score.derived_data` : sql`score.data`;
 
 	const rows = await scoreDocumentJoin()
 		.where("score.user_id", "=", userID)
-		.where("score.game", "=", v3Game)
+		.where("score.game", "=", game)
 		.where("chart.id", "in", chartIDs)
 		.where(sql<boolean>`(${jsonBlob}::jsonb->>${sql.lit(metric)})::numeric >= ${criteriaValue}`)
 		.orderBy("score.chart_id")

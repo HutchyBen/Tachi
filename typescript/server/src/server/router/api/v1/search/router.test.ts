@@ -15,21 +15,14 @@ describe("GET /api/v1/search/chart-hash", () => {
 		expect(res.body.description).toContain("search");
 	});
 
-	it("returns 200 with empty buckets when nothing matches", async () => {
+	it("returns 200 with an empty charts array when nothing matches", async () => {
 		const res = await mockApi.get(
 			"/api/v1/search/chart-hash?search=deadbeefdeadbeefdeadbeefdeadbeef",
 		);
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
-		const charts = res.body.body.charts;
-		expect(charts["bms:7K"]).toEqual([]);
-		expect(charts["bms:14K"]).toEqual([]);
-		expect(charts["pms:Controller"]).toEqual([]);
-		expect(charts["pms:Keyboard"]).toEqual([]);
-		expect(charts["usc:Controller"]).toEqual([]);
-		expect(charts["usc:Keyboard"]).toEqual([]);
-		expect(charts["itg:Stamina"]).toEqual([]);
+		expect(res.body.body.charts).toEqual([]);
 	});
 
 	it("returns BMS charts matched by MD5", async () => {
@@ -85,10 +78,10 @@ describe("GET /api/v1/search/chart-hash", () => {
 		const res = await mockApi.get(`/api/v1/search/chart-hash?search=${md5}`);
 
 		expect(res.status).toBe(200);
-		expect(res.body.body.charts["bms:7K"]).toHaveLength(1);
-		expect(res.body.body.charts["bms:7K"][0].chart.chartID).toBe(chartPgId);
-		expect(res.body.body.charts["bms:7K"][0].song.id).toBe(legacySongId);
-		expect(res.body.body.charts["bms:7K"][0].playcount).toBeNull();
+		const charts = res.body.body.charts as Array<{ chartID: string; song: { id: string } }>;
+		expect(charts).toHaveLength(1);
+		expect(charts[0].chartID).toBe(chartPgId);
+		expect(charts[0].song.id).toBe(songNewID);
 	});
 
 	it("returns PMS charts matched by SHA256", async () => {
@@ -143,9 +136,10 @@ describe("GET /api/v1/search/chart-hash", () => {
 		const res = await mockApi.get(`/api/v1/search/chart-hash?search=${sha256}`);
 
 		expect(res.status).toBe(200);
-		expect(res.body.body.charts["pms:Keyboard"]).toHaveLength(1);
-		expect(res.body.body.charts["pms:Keyboard"][0].chart.chartID).toBe(chartPgId);
-		expect(res.body.body.charts["pms:Keyboard"][0].song.id).toBe(legacySongId);
+		const charts = res.body.body.charts as Array<{ chartID: string; song: { id: string } }>;
+		expect(charts).toHaveLength(1);
+		expect(charts[0].chartID).toBe(chartPgId);
+		expect(charts[0].song.id).toBe(songNewID);
 	});
 
 	it("returns ITG charts matched by hashGSv3", async () => {
@@ -203,9 +197,10 @@ describe("GET /api/v1/search/chart-hash", () => {
 		);
 
 		expect(res.status).toBe(200);
-		expect(res.body.body.charts["itg:Stamina"]).toHaveLength(1);
-		expect(res.body.body.charts["itg:Stamina"][0].chart.chartID).toBe(chartPgId);
-		expect(res.body.body.charts["itg:Stamina"][0].song.id).toBe(legacySongId);
+		const charts = res.body.body.charts as Array<{ chartID: string; song: { id: string } }>;
+		expect(charts).toHaveLength(1);
+		expect(charts[0].chartID).toBe(chartPgId);
+		expect(charts[0].song.id).toBe(songNewID);
 	});
 
 	it("returns USC charts matched by hashSHA1", async () => {
@@ -252,8 +247,9 @@ describe("GET /api/v1/search/chart-hash", () => {
 		const res = await mockApi.get(`/api/v1/search/chart-hash?search=${sha1}`);
 
 		expect(res.status).toBe(200);
-		expect(res.body.body.charts["usc:Controller"]).toHaveLength(1);
-		expect(res.body.body.charts["usc:Controller"][0].chart.chartID).toBe(chartPgId);
-		expect(res.body.body.charts["usc:Controller"][0].song.id).toBe(legacySongId);
+		const charts = res.body.body.charts as Array<{ chartID: string; song: { id: string } }>;
+		expect(charts).toHaveLength(1);
+		expect(charts[0].chartID).toBe(chartPgId);
+		expect(charts[0].song.id).toBe(songNewID);
 	});
 });

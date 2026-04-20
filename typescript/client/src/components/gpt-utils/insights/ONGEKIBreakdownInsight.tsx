@@ -20,27 +20,26 @@ import React from "react";
 import { Col, Row } from "react-bootstrap";
 import {
 	type AnyScoreRatingAlg,
+	type ChartDocument,
 	COLOUR_SET,
 	CreateSongMap,
 	FmtNum,
-	type GameGroup,
-	type GPTString,
 	type integer,
-	type MONGO_ChartDocument,
-	type MONGO_PBScoreDocument,
-	type MONGO_SongDocument,
+	type PBScoreDocument,
+	type SongDocument,
+	type V3Game,
 } from "tachi-common";
 
-function ComponentClassic({ game, playtype, reqUser }: UGPT) {
-	if (game !== "ongeki" || playtype !== "Single") {
-		throw new Error("Game or playtype is not ongeki:Single");
+function ComponentClassic({ game, reqUser }: UGPT) {
+	if (game !== "ongeki") {
+		throw new Error("Game is not ongeki");
 	}
 
 	const { data, error } = useApiQuery<{
-		charts: Array<MONGO_ChartDocument<"ongeki:Single">>;
-		pbs: Array<MONGO_PBScoreDocument<"ongeki:Single">>;
-		songs: Array<MONGO_SongDocument<"ongeki">>;
-	}>(`/users/${reqUser.id}/games/${game}/${playtype}/pbs/best?alg=rating`);
+		charts: Array<ChartDocument<"ongeki">>;
+		pbs: Array<PBScoreDocument<"ongeki">>;
+		songs: Array<SongDocument<"ongeki">>;
+	}>(`/users/${reqUser.id}/games/${game}/pbs/best?alg=rating`);
 
 	if (error) {
 		return <ApiError error={error} />;
@@ -50,8 +49,8 @@ function ComponentClassic({ game, playtype, reqUser }: UGPT) {
 		return <Loading />;
 	}
 
-	const flatDataset: PBDataset<"ongeki:Single"> = CreateFlatDataset(data, "rating", 45);
-	const compoundDataset = ColumnMerge<"ongeki:Single">(flatDataset, 3);
+	const flatDataset: PBDataset<"ongeki"> = CreateFlatDataset<"ongeki">(data, "rating", 45);
+	const compoundDataset = ColumnMerge<"ongeki">(flatDataset, 3);
 
 	const classicRating =
 		Math.floor(
@@ -94,22 +93,22 @@ function ComponentClassic({ game, playtype, reqUser }: UGPT) {
 	);
 }
 
-function ComponentRefresh({ game, playtype, reqUser }: UGPT) {
-	if (game !== "ongeki" || playtype !== "Single") {
-		throw new Error("Game or playtype is not ongeki:Single");
+function ComponentRefresh({ game, reqUser }: UGPT) {
+	if (game !== "ongeki") {
+		throw new Error("Game is not ongeki");
 	}
 
 	const query1 = useApiQuery<{
-		charts: Array<MONGO_ChartDocument<"ongeki:Single">>;
-		pbs: Array<MONGO_PBScoreDocument<"ongeki:Single">>;
-		songs: Array<MONGO_SongDocument<"ongeki">>;
-	}>(`/users/${reqUser.id}/games/${game}/${playtype}/pbs/best?alg=scoreRating`);
+		charts: Array<ChartDocument<"ongeki">>;
+		pbs: Array<PBScoreDocument<"ongeki">>;
+		songs: Array<SongDocument<"ongeki">>;
+	}>(`/users/${reqUser.id}/games/${game}/pbs/best?alg=scoreRating`);
 
 	const query2 = useApiQuery<{
-		charts: Array<MONGO_ChartDocument<"ongeki:Single">>;
-		pbs: Array<MONGO_PBScoreDocument<"ongeki:Single">>;
-		songs: Array<MONGO_SongDocument<"ongeki">>;
-	}>(`/users/${reqUser.id}/games/${game}/${playtype}/pbs/best?alg=starRating`);
+		charts: Array<ChartDocument<"ongeki">>;
+		pbs: Array<PBScoreDocument<"ongeki">>;
+		songs: Array<SongDocument<"ongeki">>;
+	}>(`/users/${reqUser.id}/games/${game}/pbs/best?alg=starRating`);
 
 	if (query1.error) {
 		return <ApiError error={query1.error} />;
@@ -123,19 +122,19 @@ function ComponentRefresh({ game, playtype, reqUser }: UGPT) {
 		return <Loading />;
 	}
 
-	const flatDatasetScore: PBDataset<"ongeki:Single"> = CreateFlatDataset(
+	const flatDatasetScore: PBDataset<"ongeki"> = CreateFlatDataset<"ongeki">(
 		query1.data,
 		"scoreRating",
 		60,
 	);
-	const flatDatasetStar: PBDataset<"ongeki:Single"> = CreateFlatDataset(
+	const flatDatasetStar: PBDataset<"ongeki"> = CreateFlatDataset<"ongeki">(
 		query2.data,
 		"starRating",
 		51,
 	);
 
-	const datasetScore = ColumnMerge<"ongeki:Single">(flatDatasetScore, 3);
-	const datasetStar = ColumnMerge<"ongeki:Single">(flatDatasetStar, 3);
+	const datasetScore = ColumnMerge<"ongeki">(flatDatasetScore, 3);
+	const datasetStar = ColumnMerge<"ongeki">(flatDatasetStar, 3);
 
 	const scoreR1k = Math.floor(
 		flatDatasetScore.reduce(
@@ -228,13 +227,13 @@ function CompactRow({
 	lampField,
 }: {
 	count?: number;
-	game: GameGroup;
-	lampField: (pb: MONGO_PBScoreDocument<"ongeki:Single">) => string | JSX.Element;
-	pbs: PBDataset<"ongeki:Single">[0][];
-	ratingField: (pb: MONGO_PBScoreDocument<"ongeki:Single">) => string | JSX.Element;
+	game: V3Game;
+	lampField: (pb: PBScoreDocument<"ongeki">) => string | JSX.Element;
+	pbs: PBDataset<"ongeki">[0][];
+	ratingField: (pb: PBScoreDocument<"ongeki">) => string | JSX.Element;
 	scoreField: (
-		pb: MONGO_PBScoreDocument<"ongeki:Single">,
-		chart: MONGO_ChartDocument<"ongeki:Single">,
+		pb: PBScoreDocument<"ongeki">,
+		chart: ChartDocument<"ongeki">,
 	) => string | JSX.Element;
 }) {
 	return (
@@ -273,15 +272,15 @@ function CompactCell({
 	ratingField,
 	lampField,
 }: {
-	chart: MONGO_ChartDocument<"ongeki:Single">;
-	lampField: (pb: MONGO_PBScoreDocument<"ongeki:Single">) => string | JSX.Element;
-	pb: MONGO_PBScoreDocument<"ongeki:Single">;
-	ratingField: (pb: MONGO_PBScoreDocument<"ongeki:Single">) => string | JSX.Element;
+	chart: ChartDocument<"ongeki">;
+	lampField: (pb: PBScoreDocument<"ongeki">) => string | JSX.Element;
+	pb: PBScoreDocument<"ongeki">;
+	ratingField: (pb: PBScoreDocument<"ongeki">) => string | JSX.Element;
 	scoreField: (
-		pb: MONGO_PBScoreDocument<"ongeki:Single">,
-		chart: MONGO_ChartDocument<"ongeki:Single">,
+		pb: PBScoreDocument<"ongeki">,
+		chart: ChartDocument<"ongeki">,
 	) => string | JSX.Element;
-	song: MONGO_SongDocument;
+	song: SongDocument;
 }) {
 	// Third-party scripts may find this useful
 	const className = `c-${chart.data.inGameID}`;
@@ -290,7 +289,7 @@ function CompactCell({
 		<td className={className} style={{ width: "300px" }}>
 			<div className="d-flex flex-column gap-2" style={{ textAlign: "left" }}>
 				<div>
-					<GentleLink to={CreateChartLink(chart, "ongeki")}>
+					<GentleLink to={CreateChartLink(chart)}>
 						<span style={{ fontSize: "120%" }}>{song.title}</span>
 					</GentleLink>
 				</div>
@@ -339,7 +338,7 @@ function ShortLamp({
 	let text1 = "";
 	let color2 = COLOUR_SET.gray;
 	let text2 = "";
-	const color3 = GPT_CLIENT_IMPLEMENTATIONS["ongeki:Single"].enumColours.grade[grade];
+	const color3 = GPT_CLIENT_IMPLEMENTATIONS.ongeki.enumColours.grade[grade];
 
 	if (noteLamp === "ALL BREAK+") {
 		color1 = COLOUR_SET.vibrantBlue;
@@ -388,14 +387,14 @@ function ShortLamp({
 	);
 }
 
-function CreateFlatDataset<T extends GPTString>(data: any, alg: AnyScoreRatingAlg, count: number) {
+function CreateFlatDataset<T extends V3Game>(data: any, alg: AnyScoreRatingAlg, count: number) {
 	const flatDataset: PBDataset<T> = [];
 
 	const songMap = CreateSongMap(data.songs);
 	const chartMap = CreateChartMap<T>(data.charts);
 
 	const sortedRatings = data.pbs
-		.map((e: MONGO_PBScoreDocument) => e.calculatedData[alg])
+		.map((e: PBScoreDocument) => e.calculatedData[alg])
 		.sort(NumericSOV((x: number) => x ?? -Infinity, true));
 
 	for (const pb of data.pbs.slice(0, count)) {
@@ -419,7 +418,7 @@ function CreateFlatDataset<T extends GPTString>(data: any, alg: AnyScoreRatingAl
 	return flatDataset;
 }
 
-function ColumnMerge<T extends GPTString>(flatDataset: PBDataset<T>, columns: number) {
+function ColumnMerge<T extends V3Game>(flatDataset: PBDataset<T>, columns: number) {
 	const compoundDataset: PBDataset<T>[] = [[]];
 	for (const d of flatDataset) {
 		const back = compoundDataset[compoundDataset.length - 1];

@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { allSupportedGameGroups, GetGameGroupConfig, GetGamePTConfig } from "./config";
+import { IsValidGame } from "../utils/util";
+import { allSupportedGameGroups, GetGameGroupConfig, LEGACY_GetGamePTConfig } from "./config";
+
+describe("#IsValidGame", () => {
+	it("accepts games and rejects unknown strings", () => {
+		expect(IsValidGame("iidx-sp")).toBe(true);
+		expect(IsValidGame("not-a-real-game")).toBe(false);
+		expect(IsValidGame("")).toBe(false);
+	});
+});
 
 describe("#GetGameGroupConfig", () => {
 	it("defines configs for every supported game group with valid IDs", () => {
@@ -34,7 +43,7 @@ describe("#GetGamePTConfig", () => {
 			const gameConfig = GetGameGroupConfig(game);
 
 			for (const playtype of gameConfig.playtypes) {
-				const conf = GetGamePTConfig(game, playtype);
+				const conf = LEGACY_GetGamePTConfig(game, playtype);
 
 				expect(conf, `'${game}:${playtype}' should have a config defined.`).toBeDefined();
 				if (!conf) {

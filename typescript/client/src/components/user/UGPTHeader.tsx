@@ -17,7 +17,7 @@ import { FormatDurationHours, MillisToSince } from "#util/time";
 import { SendErrorToast, SendSuccessToast } from "#util/toaster";
 import React, { useContext } from "react";
 import { Button } from "react-bootstrap";
-import { type GameGroup, type integer, type MONGO_UserDocument, type Playtype } from "tachi-common";
+import { type integer, type UserDocument, type V3Game } from "tachi-common";
 
 import ProfileBadges from "./ProfileBadges";
 import ProfilePicture from "./ProfilePicture";
@@ -27,12 +27,10 @@ import UGPTRatingsTable from "./UGPTStatsOverview";
 export function UGPTHeaderBody({
 	reqUser,
 	game,
-	playtype,
 	stats,
 }: {
-	game: GameGroup;
-	playtype: Playtype;
-	reqUser: MONGO_UserDocument;
+	game: V3Game;
+	reqUser: UserDocument;
 	stats: UGPTStatsReturn;
 }) {
 	const { settings, setSettings } = useLUGPTSettings();
@@ -108,12 +106,7 @@ export function UGPTHeaderBody({
 				<UGPTRatingsTable ugs={stats.gameStats} />
 			</div>
 			<div className="col-12 col-lg-3">
-				<RankingData
-					game={game}
-					playtype={playtype}
-					rankingData={stats.rankingData}
-					userID={reqUser.id}
-				/>
+				<RankingData game={game} rankingData={stats.rankingData} userID={reqUser.id} />
 			</div>
 			{/* if someone is logged in and they aren't the user they're viewing */}
 			{/* give them the option to add them as a rival or follow them */}
@@ -136,7 +129,7 @@ export function UGPTHeaderBody({
 										);
 
 										const res = await APIFetchV1(
-											`/users/${settings.userID}/games/${game}/${playtype}/rivals`,
+											`/users/${settings.userID}/games/${game}/rivals`,
 											{
 												method: "PUT",
 												body: JSON.stringify({
@@ -171,7 +164,7 @@ export function UGPTHeaderBody({
 										const newRivals = [...settings.rivals, reqUser.id];
 
 										const res = await APIFetchV1(
-											`/users/${settings.userID}/games/${game}/${playtype}/rivals`,
+											`/users/${settings.userID}/games/${game}/rivals`,
 											{
 												method: "PUT",
 												body: JSON.stringify({
@@ -215,12 +208,10 @@ export function UGPTBottomNav({
 	baseUrl,
 	isRequestedUser,
 	game,
-	playtype,
 }: {
 	baseUrl: string;
-	game: GameGroup;
+	game: V3Game;
 	isRequestedUser: boolean;
-	playtype: Playtype;
 }) {
 	const navItems = [
 		<Navbar.Item key="overview" to={`${baseUrl}/`}>
@@ -237,7 +228,7 @@ export function UGPTBottomNav({
 		</Navbar.Item>,
 	];
 
-	const utilsName = GetGPTUtilsName(game, playtype, isRequestedUser);
+	const utilsName = GetGPTUtilsName(game, isRequestedUser);
 
 	if (utilsName) {
 		navItems.push(

@@ -7,36 +7,32 @@ import useLUGPTSettings from "#components/util/useLUGPTSettings";
 import useUGPTBase from "#components/util/useUGPTBase";
 import React from "react";
 import { Col, Row } from "react-bootstrap";
-import { Redirect, Route, Switch } from "react-router-dom";
+import { Route, Switch } from "react-router-dom";
 import {
-	FormatGameGroup,
-	type GameGroup,
+	FormatGame,
+	GameToGameGroup,
 	GetGameGroupConfig,
-	type MONGO_UserDocument,
-	type Playtype,
+	type UserDocument,
+	type V3Game,
 } from "tachi-common";
 
 import RivalsActivityPage from "./RivalsActivityPage";
 import RivalsManagePage from "./RivalsManagePage";
 
-export default function RivalsMainPage({
-	reqUser,
-	game,
-	playtype,
-}: {
-	game: GameGroup;
-	playtype: Playtype;
-	reqUser: MONGO_UserDocument;
-}) {
-	const gameConfig = GetGameGroupConfig(game);
-
+export default function RivalsMainPage({ reqUser, game }: { game: V3Game; reqUser: UserDocument }) {
 	useSetSubheader(
-		["Users", reqUser.username, "Games", gameConfig.name, playtype, "Rivals"],
-		[reqUser, game, playtype],
-		`${reqUser.username}'s ${FormatGameGroup(game, playtype)} Rivals`,
+		[
+			"Users",
+			reqUser.username,
+			"Games",
+			GetGameGroupConfig(GameToGameGroup(game)).name,
+			"Rivals",
+		],
+		[reqUser, game],
+		`${reqUser.username}'s ${FormatGame(game)} Rivals`,
 	);
 
-	const base = useUGPTBase({ reqUser, game, playtype });
+	const base = useUGPTBase({ reqUser, game });
 
 	const { settings } = useLUGPTSettings();
 
@@ -48,11 +44,6 @@ export default function RivalsMainPage({
 		<Row>
 			<Col className="text-center" xs={12}>
 				<div className="btn-group d-flex justify-content-center">
-					{/* this ui sucks and i don't like it. come up with something better? */}
-					{/* <SelectLinkButton to={`${base}/rivals/pb-leaderboard`}>
-						<Icon type="sort-amount-up" />
-						Rival's Bests
-					</SelectLinkButton> */}
 					<SelectLinkButton to={`${base}/rivals`}>
 						<Icon type="list" /> Rival Activity
 					</SelectLinkButton>
@@ -64,20 +55,19 @@ export default function RivalsMainPage({
 			</Col>
 			<Col xs={12}>
 				<Switch>
-					<Route exact path="/u/:userID/games/:game/:playtype/rivals">
-						<RivalsActivityPage game={game} playtype={playtype} reqUser={reqUser} />
+					<Route exact path="/u/:userID/games/:game/rivals">
+						<RivalsActivityPage game={game} reqUser={reqUser} />
 					</Route>
 
-					<Route exact path="/u/:userID/games/:game/:playtype/rivals/manage">
-						<RivalsManagePage game={game} playtype={playtype} reqUser={reqUser} />
+					<Route exact path="/u/:userID/games/:game/rivals/manage">
+						<RivalsManagePage game={game} reqUser={reqUser} />
 					</Route>
 
-					<Route exact path="/u/:userID/games/:game/:playtype/rivals/pb-leaderboard">
+					<Route exact path="/u/:userID/games/:game/rivals/pb-leaderboard">
 						<ScoreLeaderboard
 							game={game}
-							playtype={playtype}
 							refreshDeps={[`rivals-pb-leaderboard-${settings.rivals.join(",")}`]}
-							url={`/users/${reqUser.id}/games/${game}/${playtype}/rivals/pb-leaderboard`}
+							url={`/users/${reqUser.id}/games/${game}/rivals/pb-leaderboard`}
 						/>
 					</Route>
 				</Switch>

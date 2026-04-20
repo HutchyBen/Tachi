@@ -3,7 +3,7 @@ import type { RequestHandler } from "express";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log";
 import { IsNullish } from "#utils/misc";
-import { AssignToReqTachiData, GetTachiData } from "#utils/req-tachi-data";
+import { REQ_AssignToReqTachiData, REQ_GetTachiData } from "#utils/req-tachi-data";
 import { GetUserWithID, ResolveUser } from "#utils/user";
 import { UserAuthLevels } from "tachi-common";
 
@@ -29,7 +29,7 @@ export const GetUserFromParam: RequestHandler = async (req, res, next) => {
 
 		// fast assign using JWT
 		if (req.session.tachi?.user) {
-			AssignToReqTachiData(req, { requestedUser: req.session.tachi.user });
+			REQ_AssignToReqTachiData(req, { requestedUser: req.session.tachi.user });
 			next();
 			return;
 		}
@@ -46,7 +46,7 @@ export const GetUserFromParam: RequestHandler = async (req, res, next) => {
 		});
 	}
 
-	AssignToReqTachiData(req, { requestedUser: user });
+	REQ_AssignToReqTachiData(req, { requestedUser: user });
 
 	next();
 };
@@ -55,7 +55,7 @@ export const GetUserFromParam: RequestHandler = async (req, res, next) => {
  * Require the user making this request to also be the user in the :userID param.
  */
 export const RequireAuthedAsUser: RequestHandler = async (req, res, next) => {
-	const user = GetTachiData(req, "requestedUser");
+	const user = REQ_GetTachiData(req, "requestedUser");
 
 	const requestingUserID = req[SYMBOL_TACHI_API_AUTH].userID;
 
@@ -98,7 +98,7 @@ export const RequireAuthedAsUser: RequestHandler = async (req, res, next) => {
  * alter/access, like integration information.
  */
 export const RequireSelfRequestFromUser: RequestHandler = (req, res, next) => {
-	const user = GetTachiData(req, "requestedUser");
+	const user = REQ_GetTachiData(req, "requestedUser");
 
 	if (req[SYMBOL_TACHI_API_AUTH].userID === null) {
 		return res.status(401).json({

@@ -1,12 +1,12 @@
 /* eslint-disable no-await-in-loop */
 
 import readline from "readline";
-import { type MONGO_ChartDocument, type MONGO_SongDocument } from "tachi-common";
+import { type ChartDocument, type SongDocument } from "tachi-common";
 
 import { ReadCollection, WriteCollection } from "../../util";
 
-type OngekiChart = MONGO_ChartDocument<"ongeki:Single">;
-type OngekiSong = MONGO_SongDocument<"ongeki">;
+type OngekiChart = ChartDocument<"ongeki">;
+type OngekiSong = SongDocument<"ongeki">;
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 const prompt = (query: string) => new Promise((resolve) => rl.question(query, resolve));
@@ -136,7 +136,7 @@ const listMissing = async (charts: OngekiChart[], songs: OngekiSong[], minLevel:
 			continue;
 		}
 		if (chart.levelNum >= minLevel && !chart.data.chartViewURL) {
-			const song = songs.find((s) => s.id === chart.songID);
+			const song = songs.find((s) => s.id === chart.song.id);
 			// @ts-expect-error The linter disagrees with the compiler
 			chart.data.chartViewURL = await prompt(
 				`Missing: ${song?.artist} ${song?.title} ${chart.difficulty} ${chart.level}\n`,

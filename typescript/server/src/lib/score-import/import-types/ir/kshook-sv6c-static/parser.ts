@@ -1,11 +1,12 @@
 import type { KtLogger } from "#lib/log/log";
+import type { ParserFunctionReturns } from "#lib/score-import/import-types/common/types";
 import type { EmptyObject } from "#utils/types";
+import type { GamesForGroup } from "tachi-common";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { FormatPrError } from "#utils/prudence";
 import { p, type PrudenceSchema } from "prudence";
 
-import type { ParserFunctionReturns } from "../../common/types";
 import type { KsHookSV6CStaticBody, KsHookSV6CStaticScore } from "./types";
 
 import { PR_KSHOOK_SV6C } from "../kshook-sv6c/parser";
@@ -29,7 +30,7 @@ const PR_KSHOOK_SV6C_STATIC: PrudenceSchema = {
 export function ParseKsHookSV6CStatic(
 	body: Record<string, unknown>,
 	_log: KtLogger,
-): ParserFunctionReturns<KsHookSV6CStaticScore, EmptyObject> {
+): ParserFunctionReturns<KsHookSV6CStaticScore, EmptyObject, GamesForGroup["sdvx"]> {
 	// Ignore excess keys, as SV6C might add more features in the future.
 	const err = p(body, PR_KSHOOK_SV6C_STATIC, undefined, { allowExcessKeys: true });
 
@@ -40,7 +41,7 @@ export function ParseKsHookSV6CStatic(
 	const data = body as unknown as KsHookSV6CStaticBody;
 
 	return {
-		game: "sdvx",
+		gameGroup: "sdvx",
 		iterable: data.scores,
 		context: {},
 		classProvider: null,

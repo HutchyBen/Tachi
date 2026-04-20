@@ -1,139 +1,118 @@
-import { GetChartById } from "#lib/db-formats/chart.js";
+import { GetChartByIdForGame } from "#lib/db-formats/chart";
 import {
 	type ScoreDocumentJoinRow,
 	SELECT_SCORE_DOCUMENT,
 	ToScoreDocument,
 } from "#lib/db-formats/score";
-import { SearchSpecificGameSongsAndCharts } from "#lib/search/song-charts.js";
-import { HyperAggressiveRateLimitMiddleware } from "#server/middleware/rate-limiter";
+import { withUserGameProfile } from "#lib/router/middleware";
+import { success } from "#lib/router/typed-router";
+import { SearchSpecificGameSongsAndCharts } from "#lib/search/song-charts";
+import { API_V1_ROUTER } from "#server/router/api/v1/router";
 import DB from "#services/pg/db";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import {
 	GetPrimaryScoresForUserUGPT,
 	GetRecentUGPTScoresByTimeAchieved,
-	GetScoresForUserOnChartPgIds,
+	GetScoresForUserOnChartIDs,
 } from "#utils/queries/scores";
-import { GetUGPT } from "#utils/req-tachi-data";
 import { FilterChartsAndSongs } from "#utils/scores";
-import { Router } from "express";
-import { GamePTToV3 } from "tachi-common";
-
-const router: Router = Router({ mergeParams: true });
+import { ExpectedErr } from "bliss";
 
 /**
  * Searches a user's individual scores.
  *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/scores
+ * @name GET /api/v1/users/:userID/games/:game/scores
  */
-router.get("/", async (req, res) => {
-	const { user, game, playtype } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/scores",
+	withUserGameProfile,
+	async ({ ctx, input }) => {
+		const { requestedUser: user, game } = ctx;
 
-	if (typeof req.query.search !== "string") {
-		return res.status(400).json({
-			success: false,
-			description: `Invalid value for search parameter.`,
-		});
-	}
+		const { songs: allSongs, charts: allCharts } = await SearchSpecificGameSongsAndCharts(
+			game,
+			input.search,
+		);
 
-	const { songs: allSongs, charts: allCharts } = await SearchSpecificGameSongsAndCharts(
-		game,
-		req.query.search,
-		playtype,
-	);
+		const chartIDs = [...new Set(allCharts.map((c) => c.chartID))];
+		const scores = await GetScoresForUserOnChartIDs(user.id, game, chartIDs, 30);
 
-	const v3Game = GamePTToV3(game, playtype);
-	const chartPgIds = [...new Set(allCharts.map((c) => c.chartID))];
-	const scores = await GetScoresForUserOnChartPgIds(user.id, v3Game, chartPgIds, 30);
+		const { songs, charts } = FilterChartsAndSongs(scores, allCharts, allSongs);
 
-	const { songs, charts } = FilterChartsAndSongs(scores, allCharts, allSongs);
-
-	return res.status(200).json({
-		success: true,
-		description: `Retrieved ${scores.length} scores.`,
-		body: {
-			scores,
-			songs,
-			charts,
-		},
-	});
-});
+		return success(`Retrieved ${scores.length} scores.`, { charts, scores, songs });
+	},
+);
 
 /**
- * Retrieve all scores from this user.
+ * Retrieve all scores from this user (expensive).
  *
- * @warn This endpoint is expensive, and is rate-limited as such.
- *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/scores/all
+ * @name GET /api/v1/users/:userID/games/:game/scores/all
  */
-router.get("/all", HyperAggressiveRateLimitMiddleware, async (req, res) => {
-	const { user, game, playtype } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/scores/all",
+	withUserGameProfile,
+	async ({ ctx }) => {
+		const { requestedUser: user, game } = ctx;
 
-	const scores = await GetPrimaryScoresForUserUGPT(user.id, game, playtype);
+		const scores = await GetPrimaryScoresForUserUGPT(user.id, game);
+		const { songs, charts } = await GetRelevantSongsAndCharts(scores);
 
-	const { songs, charts } = await GetRelevantSongsAndCharts(scores, game);
-
-	return res.status(200).json({
-		success: true,
-		description: `Returned ${scores.length} PBs.`,
-		body: { scores, songs, charts },
-	});
-});
+		return success(`Returned ${scores.length} PBs.`, { charts, scores, songs });
+	},
+);
 
 /**
  * Returns a users recent 100 scores for this game.
  *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/scores/recent
+ * @name GET /api/v1/users/:userID/games/:game/scores/recent
  */
-router.get("/recent", async (req, res) => {
-	const { user, game, playtype } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/scores/recent",
+	withUserGameProfile,
+	async ({ ctx }) => {
+		const { requestedUser: user, game } = ctx;
 
-	const recentScores = await GetRecentUGPTScoresByTimeAchieved(user.id, game, playtype, 100);
+		const recentScores = await GetRecentUGPTScoresByTimeAchieved(user.id, game, 100);
+		const { songs, charts } = await GetRelevantSongsAndCharts(recentScores);
 
-	const { songs, charts } = await GetRelevantSongsAndCharts(recentScores, game);
-
-	return res.status(200).json({
-		success: true,
-		description: `Retrieved ${recentScores.length} scores.`,
-		body: {
+		return success(`Retrieved ${recentScores.length} scores.`, {
+			charts,
 			scores: recentScores,
 			songs,
-			charts,
-		},
-	});
-});
+		});
+	},
+);
 
 /**
  * Retrieve all the scores a user has on the given chartID.
  *
- * @name GET /api/v1/users/:userID/games/:game/:playtype/scores/:chartID
+ * @name GET /api/v1/users/:userID/games/:game/scores/:chartID
  */
-router.get("/:chartID", async (req, res) => {
-	const { user, game, playtype } = GetUGPT(req);
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/scores/:chartID",
+	withUserGameProfile,
+	async ({ ctx, params }) => {
+		const { requestedUser: user, game } = ctx;
 
-	const chart = await GetChartById(GamePTToV3(game, playtype), req.params.chartID);
+		const chart = await GetChartByIdForGame(game, params.chartID);
 
-	if (!chart) {
-		return res.status(404).json({
-			success: false,
-			description: `This chart does not exist.`,
-		});
-	}
+		if (!chart) {
+			throw new ExpectedErr(404, "This chart does not exist.");
+		}
 
-	const rows = await DB.selectFrom("score")
-		.innerJoin("chart", "chart.id", "score.chart_id")
-		.innerJoin("song", "song.id", "chart.song_id")
-		.leftJoin("import", "import.id", "score.import_id")
-		.select(SELECT_SCORE_DOCUMENT)
-		.where("score.user_id", "=", user.id)
-		.where("chart.id", "=", chart.chartID)
-		.orderBy("score.time_added", "desc")
-		.execute();
+		const rows = await DB.selectFrom("score")
+			.innerJoin("chart", "chart.id", "score.chart_id")
+			.innerJoin("song", "song.id", "chart.song_id")
+			.leftJoin("import", "import.id", "score.import_id")
+			.select(SELECT_SCORE_DOCUMENT)
+			.where("score.user_id", "=", user.id)
+			.where("chart.id", "=", chart.chartID)
+			.orderBy("score.time_added", "desc")
+			.execute();
 
-	return res.status(200).json({
-		success: true,
-		description: `Returned ${rows.length} scores.`,
-		body: rows.map((r) => ToScoreDocument(r as ScoreDocumentJoinRow)),
-	});
-});
-
-export default router;
+		return success(
+			`Returned ${rows.length} scores.`,
+			rows.map((r) => ToScoreDocument(r as ScoreDocumentJoinRow)),
+		);
+	},
+);

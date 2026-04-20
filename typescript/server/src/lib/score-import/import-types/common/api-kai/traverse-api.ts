@@ -1,12 +1,11 @@
 import type { KtLogger } from "#lib/log/log";
 
 import { VERSION_STR } from "#lib/constants/version";
+import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { TachiConfig } from "#lib/setup/config";
 import nodeFetch from "#utils/fetch";
 import { IsRecord } from "#utils/misc";
 import { URL } from "url";
-
-import ScoreImportFatalError from "../../../framework/score-importing/score-import-error";
 
 /**
  * A Kai Reauth function is an async function that returns a string
