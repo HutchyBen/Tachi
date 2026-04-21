@@ -54,7 +54,7 @@ const refChecks: Array<ReferenceCheck> = [
 		base: "tables",
 		baseKey: (table) => table.folders.map((slug: string) => `${table.game}:${slug}`),
 		parent: "folders",
-		parentKey: (folder) => `${folder.game}:${folderSeedSlug(folder)}`,
+		parentKey: (folder) => [`${folder.game}:${folderSeedSlug(folder)}`],
 		gameGroup: null,
 		game: null,
 	},

@@ -4,9 +4,9 @@ import {
 	type GameGroup,
 	type GoalDocument,
 	type integer,
-	type QuestDocument,
 	type ScoreDocument,
 	type SessionScoreInfo,
+	type SEEDS_SongDocument,
 	type SongDocument,
 	type UserDocument,
 	type V3Game,
@@ -28,11 +28,13 @@ export function GetPBs(scoreInfo: SessionScoreInfo[]) {
 	});
 }
 
-export function CreateSongMap<G extends GameGroup = GameGroup>(songs: SongDocument<G>[]) {
+export function CreateSongMap<G extends GameGroup = GameGroup>(
+	songs: Array<SongDocument<G> | SEEDS_SongDocument<G>>,
+) {
 	const songMap = new Map<string, SongDocument<G>>();
 
 	for (const song of songs) {
-		songMap.set(song.id, song);
+		songMap.set(song.id, song as SongDocument<G>);
 	}
 
 	return songMap;
@@ -48,8 +50,8 @@ export function CreateUserMap(users: UserDocument[]) {
 	return userMap;
 }
 
-export function CreateGoalMap(goals: GoalDocument[]) {
-	const goalMap = new Map<string, GoalDocument>();
+export function CreateGoalMap<G extends { goalID: string }>(goals: Array<G>) {
+	const goalMap = new Map<string, G>();
 
 	for (const goal of goals) {
 		goalMap.set(goal.goalID, goal);
@@ -93,7 +95,9 @@ export function CreateChartLink(chart: ChartDocument) {
 }
 
 // stolen from server
-export function GetGoalIDsFromQuest(quest: QuestDocument) {
+export function GetGoalIDsFromQuest(quest: {
+	questData: Array<{ goals: Array<{ goalID: string }> }>;
+}) {
 	// this sucks - maybe a nicer way to do this, because nested
 	// maps are just ugly
 	return quest.questData.map((e) => e.goals.map((e) => e.goalID)).flat(1);

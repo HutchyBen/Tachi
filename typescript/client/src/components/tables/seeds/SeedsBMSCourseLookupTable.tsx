@@ -2,7 +2,12 @@ import { type BMSCourseWithRelated, type CellsRenderFN } from "#types/seeds";
 import { StrSOV } from "#util/sorts";
 import { type SearchFunctions } from "#util/ztable/search";
 import React from "react";
-import { FormatChart, GetBMSCourseIndex } from "tachi-common";
+import {
+	type ChartDocument,
+	type ChartDocumentData,
+	FormatChart,
+	GetBMSCourseIndex,
+} from "tachi-common";
 
 import { type Header } from "../components/TachiTable";
 
@@ -40,7 +45,7 @@ export const SeedsBMSCourseLookupSearchFns: SearchFunctions<BMSCourseWithRelated
 					return `UNKNOWN CHART (${e})`;
 				}
 
-				return FormatChart(e.chart);
+				return FormatChart({ ...e.chart, song: e.song } as unknown as ChartDocument);
 			})
 			.join("\n"),
 };
@@ -59,12 +64,17 @@ export const SeedsBMSCourseLookupCells: CellsRenderFN<BMSCourseWithRelated> = ({
 					{typeof e === "string" ? (
 						<span className="text-danger">UNKNOWN CHART</span>
 					) : (
-						<span>{FormatChart(e.chart)} </span>
+						<span>{FormatChart({ ...e.chart, song: e.song } as unknown as ChartDocument)} </span>
 					)}
 
 					{!compress && (
 						<div className="ms-auto" key={i}>
-							<code>{typeof e === "string" ? e : e.chart.data.hashMD5}</code>
+							<code>
+								{typeof e === "string"
+									? e
+									: (e.chart.data as ChartDocumentData["bms-7k"] | ChartDocumentData["bms-14k"])
+											.hashMD5}
+							</code>
 						</div>
 					)}
 				</div>

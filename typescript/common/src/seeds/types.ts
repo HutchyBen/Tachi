@@ -1,15 +1,14 @@
+import type { GameGroup, V3Game } from "../types";
 import type {
-	BMSCourseDocument,
-	ChartDocument,
-	FolderDocument,
-	GameGroup,
-	GoalDocument,
-	QuestDocument,
-	QuestlineDocument,
-	SongDocument,
-	TableDocument,
-	V3Game,
-} from "../types";
+	SEEDS_BMSCourseDocument,
+	SEEDS_ChartDocument,
+	SEEDS_FolderDocument,
+	SEEDS_GoalDocument,
+	SEEDS_QuestDocument,
+	SEEDS_QuestlineDocument,
+	SEEDS_SongDocument,
+	SEEDS_TableDocument,
+} from "../types/seeds-documents";
 
 import { allSupportedGameGroups } from "../config/config";
 
@@ -17,20 +16,20 @@ import { allSupportedGameGroups } from "../config/config";
 // note that TS won't let you do this multiple times within an object
 // so, we have to join them ourselves. Ah well, not that bad.
 type ChartDBSeeds = {
-	[TGame in V3Game as `charts-${TGame}.json`]: Array<ChartDocument<TGame>>;
+	[TGame in V3Game as `charts-${TGame}.json`]: Array<SEEDS_ChartDocument<TGame>>;
 };
 
 type SongDBSeeds = {
-	[G in GameGroup as `songs-${G}.json`]: Array<SongDocument<G>>;
+	[G in GameGroup as `songs-${G}.json`]: Array<SEEDS_SongDocument<G>>;
 };
 
 interface OtherDBSeeds {
-	"bms-course-lookup.json": Array<BMSCourseDocument>;
-	"folders.json": Array<FolderDocument>;
-	"goals.json": Array<GoalDocument>;
-	"questlines.json": Array<QuestlineDocument>;
-	"quests.json": Array<QuestDocument>;
-	"tables.json": Array<TableDocument>;
+	"bms-course-lookup.json": Array<SEEDS_BMSCourseDocument>;
+	"folders.json": Array<SEEDS_FolderDocument>;
+	"goals.json": Array<SEEDS_GoalDocument>;
+	"questlines.json": Array<SEEDS_QuestlineDocument>;
+	"quests.json": Array<SEEDS_QuestDocument>;
+	"tables.json": Array<SEEDS_TableDocument>;
 }
 
 export type AllDatabaseSeeds = ChartDBSeeds & OtherDBSeeds & SongDBSeeds;

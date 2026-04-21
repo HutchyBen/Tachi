@@ -1,12 +1,18 @@
 import {
 	ALL_GAMES,
 	allSupportedGameGroups,
-	GAME_CONFIGS,
-	GAME_GROUP_CONFIGS,
+	SEEDS_BMS_COURSE_DOCUMENT_SCHEMA,
+	SEEDS_CHART_DOCUMENT_SCHEMAS,
+	SEEDS_FOLDER_DOCUMENT_SCHEMA,
+	SEEDS_GOAL_DOCUMENT_SCHEMA,
+	SEEDS_QUEST_DOCUMENT_SCHEMA,
+	SEEDS_QUESTLINE_DOCUMENT_SCHEMA,
+	SEEDS_SONG_DOCUMENT_SCHEMAS,
+	SEEDS_TABLE_DOCUMENT_SCHEMA,
 	type GameGroup,
 	type V3Game,
 } from "tachi-common";
-import { z, type ZodType } from "zod";
+import { type ZodType } from "zod";
 
 export type AllCollections =
 	| "bms-course-lookup.json"
@@ -18,94 +24,23 @@ export type AllCollections =
 	| `charts-${V3Game}.json`
 	| `songs-${GameGroup}.json`;
 
-export const V3_GAME_SCHEMA = z.enum(ALL_GAMES as [V3Game, ...Array<V3Game>]);
-export const V3_GAME_GROUP_SCHEMA = z.enum(
-	allSupportedGameGroups as [GameGroup, ...Array<GameGroup>],
-);
+/** @deprecated Use {@link SEEDS_CHART_DOCUMENT_SCHEMAS} from tachi-common. */
+export const V3_CHART_SCHEMAS = Object.fromEntries(
+	ALL_GAMES.map((game) => [`charts-${game}.json` as const, SEEDS_CHART_DOCUMENT_SCHEMAS[game]]),
+) as Record<`charts-${V3Game}.json`, ZodType>;
 
-export const V3_TACHI_ID = (prefix: string) =>
-	z.string().regex(new RegExp(`^${prefix}[0-9a-f]{19}$`, "u"));
-
-export const V3_FOLDER_SCHEMA = z.strictObject({
-	title: z.string(),
-	game: V3_GAME_SCHEMA,
-	id: V3_TACHI_ID("F"),
-	legacyFolderID: z.string(),
-	inactive: z.boolean(),
-	searchTerms: z.array(z.string()),
-	versionFilter: z.array(z.string()).optional(),
-	where: z.string(),
-	slug: z.string().optional(),
-});
-
-export const V3_TABLE_SCHEMA = z.strictObject({
-	game: V3_GAME_SCHEMA,
-	id: V3_TACHI_ID("T"),
-	legacyTableID: z.string(),
-	inactive: z.boolean(),
-	title: z.string(),
-	description: z.string(),
-	slug: z.string().optional(),
-	default: z.boolean(),
-	folders: z.array(z.string()),
-});
-
-export const V3_BMS_COURSE_LOOKUP_SCHEMA = z.strictObject({
-	md5sums: z.string(),
-	title: z.string(),
-	set: z.string(),
-	game: z.enum(["bms-7k", "bms-14k"]),
-	value: z.string(),
-});
-
-// TODO(zk): impl
-export const V3_QUEST_SCHEMA = z.any();
-export const V3_QUESTLINE_SCHEMA = z.any();
-export const V3_GOAL_SCHEMA = z.any();
-
-export const V3_SONG_SCHEMAS: Record<`songs-${GameGroup}.json`, ZodType> = Object.fromEntries(
-	allSupportedGameGroups.map((gameGroup) => [
-		`songs-${gameGroup}.json` as const,
-		z.strictObject({
-			id: V3_TACHI_ID("S"),
-			legacySongID: z.number(),
-			title: z.string(),
-			artist: z.string(),
-			altTitles: z.array(z.string()),
-			searchTerms: z.array(z.string()),
-			data: GAME_GROUP_CONFIGS[gameGroup].songData,
-		}),
-	]),
-) as unknown as Record<`songs-${GameGroup}.json`, ZodType>;
-// ^ object.fromEntries is hardcoded to [k: string]
-// even when k is a subset of string
-
-export const V3_CHART_SCHEMAS: Record<`charts-${V3Game}.json`, ZodType> = Object.fromEntries(
-	ALL_GAMES.map((game) => [
-		`charts-${game}.json` as const,
-		z.strictObject({
-			id: V3_TACHI_ID("C"),
-			// TODO(zk): Game specific?
-			difficulty: z.string(),
-			isPrimary: z.boolean(),
-			legacyChartID: z.string(),
-			level: z.string(),
-			levelNum: z.number(),
-			songID: V3_TACHI_ID("S"),
-			versions: z.array(z.string()),
-			data: GAME_CONFIGS[game].chartData,
-		}),
-	]),
-) as unknown as Record<`charts-${V3Game}.json`, ZodType>;
+/** @deprecated Use {@link SEEDS_SONG_DOCUMENT_SCHEMAS} from tachi-common. */
+export const V3_SONG_SCHEMAS = Object.fromEntries(
+	allSupportedGameGroups.map((g) => [`songs-${g}.json` as const, SEEDS_SONG_DOCUMENT_SCHEMAS[g]]),
+) as Record<`songs-${GameGroup}.json`, ZodType>;
 
 export const V3_SCHEMAS: Record<AllCollections, ZodType> = {
-	"bms-course-lookup.json": V3_BMS_COURSE_LOOKUP_SCHEMA,
-	"folders.json": V3_FOLDER_SCHEMA,
-	"tables.json": V3_TABLE_SCHEMA,
-	"quests.json": V3_QUEST_SCHEMA,
-	"questlines.json": V3_QUESTLINE_SCHEMA,
-	"goals.json": V3_GOAL_SCHEMA,
-
+	"bms-course-lookup.json": SEEDS_BMS_COURSE_DOCUMENT_SCHEMA,
+	"folders.json": SEEDS_FOLDER_DOCUMENT_SCHEMA,
+	"goals.json": SEEDS_GOAL_DOCUMENT_SCHEMA,
+	"questlines.json": SEEDS_QUESTLINE_DOCUMENT_SCHEMA,
+	"quests.json": SEEDS_QUEST_DOCUMENT_SCHEMA,
+	"tables.json": SEEDS_TABLE_DOCUMENT_SCHEMA,
 	...V3_SONG_SCHEMAS,
 	...V3_CHART_SCHEMAS,
 };

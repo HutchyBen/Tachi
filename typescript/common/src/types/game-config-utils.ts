@@ -123,10 +123,36 @@ export interface FixedDifficulties<Difficulty extends string> {
 	order: ReadonlyArray<Difficulty>;
 
 	/**
-	 * For mobile view (and certain pages where things are generally smaller)
-	 * how should we shorten these difficulty names?
+	 * How should we format these difficulty names?
+	 */
+	format: Partial<Record<Difficulty, string>>;
+
+	default: Difficulty;
+}
+
+/**
+ * This is for chugekimai; where they have a "fixed" set of difficulties, and then a dynamic amount
+ * of difficulties for LUNATIC/WORLD'S END/UTAGE charts. This way, we can have the fixed set and
+ * still support the dynamic set of additional ones.
+ *
+ * This is a bit of a bodge. We don't have a nice way of handling this - but we also don't have a
+ * nice way of disambiguating score imports as usual - we can't let people import "i got xxx on
+ * the worlds end for yyy", because such a uniqueness relation *does not exist*. the difficulty name
+ * is not the unique bit - it is meaningless flavour like the dynamic diffnames.
+ *
+ * Originally, I called this "SEMI_FIXED", which is the sort of ZK quirkiness you've came to know at
+ * this point, but now there's no point, this is for chugekimai, and this makes it clear.
+ */
+export interface ChuGekiMaiDifficulties<Difficulty extends string> {
+	type: "CHUGEKIMAI_STYLE";
+
+	order: ReadonlyArray<Difficulty>;
+
+	/**
+	 * How should we format these difficulty names?
 	 *
-	 * For example, in IIDX "ANOTHER" is generally shortened to "A".
+	 * Dynamic ones (i.e. ones not in the Order set) are not formatted - they are printed
+	 * exactly as-is.
 	 */
 	format: Partial<Record<Difficulty, string>>;
 
@@ -134,5 +160,6 @@ export interface FixedDifficulties<Difficulty extends string> {
 }
 
 export type DifficultyConfig<D extends string = string> =
+	| ChuGekiMaiDifficulties<D>
 	| DynamicDifficulties
 	| FixedDifficulties<D>;

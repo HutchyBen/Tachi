@@ -544,8 +544,8 @@ export function clamp(a: number, low: number, up: number) {
 	return a;
 }
 
-export function CreateQuestMap(quests: Array<QuestDocument>) {
-	const map = new Map<string, QuestDocument>();
+export function CreateQuestMap<Q extends { questID: string }>(quests: Array<Q>) {
+	const map = new Map<string, Q>();
 
 	for (const q of quests) {
 		map.set(q.questID, q);

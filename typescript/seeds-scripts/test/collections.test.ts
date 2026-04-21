@@ -71,8 +71,6 @@ for (const collection of collections) {
 		} else {
 			success++;
 		}
-
-		success++;
 	}
 
 	const report = `GOOD: ${success}, BAD: ${fails}(${Math.min(

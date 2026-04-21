@@ -31,3 +31,4 @@ export * from "./types/documents";
 export * from "./types/game-config";
 export * from "./types/import-types";
 export * from "./types/notifications";
+export * from "./types/seeds-documents";

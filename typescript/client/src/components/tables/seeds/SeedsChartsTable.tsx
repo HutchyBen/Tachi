@@ -6,7 +6,7 @@ import { FlattenValue, StringifyKeyChain } from "#util/misc";
 import { StrSOV } from "#util/sorts";
 import { type SearchFunctions } from "#util/ztable/search";
 import React from "react";
-import { COLOUR_SET, type V3Game } from "tachi-common";
+import { type ChartDocument, COLOUR_SET, type V3Game } from "tachi-common";
 
 import DifficultyCell from "../cells/DifficultyCell";
 import ObjCell from "../cells/ObjCell";
@@ -21,7 +21,7 @@ export function MakeSeedsChartsControls(game: V3Game): {
 } {
 	return {
 		headers: [
-			ChartHeader(game, (k) => k),
+			ChartHeader(game, (k) => k as unknown as ChartDocument),
 			["Title", "Title", StrSOV((x) => x.__related.song?.title ?? "")],
 			["Data", "Data"],
 		],
@@ -31,7 +31,7 @@ export function MakeSeedsChartsControls(game: V3Game): {
 			songID: (x) => x.__related.song?.id ?? null,
 			searchTerms: (x) => x.__related.song?.searchTerms.join(", ") ?? null,
 			altTitles: (x) => x.__related.song?.altTitles.join(", ") ?? null,
-			difficulty: (x) => x.difficulty,
+			difficulty: (x) => String(x.difficulty),
 			level: (x) => x.levelNum,
 			data: (x) =>
 				FlattenValue(x.data)
@@ -40,14 +40,14 @@ export function MakeSeedsChartsControls(game: V3Game): {
 		},
 		Cells: ({ data }) => (
 			<>
-				<DifficultyCell chart={data} game={game} />
+				<DifficultyCell chart={data as unknown as ChartDocument} game={game} />
 
 				{/* if we have a song, render the title cell. Otherwise, this chart has no parent song, and is invalid. */}
 				{data.__related.song ? (
-					<TitleCell chart={data} game={game} song={data.__related.song} />
+					<TitleCell chart={data as unknown as ChartDocument} game={game} song={data.__related.song} />
 				) : (
 					<td style={{ backgroundColor: ChangeOpacity(COLOUR_SET.red, 0.3) }}>
-						INVALID SONG ({data.song.id})
+						INVALID SONG ({data.songID})
 						<QuickTooltip tooltipContent="This chart points to a songID that does not exist at the time of this commit. This is a fatal error, and this commit doesn't pass tests.">
 							<div>
 								<Icon type="info" />

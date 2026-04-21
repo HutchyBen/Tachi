@@ -124,12 +124,8 @@ export const GAME_MAIMAI_CONF = {
 	defaultSessionRatingAlg: "rate",
 	defaultProfileRatingAlg: "naiveRate",
 
-	// Similar to CHUNITHM, this game has a dynamic set of difficulties,
-	// with a song able to have as many UTAGE difficulties as it likes.
-	// This will also not be implemented for the same reasons as CHUNITHM.
-	// Sorry!
 	difficulties: {
-		type: "FIXED",
+		type: "CHUGEKIMAI_STYLE",
 		order: ["Easy", "Basic", "Advanced", "Expert", "Master", "Re:Master"],
 		format: {
 			Easy: "ESY",

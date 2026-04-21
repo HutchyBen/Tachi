@@ -1,14 +1,13 @@
 import type { z } from "zod";
 
 import chalk from "chalk";
-import { ALL_GAMES, FormatGame } from "tachi-common";
+import { ALL_GAMES, FormatGame, type SEEDS_TABLE_DOCUMENT_SCHEMA } from "tachi-common";
 
 import { ReadCollection } from "../util";
-import { type V3_TABLE_SCHEMA } from "./schemas";
 
 const defaultTableMap = {};
 
-const tables: Array<z.infer<typeof V3_TABLE_SCHEMA>> = ReadCollection("tables.json");
+const tables: Array<z.infer<typeof SEEDS_TABLE_DOCUMENT_SCHEMA>> = ReadCollection("tables.json");
 
 let errs = 0;
 

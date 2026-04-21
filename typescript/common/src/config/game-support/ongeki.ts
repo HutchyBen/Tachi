@@ -182,7 +182,7 @@ export const GAME_ONGEKI_CONF = {
 	defaultProfileRatingAlg: "naiveRating",
 
 	difficulties: {
-		type: "FIXED",
+		type: "CHUGEKIMAI_STYLE",
 		order: ["BASIC", "ADVANCED", "EXPERT", "MASTER", "LUNATIC"],
 		format: {
 			BASIC: "BAS",

@@ -11,10 +11,6 @@ export function AssertStrAsDifficulty(strVal: string, game: V3Game): Difficultie
 	}
 
 	if (!diffConf.order.includes(strVal)) {
-		if (game === "chunithm" && strVal === "WORLD'S END") {
-			throw new InvalidScoreFailure("WORLD'S END is not supported. Sorry.");
-		}
-
 		throw new InvalidScoreFailure(
 			`Invalid Difficulty for ${FormatGame(game)} - Expected any of ${diffConf.order.join(
 				", ",

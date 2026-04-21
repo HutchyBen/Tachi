@@ -482,6 +482,23 @@ export async function ResolveChartFromSong(
 
 	const difficulty = AssertStrAsDifficulty(resolver.difficulty, game);
 
+	const gameConfig = GetGameConfig(resolver.game);
+	switch (gameConfig.difficulties.type) {
+		case "DYNAMIC":
+			throw new InvalidScoreFailure(
+				"You cannot use a songTitle+difficulty lookup for a game with 'DYNAMIC' difficulties",
+			);
+		case "CHUGEKIMAI_STYLE":
+			if (!gameConfig.difficulties.order.includes(difficulty)) {
+				throw new InvalidScoreFailure(
+					`This difficulty "${difficulty}" is not supported for songTitle+difficulty lookups. If you are trying to import for WORLD'S END/LUNATIC/UTAGE scores, you must use inGameID, or a different lookup method.`,
+				);
+			}
+			break;
+		case "FIXED":
+			break;
+	}
+
 	let chart;
 
 	if (resolver.version) {

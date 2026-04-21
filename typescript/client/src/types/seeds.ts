@@ -1,14 +1,15 @@
 import { type JSONAttributeDiff } from "#util/misc";
 import {
-	type BMSCourseDocument,
-	type ChartDocument,
-	type FolderDocument,
 	type GameGroup,
-	type GoalDocument,
-	type QuestDocument,
-	type QuestlineDocument,
+	type SEEDS_BMSCourseDocument,
+	type SEEDS_ChartDocument,
+	type SEEDS_FolderDocument,
+	type SEEDS_GoalDocument,
+	type SEEDS_QuestDocument,
+	type SEEDS_QuestlineDocument,
+	type SEEDS_SongDocument,
+	type SEEDS_TableDocument,
 	type SongDocument,
-	type TableDocument,
 	type V3Game,
 } from "tachi-common";
 
@@ -23,46 +24,46 @@ export type BMSCourseWithRelated = {
 		entries: Array<
 			| string
 			| {
-					chart: ChartDocument<"bms-7k" | "bms-14k">;
+					chart: SEEDS_ChartDocument<"bms-7k" | "bms-14k">;
 					song: SongDocument<"bms">;
 			  }
 		>;
 	};
-} & BMSCourseDocument;
+} & SEEDS_BMSCourseDocument;
 
 export type TableWithRelated = {
 	__related: {
 		/** Keys match `tables.json` folder slug strings (per game). */
 		folders: {
-			[folderSlug: string]: FolderDocument | undefined;
+			[folderSlug: string]: SEEDS_FolderDocument | undefined;
 		};
 	};
-} & TableDocument;
+} & SEEDS_TableDocument;
 
 export type QuestlineWithRelated = {
 	__related: {
 		quests: {
-			[questID: string]: QuestDocument | undefined;
+			[questID: string]: SEEDS_QuestDocument | undefined;
 		};
 	};
-} & QuestlineDocument;
+} & SEEDS_QuestlineDocument;
 
 export type QuestWithRelated = {
 	__related: {
 		goals: {
-			[goalID: string]: GoalDocument | undefined;
+			[goalID: string]: SEEDS_GoalDocument | undefined;
 		};
 	};
-} & QuestDocument;
+} & SEEDS_QuestDocument;
 
 export type ChartWithRelated<T extends V3Game = V3Game> = {
 	__related: {
 		song: SongDocument | undefined;
 	};
-} & ChartDocument<T>;
+} & SEEDS_ChartDocument<T>;
 
 type SongSeedsWithRelated = {
-	[G in GameGroup as `songs-${G}.json`]: Array<SongDocument<G>>;
+	[G in GameGroup as `songs-${G}.json`]: Array<SEEDS_SongDocument<G>>;
 };
 
 type ChartSeedsWithRelated = {
@@ -78,9 +79,9 @@ export type DatabaseSeedsWithRelated = {
 	"bms-course-lookup.json": Array<BMSCourseWithRelated>;
 
 	// intentional: folders don't need to be joined with anything.
-	"folders.json": Array<FolderDocument>;
+	"folders.json": Array<SEEDS_FolderDocument>;
 
-	"goals.json": Array<GoalDocument>;
+	"goals.json": Array<SEEDS_GoalDocument>;
 	"questlines.json": Array<QuestlineWithRelated>;
 	"quests.json": Array<QuestWithRelated>;
 	"tables.json": Array<TableWithRelated>;

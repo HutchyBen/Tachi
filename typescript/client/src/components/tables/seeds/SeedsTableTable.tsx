@@ -9,7 +9,7 @@ import { FormatGame } from "tachi-common";
 import { type Header } from "../components/TachiTable";
 
 export const SeedsTableHeaders: Header<TableWithRelated>[] = [
-	["ID", "ID", StrSOV((x) => x.tableID)],
+	["ID", "ID", StrSOV((x) => x.id)],
 	["Name", "Name", StrSOV((x) => x.title)],
 	["GPT", "GPT", StrSOV((x) => x.game)],
 	["Folders", "Folders", StrSOV((x) => x.title)],
@@ -17,7 +17,7 @@ export const SeedsTableHeaders: Header<TableWithRelated>[] = [
 
 export const SeedsTableSearchFns: SearchFunctions<TableWithRelated> = {
 	title: (x) => x.title,
-	tableID: (x) => x.tableID,
+	tableID: (x) => x.id,
 	inactive: (x) => x.inactive,
 	default: (x) => x.default,
 	description: (x) => x.description,
@@ -33,7 +33,7 @@ export const SeedsTableSearchFns: SearchFunctions<TableWithRelated> = {
 export const SeedsTableCells: CellsRenderFN<TableWithRelated> = ({ data }) => (
 	<>
 		<td>
-			<code>{data.tableID}</code>
+			<code>{data.id}</code>
 		</td>
 		<td>
 			<strong>{data.title}</strong>

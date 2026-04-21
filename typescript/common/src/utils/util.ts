@@ -10,6 +10,8 @@ import type {
 	GamesForGroup,
 	integer,
 	LEGACY_Playtypes,
+	SEEDS_BMSCourseDocument,
+	SEEDS_SongDocument,
 	SongDocument,
 	V3Game,
 } from "../types";
@@ -357,11 +359,13 @@ export function GetCloserGradeDelta<G extends string>(
 	return lower;
 }
 
-export function CreateSongMap<G extends GameGroup = GameGroup>(songs: Array<SongDocument<G>>) {
+export function CreateSongMap<G extends GameGroup = GameGroup>(
+	songs: Array<SEEDS_SongDocument<G> | SongDocument<G>>,
+) {
 	const songMap = new Map<string, SongDocument<G>>();
 
 	for (const song of songs) {
-		songMap.set(song.id, song);
+		songMap.set(song.id, song as SongDocument<G>);
 	}
 
 	return songMap;
@@ -391,7 +395,7 @@ export function FormatPrError(err: PrudenceError, foreword = "Error"): string {
 	return `${foreword}: ${err.keychain} | ${err.message}${receivedText}.`;
 }
 
-export function GetBMSCourseIndex(course: BMSCourseDocument) {
+export function GetBMSCourseIndex(course: BMSCourseDocument | SEEDS_BMSCourseDocument) {
 	const gameConfig = GetGameConfig(course.game);
 
 	const cls = gameConfig.classes[course.set as keyof typeof gameConfig.classes];

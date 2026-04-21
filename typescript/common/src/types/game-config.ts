@@ -241,6 +241,7 @@ export type LEGACY_GameToPlaytype = {
 export type Difficulties = {
 	// If this game has fixed difficulties, infer what they are
 	// otherwise, difficulties are an arbitrary string
+	// n.b. still true even with the new chugekimai stuff
 	[TGame in V3Game]: (typeof GAME_CONFIGS)[TGame]["difficulties"] extends FixedDifficulties<
 		infer D
 	>

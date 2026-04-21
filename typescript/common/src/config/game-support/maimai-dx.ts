@@ -174,7 +174,7 @@ export const GAME_MAIMAI_DX_CONF = {
 	defaultProfileRatingAlg: "naiveRate",
 
 	difficulties: {
-		type: "FIXED",
+		type: "CHUGEKIMAI_STYLE",
 		order: [
 			"Basic",
 			"Advanced",

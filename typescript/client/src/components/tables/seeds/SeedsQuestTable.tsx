@@ -4,7 +4,12 @@ import { type CellsRenderFN, type QuestWithRelated } from "#types/seeds";
 import { StrSOV } from "#util/sorts";
 import { type SearchFunctions } from "#util/ztable/search";
 import React from "react";
-import { FormatGame } from "tachi-common";
+import {
+	type GameGroup,
+	type GoalDocument,
+	LEGACY_FormatGameGroupPT,
+	type LEGACY_Playtypes,
+} from "tachi-common";
 
 import { type Header } from "../components/TachiTable";
 
@@ -19,7 +24,11 @@ export const SeedsQuestSearchFns: SearchFunctions<QuestWithRelated> = {
 	name: (x) => x.name,
 	questID: (x) => x.questID,
 	game: (x) => x.game,
-	gpt: (x) => FormatGame(x.game),
+	gpt: (x) =>
+		LEGACY_FormatGameGroupPT(
+			x.game as GameGroup,
+			x.playtype as LEGACY_Playtypes[typeof x.game],
+		),
 	goals: (x) =>
 		Object.values(x.__related.goals)
 			.map((e) => e!.name)
@@ -38,7 +47,12 @@ export const SeedsQuestCells: CellsRenderFN<QuestWithRelated> = ({
 		<td>
 			<strong>{data.name}</strong>
 		</td>
-		<td>{FormatGame(data.game)}</td>
+		<td>
+			{LEGACY_FormatGameGroupPT(
+				data.game as GameGroup,
+				data.playtype as LEGACY_Playtypes[typeof data.game],
+			)}
+		</td>
 		<td>
 			<div style={{ maxHeight: "200px", overflowY: "auto" }}>
 				{data.questData.map((section) => (
@@ -51,7 +65,7 @@ export const SeedsQuestCells: CellsRenderFN<QuestWithRelated> = ({
 							if (goal) {
 								return (
 									<div className="text-start" key={ref.goalID}>
-										<InnerQuestSectionGoal goal={goal} />
+										<InnerQuestSectionGoal goal={goal as GoalDocument} />
 										{ref.note && <Muted>{ref.note}</Muted>}
 									</div>
 								);
