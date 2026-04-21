@@ -29,7 +29,6 @@ import {
 	type GoalDocument,
 	type GoalSubscriptionDocument,
 	type integer,
-	LEGACY_GameToGPTString,
 	type PBScoreDocument,
 	type QuestDocument,
 	type QuestSubscriptionDocument,
@@ -72,13 +71,12 @@ export async function EvaluateGoalForUser(
 ): Promise<EvaluatedGoalReturn | null> {
 	const chartIDs = await ResolveGoalCharts(goal);
 	const v3Game = goal.game;
-	const gptString = LEGACY_GameToGPTString(v3Game);
 	const gameConfig = GetGameConfig(v3Game);
 	const scoreConf = GetScoreMetricConf(gameConfig, goal.criteria.key);
 
 	if (!scoreConf) {
 		throw new Error(
-			`Invalid goal.criteria.key, got '${goal.criteria.key}', but no config exists for this metric for ${gptString}.`,
+			`Invalid goal.criteria.key, got '${goal.criteria.key}', but no config exists for this metric for ${v3Game}.`,
 		);
 	}
 

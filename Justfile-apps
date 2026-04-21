@@ -1,6 +1,6 @@
 start:
 	#!/bin/bash
-	ARGS=(server client)
+	ARGS=(server client seeds-webui)
 
 	echo "Starting: ${ARGS[@]}"
 	set -e
@@ -21,3 +21,6 @@ server:
 
 client:
 	cd typescript/client && bun vite
+
+seeds-webui:
+	cd typescript/seeds-webui && bun vite

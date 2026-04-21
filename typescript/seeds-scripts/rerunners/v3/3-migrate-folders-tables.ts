@@ -8,8 +8,8 @@ import fs from "fs";
 import path from "path";
 import {
 	type GameGroup,
-	GPTStringToGame,
 	LEGACY_GetGPTString,
+	LEGACY_GPTStringToGame,
 	type LEGACY_Playtype,
 } from "tachi-common";
 
@@ -58,7 +58,7 @@ for (const entry of folders) {
 		delete entry.folderID;
 	}
 
-	entry.game = GPTStringToGame(
+	entry.game = LEGACY_GPTStringToGame(
 		LEGACY_GetGPTString(entry.game as GameGroup, entry.playtype as LEGACY_Playtype),
 	);
 	delete entry.playtype;
@@ -82,7 +82,7 @@ for (const entry of tables) {
 		delete entry.tableID;
 	}
 
-	entry.game = GPTStringToGame(
+	entry.game = LEGACY_GPTStringToGame(
 		LEGACY_GetGPTString(entry.game as GameGroup, entry.playtype as LEGACY_Playtype),
 	);
 	delete entry.playtype;

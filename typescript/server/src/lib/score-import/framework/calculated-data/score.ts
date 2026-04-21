@@ -25,7 +25,7 @@ export function CreateScoreCalcData<TGame extends V3Game>(
 		chart as any,
 	) as MongoDerivedMetrics[TGame];
 
-	// Per-GPT `scoreCalcs` take game-specific score/derived types; at runtime inputs match `gptString`.
+	// Per-GPT `scoreCalcs` take game-specific score/derived types; at runtime inputs match `game`.
 	const scoreCalcs = impl.scoreCalcs as unknown as (
 		scoreData: ScoreData<TGame>,
 		derivedData: MongoDerivedMetrics[TGame],

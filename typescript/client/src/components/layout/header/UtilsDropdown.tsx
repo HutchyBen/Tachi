@@ -2,13 +2,22 @@ import DropdownNavLink from "#components/ui/DropdownNavLink";
 import QuickDropdown from "#components/ui/QuickDropdown";
 import { type SetState } from "#types/react";
 import React from "react";
+import DropdownItem from "react-bootstrap/DropdownItem";
+
+const SEEDS_URL = import.meta.env.VITE_SEEDS_URL as string | undefined;
 
 function UtilsLinks({ onClick }: { onClick: React.MouseEventHandler }) {
 	return (
 		<>
-			<DropdownNavLink onClick={onClick} to="/utils/seeds">
+			<DropdownItem
+				className="rounded focus-visible-ring"
+				href={SEEDS_URL}
+				onClick={onClick}
+				rel="noopener noreferrer"
+				target="_blank"
+			>
 				Seeds Management
-			</DropdownNavLink>
+			</DropdownItem>
 			<DropdownNavLink onClick={onClick} to="/utils/imports">
 				Import Management
 			</DropdownNavLink>

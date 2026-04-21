@@ -144,14 +144,23 @@ const v3GameMappings: Record<LEGACY_GPTString, V3Game> = {
 	"ddr:DP": "ddr-dp",
 };
 
+/**
+ * @deprecated
+ */
 export function LEGACY_GameGroupPTToGame(game: GameGroup, playtype: LEGACY_Playtype): V3Game {
-	return GPTStringToGame(LEGACY_GetGPTString(game, playtype));
+	return LEGACY_GPTStringToGame(LEGACY_GetGPTString(game, playtype));
 }
 
-export function GPTStringToGame(gptString: LEGACY_GPTString): V3Game {
+/**
+ * @deprecated
+ */
+export function LEGACY_GPTStringToGame(gptString: LEGACY_GPTString): V3Game {
 	return v3GameMappings[gptString];
 }
 
+/**
+ * @deprecated
+ */
 export function LEGACY_GameToGPTString(game: V3Game): LEGACY_GPTString {
 	const mapping: Record<V3Game, LEGACY_GPTString> = {
 		"iidx-sp": "iidx:SP",
@@ -241,7 +250,7 @@ export function LEGACY_GetGamePTConfig(
 }
 
 export function LEGACY_GetGPTConfig(gptString: LEGACY_GPTString): GameConfig {
-	const game = GPTStringToGame(gptString);
+	const game = LEGACY_GPTStringToGame(gptString);
 	return GAME_CONFIGS[game] as unknown as GameConfig;
 }
 

@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { spawnSync } = require("child_process");
 
 function ChartSort(a, b) {
 	// sink all 2dxtra charts to the bottom
@@ -97,6 +98,17 @@ function SortSeeds() {
 		content = content.map(SortObjectKeys);
 
 		fs.writeFileSync(collPath, JSON.stringify(content, null, "\t"));
+	}
+
+	// Run the repo formatter so the output is consistent with `just fmt`.
+	const repoRoot = path.resolve(__dirname, "../..");
+	const biome = path.join(repoRoot, "node_modules", ".bin", "biome");
+	const result = spawnSync(biome, ["format", "--write", collectionsDir], {
+		cwd: repoRoot,
+		stdio: "inherit",
+	});
+	if (result.status !== 0) {
+		throw new Error(`biome format exited ${result.status}`);
 	}
 }
 

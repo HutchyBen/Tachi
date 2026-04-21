@@ -357,21 +357,33 @@ function encodeBmsTableKey(game: string, key: string): string {
 
 function encodeBmsTableValue(value: string): string {
 	const parts: Array<string> = [];
+	let alphanumRun = "";
 
 	for (const ch of value) {
 		if (/[a-z0-9]/iu.test(ch)) {
-			parts.push(ch.toLowerCase());
-		} else if (ch === "+") {
-			parts.push("p");
-		} else if (ch === "?") {
-			parts.push("q");
-		} else if (ch === "-") {
-			parts.push("dash");
-		} else if (ch === "!") {
-			parts.push("excl");
+			alphanumRun += ch.toLowerCase();
 		} else {
-			parts.push(`u${ch.codePointAt(0)?.toString(16) ?? "0"}`);
+			if (alphanumRun.length > 0) {
+				parts.push(alphanumRun);
+				alphanumRun = "";
+			}
+
+			if (ch === "+") {
+				parts.push("p");
+			} else if (ch === "?") {
+				parts.push("q");
+			} else if (ch === "-") {
+				parts.push("dash");
+			} else if (ch === "!") {
+				parts.push("excl");
+			} else {
+				parts.push(`u${ch.codePointAt(0)?.toString(16) ?? "0"}`);
+			}
 		}
+	}
+
+	if (alphanumRun.length > 0) {
+		parts.push(alphanumRun);
 	}
 
 	return parts.join("-");
@@ -386,7 +398,7 @@ function slugBmsLike(folder: SeedFolderRow, label: string): string {
 		const key = mKv[1].replaceAll("''", "'");
 		const val = mKv[2].replaceAll("''", "'");
 
-		return `tf-${encodeBmsTableKey(folder.game, key)}-${encodeBmsTableValue(val)}`;
+		return `${encodeBmsTableKey(folder.game, key)}-${encodeBmsTableValue(val)}`;
 	}
 
 	const mPr = /tableFolders'\) \? '((?:[^']|'')+)'/u.exec(w);
@@ -394,7 +406,7 @@ function slugBmsLike(folder: SeedFolderRow, label: string): string {
 	if (mPr !== null) {
 		const key = mPr[1].replaceAll("''", "'");
 
-		return `tf-${encodeBmsTableKey(folder.game, key)}-present`;
+		return `${encodeBmsTableKey(folder.game, key)}-present`;
 	}
 
 	const mRg =

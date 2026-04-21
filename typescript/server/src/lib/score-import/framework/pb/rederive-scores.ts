@@ -59,7 +59,7 @@ export async function rederiveScoresForChart(chartId: string, log: KtLogger): Pr
 		for (const row of rows) {
 			const score = ToScoreDocument(row as ScoreDocumentJoinRow);
 
-			// GPT-specific union types aren't callable with the generic GPTString,
+			// game-specific union types aren't callable with the generic game,
 			// so we cast through `any` the same way CreateScoreCalcData does.
 			const derivedData = (impl.scoreDeriver as any)(score.scoreData, chart);
 
