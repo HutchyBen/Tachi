@@ -30,11 +30,15 @@ type EditRoute = { component: React.ComponentType; path: string };
 function useEditRoutes(): EditRoute[] {
 	const [routes, setRoutes] = useState<EditRoute[]>([]);
 	useEffect(() => {
-		if (!EDIT_MODE) {return;}
+		if (!EDIT_MODE) {
+			return;
+		}
 		let alive = true;
 		import("./app/editRoutes")
 			.then((m) => {
-				if (alive) {setRoutes(m.editRoutes);}
+				if (alive) {
+					setRoutes(m.editRoutes);
+				}
 			})
 			.catch((err) => {
 				console.error("[seeds-webui] failed to load edit routes:", err);
@@ -56,11 +60,7 @@ export default function App() {
 						<Switch>
 							<Route component={Overview} exact path="/" />
 							<Route component={Query} exact path="/query" />
-							<Route
-								exact
-								path="/history"
-								render={() => <Redirect to="/diff" />}
-							/>
+							<Route exact path="/history" render={() => <Redirect to="/diff" />} />
 							<Route component={Diff} exact path="/diff" />
 							<Route component={Collection} exact path="/c/:name" />
 							{editRoutes.map((r) => (

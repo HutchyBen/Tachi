@@ -9,13 +9,7 @@ type SqliteWorkspaceGateProps = { children: ReactNode };
  * that matches the editor area so the rest of the app (nav, other routes) stays usable.
  */
 export function SqliteWorkspaceGate({ children }: SqliteWorkspaceGateProps) {
-	const {
-		error: ingestError,
-		progress,
-		ready,
-		transportError,
-		transportLoading,
-	} = useIngest();
+	const { error: ingestError, progress, ready, transportError, transportLoading } = useIngest();
 
 	if (ready) {
 		return <>{children}</>;
@@ -31,7 +25,9 @@ export function SqliteWorkspaceGate({ children }: SqliteWorkspaceGateProps) {
 		<div aria-busy="true" className="sql-workspace-gate" role="status">
 			{errMsg ? (
 				<div className="alert alert-danger sql-workspace-gate-inner mono mb-0" role="alert">
-					<strong className="d-block text-danger-emphasis mb-1">SQLite not available</strong>
+					<strong className="d-block text-danger-emphasis mb-1">
+						SQLite not available
+					</strong>
 					{errMsg}
 				</div>
 			) : (
@@ -52,11 +48,20 @@ export function SqliteWorkspaceGate({ children }: SqliteWorkspaceGateProps) {
 								<span className="mono text-body-secondary">{progress.name}</span>
 								<span>
 									{progress.idx + 1} / {progress.total}
-									{progress.cached ? " · cached" : ` · ${progress.rows.toLocaleString()} rows`}
+									{progress.cached
+										? " · cached"
+										: ` · ${progress.rows.toLocaleString()} rows`}
 								</span>
 							</div>
 							{progress.total > 0 ? (
-								<div className="ingest-bar sql-workspace-gate-bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Ingest progress">
+								<div
+									className="ingest-bar sql-workspace-gate-bar"
+									role="progressbar"
+									aria-valuenow={pct}
+									aria-valuemin={0}
+									aria-valuemax={100}
+									aria-label="Ingest progress"
+								>
 									<div className="ingest-bar-fill" style={{ width: `${pct}%` }} />
 								</div>
 							) : null}

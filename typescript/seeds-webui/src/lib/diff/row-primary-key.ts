@@ -17,7 +17,9 @@ export const PK_KEYS = [
 export function primaryKey(row: Row): string | null {
 	for (const k of PK_KEYS) {
 		const v = row[k];
-		if (typeof v === "string" || typeof v === "number") {return `${k}=${v}`;}
+		if (typeof v === "string" || typeof v === "number") {
+			return `${k}=${v}`;
+		}
 	}
 	return null;
 }

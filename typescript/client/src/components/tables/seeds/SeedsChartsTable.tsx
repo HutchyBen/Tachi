@@ -44,7 +44,11 @@ export function MakeSeedsChartsControls(game: V3Game): {
 
 				{/* if we have a song, render the title cell. Otherwise, this chart has no parent song, and is invalid. */}
 				{data.__related.song ? (
-					<TitleCell chart={data as unknown as ChartDocument} game={game} song={data.__related.song} />
+					<TitleCell
+						chart={data as unknown as ChartDocument}
+						game={game}
+						song={data.__related.song}
+					/>
 				) : (
 					<td style={{ backgroundColor: ChangeOpacity(COLOUR_SET.red, 0.3) }}>
 						INVALID SONG ({data.songID})

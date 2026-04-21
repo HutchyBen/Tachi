@@ -18,7 +18,9 @@ let cached: Promise<SeedsTransport> | null = null;
  *   preview` locally).
  */
 export function getTransport(): Promise<SeedsTransport> {
-	if (cached) {return cached;}
+	if (cached) {
+		return cached;
+	}
 
 	cached = (async () => {
 		if (EDIT_MODE && (await probeDevTransport())) {

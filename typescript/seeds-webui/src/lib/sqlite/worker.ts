@@ -1,8 +1,5 @@
 /// <reference lib="webworker" />
-import sqlite3InitModule, {
-	type Database,
-	type SqlValue,
-} from "@sqlite.org/sqlite-wasm";
+import sqlite3InitModule, { type Database, type SqlValue } from "@sqlite.org/sqlite-wasm";
 import * as Comlink from "comlink";
 
 import type { QueryResult, SqliteApi } from "./types";
@@ -31,7 +28,9 @@ const SCHEMA_VERSION = 3;
 let db: Database | null = null;
 
 async function ensureDb(): Promise<Database> {
-	if (db) {return db;}
+	if (db) {
+		return db;
+	}
 	const sqlite3 = await sqlite3InitModule();
 
 	if (typeof sqlite3.oo1.OpfsDb === "function") {
@@ -88,7 +87,9 @@ function selectAll(handle: Database, sql: string, params: readonly SqlValue[] = 
 	const t0 = performance.now();
 	const stmt = handle.prepare(sql);
 	try {
-		if (params.length > 0) {stmt.bind(params);}
+		if (params.length > 0) {
+			stmt.bind(params);
+		}
 		const columns = stmt.getColumnNames();
 		const rows: unknown[][] = [];
 		while (stmt.step()) {
@@ -104,10 +105,18 @@ function selectAll(handle: Database, sql: string, params: readonly SqlValue[] = 
 // coerce here (objects/arrays get JSON.stringified).
 function toBindings(xs: unknown[]): SqlValue[] {
 	return xs.map((v) => {
-		if (v === undefined || v === null) {return null;}
-		if (typeof v === "boolean") {return v ? 1 : 0;}
-		if (typeof v === "string" || typeof v === "number" || typeof v === "bigint") {return v;}
-		if (v instanceof Uint8Array) {return v;}
+		if (v === undefined || v === null) {
+			return null;
+		}
+		if (typeof v === "boolean") {
+			return v ? 1 : 0;
+		}
+		if (typeof v === "string" || typeof v === "number" || typeof v === "bigint") {
+			return v;
+		}
+		if (v instanceof Uint8Array) {
+			return v;
+		}
 		return JSON.stringify(v);
 	});
 }
@@ -121,18 +130,24 @@ const api: SqliteApi = {
 		const handle = await ensureDb();
 		const prev = selectAll(handle, `SELECT content_hash FROM _meta WHERE name = ?`, [name]);
 		const prevHash = prev.rows[0]?.[0] as string | undefined;
-		if (prevHash === contentHash) {return { ingested: false };}
+		if (prevHash === contentHash) {
+			return { ingested: false };
+		}
 
 		const tbl = tableNameFor(name);
 		handle.exec("BEGIN");
 		try {
 			handle.exec(ddlFor(name));
-			for (const idx of indexesFor(name)) {handle.exec(idx);}
+			for (const idx of indexesFor(name)) {
+				handle.exec(idx);
+			}
 			handle.exec(`DELETE FROM "${tbl}"`);
 			const stmt = handle.prepare(insertSqlFor(name));
 			try {
 				for (const row of rows) {
-					if (row === null || typeof row !== "object") {continue;}
+					if (row === null || typeof row !== "object") {
+						continue;
+					}
 					stmt.bind(toBindings(projectRow(name, row as Record<string, unknown>)));
 					stmt.step();
 					stmt.reset(true);

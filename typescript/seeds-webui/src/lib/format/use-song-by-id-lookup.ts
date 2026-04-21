@@ -12,7 +12,9 @@ import { GameToGameGroup } from "tachi-common/config/config";
  */
 export function useSongByIdLookup(collectionName: string | undefined) {
 	const songFile = useMemo(() => {
-		if (!collectionName?.startsWith("charts-")) {return null;}
+		if (!collectionName?.startsWith("charts-")) {
+			return null;
+		}
 		const game = collectionName.replace(/^charts-/u, "").replace(/\.json$/u, "") as V3Game;
 		return `songs-${GameToGameGroup(game)}.json`;
 	}, [collectionName]);

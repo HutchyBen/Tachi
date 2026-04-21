@@ -2,7 +2,7 @@ import type { V3Game } from "tachi-common/types";
 
 import { DiffRows } from "#components/CollectionDiffRows";
 import { type Row, summariseDiff } from "#lib/diff/collection-diff";
-import { type Commit , getTransport } from "#lib/transport/transport";
+import { type Commit, getTransport } from "#lib/transport/transport";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "react-query";
 import { Link, useLocation } from "react-router-dom";
@@ -99,14 +99,18 @@ export function Diff() {
 	const files = useQuery("collections", async () => (await getTransport()).listCollections());
 	const [file, setFile] = useState(() => {
 		const p = new URLSearchParams(location.search);
-		if (!p.get("base") || !p.get("head")) {return "folders.json";}
+		if (!p.get("base") || !p.get("head")) {
+			return "folders.json";
+		}
 		return p.get("file") ?? "folders.json";
 	});
 	const [filter, setFilter] = useState("");
 	const [kindFilter, setKindFilter] = useState<"added" | "all" | "changed" | "removed">("all");
 
 	useEffect(() => {
-		if (!hasPair) {return;}
+		if (!hasPair) {
+			return;
+		}
 		const p = new URLSearchParams(location.search);
 		setFile(p.get("file") ?? "folders.json");
 	}, [hasPair, location.search]);
@@ -114,7 +118,9 @@ export function Diff() {
 	const headCommit = useQuery(
 		["commit", head],
 		async () => {
-			if (!head) {return null;}
+			if (!head) {
+				return null;
+			}
 			const t = await getTransport();
 			return t.getCommit(head);
 		},
@@ -124,7 +130,9 @@ export function Diff() {
 	const pair = useQuery(
 		["pair", base, head, file],
 		async () => {
-			if (!base || !head || !file) {return null;}
+			if (!base || !head || !file) {
+				return null;
+			}
 			const t = await getTransport();
 			const [a, b] = await Promise.all([
 				t.getCollection(file, base),
@@ -148,7 +156,9 @@ export function Diff() {
 	);
 
 	const summary = useMemo(() => {
-		if (!pair.data) {return null;}
+		if (!pair.data) {
+			return null;
+		}
 		return summariseDiff(pair.data.a, pair.data.b, {
 			collectionName: file,
 			songById: pair.data.songById,
@@ -156,7 +166,9 @@ export function Diff() {
 	}, [pair.data, file]);
 
 	const filteredRows = useMemo(() => {
-		if (!summary) {return [];}
+		if (!summary) {
+			return [];
+		}
 		const q = filter.trim().toLowerCase();
 		return summary.rows.filter((r) => {
 			const kindOk =
@@ -164,11 +176,13 @@ export function Diff() {
 				(kindFilter === "added" && r.kind === "added") ||
 				(kindFilter === "removed" && r.kind === "removed") ||
 				(kindFilter === "changed" && r.kind === "changed");
-			if (!kindOk) {return false;}
-			if (!q) {return true;}
-			return (
-				r.id.toLowerCase().includes(q) || r.pretty.toLowerCase().includes(q)
-			);
+			if (!kindOk) {
+				return false;
+			}
+			if (!q) {
+				return true;
+			}
+			return r.id.toLowerCase().includes(q) || r.pretty.toLowerCase().includes(q);
 		});
 	}, [summary, filter, kindFilter]);
 
@@ -265,18 +279,28 @@ export function Diff() {
 // commits. Returns a PR number or null.
 function extractPrNumber(message: string): number | null {
 	const parens = message.match(/\(#(\d+)\)/u);
-	if (parens?.[1]) {return Number(parens[1]);}
+	if (parens?.[1]) {
+		return Number(parens[1]);
+	}
 	const merge = message.match(/Merge pull request #(\d+)/u);
-	if (merge?.[1]) {return Number(merge[1]);}
+	if (merge?.[1]) {
+		return Number(merge[1]);
+	}
 	const hash = message.match(/(?:^|\s)#(\d+)(?:\s|$)/mu);
-	if (hash?.[1]) {return Number(hash[1]);}
+	if (hash?.[1]) {
+		return Number(hash[1]);
+	}
 	return null;
 }
 
 function formatCommitDate(iso: string | undefined): string {
-	if (!iso) {return "";}
+	if (!iso) {
+		return "";
+	}
 	const d = new Date(iso);
-	if (Number.isNaN(d.getTime())) {return iso;}
+	if (Number.isNaN(d.getTime())) {
+		return iso;
+	}
 	return d.toLocaleString(undefined, {
 		day: "2-digit",
 		hour: "2-digit",

@@ -3,11 +3,7 @@ import { type CellsRenderFN, type QuestlineWithRelated } from "#types/seeds";
 import { StrSOV } from "#util/sorts";
 import { type SearchFunctions } from "#util/ztable/search";
 import React from "react";
-import {
-	type GameGroup,
-	LEGACY_FormatGameGroupPT,
-	type LEGACY_Playtypes,
-} from "tachi-common";
+import { type GameGroup, LEGACY_FormatGameGroupPT, type LEGACY_Playtypes } from "tachi-common";
 
 import { type Header } from "../components/TachiTable";
 

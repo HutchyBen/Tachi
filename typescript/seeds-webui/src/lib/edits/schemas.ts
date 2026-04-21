@@ -24,10 +24,18 @@ import {
 export function schemaForCollection(name: string): z.ZodType<unknown> | null {
 	const stripped = name.replace(/\.json$/u, "");
 
-	if (stripped === "folders") {return SEEDS_FOLDER_DOCUMENT_SCHEMA as z.ZodType<unknown>;}
-	if (stripped === "tables") {return SEEDS_TABLE_DOCUMENT_SCHEMA as z.ZodType<unknown>;}
-	if (stripped === "goals") {return SEEDS_GOAL_DOCUMENT_SCHEMA as z.ZodType<unknown>;}
-	if (stripped === "quests") {return SEEDS_QUEST_DOCUMENT_SCHEMA as z.ZodType<unknown>;}
+	if (stripped === "folders") {
+		return SEEDS_FOLDER_DOCUMENT_SCHEMA as z.ZodType<unknown>;
+	}
+	if (stripped === "tables") {
+		return SEEDS_TABLE_DOCUMENT_SCHEMA as z.ZodType<unknown>;
+	}
+	if (stripped === "goals") {
+		return SEEDS_GOAL_DOCUMENT_SCHEMA as z.ZodType<unknown>;
+	}
+	if (stripped === "quests") {
+		return SEEDS_QUEST_DOCUMENT_SCHEMA as z.ZodType<unknown>;
+	}
 	if (stripped === "questlines") {
 		return SEEDS_QUESTLINE_DOCUMENT_SCHEMA as z.ZodType<unknown>;
 	}

@@ -7,11 +7,7 @@ import {
 	removeDraft,
 } from "#lib/edits/draft-store";
 import { applyMergeToRow, mergeToPatchOps, setValueAtPath } from "#lib/edits/patch-merge-ops";
-import {
-	bustAll,
-	bustCollection,
-	fetchCollection,
-} from "#lib/transport/collection-cache";
+import { bustAll, bustCollection, fetchCollection } from "#lib/transport/collection-cache";
 import {
 	getTransport,
 	type JsonPatch,
@@ -43,9 +39,7 @@ async function computeDocPair(draft: Draft): Promise<DocPair | null> {
 		if (synth) {
 			const [, field, enc] = synth;
 			const val = decodeURIComponent(enc!);
-			const row = (data as Record<string, unknown>[]).find(
-				(r) => String(r[field!]) === val,
-			);
+			const row = (data as Record<string, unknown>[]).find((r) => String(r[field!]) === val);
 			return { after: null, before: row ?? null };
 		}
 		const idxM = /^\/(\d+)/u.exec(op.path);
@@ -64,10 +58,10 @@ async function computeDocPair(draft: Draft): Promise<DocPair | null> {
 			const [, field, enc, tail] = synth;
 			const val = decodeURIComponent(enc!);
 			const data = await fetchCollection(collection);
-			const row = (data as Record<string, unknown>[]).find(
-				(r) => String(r[field!]) === val,
-			);
-			if (!row) {return null;}
+			const row = (data as Record<string, unknown>[]).find((r) => String(r[field!]) === val);
+			if (!row) {
+				return null;
+			}
 
 			if (tail === "__merge__") {
 				const patch = op.value as Record<string, unknown>;
@@ -83,7 +77,9 @@ async function computeDocPair(draft: Draft): Promise<DocPair | null> {
 			const idx = Number(parts[0]);
 			const data = await fetchCollection(collection);
 			const row = data[idx] as Record<string, unknown> | undefined;
-			if (!row) {return null;}
+			if (!row) {
+				return null;
+			}
 			if (parts.length === 1) {
 				return { after: op.value as Record<string, unknown>, before: row };
 			}
@@ -115,7 +111,9 @@ function DraftItem({ draft, onDiscard }: { draft: Draft; onDiscard: () => void }
 		setDiffError(null);
 		void computeDocPair(draftRef.current)
 			.then((p) => {
-				if (!cancelled) {setDocPair(p);}
+				if (!cancelled) {
+					setDocPair(p);
+				}
 			})
 			.catch((err) => {
 				if (!cancelled) {
@@ -123,7 +121,9 @@ function DraftItem({ draft, onDiscard }: { draft: Draft; onDiscard: () => void }
 				}
 			})
 			.finally(() => {
-				if (!cancelled) {setDiffLoading(false);}
+				if (!cancelled) {
+					setDiffLoading(false);
+				}
 			});
 		return () => {
 			cancelled = true;
@@ -340,7 +340,9 @@ async function expandPatch(
 	patch: JsonPatch,
 ): Promise<JsonPatch> {
 	const synthetic = patch.some((op) => /^\/~by-[^/]+~\//u.test(op.path));
-	if (!synthetic) {return patch;}
+	if (!synthetic) {
+		return patch;
+	}
 
 	const current = (await transport.getCollection(collection)) as Array<Record<string, unknown>>;
 	const out: JsonPatch = [];

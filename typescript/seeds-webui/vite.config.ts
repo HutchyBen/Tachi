@@ -19,16 +19,9 @@ const cmPackage = (name: string) => path.join(REPO_ROOT, "node_modules", "@codem
 const codemirrorSingleInstanceAliases: {
 	find: string;
 	replacement: string;
-}[] = [
-	"autocomplete",
-	"commands",
-	"lang-sql",
-	"language",
-	"lint",
-	"search",
-	"state",
-	"view",
-].map((name) => ({ find: `@codemirror/${name}`, replacement: cmPackage(name) }));
+}[] = ["autocomplete", "commands", "lang-sql", "language", "lint", "search", "state", "view"].map(
+	(name) => ({ find: `@codemirror/${name}`, replacement: cmPackage(name) }),
+);
 
 const lezerPackage = (name: string) => path.join(REPO_ROOT, "node_modules", "@lezer", name);
 

@@ -9,7 +9,9 @@ function useDraftCount(): number {
 	const { data = 0 } = useQuery(
 		"draft-count",
 		async () => {
-			if (!EDIT_MODE) {return 0;}
+			if (!EDIT_MODE) {
+				return 0;
+			}
 			return (await listDrafts()).length;
 		},
 		{
@@ -116,7 +118,9 @@ type Theme = "dark" | "light";
 
 function useTheme(): [Theme, (t: Theme) => void] {
 	const [theme, setThemeState] = useState<Theme>(() => {
-		if (typeof document === "undefined") {return "dark";}
+		if (typeof document === "undefined") {
+			return "dark";
+		}
 		return (document.documentElement.getAttribute("data-bs-theme") as Theme) ?? "dark";
 	});
 

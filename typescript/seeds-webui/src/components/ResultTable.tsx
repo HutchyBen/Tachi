@@ -148,7 +148,9 @@ function ResultRow({
 					isInline
 						? undefined
 						: (e) => {
-								if (e.key === "Enter" || e.key === " ") {toggle();}
+								if (e.key === "Enter" || e.key === " ") {
+									toggle();
+								}
 							}
 				}
 				role={isInline ? undefined : "button"}
@@ -168,22 +170,25 @@ function ResultRow({
 					<ResultCell key={j} value={v} wide={wideCols.has(j)} />
 				))}
 				{actions ? (
-					<td
-						className="result-col-actions"
-						onClick={(e) => e.stopPropagation()}
-					>
+					<td className="result-col-actions" onClick={(e) => e.stopPropagation()}>
 						{actions({ columns, row })}
 					</td>
 				) : null}
 			</tr>
 			{showPanel ? (
-				<tr className={isInline ? "result-expanded result-expanded-inline" : "result-expanded"}>
+				<tr
+					className={
+						isInline ? "result-expanded result-expanded-inline" : "result-expanded"
+					}
+				>
 					{isInline ? null : <td aria-hidden="true" />}
 					<td colSpan={columns.length + extraCols}>
 						{expandedContent ? (
 							expandedContent({ columns, row })
 						) : (
-							<pre className="result-row-json mono">{formatRowAsJson(row, columns)}</pre>
+							<pre className="result-row-json mono">
+								{formatRowAsJson(row, columns)}
+							</pre>
 						)}
 					</td>
 				</tr>

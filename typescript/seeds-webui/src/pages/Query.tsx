@@ -98,7 +98,11 @@ export function Query() {
 					) : null}
 				</div>
 				<div className="d-flex flex-wrap gap-2 mb-3">
-					<button className="btn btn-primary" disabled={running} onClick={() => void run()}>
+					<button
+						className="btn btn-primary"
+						disabled={running}
+						onClick={() => void run()}
+					>
 						{running ? "Running…" : "Run (Ctrl-Enter)"}
 					</button>
 					<button

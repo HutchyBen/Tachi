@@ -38,7 +38,9 @@ export async function listBranches(
 	const branches: DevBranch[] = [];
 	for (const line of stdout.split("\n")) {
 		const [name, sha] = line.split("\t");
-		if (name && sha) {branches.push({ name, sha });}
+		if (name && sha) {
+			branches.push({ name, sha });
+		}
 	}
 
 	let current: DevBranch | null = null;
@@ -47,7 +49,9 @@ export async function listBranches(
 		const name = head.trim();
 		if (name && name !== "HEAD") {
 			const found = branches.find((b) => b.name === name);
-			if (found) {current = found;}
+			if (found) {
+				current = found;
+			}
 		}
 	} catch {
 		// detached head — leave current null.
@@ -70,14 +74,20 @@ export async function listCommits(
 		`--max-count=${opts.limit ?? 30}`,
 		`--skip=${opts.skip ?? 0}`,
 	];
-	if (opts.branch) {args.push(opts.branch);}
-	if (opts.file) {args.push("--", opts.file);}
+	if (opts.branch) {
+		args.push(opts.branch);
+	}
+	if (opts.file) {
+		args.push("--", opts.file);
+	}
 
 	const { stdout } = await gitExec(repoRoot, args);
 	const commits: DevCommit[] = [];
 	for (const record of stdout.split("\x1e")) {
 		const parts = record.trim().split("\x00");
-		if (parts.length < 9) {continue;}
+		if (parts.length < 9) {
+			continue;
+		}
 		const [sha, parents, an, ae, ad, cn, ce, cd, message] = parts;
 		commits.push({
 			sha: sha!,
@@ -95,7 +105,9 @@ export async function listCommits(
 
 export async function getCommit(repoRoot: string, sha: string): Promise<DevCommit> {
 	const [c] = await listCommits(repoRoot, { branch: sha, limit: 1 });
-	if (!c) {throw new Error(`No commit found for ${sha}`);}
+	if (!c) {
+		throw new Error(`No commit found for ${sha}`);
+	}
 	return c;
 }
 

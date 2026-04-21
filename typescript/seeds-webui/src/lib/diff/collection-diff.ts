@@ -12,7 +12,9 @@ export { primaryKey, rowLabel } from "./row-primary-key";
 
 // Deep-equality via JSON roundtrip. Good enough for seeds documents.
 function sameJson(a: unknown, b: unknown): boolean {
-	if (a === b) {return true;}
+	if (a === b) {
+		return true;
+	}
 	try {
 		return JSON.stringify(a) === JSON.stringify(b);
 	} catch {
@@ -32,7 +34,9 @@ export function fieldDeltas(a: Row, b: Row, prefix = ""): FieldDelta[] {
 		const path = prefix ? `${prefix}.${k}` : k;
 		const av = a?.[k];
 		const bv = b?.[k];
-		if (sameJson(av, bv)) {continue;}
+		if (sameJson(av, bv)) {
+			continue;
+		}
 
 		if (av === undefined) {
 			out.push({ after: bv, kind: "added", path });
@@ -89,20 +93,20 @@ function prettyForRow(
 	return prettySeedDocSummary(collectionName, doc, { songById });
 }
 
-export function summariseDiff(
-	a: unknown[],
-	b: unknown[],
-	ctx?: SummariseDiffContext,
-): DiffSummary {
+export function summariseDiff(a: unknown[], b: unknown[], ctx?: SummariseDiffContext): DiffSummary {
 	const aMap = new Map<string, Row>();
 	const bMap = new Map<string, Row>();
 	for (const r of a) {
 		const pk = primaryKey(r as Row);
-		if (pk) {aMap.set(pk, r as Row);}
+		if (pk) {
+			aMap.set(pk, r as Row);
+		}
 	}
 	for (const r of b) {
 		const pk = primaryKey(r as Row);
-		if (pk) {bMap.set(pk, r as Row);}
+		if (pk) {
+			bMap.set(pk, r as Row);
+		}
 	}
 
 	let added = 0;
@@ -175,7 +179,9 @@ export function singleDocumentDiff(
 		};
 	}
 	if (before && after) {
-		if (sameJson(before, after)) {return null;}
+		if (sameJson(before, after)) {
+			return null;
+		}
 		return {
 			after,
 			before,
@@ -189,9 +195,15 @@ export function singleDocumentDiff(
 }
 
 export function formatValue(v: unknown): string {
-	if (v === undefined) {return "—";}
-	if (v === null) {return "null";}
-	if (typeof v === "string") {return v;}
+	if (v === undefined) {
+		return "—";
+	}
+	if (v === null) {
+		return "null";
+	}
+	if (typeof v === "string") {
+		return v;
+	}
 	try {
 		return JSON.stringify(v, null, 2);
 	} catch {

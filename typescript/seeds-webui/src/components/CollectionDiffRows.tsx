@@ -25,8 +25,7 @@ export function SingleRowDocumentDiff({
 	const songQuery = useSongByIdLookup(
 		collectionName && shouldFetchSongs ? collectionName : undefined,
 	);
-	const songById =
-		songByIdProp !== undefined ? songByIdProp : (songQuery.data ?? undefined);
+	const songById = songByIdProp !== undefined ? songByIdProp : (songQuery.data ?? undefined);
 
 	const row = useMemo(
 		() => singleDocumentDiff(before, after, { collectionName, songById }),
@@ -68,9 +67,7 @@ export function DiffRowCard({ row }: { row: DiffRow }) {
 					{row.kind === "added" ? "+" : row.kind === "removed" ? "−" : "~"}
 				</span>
 				<code className="diff-id">{row.id}</code>
-				{row.pretty !== row.id ? (
-					<span className="diff-pretty">{row.pretty}</span>
-				) : null}
+				{row.pretty !== row.id ? <span className="diff-pretty">{row.pretty}</span> : null}
 				<span className="diff-card-spacer" />
 				{row.kind === "changed" ? (
 					<span className="diff-field-count">

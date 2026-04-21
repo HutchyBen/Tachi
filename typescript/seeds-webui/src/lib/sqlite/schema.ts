@@ -38,14 +38,30 @@ export type Flavour =
 	| "tables";
 
 export function flavourFor(collection: string): Flavour {
-	if (collection.startsWith("songs-")) {return "songs";}
-	if (collection.startsWith("charts-")) {return "charts";}
-	if (collection === "folders.json") {return "folders";}
-	if (collection === "goals.json") {return "goals";}
-	if (collection === "quests.json") {return "quests";}
-	if (collection === "questlines.json") {return "questlines";}
-	if (collection === "tables.json") {return "tables";}
-	if (collection === "bms-course-lookup.json") {return "bms-course-lookup";}
+	if (collection.startsWith("songs-")) {
+		return "songs";
+	}
+	if (collection.startsWith("charts-")) {
+		return "charts";
+	}
+	if (collection === "folders.json") {
+		return "folders";
+	}
+	if (collection === "goals.json") {
+		return "goals";
+	}
+	if (collection === "quests.json") {
+		return "quests";
+	}
+	if (collection === "questlines.json") {
+		return "questlines";
+	}
+	if (collection === "tables.json") {
+		return "tables";
+	}
+	if (collection === "bms-course-lookup.json") {
+		return "bms-course-lookup";
+	}
 	throw new Error(`Unknown seeds collection flavour: ${collection}`);
 }
 
@@ -106,10 +122,18 @@ export function ddlFor(collection: string): string {
 
 	const colDecls = cols
 		.map((c) => {
-			if (c === pk) {return `"${c}" PRIMARY KEY`;}
-			if (c === "versions" || c === "criteria") {return `"${c}" TEXT`;} // JSON-as-text
-			if (c === "isPrimary" || c === "inactive" || c === "default") {return `"${c}" INTEGER`;}
-			if (c === "level" || c === "levelNum" || c === "value") {return `"${c}"`;}
+			if (c === pk) {
+				return `"${c}" PRIMARY KEY`;
+			}
+			if (c === "versions" || c === "criteria") {
+				return `"${c}" TEXT`;
+			} // JSON-as-text
+			if (c === "isPrimary" || c === "inactive" || c === "default") {
+				return `"${c}" INTEGER`;
+			}
+			if (c === "level" || c === "levelNum" || c === "value") {
+				return `"${c}"`;
+			}
 			return `"${c}" TEXT`;
 		})
 		.join(", ");

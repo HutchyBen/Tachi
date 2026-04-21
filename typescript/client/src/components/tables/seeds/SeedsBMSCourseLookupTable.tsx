@@ -64,7 +64,12 @@ export const SeedsBMSCourseLookupCells: CellsRenderFN<BMSCourseWithRelated> = ({
 					{typeof e === "string" ? (
 						<span className="text-danger">UNKNOWN CHART</span>
 					) : (
-						<span>{FormatChart({ ...e.chart, song: e.song } as unknown as ChartDocument)} </span>
+						<span>
+							{FormatChart({
+								...e.chart,
+								song: e.song,
+							} as unknown as ChartDocument)}{" "}
+						</span>
 					)}
 
 					{!compress && (
@@ -72,8 +77,11 @@ export const SeedsBMSCourseLookupCells: CellsRenderFN<BMSCourseWithRelated> = ({
 							<code>
 								{typeof e === "string"
 									? e
-									: (e.chart.data as ChartDocumentData["bms-7k"] | ChartDocumentData["bms-14k"])
-											.hashMD5}
+									: (
+											e.chart.data as
+												| ChartDocumentData["bms-7k"]
+												| ChartDocumentData["bms-14k"]
+										).hashMD5}
 							</code>
 						</div>
 					)}

@@ -106,14 +106,18 @@ async function handle(req: IncomingMessage, res: ServerResponse, ctx: Ctx) {
 
 		case "GET /commit": {
 			const sha = url.searchParams.get("sha");
-			if (!sha) {return respond(res, 400, { error: "missing sha" });}
+			if (!sha) {
+				return respond(res, 400, { error: "missing sha" });
+			}
 			return respond(res, 200, await getCommit(ctx.repoRoot, sha));
 		}
 
 		case "GET /collection": {
 			const name = url.searchParams.get("name");
 			const rev = url.searchParams.get("rev") ?? undefined;
-			if (!name) {return respond(res, 400, { error: "missing name" });}
+			if (!name) {
+				return respond(res, 400, { error: "missing name" });
+			}
 			return respond(res, 200, await readCollection(ctx, name, rev));
 		}
 
@@ -152,7 +156,9 @@ async function readJson<T>(req: IncomingMessage): Promise<T> {
 		chunks.push(c as Buffer);
 	}
 	const raw = Buffer.concat(chunks).toString("utf-8");
-	if (raw.length === 0) {return {} as T;}
+	if (raw.length === 0) {
+		return {} as T;
+	}
 	return JSON.parse(raw) as T;
 }
 

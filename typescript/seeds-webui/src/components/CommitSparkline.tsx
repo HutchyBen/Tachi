@@ -27,10 +27,16 @@ export function CommitSparkline({ commits, days = 90 }: CommitSparklineProps) {
 		let total = 0;
 		for (const c of commits) {
 			const d = new Date(c.author.date);
-			if (Number.isNaN(d.getTime())) {continue;}
-			if (d.getTime() < startDate.getTime()) {continue;}
+			if (Number.isNaN(d.getTime())) {
+				continue;
+			}
+			if (d.getTime() < startDate.getTime()) {
+				continue;
+			}
 			const key = d.toISOString().slice(0, 10);
-			if (!bucket.has(key)) {continue;}
+			if (!bucket.has(key)) {
+				continue;
+			}
 			bucket.set(key, (bucket.get(key) ?? 0) + 1);
 			total++;
 		}

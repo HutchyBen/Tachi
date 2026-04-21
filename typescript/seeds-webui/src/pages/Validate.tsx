@@ -1,5 +1,5 @@
 import { RunOutput } from "#components/RunOutput";
-import { getTransport , type RunEvent } from "#lib/transport/transport";
+import { getTransport, type RunEvent } from "#lib/transport/transport";
 import { useState } from "react";
 
 export function Validate() {
@@ -11,7 +11,9 @@ export function Validate() {
 		setRunning(true);
 		try {
 			const t = await getTransport();
-			if (!t.runTests) {throw new Error("Read-only transport");}
+			if (!t.runTests) {
+				throw new Error("Read-only transport");
+			}
 			for await (const ev of t.runTests()) {
 				setEvents((prev) => [...prev, ev]);
 			}

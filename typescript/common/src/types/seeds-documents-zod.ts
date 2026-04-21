@@ -70,7 +70,9 @@ function versionsZodSchema<G extends V3Game>(game: G): z.ZodType<Array<Versions[
 }
 
 function seedsChartDocumentSchemaForGame<G extends V3Game>(game: G) {
-	const chartData = GetSpecificGameConfig(game).chartData as unknown as z.ZodType<ChartDocumentData[G]>;
+	const chartData = GetSpecificGameConfig(game).chartData as unknown as z.ZodType<
+		ChartDocumentData[G]
+	>;
 
 	return z.strictObject({
 		data: chartData,
@@ -107,7 +109,9 @@ export type SEEDS_ChartDocument<TGame extends V3Game = V3Game> = z.infer<
 >;
 
 function seedsSongDocumentSchemaForGroup<G extends GameGroup>(group: G) {
-	const songData = GAME_GROUP_CONFIGS[group].songData as unknown as z.ZodType<SongDocumentData[G]>;
+	const songData = GAME_GROUP_CONFIGS[group].songData as unknown as z.ZodType<
+		SongDocumentData[G]
+	>;
 
 	return z.strictObject({
 		altTitles: z.array(z.string()),

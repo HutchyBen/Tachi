@@ -70,7 +70,9 @@ export function RowEditor({
 
 	function handleSave() {
 		const result = schema.safeParse(parsed);
-		if (!result.success) {return;}
+		if (!result.success) {
+			return;
+		}
 		onSave(result.data);
 	}
 
@@ -119,7 +121,9 @@ export function RowEditor({
 }
 
 function safeStringify(v: unknown): string {
-	if (v === undefined) {return "";}
+	if (v === undefined) {
+		return "";
+	}
 	try {
 		return JSON.stringify(v, null, 2);
 	} catch {

@@ -105,9 +105,12 @@ export function mergeToPatchOps(
 	patchObj: Record<string, unknown>,
 ): JsonPatchOp[] {
 	const leaves = flattenMergeLeaves(patchObj, []);
-	return leaves.map(({ path, value }) => ({
-		op: hasLeafKey(row, path) ? "replace" : "add",
-		path: `/${idx}/${path.map(jsonPtrEncode).join("/")}`,
-		value,
-	} satisfies JsonPatchOp));
+	return leaves.map(
+		({ path, value }) =>
+			({
+				op: hasLeafKey(row, path) ? "replace" : "add",
+				path: `/${idx}/${path.map(jsonPtrEncode).join("/")}`,
+				value,
+			}) satisfies JsonPatchOp,
+	);
 }

@@ -36,11 +36,15 @@ export function Collection() {
 	// whole tachi-common game config tree.
 	const [schema, setSchema] = useState<z.ZodType<unknown> | null>(null);
 	useEffect(() => {
-		if (!EDIT_MODE) {return;}
+		if (!EDIT_MODE) {
+			return;
+		}
 		let alive = true;
 		import("#lib/edits/schemas")
 			.then((m) => {
-				if (alive) {setSchema(m.schemaForCollection(name));}
+				if (alive) {
+					setSchema(m.schemaForCollection(name));
+				}
 			})
 			.catch((err) => {
 				console.error("[seeds-webui] failed to load schemas:", err);
@@ -52,13 +56,17 @@ export function Collection() {
 
 	// For chart collections we know the V3Game and can join the songs table.
 	const chartGame = useMemo<V3Game | null>(() => {
-		if (flav !== "charts") {return null;}
+		if (flav !== "charts") {
+			return null;
+		}
 		const game = name.replace(/^charts-/u, "").replace(/\.json$/u, "") as V3Game;
 		return game;
 	}, [flav, name]);
 
 	const songTable = useMemo<string | null>(() => {
-		if (!chartGame) {return null;}
+		if (!chartGame) {
+			return null;
+		}
 		const group = GameToGameGroup(chartGame);
 		return tableNameFor(`songs-${group}.json`);
 	}, [chartGame]);
@@ -82,11 +90,15 @@ export function Collection() {
 	);
 
 	const entries = useMemo<SeedDocEntry[]>(() => {
-		if (!rows.data) {return [];}
+		if (!rows.data) {
+			return [];
+		}
 		const out: SeedDocEntry[] = [];
 		for (const row of rows.data.rows) {
 			const doc = safeParseRaw(row[0]);
-			if (!doc) {continue;}
+			if (!doc) {
+				continue;
+			}
 			if (flav === "charts" && chartGame) {
 				const songDoc = safeParseRaw(row[1]);
 				out.push({ doc, game: chartGame, songDoc: songDoc ?? undefined });
@@ -107,7 +119,9 @@ export function Collection() {
 
 	async function stageReplace(before: Record<string, unknown>, after: unknown) {
 		const idx = await findRowIndex(name, before);
-		if (idx < 0) {throw new Error(`could not locate row in ${name}`);}
+		if (idx < 0) {
+			throw new Error(`could not locate row in ${name}`);
+		}
 		await addDraft({
 			collection: name,
 			label: summariseEntry(name, { doc: before }),
@@ -125,7 +139,9 @@ export function Collection() {
 
 	async function stageDelete(entry: SeedDocEntry) {
 		const label = summariseEntry(name, entry);
-		if (!confirm(`Stage a delete for "${label}"?`)) {return;}
+		if (!confirm(`Stage a delete for "${label}"?`)) {
+			return;
+		}
 		const idx = await findRowIndex(name, entry.doc);
 		if (idx < 0) {
 			alert(`Could not locate row in ${name}. It may already be gone.`);
@@ -139,7 +155,9 @@ export function Collection() {
 	}
 
 	async function handleDrawerSave(value: unknown) {
-		if (!drawer) {return;}
+		if (!drawer) {
+			return;
+		}
 		try {
 			if (drawer.mode === "edit") {
 				await stageReplace(drawer.initial as Record<string, unknown>, value);
@@ -351,7 +369,9 @@ function Drawer({ children, onClose }: { children: React.ReactNode; onClose: () 
 }
 
 function safeParseRaw(v: unknown): Record<string, unknown> | null {
-	if (typeof v !== "string") {return null;}
+	if (typeof v !== "string") {
+		return null;
+	}
 	try {
 		const parsed = JSON.parse(v);
 		if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
@@ -366,7 +386,9 @@ function safeParseRaw(v: unknown): Record<string, unknown> | null {
 function pickPk(row: Record<string, unknown>): { key: string; value: number | string } | null {
 	for (const k of PK_KEYS) {
 		const v = row[k];
-		if (typeof v === "string" || typeof v === "number") {return { key: k, value: v };}
+		if (typeof v === "string" || typeof v === "number") {
+			return { key: k, value: v };
+		}
 	}
 	return null;
 }
@@ -377,10 +399,14 @@ async function findRowIndex(name: string, row: Record<string, unknown>): Promise
 	const t = await getTransport();
 	const data = await t.getCollection(name);
 	const pk = pickPk(row);
-	if (!pk) {return -1;}
+	if (!pk) {
+		return -1;
+	}
 	for (let i = 0; i < data.length; i++) {
 		const r = data[i] as Record<string, unknown> | undefined;
-		if (r && r[pk.key] === pk.value) {return i;}
+		if (r && r[pk.key] === pk.value) {
+			return i;
+		}
 	}
 	return -1;
 }

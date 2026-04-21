@@ -20,7 +20,9 @@ function decode(segment: string): string {
 }
 
 function split(path: string): string[] {
-	if (path === "") {return [];}
+	if (path === "") {
+		return [];
+	}
 	if (path[0] !== "/") {
 		throw new Error(`Invalid JSON Pointer: ${path}`);
 	}

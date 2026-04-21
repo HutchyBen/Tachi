@@ -19,7 +19,9 @@ function ghHeaders(): HeadersInit {
 		accept: "application/vnd.github+json",
 		"x-github-api-version": "2022-11-28",
 	};
-	if (pat) {headers.authorization = `Bearer ${pat}`;}
+	if (pat) {
+		headers.authorization = `Bearer ${pat}`;
+	}
 	return headers;
 }
 
@@ -67,10 +69,14 @@ function mapCommit(c: GhCommit): Commit {
 
 // Parse Link header for cursor-style pagination.
 function parseLinkCursor(link: string | null): string | undefined {
-	if (!link) {return undefined;}
+	if (!link) {
+		return undefined;
+	}
 	// Example: <https://api.github.com/...&page=2>; rel="next"
 	const m = /<([^>]+)>; rel="next"/u.exec(link);
-	if (!m) {return undefined;}
+	if (!m) {
+		return undefined;
+	}
 	const url = new URL(m[1]!);
 	return url.searchParams.get("page") ?? undefined;
 }
@@ -83,7 +89,9 @@ interface BundleManifest {
 async function loadBundleManifest(): Promise<BundleManifest | null> {
 	try {
 		const res = await fetch("/seeds-bundle/manifest.json");
-		if (!res.ok) {return null;}
+		if (!res.ok) {
+			return null;
+		}
 		return (await res.json()) as BundleManifest;
 	} catch {
 		return null;
@@ -96,7 +104,9 @@ export function makeGithubTransport(): SeedsTransport {
 
 		listCollections: async () => {
 			const m = await loadBundleManifest();
-			if (m) {return m.files.map((f) => f.name);}
+			if (m) {
+				return m.files.map((f) => f.name);
+			}
 
 			// Fallback: list contents of db/seeds on the default branch.
 			interface Entry {
@@ -127,7 +137,9 @@ export function makeGithubTransport(): SeedsTransport {
 			params.set("sha", opts.branch ?? SEEDS_DEFAULT_BRANCH);
 			params.set("path", opts.file ? `${SEEDS_REPO_PATH}/${opts.file}` : SEEDS_REPO_PATH);
 			params.set("per_page", "30");
-			if (opts.cursor) {params.set("page", opts.cursor);}
+			if (opts.cursor) {
+				params.set("page", opts.cursor);
+			}
 
 			const res = await fetch(`${GH}/repos/${SEEDS_REPO}/commits?${params.toString()}`, {
 				headers: ghHeaders(),
@@ -149,7 +161,9 @@ export function makeGithubTransport(): SeedsTransport {
 			// Prefer the bundled snapshot for "current state" (no rev given).
 			if (rev === undefined) {
 				const res = await fetch(`/seeds-bundle/${encodeURIComponent(name)}`);
-				if (res.ok) {return (await res.json()) as unknown[];}
+				if (res.ok) {
+					return (await res.json()) as unknown[];
+				}
 			}
 
 			// Otherwise, fetch from raw.githubusercontent.com at the given ref.

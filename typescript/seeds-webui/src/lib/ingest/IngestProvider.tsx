@@ -45,13 +45,17 @@ export function IngestProvider({ children }: { children: React.ReactNode }) {
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		if (!transportQuery.data) {return;}
+		if (!transportQuery.data) {
+			return;
+		}
 		let cancelled = false;
 		setReady(false);
 		setError(null);
 		(async () => {
 			for await (const p of buildSqliteFromTransport(transportQuery.data!)) {
-				if (cancelled) {return;}
+				if (cancelled) {
+					return;
+				}
 				setProgress(p);
 			}
 			if (!cancelled) {
@@ -60,7 +64,9 @@ export function IngestProvider({ children }: { children: React.ReactNode }) {
 			}
 		})().catch((err) => {
 			console.error("[seeds-webui] ingest failed:", err);
-			if (!cancelled) {setError(String(err?.message ?? err));}
+			if (!cancelled) {
+				setError(String(err?.message ?? err));
+			}
 		});
 		return () => {
 			cancelled = true;

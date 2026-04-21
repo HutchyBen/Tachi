@@ -66,78 +66,76 @@ export type SqlEditorProps = {
 
 /** Surfaces, caret, and panels — all use Bootstrap CSS variables so light/dark track the page. */
 // Use baseTheme: `&light` / `&dark` are only expanded in buildTheme(..., lightDarkIDs), not in EditorView.theme().
-const surfaceTheme = EditorView.baseTheme(
-	{
-		"&": {
-			fontSize: "0.9375rem",
-			backgroundColor: "var(--bs-body-bg)",
-			color: "var(--bs-body-color)",
-			fontVariantLigatures: "none",
-			fontFeatureSettings: '"liga" 0, "calt" 0',
-		},
-		// Caret: drawSelection defaults to black / #ddd for &dark, but the editor was not getting
-		// `EditorView.darkTheme` — keep an explicit color so the caret always matches body text.
-		".cm-cursor, .cm-dropCursor": {
-			borderLeft: "1.2px solid var(--bs-body-color)",
-		},
-		".cm-content": {
-			caretColor: "var(--bs-body-color)",
-			fontFamily: "var(--sw-mono)",
-			minHeight: "220px",
-			paddingBlock: "0.5rem",
-		},
-		// Override drawSelection’s fixed &light / &gray colors (see @codemirror/view).
-		"&light .cm-selectionBackground": {
-			background: "rgba(var(--bs-primary-rgb), 0.2)",
-		},
-		"&dark .cm-selectionBackground": {
-			background: "rgba(var(--bs-primary-rgb), 0.2)",
-		},
-		"&light.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground": {
-			background: "rgba(var(--bs-primary-rgb), 0.28)",
-		},
-		"&dark.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground": {
-			background: "rgba(var(--bs-primary-rgb), 0.28)",
-		},
-		".cm-scroller": {
-			border: "1px solid var(--bs-border-color)",
-			borderRadius: "var(--bs-border-radius)",
-			overflow: "auto",
-		},
-		"&light .cm-gutters, &dark .cm-gutters": {
-			backgroundColor: "var(--bs-secondary-bg)",
-			borderRight: "1px solid var(--bs-border-color)",
-			borderRadius: "0",
-			color: "var(--bs-secondary-color)",
-			borderTopLeftRadius: "var(--bs-border-radius)",
-			borderBottomLeftRadius: "var(--bs-border-radius)",
-		},
-		"&light .cm-activeLineGutter, &dark .cm-activeLineGutter": {
-			backgroundColor: "var(--bs-tertiary-bg)",
-		},
-		"&light .cm-activeLine, &dark .cm-activeLine": {
-			backgroundColor: "var(--bs-tertiary-bg)",
-		},
-		".cm-panels, .cm-panels-top, .cm-panels-bottom": {
-			backgroundColor: "var(--bs-body-bg)",
-			color: "var(--bs-body-color)",
-		},
-		".cm-tooltip": {
-			backgroundColor: "var(--bs-body-bg)",
-			border: "1px solid var(--bs-border-color)",
-			boxShadow: "var(--bs-box-shadow)",
-			color: "var(--bs-body-color)",
-		},
-		".cm-tooltip.cm-tooltip-autocomplete > ul": {
-			fontFamily: "var(--sw-mono)",
-			fontSize: "0.875rem",
-		},
-		".cm-tooltip-autocomplete ul li[aria-selected]": {
-			background: "var(--bs-primary)",
-			color: "#fff",
-		},
+const surfaceTheme = EditorView.baseTheme({
+	"&": {
+		fontSize: "0.9375rem",
+		backgroundColor: "var(--bs-body-bg)",
+		color: "var(--bs-body-color)",
+		fontVariantLigatures: "none",
+		fontFeatureSettings: '"liga" 0, "calt" 0',
 	},
-);
+	// Caret: drawSelection defaults to black / #ddd for &dark, but the editor was not getting
+	// `EditorView.darkTheme` — keep an explicit color so the caret always matches body text.
+	".cm-cursor, .cm-dropCursor": {
+		borderLeft: "1.2px solid var(--bs-body-color)",
+	},
+	".cm-content": {
+		caretColor: "var(--bs-body-color)",
+		fontFamily: "var(--sw-mono)",
+		minHeight: "220px",
+		paddingBlock: "0.5rem",
+	},
+	// Override drawSelection’s fixed &light / &gray colors (see @codemirror/view).
+	"&light .cm-selectionBackground": {
+		background: "rgba(var(--bs-primary-rgb), 0.2)",
+	},
+	"&dark .cm-selectionBackground": {
+		background: "rgba(var(--bs-primary-rgb), 0.2)",
+	},
+	"&light.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground": {
+		background: "rgba(var(--bs-primary-rgb), 0.28)",
+	},
+	"&dark.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground": {
+		background: "rgba(var(--bs-primary-rgb), 0.28)",
+	},
+	".cm-scroller": {
+		border: "1px solid var(--bs-border-color)",
+		borderRadius: "var(--bs-border-radius)",
+		overflow: "auto",
+	},
+	"&light .cm-gutters, &dark .cm-gutters": {
+		backgroundColor: "var(--bs-secondary-bg)",
+		borderRight: "1px solid var(--bs-border-color)",
+		borderRadius: "0",
+		color: "var(--bs-secondary-color)",
+		borderTopLeftRadius: "var(--bs-border-radius)",
+		borderBottomLeftRadius: "var(--bs-border-radius)",
+	},
+	"&light .cm-activeLineGutter, &dark .cm-activeLineGutter": {
+		backgroundColor: "var(--bs-tertiary-bg)",
+	},
+	"&light .cm-activeLine, &dark .cm-activeLine": {
+		backgroundColor: "var(--bs-tertiary-bg)",
+	},
+	".cm-panels, .cm-panels-top, .cm-panels-bottom": {
+		backgroundColor: "var(--bs-body-bg)",
+		color: "var(--bs-body-color)",
+	},
+	".cm-tooltip": {
+		backgroundColor: "var(--bs-body-bg)",
+		border: "1px solid var(--bs-border-color)",
+		boxShadow: "var(--bs-box-shadow)",
+		color: "var(--bs-body-color)",
+	},
+	".cm-tooltip.cm-tooltip-autocomplete > ul": {
+		fontFamily: "var(--sw-mono)",
+		fontSize: "0.875rem",
+	},
+	".cm-tooltip-autocomplete ul li[aria-selected]": {
+		background: "var(--bs-primary)",
+		color: "#fff",
+	},
+});
 
 function sqlSupportForSchema(schema: Record<string, string[]> | null) {
 	const s = schema ?? {};

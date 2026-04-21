@@ -30,14 +30,14 @@ export function prettySeedDocSummary(
 
 	const songFromOpts = opts?.songDoc;
 	const songFromMap =
-		opts?.songById && typeof doc.songID === "string" ? opts.songById.get(doc.songID) : undefined;
+		opts?.songById && typeof doc.songID === "string"
+			? opts.songById.get(doc.songID)
+			: undefined;
 	const songDoc = songFromOpts ?? songFromMap;
 
 	switch (flav) {
 		case "charts": {
-			const game = collectionName
-				.replace(/^charts-/u, "")
-				.replace(/\.json$/u, "") as V3Game;
+			const game = collectionName.replace(/^charts-/u, "").replace(/\.json$/u, "") as V3Game;
 			if (songDoc && game) {
 				try {
 					return FormatChart({ ...doc, game, song: songDoc } as unknown as Parameters<

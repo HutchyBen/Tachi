@@ -8,7 +8,9 @@ import type { SqliteApi } from "./types";
 let remote: Comlink.Remote<SqliteApi> | null = null;
 
 export function getSqlite(): Comlink.Remote<SqliteApi> {
-	if (remote) {return remote;}
+	if (remote) {
+		return remote;
+	}
 	const worker = new Worker(new URL("./worker.ts", import.meta.url), {
 		type: "module",
 		name: "seeds-webui-sqlite",

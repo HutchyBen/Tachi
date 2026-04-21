@@ -44,15 +44,23 @@ export function makeDevTransport(): SeedsTransport {
 		listBranches: () => jsonFetch<{ branches: Branch[]; current: Branch | null }>("/branches"),
 		listCommits: (opts) => {
 			const params = new URLSearchParams();
-			if (opts.branch) {params.set("branch", opts.branch);}
-			if (opts.file) {params.set("file", opts.file);}
-			if (opts.cursor) {params.set("cursor", opts.cursor);}
+			if (opts.branch) {
+				params.set("branch", opts.branch);
+			}
+			if (opts.file) {
+				params.set("file", opts.file);
+			}
+			if (opts.cursor) {
+				params.set("cursor", opts.cursor);
+			}
 			return jsonFetch<CommitPage>(`/commits?${params.toString()}`);
 		},
 		getCommit: (sha) => jsonFetch<Commit>(`/commit?sha=${encodeURIComponent(sha)}`),
 		getCollection: (name, rev) => {
 			const params = new URLSearchParams({ name });
-			if (rev !== undefined) {params.set("rev", rev);}
+			if (rev !== undefined) {
+				params.set("rev", rev);
+			}
 			return jsonFetch<unknown[]>(`/collection?${params.toString()}`);
 		},
 		writeCollection: (name, patch) =>
@@ -88,7 +96,9 @@ async function* streamSSE<T>(pathname: string, body: unknown): AsyncIterable<T> 
 	try {
 		while (true) {
 			const { done, value } = await reader.read();
-			if (done) {break;}
+			if (done) {
+				break;
+			}
 			buffer += decoder.decode(value, { stream: true });
 
 			// SSE frames are separated by a blank line; events are `data: <json>\n`
@@ -100,7 +110,9 @@ async function* streamSSE<T>(pathname: string, body: unknown): AsyncIterable<T> 
 				for (const line of frame.split("\n")) {
 					if (line.startsWith("data:")) {
 						const payload = line.slice(5).trim();
-						if (payload.length === 0) {continue;}
+						if (payload.length === 0) {
+							continue;
+						}
 						yield JSON.parse(payload) as T;
 					}
 				}

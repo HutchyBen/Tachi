@@ -25,7 +25,9 @@ export function IngestToast() {
 		}
 	}, [error, progress, ready, visible]);
 
-	if (!visible) {return null;}
+	if (!visible) {
+		return null;
+	}
 
 	const pct =
 		progress && progress.total > 0
