@@ -198,7 +198,15 @@
 		"@types/tap": "^15.0.5",
 		"tap": "^15.1.6",
 		"@types/istanbul-lib-coverage": "^2.0.6",
-		"istanbul-lib-coverage": "^3.2.2"
+		"istanbul-lib-coverage": "^3.2.2",
+		"@codemirror/lang-sql": "^6.10.0",
+		"@codemirror/language": "^6.12.3",
+		"@lezer/highlight": "^1.2.3",
+		"@sqlite.org/sqlite-wasm": "^3.51.2-build9",
+		"codemirror": "^6.0.2",
+		"comlink": "^4.4.2",
+		"fast-json-patch": "^3.1.1",
+		"cron-parser": "5.0.2"
 	},
 	"overrides": {
 		"@types/mongodb": "3.6.20",

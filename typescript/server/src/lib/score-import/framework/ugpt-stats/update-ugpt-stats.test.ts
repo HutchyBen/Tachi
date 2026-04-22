@@ -112,7 +112,7 @@ describe("UpdateUsersGamePlaytypeStats (ported from update-ugpt-stats.oldtest.ts
 		await insertPbFromTesting({ userId: 1, pb: TestingIIDXSPScorePB });
 	});
 
-	it("creates game_profile and game_settings when the user has none", async () => {
+	it("creates game_profile with preference defaults when the user has none", async () => {
 		const res = await UpdateUsersGamePlaytypeStats("iidx-sp", 1, null, log);
 
 		expect(res).toEqual([]);
@@ -124,14 +124,15 @@ describe("UpdateUsersGamePlaytypeStats (ported from update-ugpt-stats.oldtest.ts
 			.executeTakeFirstOrThrow();
 
 		const ratings = typeof gp.ratings === "string" ? JSON.parse(gp.ratings) : gp.ratings;
-		expect(ratings).toMatchObject({ ktLampRating: expect.any(Number) });
+		expect(ratings).toMatchObject({
+			ktLampRating: expect.any(Number),
+			ktLampRatingNC: expect.any(Number),
+			ktLampRatingHC: expect.any(Number),
+			ktLampRatingEXHC: expect.any(Number),
+		});
 
-		const settings = await DB.selectFrom("game_settings")
-			.selectAll()
-			.where("user_id", "=", 1)
-			.where("game", "=", "iidx-sp")
-			.executeTakeFirst();
-		expect(settings).toBeDefined();
+		const dataRaw = gp.data;
+		expect(dataRaw).toBeDefined();
 	});
 
 	it("updates ratings when game_profile already exists", async () => {
@@ -172,8 +173,11 @@ describe("UpdateUsersGamePlaytypeStats (ported from update-ugpt-stats.oldtest.ts
 				pb: deepmerge(TestingIIDXSPScorePB, {
 					chartID: fakeChart,
 					calculatedData: {
-						ktLampRating: e,
 						BPI: 10.1,
+						ktLampRating: e,
+						ktLampRatingNC: e,
+						ktLampRatingHC: e,
+						ktLampRatingEXHC: e,
 					},
 				}),
 			});

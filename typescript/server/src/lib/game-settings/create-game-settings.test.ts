@@ -1,37 +1,18 @@
-import DB from "#services/pg/db";
-import { seedUser } from "#test-utils/pg-fixtures";
 import { describe, expect, it } from "vitest";
 
-import { CreateGameSettings } from "./create-game-settings";
+import { newGameProfilePreferenceColumns } from "./create-game-settings";
 
-describe("CreateGameSettings", () => {
-	it("creates settings for a new user and game", async () => {
-		const { id: userId } = await seedUser();
-
-		await CreateGameSettings(userId, "bms-7k");
-
-		const row = await DB.selectFrom("game_settings")
-			.selectAll()
-			.where("user_id", "=", userId)
-			.where("game", "=", "bms-7k")
-			.executeTakeFirst();
-
-		expect(row).not.toBeUndefined();
-		expect(row?.game).toBe("bms-7k");
+describe("newGameProfilePreferenceColumns", () => {
+	it("returns IIDX-specific defaults for iidx-sp", () => {
+		const cols = newGameProfilePreferenceColumns("iidx-sp");
+		expect(JSON.parse(cols.data)).toEqual({ display2DXTra: false, bpiTarget: 0 });
+		expect(JSON.parse(cols.showcase)).toEqual([]);
+		expect(cols.pf_preferred_score_alg).toBeNull();
 	});
 
-	it("throws if settings already exist", async () => {
-		const { id } = await seedUser();
-		const localUserId = id;
-
-		try {
-			await CreateGameSettings(localUserId, "popn");
-			await expect(CreateGameSettings(localUserId, "popn")).rejects.toThrow(
-				/Cannot create .* game-settings as one already exists/u,
-			);
-		} finally {
-			await DB.deleteFrom("game_settings").where("user_id", "=", localUserId).execute();
-			await DB.deleteFrom("account").where("id", "=", localUserId).execute();
-		}
+	it("returns empty gameSpecific JSON for non-IIDX games", () => {
+		const cols = newGameProfilePreferenceColumns("bms-7k");
+		expect(JSON.parse(cols.data)).toEqual({});
+		expect(JSON.parse(cols.showcase)).toEqual([]);
 	});
 });

@@ -65,14 +65,11 @@ Empty Object.
 
 *****
 
-## Resynchronise all PBs that match the given query or users.
+## Re-run PB processing for every scored user+chart (synchronous).
 
-`POST /api/v1/admin/resync-pbs`
+`POST /api/v1/admin/recalc-pbs`
 
-!!! info
-	This is intended to be used in the case that PBs fall out of
-	sync with what they should be. This could be due to a
-	database migration going awry, or anything else.
+Inserts every distinct `(user_id, chart_id)` from the **`score`** table into **`pb_dirty`**, then **drains** `pb_dirty` and downstream **`session_dirty`** / **`game_profile_dirty`** queues until nothing remains (same batching as the background worker, but the HTTP request waits until idle). Intended when PBs may be out of sync (e.g. after a bad migration). There is **no request body** and no filter—always all distinct pairs that appear on scores.
 
 ### Permissions
 
@@ -80,34 +77,29 @@ Empty Object.
 
 ### Parameters
 
-| Property | Type | Description |
-| :: | :: | :: |
-| `userIDs` | Array&lt;Integer&gt; (Optional) | The list of userIDs to resynchronise PBs for. |
-| `filters` | Mongo Query for the PBs Collection. (Optional) | A query to reduce the amount of PBs that get reprocessed. |
+None (send `{}` if your client requires a body).
 
 ### Response
 
-Empty Object.
+Empty object (standard success wrapper with `body`).
 
 ### Example
 
 #### Request
+
 ```
-POST /api/v1/admin/resync-pbs
+POST /api/v1/admin/recalc-pbs
 ```
 
 ```js
-{
-	"filter": {
-		"game": {$in: ["iidx","sdvx"]}
-	},
-	"userIDs": [1,2,3,4]
-}
+{}
 ```
 
 #### Response
 
-Nothing.
+```js
+{}
+```
 
 *****
 
@@ -195,9 +187,11 @@ Empty Object.
 
 *****
 
-## Perform a site recalc on this set of scores.
+## Re-derive all scores site-wide (synchronous).
 
 `POST /api/v1/admin/recalc`
+
+Enqueues **every chart** into **`score_rederive`**, then **drains** `score_rederive` and downstream **`pb_dirty`**, **`session_dirty`**, and **`game_profile_dirty`** queues until nothing remains (the request waits until idle). Re-runs `scoreDeriver` and `scoreCalcs` for every score. There is **no request body** and no filter—always all charts.
 
 ### Permissions
 
@@ -205,33 +199,26 @@ Empty Object.
 
 ### Parameters
 
-| Property | Type | Description |
-| :: | :: | :: |
-| `<body>` | Mongo Query for scores | Filters the amount of scores recalced. If not provided, defaults to every score on the site. |
+None (send an empty JSON object `{}` if your client requires a body).
 
 ### Response
 
-| Property | Type | Description |
-| :: | :: | :: |
-| `scoresRecalced` | Integer | The amount of scores recalced. |
+Empty object (standard success wrapper with `body`).
 
 ### Example
 
 #### Request
+
 ```
 POST /api/v1/admin/recalc
 ```
+
 ```js
-{
-	"game": "iidx",
-	"scoreData.percent": {$gt: 90},
-}
+{}
 ```
 
 #### Response
 
 ```js
-{
-	"scoresRecalced": 174
-}
+{}
 ```

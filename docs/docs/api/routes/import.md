@@ -242,6 +242,36 @@ Returns rows from `orphan_score` for the authenticated user (scores that failed 
 
 *****
 
+## Get one orphaned score (full payload)
+
+`GET /api/v1/import/orphans/:orphanID`
+
+Returns a single `orphan_score` row for the authenticated user, including raw `data` and `context` JSON (for debugging unmatched imports). `404` if the row does not exist or belongs to another user.
+
+### Permissions
+
+- submit_score
+
+### Parameters
+
+| Parameter | Type | Description |
+| :: | :: | :: |
+| `orphanID` | Path | The orphan’s `orphanID` (same as in `GET /import/orphans` or import errors). |
+
+### Response
+
+| Property | Type | Description |
+| :: | :: | :: |
+| `orphanID` | String | Stable orphan identifier. |
+| `importType` | String | Import type that produced the orphan. |
+| `gameGroup` | String | Game group. |
+| `timeInserted` | Number | Unix time in ms when the row was stored. |
+| `message` | String or null | Stored error / context message. |
+| `data` | Object | Raw import datapoint (shape depends on `importType`). |
+| `context` | Object | Raw import context. |
+
+*****
+
 ## Delete one orphaned score
 
 `DELETE /api/v1/import/orphans/:orphanID`

@@ -15,7 +15,12 @@ import SelectButton from "#components/util/SelectButton";
 import { useProfileRatingAlg } from "#components/util/useScoreRatingAlg";
 import { type UGPTHistory } from "#types/api-returns";
 import { type GamePT, type SetState, type UGPT } from "#types/react";
-import { FormatGPTProfileRating, FormatGPTProfileRatingName, UppercaseFirst } from "#util/misc";
+import {
+	FormatGPTProfileRating,
+	FormatGPTProfileRatingName,
+	getProfileRatingAlgKeysInDisplayOrder,
+	UppercaseFirst,
+} from "#util/misc";
 import { FormatDate, MillisToSince } from "#util/time";
 import { DateTime } from "luxon";
 import React, { useMemo, useState } from "react";
@@ -158,7 +163,7 @@ function UserHistory({
 			<Divider className="mt-6 mb-2" />
 			{mode === "ranking" ? (
 				<>
-					{Object.keys(gameConfig.profileRatingAlgs).length > 1 && (
+					{getProfileRatingAlgKeysInDisplayOrder(game).length > 1 && (
 						<div className="col-12 offset-md-4 col-md-4 mt-4">
 							<FormSelect
 								onChange={(e) =>
@@ -166,7 +171,7 @@ function UserHistory({
 								}
 								value={rating}
 							>
-								{Object.keys(gameConfig.profileRatingAlgs).map((e) => (
+								{getProfileRatingAlgKeysInDisplayOrder(game).map((e) => (
 									<option key={e} value={e}>
 										{FormatGPTProfileRatingName(game, e)}
 									</option>
@@ -211,7 +216,7 @@ function UserHistory({
 				/>
 			) : (
 				<>
-					{Object.keys(gameConfig.profileRatingAlgs).length > 1 && (
+					{getProfileRatingAlgKeysInDisplayOrder(game).length > 1 && (
 						<div className="col-12 offset-md-4 col-md-4 mt-4">
 							<FormSelect
 								onChange={(e) =>
@@ -219,7 +224,7 @@ function UserHistory({
 								}
 								value={rating}
 							>
-								{Object.keys(gameConfig.profileRatingAlgs).map((e) => (
+								{getProfileRatingAlgKeysInDisplayOrder(game).map((e) => (
 									<option key={e} value={e}>
 										{FormatGPTProfileRatingName(game, e)}
 									</option>

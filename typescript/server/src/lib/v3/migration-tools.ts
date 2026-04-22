@@ -99,7 +99,7 @@ export function mongoScoreDataToPg<TGame extends V3Game = V3Game>(
  * Reconstruct API {@link ScoreData} from Postgres `data` / `derived_data` JSON blobs
  * and the `judgements` column (the inverse of {@link mongoScoreDataToPg}).
  */
-export function pgScoreDataToMongo<TGame extends V3Game = V3Game>(
+export function pgScoreDataToAPI<TGame extends V3Game = V3Game>(
 	game: TGame,
 	scoreData: PgScoreData<TGame>,
 ): ScoreData<TGame> {

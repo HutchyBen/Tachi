@@ -1,6 +1,6 @@
 import type { KtLogger } from "#lib/log/log";
 
-import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
+import { newGameProfilePreferenceColumns } from "#lib/game-settings/create-game-settings";
 import DB from "#services/pg/db";
 import { loadUserGameStats } from "#utils/class";
 import { type ClassDelta, type integer, type V3Game } from "tachi-common";
@@ -80,9 +80,9 @@ export async function UpdateUsersGamePlaytypeStats(
 				game,
 				ratings: JSON.stringify(ratings),
 				classes: JSON.stringify(classes),
+				...newGameProfilePreferenceColumns(game),
 			})
 			.execute();
-		await CreateGameSettings(userID, game);
 	}
 
 	return deltas;

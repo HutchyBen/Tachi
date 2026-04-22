@@ -21,6 +21,13 @@ export interface ProfileRatingAlgorithmConfig extends RatingAlgorithmConfig {
 	 * of this algorithm's description?
 	 */
 	associatedScoreAlgs: ReadonlyArray<string>;
+
+	/**
+	 * Sort order in the UI when multiple profile ratings are listed (e.g. profile header
+	 * table, settings). Lower numbers appear first; algorithms without this field sort
+	 * after those that have it, then by key name.
+	 */
+	displayOrder?: number;
 }
 
 export interface ClassInfo<ClassID extends string> {
@@ -143,10 +150,10 @@ export interface FixedDifficulties<Difficulty extends string> {
  * Originally, I called this "SEMI_FIXED", which is the sort of ZK quirkiness you've came to know at
  * this point, but now there's no point, this is for chugekimai, and this makes it clear.
  */
-export interface ChuGekiMaiDifficulties<Difficulty extends string> {
+export interface ChuGekiMaiDifficulties<TDifficulty extends string> {
 	type: "CHUGEKIMAI_STYLE";
 
-	order: ReadonlyArray<Difficulty>;
+	order: ReadonlyArray<TDifficulty>;
 
 	/**
 	 * How should we format these difficulty names?
@@ -154,9 +161,9 @@ export interface ChuGekiMaiDifficulties<Difficulty extends string> {
 	 * Dynamic ones (i.e. ones not in the Order set) are not formatted - they are printed
 	 * exactly as-is.
 	 */
-	format: Partial<Record<Difficulty, string>>;
+	format: Partial<Record<TDifficulty, string>>;
 
-	default: Difficulty;
+	default: TDifficulty;
 }
 
 export type DifficultyConfig<D extends string = string> =

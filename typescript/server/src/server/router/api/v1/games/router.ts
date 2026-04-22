@@ -2,7 +2,7 @@ import { GetRecentActivityForMultipleGames } from "#lib/activity/activity";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { ONE_HOUR } from "#lib/constants/time";
 import { LoadFolderDocumentByGameAndSlug, LoadFolderDocumentsByIds } from "#lib/db-formats/folders";
-import { SELECT_GAME_PROFILE, ToGameStatsDocument } from "#lib/db-formats/game-profiles";
+import { ToGameStatsDocument } from "#lib/db-formats/game-profiles";
 import { SELECT_GOAL, SELECT_GOAL_SUB_WITH_GOAL_GAME } from "#lib/db-formats/goal";
 import {
 	CountPbsOnChart,
@@ -77,6 +77,7 @@ import {
 	LEGACY_GameToGameGroupPT,
 	LEGACY_GetGamePTConfig,
 	type UGPTSettingsDocument,
+	type UserGameStatsWithProfileLeaderboardRank,
 	type V3Game,
 } from "tachi-common";
 
@@ -202,12 +203,25 @@ API_V1_ROUTER.add("GET /games/:game/leaderboard", withGame, async ({ input, ctx 
 	const ratingCol = sql<number>`coalesce((game_profile.ratings::jsonb->>${sql.lit(alg)})::numeric, 0)`;
 
 	const gameStats = await DB.selectFrom("game_profile")
-		.select(SELECT_GAME_PROFILE)
+		.select([
+			"game_profile.user_id",
+			"game_profile.game",
+			"game_profile.ratings",
+			"game_profile.classes",
+			sql<number>`RANK() OVER (ORDER BY ${ratingCol} DESC)`.as("rank"),
+		])
 		.where("game_profile.game", "=", v3Game)
 		.orderBy(ratingCol, "desc")
 		.limit(limit)
 		.execute()
-		.then((rows) => rows.map(ToGameStatsDocument));
+		.then((rows) =>
+			rows.map(
+				(row): UserGameStatsWithProfileLeaderboardRank => ({
+					...ToGameStatsDocument(row),
+					rank: Number(row.rank),
+				}),
+			),
+		);
 
 	const users = await GetUsersWithIDs(gameStats.map((e) => e.userID));
 

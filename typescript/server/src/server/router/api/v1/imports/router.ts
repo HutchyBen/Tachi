@@ -1,7 +1,5 @@
-import type { ScoreImportWorkerReturns } from "#lib/score-import/worker/types";
-
 import { ACTION_DeleteImport } from "#actions/delete-import";
-import { JOB_RETRY_COUNT, SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
+import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import {
 	GetImportTrackerByImportId,
 	ListFailedImportTrackers,
@@ -10,11 +8,17 @@ import {
 } from "#lib/db-formats/import-document";
 import { LoadSessionDocumentById } from "#lib/db-formats/session";
 import { GetImportScores } from "#lib/imports/imports";
+import {
+	JOB_STATUS_DONE,
+	JOB_STATUS_FAILED,
+	JOB_STATUS_QUEUED,
+	JOB_STATUS_RUNNING,
+} from "#lib/jobs/job-queue/constants";
 import { log } from "#lib/log/log";
 import { withImport } from "#lib/router/middleware";
 import { success } from "#lib/router/typed-router";
-import ScoreImportQueue, { ScoreImportQueueEvents } from "#lib/score-import/worker/queue";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
+import DB from "#services/pg/db";
 import { GetRelevantSongsAndCharts } from "#utils/db";
 import { GetUsersWithIDs, GetUserWithID } from "#utils/user";
 import { ExpectedErr } from "bliss";
@@ -139,25 +143,12 @@ API_V1_ROUTER.add("POST /imports/:importID/revert", withImport, async ({ params,
 
 // ─── Import poll-status ───────────────────────────────────────────────────────
 
-// Finding jobs is slightly harder than just doing a key lookup, because of retrying.
-async function FindImportJob(importID: string) {
-	const possibleImportIDs = [];
-
-	for (let i = 1; i <= JOB_RETRY_COUNT; i++) {
-		possibleImportIDs.push(`${importID}:TRY${i}`);
-	}
-
-	try {
-		// Note that instead of the cleaner await-inside-for here, we parallelise this
-		// for performance.
-		const maybeJob = (
-			await Promise.all(possibleImportIDs.map((i) => ScoreImportQueue.getJob(i)))
-		).find((k) => k);
-
-		return maybeJob;
-	} catch (_err) {
-		return undefined;
-	}
+async function findJobQueueForImport(importID: string) {
+	return DB.selectFrom("job_queue")
+		.selectAll()
+		.where("job_queue.scope", "=", `import:${importID}`)
+		.orderBy("job_queue.created_at", "desc")
+		.executeTakeFirst();
 }
 
 /**
@@ -190,7 +181,7 @@ API_V1_ROUTER.add("GET /imports/:importID/poll-status", async ({ params }) => {
 		});
 	}
 
-	const job = await FindImportJob(params.importID);
+	const job = await findJobQueueForImport(params.importID);
 
 	if (!job) {
 		const tracker = await GetImportTrackerByImportId(params.importID);
@@ -199,9 +190,7 @@ API_V1_ROUTER.add("GET /imports/:importID/poll-status", async ({ params }) => {
 			throw new ExpectedErr(404, "There is no ongoing import here.");
 		}
 
-		// The user has requested the status of the import before the job has even
-		// been sent to redis. This is rare, but prevents a race condition of saying
-		// that an import is not ongoing when it is.
+		// The user has requested the status before a job row is visible. Rare race.
 		switch (tracker.type) {
 			case "ONGOING":
 				return success("Import is ongoing.", { importStatus: "ongoing", progress: 0 });
@@ -220,56 +209,39 @@ API_V1_ROUTER.add("GET /imports/:importID/poll-status", async ({ params }) => {
 		}
 	}
 
-	let isFailed: boolean;
-
-	try {
-		isFailed = await job.isFailed();
-	} catch (err) {
-		log.info(`Failed to read job: ${err}`);
-		isFailed = true;
-	}
-
-	let isCompleted: boolean;
-
-	try {
-		isCompleted = await job.isCompleted();
-	} catch (err) {
-		log.info(`Failed to read job: ${err}`);
-		isCompleted = false;
-	}
-
-	// job.isFailed() means a critical error has occurred — an unhandled exception was thrown.
-	if (isFailed) {
-		log.error({ job }, "Internal Server Error with job?");
+	if (job.status === JOB_STATUS_FAILED) {
+		log.error({ job }, "Postgres job_queue row in failed state.");
 		throw new ExpectedErr(500, "An internal service error has occurred with this import.");
 	}
 
-	if (isCompleted) {
-		const content = (await job.waitUntilFinished(
-			ScoreImportQueueEvents,
-		)) as ScoreImportWorkerReturns;
+	if (job.status === JOB_STATUS_QUEUED || job.status === JOB_STATUS_RUNNING) {
+		return success("Import is ongoing.", {
+			importStatus: "ongoing",
+			progress: { description: "Importing scores." },
+		});
+	}
 
-		// content.success == true means the import finished cleanly.
-		// Otherwise it was a ScoreImportFatalError (bad user input etc.).
-		if (content.success) {
+	// job.status === DONE (2)
+	if (job.status === JOB_STATUS_DONE) {
+		const again = await LoadImportDocumentById(params.importID);
+		if (again) {
 			return success("Import was completed!", {
-				import: content.ImportDocument,
+				import: again,
 				importStatus: "completed",
 			});
 		}
-
-		return {
-			$status: content.statusCode,
-			body: {},
-			description: content.description,
-			success: true,
-		};
+		const tracker = await GetImportTrackerByImportId(params.importID);
+		if (tracker?.type === "FAILED") {
+			return {
+				$status: tracker.error.statusCode ?? 500,
+				body: {},
+				description: tracker.error.message,
+				success: true as const,
+			};
+		}
+		// small race: job finished, document not yet visible
+		return success("Import is ongoing.", { importStatus: "ongoing", progress: 0 });
 	}
 
-	const progress = job.progress;
-
-	return success("Import is ongoing.", {
-		importStatus: "ongoing",
-		progress: progress === 0 ? { description: "Starting up import." } : progress,
-	});
+	throw new ExpectedErr(500, "Unrecognised job queue state.");
 });

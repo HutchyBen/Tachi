@@ -1,6 +1,6 @@
 import { useProfileRatingAlg } from "#components/util/useScoreRatingAlg";
 import { type GamePT } from "#types/react";
-import { FormatGPTProfileRatingName } from "#util/misc";
+import { FormatGPTProfileRatingName, getProfileRatingAlgKeysInDisplayOrder } from "#util/misc";
 import React from "react";
 import { Link } from "react-router-dom";
 import { type integer, type ProfileRatingAlgorithms, type V3Game } from "tachi-common";
@@ -22,19 +22,21 @@ export default function RankingData({
 
 	const extendData = [];
 
-	for (const k in rankingData) {
+	for (const k of getProfileRatingAlgKeysInDisplayOrder(game)) {
 		const key = k as ProfileRatingAlgorithms[V3Game];
 
-		if (key !== alg) {
-			extendData.push(
-				<div className="col-12" key={key}>
-					<small className="text-body-secondary">
-						{FormatGPTProfileRatingName(game, key)}: #{rankingData[key].ranking}/
-						{rankingData[key].outOf}
-					</small>
-				</div>,
-			);
+		if (!(key in rankingData) || key === alg) {
+			continue;
 		}
+
+		extendData.push(
+			<div className="col-12" key={key}>
+				<small className="text-body-secondary">
+					{FormatGPTProfileRatingName(game, key)}: #{rankingData[key].ranking}/
+					{rankingData[key].outOf}
+				</small>
+			</div>,
+		);
 	}
 
 	return (

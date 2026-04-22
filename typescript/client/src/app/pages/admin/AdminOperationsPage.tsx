@@ -19,9 +19,6 @@ export default function AdminOperationsPage() {
 
 	const [folderId, setFolderId] = useState("");
 
-	const [resyncBody, setResyncBody] = useState("{}");
-	const [recalcBody, setRecalcBody] = useState("{}");
-
 	const [supporterUser, setSupporterUser] = useState("");
 
 	const announcementGameConfig = announcementGame ? GetGameGroupConfig(announcementGame) : null;
@@ -226,34 +223,22 @@ export default function AdminOperationsPage() {
 
 			<Col lg={6}>
 				<Card>
-					<Card.Header>Resync PBs</Card.Header>
+					<Card.Header>Recalc PBs</Card.Header>
 					<Card.Body>
-						<Form.Group className="mb-3" controlId="resync-json">
-							<Form.Label>JSON body</Form.Label>
-							<Form.Control
-								as="textarea"
-								onChange={(e) => setResyncBody(e.target.value)}
-								placeholder='{} or { "userIDs": [1, 2], "filter": { ... } }'
-								rows={5}
-								style={{ fontFamily: "monospace", fontSize: "0.85rem" }}
-								value={resyncBody}
-							/>
-						</Form.Group>
+						<p className="text-muted small mb-3">
+							Enqueues every distinct user+chart that has at least one score into
+							<code className="mx-1">pb_dirty</code>, then drains that queue and
+							downstream session/profile queues until idle (all games). This request
+							waits until processing finishes.
+						</p>
 						<Button
 							onClick={() => {
-								let parsed: unknown = {};
-								try {
-									parsed = JSON.parse(resyncBody) as unknown;
-								} catch {
-									alert("Invalid JSON.");
-									return;
-								}
 								void APIFetchV1(
-									`/admin/resync-pbs`,
+									`/admin/recalc-pbs`,
 									{
 										method: "POST",
 										headers: { "Content-Type": "application/json" },
-										body: JSON.stringify(parsed),
+										body: JSON.stringify({}),
 									},
 									true,
 									true,
@@ -261,7 +246,7 @@ export default function AdminOperationsPage() {
 							}}
 							variant="primary"
 						>
-							Resync PBs
+							Recalc all PBs
 						</Button>
 					</Card.Body>
 				</Card>
@@ -271,32 +256,19 @@ export default function AdminOperationsPage() {
 				<Card>
 					<Card.Header>Recalc scores</Card.Header>
 					<Card.Body>
-						<Form.Group className="mb-3" controlId="recalc-json">
-							<Form.Label>Mongo filter (JSON object)</Form.Label>
-							<Form.Control
-								as="textarea"
-								onChange={(e) => setRecalcBody(e.target.value)}
-								placeholder="{}"
-								rows={5}
-								style={{ fontFamily: "monospace", fontSize: "0.85rem" }}
-								value={recalcBody}
-							/>
-						</Form.Group>
+						<p className="text-muted small mb-3">
+							Enqueues every chart for full score re-derivation (all games), then
+							drains score and downstream queues until idle. This request waits until
+							processing finishes; can take a long time on large databases.
+						</p>
 						<Button
 							onClick={() => {
-								let parsed: unknown = {};
-								try {
-									parsed = JSON.parse(recalcBody) as unknown;
-								} catch {
-									alert("Invalid JSON.");
-									return;
-								}
 								void APIFetchV1(
 									`/admin/recalc`,
 									{
 										method: "POST",
 										headers: { "Content-Type": "application/json" },
-										body: JSON.stringify(parsed),
+										body: JSON.stringify({}),
 									},
 									true,
 									true,
@@ -304,7 +276,7 @@ export default function AdminOperationsPage() {
 							}}
 							variant="primary"
 						>
-							Recalc
+							Recalc all scores
 						</Button>
 					</Card.Body>
 				</Card>

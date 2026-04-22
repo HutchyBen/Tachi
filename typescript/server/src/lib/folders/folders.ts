@@ -10,7 +10,7 @@ import { LoadPbsForUserOnChartsByPgIds } from "#lib/db-formats/pb";
 import { GetSongsByIDs } from "#lib/db-formats/song";
 import { LoadTableDocumentByLegacyId } from "#lib/db-formats/table";
 import { log } from "#lib/log/log";
-import { pgScoreDataToMongo } from "#lib/v3/migration-tools";
+import { pgScoreDataToAPI } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import { GetFolderForIDGuaranteed } from "#utils/db";
 import { ISO8601ToUnixMilliseconds, UnixMillisecondsToISO8601 } from "#utils/time";
@@ -293,7 +293,7 @@ export async function GetEnumDistForFolderAsOf(
 		const maxByChart = new Map<string, Record<string, integer>>();
 
 		for (const row of rows) {
-			const mongoData = pgScoreDataToMongo(v3Game, {
+			const mongoData = pgScoreDataToAPI(v3Game, {
 				data: row.data as any,
 				derived: row.derived_data as any,
 				judgements: row.judgements as any,

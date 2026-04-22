@@ -17,6 +17,7 @@ import {
 	CreateSongMap,
 	DatabaseSeedNames,
 	type GameGroup,
+	type SeedFolderRow,
 	type SEEDS_BMSCourseDocument,
 	type SEEDS_ChartDocument,
 	type SEEDS_FolderDocument,
@@ -24,7 +25,6 @@ import {
 	type SEEDS_QuestDocument,
 	type SEEDS_QuestlineDocument,
 	type SEEDS_TableDocument,
-	type SeedFolderRow,
 	type SongDocument,
 } from "tachi-common";
 

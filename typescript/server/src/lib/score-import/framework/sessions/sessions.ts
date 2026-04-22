@@ -87,6 +87,9 @@ function ScoreToSessionScoreInfo(
 export async function GetSessionScoreInfo(
 	session: SessionDocument,
 ): Promise<Array<SessionScoreInfo>> {
+	// TODO: Hard to implement efficiently
+	// need to get the PB for this chart BEFORE the
+	// given time T
 	const scores = await DB.selectFrom("score")
 		.innerJoin("chart", "chart.id", "score.chart_id")
 		.innerJoin("song", "song.id", "chart.song_id")

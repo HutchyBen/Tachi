@@ -1,7 +1,7 @@
 import { type PgScoreData, type ScoreData, SDVX_GRADES, SDVX_LAMPS } from "tachi-common";
 import { describe, expect, it } from "vitest";
 
-import { mongoScoreDataToPg, pgScoreDataToMongo } from "./migration-tools";
+import { mongoScoreDataToPg, pgScoreDataToAPI } from "./migration-tools";
 
 const sdvxScoreData: ScoreData<"sdvx"> = {
 	score: 9_876_543,
@@ -48,7 +48,7 @@ const pgSdvxScoreData: PgScoreData<"sdvx"> = {
 
 describe("pgScoreDataToMongo", () => {
 	it("converts nicely", () => {
-		const merged = pgScoreDataToMongo("sdvx", pgSdvxScoreData);
+		const merged = pgScoreDataToAPI("sdvx", pgSdvxScoreData);
 
 		expect(merged).toStrictEqual({
 			enumIndexes: {
@@ -76,7 +76,7 @@ describe("pgScoreDataToMongo", () => {
 
 	it("roundtrips as expected (sdvx)", () => {
 		const pgScoreData = mongoScoreDataToPg("sdvx", sdvxScoreData);
-		const merged = pgScoreDataToMongo("sdvx", pgScoreData);
+		const merged = pgScoreDataToAPI("sdvx", pgScoreData);
 
 		expect(merged).toStrictEqual(sdvxScoreData);
 	});

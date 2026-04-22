@@ -9,30 +9,32 @@ import {
 } from "tachi-common";
 import { type Database } from "tachi-db";
 
-export const SELECT_GAME_SETTINGS = [
-	"game_settings.user_id",
-	"game_settings.game",
-	"game_settings.pf_preferred_score_alg",
-	"game_settings.pf_preferred_session_alg",
-	"game_settings.pf_preferred_profile_alg",
-	"game_settings.pf_preferred_default_enum",
-	"game_settings.pf_default_table",
-	"game_settings.pf_preferred_ranking",
-	"game_settings.data",
+export const SELECT_GAME_PROFILE_SETTINGS = [
+	"game_profile.user_id",
+	"game_profile.game",
+	"game_profile.pf_preferred_score_alg",
+	"game_profile.pf_preferred_session_alg",
+	"game_profile.pf_preferred_profile_alg",
+	"game_profile.pf_preferred_default_enum",
+	"game_profile.pf_default_table",
+	"game_profile.pf_preferred_ranking",
+	"game_profile.data",
+	"game_profile.showcase",
 ] as const;
 
-export type GameSettingsRow = Selection<
+export type GameProfilePreferenceRow = Selection<
 	Database,
-	"game_settings",
-	(typeof SELECT_GAME_SETTINGS)[number]
+	"game_profile",
+	(typeof SELECT_GAME_PROFILE_SETTINGS)[number]
 >;
 
 export function ToUGPTSettingsDocument(
-	row: GameSettingsRow,
+	row: GameProfilePreferenceRow,
 	rivals: Array<integer>,
-	stats: Array<ShowcaseStatDetails>,
 ): UGPTSettingsDocument {
 	const gameSpecific = row.data as UGPTSettingsDocument["preferences"]["gameSpecific"];
+	const rawShowcase = row.showcase as Array<ShowcaseStatDetails>;
+	const stats = normalizeShowcaseStats(rawShowcase);
 
 	return {
 		userID: row.user_id,
@@ -62,10 +64,10 @@ export async function GetUGPTSettingsDocument(
 	userID: integer,
 	game: V3Game,
 ): Promise<UGPTSettingsDocument | null> {
-	const row = await DB.selectFrom("game_settings")
-		.select(SELECT_GAME_SETTINGS)
-		.where("game_settings.user_id", "=", userID)
-		.where("game_settings.game", "=", game)
+	const row = await DB.selectFrom("game_profile")
+		.select(SELECT_GAME_PROFILE_SETTINGS)
+		.where("game_profile.user_id", "=", userID)
+		.where("game_profile.game", "=", game)
 		.executeTakeFirst();
 
 	if (!row) {
@@ -80,18 +82,12 @@ export async function GetUGPTSettingsDocument(
 
 	const rivals = rivalRows.map((r) => r.rival);
 
-	const showcaseRow = await DB.selectFrom("game_settings_showcase")
-		.select("data")
-		.where("user_id", "=", userID)
-		.where("game", "=", game)
-		.executeTakeFirst();
-
-	const stats = showcaseRow ? (showcaseRow.data as Array<ShowcaseStatDetails>) : [];
-
-	return ToUGPTSettingsDocument(row, rivals, normalizeShowcaseStats(stats));
+	return ToUGPTSettingsDocument(row, rivals);
 }
 
 /** Strips legacy `metric` from chart entries stored before chart showcase was PB+playcount-only. */
+// TODO(zk): nonsense, lets just remove this
+// with a migration?
 function normalizeShowcaseStats(raw: Array<ShowcaseStatDetails>): Array<ShowcaseStatDetails> {
 	return raw.map((stat) => {
 		if (stat.mode === "chart") {

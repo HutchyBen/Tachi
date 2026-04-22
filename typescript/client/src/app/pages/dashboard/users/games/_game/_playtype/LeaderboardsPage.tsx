@@ -24,7 +24,7 @@ import {
 	type integer,
 	type ProfileRatingAlgorithms,
 	type UserDocument,
-	type UserGameStats,
+	type UserGameStatsWithProfileLeaderboardRank,
 	type V3Game,
 } from "tachi-common";
 
@@ -111,7 +111,7 @@ function LeaderboardsPageContent({
 
 	const bestNearbyUser = stats.thisUsersRanking.ranking - stats.above.length - 1;
 
-	function LeaderboardRow({ s, i }: { i: integer; s: UserGameStats }) {
+	function LeaderboardRow({ s }: { s: UserGameStatsWithProfileLeaderboardRank }) {
 		return (
 			<tr
 				style={{
@@ -121,7 +121,7 @@ function LeaderboardsPageContent({
 				}}
 			>
 				<td>
-					<strong>#{i}</strong>
+					<strong>#{s.rank}</strong>
 					{reqUser.id === s.userID && (
 						<small className="text-body-secondary">
 							/{stats.thisUsersRanking.outOf}
@@ -177,18 +177,14 @@ function LeaderboardsPageContent({
 					{bestNearbyUser >= 1 &&
 						leaderboard.gameStats
 							.slice(0, bestNearbyUser)
-							.map((s, i) => <LeaderboardRow i={i + 1} key={s.userID} s={s} />)}
+							.map((s) => <LeaderboardRow key={s.userID} s={s} />)}
 					{bestNearbyUser > 4 && (
 						<tr style={{ lineHeight: "0.5rem" }}>
 							<td colSpan={4}>...</td>
 						</tr>
 					)}
-					{[...stats.above, stats.thisUsersStats, ...stats.below].map((s, i) => (
-						<LeaderboardRow
-							i={stats.thisUsersRanking.ranking - stats.above.length + i}
-							key={s.userID}
-							s={s}
-						/>
+					{[...stats.above, stats.thisUsersStats, ...stats.below].map((s) => (
+						<LeaderboardRow key={s.userID} s={s} />
 					))}
 				</>
 			</MiniTable>

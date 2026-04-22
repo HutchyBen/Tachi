@@ -2,7 +2,7 @@ import type { ScoreImportJobData } from "#lib/score-import/worker/types";
 
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
-import { MakeScoreImport } from "#lib/score-import/framework/score-import";
+import { EnqueueScoreImportJob } from "#lib/score-import/worker/enqueue-pg";
 import { ServerConfig } from "#lib/setup/config";
 import { RequirePermissions } from "#server/middleware/auth";
 import { ScoreImportRateLimiter } from "#server/middleware/rate-limiter";
@@ -35,7 +35,7 @@ router.post(
 			};
 
 			// Fire the score import, but make no guarantees about its state.
-			void MakeScoreImport(job);
+			void EnqueueScoreImportJob(job);
 
 			return res.status(202).json({
 				success: true,

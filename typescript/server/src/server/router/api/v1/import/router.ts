@@ -4,14 +4,16 @@ import type { FileUploadImportTypes } from "tachi-common";
 import { SIXTEEN_MEGABTYES } from "#lib/constants/filesize";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log";
+import { withPermission } from "#lib/router/middleware";
 import { success } from "#lib/router/typed-router";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
 import {
-	DeorphanScores,
 	deleteOrphanScoreForUser,
+	DeorphanScores,
+	getOrphanScoreDetailForUser,
 	listOrphanScoresForUser,
 } from "#lib/score-import/framework/orphans/orphans";
-import { MakeScoreImport } from "#lib/score-import/framework/score-import";
+import { EnqueueScoreImportJob } from "#lib/score-import/worker/enqueue-pg";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RequirePermissions } from "#server/middleware/auth";
 import { CreateMulterSingleUploadMiddleware } from "#server/middleware/multer-upload";
@@ -74,7 +76,7 @@ API_V1_ROUTER.rawAdd(
 			};
 
 			// Fire the score import, but make no guarantees about its state.
-			void MakeScoreImport<FileUploadImportTypes>(job);
+			void EnqueueScoreImportJob(job);
 
 			return res.status(202).json({
 				success: true,
@@ -112,8 +114,7 @@ API_V1_ROUTER.add("POST /import/from-api", async ({ input, req }) => {
 	const userIntent = req.header("X-User-Intent")?.toLowerCase() === "true";
 
 	if (ServerConfig.USE_EXTERNAL_SCORE_IMPORT_WORKER) {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		void (MakeScoreImport as any)({
+		void EnqueueScoreImportJob({
 			importID,
 			importType,
 			parserArguments: [userID],
@@ -155,7 +156,7 @@ API_V1_ROUTER.add("POST /import/from-api", async ({ input, req }) => {
  *
  * @name POST /api/v1/import/orphans
  */
-API_V1_ROUTER.add("POST /import/orphans", async ({ req }) => {
+API_V1_ROUTER.add("POST /import/orphans", withPermission("submit_score"), async ({ req }) => {
 	const userDoc = await GetUserWithIDGuaranteed(req[SYMBOL_TACHI_API_AUTH].userID!);
 
 	log.info(`User ${FormatUserDoc(userDoc)} forced an orphan sync.`);
@@ -180,7 +181,7 @@ API_V1_ROUTER.add("POST /import/orphans", async ({ req }) => {
  *
  * @name GET /api/v1/import/orphans
  */
-API_V1_ROUTER.add("GET /import/orphans", async ({ input, req }) => {
+API_V1_ROUTER.add("GET /import/orphans", withPermission("submit_score"), async ({ input, req }) => {
 	const userDoc = await GetUserWithIDGuaranteed(req[SYMBOL_TACHI_API_AUTH].userID!);
 
 	const body = await listOrphanScoresForUser({
@@ -193,18 +194,43 @@ API_V1_ROUTER.add("GET /import/orphans", async ({ input, req }) => {
 });
 
 /**
+ * Return one orphaned score row (including raw data/context) for the current user.
+ *
+ * @name GET /api/v1/import/orphans/:orphanID
+ */
+API_V1_ROUTER.add(
+	"GET /import/orphans/:orphanID",
+	withPermission("submit_score"),
+	async ({ params, req }) => {
+		const userDoc = await GetUserWithIDGuaranteed(req[SYMBOL_TACHI_API_AUTH].userID!);
+
+		const detail = await getOrphanScoreDetailForUser(params.orphanID, userDoc.id);
+
+		if (!detail) {
+			throw new ExpectedErr(404, "No such orphan score for this user.");
+		}
+
+		return success("Returned orphan score.", detail);
+	},
+);
+
+/**
  * Delete a single orphaned score row for the current user.
  *
  * @name DELETE /api/v1/import/orphans/:orphanID
  */
-API_V1_ROUTER.add("DELETE /import/orphans/:orphanID", async ({ params, req }) => {
-	const userDoc = await GetUserWithIDGuaranteed(req[SYMBOL_TACHI_API_AUTH].userID!);
+API_V1_ROUTER.add(
+	"DELETE /import/orphans/:orphanID",
+	withPermission("submit_score"),
+	async ({ params, req }) => {
+		const userDoc = await GetUserWithIDGuaranteed(req[SYMBOL_TACHI_API_AUTH].userID!);
 
-	const deleted = await deleteOrphanScoreForUser(params.orphanID, userDoc.id);
+		const deleted = await deleteOrphanScoreForUser(params.orphanID, userDoc.id);
 
-	if (!deleted) {
-		throw new ExpectedErr(404, "No such orphan score for this user.");
-	}
+		if (!deleted) {
+			throw new ExpectedErr(404, "No such orphan score for this user.");
+		}
 
-	return success("Deleted orphan score.", {});
-});
+		return success("Deleted orphan score.", {});
+	},
+);

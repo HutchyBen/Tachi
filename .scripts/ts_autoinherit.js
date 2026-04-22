@@ -10,7 +10,9 @@ process.chdir(cwd);
 const rootPkg = JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8"));
 
 for (const workspacePattern of rootPkg.workspaces) {
-	let glob = new Glob(workspacePattern + "*/package.json");
+	// "typescript/*" + "/package.json" => "typescript/*/package.json" (one workspace dir only).
+	// "typescript/*" + "*/package.json" would merge *+* into ** and match nested paths / node_modules.
+	let glob = new Glob(workspacePattern + "/package.json");
 
 	for (const pkgPath of glob.scanSync(".")) {
 		console.log(pkgPath);

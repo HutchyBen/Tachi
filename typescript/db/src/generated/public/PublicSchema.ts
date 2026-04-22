@@ -11,7 +11,6 @@ import type { default as InviteLockTable } from './InviteLock';
 import type { default as OrphanChartTable } from './OrphanChart';
 import type { default as GameRivalTable } from './GameRival';
 import type { default as GoalTable } from './Goal';
-import type { default as GameSettingsTable } from './GameSettings';
 import type { default as ImportQuestTable } from './ImportQuest';
 import type { default as CronTaskExecutionTable } from './CronTaskExecution';
 import type { default as NotificationTable } from './Notification';
@@ -39,7 +38,7 @@ import type { default as MigrationTable } from './Migration';
 import type { default as ActionTable } from './Action';
 import type { default as PrivSvcKaiAuthTokenTable } from './PrivSvcKaiAuthToken';
 import type { default as ChartTable } from './Chart';
-import type { default as GameSettingsShowcaseTable } from './GameSettingsShowcase';
+import type { default as GameProfileDirtyTable } from './GameProfileDirty';
 import type { default as AccountFollowingTable } from './AccountFollowing';
 import type { default as ImportTable } from './Import';
 import type { default as FolderTable } from './Folder';
@@ -56,6 +55,7 @@ import type { default as PrivApiClientTable } from './PrivApiClient';
 import type { default as PrivApiTokenTable } from './PrivApiToken';
 import type { default as SvcKshookSv6cSettingsTable } from './SvcKshookSv6cSettings';
 import type { default as ImportErrorTable } from './ImportError';
+import type { default as SessionDirtyTable } from './SessionDirty';
 import type { default as FolderChartLookupTable } from './FolderChartLookup';
 import type { default as QuestTable } from './Quest';
 import type { default as AccountSettingsTable } from './AccountSettings';
@@ -88,8 +88,6 @@ export default interface PublicSchema {
   game_rival: GameRivalTable;
 
   goal: GoalTable;
-
-  game_settings: GameSettingsTable;
 
   import_quest: ImportQuestTable;
 
@@ -145,7 +143,7 @@ export default interface PublicSchema {
 
   chart: ChartTable;
 
-  game_settings_showcase: GameSettingsShowcaseTable;
+  game_profile_dirty: GameProfileDirtyTable;
 
   account_following: AccountFollowingTable;
 
@@ -178,6 +176,8 @@ export default interface PublicSchema {
   svc_kshook_sv6c_settings: SvcKshookSv6cSettingsTable;
 
   import_error: ImportErrorTable;
+
+  session_dirty: SessionDirtyTable;
 
   folder_chart_lookup: FolderChartLookupTable;
 

@@ -1,6 +1,7 @@
 import { SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart";
 import { SELECT_SCORE_DOCUMENT, ToScoreDocument } from "#lib/db-formats/score";
 import { SELECT_SONG_DOCUMENT, ToSongDocument } from "#lib/db-formats/song";
+import { GetSessionScoreInfo } from "#lib/score-import/framework/sessions/sessions";
 import DB from "#services/pg/db";
 import { GetUserWithIDGuaranteed } from "#utils/user";
 import _ from "lodash";
@@ -70,10 +71,7 @@ export async function GetSessionData(session: SessionDocument): Promise<{
 	let scores = rows.map(ToScoreDocument);
 	scores = _.uniqBy(scores, "scoreID");
 
-	// TODO: Hard to implement efficiently
-	// need to get the PB for this chart BEFORE the
-	// given time T
-	const scoreInfo: Array<SessionScoreInfo> = [];
+	const scoreInfo = await GetSessionScoreInfo(session);
 
 	return {
 		charts,

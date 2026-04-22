@@ -26,6 +26,7 @@ import {
 	type UserDocument,
 	type UserGameStats,
 	type UserGameStatsSnapshotDocument,
+	type UserGameStatsWithProfileLeaderboardRank,
 	type V3Game,
 } from "tachi-common";
 
@@ -45,10 +46,10 @@ export interface UGPTStatsReturn<GPT extends V3Game = V3Game> {
 }
 
 export interface UGPTLeaderboardAdjacent {
-	above: UserGameStats[];
-	below: UserGameStats[];
+	above: UserGameStatsWithProfileLeaderboardRank[];
+	below: UserGameStatsWithProfileLeaderboardRank[];
 	users: UserDocument[];
-	thisUsersStats: UserGameStats;
+	thisUsersStats: UserGameStatsWithProfileLeaderboardRank;
 	thisUsersRanking: {
 		outOf: integer;
 		ranking: integer;
@@ -56,7 +57,7 @@ export interface UGPTLeaderboardAdjacent {
 }
 
 export interface GPTLeaderboard {
-	gameStats: UserGameStats[];
+	gameStats: UserGameStatsWithProfileLeaderboardRank[];
 	users: UserDocument[];
 }
 
@@ -179,7 +180,7 @@ export interface ScoreLeaderboardReturns<GPT extends V3Game = V3Game> {
 
 export interface UserLeaderboardReturns {
 	users: UserDocument[];
-	gameStats: UserGameStats[];
+	gameStats: UserGameStatsWithProfileLeaderboardRank[];
 }
 
 export interface UserRecentSummary {

@@ -1,9 +1,9 @@
 start:
 	#!/bin/bash
+	set -euo pipefail
 	ARGS=(server client seeds-webui)
 
 	echo "Starting: ${ARGS[@]}"
-	set -e
 	pids=()
 	for target in ${ARGS[@]}; do
 		(just "$target") &
@@ -14,10 +14,33 @@ start:
 
 
 server:
-		cd typescript/server && \
-		VERSION=$(jq -r .version package.json) \
-		COMMIT_HASH=$(git rev-parse --short HEAD) \
-		bun --watch src/main.ts
+	#!/bin/bash
+	set -euo pipefail
+	cd typescript/server
+	VERSION="${VERSION:-"$(jq -r .version package.json)"}"
+	COMMIT_HASH="${COMMIT_HASH:-"$(git rev-parse --short HEAD)"}"
+	export VERSION COMMIT_HASH
+	sidecar_pids=()
+	# Crons: Postgres-backed scheduler. Jobs: `job_queue` (SKIP LOCKED; run multiple for load).
+	if [[ -z "${TACHI_SERVER_NO_SIDECARS:-}" ]]; then
+		bun run cron-worker & sidecar_pids+=($!)
+		n="${TACHI_SERVER_JOB_WORKER_COUNT:-1}"
+		[[ "$n" =~ ^[0-9]+$ ]] && [[ "$n" -ge 1 ]] || n=1
+		for _ in $(seq 1 "$n"); do
+			bun run job-queue-worker & sidecar_pids+=($!)
+		done
+	fi
+	_cleanup_sidecars() {
+		trap - INT TERM EXIT
+		local s=$?
+		if ((${#sidecar_pids[@]})); then
+			kill -TERM "${sidecar_pids[@]}" 2>/dev/null || true
+			wait "${sidecar_pids[@]}" 2>/dev/null || true
+		fi
+		exit "$s"
+	}
+	trap _cleanup_sidecars INT TERM EXIT
+	bun --watch src/main.ts
 
 client:
 	cd typescript/client && bun vite

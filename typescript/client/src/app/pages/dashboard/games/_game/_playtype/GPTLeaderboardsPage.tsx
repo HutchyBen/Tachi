@@ -16,7 +16,11 @@ import { type UserLeaderboardReturns } from "#types/api-returns";
 import { type GamePT } from "#types/react";
 import { type UGSDataset } from "#types/tables";
 import { CreateUserMap } from "#util/data";
-import { FormatGPTProfileRating, FormatGPTProfileRatingName } from "#util/misc";
+import {
+	FormatGPTProfileRating,
+	FormatGPTProfileRatingName,
+	getProfileRatingAlgKeysInDisplayOrder,
+} from "#util/misc";
 import { NumericSOV, StrSOV } from "#util/sorts";
 import React, { useState } from "react";
 import { Col, Form, Row } from "react-bootstrap";
@@ -25,7 +29,6 @@ import {
 	type Classes,
 	FormatGame,
 	GameToGameGroup,
-	GetGameConfig,
 	GetGameGroupConfig,
 	type V3Game,
 } from "tachi-common";
@@ -64,16 +67,18 @@ export default function GPTLeaderboardsPage({ game }: GamePT) {
 }
 
 function ProfileLeaderboard({ game }: GamePT) {
-	const gameConfig = GetGameConfig(game);
-
 	const defaultAlg = useProfileRatingAlg(game);
 
 	const [alg, setAlg] = useState(defaultAlg);
 
+	const profileAlgKeys = getProfileRatingAlgKeysInDisplayOrder(
+		game,
+	) as Array<AnyProfileRatingAlg>;
+
 	const SelectComponent =
-		Object.keys(gameConfig.profileRatingAlgs).length > 1 ? (
+		profileAlgKeys.length > 1 ? (
 			<Form.Select onChange={(e) => setAlg(e.target.value as any)} value={alg}>
-				{Object.keys(gameConfig.profileRatingAlgs).map((e) => (
+				{profileAlgKeys.map((e) => (
 					<option key={e} value={e}>
 						{FormatGPTProfileRatingName(game, e)}
 					</option>
@@ -107,12 +112,12 @@ function ProfileLeaderboard({ game }: GamePT) {
 
 	const userDataset: UGSDataset = [];
 
-	for (const [index, gs] of data.gameStats.entries()) {
+	for (const gs of data.gameStats) {
 		userDataset.push({
 			...gs,
 			__related: {
 				user: userMap.get(gs.userID)!,
-				index,
+				index: gs.rank - 1,
 			},
 		});
 	}
@@ -125,11 +130,9 @@ function ProfileLeaderboard({ game }: GamePT) {
 				dataset={userDataset}
 				entryName="Rankers"
 				headers={[
-					["Ranking", "Rank", NumericSOV((x) => x.__related.index)],
+					["Ranking", "Rank", NumericSOV((x) => x.rank)],
 					["User", "User", StrSOV((x) => x.__related.user.username)],
-					...(
-						Object.keys(gameConfig.profileRatingAlgs) as Array<AnyProfileRatingAlg>
-					).map(
+					...profileAlgKeys.map(
 						(e) =>
 							[
 								FormatGPTProfileRatingName(game, e),
@@ -143,9 +146,7 @@ function ProfileLeaderboard({ game }: GamePT) {
 					<tr>
 						<IndexCell index={r.__related.index} />
 						<UserCell game={game} user={r.__related.user} />
-						{(
-							Object.keys(gameConfig.profileRatingAlgs) as Array<AnyProfileRatingAlg>
-						).map((e) => (
+						{profileAlgKeys.map((e) => (
 							<td key={e}>
 								{r.ratings[e]
 									? FormatGPTProfileRating(game, e, r.ratings[e]!)

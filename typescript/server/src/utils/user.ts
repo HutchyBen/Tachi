@@ -212,6 +212,38 @@ export async function GetUsersRankingAndOutOf(
 	};
 }
 
+/**
+ * 1-based leaderboard rank per user for a profile rating algorithm. Ties share the
+ * same rank; the next rank skips (same as {@link GetUsersRankingAndOutOf}).
+ */
+export async function GetLeaderboardRanksForUserIds(
+	game: V3Game,
+	alg: ProfileRatingAlgorithms[V3Game],
+	userIds: Array<integer>,
+): Promise<ReadonlyMap<integer, integer>> {
+	if (userIds.length === 0) {
+		return new Map();
+	}
+	const uniqueIds = [...new Set(userIds)];
+
+	const result = await sql<{ rank: string; user_id: number }>`
+		WITH ranked AS (
+			SELECT
+				game_profile.user_id,
+				RANK() OVER (
+					ORDER BY coalesce((game_profile.ratings::jsonb->>${sql.lit(alg)})::numeric, 0) DESC
+				) AS rank
+			FROM game_profile
+			WHERE game_profile.game = ${game}
+		)
+		SELECT user_id, rank
+		FROM ranked
+		WHERE user_id IN (${sql.join(uniqueIds.map((id) => sql`${id}`))})
+	`.execute(DB);
+
+	return new Map(result.rows.map((r) => [r.user_id, Number(r.rank)]));
+}
+
 const FIVE_MINUTES = 1000 * 60 * 5;
 
 /**

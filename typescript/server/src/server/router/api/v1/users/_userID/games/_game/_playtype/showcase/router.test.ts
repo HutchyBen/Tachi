@@ -1,3 +1,4 @@
+import { newGameProfilePreferenceColumns } from "#lib/game-settings/create-game-settings";
 import DB from "#services/pg/db";
 import mockApi, { CloseServerConnection } from "#test-utils/mock-api";
 import { seedUser } from "#test-utils/pg-fixtures";
@@ -22,20 +23,7 @@ async function seedIIDXUserProfile(userId: number) {
 			game: "iidx-sp",
 			ratings: JSON.stringify({}),
 			classes: JSON.stringify({}),
-		})
-		.execute();
-
-	await DB.insertInto("game_settings")
-		.values({
-			user_id: userId,
-			game: "iidx-sp",
-			pf_preferred_score_alg: null,
-			pf_preferred_session_alg: null,
-			pf_preferred_profile_alg: null,
-			pf_preferred_default_enum: null,
-			pf_default_table: null,
-			pf_preferred_ranking: null,
-			data: JSON.stringify({ display2DXTra: false, bpiTarget: 0 }),
+			...newGameProfilePreferenceColumns("iidx-sp"),
 		})
 		.execute();
 }
@@ -118,13 +106,13 @@ describe("PUT /api/v1/users/:userID/games/:game/showcase", () => {
 		expect(res.body.success).toBe(true);
 		expect(res.body.body.preferences.stats).toEqual(stats);
 
-		const row = await DB.selectFrom("game_settings_showcase")
-			.selectAll()
-			.where("user_id", "=", userId)
-			.where("game", "=", "iidx-sp")
+		const row = await DB.selectFrom("game_profile")
+			.select("game_profile.showcase")
+			.where("game_profile.user_id", "=", userId)
+			.where("game_profile.game", "=", "iidx-sp")
 			.executeTakeFirst();
 
 		expect(row).toBeDefined();
-		expect(row?.data).toEqual(stats);
+		expect(row?.showcase).toEqual(stats);
 	});
 });

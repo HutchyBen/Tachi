@@ -16,7 +16,7 @@ export default function IndexCell({ index }: { index: integer }) {
 			</span>
 			<span
 				style={{
-					fontWeight: index < 10 ? "bold" : undefined,
+					fontWeight: index + 1 < 10 ? "bold" : undefined,
 				}}
 			>
 				{index + 1}

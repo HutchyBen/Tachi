@@ -71,7 +71,7 @@ describe("UpdateClassIfGreater (Postgres)", () => {
 		expect(ach.class_prev_value).toBe("KYU_7");
 	});
 
-	it("creates game_profile and game_settings when none exist (first class)", async () => {
+	it("creates game_profile with preference defaults when none exist (first class)", async () => {
 		const { id } = await seedUser({ username: `cls_new_${Date.now()}` });
 
 		const result = await UpdateClassIfGreater(id, "iidx-sp", "dan", "DAN_1");
@@ -85,16 +85,11 @@ describe("UpdateClassIfGreater (Postgres)", () => {
 
 		expect(asClassesJson(profile.classes).dan).toBe("DAN_1");
 
-		const settings = await DB.selectFrom("game_settings")
-			.selectAll()
-			.where("user_id", "=", id)
-			.where("game", "=", "iidx-sp")
-			.executeTakeFirstOrThrow();
-
+		const dataRaw = profile.data;
 		const data =
-			typeof settings.data === "string"
-				? (JSON.parse(settings.data) as { bpiTarget?: number; display2DXTra?: boolean })
-				: (settings.data as { bpiTarget?: number; display2DXTra?: boolean });
+			typeof dataRaw === "string"
+				? (JSON.parse(dataRaw) as { bpiTarget?: number; display2DXTra?: boolean })
+				: (dataRaw as { bpiTarget?: number; display2DXTra?: boolean });
 		expect(data.display2DXTra).toBe(false);
 		expect(data.bpiTarget).toBe(0);
 	});

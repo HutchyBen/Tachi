@@ -85,6 +85,7 @@ test-parity suite="":
 # Workers clone from this template rather than re-running migrations each time.
 bot-db-test-template-reset:
 	#!/bin/bash
+	set -euo pipefail
 	export POSTGRES_URL="{{POSTGRES_URL}}/tachi_bot_test_template"
 	tachidb database drop || true
 	tachidb database create
@@ -94,9 +95,20 @@ bot-db-test-template-reset:
 # Workers clone from this template rather than re-running migrations each time.
 server-db-test-template-reset:
 	#!/bin/bash
+	set -euo pipefail
 	export POSTGRES_URL="{{POSTGRES_URL}}/tachi_server_test_template"
 	tachidb database drop || true
 	tachidb database create
 	tachidb migrate run
 
 # <== End of parallel db test justscripts
+
+# Score-import HTTP load tests against a live server (multipart /api/v1/import/file).
+# See typescript/server/src/load-tests/README.md
+load-test-score-import *ARGS:
+	cd typescript/server && bun run load-test:score-import -- {{ARGS}}
+
+# Seed N dev users + API tokens (submit_score); writes one token per line to OUTPUT_FILE.
+# Uses the server package env (.env); same Postgres as a local tachi-server.
+load-test-score-import-seed-tokens COUNT OUTPUT_FILE:
+	cd typescript/server && bun run src/load-tests/seed-stress-api-tokens.ts {{COUNT}} {{OUTPUT_FILE}}

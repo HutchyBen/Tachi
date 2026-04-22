@@ -1,4 +1,4 @@
-import { CreateGameSettings } from "#lib/game-settings/create-game-settings";
+import { newGameProfilePreferenceColumns } from "#lib/game-settings/create-game-settings";
 import { log } from "#lib/log/log";
 import { EmitWebhookEvent } from "#lib/webhooks/webhooks";
 import DB from "#services/pg/db";
@@ -150,12 +150,11 @@ export async function UpdateClassIfGreater(
 				game,
 				ratings: JSON.stringify({}),
 				user_id: userID,
+				...newGameProfilePreferenceColumns(game),
 			})
 			.execute();
 
 		log.info(`Created new player gamestats for ${userID} (${game})`);
-
-		await CreateGameSettings(userID, game);
 	}
 
 	const prevForAchievement =

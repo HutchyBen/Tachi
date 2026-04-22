@@ -70,8 +70,8 @@ export const HyperAggressiveRateLimitMiddleware = rateLimit(
 
 // 5 requests every minute. This one has a tighter window, so it is less
 // vulnerable to bursting down the server.
-// if we're in testing, disable this rate limit!
+// Vitest: unlimited. Optional: TACHI_DISABLE_SCORE_IMPORT_RATE_LIMIT for local stress runs.
 export const ScoreImportRateLimiter =
-	Env.NODE_ENV === "test"
+	Env.NODE_ENV === "test" || ServerConfig.DISABLE_SCORE_IMPORT_RATE_LIMIT
 		? rateLimit(CreateRateLimitOptions(Infinity, "ScImport", ONE_MINUTE))
 		: rateLimit(CreateRateLimitOptions(5, "ScImport", ONE_MINUTE));

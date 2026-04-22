@@ -89,14 +89,14 @@ API_V1_ROUTER.add(
 );
 
 /**
- * Returns all of the game-stats this user has.
+ * Returns all per-game profiles (ratings, classes) for this user.
  * Additionally, adds a __rankingData property, which contains this users
  * ranking information.
  * This endpoint doubles up as a way of checking what games a user has played.
  *
- * @name GET /api/v1/users/:userID/game-stats
+ * @name GET /api/v1/users/:userID/game-profiles
  */
-API_V1_ROUTER.add("GET /users/:userID/game-stats", withRequestedUser, async ({ ctx }) => {
+API_V1_ROUTER.add("GET /users/:userID/game-profiles", withRequestedUser, async ({ ctx }) => {
 	const { requestedUser: user } = ctx;
 
 	// a user has played a game if and only if they have stats for it.

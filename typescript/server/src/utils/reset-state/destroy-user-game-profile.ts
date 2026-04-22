@@ -1,38 +1,25 @@
-import type { Game } from "tachi-db";
-
 import { log } from "#lib/log/log";
 import { RecalculatePbsForChartsFromPostgresScores } from "#lib/score-import/framework/pb/process-pbs";
 import DB from "#services/pg/db";
 import { sql } from "kysely";
-import {
-	type GameGroup,
-	type integer,
-	LEGACY_GameGroupPTToGame,
-	type LEGACY_Playtype,
-} from "tachi-common";
+import { GameToGameGroup, type integer, type V3Game } from "tachi-common";
 
 /**
  * Completely resets a user's game profile.
  *
  * This function is dangerous! Should only be ran by admins.
  */
-export default async function DestroyUserGameProfile(
-	userID: integer,
-	game: GameGroup,
-	playtype: LEGACY_Playtype,
-) {
-	const v3Game = LEGACY_GameGroupPTToGame(game, playtype) as Game;
-
+export default async function DestroyUserGameProfile(userID: integer, game: V3Game) {
 	await DB.deleteFrom("game_stats_snapshot")
 		.where("user_id", "=", userID)
-		.where("game", "=", v3Game)
+		.where("game", "=", game)
 		.execute();
 
 	const chartRows = await DB.selectFrom("pb")
 		.innerJoin("chart", "chart.id", "pb.chart_id")
 		.select("chart.id")
 		.where("pb.user_id", "=", userID)
-		.where("chart.game", "=", v3Game)
+		.where("chart.game", "=", game)
 		.where("pb.lens", "is", null)
 		.execute();
 
@@ -40,7 +27,7 @@ export default async function DestroyUserGameProfile(
 		.innerJoin("chart", "chart.id", "score.chart_id")
 		.select("chart.id")
 		.where("score.user_id", "=", userID)
-		.where("chart.game", "=", v3Game)
+		.where("chart.game", "=", game)
 		.execute();
 
 	const chartIDs = [
@@ -51,7 +38,7 @@ export default async function DestroyUserGameProfile(
 		.innerJoin("chart", "chart.id", "score.chart_id")
 		.select("score.id")
 		.where("score.user_id", "=", userID)
-		.where("chart.game", "=", v3Game)
+		.where("chart.game", "=", game)
 		.execute();
 
 	const scoreIds = scoreRows.map((r) => r.id);
@@ -66,7 +53,7 @@ export default async function DestroyUserGameProfile(
 		.innerJoin("chart", "chart.id", "pb.chart_id")
 		.select("pb.row_id")
 		.where("pb.user_id", "=", userID)
-		.where("chart.game", "=", v3Game)
+		.where("chart.game", "=", game)
 		.execute();
 
 	const pbIds = pbRowIds.map((r) => r.row_id);
@@ -78,49 +65,36 @@ export default async function DestroyUserGameProfile(
 	}
 
 	if (chartIDs.length > 0) {
-		await RecalculatePbsForChartsFromPostgresScores(v3Game, chartIDs, log);
+		await RecalculatePbsForChartsFromPostgresScores(game, chartIDs, log);
 	}
 
-	await DB.deleteFrom("session")
-		.where("user_id", "=", userID)
-		.where("game", "=", v3Game)
-		.execute();
+	await DB.deleteFrom("session").where("user_id", "=", userID).where("game", "=", game).execute();
 
 	await DB.deleteFrom("import_game")
-		.where("game", "=", v3Game)
+		.where("game", "=", game)
 		.where("id", "in", (eb) =>
 			eb
 				.selectFrom("import")
 				.select("id")
 				.where("user_id", "=", userID)
-				.where("game_group", "=", game),
+				.where("game_group", "=", GameToGameGroup(game)),
 		)
 		.execute();
 
 	await sql`
 		DELETE FROM import AS i
 		WHERE i.user_id = ${userID}
-		AND i.game_group = ${game}
+		AND i.game_group = ${GameToGameGroup(game)}
 		AND NOT EXISTS (SELECT 1 FROM import_game ig WHERE ig.id = i.id)
 	`.execute(DB);
 
-	await DB.deleteFrom("game_settings_showcase")
-		.where("user_id", "=", userID)
-		.where("game", "=", v3Game)
-		.execute();
-
 	await DB.deleteFrom("game_rival")
 		.where("user_id", "=", userID)
-		.where("game", "=", v3Game)
-		.execute();
-
-	await DB.deleteFrom("game_settings")
-		.where("user_id", "=", userID)
-		.where("game", "=", v3Game)
+		.where("game", "=", game)
 		.execute();
 
 	await DB.deleteFrom("game_profile")
 		.where("user_id", "=", userID)
-		.where("game", "=", v3Game)
+		.where("game", "=", game)
 		.execute();
 }

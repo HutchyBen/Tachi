@@ -1,5 +1,5 @@
 import { LoadScoreDocumentById } from "#lib/db-formats/score";
-import { mongoScoreDataToPg, pgScoreDataToMongo } from "#lib/v3/migration-tools";
+import { mongoScoreDataToPg, pgScoreDataToAPI } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { type ScoreData } from "tachi-common";
@@ -20,7 +20,7 @@ describe("mergeScoreDataFromPg", () => {
 		} as ScoreData<"iidx-sp">;
 
 		const pg = mongoScoreDataToPg("iidx-sp", { ...original, judgements: {} });
-		const back = pgScoreDataToMongo("iidx-sp", pg);
+		const back = pgScoreDataToAPI("iidx-sp", pg);
 
 		expect(back).toMatchObject({
 			grade: "F",

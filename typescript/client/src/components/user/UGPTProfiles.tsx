@@ -48,7 +48,7 @@ const ContextualGamesInfo = memo(({ user }: { user: UserDocument }) => {
 
 function QueryGamesInfo({ reqUser }: { reqUser: UserDocument }) {
 	const { data, error } = useApiQuery<UserGameStats[]>(
-		`/users/${reqUser.id}/game-stats`,
+		`/users/${reqUser.id}/game-profiles`,
 		undefined,
 		undefined,
 		!reqUser,

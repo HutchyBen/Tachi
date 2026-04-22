@@ -26,6 +26,7 @@ import { ISO8601ToUnixMilliseconds, UnixMillisecondsToISO8601 } from "#utils/tim
 import {
 	FormatUserDoc,
 	GetAllRankings,
+	GetLeaderboardRanksForUserIds,
 	GetUGPTPlaycount,
 	GetUserPrivateInfo,
 	GetUsersRankingAndOutOf,
@@ -39,7 +40,9 @@ import {
 	LEGACY_FormatGameGroupPT,
 	LEGACY_GameToGameGroupPT,
 	type PBScoreDocument,
+	type UserGameStats,
 	type UserGameStatsSnapshotDocument,
+	type UserGameStatsWithProfileLeaderboardRank,
 } from "tachi-common";
 
 /**
@@ -309,11 +312,22 @@ API_V1_ROUTER.add(
 
 		const thisUsersRanking = await GetUsersRankingAndOutOf(thisUsersStats, alg);
 
+		const rankByUser = await GetLeaderboardRanksForUserIds(game, alg, [
+			user.id,
+			...aboveRows.map((r) => r.user_id),
+			...belowRows.map((r) => r.user_id),
+		]);
+
+		const withRank = (s: UserGameStats): UserGameStatsWithProfileLeaderboardRank => ({
+			...s,
+			rank: rankByUser.get(s.userID)!,
+		});
+
 		return success(`Returned ${above.length + below.length} nearby stats.`, {
-			above: above.reverse(),
-			below,
+			above: above.reverse().map(withRank),
+			below: below.map(withRank),
 			thisUsersRanking,
-			thisUsersStats,
+			thisUsersStats: withRank(thisUsersStats),
 			users,
 		});
 	},
@@ -377,7 +391,7 @@ API_V1_ROUTER.add(
 			throw new ExpectedErr(403, "Invalid password.");
 		}
 
-		await DestroyUserGameProfile(user.id, gameGroup, playtype);
+		await DestroyUserGameProfile(user.id, v3Game);
 
 		return success("Destroyed profile.", {});
 	},

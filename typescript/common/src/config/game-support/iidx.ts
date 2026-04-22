@@ -172,6 +172,17 @@ export const GAME_IIDX_SP_CONF = {
 			description:
 				"A rating system that values your clear lamps on charts. Tierlist information is taken into account.",
 		},
+		ktLampRatingNC: {
+			description:
+				"Your normal clear performance. Tierlist information is taken into account.",
+		},
+		ktLampRatingHC: {
+			description: "Your hard clear performance. Tierlist information is taken into account.",
+		},
+		ktLampRatingEXHC: {
+			description:
+				"Your EX-hard clear performance. Tierlist information is taken into account.",
+		},
 		BPI: {
 			description:
 				"A rating system for Kaiden level play. Only applies to 11s and 12s. A BPI of 0 states the score is equal to the Kaiden Average for that chart. A BPI of 100 is equal to the world record.",
@@ -182,11 +193,36 @@ export const GAME_IIDX_SP_CONF = {
 		ktLampRating: {
 			description: `An average of your best 20 ktLampRatings.`,
 			associatedScoreAlgs: ["ktLampRating"],
+			displayOrder: 0,
 		},
-		BPI: { description: `An average of your best 20 BPIs.`, associatedScoreAlgs: ["BPI"] },
+		ktLampRatingNC: {
+			description: `An average of your best 20 ktLampRatingNCs.`,
+			associatedScoreAlgs: ["ktLampRatingNC"],
+			displayOrder: 1,
+		},
+		ktLampRatingHC: {
+			description: `An average of your best 20 ktLampRatingHCs.`,
+			associatedScoreAlgs: ["ktLampRatingHC"],
+			displayOrder: 2,
+		},
+		ktLampRatingEXHC: {
+			description: `An average of your best 20 ktLampRatingEXHCs.`,
+			associatedScoreAlgs: ["ktLampRatingEXHC"],
+			displayOrder: 3,
+		},
+		BPI: {
+			description: `An average of your best 20 BPIs.`,
+			associatedScoreAlgs: ["BPI"],
+			displayOrder: 4,
+		},
 	},
 	sessionRatingAlgs: {
 		ktLampRating: { description: `An average of the best 10 ktLampRatings this session.` },
+		ktLampRatingNC: { description: `An average of the best 10 ktLampRatingNCs this session.` },
+		ktLampRatingHC: { description: `An average of the best 10 ktLampRatingHCs this session.` },
+		ktLampRatingEXHC: {
+			description: `An average of the best 10 ktLampRatingEXHCs this session.`,
+		},
 		BPI: { description: `An average of the best 10 BPIs this session.` },
 	},
 

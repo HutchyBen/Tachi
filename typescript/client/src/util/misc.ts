@@ -1,5 +1,6 @@
 import { GPT_CLIENT_IMPLEMENTATIONS } from "#lib/game-implementations";
 import fjsh from "fast-json-stable-hash";
+import { type CSSProperties } from "react";
 import toast from "react-hot-toast";
 import { type useHistory } from "react-router-dom";
 import {
@@ -10,7 +11,6 @@ import {
 	type GameConfig,
 	GetGameConfig,
 	type integer,
-	type QuestDocument,
 	type QuestSubscriptionDocument,
 	type ScoreDocument,
 	type V3Game,
@@ -103,6 +103,39 @@ export function FormatGPTSessionRatingName(game: V3Game, key: string) {
 export function FormatGPTScoreRatingName(game: V3Game, key: string) {
 	const gameConfig = GPT_CLIENT_IMPLEMENTATIONS[game];
 	return gameConfig.ratingAlgNameOverrides?.score?.[key] ?? UppercaseFirst(key);
+}
+
+/** Lower `displayOrder` first; missing `displayOrder` sorts after set values, then by key. */
+export function compareProfileRatingAlgKeys(game: V3Game, a: string, b: string): number {
+	const cfg = GetGameConfig(game);
+	const oa = cfg.profileRatingAlgs[a as keyof typeof cfg.profileRatingAlgs]?.displayOrder;
+	const ob = cfg.profileRatingAlgs[b as keyof typeof cfg.profileRatingAlgs]?.displayOrder;
+	const va = typeof oa === "number" ? oa : 10_000;
+	const vb = typeof ob === "number" ? ob : 10_000;
+	if (va !== vb) {
+		return va - vb;
+	}
+
+	return a.localeCompare(b);
+}
+
+export function getProfileRatingAlgKeysInDisplayOrder(game: V3Game): string[] {
+	const cfg = GetGameConfig(game);
+	return (Object.keys(cfg.profileRatingAlgs) as string[]).sort((x, y) =>
+		compareProfileRatingAlgKeys(game, x, y),
+	);
+}
+
+export function sortProfileRatingEntries<K extends string, V>(
+	game: V3Game,
+	entries: Array<[K, V]>,
+): Array<[K, V]> {
+	return [...entries].sort(([a], [b]) => compareProfileRatingAlgKeys(game, a, b));
+}
+
+/** Styles for the profile rating value cell (right column), not the label. */
+export function getProfileRatingAlgRowStyle(game: V3Game, key: string): CSSProperties | undefined {
+	return GPT_CLIENT_IMPLEMENTATIONS[game]?.profileRatingAlgRowStyle?.[key];
 }
 
 export function ReverseStr(str: string) {

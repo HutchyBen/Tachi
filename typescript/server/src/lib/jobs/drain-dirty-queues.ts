@@ -1,6 +1,15 @@
+import {
+	type ScoreDocumentJoinRow,
+	SELECT_SCORE_DOCUMENT,
+	ToScoreDocument,
+} from "#lib/db-formats/score";
+import { SELECT_SESSION_DOCUMENT } from "#lib/db-formats/session";
 import { log } from "#lib/log/log";
+import { CreateSessionCalcData } from "#lib/score-import/framework/calculated-data/session";
 import { ProcessPBs } from "#lib/score-import/framework/pb/process-pbs";
 import { rederiveScoresForChart } from "#lib/score-import/framework/pb/rederive-scores";
+import { scoreVisibleSql } from "#lib/score-import/framework/pg/score-visibility";
+import { UpdateUsersGamePlaytypeStats } from "#lib/score-import/framework/ugpt-stats/update-ugpt-stats";
 import DB from "#services/pg/db";
 import {
 	type GameGroup,
@@ -11,8 +20,12 @@ import {
 	type V3Game,
 } from "tachi-common";
 
-const PB_DIRTY_BATCH = 1000;
-const SCORE_REDERIVE_BATCH = 50;
+const PB_DIRTY_BATCH = 5000;
+const SCORE_REDERIVE_BATCH = 5000;
+const SESSION_DIRTY_BATCH = 5000;
+const GAME_PROFILE_DIRTY_BATCH = 500;
+/** Safety cap for one cron tick across score_rederive + pb_dirty + session + game_profile drains. */
+const STATS_QUEUE_DRAIN_CAP = 100_000;
 
 /**
  * Drain the `pb_dirty` queue: group entries by (game, playtype, user_id),
@@ -100,11 +113,278 @@ export async function drainScoreRederive(): Promise<number> {
 			.execute();
 	}
 
-	log.info(
+	log.debug(
 		`Drained ${rows.length} score_rederive entries, re-derived ${totalScores} total scores.`,
 	);
 
 	return rows.length;
+}
+
+/**
+ * Drain `session_dirty`: recompute `session.calculated_data` from visible scores in that session.
+ */
+export async function drainSessionDirty(): Promise<number> {
+	const rows = await DB.selectFrom("session_dirty")
+		.select(["session_dirty.session_id"])
+		.orderBy("session_dirty.enqueued_at", "asc")
+		.limit(SESSION_DIRTY_BATCH)
+		.execute();
+
+	if (rows.length === 0) {
+		return 0;
+	}
+
+	for (const row of rows) {
+		const sessionId = row.session_id;
+
+		// eslint-disable-next-line no-await-in-loop
+		const scoreRows = await DB.selectFrom("score")
+			.innerJoin("chart", "chart.id", "score.chart_id")
+			.innerJoin("song", "song.id", "chart.song_id")
+			.leftJoin("import", "import.id", "score.import_id")
+			.select(SELECT_SCORE_DOCUMENT)
+			.where("score.session_id", "=", sessionId)
+			.where(scoreVisibleSql())
+			.execute();
+
+		if (scoreRows.length === 0) {
+			// eslint-disable-next-line no-await-in-loop
+			await DB.deleteFrom("session_dirty")
+				.where("session_dirty.session_id", "=", sessionId)
+				.execute();
+			continue;
+		}
+
+		// eslint-disable-next-line no-await-in-loop
+		const sessionRow = await DB.selectFrom("session")
+			.select(SELECT_SESSION_DOCUMENT)
+			.where("session.id", "=", sessionId)
+			.executeTakeFirst();
+
+		if (!sessionRow) {
+			// eslint-disable-next-line no-await-in-loop
+			await DB.deleteFrom("session_dirty")
+				.where("session_dirty.session_id", "=", sessionId)
+				.execute();
+			continue;
+		}
+
+		const scoreDocs = scoreRows.map((r) => ToScoreDocument(r as ScoreDocumentJoinRow));
+		const calculatedData = CreateSessionCalcData(sessionRow.game as V3Game, scoreDocs);
+
+		// eslint-disable-next-line no-await-in-loop
+		await DB.updateTable("session")
+			.set({
+				calculated_data: JSON.stringify(calculatedData),
+			})
+			.where("session.id", "=", sessionId)
+			.execute();
+
+		// eslint-disable-next-line no-await-in-loop
+		await DB.deleteFrom("session_dirty")
+			.where("session_dirty.session_id", "=", sessionId)
+			.execute();
+	}
+
+	log.info(`Drained ${rows.length} session_dirty entries.`);
+
+	return rows.length;
+}
+
+/**
+ * Drain `game_profile_dirty`: recompute `game_profile` ratings/classes for each (user, playtype).
+ */
+export async function drainGameProfileDirty(): Promise<number> {
+	const rows = await DB.selectFrom("game_profile_dirty")
+		.select(["game_profile_dirty.user_id", "game_profile_dirty.game"])
+		.orderBy("game_profile_dirty.enqueued_at", "asc")
+		.limit(GAME_PROFILE_DIRTY_BATCH)
+		.execute();
+
+	if (rows.length === 0) {
+		return 0;
+	}
+
+	for (const row of rows) {
+		const userId = row.user_id;
+
+		// eslint-disable-next-line no-await-in-loop
+		await UpdateUsersGamePlaytypeStats(row.game as V3Game, userId, null, log);
+
+		// eslint-disable-next-line no-await-in-loop
+		await DB.deleteFrom("game_profile_dirty")
+			.where("game_profile_dirty.user_id", "=", userId)
+			.where("game_profile_dirty.game", "=", row.game)
+			.execute();
+	}
+
+	log.info(`Drained ${rows.length} game_profile_dirty entries.`);
+
+	return rows.length;
+}
+
+/**
+ * Drain `score_rederive`, then `pb_dirty`, then `session_dirty`, then `game_profile_dirty`,
+ * repeating until a full pass does nothing or `STATS_QUEUE_DRAIN_CAP` row-processings is reached.
+ * PBs must run before game profiles (ratings read from `pb`).
+ */
+export async function drainStatsQueuesInOrder(): Promise<void> {
+	let totalProcessed = 0;
+
+	while (totalProcessed < STATS_QUEUE_DRAIN_CAP) {
+		let cycleMoved = 0;
+
+		while (totalProcessed < STATS_QUEUE_DRAIN_CAP) {
+			// eslint-disable-next-line no-await-in-loop
+			const n = await drainScoreRederive();
+
+			if (n === 0) {
+				break;
+			}
+
+			cycleMoved += n;
+			totalProcessed += n;
+		}
+
+		while (totalProcessed < STATS_QUEUE_DRAIN_CAP) {
+			// eslint-disable-next-line no-await-in-loop
+			const n = await drainPbDirty();
+
+			if (n === 0) {
+				break;
+			}
+
+			cycleMoved += n;
+			totalProcessed += n;
+		}
+
+		while (totalProcessed < STATS_QUEUE_DRAIN_CAP) {
+			// eslint-disable-next-line no-await-in-loop
+			const n = await drainSessionDirty();
+
+			if (n === 0) {
+				break;
+			}
+
+			cycleMoved += n;
+			totalProcessed += n;
+		}
+
+		while (totalProcessed < STATS_QUEUE_DRAIN_CAP) {
+			// eslint-disable-next-line no-await-in-loop
+			const n = await drainGameProfileDirty();
+
+			if (n === 0) {
+				break;
+			}
+
+			cycleMoved += n;
+			totalProcessed += n;
+		}
+
+		if (cycleMoved === 0) {
+			break;
+		}
+	}
+}
+
+/**
+ * Drain `score_rederive`, then `pb_dirty`, `session_dirty`, and `game_profile_dirty`,
+ * repeating until a full pass moves nothing. No per-tick row cap (unlike the cron
+ * drain) — intended for admin synchronous recalc.
+ */
+export async function drainStatsQueuesFully(): Promise<void> {
+	for (;;) {
+		let cycleMoved = 0;
+
+		for (;;) {
+			const n = await drainScoreRederive();
+
+			if (n === 0) {
+				break;
+			}
+
+			cycleMoved += n;
+		}
+
+		for (;;) {
+			const n = await drainPbDirty();
+
+			if (n === 0) {
+				break;
+			}
+
+			cycleMoved += n;
+		}
+
+		for (;;) {
+			const n = await drainSessionDirty();
+
+			if (n === 0) {
+				break;
+			}
+
+			cycleMoved += n;
+		}
+
+		for (;;) {
+			const n = await drainGameProfileDirty();
+
+			if (n === 0) {
+				break;
+			}
+
+			cycleMoved += n;
+		}
+
+		if (cycleMoved === 0) {
+			break;
+		}
+	}
+}
+
+/**
+ * Drain `pb_dirty` then `session_dirty` and `game_profile_dirty`, repeating until
+ * idle. No per-tick row cap — intended for admin synchronous PB recalc.
+ */
+export async function drainPbDirtyAndDownstream(): Promise<void> {
+	for (;;) {
+		let cycleMoved = 0;
+
+		for (;;) {
+			const n = await drainPbDirty();
+
+			if (n === 0) {
+				break;
+			}
+
+			cycleMoved += n;
+		}
+
+		for (;;) {
+			const n = await drainSessionDirty();
+
+			if (n === 0) {
+				break;
+			}
+
+			cycleMoved += n;
+		}
+
+		for (;;) {
+			const n = await drainGameProfileDirty();
+
+			if (n === 0) {
+				break;
+			}
+
+			cycleMoved += n;
+		}
+
+		if (cycleMoved === 0) {
+			break;
+		}
+	}
 }
 
 /**

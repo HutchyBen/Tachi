@@ -1,5 +1,9 @@
 import { SELECT_ACTION } from "#lib/db-formats/action";
-import { GetUGPTSettingsDocument, SELECT_GAME_SETTINGS } from "#lib/db-formats/ugpt-settings";
+import {
+	GetUGPTSettingsDocument,
+	SELECT_GAME_PROFILE_SETTINGS,
+} from "#lib/db-formats/ugpt-settings";
+import { newGameProfilePreferenceColumns } from "#lib/game-settings/create-game-settings";
 import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -13,17 +17,13 @@ describe("ACTION_PatchUGPTSettings", () => {
 	beforeEach(async () => {
 		({ id: userId, username } = await seedUser({ username: `ugpt_set_${Date.now()}` }));
 
-		await DB.insertInto("game_settings")
+		await DB.insertInto("game_profile")
 			.values({
 				user_id: userId,
 				game: "iidx-sp",
-				pf_preferred_score_alg: null,
-				pf_preferred_session_alg: null,
-				pf_preferred_profile_alg: null,
-				pf_preferred_default_enum: null,
-				pf_default_table: null,
-				pf_preferred_ranking: null,
-				data: JSON.stringify({ display2DXTra: false, bpiTarget: 0 }),
+				ratings: JSON.stringify({}),
+				classes: JSON.stringify({}),
+				...newGameProfilePreferenceColumns("iidx-sp"),
 			})
 			.execute();
 	});
@@ -41,10 +41,10 @@ describe("ACTION_PatchUGPTSettings", () => {
 
 		expect(settings?.preferences.preferredScoreAlg).toBe("ktLampRating");
 
-		const row = await DB.selectFrom("game_settings")
-			.select(SELECT_GAME_SETTINGS)
-			.where("game_settings.user_id", "=", userId)
-			.where("game_settings.game", "=", "iidx-sp")
+		const row = await DB.selectFrom("game_profile")
+			.select(SELECT_GAME_PROFILE_SETTINGS)
+			.where("game_profile.user_id", "=", userId)
+			.where("game_profile.game", "=", "iidx-sp")
 			.executeTakeFirstOrThrow();
 
 		expect(row.pf_preferred_score_alg).toBe("ktLampRating");

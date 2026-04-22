@@ -6,23 +6,22 @@ import {
 	FormatGPTProfileRating,
 	FormatGPTProfileRatingName,
 	FormatGPTScoreRatingName,
+	getProfileRatingAlgRowStyle,
+	sortProfileRatingEntries,
 	UppercaseFirst,
 } from "#util/misc";
 import { StrSOV } from "#util/sorts";
 import React from "react";
-import {
-	type Classes,
-	GetGameConfig,
-	type ProfileRatingAlgorithms,
-	type UserGameStats,
-	type V3Game,
-} from "tachi-common";
+import { type Classes, GetGameConfig, type UserGameStats, type V3Game } from "tachi-common";
 
 export default function UGPTRatingsTable({ ugs }: { ugs: UserGameStats }) {
 	const game = ugs.game;
 	const gameConfig = GetGameConfig(game);
 
-	const ratings = Object.entries(ugs.ratings) as [ProfileRatingAlgorithms[V3Game], number][];
+	const ratings = sortProfileRatingEntries(
+		game,
+		Object.entries(ugs.ratings) as [string, number][],
+	);
 
 	return (
 		<MiniTable className="table-sm text-center" colSpan={2} headers={["Player Stats"]}>
@@ -79,7 +78,9 @@ export default function UGPTRatingsTable({ ugs }: { ugs: UserGameStats }) {
 								</div>
 							</QuickTooltip>
 						</td>
-						<td>{FormatGPTProfileRating(game, k as any, v)}</td>
+						<td style={getProfileRatingAlgRowStyle(game, k)}>
+							{FormatGPTProfileRating(game, k as any, v)}
+						</td>
 					</tr>
 				))}
 			</>

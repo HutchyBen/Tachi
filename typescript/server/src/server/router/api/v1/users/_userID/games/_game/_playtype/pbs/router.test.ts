@@ -1,3 +1,4 @@
+import { newGameProfilePreferenceColumns } from "#lib/game-settings/create-game-settings";
 import { mongoScoreDataToPg } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import mockApi, { CloseServerConnection } from "#test-utils/mock-api";
@@ -16,6 +17,7 @@ async function seedIidxSpProfile(userId: number) {
 			game: "iidx-sp",
 			ratings: JSON.stringify({}),
 			classes: JSON.stringify({}),
+			...newGameProfilePreferenceColumns("iidx-sp"),
 		})
 		.execute();
 }
@@ -119,22 +121,6 @@ async function seedIidxChartPb(opts: { userId: number; withComposition?: boolean
 	return { chartPg, chartLegacy, scoreId };
 }
 
-async function seedIidxGameSettings(userId: number) {
-	await DB.insertInto("game_settings")
-		.values({
-			user_id: userId,
-			game: "iidx-sp",
-			pf_preferred_score_alg: null,
-			pf_preferred_session_alg: null,
-			pf_preferred_profile_alg: null,
-			pf_preferred_default_enum: null,
-			pf_default_table: null,
-			pf_preferred_ranking: null,
-			data: JSON.stringify({ display2DXTra: false, bpiTarget: 0 }),
-		})
-		.execute();
-}
-
 async function insertPbOnChart(opts: {
 	calculatedData: Record<string, unknown>;
 	chartPg: string;
@@ -214,7 +200,6 @@ describe("GET /api/v1/users/:userID/games/:game/pbs/:chartID/rivals", () => {
 		const { id: mainId } = await seedUser({ username: "ugpt_pb_main" });
 		const { id: rivalId } = await seedUser({ username: "ugpt_pb_rival" });
 		await seedIidxSpProfile(mainId);
-		await seedIidxGameSettings(mainId);
 		await seedIidxSpProfile(rivalId);
 
 		await DB.insertInto("game_rival")

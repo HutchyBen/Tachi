@@ -1,6 +1,7 @@
 import {
 	ALL_GAMES,
 	allSupportedGameGroups,
+	type GameGroup,
 	SEEDS_BMS_COURSE_DOCUMENT_SCHEMA,
 	SEEDS_CHART_DOCUMENT_SCHEMAS,
 	SEEDS_FOLDER_DOCUMENT_SCHEMA,
@@ -9,7 +10,6 @@ import {
 	SEEDS_QUESTLINE_DOCUMENT_SCHEMA,
 	SEEDS_SONG_DOCUMENT_SCHEMAS,
 	SEEDS_TABLE_DOCUMENT_SCHEMA,
-	type GameGroup,
 	type V3Game,
 } from "tachi-common";
 import { type ZodType } from "zod";

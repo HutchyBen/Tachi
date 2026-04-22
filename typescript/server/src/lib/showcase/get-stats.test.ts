@@ -1,4 +1,5 @@
 import { seedUser } from "#actions/test-utils/api-tokens";
+import { newGameProfilePreferenceColumns } from "#lib/game-settings/create-game-settings";
 import { mongoScoreDataToPg } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import {
@@ -63,20 +64,6 @@ async function seedFixtures() {
 		.values({ folder_id: TestingIIDXFolderSP10.folderID, chart_id: Testing511SPA.chartID })
 		.execute();
 
-	await DB.insertInto("game_settings")
-		.values({
-			user_id: 1,
-			game: "iidx-sp",
-			pf_preferred_score_alg: null,
-			pf_preferred_session_alg: null,
-			pf_preferred_profile_alg: null,
-			pf_preferred_default_enum: null,
-			pf_default_table: null,
-			pf_preferred_ranking: null,
-			data: JSON.stringify({ display2DXTra: false, bpiTarget: 0 }),
-		})
-		.execute();
-
 	const stats = [
 		{
 			mode: "folder" as const,
@@ -90,11 +77,14 @@ async function seedFixtures() {
 		},
 	];
 
-	await DB.insertInto("game_settings_showcase")
+	await DB.insertInto("game_profile")
 		.values({
 			user_id: 1,
 			game: "iidx-sp",
-			data: JSON.stringify(stats),
+			ratings: JSON.stringify({}),
+			classes: JSON.stringify({}),
+			...newGameProfilePreferenceColumns("iidx-sp"),
+			showcase: JSON.stringify(stats),
 		})
 		.execute();
 
@@ -142,9 +132,8 @@ describe("EvaluateUsersStatsShowcase (ported from get-stats.oldtest.ts)", () => 
 		expect(res[1]?.stat).toMatchObject({ mode: "chart", chartID: Testing511SPA.chartID });
 	});
 
-	it("throws when the user has no game_settings row", async () => {
-		await DB.deleteFrom("game_settings").where("user_id", "=", 1).execute();
-		await DB.deleteFrom("game_settings_showcase").where("user_id", "=", 1).execute();
+	it("throws when the user has no game_profile row", async () => {
+		await DB.deleteFrom("game_profile").where("game_profile.user_id", "=", 1).execute();
 
 		await expect(EvaluateUsersStatsShowcase(1, "iidx-sp")).rejects.toThrow();
 	});

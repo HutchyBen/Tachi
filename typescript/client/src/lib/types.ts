@@ -107,6 +107,12 @@ export interface GPTClientImplementation<GPT extends V3Game = V3Game> {
 	};
 
 	/**
+	 * Optional styles for the **value** cell (not the label) in the profile stats mini-table,
+	 * keyed by profile rating algorithm id. Typically a tinted background.
+	 */
+	profileRatingAlgRowStyle?: Partial<Record<string, CSSProperties>>;
+
+	/**
 	 * What headers should be used when rendering scores in a table for this game?
 	 */
 	scoreHeaders: Array<Header<PBScoreDocument<GPT> | ScoreDocument<GPT>>>;

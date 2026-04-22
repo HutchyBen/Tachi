@@ -28,7 +28,7 @@ export function HeaderMenu({
 
 	const { data, error } = useApiQuery<UserGameStats[]>(
 		// We should generate a valid url just in case the skip somehow fails
-		`/users/${user?.id ?? "me"}/game-stats`,
+		`/users/${user?.id ?? "me"}/game-profiles`,
 		undefined,
 		undefined,
 		// We should skip if a user isn't logged in.

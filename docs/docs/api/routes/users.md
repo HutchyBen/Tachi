@@ -158,9 +158,9 @@ GET /api/v1/users/me IF authenticated as userID 1.
 
 ---
 
-## Retrieve user's statistics on all games.
+## Retrieve per-game profiles for a user.
 
-`GET /api/v1/users/:userID/game-stats`
+`GET /api/v1/users/:userID/game-profiles`
 
 ### Parameters
 
@@ -170,7 +170,7 @@ None.
 
 | Property |                         Type                         |                 Description                 |
 | :------: | :--------------------------------------------------: | :-----------------------------------------: |
-| `<body>` | Array&lt;UserGameStatsDocument & \_\_rankingData&gt; | The array of User Game Stats this user has. |
+| `<body>` | Array&lt;UserGameStatsDocument & \_\_rankingData&gt; | The array of per-game profile documents (ratings and classes) this user has. |
 
 !!! info
 For UI reasons, the UserGameStatsDocuments here have an additional `__rankingData` property, which contains leaderboard ranking information for this user.
@@ -182,7 +182,7 @@ For UI reasons, the UserGameStatsDocuments here have an additional `__rankingDat
 ```
 GET /api/v1/users/zkldime-stats
 OR
-GET /api/v1/users/1/game-stats
+GET /api/v1/users/1/game-profiles
 ```
 
 #### Response

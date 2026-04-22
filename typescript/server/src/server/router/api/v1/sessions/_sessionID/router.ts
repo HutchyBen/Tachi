@@ -1,5 +1,6 @@
 import { ACTION_UpdateSession } from "#actions/update-session";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
+import { GetSessionFolderRaises } from "#lib/folders/get-session-folder-raises";
 import { withSession, withSessionOwner } from "#lib/router/middleware";
 import { success } from "#lib/router/typed-router";
 import { API_V1_ROUTER } from "#server/router/api/v1/router";
@@ -35,16 +36,13 @@ API_V1_ROUTER.add("GET /sessions/:sessionID", withSession, async ({ ctx }) => {
  * This allows us to render pretty things in the UI, showing the user what their
  * best stats were.
  *
- * @warn Folder raise calculation is currently not implemented.
- *
  * @name GET /api/v1/sessions/:sessionID/folder-raises
  */
-API_V1_ROUTER.add(
-	"GET /sessions/:sessionID/folder-raises",
-	withSession,
-	// Folder raise calculation is currently not implemented.
-	() => success("Retrieved folder raises.", []),
-);
+API_V1_ROUTER.add("GET /sessions/:sessionID/folder-raises", withSession, async ({ ctx }) => {
+	const raises = await GetSessionFolderRaises(ctx.sessionDoc);
+
+	return success("Retrieved folder raises.", raises);
+});
 
 /**
  * Modifies a session.

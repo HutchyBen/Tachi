@@ -29,15 +29,23 @@ type IIDXGames = "iidx-dp" | "iidx-sp";
 const IIDX_SESSION_CALCS: GPTSessionCalcs<IIDXGames> = (arr) => ({
 	BPI: SessionAvgBest10For("BPI")(arr),
 	ktLampRating: SessionAvgBest10For("ktLampRating")(arr),
+	ktLampRatingNC: SessionAvgBest10For("ktLampRatingNC")(arr),
+	ktLampRatingHC: SessionAvgBest10For("ktLampRatingHC")(arr),
+	ktLampRatingEXHC: SessionAvgBest10For("ktLampRatingEXHC")(arr),
 });
 
 const IIDX_PROFILE_CALCS: GPTProfileCalcs<IIDXGames> = async (game, userID) => {
-	const [BPI, ktLampRating] = await Promise.all([
-		ProfileAvgBestN("BPI", 20, true)(game, userID),
-		ProfileAvgBestN("ktLampRating", 20)(game, userID),
-	]);
+	const [BPI, ktLampRating, ktLampRatingNC, ktLampRatingHC, ktLampRatingEXHC] = await Promise.all(
+		[
+			ProfileAvgBestN("BPI", 20, true)(game, userID),
+			ProfileAvgBestN("ktLampRating", 20)(game, userID),
+			ProfileAvgBestN("ktLampRatingNC", 20)(game, userID),
+			ProfileAvgBestN("ktLampRatingHC", 20)(game, userID),
+			ProfileAvgBestN("ktLampRatingEXHC", 20)(game, userID),
+		],
+	);
 
-	return { BPI, ktLampRating };
+	return { BPI, ktLampRating, ktLampRatingNC, ktLampRatingHC, ktLampRatingEXHC };
 };
 
 const IIDX_MERGERS: Array<PBMergeFunction<IIDXGames>> = [
@@ -148,7 +156,29 @@ export const IIDX_SP_IMPL: GameImplementation<"iidx-sp"> = {
 				ktLampRating = 0;
 		}
 
-		return { BPI: bpi, ktLampRating };
+		const atLeastNcClear =
+			scoreData.lamp === "CLEAR" ||
+			scoreData.lamp === "HARD CLEAR" ||
+			scoreData.lamp === "EX HARD CLEAR" ||
+			scoreData.lamp === "FULL COMBO";
+		const atLeastHcClear =
+			scoreData.lamp === "HARD CLEAR" ||
+			scoreData.lamp === "EX HARD CLEAR" ||
+			scoreData.lamp === "FULL COMBO";
+		const atLeastExhcClear =
+			scoreData.lamp === "EX HARD CLEAR" || scoreData.lamp === "FULL COMBO";
+
+		const ktLampRatingNC = atLeastNcClear ? ncValue : 0;
+		const ktLampRatingHC = atLeastHcClear ? hcValue : 0;
+		const ktLampRatingEXHC = atLeastExhcClear ? exhcValue : 0;
+
+		return {
+			BPI: bpi,
+			ktLampRating,
+			ktLampRatingNC,
+			ktLampRatingHC,
+			ktLampRatingEXHC,
+		};
 	},
 	sessionCalcs: IIDX_SESSION_CALCS,
 	profileCalcs: IIDX_PROFILE_CALCS,
@@ -205,7 +235,29 @@ export const IIDX_DP_IMPL: GameImplementation<"iidx-dp"> = {
 				ktLampRating = 0;
 		}
 
-		return { BPI: bpi, ktLampRating };
+		const atLeastNcClear =
+			scoreData.lamp === "CLEAR" ||
+			scoreData.lamp === "HARD CLEAR" ||
+			scoreData.lamp === "EX HARD CLEAR" ||
+			scoreData.lamp === "FULL COMBO";
+		const atLeastHcClear =
+			scoreData.lamp === "HARD CLEAR" ||
+			scoreData.lamp === "EX HARD CLEAR" ||
+			scoreData.lamp === "FULL COMBO";
+		const atLeastExhcClear =
+			scoreData.lamp === "EX HARD CLEAR" || scoreData.lamp === "FULL COMBO";
+
+		const ktLampRatingNC = atLeastNcClear ? ecValue : 0;
+		const ktLampRatingHC = atLeastHcClear ? ecValue : 0;
+		const ktLampRatingEXHC = atLeastExhcClear ? ecValue : 0;
+
+		return {
+			BPI: bpi,
+			ktLampRating,
+			ktLampRatingNC,
+			ktLampRatingHC,
+			ktLampRatingEXHC,
+		};
 	},
 	sessionCalcs: IIDX_SESSION_CALCS,
 	profileCalcs: IIDX_PROFILE_CALCS,

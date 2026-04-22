@@ -541,21 +541,6 @@ CREATE TABLE "folder_chart_lookup" (
 CREATE INDEX ON "folder_chart_lookup" (folder_id);
 CREATE INDEX ON "folder_chart_lookup" (chart_id);
 
-CREATE TABLE "game_settings" (
-	user_id BIGINT REFERENCES account(id) NOT NULL,
-	game GAME NOT NULL,
-	PRIMARY KEY (user_id, game),
-
-	pf_preferred_score_alg TEXT,
-	pf_preferred_session_alg TEXT,
-	pf_preferred_profile_alg TEXT,
-	pf_preferred_default_enum TEXT,
-	pf_default_table TEXT,
-	pf_preferred_ranking TEXT CHECK (pf_preferred_ranking IN ('global', 'rival')),
-
-	data JSONB NOT NULL -- game specific payload
-);
-
 CREATE TABLE "game_rival" (
 	user_id BIGINT REFERENCES account(id) NOT NULL,
 	game GAME NOT NULL,
@@ -566,17 +551,7 @@ CREATE TABLE "game_rival" (
 	CHECK (user_id != rival)
 );
 
-CREATE TABLE "game_settings_showcase" (
-	user_id BIGINT REFERENCES account(id) NOT NULL,
-	game GAME NOT NULL,
-
-	PRIMARY KEY (user_id, game),
-
-	-- kinda ridiculous but { mode: "chart", etc. } or
-	-- { mode: "folder" }
-	data JSONB NOT NULL
-);
-
+-- Per-user per-game: ratings/classes (import-derived) + UGPT preferences + showcase JSON (Tachi3 #47).
 CREATE TABLE "game_profile" (
 	user_id BIGINT REFERENCES account(id) NOT NULL,
 	game GAME NOT NULL,
@@ -584,7 +559,20 @@ CREATE TABLE "game_profile" (
 	PRIMARY KEY (user_id, game),
 
 	ratings JSONB NOT NULL,
-	classes JSONB NOT NULL
+	classes JSONB NOT NULL,
+
+	pf_preferred_score_alg TEXT,
+	pf_preferred_session_alg TEXT,
+	pf_preferred_profile_alg TEXT,
+	pf_preferred_default_enum TEXT,
+	pf_default_table TEXT,
+	pf_preferred_ranking TEXT,
+
+	data JSONB NOT NULL DEFAULT '{}'::jsonb,
+	showcase JSONB NOT NULL DEFAULT '[]'::jsonb,
+
+	CONSTRAINT game_profile_pf_preferred_ranking_check
+		CHECK (pf_preferred_ranking IS NULL OR pf_preferred_ranking IN ('global', 'rival'))
 );
 
 CREATE TABLE "game_stats_snapshot" (
@@ -770,6 +758,20 @@ CREATE TABLE "score_rederive" (
 	enqueued_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Session aggregate `calculated_data` must be refreshed when committed scores in that session change.
+CREATE TABLE session_dirty (
+	session_id TEXT NOT NULL PRIMARY KEY,
+	enqueued_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Per-playtype game stats (`game_profile`) must be refreshed when committed scores change (ratings use PBs).
+CREATE TABLE game_profile_dirty (
+	user_id BIGINT NOT NULL,
+	game GAME NOT NULL,
+	enqueued_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+	PRIMARY KEY (user_id, game)
+);
+
 -- Trigger function: on any score INSERT/UPDATE/DELETE, mark the (user_id, chart_id)
 -- pair as needing PB recalculation.
 CREATE FUNCTION enqueue_pb_dirty() RETURNS trigger AS $$
@@ -790,6 +792,72 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER "score_pb_dirty"
 	AFTER INSERT OR UPDATE OR DELETE ON score
 	FOR EACH ROW EXECUTE FUNCTION enqueue_pb_dirty();
+
+-- Staging scores (committed = false) skip these queues until commit.
+CREATE FUNCTION enqueue_session_dirty() RETURNS trigger AS $$
+BEGIN
+	IF TG_OP = 'DELETE' THEN
+		IF OLD.committed AND OLD.session_id IS NOT NULL THEN
+			INSERT INTO session_dirty (session_id)
+			VALUES (OLD.session_id)
+			ON CONFLICT DO NOTHING;
+		END IF;
+	ELSIF TG_OP = 'UPDATE' THEN
+		IF NEW.committed THEN
+			IF OLD.session_id IS NOT NULL AND OLD.session_id IS DISTINCT FROM NEW.session_id THEN
+				INSERT INTO session_dirty (session_id)
+				VALUES (OLD.session_id)
+				ON CONFLICT DO NOTHING;
+			END IF;
+			IF NEW.session_id IS NOT NULL THEN
+				INSERT INTO session_dirty (session_id)
+				VALUES (NEW.session_id)
+				ON CONFLICT DO NOTHING;
+			END IF;
+		END IF;
+	ELSE
+		IF NEW.committed AND NEW.session_id IS NOT NULL THEN
+			INSERT INTO session_dirty (session_id)
+			VALUES (NEW.session_id)
+			ON CONFLICT DO NOTHING;
+		END IF;
+	END IF;
+	RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER "score_session_dirty"
+	AFTER INSERT OR UPDATE OR DELETE ON score
+	FOR EACH ROW EXECUTE FUNCTION enqueue_session_dirty();
+
+CREATE FUNCTION enqueue_game_profile_dirty() RETURNS trigger AS $$
+BEGIN
+	IF TG_OP = 'DELETE' THEN
+		IF OLD.committed THEN
+			INSERT INTO game_profile_dirty (user_id, game)
+			VALUES (OLD.user_id, OLD.game)
+			ON CONFLICT DO NOTHING;
+		END IF;
+	ELSIF TG_OP = 'UPDATE' THEN
+		IF NEW.committed THEN
+			INSERT INTO game_profile_dirty (user_id, game)
+			VALUES (NEW.user_id, NEW.game)
+			ON CONFLICT DO NOTHING;
+		END IF;
+	ELSE
+		IF NEW.committed THEN
+			INSERT INTO game_profile_dirty (user_id, game)
+			VALUES (NEW.user_id, NEW.game)
+			ON CONFLICT DO NOTHING;
+		END IF;
+	END IF;
+	RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER "score_game_profile_dirty"
+	AFTER INSERT OR UPDATE OR DELETE ON score
+	FOR EACH ROW EXECUTE FUNCTION enqueue_game_profile_dirty();
 
 -- Trigger function: on chart UPDATE, if derivation_checksum changed, enqueue the chart
 -- for score re-derivation.

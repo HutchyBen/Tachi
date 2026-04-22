@@ -20,6 +20,7 @@ import {
 	FormatGPTProfileRatingName,
 	FormatGPTScoreRatingName,
 	FormatGPTSessionRatingName,
+	getProfileRatingAlgKeysInDisplayOrder,
 	ToFixedFloor,
 	UppercaseFirst,
 } from "#util/misc";
@@ -254,7 +255,7 @@ function PreferencesForm({
 					</Form.Text>
 				</Form.Group>
 			)}
-			{Object.keys(gameConfig.profileRatingAlgs).length > 1 && (
+			{getProfileRatingAlgKeysInDisplayOrder(game).length > 1 && (
 				<Form.Group className={formGroupClassNames}>
 					<Form.Label>Preferred Profile Algorithm</Form.Label>
 					<Form.Select
@@ -262,7 +263,7 @@ function PreferencesForm({
 						onChange={formik.handleChange}
 						value={formik.values.preferredProfileAlg}
 					>
-						{Object.keys(gameConfig.profileRatingAlgs).map((e) => (
+						{getProfileRatingAlgKeysInDisplayOrder(game).map((e) => (
 							<option key={e} value={e}>
 								{FormatGPTProfileRatingName(game, e)}
 							</option>

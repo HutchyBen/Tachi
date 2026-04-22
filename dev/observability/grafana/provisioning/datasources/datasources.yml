@@ -12,9 +12,9 @@ datasources:
     type: postgres
     access: proxy
     url: tachi-postgres:5432
-    user: tachi
+    user: grafana_ro
     secureJsonData:
-      password: tachi
+      password: grafana_ro
     jsonData:
       database: tachi_dev
       sslmode: disable

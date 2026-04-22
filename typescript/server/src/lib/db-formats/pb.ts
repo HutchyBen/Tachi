@@ -1,6 +1,6 @@
 import type { Game } from "tachi-db";
 
-import { pgScoreDataToMongo } from "#lib/v3/migration-tools";
+import { pgScoreDataToAPI } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import { EscapeForILIKE } from "#utils/misc";
 import { ISO8601ToUnixMilliseconds } from "#utils/time";
@@ -103,13 +103,13 @@ export async function ToPbScoreDocument(row: PbDocumentJoinRow): Promise<PBScore
 				})) as [PBReference, ...PBReference[]])
 			: [{ name: "Primary", scoreID: "unknown" }];
 
-	const scoreData = pgScoreDataToMongo(
+	const scoreData = pgScoreDataToAPI(
 		row.chart_game as V3Game,
 		{
 			data: row.data,
 			derived: row.derived_data,
 			judgements: {},
-		} as Parameters<typeof pgScoreDataToMongo>[1],
+		} as Parameters<typeof pgScoreDataToAPI>[1],
 	);
 
 	const rawCd = row.calculated_data;

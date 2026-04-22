@@ -10,22 +10,17 @@ import {
 	GetJobQueue,
 } from "#lib/admin/admin-queries";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
+import { drainPbDirtyAndDownstream, drainStatsQueuesFully } from "#lib/jobs/drain-dirty-queues";
 import { SendSiteAnnouncementNotification } from "#lib/notifications/notification-wrappers";
 import { withAdmin } from "#lib/router/middleware";
 import { success } from "#lib/router/typed-router";
 import { TachiConfig } from "#lib/setup/config";
 import DB from "#services/pg/db";
-import { IsValidPlaytype } from "#utils/misc";
+import { RecalcAllScores, UpdateAllPBs } from "#utils/calculations/recalc-scores";
 import DestroyUserGameProfile from "#utils/reset-state/destroy-user-game-profile";
 import { GetUserWithIDGuaranteed, ResolveUser } from "#utils/user";
 import { ExpectedErr } from "bliss";
-import {
-	type GameGroup,
-	GameToGameGroup,
-	LEGACY_GameGroupPTToGame,
-	type LEGACY_Playtype,
-	type V3Game,
-} from "tachi-common";
+import { GameToGameGroup, type V3Game } from "tachi-common";
 
 import { API_V1_ROUTER } from "../router";
 
@@ -75,8 +70,14 @@ API_V1_ROUTER.add("GET /admin/cron-tasks", withAdmin, async () => {
 	return success("Done.", { executions, tasks });
 });
 
-API_V1_ROUTER.add("POST /admin/resync-pbs", withAdmin, () => {
-	throw new ExpectedErr(501, "Not implemented.");
+API_V1_ROUTER.add("POST /admin/recalc-pbs", withAdmin, async () => {
+	await UpdateAllPBs();
+	await drainPbDirtyAndDownstream();
+
+	return success(
+		"Re-queued every distinct (user, chart) from scores into pb_dirty and drained pb/session/game_profile queues until idle.",
+		{},
+	);
 });
 
 API_V1_ROUTER.add("POST /admin/delete-score", withAdmin, async ({ input, req }) => {
@@ -100,34 +101,28 @@ API_V1_ROUTER.add("POST /admin/delete-session", withAdmin, async ({ input, req }
 });
 
 API_V1_ROUTER.add("POST /admin/destroy-ugpt", withAdmin, async ({ input }) => {
-	const gameGroup = input.game as GameGroup;
-	const playtype = input.playtype as LEGACY_Playtype;
-
-	if (!IsValidPlaytype(gameGroup, playtype)) {
-		throw new ExpectedErr(400, `Invalid playtype ${playtype} for game ${gameGroup}.`);
-	}
-
-	const game = LEGACY_GameGroupPTToGame(gameGroup, playtype);
-
 	const ugpt = await DB.selectFrom("game_profile")
 		.where("user_id", "=", input.userID)
-		.where("game", "=", game)
+		.where("game", "=", input.game)
 		.executeTakeFirst();
 
 	if (!ugpt) {
-		throw new ExpectedErr(
-			404,
-			`No stats for ${input.userID} (${gameGroup} ${playtype}) exist.`,
-		);
+		throw new ExpectedErr(404, `No stats for ${input.userID} (${input.game}) exist.`);
 	}
 
-	await DestroyUserGameProfile(input.userID, gameGroup, playtype);
+	await DestroyUserGameProfile(input.userID, input.game);
 
-	return success(`Completely destroyed UGPT for ${input.userID} (${gameGroup} ${playtype}).`, {});
+	return success(`Completely destroyed game profile for ${input.userID} (${input.game}).`, {});
 });
 
-API_V1_ROUTER.add("POST /admin/recalc", withAdmin, () => {
-	throw new ExpectedErr(501, "Not implemented.");
+API_V1_ROUTER.add("POST /admin/recalc", withAdmin, async () => {
+	await RecalcAllScores();
+	await drainStatsQueuesFully();
+
+	return success(
+		"Enqueued every chart for score re-derivation and drained score/pb/session/game_profile queues until idle.",
+		{},
+	);
 });
 
 API_V1_ROUTER.add("POST /admin/announcement", withAdmin, async ({ input }) => {

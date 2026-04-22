@@ -2,8 +2,8 @@ import { sql, SQLite } from "@codemirror/lang-sql";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { Compartment, EditorState } from "@codemirror/state";
 import { keymap } from "@codemirror/view";
-import { basicSetup, EditorView } from "codemirror";
 import { tags } from "@lezer/highlight";
+import { basicSetup, EditorView } from "codemirror";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /**

@@ -26,8 +26,6 @@ import type {
 	NewFolderView,
 	NewGameProfile,
 	NewGameRival,
-	NewGameSettings,
-	NewGameSettingsShowcase,
 	NewGameStatsSnapshot,
 	NewGoalSub,
 	NewImport,
@@ -771,22 +769,63 @@ async function main(): Promise<void> {
 		console.log(`  ${notifications.length} notifications.`);
 	}
 
-	// ── game_settings + game_settings_showcase + game_rival ──────────────────
+	// ── game_profile + game_rival ───────────────────────────────────────────────
+	// Greenfield schema: one `game_profile` row per UGPT (stats + preferences + showcase JSON);
+	// see `db/migrations/20260301154256_genesis.sql`. Here we merge legacy Mongo `game-stats` +
+	// `game-settings` (+ rivals) into those rows for mongo-to-pg.
 	{
-		console.log("\n[game_settings / game_settings_showcase / game_rival]");
+		console.log("\n[game_profile / game_rival]");
 		const ugptSettings = await mongoDB.get<UGPTSettingsDocument>("game-settings").find({});
+		const gameStats = await mongoDB.get<UserGameStats>("game-stats").find({});
 
-		const settingsRows: Array<NewGameSettings> = [];
-		const showcaseRows: Array<NewGameSettingsShowcase> = [];
-		const rivalRows: Array<NewGameRival> = [];
+		type ProfileKey = `${number}:${PgGame}`;
+		const profileByKey = new Map<ProfileKey, NewGameProfile>();
+
+		const emptyPrefs = (
+			game: PgGame,
+		): Pick<
+			NewGameProfile,
+			| "data"
+			| "pf_default_table"
+			| "pf_preferred_default_enum"
+			| "pf_preferred_profile_alg"
+			| "pf_preferred_ranking"
+			| "pf_preferred_score_alg"
+			| "pf_preferred_session_alg"
+			| "showcase"
+		> => ({
+			pf_preferred_score_alg: null,
+			pf_preferred_session_alg: null,
+			pf_preferred_profile_alg: null,
+			pf_preferred_default_enum: null,
+			pf_default_table: null,
+			pf_preferred_ranking: null,
+			data: JSON.stringify(
+				game === "iidx-sp" || game === "iidx-dp"
+					? { display2DXTra: false, bpiTarget: 0 }
+					: {},
+			),
+			showcase: JSON.stringify([]),
+		});
+
+		for (const gs of gameStats) {
+			const game = mongoGameToPg(gs.game, (gs as { playtype?: string }).playtype);
+			const key = `${gs.userID}:${game}` as ProfileKey;
+			profileByKey.set(key, {
+				user_id: gs.userID,
+				game,
+				ratings: JSON.stringify(gs.ratings),
+				classes: JSON.stringify(gs.classes),
+				...emptyPrefs(game),
+			});
+		}
 
 		for (const s of ugptSettings) {
 			const game = mongoGameToPg(s.game, (s as { playtype?: string }).playtype);
+			const key = `${s.userID}:${game}` as ProfileKey;
 			const prefs = s.preferences;
-
-			settingsRows.push({
-				user_id: s.userID,
-				game,
+			const existing = profileByKey.get(key);
+			const prefSlice = {
 				pf_preferred_score_alg: (prefs.preferredScoreAlg as string | null) ?? null,
 				pf_preferred_session_alg: (prefs.preferredSessionAlg as string | null) ?? null,
 				pf_preferred_profile_alg: (prefs.preferredProfileAlg as string | null) ?? null,
@@ -794,16 +833,26 @@ async function main(): Promise<void> {
 				pf_default_table: prefs.defaultTable,
 				pf_preferred_ranking: prefs.preferredRanking,
 				data: JSON.stringify(prefs.gameSpecific),
-			});
-
-			if (prefs.stats.length > 0) {
-				showcaseRows.push({
+				showcase: JSON.stringify(prefs.stats),
+			};
+			if (existing) {
+				profileByKey.set(key, { ...existing, ...prefSlice });
+			} else {
+				profileByKey.set(key, {
 					user_id: s.userID,
 					game,
-					data: JSON.stringify(prefs.stats),
+					ratings: JSON.stringify({}),
+					classes: JSON.stringify({}),
+					...prefSlice,
 				});
 			}
+		}
 
+		const profileRows = [...profileByKey.values()];
+		const rivalRows: Array<NewGameRival> = [];
+
+		for (const s of ugptSettings) {
+			const game = mongoGameToPg(s.game, (s as { playtype?: string }).playtype);
 			for (const rivalId of s.rivals) {
 				if (rivalId !== s.userID) {
 					rivalRows.push({ user_id: s.userID, game, rival: rivalId });
@@ -811,28 +860,11 @@ async function main(): Promise<void> {
 			}
 		}
 
-		await batchInsert("game_settings", settingsRows);
-		await batchInsert("game_settings_showcase", showcaseRows);
+		await batchInsert("game_profile", profileRows);
 		await batchInsert("game_rival", rivalRows);
 		console.log(
-			`  ${settingsRows.length} game settings, ${showcaseRows.length} showcases, ${rivalRows.length} rivals.`,
+			`  ${profileRows.length} game profiles (${gameStats.length} stats docs merged with ${ugptSettings.length} settings docs), ${rivalRows.length} rivals.`,
 		);
-	}
-
-	// ── game_profile ───────────────────────────────────────────────────────────
-	{
-		console.log("\n[game_profile]");
-		const gameStats = await mongoDB.get<UserGameStats>("game-stats").find({});
-
-		const statsRows: Array<NewGameProfile> = gameStats.map((gs) => ({
-			user_id: gs.userID,
-			game: mongoGameToPg(gs.game, (gs as { playtype?: string }).playtype),
-			ratings: JSON.stringify(gs.ratings),
-			classes: JSON.stringify(gs.classes),
-		}));
-
-		await batchInsert("game_profile", statsRows);
-		console.log(`  ${gameStats.length} game profiles.`);
 	}
 
 	// ── game_stats_snapshot ───────────────────────────────────────────────────

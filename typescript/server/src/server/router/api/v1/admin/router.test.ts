@@ -124,6 +124,182 @@ describe("POST /api/v1/admin/delete-score", () => {
 	});
 });
 
+describe("POST /api/v1/admin/recalc", () => {
+	it("returns 403 when the caller is not an admin", async () => {
+		await seedUser({
+			username: "recalc_pleb",
+			email: "recalc_pleb@test.com",
+			withCredential: true,
+			withSettings: true,
+		});
+
+		const plebCookie = await loginAs("recalc_pleb");
+
+		const res = await mockApi.post("/api/v1/admin/recalc").set("Cookie", plebCookie).send({});
+
+		expect(res.status).toBe(403);
+	});
+
+	it("enqueues every chart for score re-derivation when the caller is an admin", async () => {
+		await seedUser({
+			username: "recalc_admin",
+			email: "recalc_admin@test.com",
+			authLevel: "admin",
+			withCredential: true,
+			withSettings: true,
+		});
+
+		const adminCookie = await loginAs("recalc_admin");
+		const chartId = Testing511SPA.chartID;
+
+		await DB.insertInto("song")
+			.values({
+				id: Testing511Song.id,
+				legacy_id: 1,
+				game_group: "iidx",
+				title: Testing511Song.title,
+				artist: Testing511Song.artist,
+				search_terms: [],
+				alt_titles: [],
+				data: Testing511Song.data,
+				fts_document: "",
+			})
+			.execute();
+
+		await DB.insertInto("chart")
+			.values({
+				id: chartId,
+				legacy_id: chartId,
+				game: "iidx-sp",
+				song_id: Testing511Song.id,
+				difficulty: Testing511SPA.difficulty,
+				level: Testing511SPA.level,
+				level_num: Testing511SPA.levelNum,
+				is_primary: true,
+				versions: Testing511SPA.versions,
+				data: Testing511SPA.data,
+			})
+			.execute();
+
+		const res = await mockApi.post("/api/v1/admin/recalc").set("Cookie", adminCookie).send({});
+
+		expect(res.status).toBe(200);
+
+		const stillQueued = await DB.selectFrom("score_rederive")
+			.select("chart_id")
+			.where("chart_id", "=", chartId)
+			.executeTakeFirst();
+
+		expect(stillQueued).toBeUndefined();
+	});
+});
+
+describe("POST /api/v1/admin/recalc-pbs", () => {
+	it("returns 403 when the caller is not an admin", async () => {
+		await seedUser({
+			username: "recalc_pb_pleb",
+			email: "recalc_pb_pleb@test.com",
+			withCredential: true,
+			withSettings: true,
+		});
+
+		const plebCookie = await loginAs("recalc_pb_pleb");
+
+		const res = await mockApi
+			.post("/api/v1/admin/recalc-pbs")
+			.set("Cookie", plebCookie)
+			.send({});
+
+		expect(res.status).toBe(403);
+	});
+
+	it("enqueues pb_dirty for every distinct user+chart from scores when the caller is an admin", async () => {
+		await seedUser({
+			username: "recalc_pb_admin",
+			email: "recalc_pb_admin@test.com",
+			authLevel: "admin",
+			withCredential: true,
+			withSettings: true,
+		});
+		await seedUser({
+			username: "recalc_pb_player",
+			email: "recalc_pb_player@test.com",
+			withCredential: true,
+			withSettings: true,
+		});
+
+		const adminCookie = await loginAs("recalc_pb_admin");
+		const chartId = Testing511SPA.chartID;
+		const sd = TestingIIDXSPScore.scoreData as ScoreData<"iidx-sp">;
+		const { data, derived, judgements } = mongoScoreDataToPg("iidx-sp", sd);
+		const now = new Date().toISOString();
+
+		await DB.insertInto("song")
+			.values({
+				id: Testing511Song.id,
+				legacy_id: 1,
+				game_group: "iidx",
+				title: Testing511Song.title,
+				artist: Testing511Song.artist,
+				search_terms: [],
+				alt_titles: [],
+				data: Testing511Song.data,
+				fts_document: "",
+			})
+			.execute();
+
+		await DB.insertInto("chart")
+			.values({
+				id: chartId,
+				legacy_id: chartId,
+				game: "iidx-sp",
+				song_id: Testing511Song.id,
+				difficulty: Testing511SPA.difficulty,
+				level: Testing511SPA.level,
+				level_num: Testing511SPA.levelNum,
+				is_primary: true,
+				versions: Testing511SPA.versions,
+				data: Testing511SPA.data,
+			})
+			.execute();
+
+		await DB.insertInto("score")
+			.values({
+				id: "recalc_pb_score",
+				user_id: 2,
+				chart_id: chartId,
+				game: "iidx-sp",
+				session_id: null,
+				import_id: null,
+				data: JSON.stringify(data),
+				derived_data: JSON.stringify(derived),
+				judgements: JSON.stringify(judgements),
+				calculated_data: JSON.stringify({}),
+				meta: JSON.stringify({}),
+				time_achieved: now,
+				time_added: now,
+				highlight: false,
+				comment: null,
+			})
+			.execute();
+
+		const res = await mockApi
+			.post("/api/v1/admin/recalc-pbs")
+			.set("Cookie", adminCookie)
+			.send({});
+
+		expect(res.status).toBe(200);
+
+		const stillDirty = await DB.selectFrom("pb_dirty")
+			.select(["pb_dirty.user_id", "pb_dirty.chart_id"])
+			.where("pb_dirty.user_id", "=", 2)
+			.where("pb_dirty.chart_id", "=", chartId)
+			.executeTakeFirst();
+
+		expect(stillDirty).toBeUndefined();
+	});
+});
+
 describe("POST /api/v1/admin/change-log-level", () => {
 	it.todo("no route in router.ts (see router.oldtest.ts)");
 });

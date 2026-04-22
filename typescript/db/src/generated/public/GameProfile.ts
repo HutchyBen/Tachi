@@ -17,6 +17,22 @@ export default interface GameProfileTable {
   ratings: ColumnType<unknown, unknown, unknown>;
 
   classes: ColumnType<unknown, unknown, unknown>;
+
+  pf_preferred_score_alg: ColumnType<string | null, string | null, string | null>;
+
+  pf_preferred_session_alg: ColumnType<string | null, string | null, string | null>;
+
+  pf_preferred_profile_alg: ColumnType<string | null, string | null, string | null>;
+
+  pf_preferred_default_enum: ColumnType<string | null, string | null, string | null>;
+
+  pf_default_table: ColumnType<string | null, string | null, string | null>;
+
+  pf_preferred_ranking: ColumnType<string | null, string | null, string | null>;
+
+  data: ColumnType<unknown, unknown | undefined, unknown>;
+
+  showcase: ColumnType<unknown, unknown | undefined, unknown>;
 }
 
 export type GameProfile = Selectable<GameProfileTable>;

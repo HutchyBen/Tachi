@@ -1,10 +1,13 @@
 import { MakeAction } from "#lib/actions/actions";
-import { GetUGPTSettingsDocument, SELECT_GAME_SETTINGS } from "#lib/db-formats/ugpt-settings";
+import {
+	GetUGPTSettingsDocument,
+	SELECT_GAME_PROFILE_SETTINGS,
+} from "#lib/db-formats/ugpt-settings";
 import DB from "#services/pg/db";
 import { IsUserAdmin } from "#utils/user";
 import { ExpectedErr } from "bliss";
 import { type UGPTSettingsDocument } from "tachi-common";
-import { type GameSettingsUpdate } from "tachi-db";
+import { type GameProfileUpdate } from "tachi-db";
 
 export const ACTION_PatchUGPTSettings = MakeAction("PATCH_UGPT_SETTINGS", async (taker, input) => {
 	const { userID, game, preferences } = input;
@@ -52,17 +55,17 @@ export const ACTION_PatchUGPTSettings = MakeAction("PATCH_UGPT_SETTINGS", async 
 		return { settings };
 	}
 
-	const row = await DB.selectFrom("game_settings")
-		.select(SELECT_GAME_SETTINGS)
-		.where("game_settings.user_id", "=", userID)
-		.where("game_settings.game", "=", game)
+	const row = await DB.selectFrom("game_profile")
+		.select(SELECT_GAME_PROFILE_SETTINGS)
+		.where("game_profile.user_id", "=", userID)
+		.where("game_profile.game", "=", game)
 		.executeTakeFirst();
 
 	if (!row) {
 		throw new ExpectedErr(404, "You do not have an account for this game.");
 	}
 
-	const set: GameSettingsUpdate = {};
+	const set: GameProfileUpdate = {};
 
 	if (body.preferredScoreAlg !== undefined) {
 		set.pf_preferred_score_alg = body.preferredScoreAlg;
@@ -99,10 +102,10 @@ export const ACTION_PatchUGPTSettings = MakeAction("PATCH_UGPT_SETTINGS", async 
 		return { settings };
 	}
 
-	await DB.updateTable("game_settings")
+	await DB.updateTable("game_profile")
 		.set(set)
-		.where("user_id", "=", userID)
-		.where("game", "=", game)
+		.where("game_profile.user_id", "=", userID)
+		.where("game_profile.game", "=", game)
 		.execute();
 
 	const settings = await GetUGPTSettingsDocument(userID, game);

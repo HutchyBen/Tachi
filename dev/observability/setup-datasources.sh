@@ -2,8 +2,8 @@
 set -euo pipefail
 
 GRAFANA_URL="${GRAFANA_URL:-http://tachi-grafana:3000}"
-GRAFANA_USER="${GRAFANA_USER:-admin}"
-GRAFANA_PASS="${GRAFANA_PASS:-admin}"
+GRAFANA_USER="${GRAFANA_USER:-tachi}"
+GRAFANA_PASS="${GRAFANA_PASS:-tachi}"
 
 PROM_URL="${PROM_URL:-http://tachi-prometheus:9090}"
 ALLOY_URL="${ALLOY_URL:-http://tachi-alloy:12345}"

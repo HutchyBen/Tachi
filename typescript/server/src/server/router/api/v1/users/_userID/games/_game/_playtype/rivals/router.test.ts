@@ -1,3 +1,4 @@
+import { newGameProfilePreferenceColumns } from "#lib/game-settings/create-game-settings";
 import DB from "#services/pg/db";
 import mockApi, { CloseServerConnection } from "#test-utils/mock-api";
 import { seedUser } from "#test-utils/pg-fixtures";
@@ -22,20 +23,7 @@ async function seedUgpt(userId: number) {
 			game: "iidx-sp",
 			ratings: JSON.stringify({}),
 			classes: JSON.stringify({}),
-		})
-		.execute();
-
-	await DB.insertInto("game_settings")
-		.values({
-			user_id: userId,
-			game: "iidx-sp",
-			pf_preferred_score_alg: null,
-			pf_preferred_session_alg: null,
-			pf_preferred_profile_alg: null,
-			pf_preferred_default_enum: null,
-			pf_default_table: null,
-			pf_preferred_ranking: null,
-			data: JSON.stringify({ display2DXTra: false, bpiTarget: 0 }),
+			...newGameProfilePreferenceColumns("iidx-sp"),
 		})
 		.execute();
 }

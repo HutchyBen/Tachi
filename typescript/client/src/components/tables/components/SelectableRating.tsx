@@ -1,6 +1,11 @@
 import Icon from "#components/util/Icon";
 import { type SetState } from "#types/react";
-import { FormatGPTScoreRatingName, FormatGPTSessionRatingName } from "#util/misc";
+import {
+	FormatGPTProfileRatingName,
+	FormatGPTScoreRatingName,
+	FormatGPTSessionRatingName,
+	getProfileRatingAlgKeysInDisplayOrder,
+} from "#util/misc";
 import React from "react";
 import { GetGameConfig, type V3Game } from "tachi-common";
 
@@ -33,6 +38,11 @@ export default function SelectableRating({
 		key = "sessionRatingAlgs";
 	}
 
+	const ratingKeys =
+		mode === "profile"
+			? getProfileRatingAlgKeysInDisplayOrder(game)
+			: (Object.keys(gameConfig[key]) as string[]);
+
 	return (
 		<th>
 			<div className="vstack gap-1 align-items-center justify-content-center">
@@ -41,11 +51,13 @@ export default function SelectableRating({
 					onChange={(v) => setRating(v.target.value as AllRatings)}
 					value={rating}
 				>
-					{Object.keys(gameConfig[key]).map((s) => (
+					{ratingKeys.map((s) => (
 						<option key={s} value={s}>
 							{mode === "session"
 								? FormatGPTSessionRatingName(game, s)
-								: FormatGPTScoreRatingName(game, s)}
+								: mode === "profile"
+									? FormatGPTProfileRatingName(game, s)
+									: FormatGPTScoreRatingName(game, s)}
 						</option>
 					))}
 				</select>

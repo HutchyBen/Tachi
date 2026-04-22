@@ -10,7 +10,7 @@ import {
 import { mongoScoreDataToPg } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 
-const BATCH_SIZE = 500;
+const BATCH_SIZE = 5000;
 
 /**
  * Re-derive `derived_data` and `calculated_data` for every score on the
@@ -92,7 +92,9 @@ export async function rederiveScoresForChart(chartId: string, log: KtLogger): Pr
 		}
 	}
 
-	log.info({ chartId, totalUpdated }, `Re-derived ${totalUpdated} score(s) for chart.`);
+	if (totalUpdated > 0) {
+		log.debug({ chartId, totalUpdated }, `Re-derived ${totalUpdated} score(s) for chart.`);
+	}
 
 	return totalUpdated;
 }

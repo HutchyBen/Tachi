@@ -15,7 +15,7 @@ export default async function CreateMytWACCAClassHandler(
 	const req = create(DataRequestSchema, { apiId: titleApiId });
 	const data = await client.getData(req);
 
-	return (_gptString, _userID, _ratings, _logger) => {
+	return (_game, _userID, _ratings, _logger) => {
 		// Currently (May 2025) Reverse and Plus are supported on Myt.
 		// We look for both Reverse and PLUS version data, PLUS being prioritized if exists.
 		// If / when custom dans are added, this will need to change.

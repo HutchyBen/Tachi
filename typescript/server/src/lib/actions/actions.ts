@@ -378,6 +378,18 @@ export const ActionSignatures = {
 		}),
 		output: z.object({}),
 	},
+	SCORE_IMPORT: {
+		input: z.object({
+			importID: z.string(),
+			importType: z.string(),
+			userIntent: z.boolean(),
+			"!parserArguments": z.array(z.unknown()),
+			skipStartTracking: z.boolean().optional(),
+		}),
+		output: z.object({
+			importID: z.string(),
+		}),
+	},
 	BMS_TABLE_SYNC: {
 		input: z.object({}),
 		output: z.object({}),

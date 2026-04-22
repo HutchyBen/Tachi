@@ -4,7 +4,7 @@ import { SetRivalsFailReasons } from "#lib/constants/err-codes";
 import { log } from "#lib/log/log";
 import { SendSetRivalNotification } from "#lib/notifications/notification-wrappers";
 import { ServerConfig } from "#lib/setup/config";
-import { pgScoreDataToMongo } from "#lib/v3/migration-tools";
+import { pgScoreDataToAPI } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import { ArrayDiff } from "#utils/misc";
 import { GetUsersWithIDs, GetUserWithIDGuaranteed } from "#utils/user";
@@ -15,13 +15,13 @@ import { GetGameConfig, type integer, type PgScoreData, type V3Game } from "tach
  * Throws if the user hasn't played the GPT in question.
  */
 export async function GetRivalIDs(userID: integer, game: V3Game) {
-	const settings = await DB.selectFrom("game_settings")
-		.select("user_id")
-		.where("user_id", "=", userID)
-		.where("game", "=", game)
+	const profile = await DB.selectFrom("game_profile")
+		.select("game_profile.user_id")
+		.where("game_profile.user_id", "=", userID)
+		.where("game_profile.game", "=", game)
 		.executeTakeFirst();
 
-	if (!settings) {
+	if (!profile) {
 		throw new Error(`User ${userID} has not played ${game}. Cannot retrieve rivals.`);
 	}
 
@@ -73,7 +73,7 @@ function metricValueFromPbRow(
 	derivedData: unknown,
 	metricKey: string,
 ): number | null {
-	const scoreData = pgScoreDataToMongo(v3Game, {
+	const scoreData = pgScoreDataToAPI(v3Game, {
 		data,
 		derived: derivedData,
 		judgements: {},
@@ -102,10 +102,10 @@ export async function setRivalsWithResult(
 		return SetRivalsFailReasons.RIVALED_SELF;
 	}
 
-	const { count } = await DB.selectFrom("game_settings")
+	const { count } = await DB.selectFrom("game_profile")
 		.select(DB.fn.countAll().as("count"))
-		.where("game", "=", game)
-		.where("user_id", "in", newRivals)
+		.where("game_profile.game", "=", game)
+		.where("game_profile.user_id", "in", newRivals)
 		.executeTakeFirstOrThrow();
 
 	const playedGPTCount = Number(count);
@@ -114,19 +114,19 @@ export async function setRivalsWithResult(
 		return SetRivalsFailReasons.RIVALS_HAVENT_PLAYED_GPT;
 	}
 
-	const currentGameSettings = await DB.selectFrom("game_settings")
-		.select("user_id")
-		.where("user_id", "=", userID)
-		.where("game", "=", game)
+	const currentGameProfile = await DB.selectFrom("game_profile")
+		.select("game_profile.user_id")
+		.where("game_profile.user_id", "=", userID)
+		.where("game_profile.game", "=", game)
 		.executeTakeFirst();
 
-	if (!currentGameSettings) {
+	if (!currentGameProfile) {
 		log.error(
-			`User ${userID} attempted to set rivals for ${game}, but doesn't have game settings. Was their account deleted in midair?`,
+			`User ${userID} attempted to set rivals for ${game}, but doesn't have a game profile. Was their account deleted in midair?`,
 		);
 
 		throw new Error(
-			`User ${userID} attempted to set rivals for ${game}, but doesn't have game settings. Was their account deleted in midair?`,
+			`User ${userID} attempted to set rivals for ${game}, but doesn't have a game profile. Was their account deleted in midair?`,
 		);
 	}
 

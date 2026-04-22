@@ -73,7 +73,7 @@ function SessionPage({ data, game }: { data: SessionReturns } & UGPT) {
 	const scoreDataset = useMemo(() => {
 		const d = [];
 
-		for (const sci of data.scoreInfo) {
+		for (const sci of sessionData.scoreInfo) {
 			const score = scoreMap.get(sci.scoreID);
 
 			if (!score) {

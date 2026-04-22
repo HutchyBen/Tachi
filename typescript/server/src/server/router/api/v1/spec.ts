@@ -6,43 +6,45 @@ import type { AnyRouterSpec } from "#lib/router/typed-router";
 import type { TachiServerConfig } from "#lib/setup/config";
 import type { EvaluateUsersStatsShowcase } from "#lib/showcase/get-stats";
 import type { GitCommit } from "#utils/git";
-import type {
-	APITokenDocument,
-	CGCardInfo,
-	ChartDocument,
-	FervidexSettingsDocument,
-	FolderDocument,
-	GameConfig,
-	GameGroupConfig,
-	GoalDocument,
-	GoalSubscriptionDocument,
-	ImportDocument,
-	ImportTrackerDocument,
-	integer,
-	InviteCodeDocument,
-	KaiAuthDocument,
-	KsHookSettingsDocument,
-	MytCardInfo,
-	NotificationDocument,
-	PBScoreDocument,
-	QuestDocument,
-	QuestlineDocument,
-	QuestSubscriptionDocument,
-	RecentlyViewedFolderDocument,
-	ScoreDocument,
-	SessionDocument,
-	SessionScoreInfo,
-	SongDocument,
-	TableDocument,
-	TachiAPIClientDocument,
-	UGPTSettingsDocument,
-	UserDocument,
-	UserGameStats,
-	UserGameStatsSnapshotDocument,
-	UserSettingsDocument,
-} from "tachi-common";
 import type { CronTask, CronTaskExecution, JobQueue } from "tachi-db";
 
+import {
+	ALL_GAMES,
+	type APITokenDocument,
+	type CGCardInfo,
+	type ChartDocument,
+	type FervidexSettingsDocument,
+	type FolderDocument,
+	type GameConfig,
+	type GameGroupConfig,
+	type GoalDocument,
+	type GoalSubscriptionDocument,
+	type ImportDocument,
+	type ImportTrackerDocument,
+	type integer,
+	type InviteCodeDocument,
+	type KaiAuthDocument,
+	type KsHookSettingsDocument,
+	type MytCardInfo,
+	type NotificationDocument,
+	type PBScoreDocument,
+	type QuestDocument,
+	type QuestlineDocument,
+	type QuestSubscriptionDocument,
+	type RecentlyViewedFolderDocument,
+	type ScoreDocument,
+	type SessionDocument,
+	type SessionScoreInfo,
+	type SongDocument,
+	type TableDocument,
+	type TachiAPIClientDocument,
+	type UGPTSettingsDocument,
+	type UserDocument,
+	type UserGameStats,
+	type UserGameStatsSnapshotDocument,
+	type UserGameStatsWithProfileLeaderboardRank,
+	type UserSettingsDocument,
+} from "tachi-common";
 import { z } from "zod";
 
 type TachiInstanceConfig = TachiServerConfig["TACHI_CONFIG"];
@@ -250,8 +252,8 @@ export const API_V1_SPEC = {
 		output: doc<UserDocument>(),
 	},
 
-	"GET /users/:userID/game-stats": {
-		description: "All game stats and rankings for a user.",
+	"GET /users/:userID/game-profiles": {
+		description: "All per-game profiles (ratings, classes) and rankings for a user.",
 		input: z.object({}),
 		output: docArray<UserGameStatsWithRanking>(),
 	},
@@ -700,10 +702,10 @@ export const API_V1_SPEC = {
 		description: "Nearby players on the profile leaderboard.",
 		input: z.object({ alg: z.string().optional() }),
 		output: z.strictObject({
-			thisUsersStats: doc<UserGameStatsWithRanking>(),
+			thisUsersStats: doc<UserGameStatsWithProfileLeaderboardRank>(),
 			thisUsersRanking: doc<UserRankingPosition>(),
-			above: docArray<UserGameStats>(),
-			below: docArray<UserGameStats>(),
+			above: docArray<UserGameStatsWithProfileLeaderboardRank>(),
+			below: docArray<UserGameStatsWithProfileLeaderboardRank>(),
 			users: docArray<UserDocument>(),
 		}),
 	},
@@ -1325,7 +1327,7 @@ export const API_V1_SPEC = {
 			limit: z.coerce.number().max(500).optional(),
 		}),
 		output: z.strictObject({
-			gameStats: docArray<UserGameStatsWithRanking>(),
+			gameStats: docArray<UserGameStatsWithProfileLeaderboardRank>(),
 			users: docArray<UserDocument>(),
 		}),
 	},
@@ -1623,7 +1625,16 @@ export const API_V1_SPEC = {
 	"GET /sessions/:sessionID/folder-raises": {
 		description: "Folder raise summary for a session.",
 		input: z.object({}),
-		output: z.array(z.unknown()),
+		output: z.array(
+			z.strictObject({
+				folder: doc<FolderDocument>(),
+				previousCount: z.number().int(),
+				raisedCharts: z.array(z.string()),
+				totalCharts: z.number().int(),
+				type: z.string(),
+				value: z.string(),
+			}),
+		),
 	},
 
 	// ────────────────────────────────────────────────
@@ -1725,6 +1736,21 @@ export const API_V1_SPEC = {
 				}),
 			),
 			hasMore: z.boolean(),
+		}),
+	},
+
+	"GET /import/orphans/:orphanID": {
+		description:
+			"Return one orphaned score for the authenticated user, including raw `data` and `context` JSON.",
+		input: z.object({}),
+		output: z.strictObject({
+			orphanID: z.string(),
+			importType: z.string(),
+			gameGroup: z.string(),
+			timeInserted: z.number(),
+			message: z.string().nullable(),
+			data: z.unknown(),
+			context: z.unknown(),
 		}),
 	},
 
@@ -1839,12 +1865,10 @@ export const API_V1_SPEC = {
 		}),
 	},
 
-	"POST /admin/resync-pbs": {
-		description: "Resync PBs (stub; not yet implemented).",
-		input: z.object({
-			userIDs: z.array(z.number()).optional(),
-			filter: z.unknown().optional(),
-		}),
+	"POST /admin/recalc-pbs": {
+		description:
+			"Enqueue every distinct (user_id, chart_id) from the score table into pb_dirty, then synchronously drain pb_dirty and downstream session/game_profile queues until idle. No request body.",
+		input: z.object({}),
 		output: empty,
 	},
 
@@ -1864,14 +1888,14 @@ export const API_V1_SPEC = {
 		description: "Destroy all data for a user on a game+playtype.",
 		input: z.object({
 			userID: z.number(),
-			game: z.string(),
-			playtype: z.string(),
+			game: z.enum(ALL_GAMES),
 		}),
 		output: empty,
 	},
 
 	"POST /admin/recalc": {
-		description: "Recalculate ratings (stub; not yet implemented).",
+		description:
+			"Enqueue every chart for score re-derivation (derived_data + calculated_data), then synchronously drain score_rederive and downstream pb/session/game_profile queues until idle. No request body.",
 		input: z.object({}),
 		output: empty,
 	},

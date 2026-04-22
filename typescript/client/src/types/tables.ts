@@ -11,7 +11,7 @@ import {
 	type ScoreDocument,
 	type SongDocument,
 	type UserDocument,
-	type UserGameStats,
+	type UserGameStatsWithProfileLeaderboardRank,
 	type V3Game,
 } from "tachi-common";
 
@@ -53,7 +53,7 @@ export type UGSDataset = ({
 		index: integer;
 		user: UserDocument;
 	};
-} & UserGameStats)[];
+} & UserGameStatsWithProfileLeaderboardRank)[];
 
 export type RivalChartDataset<GPT extends V3Game = V3Game> = ({
 	__related: {

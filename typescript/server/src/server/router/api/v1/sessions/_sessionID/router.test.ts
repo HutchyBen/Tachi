@@ -119,7 +119,51 @@ describe("GET /api/v1/sessions/:sessionID", () => {
 		expect(res.body.body.songs).toHaveLength(1);
 		expect(res.body.body.songs[0].id).toBe(SONG_PG);
 		expect(res.body.body.user.id).toBe(userId);
-		expect(Array.isArray(res.body.body.scoreInfo)).toBe(true);
+		expect(res.body.body.scoreInfo).toHaveLength(1);
+		expect(res.body.body.scoreInfo[0].scoreID).toBe(scoreId);
+		expect(res.body.body.scoreInfo[0].isNewScore).toBe(true);
+	});
+});
+
+describe("GET /api/v1/sessions/:sessionID/folder-raises", () => {
+	it("returns folder raise rows when session charts appear in folder_chart_lookup", async () => {
+		const { sessionId } = await seedSessionFixture();
+		const folderId = `F_folder_sess_${sessionId}`;
+
+		await DB.insertInto("folder")
+			.values({
+				id: folderId,
+				legacy_id: folderId,
+				game: "iidx-sp",
+				inactive: false,
+				title: "Session Folder Raises Test",
+				slug: folderId,
+				where: `chart.id = '${CHART_PG}'`,
+				version_filter: null,
+				search_terms: [],
+			})
+			.execute();
+
+		await DB.insertInto("folder_chart_lookup")
+			.values({ folder_id: folderId, chart_id: CHART_PG })
+			.execute();
+
+		const res = await mockApi.get(`/api/v1/sessions/${sessionId}/folder-raises`);
+
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(Array.isArray(res.body.body)).toBe(true);
+		expect(res.body.body.length).toBeGreaterThan(0);
+
+		const hit = res.body.body.find(
+			(r: { folder: { folderID: string } }) => r.folder.folderID === folderId,
+		);
+
+		expect(hit).toBeDefined();
+		expect(hit.raisedCharts).toContain(CHART_PG);
+		expect(hit.totalCharts).toBeGreaterThanOrEqual(1);
+		expect(typeof hit.type).toBe("string");
+		expect(typeof hit.value).toBe("string");
 	});
 });
 

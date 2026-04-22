@@ -236,6 +236,110 @@ describe("IIDX_IMPL (unit)", () => {
 		});
 	});
 
+	describe("scoreCalcs ktLampRatingNC / ktLampRatingHC / ktLampRatingEXHC", () => {
+		it("IIDX SP", () => {
+			const run = (
+				scoreData: Partial<ScoreData<"iidx-sp">>,
+				chartData: Partial<ChartDocumentData["iidx-sp"]>,
+			) =>
+				IIDX_SP_IMPL.scoreCalcs(
+					dmf(TestingIIDXSPScore.scoreData, scoreData),
+					IIDX_SP_IMPL.scoreDeriver(
+						dmf(TestingIIDXSPScore.scoreData, scoreData),
+						dmf(Testing511SPA, { data: chartData as never }),
+					),
+					dmf(Testing511SPA, { data: chartData as never }),
+				);
+
+			function mkTier(v: number) {
+				return { value: v, text: "whatever", individualDifference: false };
+			}
+
+			const tiered = { ncTier: mkTier(15), hcTier: mkTier(16), exhcTier: mkTier(17) };
+
+			expect(run({ lamp: "FAILED" }, {})).toMatchObject({
+				ktLampRatingNC: 0,
+				ktLampRatingHC: 0,
+				ktLampRatingEXHC: 0,
+			});
+			expect(run({ lamp: "EASY CLEAR" }, {})).toMatchObject({
+				ktLampRatingNC: 0,
+				ktLampRatingHC: 0,
+				ktLampRatingEXHC: 0,
+			});
+			expect(run({ lamp: "CLEAR" }, tiered)).toMatchObject({
+				ktLampRatingNC: 15,
+				ktLampRatingHC: 0,
+				ktLampRatingEXHC: 0,
+			});
+			expect(run({ lamp: "HARD CLEAR" }, tiered)).toMatchObject({
+				ktLampRatingNC: 15,
+				ktLampRatingHC: 16,
+				ktLampRatingEXHC: 0,
+			});
+			expect(run({ lamp: "EX HARD CLEAR" }, tiered)).toMatchObject({
+				ktLampRatingNC: 15,
+				ktLampRatingHC: 16,
+				ktLampRatingEXHC: 17,
+			});
+			expect(run({ lamp: "FULL COMBO" }, tiered)).toMatchObject({
+				ktLampRatingNC: 15,
+				ktLampRatingHC: 16,
+				ktLampRatingEXHC: 17,
+			});
+			expect(run({ lamp: "HARD CLEAR" }, { ncTier: mkTier(15) })).toMatchObject({
+				ktLampRatingNC: 15,
+				ktLampRatingHC: 15,
+				ktLampRatingEXHC: 0,
+			});
+		});
+
+		it("IIDX DP", () => {
+			const run = (
+				scoreData: Partial<ScoreData<"iidx-dp">>,
+				chartData: Partial<ChartDocumentData["iidx-dp"]>,
+			) =>
+				IIDX_DP_IMPL.scoreCalcs(
+					dmf(TestingIIDXSPScore.scoreData, scoreData),
+					IIDX_DP_IMPL.scoreDeriver(
+						dmf(TestingIIDXSPScore.scoreData, scoreData),
+						dmf(Testing511SPA, { data: chartData as never }) as never,
+					),
+					dmf(Testing511SPA, { data: chartData as never }) as never,
+				);
+
+			function mkTier(v: number) {
+				return { value: v, text: "whatever", individualDifference: false };
+			}
+
+			expect(run({ lamp: "EASY CLEAR" }, { dpTier: mkTier(15) })).toMatchObject({
+				ktLampRatingNC: 0,
+				ktLampRatingHC: 0,
+				ktLampRatingEXHC: 0,
+			});
+			expect(run({ lamp: "CLEAR" }, { dpTier: mkTier(15) })).toMatchObject({
+				ktLampRatingNC: 15,
+				ktLampRatingHC: 0,
+				ktLampRatingEXHC: 0,
+			});
+			expect(run({ lamp: "HARD CLEAR" }, { dpTier: mkTier(15) })).toMatchObject({
+				ktLampRatingNC: 15,
+				ktLampRatingHC: 15,
+				ktLampRatingEXHC: 0,
+			});
+			expect(run({ lamp: "EX HARD CLEAR" }, { dpTier: mkTier(15) })).toMatchObject({
+				ktLampRatingNC: 15,
+				ktLampRatingHC: 15,
+				ktLampRatingEXHC: 15,
+			});
+			expect(run({ lamp: "FULL COMBO" }, { dpTier: mkTier(15) })).toMatchObject({
+				ktLampRatingNC: 15,
+				ktLampRatingHC: 15,
+				ktLampRatingEXHC: 15,
+			});
+		});
+	});
+
 	describe("goal formatters", () => {
 		describe.each([IIDX_SP_IMPL, IIDX_DP_IMPL] as const)("impl", (impl) => {
 			it("criteria", () => {

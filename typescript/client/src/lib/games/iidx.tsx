@@ -5,6 +5,7 @@ import RatingCell from "#components/tables/cells/RatingCell";
 import ScoreCell from "#components/tables/cells/ScoreCell";
 import { GetEnumColour } from "#lib/game-implementations";
 import { type GPTClientImplementation } from "#lib/types";
+import { ChangeOpacity } from "#util/color-opacity";
 import { NumericSOV } from "#util/sorts";
 import React from "react";
 import { COLOUR_SET, type GamesForGroup, IIDX_LAMPS, IIDXLIKE_GBOUNDARIES } from "tachi-common";
@@ -114,6 +115,17 @@ const IIDXCoreCells: GPTClientImplementation<GamesForGroup["iidx"]>["scoreCoreCe
 	</>
 );
 
+/** Applied to the profile stats table value cell only (see UGPTRatingsTable). */
+const IIDX_PROFILE_RATING_VALUE_CELL_STYLE: NonNullable<
+	GPTClientImplementation<GamesForGroup["iidx"]>["profileRatingAlgRowStyle"]
+> = {
+	ktLampRating: { backgroundColor: ChangeOpacity(COLOUR_SET.purple, 0.12) },
+	ktLampRatingNC: { backgroundColor: ChangeOpacity(COLOUR_SET.blue, 0.14) },
+	ktLampRatingHC: { backgroundColor: ChangeOpacity(COLOUR_SET.orange, 0.14) },
+	ktLampRatingEXHC: { backgroundColor: ChangeOpacity(COLOUR_SET.gold, 0.12) },
+	BPI: { backgroundColor: ChangeOpacity(COLOUR_SET.paleBlue, 0.12) },
+};
+
 const IIDXRatingCell: GPTClientImplementation<GamesForGroup["iidx"]>["ratingCell"] = ({
 	sc,
 	chart,
@@ -169,6 +181,7 @@ export const IIDX_SP_IMPL: GPTClientImplementation<"iidx-sp"> = {
 	classColours: IIDX_COLOURS,
 	scoreCoreCells: IIDXCoreCells,
 	ratingCell: IIDXRatingCell,
+	profileRatingAlgRowStyle: IIDX_PROFILE_RATING_VALUE_CELL_STYLE,
 };
 
 export const IIDX_DP_IMPL: GPTClientImplementation<"iidx-dp"> = {
@@ -194,4 +207,5 @@ export const IIDX_DP_IMPL: GPTClientImplementation<"iidx-dp"> = {
 	classColours: IIDX_COLOURS,
 	scoreCoreCells: IIDXCoreCells,
 	ratingCell: IIDXRatingCell,
+	profileRatingAlgRowStyle: IIDX_PROFILE_RATING_VALUE_CELL_STYLE,
 };

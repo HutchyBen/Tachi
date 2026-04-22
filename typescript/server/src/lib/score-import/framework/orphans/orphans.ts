@@ -48,13 +48,24 @@ async function deleteOrphanByOrphanId(orphanID: string): Promise<void> {
 
 /** API-facing row for listing a user’s orphan_score entries. */
 export type OrphanScoreListItem = {
+	gameGroup: string;
+	importType: string;
+	message: string | null;
 	orphanID: string;
 	rowID: string;
-	importType: string;
-	gameGroup: string;
-	timeInserted: number;
-	message: string | null;
 	summary: string | null;
+	timeInserted: number;
+};
+
+/** API-facing detail for one orphan_score row (includes raw import payload). */
+export type OrphanScoreDetail = {
+	context: unknown;
+	data: unknown;
+	gameGroup: string;
+	importType: string;
+	message: string | null;
+	orphanID: string;
+	timeInserted: number;
 };
 
 function summarizeOrphanRow(row: PgOrphanScoreRow): string | null {
@@ -102,8 +113,38 @@ function orphanRowToListItem(row: PgOrphanScoreRow): OrphanScoreListItem {
 	};
 }
 
+/** Loads one orphan_score row for the user, or null if none. */
+export async function getOrphanScoreDetailForUser(
+	orphanID: string,
+	userID: integer,
+): Promise<OrphanScoreDetail | null> {
+	const row = await DB.selectFrom("orphan_score")
+		.select(SELECT_ORPHAN_SCORE)
+		.where("orphan_score.orphan_id", "=", orphanID)
+		.where("orphan_score.user_id", "=", userID)
+		.executeTakeFirst();
+
+	if (!row) {
+		return null;
+	}
+
+	const msg = row.error_message.trim();
+	return {
+		orphanID: row.orphan_id,
+		importType: row.import_type,
+		gameGroup: row.game_group,
+		timeInserted: new Date(row.time_inserted).getTime(),
+		message: msg.length > 0 ? msg : null,
+		data: row.data,
+		context: row.context,
+	};
+}
+
 /** Deletes one orphan_score row if it belongs to the given user. Returns whether a row was removed. */
-export async function deleteOrphanScoreForUser(orphanID: string, userID: integer): Promise<boolean> {
+export async function deleteOrphanScoreForUser(
+	orphanID: string,
+	userID: integer,
+): Promise<boolean> {
 	const result = await DB.deleteFrom("orphan_score")
 		.where("orphan_score.orphan_id", "=", orphanID)
 		.where("orphan_score.user_id", "=", userID)
@@ -117,12 +158,12 @@ export async function deleteOrphanScoreForUser(orphanID: string, userID: integer
  * @param afterRowID — `row_id` of the last item from the previous page (omit on first page).
  */
 export async function listOrphanScoresForUser(opts: {
-	userID: integer;
-	limit: number;
 	afterRowID?: string;
-}): Promise<{ orphans: OrphanScoreListItem[]; hasMore: boolean }> {
+	limit: number;
+	userID: integer;
+}): Promise<{ hasMore: boolean; orphans: OrphanScoreListItem[] }> {
 	const cap = Math.min(Math.max(opts.limit, 1), 100);
-	let anchor: { time_inserted: string; row_id: string } | undefined;
+	let anchor: { row_id: string; time_inserted: string } | undefined;
 
 	if (opts.afterRowID !== undefined && opts.afterRowID.length > 0) {
 		anchor = await DB.selectFrom("orphan_score")

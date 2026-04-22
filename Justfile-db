@@ -7,6 +7,10 @@ db POSTGRES_DB=DEFAULT_DB:
 
 db-cheap-reset POSTGRES_DB=DEFAULT_DB:
 	#!/bin/bash
+	set -euo pipefail
+	# Disconnect all sessions using this DB so DROP DATABASE can succeed.
+	psql "{{POSTGRES_URL}}/postgres" -v ON_ERROR_STOP=1 -c \
+		"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{{POSTGRES_DB}}'"
 	export POSTGRES_URL="{{POSTGRES_URL}}/{{POSTGRES_DB}}"
 	tachidb database drop
 	tachidb database create
@@ -15,6 +19,7 @@ db-cheap-reset POSTGRES_DB=DEFAULT_DB:
 # Drop and recreate the database so migrations can be re-applied from scratch.
 db-reset POSTGRES_DB=DEFAULT_DB:
 	#!/bin/bash
+	set -euo pipefail
 
 	just db-cheap-reset "{{POSTGRES_DB}}"
 	just db-load-seeds "{{POSTGRES_DB}}"

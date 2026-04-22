@@ -1,21 +1,11 @@
-import { Env, TachiConfig } from "#lib/setup/config";
-import { Queue, QueueEvents } from "bullmq";
+/**
+ * BullMQ score import queue (legacy). Replaced by Postgres `job_queue`.
+ * The API process no longer instantiates a Redis queue; keep a no-op close for shutdown paths.
+ */
+export default null;
 
-const ScoreImportQueue = new Queue(`${TachiConfig.NAME} Score Import Queue`, {
-	connection: { host: Env.REDIS_URL, port: 6379 },
-	defaultJobOptions: {
-		removeOnComplete: true,
-		removeOnFail: 10, // keep the last 10 failed jobs, but start pruning beyond that.
-	},
-});
+export const ScoreImportQueueEvents = null;
 
-export default ScoreImportQueue;
-
-export const ScoreImportQueueEvents = new QueueEvents(ScoreImportQueue.name, {
-	connection: { host: Env.REDIS_URL, port: 6379 },
-});
-
-export async function CloseScoreImportQueue() {
-	await ScoreImportQueueEvents.close();
-	return ScoreImportQueue.close();
+export async function CloseScoreImportQueue(): Promise<void> {
+	// no-op (Postgres `job_queue` is used for score imports)
 }

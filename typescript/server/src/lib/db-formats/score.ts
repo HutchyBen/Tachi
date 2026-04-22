@@ -1,4 +1,4 @@
-import { pgScoreDataToMongo } from "#lib/v3/migration-tools";
+import { pgScoreDataToAPI } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import { ISO8601ToUnixMilliseconds } from "#utils/time";
 import { type GameGroup, type ImportTypes, type ScoreDocument } from "tachi-common";
@@ -47,7 +47,7 @@ export interface ScoreDocumentJoinRow {
 }
 
 export function ToScoreDocument(row: ScoreDocumentJoinRow): ScoreDocument {
-	const scoreData = pgScoreDataToMongo(row.score_game, {
+	const scoreData = pgScoreDataToAPI(row.score_game, {
 		data: row.score_data as any,
 		derived: row.score_derived_data as any,
 		judgements: row.score_judgements as any,

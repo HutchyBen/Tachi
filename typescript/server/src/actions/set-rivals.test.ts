@@ -1,3 +1,4 @@
+import { newGameProfilePreferenceColumns } from "#lib/game-settings/create-game-settings";
 import { ServerConfig } from "#lib/setup/config";
 import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
@@ -14,21 +15,23 @@ describe("ACTION_SetRivals", () => {
 		({ id: userId, username } = await seedUser({ username: `rival_set_${Date.now()}` }));
 		rivalId = (await seedUser({ username: `rival_target_${Date.now()}` })).id;
 
-		const ugptRow = {
-			game: "iidx-sp" as const,
-			pf_preferred_score_alg: null,
-			pf_preferred_session_alg: null,
-			pf_preferred_profile_alg: null,
-			pf_preferred_default_enum: null,
-			pf_default_table: null,
-			pf_preferred_ranking: null,
-			data: JSON.stringify({ display2DXTra: false, bpiTarget: 0 }),
-		};
-
-		await DB.insertInto("game_settings")
+		const prefs = newGameProfilePreferenceColumns("iidx-sp");
+		await DB.insertInto("game_profile")
 			.values([
-				{ user_id: userId, ...ugptRow },
-				{ user_id: rivalId, ...ugptRow },
+				{
+					user_id: userId,
+					game: "iidx-sp",
+					ratings: JSON.stringify({}),
+					classes: JSON.stringify({}),
+					...prefs,
+				},
+				{
+					user_id: rivalId,
+					game: "iidx-sp",
+					ratings: JSON.stringify({}),
+					classes: JSON.stringify({}),
+					...prefs,
+				},
 			])
 			.execute();
 	});
@@ -102,21 +105,23 @@ describe("ACTION_SetRivals", () => {
 			),
 		);
 
-		const ugptRow = {
-			game: "iidx-sp" as const,
-			pf_preferred_score_alg: null,
-			pf_preferred_session_alg: null,
-			pf_preferred_profile_alg: null,
-			pf_preferred_default_enum: null,
-			pf_default_table: null,
-			pf_preferred_ranking: null,
-			data: JSON.stringify({ display2DXTra: false, bpiTarget: 0 }),
-		};
-
-		await DB.insertInto("game_settings")
+		const prefs = newGameProfilePreferenceColumns("iidx-sp");
+		await DB.insertInto("game_profile")
 			.values([
-				{ user_id: main.id, ...ugptRow },
-				...rivalUsers.map((u) => ({ user_id: u.id, ...ugptRow })),
+				{
+					user_id: main.id,
+					game: "iidx-sp",
+					ratings: JSON.stringify({}),
+					classes: JSON.stringify({}),
+					...prefs,
+				},
+				...rivalUsers.map((u) => ({
+					user_id: u.id,
+					game: "iidx-sp" as const,
+					ratings: JSON.stringify({}),
+					classes: JSON.stringify({}),
+					...prefs,
+				})),
 			])
 			.execute();
 

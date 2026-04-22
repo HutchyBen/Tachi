@@ -128,5 +128,5 @@ const { clientSecret: _secret, ...publicDoc } = ToAPIClientDocument(row);
 | `api-token.ts` | `priv_api_token` | `APITokenDocument` |
 | `user.ts` | `account` | `UserDocument` |
 | `user-settings.ts` | `account_settings` | `UserSettingsDocument` |
-| `game-stats.ts` | `game_stats` | `UserGameStats` |
+| `game-profiles.ts` | `game_profile` | `UserGameStats` (ratings + classes); UGPT preferences and showcase JSON also live on `game_profile` |
 | `kshook-sv6c-settings.ts` | `svc_kshook_sv6c_settings` | `KsHookSettingsDocument` |

@@ -1,5 +1,6 @@
-import { useIngest } from "#lib/ingest/IngestProvider";
 import type { ReactNode } from "react";
+
+import { useIngest } from "#lib/ingest/IngestProvider";
 
 type SqliteWorkspaceGateProps = { children: ReactNode };
 
@@ -55,12 +56,12 @@ export function SqliteWorkspaceGate({ children }: SqliteWorkspaceGateProps) {
 							</div>
 							{progress.total > 0 ? (
 								<div
+									aria-label="Ingest progress"
+									aria-valuemax={100}
+									aria-valuemin={0}
+									aria-valuenow={pct}
 									className="ingest-bar sql-workspace-gate-bar"
 									role="progressbar"
-									aria-valuenow={pct}
-									aria-valuemin={0}
-									aria-valuemax={100}
-									aria-label="Ingest progress"
 								>
 									<div className="ingest-bar-fill" style={{ width: `${pct}%` }} />
 								</div>

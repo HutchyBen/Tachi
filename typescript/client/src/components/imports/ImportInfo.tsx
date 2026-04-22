@@ -53,7 +53,7 @@ export default function ImportInfo({
 			return;
 		}
 
-		APIFetchV1<UserGameStats[]>(`/users/${user!.id}/game-stats`).then((r) => {
+		APIFetchV1<UserGameStats[]>(`/users/${user!.id}/game-profiles`).then((r) => {
 			if (!r.success) {
 				console.warn(`Can't update user stats post-import. ${r.description}`);
 				return;
@@ -130,8 +130,8 @@ export default function ImportInfo({
 							are matched with data, all we have to display might be a hash.
 							<br />
 							<strong>SongOrChartNotFound</strong> means the score was still{" "}
-							<strong>saved as an orphan</strong> for nightly matching (around 00:01 UTC) or
-							manual reprocess — see{" "}
+							<strong>saved as an orphan</strong> for nightly matching (around 00:01
+							UTC) or manual reprocess — see{" "}
 							{user ? (
 								<Link to={`/u/${user.username}/orphans`}>Orphan scores</Link>
 							) : (
@@ -157,7 +157,9 @@ export default function ImportInfo({
 											<div className="mt-2 small text-muted">
 												This may be stored as an orphan.{" "}
 												{user ? (
-													<Link to={`/u/${user.username}/orphans`}>Open orphan queue</Link>
+													<Link to={`/u/${user.username}/orphans`}>
+														Open orphan queue
+													</Link>
 												) : (
 													"Open orphan queue"
 												)}

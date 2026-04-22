@@ -11,8 +11,6 @@ import server, { metricsApp } from "#server/server";
 import DB from "#services/pg/db";
 import fetch from "#utils/fetch";
 import { GetUserWithID } from "#utils/user";
-import { spawn } from "child_process";
-import path from "path";
 import { applyMigrations } from "tachi-db-migration-engine";
 
 log.info(
@@ -83,39 +81,3 @@ if (metricsApp) {
 process.on("SIGTERM", () => {
 	void HandleSIGTERMGracefully(instance, metricsInstance);
 });
-
-if (process.env.INVOKE_JOB_RUNNER) {
-	log.info({ bootInfo: true }, `Spawning a tachi-server job runner inline.`);
-
-	if (Env.NODE_ENV === "production") {
-		log.warn(
-			{ bootInfo: true },
-			`Spawning inline tachi-server job runner in production. This is bad for performance.`,
-		);
-	}
-
-	// Spawn as a separate process to avoid hogging the main thread.
-	const jobProcess = spawn(
-		"ts-node",
-		[
-			// Note: Can't use -r tsconfig-paths/register here
-			// because that is rejected by some library called
-			// arg.
-			// I'm not sure why.
-			"--require=tsconfig-paths/register",
-			path.join(__dirname, "../src/lib/jobs/job-runner.ts"),
-		],
-		{
-			stdio: "inherit",
-		},
-	);
-
-	jobProcess.on("error", (err) => {
-		log.fatal({ err }, `Failed to spawn job runner. Terminating process.`);
-	});
-
-	process.on("beforeExit", () => {
-		log.info(`Killing Job Runner.`);
-		jobProcess.kill();
-	});
-}

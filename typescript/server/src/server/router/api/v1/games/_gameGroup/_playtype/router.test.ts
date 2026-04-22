@@ -141,6 +141,26 @@ describe("GET /api/v1/games/:game/leaderboard", () => {
 
 		expect(res.body.body.gameStats.map((e: { userID: number }) => e.userID)).toEqual([2, 3, 1]);
 	});
+
+	it("gives the same rank to users tied on the profile algorithm (next rank skips)", async () => {
+		await DB.updateTable("game_profile")
+			.set({ ratings: JSON.stringify({ BPI: 100 }) })
+			.where("user_id", "=", 3)
+			.execute();
+
+		const res = await mockApi.get("/api/v1/games/iidx-sp/leaderboard?alg=BPI&limit=10");
+
+		expect(res.status).toBe(200);
+		const stats = res.body.body.gameStats as Array<{
+			rank: number;
+			userID: number;
+		}>;
+		const r2 = stats.find((s) => s.userID === 2)!;
+		const r3 = stats.find((s) => s.userID === 3)!;
+		expect(r2.rank).toBe(1);
+		expect(r3.rank).toBe(1);
+		expect(stats.find((s) => s.userID === 1)!.rank).toBe(3);
+	});
 });
 
 describe("GET /api/v1/games/:game/players", () => {

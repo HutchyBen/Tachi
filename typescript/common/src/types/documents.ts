@@ -338,6 +338,11 @@ export interface UserGameStats {
 	classes: AnyClasses;
 }
 
+/** `GET /games/:game/leaderboard` and `.../leaderboard-adjacent` (tie-aware profile rating rank). */
+export type UserGameStatsWithProfileLeaderboardRank = {
+	rank: integer;
+} & UserGameStats;
+
 export interface ChartTierlistInfo {
 	text: string;
 	value: number;

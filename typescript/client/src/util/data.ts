@@ -2,11 +2,10 @@ import { type GoalsOnChartReturn, type GoalsOnFolderReturn } from "#types/api-re
 import {
 	type ChartDocument,
 	type GameGroup,
-	type GoalDocument,
 	type integer,
 	type ScoreDocument,
-	type SessionScoreInfo,
 	type SEEDS_SongDocument,
+	type SessionScoreInfo,
 	type SongDocument,
 	type UserDocument,
 	type V3Game,
@@ -29,7 +28,7 @@ export function GetPBs(scoreInfo: SessionScoreInfo[]) {
 }
 
 export function CreateSongMap<G extends GameGroup = GameGroup>(
-	songs: Array<SongDocument<G> | SEEDS_SongDocument<G>>,
+	songs: Array<SEEDS_SongDocument<G> | SongDocument<G>>,
 ) {
 	const songMap = new Map<string, SongDocument<G>>();
 

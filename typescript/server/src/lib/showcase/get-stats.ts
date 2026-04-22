@@ -20,11 +20,11 @@ export async function EvaluateUsersStatsShowcase(
 
 	if (!settings) {
 		log.error(
-			`User ${getSettingsID} has no game-settings, yet a call to EvaluateUsersStatsShowcase was made.`,
+			`User ${getSettingsID} has no game profile row, yet a call to EvaluateUsersStatsShowcase was made.`,
 		);
 
 		throw new Error(
-			`User ${getSettingsID} has no game-settings, yet a call to EvaluateUsersStatsShowcase was made.`,
+			`User ${getSettingsID} has no game profile row, yet a call to EvaluateUsersStatsShowcase was made.`,
 		);
 	}
 

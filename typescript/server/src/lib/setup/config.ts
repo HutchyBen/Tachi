@@ -60,6 +60,8 @@ const configSchema = z.object({
 	USE_EXTERNAL_SCORE_IMPORT_WORKER: z.boolean().default(false),
 	EXTERNAL_SCORE_IMPORT_WORKER_CONCURRENCY: z.number().int().positive().optional(),
 	ALLOW_RUNNING_OFFLINE: z.boolean().optional(),
+	/** Dev/stress: when true, score import HTTP routes use an unlimited score-import rate limiter. */
+	DISABLE_SCORE_IMPORT_RATE_LIMIT: z.boolean().default(false),
 	ENABLE_METRICS: z.boolean().default(true),
 	EMAIL_CONFIG: z.object({
 		FROM: z.string(),
@@ -425,6 +427,8 @@ const configFromEnv: unknown = {
 		10,
 	),
 	ALLOW_RUNNING_OFFLINE: parseBool("TACHI_ALLOW_RUNNING_OFFLINE"),
+	DISABLE_SCORE_IMPORT_RATE_LIMIT:
+		parseBool("TACHI_DISABLE_SCORE_IMPORT_RATE_LIMIT", false) ?? false,
 	ENABLE_METRICS: parseBool("TACHI_ENABLE_METRICS", true) ?? true,
 	EMAIL_CONFIG: emailCfg,
 	USC_QUEUE_SIZE: parseIntEnv("TACHI_USC_QUEUE_SIZE", 3),

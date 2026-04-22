@@ -1,9 +1,12 @@
 import {
+	ALL_GAMES,
 	type BMSCourseDocument,
 	type ChartDocument,
 	computeFolderSlug,
 	type FolderDocument,
 	type GoalDocument,
+	LEGACY_GameGroupPTToGame,
+	type LEGACY_Playtype,
 	type QuestDocument,
 	type QuestlineDocument,
 	type SeedFolderRow,
@@ -64,6 +67,24 @@ type SeedTable = {
 	id: string;
 	legacyTableID?: string;
 } & Omit<TableDocument, "folders" | "game" | "playtype" | "tableID">;
+
+/**
+ * Maps `goals.json` / `quests.json` / `questlines.json` fields where `game` may be a
+ * legacy {@link GameGroup} (e.g. "iidx") to the Postgres `game` enum (e.g. "iidx-sp").
+ */
+function seedJsonGameToPg(game: string, playtype: string | undefined, label: string): PgGame {
+	if ((ALL_GAMES as readonly string[]).includes(game)) {
+		return game as PgGame;
+	}
+
+	if (playtype === undefined) {
+		throw new Error(
+			`[seeds] ${label}: missing playtype for legacy game group ${JSON.stringify(game)}`,
+		);
+	}
+
+	return LEGACY_GameGroupPTToGame(game as GameGroup, playtype as LEGACY_Playtype) as PgGame;
+}
 
 const INSERT_CHUNK = 500;
 
@@ -557,13 +578,21 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 		console.log("[goal]");
 		const goals = readCollection<GoalDocument>("goals.json");
 
-		const goalRows: Array<NewGoal> = goals.map((g) => ({
-			id: g.goalID,
-			game: g.game,
-			name: g.name,
-			charts: JSON.stringify(g.charts),
-			criteria: JSON.stringify(g.criteria),
-		}));
+		const goalRows: Array<NewGoal> = goals.map((g) => {
+			const gWithPlaytype = g as { playtype?: string } & GoalDocument;
+
+			return {
+				id: g.goalID,
+				game: seedJsonGameToPg(
+					gWithPlaytype.game,
+					gWithPlaytype.playtype,
+					`goal ${g.goalID}`,
+				),
+				name: g.name,
+				charts: JSON.stringify(g.charts),
+				criteria: JSON.stringify(g.criteria),
+			};
+		});
 
 		// Goals are never updated once created — only new ones are inserted.
 		await batchIgnorePg(pg, "goal", goalRows);
@@ -575,13 +604,21 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 		console.log("[quest]");
 		const quests = readCollection<QuestDocument>("quests.json");
 
-		const questRows: Array<NewQuest> = quests.map((q) => ({
-			id: q.questID,
-			game: q.game,
-			name: q.name,
-			description: q.desc,
-			quest_data: JSON.stringify(q.questData),
-		}));
+		const questRows: Array<NewQuest> = quests.map((q) => {
+			const qWithPlaytype = q as { playtype?: string } & QuestDocument;
+
+			return {
+				id: q.questID,
+				game: seedJsonGameToPg(
+					qWithPlaytype.game,
+					qWithPlaytype.playtype,
+					`quest ${q.questID}`,
+				),
+				name: q.name,
+				description: q.desc,
+				quest_data: JSON.stringify(q.questData),
+			};
+		});
 
 		for (let i = 0; i < questRows.length; i = i + INSERT_CHUNK) {
 			const chunk = questRows.slice(i, i + INSERT_CHUNK);
@@ -607,12 +644,20 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 		console.log("[questline / questline_quest]");
 		const questlines = readCollection<QuestlineDocument>("questlines.json");
 
-		const qlRows: Array<NewQuestline> = questlines.map((ql) => ({
-			id: ql.questlineID,
-			game: ql.game,
-			name: ql.name,
-			description: ql.desc,
-		}));
+		const qlRows: Array<NewQuestline> = questlines.map((ql) => {
+			const qlWithPlaytype = ql as { playtype?: string } & QuestlineDocument;
+
+			return {
+				id: ql.questlineID,
+				game: seedJsonGameToPg(
+					qlWithPlaytype.game,
+					qlWithPlaytype.playtype,
+					`questline ${ql.questlineID}`,
+				),
+				name: ql.name,
+				description: ql.desc,
+			};
+		});
 
 		for (let i = 0; i < qlRows.length; i = i + INSERT_CHUNK) {
 			const chunk = qlRows.slice(i, i + INSERT_CHUNK);

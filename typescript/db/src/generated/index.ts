@@ -11,7 +11,6 @@ export { type default as InviteLockTable, type InviteLock, type NewInviteLock, t
 export { type orphan_chart_id, type default as OrphanChartTable, type OrphanChart, type NewOrphanChart, type OrphanChartUpdate } from './public/OrphanChart';
 export { type game_rival_game, type default as GameRivalTable, type GameRival, type NewGameRival, type GameRivalUpdate } from './public/GameRival';
 export { type goal_id, type default as GoalTable, type Goal, type NewGoal, type GoalUpdate } from './public/Goal';
-export { type game_settings_game, type default as GameSettingsTable, type GameSettings, type NewGameSettings, type GameSettingsUpdate } from './public/GameSettings';
 export { type import_quest_row_id, type default as ImportQuestTable, type ImportQuest, type NewImportQuest, type ImportQuestUpdate } from './public/ImportQuest';
 export { type cron_task_execution_id, type default as CronTaskExecutionTable, type CronTaskExecution, type NewCronTaskExecution, type CronTaskExecutionUpdate } from './public/CronTaskExecution';
 export { type notification_row_id, type default as NotificationTable, type Notification, type NewNotification, type NotificationUpdate } from './public/Notification';
@@ -39,7 +38,7 @@ export { type default as MigrationTable, type Migration, type NewMigration, type
 export { type action_row_id, type default as ActionTable, type Action, type NewAction, type ActionUpdate } from './public/Action';
 export { type priv_svc_kai_auth_token_service, type default as PrivSvcKaiAuthTokenTable, type PrivSvcKaiAuthToken, type NewPrivSvcKaiAuthToken, type PrivSvcKaiAuthTokenUpdate } from './public/PrivSvcKaiAuthToken';
 export { type chart_id, type default as ChartTable, type Chart, type NewChart, type ChartUpdate } from './public/Chart';
-export { type game_settings_showcase_game, type default as GameSettingsShowcaseTable, type GameSettingsShowcase, type NewGameSettingsShowcase, type GameSettingsShowcaseUpdate } from './public/GameSettingsShowcase';
+export { type game_profile_dirty_user_id, type game_profile_dirty_game, type default as GameProfileDirtyTable, type GameProfileDirty, type NewGameProfileDirty, type GameProfileDirtyUpdate } from './public/GameProfileDirty';
 export { type default as AccountFollowingTable, type AccountFollowing, type NewAccountFollowing, type AccountFollowingUpdate } from './public/AccountFollowing';
 export { type import_id, type default as ImportTable, type Import, type NewImport, type ImportUpdate } from './public/Import';
 export { type folder_id, type default as FolderTable, type Folder, type NewFolder, type FolderUpdate } from './public/Folder';
@@ -56,6 +55,7 @@ export { type priv_api_client_client_id, type default as PrivApiClientTable, typ
 export { type priv_api_token_token, type default as PrivApiTokenTable, type PrivApiToken, type NewPrivApiToken, type PrivApiTokenUpdate } from './public/PrivApiToken';
 export { type default as SvcKshookSv6cSettingsTable, type SvcKshookSv6cSettings, type NewSvcKshookSv6cSettings, type SvcKshookSv6cSettingsUpdate } from './public/SvcKshookSv6cSettings';
 export { type import_error_row_id, type default as ImportErrorTable, type ImportError, type NewImportError, type ImportErrorUpdate } from './public/ImportError';
+export { type session_dirty_session_id, type default as SessionDirtyTable, type SessionDirty, type NewSessionDirty, type SessionDirtyUpdate } from './public/SessionDirty';
 export { type default as FolderChartLookupTable, type FolderChartLookup, type NewFolderChartLookup, type FolderChartLookupUpdate } from './public/FolderChartLookup';
 export { type quest_id, type default as QuestTable, type Quest, type NewQuest, type QuestUpdate } from './public/Quest';
 export { type default as AccountSettingsTable, type AccountSettings, type NewAccountSettings, type AccountSettingsUpdate } from './public/AccountSettings';
@@ -74,6 +74,8 @@ export { type default as ActionResult } from './public/ActionResult';
 export { type default as GameGroup } from './public/GameGroup';
 export { type default as ImportType } from './public/ImportType';
 export { type enqueue_pb_dirty_params } from './public/enqueue_pb_dirty';
+export { type enqueue_game_profile_dirty_params } from './public/enqueue_game_profile_dirty';
 export { type enqueue_score_rederive_params } from './public/enqueue_score_rederive';
+export { type enqueue_session_dirty_params } from './public/enqueue_session_dirty';
 export { type default as PublicSchema } from './public/PublicSchema';
 export { type default as Database } from './Database';

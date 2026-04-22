@@ -8,6 +8,7 @@ import type {
 
 import { log } from "#lib/log/log";
 import { Random20Hex } from "#utils/misc";
+import { ExpectedErr } from "bliss";
 
 import type { ParserArguments } from "../worker/types";
 
@@ -52,14 +53,17 @@ export async function ExpressWrappedScoreImportMain<I extends ImportTypes>(
 			},
 		};
 	} catch (err) {
-		// this is definitely fine, as the errors are emitted from the same place.
-		if (err instanceof ScoreImportFatalError) {
-			log.info(err.message);
+		// `ACTION_ScoreImport` throws `ExpectedErr` (mapped from `ScoreImportFatalError`); the
+		// external-worker guard in `MakeScoreImport` still throws `ScoreImportFatalError`.
+		if (ExpectedErr.is(err) || err instanceof ScoreImportFatalError) {
+			const description = ExpectedErr.is(err) ? err.reason : err.message;
+			const statusCode = ExpectedErr.is(err) ? err.code : err.statusCode;
+			log.info(description);
 			return {
-				statusCode: err.statusCode,
+				statusCode,
 				body: {
 					success: false,
-					description: err.message,
+					description,
 				},
 			};
 		}
