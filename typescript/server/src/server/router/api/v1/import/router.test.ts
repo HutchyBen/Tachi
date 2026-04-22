@@ -121,3 +121,96 @@ describe("POST /api/v1/import/orphans", () => {
 		expect(Number(remaining.c)).toBe(1);
 	});
 });
+
+describe("GET /api/v1/import/orphans", () => {
+	it("returns the authenticated user’s orphan rows with pagination", async () => {
+		const { id: userId } = await seedUser({
+			username: "import_orphan_list_user",
+			withCredential: true,
+			withSettings: true,
+		});
+		const cookie = await loginAs("import_orphan_list_user");
+
+		await DB.insertInto("orphan_score")
+			.values({
+				orphan_id: "O_LIST_A",
+				user_id: userId,
+				import_id: null,
+				import_type: "ir/direct-manual",
+				game_group: "iidx",
+				context: { game: "iidx-sp", version: "27", service: "foo" },
+				data: { identifier: "Song A", score: 100 },
+				time_inserted: new Date(2_000).toISOString(),
+				error_message: "err-a",
+			})
+			.execute();
+
+		await DB.insertInto("orphan_score")
+			.values({
+				orphan_id: "O_LIST_B",
+				user_id: userId,
+				import_id: null,
+				import_type: "ir/direct-manual",
+				game_group: "iidx",
+				context: { game: "iidx-sp", version: "27", service: "foo" },
+				data: { identifier: "Song B", score: 200 },
+				time_inserted: new Date(3_000).toISOString(),
+				error_message: "",
+			})
+			.execute();
+
+		const first = await mockApi.get("/api/v1/import/orphans").query({ limit: 1 }).set("Cookie", cookie);
+
+		expect(first.status).toBe(200);
+		expect(first.body.success).toBe(true);
+		expect(first.body.body.orphans).toHaveLength(1);
+		expect(first.body.body.hasMore).toBe(true);
+		expect(first.body.body.orphans[0].orphanID).toBe("O_LIST_B");
+		expect(first.body.body.orphans[0].summary).toBe("Song B");
+
+		const rowID = first.body.body.orphans[0].rowID as string;
+
+		const second = await mockApi
+			.get("/api/v1/import/orphans")
+			.query({ limit: 10, after: rowID })
+			.set("Cookie", cookie);
+
+		expect(second.status).toBe(200);
+		expect(second.body.body.orphans.some((o: { orphanID: string }) => o.orphanID === "O_LIST_A")).toBe(
+			true,
+		);
+	});
+});
+
+describe("DELETE /api/v1/import/orphans/:orphanID", () => {
+	it("deletes only the caller’s orphan row", async () => {
+		const { id: userId } = await seedUser({
+			username: "import_orphan_del_user",
+			withCredential: true,
+			withSettings: true,
+		});
+		const cookie = await loginAs("import_orphan_del_user");
+
+		await DB.insertInto("orphan_score")
+			.values({
+				orphan_id: "O_DEL_ME",
+				user_id: userId,
+				import_id: null,
+				import_type: "ir/direct-manual",
+				game_group: "iidx",
+				context: {},
+				data: {},
+				time_inserted: new Date().toISOString(),
+				error_message: "",
+			})
+			.execute();
+
+		const res = await mockApi.delete("/api/v1/import/orphans/O_DEL_ME").set("Cookie", cookie);
+
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+
+		const again = await mockApi.delete("/api/v1/import/orphans/O_DEL_ME").set("Cookie", cookie);
+		expect(again.status).toBe(404);
+	});
+});

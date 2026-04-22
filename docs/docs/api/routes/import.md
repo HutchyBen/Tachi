@@ -213,3 +213,51 @@ N/A
 	"removed": 3
 }
 ```
+
+*****
+
+## List your orphaned scores
+
+`GET /api/v1/import/orphans`
+
+Returns rows from `orphan_score` for the authenticated user (scores that failed with SongOrChartNotFound and were persisted for later matching). Newest rows are returned first.
+
+### Permissions
+
+- submit_score
+
+### Query parameters
+
+| Parameter | Type | Description |
+| :: | :: | :: |
+| `limit` | Integer (optional) | Page size, 1–100. Default `50`. |
+| `after` | String (optional) | Keyset cursor: the `rowID` from the last orphan in the previous page. Omit on the first request. |
+
+### Response
+
+| Property | Type | Description |
+| :: | :: | :: |
+| `orphans` | Array | Each object includes `orphanID`, `rowID`, `importType`, `gameGroup`, `timeInserted` (ms), `message` (nullable), `summary` (nullable, best-effort hint from stored data). |
+| `hasMore` | Boolean | Whether another page exists after this one. |
+
+*****
+
+## Delete one orphaned score
+
+`DELETE /api/v1/import/orphans/:orphanID`
+
+Removes a single `orphan_score` row **only if** it belongs to the authenticated user. Use this when you no longer want Tachi to keep or retry a given orphan (for example after a bad import).
+
+### Permissions
+
+- submit_score
+
+### Parameters
+
+| Parameter | Type | Description |
+| :: | :: | :: |
+| `orphanID` | Path | The orphan’s `orphanID` (for example from an import error or from `GET /import/orphans`). |
+
+### Response
+
+Empty body on success (`success: true`). `404` if no such orphan exists for this user.

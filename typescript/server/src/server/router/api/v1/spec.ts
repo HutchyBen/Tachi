@@ -1704,6 +1704,36 @@ export const API_V1_SPEC = {
 		}),
 	},
 
+	"GET /import/orphans": {
+		description:
+			"List orphaned scores for the authenticated user (SongOrChartNotFound rows), newest first.",
+		input: z.object({
+			limit: z.coerce.number().int().min(1).max(100).default(50),
+			/** Keyset cursor: `rowID` from the last item of the previous page. */
+			after: z.string().optional(),
+		}),
+		output: z.strictObject({
+			orphans: z.array(
+				z.strictObject({
+					orphanID: z.string(),
+					rowID: z.string(),
+					importType: z.string(),
+					gameGroup: z.string(),
+					timeInserted: z.number(),
+					message: z.string().nullable(),
+					summary: z.string().nullable(),
+				}),
+			),
+			hasMore: z.boolean(),
+		}),
+	},
+
+	"DELETE /import/orphans/:orphanID": {
+		description: "Delete one orphaned score row belonging to the authenticated user.",
+		input: z.object({}),
+		output: empty,
+	},
+
 	// ────────────────────────────────────────────────
 	// Clients (OAuth2 clients)
 	// ────────────────────────────────────────────────

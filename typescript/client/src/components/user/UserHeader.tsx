@@ -149,6 +149,11 @@ export function UserBottomNav({ baseUrl, reqUser }: { baseUrl: string; reqUser: 
 				Imports
 			</Navbar.Item>,
 		);
+		navItems.push(
+			<Navbar.Item key="orphans" to={`${baseUrl}/orphans`}>
+				Orphans
+			</Navbar.Item>,
+		);
 
 		// If mandates login, assume that we also use invite codes.
 		// I'm sure we could set up an elaborate way of doing this by

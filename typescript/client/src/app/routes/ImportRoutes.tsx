@@ -47,6 +47,9 @@ export default function ImportRoutes() {
 			<Route exact path="/import">
 				<ImportPage user={user} />
 			</Route>
+			<Route exact path="/import/orphan-scores">
+				<Redirect to={`/u/${user.username}/orphans`} />
+			</Route>
 			<Switch>
 				<Route path="/import/*">
 					<div>

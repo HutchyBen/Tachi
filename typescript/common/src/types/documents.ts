@@ -157,9 +157,12 @@ export interface SessionDocument<TGame extends V3Game = V3Game> {
 	highlight: boolean;
 }
 
-interface ImportErrContent {
+/** One entry in {@link ImportDocument.errors} for a failed datapoint during import. */
+export interface ImportErrContent {
 	type: string;
 	message: string;
+	/** Set when this row was persisted as `orphan_score` (SongOrChartNotFound / OrphanExists). */
+	orphanID?: string;
 }
 
 export interface ImportDocument {

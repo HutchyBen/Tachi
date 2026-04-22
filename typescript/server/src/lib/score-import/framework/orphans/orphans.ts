@@ -14,6 +14,7 @@ import { Converters } from "#lib/score-import/import-types/converters";
 import DB from "#services/pg/db";
 import { GetBlacklist } from "#utils/queries/blacklist";
 import { GetUserWithID } from "#utils/user";
+import { ExpectedErr } from "bliss";
 import fjsh from "fast-json-stable-hash";
 import { sql } from "kysely";
 
@@ -42,7 +43,126 @@ function pgOrphanRowToDocument(row: PgOrphanScoreRow): OrphanScoreDocument {
 }
 
 async function deleteOrphanByOrphanId(orphanID: string): Promise<void> {
-	await DB.deleteFrom("orphan_score").where("orphan_id", "=", orphanID).execute();
+	await DB.deleteFrom("orphan_score").where("orphan_score.orphan_id", "=", orphanID).execute();
+}
+
+/** API-facing row for listing a user’s orphan_score entries. */
+export type OrphanScoreListItem = {
+	orphanID: string;
+	rowID: string;
+	importType: string;
+	gameGroup: string;
+	timeInserted: number;
+	message: string | null;
+	summary: string | null;
+};
+
+function summarizeOrphanRow(row: PgOrphanScoreRow): string | null {
+	const data = row.data;
+	if (data && typeof data === "object") {
+		const d = data as Record<string, unknown>;
+		for (const k of ["identifier", "title", "songTitle", "hashSHA256", "sha256"] as const) {
+			const v = d[k];
+			if (typeof v === "string" && v.length > 0) {
+				return v.length > 120 ? `${v.slice(0, 117)}...` : v;
+			}
+		}
+	}
+	const ctx = row.context;
+	if (ctx && typeof ctx === "object") {
+		const c = ctx as Record<string, unknown>;
+		for (const k of ["title", "identifier"] as const) {
+			const v = c[k];
+			if (typeof v === "string" && v.length > 0) {
+				return v.length > 120 ? `${v.slice(0, 117)}...` : v;
+			}
+		}
+		const chart = c.chart;
+		if (chart && typeof chart === "object") {
+			const chartObj = chart as Record<string, unknown>;
+			const sha = chartObj.sha256;
+			if (typeof sha === "string" && sha.length > 0) {
+				return `sha256:${sha.slice(0, 16)}...`;
+			}
+		}
+	}
+	return null;
+}
+
+function orphanRowToListItem(row: PgOrphanScoreRow): OrphanScoreListItem {
+	const msg = row.error_message.trim();
+	return {
+		orphanID: row.orphan_id,
+		rowID: row.row_id,
+		importType: row.import_type,
+		gameGroup: row.game_group,
+		timeInserted: new Date(row.time_inserted).getTime(),
+		message: msg.length > 0 ? msg : null,
+		summary: summarizeOrphanRow(row),
+	};
+}
+
+/** Deletes one orphan_score row if it belongs to the given user. Returns whether a row was removed. */
+export async function deleteOrphanScoreForUser(orphanID: string, userID: integer): Promise<boolean> {
+	const result = await DB.deleteFrom("orphan_score")
+		.where("orphan_score.orphan_id", "=", orphanID)
+		.where("orphan_score.user_id", "=", userID)
+		.executeTakeFirst();
+
+	return Number(result.numDeletedRows ?? 0n) > 0;
+}
+
+/**
+ * Lists orphan_score rows for a user, newest first, with keyset pagination on `row_id` + `time_inserted`.
+ * @param afterRowID — `row_id` of the last item from the previous page (omit on first page).
+ */
+export async function listOrphanScoresForUser(opts: {
+	userID: integer;
+	limit: number;
+	afterRowID?: string;
+}): Promise<{ orphans: OrphanScoreListItem[]; hasMore: boolean }> {
+	const cap = Math.min(Math.max(opts.limit, 1), 100);
+	let anchor: { time_inserted: string; row_id: string } | undefined;
+
+	if (opts.afterRowID !== undefined && opts.afterRowID.length > 0) {
+		anchor = await DB.selectFrom("orphan_score")
+			.select(["orphan_score.time_inserted", "orphan_score.row_id"])
+			.where("orphan_score.user_id", "=", opts.userID)
+			.where("orphan_score.row_id", "=", opts.afterRowID)
+			.executeTakeFirst();
+
+		if (anchor === undefined) {
+			throw new ExpectedErr(400, "Invalid pagination cursor.");
+		}
+	}
+
+	let q = DB.selectFrom("orphan_score")
+		.select(SELECT_ORPHAN_SCORE)
+		.where("orphan_score.user_id", "=", opts.userID)
+		.orderBy("orphan_score.time_inserted", "desc")
+		.orderBy("orphan_score.row_id", "desc")
+		.limit(cap + 1);
+
+	if (anchor !== undefined) {
+		const anchorRow = anchor;
+		q = q.where((eb) =>
+			eb.or([
+				eb("orphan_score.time_inserted", "<", anchorRow.time_inserted),
+				eb.and([
+					eb("orphan_score.time_inserted", "=", anchorRow.time_inserted),
+					eb("orphan_score.row_id", "<", anchorRow.row_id),
+				]),
+			]),
+		);
+	}
+
+	const rows = await q.execute();
+	const hasMore = rows.length > cap;
+	const slice = hasMore ? rows.slice(0, cap) : rows;
+	return {
+		orphans: slice.map(orphanRowToListItem),
+		hasMore,
+	};
 }
 
 /**

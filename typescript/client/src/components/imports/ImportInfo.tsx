@@ -128,6 +128,16 @@ export default function ImportInfo({
 						<Alert variant="warning">
 							Some of these errors might not be very useful. Depending on how scores
 							are matched with data, all we have to display might be a hash.
+							<br />
+							<strong>SongOrChartNotFound</strong> means the score was still{" "}
+							<strong>saved as an orphan</strong> for nightly matching (around 00:01 UTC) or
+							manual reprocess — see{" "}
+							{user ? (
+								<Link to={`/u/${user.username}/orphans`}>Orphan scores</Link>
+							) : (
+								"Orphan scores"
+							)}
+							.
 						</Alert>
 						<TachiTable
 							dataset={data.import.errors}
@@ -139,7 +149,27 @@ export default function ImportInfo({
 							rowFunction={(r) => (
 								<tr>
 									<td>{r.type}</td>
-									<td>{r.message}</td>
+									<td>
+										<div>{r.message}</div>
+										{(r.type === "SongOrChartNotFound" ||
+											r.type === "OrphanExists" ||
+											r.orphanID !== undefined) && (
+											<div className="mt-2 small text-muted">
+												This may be stored as an orphan.{" "}
+												{user ? (
+													<Link to={`/u/${user.username}/orphans`}>Open orphan queue</Link>
+												) : (
+													"Open orphan queue"
+												)}
+												{r.orphanID ? (
+													<>
+														{" "}
+														(ID: <code>{r.orphanID}</code>)
+													</>
+												) : null}
+											</div>
+										)}
+									</td>
 								</tr>
 							)}
 						/>

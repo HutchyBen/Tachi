@@ -433,7 +433,15 @@ function ParseImportInfo(importInfo: Array<ImportProcessingInfo>) {
 				scoreGameMap[v3Game] = [info.content.score];
 			}
 		} else {
-			errors.push({ type: info.type, message: info.message });
+			if (info.type === "SongOrChartNotFound" || info.type === "OrphanExists") {
+				errors.push({
+					type: info.type,
+					message: info.message,
+					orphanID: info.content.orphanID,
+				});
+			} else {
+				errors.push({ type: info.type, message: info.message });
+			}
 		}
 	}
 

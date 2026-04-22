@@ -6,7 +6,11 @@ import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { log } from "#lib/log/log";
 import { success } from "#lib/router/typed-router";
 import { ExpressWrappedScoreImportMain } from "#lib/score-import/framework/express-wrapper";
-import { DeorphanScores } from "#lib/score-import/framework/orphans/orphans";
+import {
+	DeorphanScores,
+	deleteOrphanScoreForUser,
+	listOrphanScoresForUser,
+} from "#lib/score-import/framework/orphans/orphans";
 import { MakeScoreImport } from "#lib/score-import/framework/score-import";
 import { ServerConfig, TachiConfig } from "#lib/setup/config";
 import { RequirePermissions } from "#server/middleware/auth";
@@ -15,6 +19,7 @@ import prValidate from "#server/middleware/prudence-validate";
 import { ScoreImportRateLimiter } from "#server/middleware/rate-limiter";
 import { Random20Hex } from "#utils/misc";
 import { FormatUserDoc, GetUserWithIDGuaranteed } from "#utils/user";
+import { ExpectedErr } from "bliss";
 import { p } from "prudence";
 
 import { API_V1_ROUTER } from "../router";
@@ -168,4 +173,38 @@ API_V1_ROUTER.add("POST /import/orphans", async ({ req }) => {
 		removed,
 		success: orphanSuccess,
 	});
+});
+
+/**
+ * List orphaned scores for the current user (scores that could not be matched to a chart).
+ *
+ * @name GET /api/v1/import/orphans
+ */
+API_V1_ROUTER.add("GET /import/orphans", async ({ input, req }) => {
+	const userDoc = await GetUserWithIDGuaranteed(req[SYMBOL_TACHI_API_AUTH].userID!);
+
+	const body = await listOrphanScoresForUser({
+		userID: userDoc.id,
+		limit: input.limit,
+		afterRowID: input.after,
+	});
+
+	return success(`Returned ${body.orphans.length} orphan scores.`, body);
+});
+
+/**
+ * Delete a single orphaned score row for the current user.
+ *
+ * @name DELETE /api/v1/import/orphans/:orphanID
+ */
+API_V1_ROUTER.add("DELETE /import/orphans/:orphanID", async ({ params, req }) => {
+	const userDoc = await GetUserWithIDGuaranteed(req[SYMBOL_TACHI_API_AUTH].userID!);
+
+	const deleted = await deleteOrphanScoreForUser(params.orphanID, userDoc.id);
+
+	if (!deleted) {
+		throw new ExpectedErr(404, "No such orphan score for this user.");
+	}
+
+	return success("Deleted orphan score.", {});
 });

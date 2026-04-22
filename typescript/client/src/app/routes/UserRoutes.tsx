@@ -9,6 +9,7 @@ import UGPTSettingsPage from "#app/pages/dashboard/users/games/_game/_playtype/U
 import UGPTUtilsPage from "#app/pages/dashboard/users/games/_game/_playtype/utils/UGPTUtilsPage";
 import UserGamesPage from "#app/pages/dashboard/users/UserGamesPage";
 import UserImportsPage from "#app/pages/dashboard/users/UserImportsPage";
+import UserOrphansPage from "#app/pages/dashboard/users/UserOrphansPage";
 import UserIntegrationsPage from "#app/pages/dashboard/users/UserIntegrationsPage";
 import UserInvitesPage from "#app/pages/dashboard/users/UserInvitesPage";
 import UserSettingsPage from "#app/pages/dashboard/users/UserSettingsPage";
@@ -131,6 +132,11 @@ function UserProfileRoutes({ reqUser }: { reqUser: UserDocument }) {
 			<Route path="/u/:userID/imports">
 				<RequireAuthAsUserParam>
 					<UserImportsPage reqUser={reqUser} />
+				</RequireAuthAsUserParam>
+			</Route>
+			<Route exact path="/u/:userID/orphans">
+				<RequireAuthAsUserParam>
+					<UserOrphansPage reqUser={reqUser} />
 				</RequireAuthAsUserParam>
 			</Route>
 			<Route exact path="/u/:userID/invites">

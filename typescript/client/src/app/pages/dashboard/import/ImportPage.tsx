@@ -57,6 +57,9 @@ export default function ImportPage({ user }: { user: UserDocument }) {
 				<br />
 				Want to manage or revert an import? Go to{" "}
 				<Link to={`/u/${user.username}/imports`}>Import Management</Link>.
+				<br />
+				Scores that could not be matched to a chart are kept as{" "}
+				<Link to={`/u/${user.username}/orphans`}>orphans</Link> (view or delete them there).
 			</div>
 			<hr />
 			<Form.Select
