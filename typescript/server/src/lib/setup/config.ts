@@ -35,7 +35,6 @@ const cdnS3SaveLocationSchema = z.object({
 });
 
 const configSchema = z.object({
-	MONGO_DATABASE_NAME: z.string(),
 	CAPTCHA_SECRET_KEY: z.string(),
 	SESSION_SECRET: z.string(),
 	FLO_API_URL: z.url().optional(),
@@ -399,7 +398,6 @@ const clientDev = clientDevServer();
 const extWorkerConc = opt("TACHI_EXTERNAL_SCORE_IMPORT_WORKER_CONCURRENCY");
 
 const configFromEnv: unknown = {
-	MONGO_DATABASE_NAME: req("TACHI_MONGO_DATABASE_NAME"),
 	CAPTCHA_SECRET_KEY: req("TACHI_CAPTCHA_SECRET_KEY"),
 	SESSION_SECRET: req("TACHI_SESSION_SECRET"),
 	FLO_API_URL: optUrl("TACHI_FLO_API_URL"),

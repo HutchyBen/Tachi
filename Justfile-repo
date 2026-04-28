@@ -6,3 +6,12 @@ setup-fish:
 # Set up the codebase.
 setup:
 	./dev/bootstrap.sh -f
+
+# Deploy stuff for putting tachi on a server.
+#
+# It's only private because I'm too lazy to make it modular
+# and it's also just hyperspecific to _my_ opinions on how
+# tachi should be deployed. I've already given you the docker
+# containers!
+enable-zkldi-deploy-code:
+	git submodule update --init --remote deploy

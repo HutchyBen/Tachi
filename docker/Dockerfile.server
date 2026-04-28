@@ -1,5 +1,7 @@
 # Build context must be the repo root.
-# docker build -f deploy/docker/Dockerfile.server .
+# docker build -f docker/Dockerfile.server --target prod-api .
+# docker build -f docker/Dockerfile.server --target prod-job-worker .
+# docker build -f docker/Dockerfile.server --target prod-cron-worker .
 
 FROM oven/bun:alpine AS base
 WORKDIR /app
@@ -17,33 +19,113 @@ COPY typescript/db-migration-engine/package.json ./typescript/db-migration-engin
 
 RUN bun install --frozen-lockfile
 
-# --- build: compile everything into a single native binary ---
-FROM deps AS build
+# --- build stages: compile each entrypoint into a native binary ---
+FROM deps AS build-api
 
 COPY typescript/server              ./typescript/server
 COPY typescript/common              ./typescript/common
 COPY typescript/db                  ./typescript/db
 COPY typescript/db-migration-engine ./typescript/db-migration-engine
-
+COPY db/migrations                  ./db/migrations
 COPY package.json bunfig.toml ./
 
 RUN bun build \
   --compile \
   --target=bun \
   ./typescript/server/src/main.ts \
-  --outfile /server
+  --outfile /out/server
 
-# --- prod: nothing but the binary ---
-FROM alpine:3.21 AS prod
+FROM deps AS build-job-worker
+
+COPY typescript/server              ./typescript/server
+COPY typescript/common              ./typescript/common
+COPY typescript/db                  ./typescript/db
+COPY typescript/db-migration-engine ./typescript/db-migration-engine
+COPY db/migrations                  ./db/migrations
+COPY package.json bunfig.toml ./
+
+RUN bun build \
+  --compile \
+  --target=bun \
+  ./typescript/server/src/job-queue-worker.ts \
+  --outfile /out/job-queue-worker
+
+FROM deps AS build-cron-worker
+
+COPY typescript/server              ./typescript/server
+COPY typescript/common              ./typescript/common
+COPY typescript/db                  ./typescript/db
+COPY typescript/db-migration-engine ./typescript/db-migration-engine
+COPY db/migrations                  ./db/migrations
+COPY package.json bunfig.toml ./
+
+RUN bun build \
+  --compile \
+  --target=bun \
+  ./typescript/server/src/cron-worker.ts \
+  --outfile /out/cron-worker
+
+# --- API image ---
+FROM alpine:3.21 AS prod-api
 
 ARG COMMIT_HASH
 ENV COMMIT_HASH=${COMMIT_HASH}
+ENV MIGRATIONS_DIR=/app/db/migrations
 
 RUN apk add --no-cache curl
 
-COPY --from=build /server /server
+COPY --from=build-api /out/server /server
+COPY db/migrations /app/db/migrations
+
+EXPOSE 8080
 
 HEALTHCHECK --interval=15s --timeout=5s \
   CMD curl -sf http://localhost:8080/.deploy/up || exit 1
+
+CMD ["/server"]
+
+# --- Job queue worker (no HTTP port) ---
+FROM alpine:3.21 AS prod-job-worker
+
+ARG COMMIT_HASH
+ENV COMMIT_HASH=${COMMIT_HASH}
+ENV MIGRATIONS_DIR=/app/db/migrations
+
+RUN apk add --no-cache curl
+
+COPY --from=build-job-worker /out/job-queue-worker /job-queue-worker
+COPY db/migrations /app/db/migrations
+
+CMD ["/job-queue-worker"]
+
+# --- Cron worker (no HTTP port) ---
+FROM alpine:3.21 AS prod-cron-worker
+
+ARG COMMIT_HASH
+ENV COMMIT_HASH=${COMMIT_HASH}
+ENV MIGRATIONS_DIR=/app/db/migrations
+
+RUN apk add --no-cache curl
+
+COPY --from=build-cron-worker /out/cron-worker /cron-worker
+COPY db/migrations /app/db/migrations
+
+CMD ["/cron-worker"]
+
+# --- All-in-one image for Kamal (web + job + cron roles share network with accessories) ---
+FROM alpine:3.21 AS prod-unified
+
+ARG COMMIT_HASH
+ENV COMMIT_HASH=${COMMIT_HASH}
+ENV MIGRATIONS_DIR=/app/db/migrations
+
+RUN apk add --no-cache curl
+
+COPY --from=build-api /out/server /server
+COPY --from=build-job-worker /out/job-queue-worker /job-queue-worker
+COPY --from=build-cron-worker /out/cron-worker /cron-worker
+COPY db/migrations /app/db/migrations
+
+EXPOSE 8080
 
 CMD ["/server"]

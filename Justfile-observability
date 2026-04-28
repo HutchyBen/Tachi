@@ -8,4 +8,4 @@ alloy:
 
 # Reload all Grafana provisioning (datasources + dashboards) and verify health.
 grafana-reset:
-	./dev/observability/setup-datasources.sh
+	./observability/setup-datasources.sh

@@ -5,18 +5,31 @@ on:
     branches:
       - "main"
     paths:
-      - "server/**"
-      - "common/**"
+      - "typescript/server/**"
+      - "typescript/common/**"
+      - "typescript/db/**"
+      - "typescript/db-migration-engine/**"
+      - "docker/**"
+      - "db/migrations/**"
+      - ".github/workflows/server.yml"
   pull_request:
     branches:
       - "main"
     paths:
-      - "server/**"
-      - "common/**"
+      - "typescript/server/**"
+      - "typescript/common/**"
+      - "typescript/db/**"
+      - "typescript/db-migration-engine/**"
+      - "docker/**"
+      - "db/migrations/**"
+      - ".github/workflows/server.yml"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
-  group: "seeds-lock-${{ github.sha }}"
+  group: "server-${{ github.ref }}-${{ github.workflow }}"
   cancel-in-progress: false
 
 jobs:
@@ -25,6 +38,28 @@ jobs:
     env:
       NODE_ENV: "test"
     services:
+      tachi-postgres:
+        image: postgres:16
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: tachi
+          POSTGRES_PASSWORD: tachi
+          POSTGRES_DB: postgres
+        options: >-
+          --health-cmd "pg_isready -U tachi"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      tachi-redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
       tachi-s3:
         image: quay.io/minio/minio:RELEASE.2024-10-29T16-01-48Z
         ports:
@@ -33,14 +68,16 @@ jobs:
           MINIO_ROOT_USER: minio
           MINIO_ROOT_PASSWORD: password
     steps:
-      - uses: actions/checkout@v3
-
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          bun-version: latest
+          persist-credentials: false
+
+      - uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2.0.2
+        with:
+          bun-version: "1.2.20"
 
       - name: Install dependencies
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Lint code
         run: bun run --filter tachi-server lint
@@ -48,77 +85,82 @@ jobs:
       - name: Typecheck code
         run: bun run --filter tachi-server typecheck
 
-        # configure external dbs
-      - uses: supercharge/mongodb-github-action@1.4.1
-      - uses: supercharge/redis-github-action@1.1.0
-
       - name: Run tests
         run: bun run --filter tachi-server test
         env:
           NODE_ENV: "test"
           PORT: 8080
-          MONGO_URL: "localhost"
-          REDIS_URL: "localhost"
+          REDIS_URL: "redis://localhost:6379"
 
   docker-push:
     runs-on: ubuntu-latest
     needs: [test]
-    defaults:
-      run:
-        working-directory: ./server
     if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+    permissions:
+      contents: read
+      packages: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Docker Hub login
-        uses: docker/login-action@v2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_TOKEN }}
+          persist-credentials: false
 
-      - name: Commit Hash
-        run: 'echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV'
+      - name: Image name (lowercase for GHCR)
+        env:
+          REPO: ${{ github.repository }}
+        run: |
+          echo "TACHI_IMAGE=ghcr.io/$(echo "$REPO" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+          echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
 
-      - name: Docker Tag
-        if: github.ref == 'refs/heads/main'
-        run: 'echo "DOCKER_TAG=stable" >> $GITHUB_ENV'
+      - name: Log in to GHCR
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
 
-      - name: Build and push
-        id: docker_build
-        uses: docker/build-push-action@v3
+      - name: Build and push unified server image
+        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
         with:
-          context: ./
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/tachi-server:${{ env.DOCKER_TAG }}
-          file: ./Dockerfile.server
+          context: .
+          file: docker/Dockerfile.server
+          target: prod-unified
+          push: ${{ github.ref == 'refs/heads/main' }}
+          provenance: true
+          sbom: true
+          tags: |
+            ${{ env.TACHI_IMAGE }}:${{ github.sha }}
+            ${{ env.TACHI_IMAGE }}:main
           build-args: |
             COMMIT_HASH=${{ env.SHORT_SHA }}
-          cache-from: type=gha,scope=$GITHUB_REF_NAME-server
-          cache-to: type=gha,mode=max,scope=$GITHUB_REF_NAME-server
-
-      - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
+          cache-from: type=gha,scope=server-${{ github.ref_name }}
+          cache-to: type=gha,mode=max,scope=server-${{ github.ref_name }}
 
   deploy:
     runs-on: ubuntu-latest
     needs: [test, docker-push]
-    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        destination: [boku, kamai, dev]
+    permissions:
+      contents: read
     steps:
-      - name: Enable SSH Key
+      - name: Enable SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
         run: |
           mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          sudo chmod 600 ~/.ssh/id_rsa
-          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-        env:
-          SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
-          SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
+          printf '%s' "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          printf '%s' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
 
-      - name: Deploy updates
-        run: ssh ci@"$TACHI_HOST" /home/ci/tachi-devops/scripts/deploy_server.sh
+      - name: Deploy on server
         env:
-          TACHI_HOST: ${{secrets.TACHI_HOST}}
+          TACHI_HOST: ${{ secrets.TACHI_HOST }}
+        run: ssh "ci@${TACHI_HOST}" "/opt/tachi/deploy/scripts/deploy-server.sh ${{ matrix.destination }}"

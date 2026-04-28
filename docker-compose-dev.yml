@@ -114,8 +114,8 @@ services:
       GF_SERVER_ROOT_URL: http://localhost:3005
     volumes:
       - tachi-grafana:/var/lib/grafana
-      - ./dev/observability/grafana/provisioning:/etc/grafana/provisioning
-      - ./dev/observability/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards
 
   tachi-prometheus:
     container_name: tachi-prometheus
@@ -130,7 +130,7 @@ services:
       - "9090:9090"
     volumes:
       - tachi-prometheus:/prometheus
-      - ./dev/observability/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml
 
   tachi-alloy:
     container_name: tachi-alloy
@@ -149,7 +149,7 @@ services:
     tmpfs:
       - /var/lib/alloy/data
     volumes:
-      - ./dev/observability/alloy-config.alloy:/etc/alloy/config.alloy
+      - ./observability/alloy-config.alloy:/etc/alloy/config.alloy
 
 volumes:
   tachi-volume:
