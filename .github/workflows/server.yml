@@ -42,7 +42,7 @@ jobs:
       NODE_ENV: "test"
     services:
       tachi-postgres:
-        image: postgres:16
+        image: postgres:18
         env:
           POSTGRES_USER: tachi
           POSTGRES_PASSWORD: tachi
