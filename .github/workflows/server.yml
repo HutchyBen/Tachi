@@ -35,13 +35,14 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
+    container:
+      image: zkldi/tachi-dev:main
+      options: --user root
     env:
       NODE_ENV: "test"
     services:
       tachi-postgres:
         image: postgres:16
-        ports:
-          - 5432:5432
         env:
           POSTGRES_USER: tachi
           POSTGRES_PASSWORD: tachi
@@ -53,8 +54,6 @@ jobs:
           --health-retries 10
       tachi-redis:
         image: redis:7.4-alpine
-        ports:
-          - 6379:6379
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 5s
@@ -62,8 +61,6 @@ jobs:
           --health-retries 10
       tachi-s3:
         image: quay.io/minio/minio:RELEASE.2024-10-29T16-01-48Z
-        ports:
-          - 9000:9000
         env:
           MINIO_ROOT_USER: minio
           MINIO_ROOT_PASSWORD: password
@@ -72,9 +69,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2.0.2
-        with:
-          bun-version: "1.2.20"
+      - name: Link workspace to /tachi
+        # tachidb, just recipes, and .env.test all assume the repo lives at /tachi.
+        # GHA mounts the workspace elsewhere, so we replace the empty /tachi dir
+        # (created by the image's WORKDIR) with a symlink to the real checkout.
+        run: rm -rf /tachi && ln -sf "$GITHUB_WORKSPACE" /tachi
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -90,7 +89,6 @@ jobs:
         env:
           NODE_ENV: "test"
           PORT: 8080
-          REDIS_URL: "redis://localhost:6379"
 
   docker-push:
     runs-on: ubuntu-latest

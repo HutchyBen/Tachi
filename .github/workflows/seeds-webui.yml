@@ -25,14 +25,13 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: zkldi/tachi-dev:main
+      options: --user root
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
-
-      - uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2.0.2
-        with:
-          bun-version: "1.2.20"
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -46,11 +45,11 @@ jobs:
       - name: Production build
         run: bun run --filter tachi-seeds-webui build
         env:
-          BUILD_OUT_DIR: /home/runner/seeds-webui
+          BUILD_OUT_DIR: /tmp/seeds-webui
 
       - name: Bundle build output
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: tar -C /home/runner -czf seeds-webui.tgz seeds-webui
+        run: tar -C /tmp -czf seeds-webui.tgz seeds-webui
 
       - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -72,7 +71,7 @@ jobs:
           name: seeds-webui
 
       - name: Unpack build output
-        run: tar -C /home/runner -xzf seeds-webui.tgz
+        run: tar -C /tmp -xzf seeds-webui.tgz
 
       - name: Enable SSH
         env:
@@ -87,4 +86,4 @@ jobs:
       - name: Deploy static to seeds.tachi.ac root
         env:
           TACHI_HOST: ${{ secrets.TACHI_HOST }}
-        run: rsync --recursive --compress --delete --progress /home/runner/seeds-webui/. "ci@${TACHI_HOST}:/srv/tachi-static/seeds/"
+        run: rsync --recursive --compress --delete --progress /tmp/seeds-webui/. "ci@${TACHI_HOST}:/srv/tachi-static/seeds/"

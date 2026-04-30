@@ -24,14 +24,13 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    container:
+      image: zkldi/tachi-dev:main
+      options: --user root
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
-
-      - uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2.0.2
-        with:
-          bun-version: "1.2.20"
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -44,16 +43,15 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    container:
+      image: zkldi/tachi-dev:main
+      options: --user root
     needs: test
     if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
-
-      - uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2.0.2
-        with:
-          bun-version: "1.2.20"
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -69,7 +67,7 @@ jobs:
           VITE_DISCORD: "https://discord.gg/E4n8ZZF5ES"
           VITE_CDN_URL: "https://cdn-boku.tachi.ac"
           TACHI_NAME: "Bokutachi"
-          BUILD_OUT_DIR: /home/runner/boku
+          BUILD_OUT_DIR: /tmp/boku
 
       - name: Build Kamaitachi (v3)
         run: bun run --filter tachi-client build
@@ -86,7 +84,7 @@ jobs:
           VITE_GIT_REPO: "GitHub:zkldi/Tachi"
           VITE_RECAPTCHA_KEY: "6LcsYbIpAAAAAEJffjIXmbQcxj_SBZG7BnSPjF4L"
           TACHI_NAME: "Kamaitachi"
-          BUILD_OUT_DIR: /home/runner/kamai
+          BUILD_OUT_DIR: /tmp/kamai
 
       - name: Build Dev
         run: bun run --filter tachi-client build
@@ -99,10 +97,10 @@ jobs:
           VITE_GIT_REPO: "GitHub:zkldi/Tachi"
           VITE_RECAPTCHA_KEY: "6LcsYbIpAAAAAEJffjIXmbQcxj_SBZG7BnSPjF4L"
           TACHI_NAME: "Tachi Dev"
-          BUILD_OUT_DIR: /home/runner/dev
+          BUILD_OUT_DIR: /tmp/dev
 
       - name: Bundle build outputs
-        run: tar -C /home/runner -czf client-builds.tgz boku kamai dev
+        run: tar -C /tmp -czf client-builds.tgz boku kamai dev
 
       - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
@@ -124,8 +122,8 @@ jobs:
 
       - name: Unpack build outputs
         run: |
-          mkdir -p /home/runner/boku /home/runner/kamai /home/runner/dev
-          tar -C /home/runner -xzf client-builds.tgz
+          mkdir -p /tmp/boku /tmp/kamai /tmp/dev
+          tar -C /tmp -xzf client-builds.tgz
 
       - name: Enable SSH Key
         env:
@@ -141,6 +139,6 @@ jobs:
         env:
           TACHI_HOST: ${{ secrets.TACHI_HOST }}
         run: |
-          rsync --recursive --compress --delete --progress /home/runner/kamai/. "ci@${TACHI_HOST}:/srv/tachi-static/kamai/"
-          rsync --recursive --compress --delete --progress /home/runner/boku/. "ci@${TACHI_HOST}:/srv/tachi-static/boku/"
-          rsync --recursive --compress --delete --progress /home/runner/dev/. "ci@${TACHI_HOST}:/srv/tachi-static/dev/"
+          rsync --recursive --compress --delete --progress /tmp/kamai/. "ci@${TACHI_HOST}:/srv/tachi-static/kamai/"
+          rsync --recursive --compress --delete --progress /tmp/boku/. "ci@${TACHI_HOST}:/srv/tachi-static/boku/"
+          rsync --recursive --compress --delete --progress /tmp/dev/. "ci@${TACHI_HOST}:/srv/tachi-static/dev/"
