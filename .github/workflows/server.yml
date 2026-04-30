@@ -53,7 +53,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
       tachi-redis:
-        image: redis:7.4-alpine
+        image: redis:7.4.1
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 5s
@@ -64,6 +64,12 @@ jobs:
         env:
           MINIO_ROOT_USER: minio
           MINIO_ROOT_PASSWORD: password
+          MINIO_VOLUMES: /data
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
