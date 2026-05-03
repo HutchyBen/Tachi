@@ -17,10 +17,11 @@ RUN bun build \
   ./typescript/github-bot/src/main.ts \
   --outfile /ghbot
 
+# Runtime: `bun build --compile` links against libstdc++/libgcc; bare alpine:3.21 has neither.
 # --- prod: nothing but the binary ---
 FROM alpine:3.21 AS prod
 
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl libstdc++ libgcc
 
 COPY --from=build /ghbot /ghbot
 

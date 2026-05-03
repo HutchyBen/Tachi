@@ -39,6 +39,7 @@ RUN mkdir -p /out && bun build \
   ./typescript/server/src/cron-worker.ts \
   --outfile /out/cron-worker
 
+# Runtime: `bun build --compile` links against libstdc++/libgcc; bare alpine:3.21 has neither.
 # --- API image ---
 FROM alpine:3.21 AS prod-api
 
@@ -46,7 +47,7 @@ ARG COMMIT_HASH
 ENV COMMIT_HASH=${COMMIT_HASH}
 ENV MIGRATIONS_DIR=/app/db/migrations
 
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl libstdc++ libgcc
 
 COPY --from=build-api /out/server /server
 COPY --from=deps /app/db/migrations /app/db/migrations
@@ -65,7 +66,7 @@ ARG COMMIT_HASH
 ENV COMMIT_HASH=${COMMIT_HASH}
 ENV MIGRATIONS_DIR=/app/db/migrations
 
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl libstdc++ libgcc
 
 COPY --from=build-job-worker /out/job-queue-worker /job-queue-worker
 COPY --from=deps /app/db/migrations /app/db/migrations
@@ -79,7 +80,7 @@ ARG COMMIT_HASH
 ENV COMMIT_HASH=${COMMIT_HASH}
 ENV MIGRATIONS_DIR=/app/db/migrations
 
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl libstdc++ libgcc
 
 COPY --from=build-cron-worker /out/cron-worker /cron-worker
 COPY --from=deps /app/db/migrations /app/db/migrations
@@ -93,7 +94,7 @@ ARG COMMIT_HASH
 ENV COMMIT_HASH=${COMMIT_HASH}
 ENV MIGRATIONS_DIR=/app/db/migrations
 
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl libstdc++ libgcc
 
 COPY --from=build-api /out/server /server
 COPY --from=build-job-worker /out/job-queue-worker /job-queue-worker
