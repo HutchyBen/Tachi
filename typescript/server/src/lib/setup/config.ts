@@ -77,9 +77,9 @@ const configSchema = z.object({
 	}),
 	INVITE_CODE_CONFIG: z
 		.object({
-			BATCH_SIZE: z.number().int().positive(),
-			INVITE_CAP: z.number().int().positive(),
-			BETA_USER_BONUS: z.number().int().positive(),
+			BATCH_SIZE: z.number().int().nonnegative(),
+			INVITE_CAP: z.number().int().nonnegative(),
+			BETA_USER_BONUS: z.number().int().nonnegative(),
 		})
 		.optional(),
 	TACHI_CONFIG: z.object({
