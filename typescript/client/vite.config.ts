@@ -93,9 +93,6 @@ export default defineConfig({
 		createHtmlPlugin({
 			inject: {
 				data: {
-					GOATCOUNTER: process.env.VITE_GOATCOUNTER
-						? `<script data-goatcounter="${process.env.VITE_GOATCOUNTER}" async src="//gc.zgo.at/count.js"></script>`
-						: "",
 					TACHI_NAME: process.env.TACHI_NAME,
 					THEME_INIT: `
 <script>

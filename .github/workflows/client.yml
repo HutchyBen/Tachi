@@ -66,7 +66,6 @@ jobs:
         env:
           VITE_GIT_REPO: "GitHub:zkldi/Tachi"
           VITE_TCHIC_MODE: "boku"
-          VITE_GOATCOUNTER: "https://tachi.goatcounter.com/count"
           VITE_RECAPTCHA_KEY: "6LcsYbIpAAAAAEJffjIXmbQcxj_SBZG7BnSPjF4L"
           VITE_SERVER_URL: "https://v3-boku.tachi.ac"
           VITE_DISCORD: "https://discord.gg/E4n8ZZF5ES"
@@ -78,7 +77,6 @@ jobs:
         run: bun run --filter tachi-client build
         env:
           VITE_MANDATE_LOGIN: true
-          VITE_GOATCOUNTER: "https://tachi.goatcounter.com/count"
           VITE_SERVER_URL: "https://v3-kamai.tachi.ac"
           VITE_EAG_CLIENT_ID: "332B9789DEA10B94DB0E345A6F8ECF54BB86E6DD"
           VITE_FLO_CLIENT_ID: "98B965554FB2341D969667F3D04CFC28F8C080ED"
@@ -95,7 +93,6 @@ jobs:
         run: bun run --filter tachi-client build
         env:
           VITE_MANDATE_LOGIN: true
-          VITE_GOATCOUNTER: "https://tachi.goatcounter.com/count"
           VITE_SERVER_URL: "https://dev.tachi.ac"
           VITE_TCHIC_MODE: "omni"
           VITE_CDN_URL: "https://cdn-staging.tachi.ac"
