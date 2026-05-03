@@ -1,7 +1,7 @@
 import { getCronTaskDefinitions } from "#lib/jobs/cron/cron-registry";
 import { log } from "#lib/log/log";
 import DB from "#services/pg/db";
-import CronExpressionParser from "cron-parser";
+import { CronExpressionParser } from "cron-parser";
 import { sql } from "kysely";
 
 /** Namespaces `pg_try_advisory_lock` for the cron scheduler. */
