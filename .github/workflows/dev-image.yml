@@ -53,6 +53,7 @@ jobs:
           push: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
           tags: |
             ghcr.io/zkldi/tachi-dev:main
+            ghcr.io/zkldi/tachi-dev:latest
             ghcr.io/zkldi/tachi-dev:${{ github.sha }}
           cache-from: type=gha,scope=dev-image
           cache-to: type=gha,mode=max,scope=dev-image

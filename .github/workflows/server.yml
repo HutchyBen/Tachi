@@ -133,6 +133,7 @@ jobs:
           tags: |
             ghcr.io/zkldi/tachi:${{ github.sha }}
             ghcr.io/zkldi/tachi:main
+            ghcr.io/zkldi/tachi:latest
           build-args: |
             COMMIT_HASH=${{ github.sha }}
           cache-from: type=gha,scope=server-${{ github.ref_name }}

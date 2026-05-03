@@ -46,6 +46,7 @@ jobs:
           tags: |
             ghcr.io/zkldi/tachi-ghbot:${{ github.sha }}
             ghcr.io/zkldi/tachi-ghbot:main
+            ghcr.io/zkldi/tachi-ghbot:latest
           cache-from: type=gha,scope=${{ github.ref_name }}-github-bot
           cache-to: type=gha,mode=max,scope=${{ github.ref_name }}-github-bot
 
