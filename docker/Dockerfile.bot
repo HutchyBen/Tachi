@@ -11,8 +11,12 @@ RUN bun install --frozen-lockfile
 
 FROM deps AS build
 
+# Do not inline process.env at build time; binary reads runtime env from the host.
+# Do not auto-load dotenv inside the standalone executable.
 RUN bun build \
   --compile \
+  --env=disable \
+  --no-compile-autoload-dotenv \
   --target=bun \
   ./typescript/bot/src/main.ts \
   --outfile /bot

@@ -15,10 +15,14 @@ COPY . .
 RUN bun install --frozen-lockfile
 
 # --- compile each entrypoint (inherits full /app from deps) ---
+# Do not inline process.env at build time; standalone binary must read runtime env from the host.
+# Do not auto-load dotenv inside the executable (orchestrator / loadServerEnvFile own that story).
 FROM deps AS build-api
 
 RUN mkdir -p /out && bun build \
   --compile \
+  --env=disable \
+  --no-compile-autoload-dotenv \
   --target=bun \
   ./typescript/server/src/main.ts \
   --outfile /out/server
@@ -27,6 +31,8 @@ FROM deps AS build-job-worker
 
 RUN mkdir -p /out && bun build \
   --compile \
+  --env=disable \
+  --no-compile-autoload-dotenv \
   --target=bun \
   ./typescript/server/src/job-queue-worker.ts \
   --outfile /out/job-queue-worker
@@ -35,6 +41,8 @@ FROM deps AS build-cron-worker
 
 RUN mkdir -p /out && bun build \
   --compile \
+  --env=disable \
+  --no-compile-autoload-dotenv \
   --target=bun \
   ./typescript/server/src/cron-worker.ts \
   --outfile /out/cron-worker
