@@ -481,13 +481,6 @@ if (!REDIS_URL) {
 	process.exit(1);
 }
 
-const MONGO_URL = process.env.MONGO_URL;
-
-if (!MONGO_URL) {
-	log.error(`No MONGO_URL specified in environment. Terminating.`);
-	process.exit(1);
-}
-
 const NODE_ENV = process.env.NODE_ENV;
 
 if (!NODE_ENV) {
@@ -547,7 +540,6 @@ if (!commitHash) {
 export const Env = {
 	PORT,
 	REDIS_URL,
-	MONGO_URL,
 	POSTGRES_URL,
 	MIGRATIONS_DIR,
 	VERSION: version,

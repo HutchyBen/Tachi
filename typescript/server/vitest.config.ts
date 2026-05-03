@@ -34,7 +34,6 @@ export default defineConfig({
 		env: {
 			NODE_ENV: "test",
 			PORT: "8080",
-			MONGO_URL: "tachi-mongo",
 			REDIS_URL: "tachi-redis",
 			MIGRATIONS_DIR: "/tachi/db/migrations",
 			LOG_LEVEL: "warn",
