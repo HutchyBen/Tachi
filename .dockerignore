@@ -5,6 +5,13 @@ tsconfig.json.tsbuildinfo
 **/node_modules
 **/tsconfig.json.tsbuildinfo
 
+# Build outputs & tool caches
+**/dist
+**/build
+**/.turbo
+**/coverage
+**/.vite
+
 # Extracted data from iidx merge script
 typescript/seeds-scripts/rerunners/iidx/iidx-mdb-parse/ifs-output
 typescript/seeds-scripts/rerunners/iidx/iidx-mdb-parse/logs

@@ -1,23 +1,15 @@
-# Build context must be the repo root.
+# Build context must be the repo root. Full tree + .dockerignore (see repo root).
 # docker build -f docker/Dockerfile.ghbot .
 
 FROM oven/bun:alpine AS base
 WORKDIR /app
 
-# --- deps: install ALL deps (dev included, needed for the build) ---
 FROM base AS deps
 
-COPY package.json bun.lock bunfig.toml ./
-COPY patches ./patches
-
-COPY typescript/github-bot/package.json ./typescript/github-bot/
-
+COPY . .
 RUN bun install --frozen-lockfile
 
-# --- build: compile everything into a single native binary ---
 FROM deps AS build
-
-COPY typescript/github-bot ./typescript/github-bot
 
 RUN bun build \
   --compile \

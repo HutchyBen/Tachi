@@ -22,7 +22,6 @@
 	"dependencies": {
 		"@types/lodash.get": "catalog:",
 		"@types/node": "catalog:",
-		"better-sqlite3": "catalog:",
 		"binary-parser": "catalog:",
 		"bms-table-loader": "catalog:",
 		"chalk": "catalog:",

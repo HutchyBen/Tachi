@@ -1,4 +1,4 @@
-const sqlite3 = require("better-sqlite3");
+const { Database } = require("bun:sqlite");
 const { Command } = require("commander");
 const fs = require("fs");
 
@@ -19,8 +19,10 @@ const options = program.opts();
 // Change this to see logs in the terminal
 const DEBUG = options.debug;
 
-const db = sqlite3(options.db);
-const dbRows = db.prepare(`SELECT * FROM Charts WHERE path LIKE '%${options.filter}%'`).all();
+const db = new Database(options.db, { readonly: true });
+const dbRows = db
+	.query(`SELECT * FROM Charts WHERE path LIKE '%${options.filter}%'`)
+	.all();
 console.log(`Found ${dbRows.length} charts.`);
 
 const songs = ReadCollection("songs-usc.json");

@@ -7,23 +7,19 @@ setup-fish:
 setup:
 	./dev/bootstrap.sh -f
 
-# Deploy stuff for putting tachi on a server.
-#
-# It's only private because I'm too lazy to make it modular
-# and it's also just hyperspecific to _my_ opinions on how
-# tachi should be deployed. I've already given you the docker
-# containers!
-enable-zkldi-deploy-code:
-	git submodule update --init --remote deploy
-
-# Same image as GHA `docker-push` (prod-unified). Context is always repo root via `git rev-parse`.
-docker-build-server: assert-docker-host
+# Verify every Dockerfile in-repo that CI builds (excludes docs: see .github/workflows/docs.yml + Dockerfile.docs).
+check-all-docker-builds: assert-docker-host
 	#!/usr/bin/env bash
 	set -euo pipefail
 	root="$(git rev-parse --show-toplevel)"
-	exec docker build \
-		-f "$root/docker/Dockerfile.server" \
-		--target prod-unified \
-		--build-arg "COMMIT_HASH=$(git -C "$root" rev-parse --short HEAD)" \
-		-t tachi-server:local \
-		"$root"
+	sha="$(git -C "$root" rev-parse --short HEAD)"
+	echo "==> server (prod-unified)"
+	docker build -f "$root/docker/Dockerfile.server" --target prod-unified \
+		--build-arg "COMMIT_HASH=$sha" -t tachi-server:check "$root"
+	echo "==> bot"
+	docker build -f "$root/docker/Dockerfile.bot" -t tachi-bot:check "$root"
+	echo "==> github-bot"
+	docker build -f "$root/docker/Dockerfile.ghbot" -t tachi-ghbot:check "$root"
+	echo "==> dev image"
+	docker build -f "$root/Dockerfile.dev" -t tachi-dev:check "$root"
+	echo "All Docker builds succeeded."

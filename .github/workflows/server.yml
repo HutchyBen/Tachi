@@ -53,7 +53,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
       tachi-redis:
-        image: redis:7.4.1
+        image: redis:7.4-alpine
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 5s

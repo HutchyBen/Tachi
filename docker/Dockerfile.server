@@ -1,4 +1,5 @@
 # Build context must be the repo root (same as GHA docker-push: context `.`).
+# Respects .dockerignore (see repo root). Full tree copy keeps workspace installs correct.
 # docker build -f docker/Dockerfile.server --target prod-unified --build-arg COMMIT_HASH="$(git rev-parse --short HEAD)" -t tachi-server:local .
 # docker build -f docker/Dockerfile.server --target prod-api .
 # docker build -f docker/Dockerfile.server --target prod-job-worker .
@@ -7,30 +8,16 @@
 FROM oven/bun:alpine AS base
 WORKDIR /app
 
-# --- deps: install ALL deps (dev included, needed for the build) ---
+# --- install: full tree so bun sees every workspace package ---
 FROM base AS deps
 
-COPY package.json bun.lock bunfig.toml ./
-COPY patches ./patches
-
-COPY typescript/server/package.json              ./typescript/server/
-COPY typescript/common/package.json              ./typescript/common/
-COPY typescript/db/package.json                  ./typescript/db/
-COPY typescript/db-migration-engine/package.json ./typescript/db-migration-engine/
-
+COPY . .
 RUN bun install --frozen-lockfile
 
-# --- build stages: compile each entrypoint into a native binary ---
+# --- compile each entrypoint (inherits full /app from deps) ---
 FROM deps AS build-api
 
-COPY typescript/server              ./typescript/server
-COPY typescript/common              ./typescript/common
-COPY typescript/db                  ./typescript/db
-COPY typescript/db-migration-engine ./typescript/db-migration-engine
-COPY db/migrations                  ./db/migrations
-COPY package.json bunfig.toml ./
-
-RUN bun build \
+RUN mkdir -p /out && bun build \
   --compile \
   --target=bun \
   ./typescript/server/src/main.ts \
@@ -38,14 +25,7 @@ RUN bun build \
 
 FROM deps AS build-job-worker
 
-COPY typescript/server              ./typescript/server
-COPY typescript/common              ./typescript/common
-COPY typescript/db                  ./typescript/db
-COPY typescript/db-migration-engine ./typescript/db-migration-engine
-COPY db/migrations                  ./db/migrations
-COPY package.json bunfig.toml ./
-
-RUN bun build \
+RUN mkdir -p /out && bun build \
   --compile \
   --target=bun \
   ./typescript/server/src/job-queue-worker.ts \
@@ -53,14 +33,7 @@ RUN bun build \
 
 FROM deps AS build-cron-worker
 
-COPY typescript/server              ./typescript/server
-COPY typescript/common              ./typescript/common
-COPY typescript/db                  ./typescript/db
-COPY typescript/db-migration-engine ./typescript/db-migration-engine
-COPY db/migrations                  ./db/migrations
-COPY package.json bunfig.toml ./
-
-RUN bun build \
+RUN mkdir -p /out && bun build \
   --compile \
   --target=bun \
   ./typescript/server/src/cron-worker.ts \
@@ -76,7 +49,7 @@ ENV MIGRATIONS_DIR=/app/db/migrations
 RUN apk add --no-cache curl
 
 COPY --from=build-api /out/server /server
-COPY db/migrations /app/db/migrations
+COPY --from=deps /app/db/migrations /app/db/migrations
 
 EXPOSE 8080
 
@@ -95,7 +68,7 @@ ENV MIGRATIONS_DIR=/app/db/migrations
 RUN apk add --no-cache curl
 
 COPY --from=build-job-worker /out/job-queue-worker /job-queue-worker
-COPY db/migrations /app/db/migrations
+COPY --from=deps /app/db/migrations /app/db/migrations
 
 CMD ["/job-queue-worker"]
 
@@ -109,7 +82,7 @@ ENV MIGRATIONS_DIR=/app/db/migrations
 RUN apk add --no-cache curl
 
 COPY --from=build-cron-worker /out/cron-worker /cron-worker
-COPY db/migrations /app/db/migrations
+COPY --from=deps /app/db/migrations /app/db/migrations
 
 CMD ["/cron-worker"]
 
@@ -125,7 +98,7 @@ RUN apk add --no-cache curl
 COPY --from=build-api /out/server /server
 COPY --from=build-job-worker /out/job-queue-worker /job-queue-worker
 COPY --from=build-cron-worker /out/cron-worker /cron-worker
-COPY db/migrations /app/db/migrations
+COPY --from=deps /app/db/migrations /app/db/migrations
 
 EXPOSE 8080
 

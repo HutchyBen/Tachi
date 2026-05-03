@@ -1,4 +1,4 @@
-import sqlite3 from "better-sqlite3";
+import { Database } from "bun:sqlite";
 import { Command } from "commander";
 import { parse } from "csv-parse/sync";
 import fs from "fs";
@@ -114,11 +114,11 @@ for (let i = 0; i < packageData.length; i++) {
 	directories[currentPack].push(directory);
 }
 
-const db = sqlite3(options.db);
+const db = new Database(options.db, { readonly: true });
 
 // We could use proper queries to be more efficient,
 // but the db isn't really large enough for it to matter...
-const dbRows = db.prepare("SELECT * FROM Charts").all();
+const dbRows = db.query("SELECT * FROM Charts").all();
 
 const songs = ReadCollection("songs-usc.json");
 const charts = ReadCollection("charts-usc.json");
