@@ -64,7 +64,8 @@ jobs:
         env:
           MINIO_ROOT_USER: minio
           MINIO_ROOT_PASSWORD: password
-          MINIO_VOLUMES: /data
+        entrypoint: /usr/bin/minio
+        command: server /data --console-address=:9001
         options: >-
           --health-cmd "curl -f http://localhost:9000/minio/health/live"
           --health-interval 5s
