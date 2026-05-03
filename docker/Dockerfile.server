@@ -1,4 +1,5 @@
-# Build context must be the repo root.
+# Build context must be the repo root (same as GHA docker-push: context `.`).
+# docker build -f docker/Dockerfile.server --target prod-unified --build-arg COMMIT_HASH="$(git rev-parse --short HEAD)" -t tachi-server:local .
 # docker build -f docker/Dockerfile.server --target prod-api .
 # docker build -f docker/Dockerfile.server --target prod-job-worker .
 # docker build -f docker/Dockerfile.server --target prod-cron-worker .

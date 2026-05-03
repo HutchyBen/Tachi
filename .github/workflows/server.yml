@@ -36,7 +36,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/zkldi/tachi-dev:main
+      image: "ghcr.io/${{ github.repository }}-dev:main"
       options: --user root
     env:
       NODE_ENV: "test"
@@ -72,7 +72,8 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
 
@@ -105,7 +106,8 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
 
@@ -113,7 +115,8 @@ jobs:
         env:
           REPO: ${{ github.repository }}
         run: |
-          echo "TACHI_IMAGE=ghcr.io/$(echo "$REPO" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+          REPO_LC="$(echo "$REPO" | tr '[:upper:]' '[:lower:]')"
+          echo "TACHI_IMAGE=ghcr.io/${REPO_LC}" >> "$GITHUB_ENV"
           echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
 
       - name: Log in to GHCR

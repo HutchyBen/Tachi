@@ -16,7 +16,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/zkldi/tachi-dev:main
+      image: "ghcr.io/${{ github.repository }}-dev:main"
       options: --user root
     if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
     steps:
@@ -31,7 +31,7 @@ jobs:
       - name: Build
         run: bun run --filter tachi-homepage build
 
-      - name: Enable SSH Key
+      - name: Enable SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
@@ -44,4 +44,4 @@ jobs:
       - name: Deploy
         env:
           TACHI_HOST: ${{ secrets.TACHI_HOST }}
-        run: rsync --recursive --compress --delete --progress ./homepage/dist/. ci@"$TACHI_HOST":tachi
+        run: rsync --recursive --compress --delete --progress ./homepage/dist/. "ci@${TACHI_HOST}:tachi"

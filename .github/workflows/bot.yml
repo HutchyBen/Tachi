@@ -21,16 +21,17 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
 
       - name: Image name (lowercase for GHCR)
         env:
-          OWNER_RAW: ${{ github.repository_owner }}
+          REPO: ${{ github.repository }}
         run: |
-          OWNER="$(echo "$OWNER_RAW" | tr '[:upper:]' '[:lower:]')"
-          echo "BOT_IMAGE=ghcr.io/${OWNER}/tachi-bot" >> "$GITHUB_ENV"
+          REPO_LC="$(echo "$REPO" | tr '[:upper:]' '[:lower:]')"
+          echo "BOT_IMAGE=ghcr.io/${REPO_LC}-bot" >> "$GITHUB_ENV"
 
       - name: Log in to GHCR
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
@@ -67,7 +68,7 @@ jobs:
       matrix:
         destination: [boku, kamai, dev]
     steps:
-      - name: Enable SSH Key
+      - name: Enable SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}

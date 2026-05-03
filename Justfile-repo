@@ -15,3 +15,15 @@ setup:
 # containers!
 enable-zkldi-deploy-code:
 	git submodule update --init --remote deploy
+
+# Same image as GHA `docker-push` (prod-unified). Context is always repo root via `git rev-parse`.
+docker-build-server: assert-docker-host
+	#!/usr/bin/env bash
+	set -euo pipefail
+	root="$(git rev-parse --show-toplevel)"
+	exec docker build \
+		-f "$root/docker/Dockerfile.server" \
+		--target prod-unified \
+		--build-arg "COMMIT_HASH=$(git -C "$root" rev-parse --short HEAD)" \
+		-t tachi-server:local \
+		"$root"
