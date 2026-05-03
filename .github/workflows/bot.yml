@@ -26,13 +26,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Image name (lowercase for GHCR)
-        env:
-          REPO: ${{ github.repository }}
-        run: |
-          REPO_LC="$(echo "$REPO" | tr '[:upper:]' '[:lower:]')"
-          echo "BOT_IMAGE=ghcr.io/${REPO_LC}-bot" >> "$GITHUB_ENV"
-
       - name: Log in to GHCR
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
@@ -44,7 +37,6 @@ jobs:
         uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
 
       - name: Build and push
-        id: docker_build
         uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
         with:
           context: .
@@ -53,8 +45,8 @@ jobs:
           provenance: true
           sbom: true
           tags: |
-            ${{ env.BOT_IMAGE }}:${{ github.sha }}
-            ${{ env.BOT_IMAGE }}:main
+            ghcr.io/zkldi/tachi-bot:${{ github.sha }}
+            ghcr.io/zkldi/tachi-bot:main
           cache-from: type=gha,scope=${{ github.ref_name }}-bot
           cache-to: type=gha,mode=max,scope=${{ github.ref_name }}-bot
 

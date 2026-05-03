@@ -34,13 +34,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Image name (lowercase for GHCR)
-        env:
-          REPO: ${{ github.repository }}
-        run: |
-          REPO_LC="$(echo "$REPO" | tr '[:upper:]' '[:lower:]')"
-          echo "DEV_IMAGE=ghcr.io/${REPO_LC}-dev" >> "$GITHUB_ENV"
-
       - name: Log in to GHCR
         if: ${{ github.event_name != 'pull_request' }}
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
@@ -59,7 +52,7 @@ jobs:
           file: Dockerfile.dev
           push: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
           tags: |
-            ${{ env.DEV_IMAGE }}:main
-            ${{ env.DEV_IMAGE }}:${{ github.sha }}
+            ghcr.io/zkldi/tachi-dev:main
+            ghcr.io/zkldi/tachi-dev:${{ github.sha }}
           cache-from: type=gha,scope=dev-image
           cache-to: type=gha,mode=max,scope=dev-image
