@@ -74,4 +74,4 @@ jobs:
       - name: Deploy updates
         env:
           TACHI_HOST: ${{ secrets.TACHI_HOST }}
-        run: ssh "ci@${TACHI_HOST}" "/opt/tachi/deploy/scripts/deploy-bot.sh ${{ matrix.destination }} ${{ github.sha }}"
+        run: ssh "ci@${TACHI_HOST}" "/home/ci/tachi-deploy/scripts/deploy-bot.sh ${{ matrix.destination }} ${{ github.sha }}"
