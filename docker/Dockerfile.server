@@ -54,6 +54,7 @@ FROM alpine:3.21 AS prod-api
 ARG COMMIT_HASH
 ENV COMMIT_HASH=${COMMIT_HASH}
 ENV MIGRATIONS_DIR=/app/db/migrations
+ENV PORT=8080
 
 RUN apk add --no-cache curl libstdc++ libgcc
 
@@ -101,6 +102,7 @@ FROM alpine:3.21 AS prod-unified
 ARG COMMIT_HASH
 ENV COMMIT_HASH=${COMMIT_HASH}
 ENV MIGRATIONS_DIR=/app/db/migrations
+ENV PORT=8080
 
 RUN apk add --no-cache curl libstdc++ libgcc
 

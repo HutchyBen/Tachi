@@ -469,7 +469,7 @@ export function AllEnabledGames(): Array<V3Game> {
 
 let PORT = Number(process.env.PORT);
 
-if (Number.isNaN(PORT) && process.env.IS_SERVER) {
+if (Number.isNaN(PORT)) {
 	log.warn(`No/invalid PORT specified in environment, defaulting to 8080.`);
 	PORT = 8080;
 }
