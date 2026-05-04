@@ -23,8 +23,10 @@ try {
 	} else {
 		transporter.verify((err) => {
 			if (err) {
+				// Do NOT throw here — this is an async callback and the throw would
+				// become an uncaught exception, crashing the process. Log and exit instead.
 				log.fatal({ err }, `Could not connect to email server.`);
-				throw err;
+				process.exit(1);
 			} else {
 				log.info({ bootInfo: true }, `Successfully connected to email server.`);
 			}

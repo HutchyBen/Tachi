@@ -62,7 +62,7 @@ COPY --from=deps /app/db/migrations /app/db/migrations
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=15s --timeout=5s \
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s \
   CMD curl -sf http://localhost:8080/.deploy/up || exit 1
 
 CMD ["/server"]
@@ -110,5 +110,8 @@ COPY --from=build-cron-worker /out/cron-worker /cron-worker
 COPY --from=deps /app/db/migrations /app/db/migrations
 
 EXPOSE 8080
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s \
+  CMD curl -sf http://localhost:8080/.deploy/up || exit 1
 
 CMD ["/server"]

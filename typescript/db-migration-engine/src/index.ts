@@ -134,7 +134,7 @@ async function withAdvisoryLock<T>(client: Client, fn: () => Promise<T>): Promis
 	await client.query(`SELECT pg_advisory_lock(${ADVISORY_LOCK})`);
 
 	try {
-		return fn();
+		return await fn();
 	} finally {
 		await client.query(`SELECT pg_advisory_unlock(${ADVISORY_LOCK})`).catch(() => undefined);
 	}
