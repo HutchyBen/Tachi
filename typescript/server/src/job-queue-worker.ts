@@ -14,6 +14,11 @@ import { applyMigrations } from "tachi-db-migration-engine";
 
 const POLL_MS = 250;
 
+process.on("uncaughtException", (err, origin) => {
+	log.fatal({ err, origin }, "Uncaught exception — terminating.");
+	log.flush(() => process.exit(1));
+});
+
 void bootstrap();
 
 /**

@@ -9,6 +9,11 @@ import { applyMigrations } from "tachi-db-migration-engine";
 
 const TICK_MS = 5_000;
 
+process.on("uncaughtException", (err, origin) => {
+	log.fatal({ err, origin }, "Uncaught exception — terminating.");
+	log.flush(() => process.exit(1));
+});
+
 void bootstrap();
 
 /**

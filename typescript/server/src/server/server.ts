@@ -135,6 +135,11 @@ process.on("unhandledRejection", (reason, promise) => {
 	log.error(reason, { promise });
 });
 
+process.on("uncaughtException", (err, origin) => {
+	log.fatal({ err, origin }, "Uncaught exception — terminating.");
+	log.flush(() => process.exit(1));
+});
+
 // enable reading json bodies
 // limit them so as not to choke the api
 app.use(express.json({ limit: "4mb" }));
