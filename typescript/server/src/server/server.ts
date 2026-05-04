@@ -136,7 +136,7 @@ process.on("unhandledRejection", (reason, promise) => {
 });
 
 process.on("uncaughtException", (err, origin) => {
-	log.fatal({ err, origin }, "Uncaught exception — terminating.");
+	log.fatal({ err, origin }, "Uncaught exception, terminating.");
 	log.flush(() => process.exit(1));
 });
 
