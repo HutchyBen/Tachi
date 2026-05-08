@@ -20,6 +20,9 @@ export function scoreVisiblePredicate(eb: ExpressionBuilder<Database, "score">) 
 
 /**
  * Same as {@link scoreVisiblePredicate}, but as a standalone expression for queries that join `score` with other tables (Kysely's `ExpressionBuilder` table set differs).
+ *
+ * TODO(zk): move scores into an "internal_scores" table, then have a "scores" view which contains only
+ * the visible ones - allows us to ban users and stuff.
  */
 export function scoreVisibleSql() {
 	const importId = getActiveImportId();

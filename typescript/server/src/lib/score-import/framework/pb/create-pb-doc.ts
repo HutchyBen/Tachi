@@ -26,16 +26,27 @@ import { CreateEnumIndexes } from "../score-importing/derivers";
 
 export type { PBScoreDocumentNoRank };
 
-async function findBestScoreForPb(
+function defaultMetricSortValueSql(game: V3Game) {
+	const cfg = GetGameConfig(game);
+	const key = cfg.defaultMetric;
+
+	if (key in cfg.derivedMetrics) {
+		return sql`(score.derived_data::jsonb->>${sql.lit(key)})::double precision`;
+	}
+
+	return sql`(score.data::jsonb->>${sql.lit(key)})::double precision`;
+}
+
+/**
+ * Get the base score from the default metric, and pb merges are applied ontop of this.
+ */
+async function GetBaseScoreForPB(
 	game: V3Game,
 	userID: integer,
 	chart: ChartDocument,
 	asOfTimestamp: number | undefined,
 ): Promise<ScoreDocument | null> {
-	const gameConfig = GetGameConfig(game);
-	const metricKey = String(gameConfig.defaultMetric);
-
-	const sortVal = sql`(score.data::jsonb->>${sql.lit(metricKey)})::double precision`;
+	const sortVal = defaultMetricSortValueSql(game);
 
 	let q = DB.selectFrom("score")
 		.innerJoin("chart", "chart.id", "score.chart_id")
@@ -51,8 +62,8 @@ async function findBestScoreForPb(
 	}
 
 	const row = await q
-		.orderBy(sortVal, "desc")
-		.orderBy("score.time_achieved", "asc")
+		.orderBy(sql`${sortVal} DESC NULLS LAST`)
+		.orderBy(sql`score.time_achieved ASC NULLS LAST`)
 		.limit(1)
 		.executeTakeFirst();
 
@@ -74,7 +85,7 @@ export async function CreatePBDoc(
 	log: KtLogger,
 	asOfTimestamp?: number,
 ) {
-	const defaultMetricPB = await findBestScoreForPb(game, userID, chart, asOfTimestamp);
+	const defaultMetricPB = await GetBaseScoreForPB(game, userID, chart, asOfTimestamp);
 
 	if (!defaultMetricPB) {
 		if (asOfTimestamp !== undefined) {
