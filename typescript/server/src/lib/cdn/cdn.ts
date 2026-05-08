@@ -11,7 +11,7 @@ import { DeleteFromS3_PUBLIC, GetObjectFromS3_PUBLIC, PushToS3_PUBLIC } from "./
 export function CDNRetrieve(fileLoc: string) {
 	log.debug(`Retrieving path ${fileLoc} from S3.`);
 
-	return GetObjectFromS3_PUBLIC(fileLoc);
+	return GetObjectFromS3_PUBLIC(fileLoc.replace(/^\//u, ""));
 }
 
 /**
@@ -33,7 +33,7 @@ export function CDNRedirect(res: Response, fileLoc: string) {
 export async function CDNStoreOrOverwrite(fileLoc: string, data: string | Buffer): Promise<void> {
 	log.debug(`Storing or overwriting path ${fileLoc}.`);
 
-	await PushToS3_PUBLIC(fileLoc, data);
+	await PushToS3_PUBLIC(fileLoc.replace(/^\//u, ""), data);
 }
 
 /**
@@ -42,5 +42,5 @@ export async function CDNStoreOrOverwrite(fileLoc: string, data: string | Buffer
 export async function CDNDelete(fileLoc: string) {
 	log.debug(`Deleting path ${fileLoc}.`);
 
-	await DeleteFromS3_PUBLIC(fileLoc);
+	await DeleteFromS3_PUBLIC(fileLoc.replace(/^\//u, ""));
 }
