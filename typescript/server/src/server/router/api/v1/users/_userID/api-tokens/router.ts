@@ -43,9 +43,7 @@ API_V1_ROUTER.add(
 			{
 				clientID: input.clientID,
 				identifier: input.identifier,
-				permissions: input.permissions
-					? Object.keys(input.permissions).filter((k) => input.permissions![k])
-					: undefined,
+				permissions: input.permissions,
 			},
 		);
 
