@@ -97,6 +97,31 @@ export async function GetAdjacentSessions(
 	};
 }
 
+/**
+ * Returns the 1-based chronological index of this session among all sessions
+ * for the same user and game, using (time_ended, id) as the sort key.
+ */
+export async function GetSessionIndex(session: SessionDocument): Promise<number> {
+	const timeEnded = UnixMillisecondsToISO8601(session.timeEnded);
+
+	const row = await DB.selectFrom("session")
+		.select(DB.fn.countAll<number>().as("count"))
+		.where("session.user_id", "=", session.userID)
+		.where("session.game", "=", session.game)
+		.where((eb) =>
+			eb.or([
+				eb("session.time_ended", "<", timeEnded),
+				eb.and([
+					eb("session.time_ended", "=", timeEnded),
+					eb("session.id", "<=", session.sessionID),
+				]),
+			]),
+		)
+		.executeTakeFirstOrThrow();
+
+	return Number(row.count);
+}
+
 export async function GetSessionData(session: SessionDocument): Promise<{
 	charts: Array<ChartDocument>;
 	scoreInfo: Array<SessionScoreInfo>;

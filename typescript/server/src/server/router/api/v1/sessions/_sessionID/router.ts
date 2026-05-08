@@ -4,7 +4,7 @@ import { GetSessionFolderRaises } from "#lib/folders/get-session-folder-raises";
 import { withSession, withSessionOwner } from "#lib/router/middleware";
 import { success } from "#lib/router/typed-router";
 import { API_V1_ROUTER } from "#server/router/api/v1/router";
-import { GetAdjacentSessions, GetSessionData } from "#utils/queries/sessions";
+import { GetAdjacentSessions, GetSessionData, GetSessionIndex } from "#utils/queries/sessions";
 import { GetUserWithID } from "#utils/user";
 import { ExpectedErr } from "bliss";
 
@@ -15,10 +15,14 @@ import { ExpectedErr } from "bliss";
  */
 API_V1_ROUTER.add("GET /sessions/:sessionID", withSession, async ({ ctx }) => {
 	const { sessionDoc: session } = ctx;
-	const sessionData = await GetSessionData(session);
+	const [sessionData, index] = await Promise.all([
+		GetSessionData(session),
+		GetSessionIndex(session),
+	]);
 
 	return success(`Successfully returned session ${session.name}.`, {
 		charts: sessionData.charts,
+		index,
 		scoreInfo: sessionData.scoreInfo,
 		scores: sessionData.scores,
 		session,

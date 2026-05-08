@@ -125,12 +125,9 @@ describe("CreatePBDoc", () => {
 			} as ScoreData<"iidx-sp">,
 		});
 
-		const pb = (await CreatePBDoc(
-			"iidx-sp",
-			userId,
-			Testing511SPA,
-			log,
-		)) as PBScoreDocumentNoRank<"iidx-sp"> | undefined;
+		const pb = (await CreatePBDoc("iidx-sp", userId, Testing511SPA, log)) as
+			| PBScoreDocumentNoRank<"iidx-sp">
+			| undefined;
 
 		expect(pb).toBeDefined();
 		expect(pb!.scoreData.score).toBe(1926);
@@ -171,12 +168,9 @@ describe("CreatePBDoc", () => {
 			} as ScoreData<"iidx-sp">,
 		});
 
-		const pb = (await CreatePBDoc(
-			"iidx-sp",
-			userId,
-			Testing511SPA,
-			log,
-		)) as PBScoreDocumentNoRank<"iidx-sp"> | undefined;
+		const pb = (await CreatePBDoc("iidx-sp", userId, Testing511SPA, log)) as
+			| PBScoreDocumentNoRank<"iidx-sp">
+			| undefined;
 
 		expect(pb).toBeDefined();
 		expect(pb!.scoreData.score).toBe(2040);

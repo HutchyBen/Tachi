@@ -95,6 +95,7 @@ export interface SessionReturns<GPT extends V3Game = V3Game> {
 	songs: SongDocument<GameGroup>[];
 	charts: ChartDocument<GPT>[];
 	user: UserDocument;
+	index: number;
 }
 
 export interface SessionAdjacentReturns {
