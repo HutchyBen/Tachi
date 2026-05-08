@@ -131,7 +131,7 @@ describe("POST /api/v1/users/:userID/api-tokens/create", () => {
 			.set("Cookie", cookie)
 			.send({
 				identifier: "Hello World",
-				permissions: { submit_score: true, customise_profile: true },
+				permissions: ["submit_score", "customise_profile"],
 			});
 
 		expect(res.status).toBe(200);
@@ -172,6 +172,7 @@ describe("POST /api/v1/users/:userID/api-tokens/create", () => {
 			.set("Cookie", cookie)
 			.send({
 				clientID: "OAUTH2_CLIENT_ID",
+				permissions: [],
 			});
 
 		expect(res.status).toBe(200);
@@ -202,7 +203,7 @@ describe("POST /api/v1/users/:userID/api-tokens/create", () => {
 			.set("Cookie", cookie)
 			.send({
 				identifier: "Hello World",
-				permissions: { submit_score: true, customise_profile: true },
+				permissions: ["submit_score", "customise_profile"],
 				clientID: "OAUTH2_CLIENT_ID",
 			});
 
@@ -229,7 +230,7 @@ describe("POST /api/v1/users/:userID/api-tokens/create", () => {
 			.set("Cookie", cookie)
 			.send({
 				identifier: "Hello World",
-				permissions: { submit_score: true, invalid_permission: true },
+				permissions: ["submit_score", "invalid_permission"],
 			});
 
 		expect(res.status).toBe(400);
