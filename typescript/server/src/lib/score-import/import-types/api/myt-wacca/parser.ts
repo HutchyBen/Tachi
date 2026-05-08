@@ -56,6 +56,7 @@ export default async function ParseMytWACCA(
 	}
 
 	return {
+		service: "MYT",
 		iterable: streamPlaylog(titleApiId, log),
 		context: {},
 		classProvider,

@@ -85,9 +85,9 @@ export async function CreatePBDoc(
 	log: KtLogger,
 	asOfTimestamp?: number,
 ) {
-	const defaultMetricPB = await GetBaseScoreForPB(game, userID, chart, asOfTimestamp);
+	const baseBestScore = await GetBaseScoreForPB(game, userID, chart, asOfTimestamp);
 
-	if (!defaultMetricPB) {
+	if (!baseBestScore) {
 		if (asOfTimestamp !== undefined) {
 			return;
 		}
@@ -108,25 +108,25 @@ export async function CreatePBDoc(
 		composedFrom: [
 			{
 				name: gptImpl.defaultMergeRefName,
-				scoreID: defaultMetricPB.scoreID,
+				scoreID: baseBestScore.scoreID,
 			},
 		],
-		chartID: defaultMetricPB.chartID,
+		chartID: baseBestScore.chartID,
 		userID,
-		songID: defaultMetricPB.songID,
-		highlight: defaultMetricPB.highlight,
-		timeAchieved: defaultMetricPB.timeAchieved,
-		game: defaultMetricPB.game,
-		isPrimary: defaultMetricPB.isPrimary,
-		scoreData: defaultMetricPB.scoreData,
-		calculatedData: defaultMetricPB.calculatedData,
+		songID: baseBestScore.songID,
+		highlight: baseBestScore.highlight,
+		timeAchieved: baseBestScore.timeAchieved,
+		game: baseBestScore.game,
+		isPrimary: baseBestScore.isPrimary,
+		scoreData: baseBestScore.scoreData,
+		calculatedData: baseBestScore.calculatedData,
 	};
 
 	for (const mergeFn of gptImpl.pbMergeFunctions) {
 		// eslint-disable-next-line no-await-in-loop
 		const ref = await mergeFn(
 			userID,
-			defaultMetricPB.chartID,
+			baseBestScore.chartID,
 			asOfTimestamp ?? null,
 			pbDoc as never,
 		);

@@ -28,7 +28,7 @@ import { CreateBatchManualClassProvider } from "./class-handler";
  */
 export function ParseBatchManualFromObject(
 	object: unknown,
-	_importType: ImportTypes,
+	importType: ImportTypes,
 	inferTimestamp: boolean,
 	_log: KtLogger,
 ): ParserFunctionReturns<BatchManualScore, BatchManualContext, V3Game> {
@@ -127,7 +127,16 @@ export function ParseBatchManualFromObject(
 		batchManual.scores[0]!.timeAchieved = Date.now();
 	}
 
+	let service = batchManual.meta.service;
+
+	if (importType === "ir/direct-manual") {
+		service = `${service} (DIRECT-MANUAL)`;
+	} else if (importType === "file/batch-manual") {
+		service = `${service} (BATCH-MANUAL)`;
+	}
+
 	return {
+		service,
 		gameGroup: GameToGameGroup(game),
 		context: {
 			service: batchManual.meta.service,

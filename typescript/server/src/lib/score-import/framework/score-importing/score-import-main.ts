@@ -102,12 +102,13 @@ export default async function ScoreImportMain<D, C>(
 			void SetJobProgress(job, "Parsing score data.");
 
 			const parseTimeStart = process.hrtime.bigint();
-			const {
-				iterable,
-				context,
-				gameGroup: game,
-				classProvider: classProvider,
-			} = await InputParser(log);
+		const {
+			iterable,
+			context,
+			gameGroup: game,
+			classProvider: classProvider,
+			service,
+		} = await InputParser(log);
 
 			const parseTime = GetMillisecondsSince(parseTimeStart);
 
@@ -120,7 +121,7 @@ export default async function ScoreImportMain<D, C>(
 				} scores.`,
 			);
 
-			await ensureImportStub(importID, user.id, game, importType, userIntent);
+			await ensureImportStub(importID, user.id, game, importType, userIntent, service);
 
 			const ConverterFunction = Converters[importType] as unknown as ConverterFunction<D, C>;
 
@@ -213,7 +214,7 @@ export default async function ScoreImportMain<D, C>(
 					gameGroup: game,
 					importType,
 					userIntent,
-					service: "Unknown",
+					service,
 					timeStartedMs: timeStarted,
 					timeFinishedMs: timeFinished,
 					games,

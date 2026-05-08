@@ -134,6 +134,7 @@ export function ParseSolidStateXML(
 	}));
 
 	return {
+		service: "Solid State Squad",
 		classProvider: null,
 		context: {},
 		iterable: scoreData as Array<S3Score>,

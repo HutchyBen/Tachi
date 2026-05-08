@@ -186,6 +186,7 @@ export function ParseFervidexSingle(
 	const score = body as unknown as FervidexScore;
 
 	return {
+		service: "Fervidex",
 		// this import method needs to know the user making the request
 		// in order to highlight existing scores. Neat!
 		context: { version, timeReceived: Date.now(), userID },

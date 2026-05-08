@@ -30,6 +30,7 @@ export function ParseFervidexStatic(
 	// if we shouldn't import scores, just sync up dans.
 	if (!headers.shouldImportScores) {
 		return {
+			service: "Fervidex Static",
 			context: { version },
 			gameGroup: "iidx",
 			iterable: [],
@@ -90,6 +91,7 @@ export function ParseFervidexStatic(
 
 	// asserted using prudence.
 	return {
+		service: "Fervidex Static",
 		context: { version },
 		gameGroup: "iidx",
 		iterable: scores,

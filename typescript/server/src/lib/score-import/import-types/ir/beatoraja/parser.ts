@@ -127,6 +127,7 @@ export function ParseBeatorajaSingle(
 	}
 
 	return {
+		service: "Beatoraja IR",
 		context: {
 			client: isPMS ? "beatoraja" : "lr2oraja",
 

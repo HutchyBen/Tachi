@@ -19,7 +19,7 @@ import type {
 } from "./types";
 
 import { FetchCGScores } from "./traverse-api";
-import { CGGameToTachiGame } from "./util";
+import { CGGameToTachiGame, FormatCGService } from "./util";
 
 const PR_CG_JUBEAT = {
 	internalId: p.isPositiveInteger,
@@ -138,6 +138,7 @@ export function CreateCGParser<T>(cgGame: CGSupportedGames, service: CGServices)
 		}
 
 		return {
+			service: FormatCGService(service),
 			context: {
 				service,
 				userID: cardInfo.userID,

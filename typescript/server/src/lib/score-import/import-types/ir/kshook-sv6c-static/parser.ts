@@ -41,6 +41,7 @@ export function ParseKsHookSV6CStatic(
 	const data = body as unknown as KsHookSV6CStaticBody;
 
 	return {
+		service: "kshook SV6C Static",
 		gameGroup: "sdvx",
 		iterable: data.scores,
 		context: {},

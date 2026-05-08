@@ -45,6 +45,7 @@ export default function ParseMytChunithm(
 	log: KtLogger,
 ): Promise<ParserFunctionReturns<MytChunithmScore, EmptyObject, GamesForGroup["chunithm"]>> {
 	return Promise.resolve({
+		service: "MYT",
 		iterable: streamPlaylog(userID, log),
 		context: {},
 		classProvider: null,

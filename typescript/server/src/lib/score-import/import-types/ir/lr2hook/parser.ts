@@ -108,6 +108,7 @@ export function ParseLR2Hook(
 	const score = body as unknown as LR2HookScore;
 
 	return {
+		service: "LR2Hook",
 		gameGroup: "bms",
 		iterable: [score],
 		context: {

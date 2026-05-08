@@ -26,6 +26,7 @@ export async function ParseKaiIIDX(
 	authDoc.token = await resolvedReauthFn();
 
 	return {
+		service,
 		iterable: TraverseKaiAPI(
 			baseUrl,
 			"/api/iidx/v2/play_history",

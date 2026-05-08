@@ -73,6 +73,7 @@ export function ParseKsHookSV6C(
 	const score = body as unknown as KsHookSV6CScore;
 
 	return {
+		service: "kshook SV6C",
 		gameGroup: "sdvx",
 		iterable: [score],
 		context: {

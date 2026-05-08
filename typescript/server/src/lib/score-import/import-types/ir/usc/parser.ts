@@ -61,6 +61,7 @@ export function ParseIRUSC(
 	score.combo ??= null;
 
 	return {
+		service: "USC-IR",
 		context: {
 			chartHash,
 			playtype,

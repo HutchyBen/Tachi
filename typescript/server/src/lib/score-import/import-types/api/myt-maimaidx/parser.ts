@@ -45,6 +45,7 @@ export default async function ParseMytMaimaiDx(
 	log: KtLogger,
 ): Promise<ParserFunctionReturns<MytMaimaiDxScore, EmptyObject, GamesForGroup["maimaidx"]>> {
 	return {
+		service: "MYT",
 		iterable: streamPlaylog(userID, log),
 		context: {},
 		classProvider: null,

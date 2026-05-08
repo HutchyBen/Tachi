@@ -67,6 +67,7 @@ export default function ParseEamusementSDVXCSV(
 	}));
 
 	return {
+		service: "e-amusement",
 		iterable,
 		context: {},
 		gameGroup: "sdvx",

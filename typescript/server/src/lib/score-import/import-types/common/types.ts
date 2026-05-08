@@ -167,6 +167,7 @@ export interface ParserFunctionReturns<D, C, TGame extends V3Game> {
 	context: C;
 	gameGroup: GameGroupFromGame[TGame];
 	classProvider: ClassProvider<TGame> | null;
+	service: string;
 }
 
 export type ParserFunction<D, C, TGame extends V3Game, A extends Array<unknown>> = (

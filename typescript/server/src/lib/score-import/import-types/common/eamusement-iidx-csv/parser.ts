@@ -259,6 +259,7 @@ function GenericParseEamIIDXCSV(
 	log.debug(`Successfully Parsed with ${iterableData.length} results.`);
 
 	return {
+		service,
 		iterable: iterableData,
 		context,
 		gameGroup: "iidx",

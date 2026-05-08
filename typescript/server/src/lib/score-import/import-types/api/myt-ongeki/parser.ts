@@ -45,6 +45,7 @@ export default async function ParseMytOngeki(
 	log: KtLogger,
 ): Promise<ParserFunctionReturns<MytOngekiScore, EmptyObject, GamesForGroup["ongeki"]>> {
 	return {
+		service: "MYT",
 		iterable: streamPlaylog(userID, log),
 		context: {},
 		classProvider: null,

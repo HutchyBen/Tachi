@@ -110,6 +110,7 @@ export function ParseMyPageScraperRecordsCSV(
 	}
 
 	return {
+		service: "mypage-scraper",
 		iterable,
 		context: {},
 		gameGroup: "wacca",
@@ -167,6 +168,7 @@ export function ParseMyPageScraperPlayerCSV(
 	};
 
 	return {
+		service: "mypage-scraper",
 		iterable: [],
 		context: {},
 		gameGroup: "wacca",

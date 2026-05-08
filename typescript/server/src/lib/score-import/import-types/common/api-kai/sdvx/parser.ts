@@ -26,6 +26,7 @@ export async function ParseKaiSDVX(
 	authDoc.token = await resolvedReauthFn();
 
 	return {
+		service,
 		iterable: TraverseKaiAPI(
 			baseUrl,
 			"/api/sdvx/v1/play_history",

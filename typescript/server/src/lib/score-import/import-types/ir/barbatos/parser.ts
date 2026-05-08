@@ -76,6 +76,7 @@ export function ParseBarbatosSingle(
 	}
 
 	return {
+		service: "Barbatos",
 		context: {
 			timeReceived: Date.now(),
 			version: "ex_score" in body ? "exceed" : "vivid",
