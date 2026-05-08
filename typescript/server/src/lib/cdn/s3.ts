@@ -50,6 +50,11 @@ export function cdnObjectKey_PRIVATE(fileLoc: string): string {
  * Pushes a file to the configured S3 Bucket. Overwrites if already exists.
  */
 export function PushToS3_PUBLIC(path: string, content: string | Buffer) {
+	if (path.startsWith("/")) {
+		throw new Error(
+			`no. absolutely not. Trying to do s3 push with a prefix /. this causes all sorts of trouble: ${path}`,
+		);
+	}
 	log.debug(`Saving content on S3 at ${path}.`);
 
 	return S3_PUBLIC.send(
@@ -65,6 +70,11 @@ export function PushToS3_PUBLIC(path: string, content: string | Buffer) {
  * Pushes a file to the configured private S3 bucket. Overwrites if already exists.
  */
 export function PushToS3_PRIVATE(path: string, content: string | Buffer) {
+	if (path.startsWith("/")) {
+		throw new Error(
+			`no. absolutely not. Trying to do s3 push with a prefix /. this causes all sorts of trouble: ${path}`,
+		);
+	}
 	log.debug(`Saving content on private S3 at ${path}.`);
 
 	return S3_PRIVATE.send(
@@ -80,6 +90,11 @@ export function PushToS3_PRIVATE(path: string, content: string | Buffer) {
  * Reads a file from the configured S3 bucket.
  */
 export async function GetObjectFromS3_PUBLIC(path: string): Promise<Buffer> {
+	if (path.startsWith("/")) {
+		throw new Error(
+			`no. absolutely not. Trying to do s3 get with a prefix /. this causes all sorts of trouble: ${path}`,
+		);
+	}
 	const response = await S3_PUBLIC.send(
 		new GetObjectCommand({
 			Bucket: saveLoc.BUCKET,
@@ -98,6 +113,11 @@ export async function GetObjectFromS3_PUBLIC(path: string): Promise<Buffer> {
  * Reads a file from the configured private S3 bucket.
  */
 export async function GetObjectFromS3_PRIVATE(path: string): Promise<Buffer> {
+	if (path.startsWith("/")) {
+		throw new Error(
+			`no. absolutely not. Trying to do s3 get with a prefix /. this causes all sorts of trouble: ${path}`,
+		);
+	}
 	const response = await S3_PRIVATE.send(
 		new GetObjectCommand({
 			Bucket: saveLocPrivate.BUCKET,
