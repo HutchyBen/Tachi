@@ -1,3 +1,4 @@
+import { ServerConfig } from "#lib/setup/config";
 import { mongoScoreDataToPg } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import mockApi, { CloseServerConnection } from "#test-utils/mock-api";
@@ -9,7 +10,7 @@ import {
 	TestingIIDXSPScore,
 } from "#test-utils/test-data";
 import { type ScoreData } from "tachi-common";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 
 afterAll(() => CloseServerConnection());
 
@@ -75,6 +76,7 @@ async function seedFakeImportFixture() {
 			import_type: "ir/direct-manual",
 			user_intent: FakeImport.userIntent,
 			service: "test",
+			status: "completed",
 		})
 		.execute();
 
@@ -174,6 +176,7 @@ describe("POST /api/v1/imports/:importID/revert", () => {
 				import_type: "ir/direct-manual",
 				user_intent: true,
 				service: "test",
+				status: "completed",
 			})
 			.execute();
 
@@ -202,6 +205,7 @@ describe("POST /api/v1/imports/:importID/revert", () => {
 				import_type: "ir/direct-manual",
 				user_intent: true,
 				service: "test",
+				status: "completed",
 			})
 			.execute();
 
@@ -221,4 +225,64 @@ describe("GET /api/v1/imports (list)", () => {
 
 describe("GET /api/v1/imports/failed", () => {
 	it.todo("port failed-import list from router.oldtest todo");
+});
+
+describe("GET /api/v1/imports/:importID/poll-status", () => {
+	let originalWorkerSetting: boolean;
+
+	beforeEach(async () => {
+		originalWorkerSetting = ServerConfig.USE_EXTERNAL_SCORE_IMPORT_WORKER;
+		ServerConfig.USE_EXTERNAL_SCORE_IMPORT_WORKER = true;
+	});
+
+	afterEach(() => {
+		ServerConfig.USE_EXTERNAL_SCORE_IMPORT_WORKER = originalWorkerSetting;
+	});
+
+	it("returns 501 when external worker is disabled", async () => {
+		ServerConfig.USE_EXTERNAL_SCORE_IMPORT_WORKER = false;
+
+		const res = await mockApi.get("/api/v1/imports/some-import/poll-status");
+
+		expect(res.status).toBe(501);
+	});
+
+	it("returns 404 when no import, tracker, or job exists", async () => {
+		const res = await mockApi.get("/api/v1/imports/nonexistent/poll-status");
+
+		expect(res.status).toBe(404);
+	});
+
+	it("returns ongoing when import stub exists but status is in_progress", async () => {
+		await seedUser({ username: "poll_user" });
+
+		await DB.insertInto("import")
+			.values({
+				id: "in-progress-import",
+				user_id: 1,
+				time_started: new Date().toISOString(),
+				time_finished: new Date().toISOString(),
+				game_group: "iidx",
+				import_type: "ir/direct-manual",
+				user_intent: true,
+				service: "test",
+				status: "in_progress",
+			})
+			.execute();
+
+		const res = await mockApi.get("/api/v1/imports/in-progress-import/poll-status");
+
+		expect(res.status).toBe(200);
+		expect(res.body.body.importStatus).toBe("ongoing");
+	});
+
+	it("returns completed when import status is completed", async () => {
+		await seedFakeImportFixture();
+
+		const res = await mockApi.get(`/api/v1/imports/${FakeImport.importID}/poll-status`);
+
+		expect(res.status).toBe(200);
+		expect(res.body.body.importStatus).toBe("completed");
+		expect(res.body.body.import.importID).toBe(FakeImport.importID);
+	});
 });

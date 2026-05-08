@@ -72,6 +72,7 @@ export { type default as AccountBadgeKind } from './public/AccountBadgeKind';
 export { type default as Game } from './public/Game';
 export { type default as ActionResult } from './public/ActionResult';
 export { type default as GameGroup } from './public/GameGroup';
+export { type default as ImportStatus } from './public/ImportStatus';
 export { type default as ImportType } from './public/ImportType';
 export { type enqueue_pb_dirty_params } from './public/enqueue_pb_dirty';
 export { type enqueue_game_profile_dirty_params } from './public/enqueue_game_profile_dirty';

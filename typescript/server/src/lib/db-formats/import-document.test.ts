@@ -26,6 +26,7 @@ describe("LoadImportDocumentById", () => {
 				import_type: "ir/direct-manual",
 				user_intent: true,
 				service: "test-svc",
+				status: "completed",
 			})
 			.execute();
 

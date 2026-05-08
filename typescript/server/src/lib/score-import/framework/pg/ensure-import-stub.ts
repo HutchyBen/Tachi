@@ -26,6 +26,7 @@ export async function ensureImportStub(
 			import_type: importType,
 			user_intent: userIntent,
 			service,
+			status: "in_progress",
 		})
 		.execute();
 }

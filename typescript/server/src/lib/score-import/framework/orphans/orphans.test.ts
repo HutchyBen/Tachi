@@ -77,6 +77,7 @@ async function ensureImportStub(opts: { importId: string; userId: number }) {
 			import_type: "ir/direct-manual",
 			user_intent: true,
 			service: "orphan-test",
+			status: "completed",
 		})
 		.execute();
 }

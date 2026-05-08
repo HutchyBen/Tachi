@@ -82,6 +82,7 @@ export async function finalizeImportToPostgres(
 			import_type: importType,
 			user_intent: userIntent,
 			service,
+			status: "completed",
 		})
 		.where("id", "=", importID)
 		.execute();

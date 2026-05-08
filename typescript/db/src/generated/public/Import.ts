@@ -3,6 +3,7 @@
 
 import type { account_id } from './Account';
 import type { default as GameGroup } from './GameGroup';
+import type { default as ImportStatus } from './ImportStatus';
 import type { default as ImportType } from './ImportType';
 import type { ColumnType, Selectable, Insertable, Updateable } from 'kysely';
 
@@ -26,6 +27,8 @@ export default interface ImportTable {
   user_intent: ColumnType<boolean, boolean, boolean>;
 
   service: ColumnType<string, string, string>;
+
+  status: ColumnType<ImportStatus, ImportStatus | undefined, ImportStatus>;
 }
 
 export type Import = Selectable<ImportTable>;

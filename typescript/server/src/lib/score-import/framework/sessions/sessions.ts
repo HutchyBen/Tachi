@@ -29,16 +29,12 @@ const TWO_HOURS = ONE_HOUR * 2;
 export async function CreateSessions(userID: integer, scoreGameMap: ScoreGameMap, log: KtLogger) {
 	const allSessionInfo = [];
 
-	console.dir(scoreGameMap);
-
 	for (const [game, scores] of Object.entries(scoreGameMap)) {
 		// eslint-disable-next-line no-await-in-loop
 		const sessionInfo = await LoadScoresIntoSessions(userID, scores, game as V3Game, log);
 
 		allSessionInfo.push(...sessionInfo);
 	}
-
-	console.dir(allSessionInfo);
 
 	return allSessionInfo;
 }

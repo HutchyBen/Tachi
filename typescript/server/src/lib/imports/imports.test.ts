@@ -95,6 +95,7 @@ describe("RevertImport", () => {
 				import_type: "file/batch-manual" as never,
 				user_intent: true,
 				service: "test",
+				status: "completed",
 			})
 			.execute();
 

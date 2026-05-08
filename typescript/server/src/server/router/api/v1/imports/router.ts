@@ -152,15 +152,16 @@ async function findJobQueueForImport(importID: string) {
 }
 
 /**
- * Retrieve the status of an ongoing import.
- * If the import has been finalised and was successful, return 200.
+ * Poll the status of a queued/in-progress import.
  *
- * If the import is ongoing, return its progress.
+ * Completion is determined by the `import.status` column, which starts as
+ * `in_progress` when the stub row is created and is set to `completed`
+ * atomically inside {@link finalizeImportToPostgres}. This avoids the
+ * previous bug where a stub row was enough to report "completed" while
+ * scores were still being inserted.
  *
- * If the import was never ongoing, return 404.
- *
- * If the import was finalised and was unsuccessful (i.e. threw a fatal error)
- * return its error information.
+ * When no `import` row exists yet (parsing phase) or it was cleaned up on
+ * failure, we fall back to `job_queue` and `import_tracker` state.
  *
  * @name GET /api/v1/imports/:importID/poll-status
  */
@@ -172,14 +173,31 @@ API_V1_ROUTER.add("GET /imports/:importID/poll-status", async ({ params }) => {
 		);
 	}
 
-	const importDoc = await LoadImportDocumentById(params.importID);
+	const importRow = await DB.selectFrom("import")
+		.select(["import.id", "import.status"])
+		.where("import.id", "=", params.importID)
+		.executeTakeFirst();
 
-	if (importDoc) {
-		return success("Import was completed!", {
-			import: importDoc,
-			importStatus: "completed",
+	if (importRow) {
+		if (importRow.status === "completed") {
+			const importDoc = await LoadImportDocumentById(params.importID);
+
+			if (importDoc) {
+				return success("Import was completed!", {
+					import: importDoc,
+					importStatus: "completed",
+				});
+			}
+		}
+
+		return success("Import is ongoing.", {
+			importStatus: "ongoing",
+			progress: { description: "Importing scores." },
 		});
 	}
+
+	// No import row yet — the run is still in the parsing phase, or the row
+	// was deleted on failure. Use job_queue / import_tracker as fallbacks.
 
 	const job = await findJobQueueForImport(params.importID);
 
@@ -190,7 +208,6 @@ API_V1_ROUTER.add("GET /imports/:importID/poll-status", async ({ params }) => {
 			throw new ExpectedErr(404, "There is no ongoing import here.");
 		}
 
-		// The user has requested the status before a job row is visible. Rare race.
 		switch (tracker.type) {
 			case "ONGOING":
 				return success("Import is ongoing.", { importStatus: "ongoing", progress: 0 });
@@ -221,16 +238,9 @@ API_V1_ROUTER.add("GET /imports/:importID/poll-status", async ({ params }) => {
 		});
 	}
 
-	// job.status === DONE (2)
 	if (job.status === JOB_STATUS_DONE) {
-		const again = await LoadImportDocumentById(params.importID);
-		if (again) {
-			return success("Import was completed!", {
-				import: again,
-				importStatus: "completed",
-			});
-		}
 		const tracker = await GetImportTrackerByImportId(params.importID);
+
 		if (tracker?.type === "FAILED") {
 			return {
 				$status: tracker.error.statusCode ?? 500,
@@ -239,7 +249,7 @@ API_V1_ROUTER.add("GET /imports/:importID/poll-status", async ({ params }) => {
 				success: true as const,
 			};
 		}
-		// small race: job finished, document not yet visible
+
 		return success("Import is ongoing.", { importStatus: "ongoing", progress: 0 });
 	}
 

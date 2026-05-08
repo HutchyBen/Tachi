@@ -125,6 +125,7 @@ export async function LoadImportDocumentById(
 	const base = await DB.selectFrom("import")
 		.select(SELECT_IMPORT)
 		.where("import.id", "=", importID)
+		.where("import.status", "=", "completed")
 		.executeTakeFirst();
 
 	if (!base) {
@@ -164,7 +165,7 @@ export async function ListRecentImportDocuments(opts: {
 	userId?: number;
 	userIntent?: boolean;
 }): Promise<ImportDocument[]> {
-	let q = DB.selectFrom("import").select(SELECT_IMPORT);
+	let q = DB.selectFrom("import").select(SELECT_IMPORT).where("import.status", "=", "completed");
 
 	if (opts.userId !== undefined) {
 		q = q.where("import.user_id", "=", opts.userId);

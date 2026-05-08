@@ -107,6 +107,7 @@ async function seedImport(
 			import_type: importType as never,
 			user_intent: userIntent,
 			service: "test",
+			status: "completed",
 		})
 		.execute();
 }
