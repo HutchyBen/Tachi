@@ -41,7 +41,7 @@ export default defineConfig({
 			COMMIT_HASH: "test",
 		},
 
-		// Parallel test execution — each worker gets its own isolated Postgres database.
+		// Parallel test execution - each worker gets its own isolated Postgres database.
 		fileParallelism: true,
 		globalSetup: "./vitest.globalSetup.ts",
 		setupFiles: "./vitest.setup.ts",

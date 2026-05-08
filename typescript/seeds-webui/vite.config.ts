@@ -8,12 +8,12 @@ import { seedsDevPlugin } from "./dev/vite-plugin-seeds-dev";
 // In `vite dev` the seedsDevPlugin mounts /__seeds/* endpoints against the
 // local repo's db/seeds/ so the UI can edit, query git history, and run
 // the seeds-scripts tests. These endpoints are NOT present in the
-// production build — all references to them are gated behind
+// production build - all references to them are gated behind
 // import.meta.env.VITE_SEEDS_EDIT_MODE and tree-shaken out.
 
 const REPO_ROOT = path.resolve(__dirname, "../..");
 
-/** Hoisted path for a workspace @codemirror/* package (single instance — avoids "Unrecognized extension value" from nested node_modules). */
+/** Hoisted path for a workspace @codemirror/* package (single instance - avoids "Unrecognized extension value" from nested node_modules). */
 const cmPackage = (name: string) => path.join(REPO_ROOT, "node_modules", "@codemirror", name);
 
 const codemirrorSingleInstanceAliases: {
@@ -35,7 +35,7 @@ const lezerSingleInstanceAliases: {
 }));
 
 export default defineConfig(({ command }) => ({
-	// Edit mode is only on for `vite dev` — `vite build` and `vite preview`
+	// Edit mode is only on for `vite dev` - `vite build` and `vite preview`
 	// produce a read-only bundle suitable for hosting at seeds.tachi.ac.
 	define: {
 		"import.meta.env.VITE_SEEDS_EDIT_MODE": JSON.stringify(command === "serve"),
@@ -67,7 +67,7 @@ export default defineConfig(({ command }) => ({
 					// In prod builds, short-circuit modules that are only reachable
 					// when EDIT_MODE is on. `editRoutes` hosts the edit-only pages
 					// and `schemas` pulls in the whole tachi-common game config tree
-					// for zod introspection — we don't want either of those shipping
+					// for zod introspection - we don't want either of those shipping
 					// to seeds.tachi.ac.
 					{
 						name: "seeds-webui:strip-edit-routes",

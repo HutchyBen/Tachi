@@ -33,7 +33,7 @@ type ActionsResponse = {
 function durationMs(start: string, end: string): string {
 	const ms = Date.parse(end) - Date.parse(start);
 	if (Number.isNaN(ms)) {
-		return "—";
+		return "-";
 	}
 	if (ms < 1000) {
 		return `${ms}ms`;
@@ -196,11 +196,11 @@ export default function AdminActionsPage() {
 														{action.username}
 													</Link>
 												) : (
-													<span className="text-body-secondary">—</span>
+													<span className="text-body-secondary">-</span>
 												)}
 											</td>
 											<td className="font-monospace small">
-												{action.ip ?? "—"}
+												{action.ip ?? "-"}
 											</td>
 											<td className="align-middle">
 												<Button

@@ -131,7 +131,7 @@ export default function ImportInfo({
 							<br />
 							<strong>SongOrChartNotFound</strong> means the score was still{" "}
 							<strong>saved as an orphan</strong> for nightly matching (around 00:01
-							UTC) or manual reprocess — see{" "}
+							UTC) or manual reprocess - see{" "}
 							{user ? (
 								<Link to={`/u/${user.username}/orphans`}>Orphan scores</Link>
 							) : (

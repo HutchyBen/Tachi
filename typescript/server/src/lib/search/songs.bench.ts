@@ -31,23 +31,23 @@ describe("Postgres song search (full seeds)", () => {
 		await importSeeds(DB, SEEDS_DIR);
 	}, 600_000);
 
-	bench("iidx FTS — gradius (title)", async () => {
+	bench("iidx FTS - gradius (title)", async () => {
 		await SearchSongsForGameFtsAndTrgm(GAME_IIDX, "gradius", 50);
 	});
 
-	bench("iidx FTS — taka (artist)", async () => {
+	bench("iidx FTS - taka (artist)", async () => {
 		await SearchSongsForGameFtsAndTrgm(GAME_IIDX, "taka", 50);
 	});
 
-	bench("iidx short query — ab (FTS + trgm)", async () => {
+	bench("iidx short query - ab (FTS + trgm)", async () => {
 		await SearchSongsForGameFtsAndTrgm(GAME_IIDX, "ab", 50);
 	});
 
-	bench("iidx sparse — xyzunlikely (mostly trgm / empty FTS)", async () => {
+	bench("iidx sparse - xyzunlikely (mostly trgm / empty FTS)", async () => {
 		await SearchSongsForGameFtsAndTrgm(GAME_IIDX, "xyzunlikely", 50);
 	});
 
-	bench("bms FTS — fezike (artist)", async () => {
+	bench("bms FTS - fezike (artist)", async () => {
 		await SearchSongsForGameFtsAndTrgm(GAME_BMS, "fezike", 50);
 	});
 

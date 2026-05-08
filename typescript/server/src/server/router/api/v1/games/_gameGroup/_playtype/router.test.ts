@@ -77,7 +77,7 @@ describe("GET /api/v1/games/:game", () => {
 	});
 
 	it.todo(
-		"GET /api/v1/games/:v3Game stats (chart/player/score): blocked — Express matches GET /games/:gameGroup before GET /games/:game, so iidx-sp is rejected as a game group",
+		"GET /api/v1/games/:v3Game stats (chart/player/score): blocked - Express matches GET /games/:gameGroup before GET /games/:game, so iidx-sp is rejected as a game group",
 	);
 
 	it("returns 400 for an unsupported game slug", async () => {

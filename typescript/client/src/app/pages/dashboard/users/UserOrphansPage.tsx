@@ -187,7 +187,7 @@ export default function UserOrphansPage({ reqUser }: { reqUser: UserDocument }) 
 
 			<Modal onHide={() => setDetailOpen(false)} show={detailOpen} size="lg">
 				<Modal.Header closeButton>
-					<Modal.Title>Orphan details — {detailTitle}</Modal.Title>
+					<Modal.Title>Orphan details - {detailTitle}</Modal.Title>
 				</Modal.Header>
 				<Modal.Body>
 					{detailLoading ? (
@@ -221,7 +221,7 @@ export default function UserOrphansPage({ reqUser }: { reqUser: UserDocument }) 
 						]}
 						rowFunction={(o) => (
 							<tr key={o.orphanID}>
-								<td>{o.summary ?? "—"}</td>
+								<td>{o.summary ?? "-"}</td>
 								<td>
 									<code className="small">{o.importType}</code>
 								</td>
@@ -230,7 +230,7 @@ export default function UserOrphansPage({ reqUser }: { reqUser: UserDocument }) 
 										o.gameGroup}
 								</td>
 								<td>{new Date(o.timeInserted).toLocaleString()}</td>
-								<td className="small text-muted">{o.message ?? "—"}</td>
+								<td className="small text-muted">{o.message ?? "-"}</td>
 								<td>
 									<div className="d-flex flex-wrap gap-1">
 										<Button

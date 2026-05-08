@@ -92,7 +92,7 @@ describe("GET /api/v1/users?search=", () => {
 
 	it("treats regex special characters as literals", async () => {
 		// '.*' matches everything as a regex, but is treated as a literal ILIKE
-		// pattern — no usernames contain that substring, so results are empty.
+		// pattern - no usernames contain that substring, so results are empty.
 		const res = await mockApi.get("/api/v1/users?search=.*");
 
 		expect(res.status).toBe(200);

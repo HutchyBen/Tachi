@@ -1,4 +1,4 @@
-# Postgres backup/restore via Docker (host only). Requires `docker` on PATH — not available
+# Postgres backup/restore via Docker (host only). Requires `docker` on PATH - not available
 # inside the devcontainer, so these recipes fail fast there.
 
 POSTGRES_CONTAINER := "tachi-postgres"

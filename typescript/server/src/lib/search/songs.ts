@@ -51,7 +51,7 @@ export type SongSearchRow = {
 
 /**
  * Indexed song search: PostgreSQL FTS (tsvector) plus optional pg_trgm / ILIKE fallback
- * (Zenith-style — no full-table load, no huge IN lists).
+ * (Zenith-style - no full-table load, no huge IN lists).
  *
  * Queries with length ≤ {@link SHORT_QUERY_STRICT_MAX_LEN} also run an **exact** match pass
  * (title, artist, `search_terms`, `alt_titles`) with a boosted rank; substring

@@ -119,7 +119,7 @@ function printHuman(report: CoverageReport): void {
 
 	for (const p of report.packages) {
 		if (!p.present || !p.metrics) {
-			console.log(`${p.id.padEnd(10)}  (no data — run: just test-typescript)`);
+			console.log(`${p.id.padEnd(10)}  (no data - run: just test-typescript)`);
 			continue;
 		}
 		console.log(row(p.id, p.metrics));

@@ -244,7 +244,7 @@ describe("GET /api/v1/clients/:clientID", () => {
 // ─── PATCH /api/v1/clients/:clientID ─────────────────────────────────────────
 
 describe("PATCH /api/v1/clients/:clientID", () => {
-	/** Prudence `?string` fields — omit vs null is not optional; send null when not updating. */
+	/** Prudence `?string` fields - omit vs null is not optional; send null when not updating. */
 	const nullTemplateAndUris = {
 		apiKeyTemplate: null,
 		redirectUri: null,

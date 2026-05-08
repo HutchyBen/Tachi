@@ -82,6 +82,7 @@ const configSchema = z.object({
 			BETA_USER_BONUS: z.number().int().nonnegative(),
 		})
 		.optional(),
+	INVITE_ADMIN_INITIAL_INVITE_CODE: z.string().optional(),
 	TACHI_CONFIG: z.object({
 		NAME: z.string(),
 		TYPE: z.enum(["kamai", "boku", "omni"]),
@@ -263,14 +264,17 @@ function envBoolFrom(env: NodeJS.ProcessEnv, key: string, defaultVal: boolean): 
 	return defaultVal;
 }
 
+const POSTMARK_SMTP_HOST = "smtp.postmarkapp.com";
+
 /**
  * SMTP settings from env. Required for every deployment.
  *
- * - `TACHI_EMAIL_FROM` — `From` header (must match Postmark sender when using Postmark).
- * - `TACHI_EMAIL_AUTH_POSTMARK` — if `true`, uses Postmark SMTP; set `TACHI_EMAIL_AUTH_USER` /
- *   `TACHI_EMAIL_AUTH_PASS` to your server token (both are the token for Postmark).
- * - Otherwise: `TACHI_EMAIL_HOST`, `TACHI_EMAIL_PORT`, `TACHI_EMAIL_SECURE`, and optionally
- *   `TACHI_EMAIL_AUTH_USER` / `TACHI_EMAIL_AUTH_PASS` (e.g. Mailpit: no auth).
+ * - `TACHI_EMAIL_FROM` - `From` header (must match a verified sender when using Postmark).
+ * - `TACHI_EMAIL_HOST`, `TACHI_EMAIL_PORT`, `TACHI_EMAIL_SECURE` (`true` / `false`).
+ * - Optionally `TACHI_EMAIL_AUTH_USER` / `TACHI_EMAIL_AUTH_PASS` when the server needs SMTP auth
+ *   (Mailpit locally typically needs none).
+ * - For Postmark, set host to `smtp.postmarkapp.com` (commonly port `587`, `TACHI_EMAIL_SECURE=false`).
+ *   Either auth field may hold the server token; the other is filled with the same value.
  *
  * @internal Exported for unit tests.
  */
@@ -280,39 +284,14 @@ export function buildEmailConfig(env: NodeJS.ProcessEnv): TachiServerConfig["EMA
 		throw new Error(`TACHI_EMAIL_FROM is required.`);
 	}
 
-	if (envBoolFrom(env, "TACHI_EMAIL_AUTH_POSTMARK", false)) {
-		const pass = envOptFrom(env, "TACHI_EMAIL_AUTH_PASS");
-		const user = envOptFrom(env, "TACHI_EMAIL_AUTH_USER");
-		const token = pass ?? user;
-		if (token === undefined) {
-			throw new Error(
-				`TACHI_EMAIL_AUTH_PASS or TACHI_EMAIL_AUTH_USER is required when TACHI_EMAIL_AUTH_POSTMARK is true.`,
-			);
-		}
-		const authUser = user ?? token;
-		const authPass = pass ?? token;
-		return {
-			FROM: from,
-			TRANSPORT_OPS: {
-				host: "smtp.postmarkapp.com",
-				port: 587,
-				secure: false,
-				auth: {
-					user: authUser,
-					pass: authPass,
-				},
-			},
-		};
-	}
-
 	const host = envOptFrom(env, "TACHI_EMAIL_HOST");
 	if (host === undefined) {
-		throw new Error(`TACHI_EMAIL_HOST is required when TACHI_EMAIL_AUTH_POSTMARK is false.`);
+		throw new Error(`TACHI_EMAIL_HOST is required.`);
 	}
 
 	const portRaw = envOptFrom(env, "TACHI_EMAIL_PORT");
 	if (portRaw === undefined) {
-		throw new Error(`TACHI_EMAIL_PORT is required when TACHI_EMAIL_AUTH_POSTMARK is false.`);
+		throw new Error(`TACHI_EMAIL_PORT is required.`);
 	}
 	const port = Number.parseInt(portRaw, 10);
 	if (Number.isNaN(port)) {
@@ -320,8 +299,19 @@ export function buildEmailConfig(env: NodeJS.ProcessEnv): TachiServerConfig["EMA
 	}
 
 	const secure = envBoolFrom(env, "TACHI_EMAIL_SECURE", false);
-	const authUser = envOptFrom(env, "TACHI_EMAIL_AUTH_USER");
-	const authPass = envOptFrom(env, "TACHI_EMAIL_AUTH_PASS");
+	let authUser = envOptFrom(env, "TACHI_EMAIL_AUTH_USER");
+	let authPass = envOptFrom(env, "TACHI_EMAIL_AUTH_PASS");
+
+	if (host.toLowerCase() === POSTMARK_SMTP_HOST) {
+		const token = authPass ?? authUser;
+		if (token === undefined) {
+			throw new Error(
+				`TACHI_EMAIL_AUTH_PASS or TACHI_EMAIL_AUTH_USER is required when TACHI_EMAIL_HOST is ${POSTMARK_SMTP_HOST}.`,
+			);
+		}
+		authUser = authUser ?? token;
+		authPass = authPass ?? token;
+	}
 
 	const transportOps: Record<string, unknown> = {
 		host,
@@ -393,6 +383,7 @@ const eagOauth = oauth2Optional("EAG");
 const minOauth = oauth2Optional("MIN");
 const emailCfg = emailConfig();
 const inviteCfg = inviteCodeConfig();
+const bootstrapInvite = opt("TACHI_INVITE_ADMIN_INITIAL_INVITE_CODE")?.trim() || undefined;
 const seedsCfg = seedsConfig();
 const clientDev = clientDevServer();
 const extWorkerConc = opt("TACHI_EXTERNAL_SCORE_IMPORT_WORKER_CONCURRENCY");
@@ -437,6 +428,7 @@ const configFromEnv: unknown = {
 	MAX_RIVALS: parseIntEnv("TACHI_MAX_RIVALS", 5),
 	OUR_URL: req("TACHI_OUR_URL"),
 	...(inviteCfg !== undefined ? { INVITE_CODE_CONFIG: inviteCfg } : {}),
+	...(bootstrapInvite !== undefined ? { INVITE_ADMIN_INITIAL_INVITE_CODE: bootstrapInvite } : {}),
 	TACHI_CONFIG: {
 		NAME: req("TACHI_NAME"),
 		TYPE: req("TACHI_TYPE"),
@@ -526,14 +518,14 @@ if (!MIGRATIONS_DIR) {
 let version = process.env.VERSION;
 
 if (!version) {
-	log.error(`No VERSION specified in environment. defaulting to 0.0.0.`);
+	log.warn(`No VERSION specified in environment. defaulting to 0.0.0.`);
 	version = "0.0.0";
 }
 
 let commitHash = process.env.COMMIT_HASH;
 
 if (!commitHash) {
-	log.error(`No COMMIT_HASH specified in environment. defaulting to unknown commit.`);
+	log.warn(`No COMMIT_HASH specified in environment. defaulting to unknown commit.`);
 	commitHash = "unknown";
 }
 

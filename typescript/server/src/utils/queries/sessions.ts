@@ -1,8 +1,10 @@
 import { SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart";
 import { SELECT_SCORE_DOCUMENT, ToScoreDocument } from "#lib/db-formats/score";
+import { SELECT_SESSION_DOCUMENT, ToSessionDocument } from "#lib/db-formats/session";
 import { SELECT_SONG_DOCUMENT, ToSongDocument } from "#lib/db-formats/song";
 import { GetSessionScoreInfo } from "#lib/score-import/framework/sessions/sessions";
 import DB from "#services/pg/db";
+import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { GetUserWithIDGuaranteed } from "#utils/user";
 import _ from "lodash";
 import {
@@ -41,6 +43,58 @@ export async function GetScoreIdsGroupedBySessionId(
 	}
 
 	return map;
+}
+
+/**
+ * Returns the chronologically adjacent sessions (prev = older, next = newer)
+ * for the same user and game, using (time_ended, id) as a deterministic sort key.
+ */
+export async function GetAdjacentSessions(
+	session: SessionDocument,
+): Promise<{ next: SessionDocument | null; prev: SessionDocument | null }> {
+	const timeEnded = UnixMillisecondsToISO8601(session.timeEnded);
+
+	const [newerRow, olderRow] = await Promise.all([
+		DB.selectFrom("session")
+			.select(SELECT_SESSION_DOCUMENT)
+			.where("session.user_id", "=", session.userID)
+			.where("session.game", "=", session.game)
+			.where((eb) =>
+				eb.or([
+					eb("session.time_ended", ">", timeEnded),
+					eb.and([
+						eb("session.time_ended", "=", timeEnded),
+						eb("session.id", ">", session.sessionID),
+					]),
+				]),
+			)
+			.orderBy("session.time_ended", "asc")
+			.orderBy("session.id", "asc")
+			.limit(1)
+			.executeTakeFirst(),
+		DB.selectFrom("session")
+			.select(SELECT_SESSION_DOCUMENT)
+			.where("session.user_id", "=", session.userID)
+			.where("session.game", "=", session.game)
+			.where((eb) =>
+				eb.or([
+					eb("session.time_ended", "<", timeEnded),
+					eb.and([
+						eb("session.time_ended", "=", timeEnded),
+						eb("session.id", "<", session.sessionID),
+					]),
+				]),
+			)
+			.orderBy("session.time_ended", "desc")
+			.orderBy("session.id", "desc")
+			.limit(1)
+			.executeTakeFirst(),
+	]);
+
+	return {
+		next: newerRow ? ToSessionDocument(newerRow, []) : null,
+		prev: olderRow ? ToSessionDocument(olderRow, []) : null,
+	};
 }
 
 export async function GetSessionData(session: SessionDocument): Promise<{

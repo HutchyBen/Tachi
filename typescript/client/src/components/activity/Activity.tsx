@@ -44,6 +44,10 @@ import {
 	type UserDocument,
 } from "tachi-common";
 
+function isActivityInteractiveTarget(el: HTMLElement) {
+	return Boolean(el.closest("a, button, input, textarea, select, [role='button']"));
+}
+
 // Records activity for a group of users on a GPT. Also used for single users.
 export default function Activity({
 	url,
@@ -291,7 +295,16 @@ function ScoresActivity({
 		<div className="timeline-item timeline-hover my-4">
 			<div className="timeline-badge bg-warning"></div>
 			<div className="timeline-content flex-nowrap">
-				<div className="timeline-content-inner" onClick={() => setShow(!show)}>
+				<div
+					className="timeline-content-inner activity-entry-toggle"
+					onClick={(e) => {
+						if (isActivityInteractiveTarget(e.target as HTMLElement)) {
+							return;
+						}
+
+						setShow(!show);
+					}}
+				>
 					<div className="timeline-content-title">
 						<span className="me-2">
 							<ProfilePicture size="sm" toGPT={{ game }} user={user} />
@@ -323,10 +336,10 @@ function ScoresActivity({
 				</div>
 
 				{show && (
-					<>
+					<div className="activity-expand-body">
 						<Divider />
 						<ScoreTable dataset={dataset} game={game} noTopDisplayStr />
-					</>
+					</div>
 				)}
 			</div>
 		</div>
@@ -367,7 +380,16 @@ function GoalActivity({
 		<div className="timeline-item timeline-hover my-4">
 			<div className="timeline-badge bg-warning"></div>
 			<div className="timeline-content">
-				<div className="timeline-content-inner" onClick={() => setShow(!show)}>
+				<div
+					className="timeline-content-inner activity-entry-toggle"
+					onClick={(e) => {
+						if (isActivityInteractiveTarget(e.target as HTMLElement)) {
+							return;
+						}
+
+						setShow(!show);
+					}}
+				>
 					<div className="timeline-content-title">
 						<span className="me-2">
 							<ProfilePicture size="sm" toGPT={{ game }} user={user} />
@@ -399,7 +421,7 @@ function GoalActivity({
 				</div>
 
 				{show && (
-					<>
+					<div className="activity-expand-body">
 						<Divider />
 						<div className="ps-4">
 							{data.goals.map((e) => (
@@ -410,7 +432,7 @@ function GoalActivity({
 								/>
 							))}
 						</div>
-					</>
+					</div>
 				)}
 			</div>
 		</div>
@@ -485,7 +507,16 @@ function SessionActivity({
 		<div className="timeline-item timeline-hover">
 			<div className={`timeline-badge bg-${data.highlight ? "warning" : "secondary"}`}></div>
 			<div className="timeline-content">
-				<div className="timeline-content-inner" onClick={() => setShow(!show)}>
+				<div
+					className="timeline-content-inner activity-entry-toggle"
+					onClick={(e) => {
+						if (isActivityInteractiveTarget(e.target as HTMLElement)) {
+							return;
+						}
+
+						setShow(!show);
+					}}
+				>
 					<div className="timeline-content-title">
 						<span className="me-2">
 							<ProfilePicture size="sm" toGPT={{ game }} user={user} />
@@ -529,7 +560,11 @@ function SessionActivity({
 						</span>
 					</div>
 				</div>
-				{show && <SessionShower sessionID={data.sessionID} />}
+				{show && (
+					<div className="activity-expand-body">
+						<SessionShower sessionID={data.sessionID} />
+					</div>
+				)}
 			</div>
 		</div>
 	);

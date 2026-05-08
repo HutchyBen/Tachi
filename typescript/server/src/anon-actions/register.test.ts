@@ -1,6 +1,7 @@
+import { ServerConfig } from "#lib/setup/config";
 import DB from "#services/pg/db";
 import { seedInvite, seedUser } from "#test-utils/pg-fixtures";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { ANON_ACTION_Register } from "./register";
 
@@ -217,6 +218,52 @@ describe("ANON_ACTION_Register", () => {
 		expect(user).toBeUndefined();
 	});
 
+	// ── Sequence gaps ─────────────────────────────────────────────────────────
+
+	it("does not burn sequence values on failed registrations with bad invite codes", async () => {
+		const first = await ANON_ACTION_Register(taker, {
+			username: "firstuser",
+			"!password": "securepassword",
+			email: "first@example.com",
+			captcha: "test",
+			inviteCode,
+		});
+
+		// Need a fresh invite for the next successful signup.
+		const { id: seedId } = await seedUser({
+			username: "inviter2",
+			email: "inviter2@example.com",
+		});
+		const secondInvite = await seedInvite(seedId, "SECOND_INVITE");
+
+		// 10 failed registrations — bad invite code but unique username/email,
+		// so they enter the transaction and reach AddNewUser before failing.
+		for (let i = 0; i < 10; i++) {
+			await expect(
+				ANON_ACTION_Register(taker, {
+					username: `baduser${i}`,
+					"!password": "securepassword",
+					email: `bad${i}@example.com`,
+					captcha: "test",
+					inviteCode: "BOGUS_CODE",
+				}),
+			).rejects.toThrow();
+		}
+
+		const second = await ANON_ACTION_Register(taker, {
+			username: "seconduser",
+			"!password": "securepassword",
+			email: "second@example.com",
+			captcha: "test",
+			inviteCode: secondInvite,
+		});
+
+		// If sequences are gap-free, the second real user should be first.id + 1
+		// (skipping only the seedUser helper we inserted, which also burns one).
+		// With BIGSERIAL, this FAILS: the 10 rolled-back txns each burned a value.
+		expect(second.userID).toBe(first.userID + 2);
+	});
+
 	// ── Audit log ──────────────────────────────────────────────────────────────
 
 	it("writes a BAD action row when the username is already taken", async () => {
@@ -274,5 +321,96 @@ describe("ANON_ACTION_Register", () => {
 		const input = action.input as Record<string, unknown>;
 
 		expect(input).not.toHaveProperty("!password");
+	});
+});
+
+// ─── Bootstrap invite (INVITE_ADMIN_INITIAL_INVITE_CODE) ──────────────────────
+
+describe("ANON_ACTION_Register - bootstrap invite", () => {
+	const taker = { ip: "127.0.0.1" };
+	const BOOTSTRAP_CODE = "BOOTSTRAP_SECRET_FOR_TESTS";
+
+	let originalBootstrap: typeof ServerConfig.INVITE_ADMIN_INITIAL_INVITE_CODE;
+
+	beforeEach(() => {
+		originalBootstrap = ServerConfig.INVITE_ADMIN_INITIAL_INVITE_CODE;
+		ServerConfig.INVITE_ADMIN_INITIAL_INVITE_CODE = BOOTSTRAP_CODE;
+	});
+
+	afterEach(() => {
+		ServerConfig.INVITE_ADMIN_INITIAL_INVITE_CODE = originalBootstrap;
+	});
+
+	it("creates an admin user when the instance has no accounts", async () => {
+		const result = await ANON_ACTION_Register(taker, {
+			username: "firstadmin",
+			"!password": "securepassword",
+			email: "admin@example.com",
+			captcha: "test",
+			inviteCode: BOOTSTRAP_CODE,
+		});
+
+		const account = await DB.selectFrom("account")
+			.select(["account.id", "account.auth_level"])
+			.where("account.id", "=", result.userID)
+			.executeTakeFirstOrThrow();
+
+		expect(account.auth_level).toBe("admin");
+	});
+
+	it("does not consume any priv_invite row", async () => {
+		await ANON_ACTION_Register(taker, {
+			username: "firstadmin",
+			"!password": "securepassword",
+			email: "admin@example.com",
+			captcha: "test",
+			inviteCode: BOOTSTRAP_CODE,
+		});
+
+		const invites = await DB.selectFrom("priv_invite")
+			.select(DB.fn.countAll().as("count"))
+			.executeTakeFirstOrThrow();
+
+		expect(Number(invites.count)).toBe(0);
+	});
+
+	it("rejects the bootstrap code when an account already exists", async () => {
+		await seedUser();
+
+		await expect(
+			ANON_ACTION_Register(taker, {
+				username: "seconduser",
+				"!password": "securepassword",
+				email: "second@example.com",
+				captcha: "test",
+				inviteCode: BOOTSTRAP_CODE,
+			}),
+		).rejects.toMatchObject({ code: 400 });
+	});
+
+	it("rejects a wrong code even on an empty instance", async () => {
+		await expect(
+			ANON_ACTION_Register(taker, {
+				username: "firstadmin",
+				"!password": "securepassword",
+				email: "admin@example.com",
+				captcha: "test",
+				inviteCode: "WRONG_CODE",
+			}),
+		).rejects.toThrow();
+	});
+
+	it("falls through to normal invite validation when env is unset", async () => {
+		ServerConfig.INVITE_ADMIN_INITIAL_INVITE_CODE = undefined;
+
+		await expect(
+			ANON_ACTION_Register(taker, {
+				username: "firstadmin",
+				"!password": "securepassword",
+				email: "admin@example.com",
+				captcha: "test",
+				inviteCode: "NONEXISTENT",
+			}),
+		).rejects.toThrow();
 	});
 });

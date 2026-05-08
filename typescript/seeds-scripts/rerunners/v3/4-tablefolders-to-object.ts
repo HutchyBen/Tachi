@@ -35,7 +35,7 @@ function sqlStr(value: string): string {
 }
 
 /**
- * `jsonb_array_elements` does not work on JSON objects — rewrite legacy elemMatch SQL
+ * `jsonb_array_elements` does not work on JSON objects - rewrite legacy elemMatch SQL
  * to key lookup (must match `5-folders-to-sql-queries.ts`).
  */
 function rewriteFolderWhereTableFoldersElemExists(where: string): string | null {

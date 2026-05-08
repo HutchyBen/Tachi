@@ -94,7 +94,7 @@ async function computeDocPair(draft: Draft): Promise<DocPair | null> {
 }
 
 // ---------------------------------------------------------------------------
-// Draft item — op / time / discard in a slim bar; diff card always visible
+// Draft item - op / time / discard in a slim bar; diff card always visible
 // (same id=…, optional pretty title, field table, Show JSON as on /diff).
 // ---------------------------------------------------------------------------
 
@@ -272,7 +272,7 @@ export function Drafts() {
 						) : null}
 					</h2>
 					<p className="page-subtitle">
-						Staged edits. Apply to write them to disk — seeds are re-sorted
+						Staged edits. Apply to write them to disk - seeds are re-sorted
 						automatically.
 					</p>
 				</div>

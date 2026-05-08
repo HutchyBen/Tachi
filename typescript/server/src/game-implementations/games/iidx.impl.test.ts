@@ -236,7 +236,7 @@ describe("IIDX_IMPL (unit)", () => {
 		});
 	});
 
-	describe("scoreCalcs ktLampRatingNC / ktLampRatingHC / ktLampRatingEXHC", () => {
+	describe("scoreCalcs ktLampRatingHC / ktLampRatingEXHC", () => {
 		it("IIDX SP", () => {
 			const run = (
 				scoreData: Partial<ScoreData<"iidx-sp">>,
@@ -258,37 +258,30 @@ describe("IIDX_IMPL (unit)", () => {
 			const tiered = { ncTier: mkTier(15), hcTier: mkTier(16), exhcTier: mkTier(17) };
 
 			expect(run({ lamp: "FAILED" }, {})).toMatchObject({
-				ktLampRatingNC: 0,
 				ktLampRatingHC: 0,
 				ktLampRatingEXHC: 0,
 			});
 			expect(run({ lamp: "EASY CLEAR" }, {})).toMatchObject({
-				ktLampRatingNC: 0,
 				ktLampRatingHC: 0,
 				ktLampRatingEXHC: 0,
 			});
 			expect(run({ lamp: "CLEAR" }, tiered)).toMatchObject({
-				ktLampRatingNC: 15,
 				ktLampRatingHC: 0,
 				ktLampRatingEXHC: 0,
 			});
 			expect(run({ lamp: "HARD CLEAR" }, tiered)).toMatchObject({
-				ktLampRatingNC: 15,
 				ktLampRatingHC: 16,
 				ktLampRatingEXHC: 0,
 			});
 			expect(run({ lamp: "EX HARD CLEAR" }, tiered)).toMatchObject({
-				ktLampRatingNC: 15,
 				ktLampRatingHC: 16,
 				ktLampRatingEXHC: 17,
 			});
 			expect(run({ lamp: "FULL COMBO" }, tiered)).toMatchObject({
-				ktLampRatingNC: 15,
 				ktLampRatingHC: 16,
 				ktLampRatingEXHC: 17,
 			});
 			expect(run({ lamp: "HARD CLEAR" }, { ncTier: mkTier(15) })).toMatchObject({
-				ktLampRatingNC: 15,
 				ktLampRatingHC: 15,
 				ktLampRatingEXHC: 0,
 			});
@@ -313,27 +306,22 @@ describe("IIDX_IMPL (unit)", () => {
 			}
 
 			expect(run({ lamp: "EASY CLEAR" }, { dpTier: mkTier(15) })).toMatchObject({
-				ktLampRatingNC: 0,
 				ktLampRatingHC: 0,
 				ktLampRatingEXHC: 0,
 			});
 			expect(run({ lamp: "CLEAR" }, { dpTier: mkTier(15) })).toMatchObject({
-				ktLampRatingNC: 15,
 				ktLampRatingHC: 0,
 				ktLampRatingEXHC: 0,
 			});
 			expect(run({ lamp: "HARD CLEAR" }, { dpTier: mkTier(15) })).toMatchObject({
-				ktLampRatingNC: 15,
 				ktLampRatingHC: 15,
 				ktLampRatingEXHC: 0,
 			});
 			expect(run({ lamp: "EX HARD CLEAR" }, { dpTier: mkTier(15) })).toMatchObject({
-				ktLampRatingNC: 15,
 				ktLampRatingHC: 15,
 				ktLampRatingEXHC: 15,
 			});
 			expect(run({ lamp: "FULL COMBO" }, { dpTier: mkTier(15) })).toMatchObject({
-				ktLampRatingNC: 15,
 				ktLampRatingHC: 15,
 				ktLampRatingEXHC: 15,
 			});

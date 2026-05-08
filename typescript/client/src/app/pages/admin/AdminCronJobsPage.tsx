@@ -31,11 +31,11 @@ type CronResponse = {
 
 function durationMs(startedAt: string, completedAt: string | null): string {
 	if (!completedAt) {
-		return "—";
+		return "-";
 	}
 	const ms = Date.parse(completedAt) - Date.parse(startedAt);
 	if (Number.isNaN(ms)) {
-		return "—";
+		return "-";
 	}
 	if (ms < 1000) {
 		return `${ms}ms`;
@@ -175,7 +175,7 @@ export default function AdminCronJobsPage() {
 														</details>
 													) : (
 														<span className="text-body-secondary">
-															—
+															-
 														</span>
 													)}
 												</td>

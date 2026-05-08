@@ -9,7 +9,7 @@ alwaysApply: false
 In Kysely `select`, `where`, `orderBy`, `join` conditions, and raw `sql` fragments, **always** qualify column names with the table or join alias. Do not use bare column names when the query references a table (including single-table queries, for consistency and safer refactors).
 
 ```typescript
-// ❌ BAD — ambiguous once joins or CTEs are added; harder to grep
+// ❌ BAD - ambiguous once joins or CTEs are added; harder to grep
 .select(["data", "chart_id", "user_id"])
 .where("id", "=", id)
 

@@ -38,7 +38,7 @@ export type ActivityConstraint = {
 	userID?: integer | { $in: Array<integer> };
 };
 
-/** Kysely dynamic column refs — same pattern as `whereUserIdOnGoalSub` in `#utils/db`. */
+/** Kysely dynamic column refs - same pattern as `whereUserIdOnGoalSub` in `#utils/db`. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- OperandExpressionFactory varies by query (session / join / class_achievement).
 type ActivityWhereEb = any;
 

@@ -20,7 +20,7 @@ const POSTGRES_HOST = "tachi-postgres";
 const POSTGRES_USER = "tachi";
 const POSTGRES_PASS = "tachi";
 
-// Set POSTGRES_URL before any app code is imported — config.ts reads it at load time.
+// Set POSTGRES_URL before any app code is imported - config.ts reads it at load time.
 process.env.POSTGRES_URL = `postgresql://${POSTGRES_USER}:${POSTGRES_PASS}@${POSTGRES_HOST}/${WORKER_DB_NAME}`;
 
 // Mock global fetch before any app code is imported.
@@ -45,7 +45,7 @@ globalThis.fetch = (url: string | Request | URL): Promise<Response> => {
 		} as unknown as Response);
 	}
 
-	// Blow up loudly if any unexpected fetch slips through — this keeps tests hermetic.
+	// Blow up loudly if any unexpected fetch slips through - this keeps tests hermetic.
 	throw new Error(`Unexpected fetch() in test: ${url.toString()}`);
 };
 

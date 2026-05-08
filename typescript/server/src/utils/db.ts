@@ -147,7 +147,7 @@ function whereUserIdOnQuestSub(userID: unknown) {
 }
 
 /**
- * Next numeric `song.legacy_id` for BMS/PMS — `max(existing) + 1`, or `1` if none.
+ * Next numeric `song.legacy_id` for BMS/PMS - `max(existing) + 1`, or `1` if none.
  * Replaces Mongo `counters` `*-song-id` documents.
  *
  * This shit sucks and should be dropped asap: TODO(zk)

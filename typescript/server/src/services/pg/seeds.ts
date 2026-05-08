@@ -594,7 +594,7 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 			};
 		});
 
-		// Goals are never updated once created — only new ones are inserted.
+		// Goals are never updated once created - only new ones are inserted.
 		await batchIgnorePg(pg, "goal", goalRows);
 		console.log(`  ${goals.length} goals\n`);
 	}

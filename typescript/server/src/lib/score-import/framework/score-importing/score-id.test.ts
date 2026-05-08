@@ -155,7 +155,7 @@ describe("CreateScoreID", () => {
 		);
 	});
 
-	it("is deterministic (canary — changing the algorithm is a breaking change)", () => {
+	it("is deterministic (canary - changing the algorithm is a breaking change)", () => {
 		const scoreID = CreateScoreID("iidx-sp", 1, TestingIIDXSPDryScore, Testing511SPA.chartID);
 
 		expect(scoreID).toBe("T5d669c4d5d6ca80761e87698acd77c51d2bed95b64ab76e65952dbca7c26bc81");

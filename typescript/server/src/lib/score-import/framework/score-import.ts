@@ -13,7 +13,7 @@ import ScoreImportFatalError from "./score-importing/score-import-error";
  * Makes a score import given ScoreImportJobData (same process as the API).
  *
  * When `USE_EXTERNAL_SCORE_IMPORT_WORKER` is true, HTTP routes call
- * {@link EnqueueScoreImportJob} instead — this function is only used for the
+ * {@link EnqueueScoreImportJob} instead - this function is only used for the
  * inline (non-queued) path.
  */
 export async function MakeScoreImport<I extends ImportTypes>(

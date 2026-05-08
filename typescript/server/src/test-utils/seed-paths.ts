@@ -4,7 +4,7 @@ import path from "path";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** Default `db/seeds` (collections JSON) relative to the server package — same as `load-seeds-pg.ts`. */
+/** Default `db/seeds` (collections JSON) relative to the server package - same as `load-seeds-pg.ts`. */
 export const DEFAULT_SEEDS_DIR = path.resolve(__dirname, "../../../../db/seeds");
 
 export function resolveSeedsDir(): string {

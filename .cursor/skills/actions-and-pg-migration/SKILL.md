@@ -3,7 +3,7 @@ name: actions-and-pg-migration
 description: Patterns for writing actions (MakeAction/MakeAnonAction), using the Postgres DB (Kysely), and migrating Express routes from MongoDB to Postgres in the Tachi server. Use when adding a new mutation, migrating a Mongo-backed router to Postgres, writing action files, or writing tests for actions or routers.
 ---
 
-# Actions & Postgres Migration — Tachi Server
+# Actions & Postgres Migration - Tachi Server
 
 ## Actions
 
@@ -31,9 +31,9 @@ import { ExpectedErr } from "bliss";
 export const ACTION_MyAction = MakeAction(
     "MY_ACTION",
     async (taker, { fieldA, fieldB }) => {
-        // taker.acct.id  — authenticated user's numeric ID
-        // taker.acct.username — their username
-        // taker.ip — request IP (for audit log)
+        // taker.acct.id  - authenticated user's numeric ID
+        // taker.acct.username - their username
+        // taker.ip - request IP (for audit log)
 
         if (somethingWrong) {
             throw new ExpectedErr(400, "Human-readable reason.");
@@ -50,18 +50,18 @@ export const ACTION_MyAction = MakeAction(
 
 ### ExpectedErr
 
-`ExpectedErr(code, reason)` is an intentional control-flow error. Throw it for 400/403/404/409 etc. The global Express error handler in `server.ts` (`MAIN_ERR_HANDLER`) catches it and returns `{ success: false, description: reason }` with the right HTTP status. **Never wrap action calls in `try/catch`** — let it propagate.
+`ExpectedErr(code, reason)` is an intentional control-flow error. Throw it for 400/403/404/409 etc. The global Express error handler in `server.ts` (`MAIN_ERR_HANDLER`) catches it and returns `{ success: false, description: reason }` with the right HTTP status. **Never wrap action calls in `try/catch`** - let it propagate.
 
 ### Calling actions from a router
 
 ```typescript
-// taker construction — same pattern everywhere:
+// taker construction - same pattern everywhere:
 const user = req.session.tachi?.user;
 if (!user) return res.status(401).json({ success: false, description: "..." });
 
 const taker = { ip: req.ip, acct: { id: user.id, username: user.username } };
 
-// No try/catch — errors reach MAIN_ERR_HANDLER automatically
+// No try/catch - errors reach MAIN_ERR_HANDLER automatically
 const result = await ACTION_MyAction(taker, { fieldA: body.fieldA });
 
 return res.status(200).json({ success: true, description: "...", body: result });
@@ -123,7 +123,7 @@ await DB.selectFrom("priv_api_client")
 // Insert
 await DB.insertInto("priv_api_client").values({ ... }).execute();
 
-// Update (fetch after separately — don't use .returning() with prefixed column lists)
+// Update (fetch after separately - don't use .returning() with prefixed column lists)
 await DB.updateTable("priv_api_client").set({ name: "New" }).where("client_id", "=", id).execute();
 const updated = await GetClientByID(id); // re-fetch via existing query helper
 
@@ -146,12 +146,12 @@ Existing query helpers (e.g. `GetClientByID`) live in `src/utils/queries/`. Use 
 ### Checklist
 
 1. **Identify Mongo collections** → find the equivalent `priv_*` Postgres table.
-2. **Reads** — replace `MONGODB_KILL["collection"].find/findOne()` with Kysely selects. Use the existing `SELECT_*` + `To*Document` helpers from `src/lib/db-formats/`.
-3. **Mutations** — extract each write operation into a `MakeAction`-wrapped file in `src/actions/`. Add its signature to `ActionSignatures` in `actions.ts`.
-4. **Middleware** — update any middleware that does Mongo lookups (e.g. `GetClientFromID`) to use a query helper or direct Kysely query.
-5. **Remove Mongo import** — `MONGODB_KILL` should be gone from the file.
-6. **Ownership checks** — move them inside the action (`taker.acct.id === row.author`) rather than in Express middleware, so the action is self-contained.
-7. **Error handler** — throw `ExpectedErr` instead of returning early; no `try/catch` in routes needed.
+2. **Reads** - replace `MONGODB_KILL["collection"].find/findOne()` with Kysely selects. Use the existing `SELECT_*` + `To*Document` helpers from `src/lib/db-formats/`.
+3. **Mutations** - extract each write operation into a `MakeAction`-wrapped file in `src/actions/`. Add its signature to `ActionSignatures` in `actions.ts`.
+4. **Middleware** - update any middleware that does Mongo lookups (e.g. `GetClientFromID`) to use a query helper or direct Kysely query.
+5. **Remove Mongo import** - `MONGODB_KILL` should be gone from the file.
+6. **Ownership checks** - move them inside the action (`taker.acct.id === row.author`) rather than in Express middleware, so the action is self-contained.
+7. **Error handler** - throw `ExpectedErr` instead of returning early; no `try/catch` in routes needed.
 
 ### Permission columns
 

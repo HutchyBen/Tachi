@@ -43,7 +43,7 @@ export function schemaForCollection(name: string): z.ZodType<unknown> | null {
 		return SEEDS_BMS_COURSE_DOCUMENT_SCHEMA as z.ZodType<unknown>;
 	}
 
-	// charts-${V3Game}.json — filenames mirror `db/seeds/` and match ALL_GAMES
+	// charts-${V3Game}.json - filenames mirror `db/seeds/` and match ALL_GAMES
 	// keys (e.g. iidx-sp, bms-14k, gitadora-dora). Do not split on the last
 	// hyphen; that would turn iidx-sp into iidx and miss the schema map.
 	if (stripped.startsWith("charts-")) {

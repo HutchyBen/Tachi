@@ -236,13 +236,13 @@ provide callback URLs inside emails.
 
 SMTP is always configured. Set:
 
-- `TACHI_EMAIL_FROM` — `From` header (must match a verified sender when using Postmark).
-- `TACHI_EMAIL_AUTH_POSTMARK` — `true` or `false`. When `true`, uses Postmark’s SMTP
-  endpoint; set `TACHI_EMAIL_AUTH_USER` and `TACHI_EMAIL_AUTH_PASS` to your server API token
-  (both are the token for Postmark SMTP).
-- When Postmark is `false`: `TACHI_EMAIL_HOST`, `TACHI_EMAIL_PORT`, `TACHI_EMAIL_SECURE`
-  (`true` / `false`), and optionally `TACHI_EMAIL_AUTH_USER` / `TACHI_EMAIL_AUTH_PASS`
-  for servers that require auth (local Mailpit typically needs no auth).
+- `TACHI_EMAIL_FROM` - `From` header (must match a verified sender when using Postmark).
+- `TACHI_EMAIL_HOST`, `TACHI_EMAIL_PORT`, `TACHI_EMAIL_SECURE` (`true` / `false`).
+- Optionally `TACHI_EMAIL_AUTH_USER` / `TACHI_EMAIL_AUTH_PASS` for SMTP auth (local Mailpit
+  typically needs none).
+- For Postmark, use host `smtp.postmarkapp.com` (usually port `587` with `TACHI_EMAIL_SECURE=false`)
+  and set either auth field to your server API token (both username and password are the token for
+  Postmark SMTP).
 
 `TRANSPORT_OPS` is derived from these variables and passed to Nodemailer.
 
@@ -271,6 +271,18 @@ interface INVITE_CODE_CONFIG: {
 	BETA_USER_BONUS: integer;
 };
 ```
+
+### TACHI_INVITE_ADMIN_INITIAL_INVITE_CODE
+
+- Type: String (Optional, environment variable only)
+
+A one-time bootstrap invite code for first-time instance setup. When `INVITE_CODE_CONFIG` is
+configured, new instances have a chicken-and-egg problem: registration requires an invite code,
+but invite codes can only be created by an existing user.
+
+Set this environment variable to a long, random secret. The first person to register with this
+code - while the `account` table is still empty - becomes the site admin. Once the first admin
+exists, the code is no longer accepted.
 
 ### TACHI_CONFIG
 

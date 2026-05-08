@@ -42,7 +42,6 @@ describe("GetAdjacentAbove / GetAdjacentBelow (Postgres)", () => {
 			.execute();
 
 		for (const r of rows) {
-			// eslint-disable-next-line no-await-in-loop
 			await DB.insertInto("pb")
 				.values({
 					calculated_data: JSON.stringify({}),

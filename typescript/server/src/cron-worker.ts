@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import { loadServerEnvFile } from "#lib/setup/load-server-env";
 loadServerEnvFile(process.env.NODE_ENV === "test" ? ".env.test" : ".env");
 
@@ -5,7 +6,11 @@ import { runCronTickOnce } from "#lib/jobs/cron/cron-service";
 import { log } from "#lib/log/log";
 import { Env } from "#lib/setup/config";
 import { ClosePgConnection } from "#services/pg/db";
+import { Sleep } from "#utils/misc";
+import { writeFileSync } from "fs";
 import { applyMigrations } from "tachi-db-migration-engine";
+
+const HEARTBEAT_FILE = "/tmp/worker-heartbeat";
 
 const TICK_MS = 5_000;
 
@@ -23,6 +28,7 @@ void bootstrap();
 async function bootstrap() {
 	await applyMigrations(Env.POSTGRES_URL, Env.MIGRATIONS_DIR);
 	log.info({ bootInfo: true }, "tachi cron worker starting.");
+
 	let stopping = false;
 	const shutdown = () => {
 		stopping = true;
@@ -32,8 +38,8 @@ async function bootstrap() {
 
 	// eslint-disable-next-line no-unmodified-loop-condition
 	while (!stopping) {
+		writeFileSync(HEARTBEAT_FILE, Date.now().toString());
 		try {
-			// eslint-disable-next-line no-await-in-loop
 			await runCronTickOnce();
 		} catch (e) {
 			log.error(e, "Cron tick error.");
@@ -41,10 +47,7 @@ async function bootstrap() {
 		if (stopping) {
 			break;
 		}
-		// eslint-disable-next-line no-await-in-loop
-		await new Promise((r) => {
-			setTimeout(r, TICK_MS);
-		});
+		await Sleep(TICK_MS);
 	}
 	log.info("Cron worker stopped.");
 	await ClosePgConnection();

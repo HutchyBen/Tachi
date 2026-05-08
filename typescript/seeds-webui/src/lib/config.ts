@@ -3,7 +3,7 @@
 // This is a *build-time* flag set in vite.config.ts. In a production build
 // (`vite build`) it is the literal `false`, so the bundler tree-shakes every
 // branch guarded by `EDIT_MODE`. That's how we keep the static prod bundle
-// absolutely incapable of writing to disk — even if someone self-hosted it.
+// absolutely incapable of writing to disk - even if someone self-hosted it.
 //
 // `hasDevTransport` (see #lib/transport/transport) additionally probes
 // /__seeds/ping at runtime before enabling the edit UI, in case a dev-built

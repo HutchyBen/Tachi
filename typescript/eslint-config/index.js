@@ -26,7 +26,7 @@ const base = tseslint.config(
 	...tseslint.configs.recommended,
 	pluginPerfectionist.configs["recommended-natural"],
 	{
-		name: "zenith/base",
+		name: "tachi/base",
 		files: ["**/*.{ts,tsx}"],
 		plugins: {
 			import: pluginImport,
@@ -141,10 +141,17 @@ const base = tseslint.config(
 			},
 		},
 	},
+	{
+		name: "tachi/test-files",
+		files: ["**/*.test.ts"],
+		rules: {
+			"no-await-in-loop": "off",
+		},
+	},
 );
 
 const node = /** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Config} */ ({
-	name: "zenith/node",
+	name: "tachi/node",
 	files: ["**/*.{js,mjs,cjs,ts,tsx}"],
 	languageOptions: {
 		globals: {
@@ -154,7 +161,7 @@ const node = /** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.
 });
 
 const react = /** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Config} */ ({
-	name: "zenith/react",
+	name: "tachi/react",
 	files: ["**/*.tsx"],
 	languageOptions: {
 		parserOptions: {
@@ -211,8 +218,10 @@ const react = /** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig
 	},
 });
 
+// unused (from zenith), we don't use remix. We don't even use remix in zenith either
+// because it got renamed to rrv7.
 const reactRemix = /** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Config} */ ({
-	name: "zenith/react-remix",
+	name: "tachi/react-remix",
 	languageOptions: {
 		// @ts-expect-error it is definitely not undefined
 		parserOptions: react.languageOptions.parserOptions,

@@ -433,6 +433,6 @@ describe("POST /ir/fervidex/score/submit (Postgres)", () => {
 	});
 });
 
-describe.skip("POST /ir/fervidex/profile/submit — deferred KT bulk seed to Postgres", () => {
+describe.skip("POST /ir/fervidex/profile/submit - deferred KT bulk seed to Postgres", () => {
 	it.skip("imports fervidex-static profile", () => {});
 });

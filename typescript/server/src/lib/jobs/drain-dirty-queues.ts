@@ -291,7 +291,7 @@ export async function drainStatsQueuesInOrder(): Promise<void> {
 /**
  * Drain `score_rederive`, then `pb_dirty`, `session_dirty`, and `game_profile_dirty`,
  * repeating until a full pass moves nothing. No per-tick row cap (unlike the cron
- * drain) — intended for admin synchronous recalc.
+ * drain) - intended for admin synchronous recalc.
  */
 export async function drainStatsQueuesFully(): Promise<void> {
 	for (;;) {
@@ -345,7 +345,7 @@ export async function drainStatsQueuesFully(): Promise<void> {
 
 /**
  * Drain `pb_dirty` then `session_dirty` and `game_profile_dirty`, repeating until
- * idle. No per-tick row cap — intended for admin synchronous PB recalc.
+ * idle. No per-tick row cap - intended for admin synchronous PB recalc.
  */
 export async function drainPbDirtyAndDownstream(): Promise<void> {
 	for (;;) {

@@ -13,7 +13,7 @@ export const GetClientFromID: RequestHandler = async (req, res, next) => {
 		});
 	}
 
-	// Strip the client secret — this middleware is used for public lookups.
+	// Strip the client secret - this middleware is used for public lookups.
 	const { clientSecret: _secret, ...publicClient } = client;
 
 	REQ_AssignToReqTachiData(req, { apiClientDoc: publicClient });

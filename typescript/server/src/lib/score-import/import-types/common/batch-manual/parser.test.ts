@@ -96,7 +96,7 @@ describe("#ParserFn", () => {
 		);
 	});
 
-	it("No Playtype — game group without playtype is not a V3 game", () => {
+	it("No Playtype - game group without playtype is not a V3 game", () => {
 		expectThrowsFatal(
 			() =>
 				ParserFn(

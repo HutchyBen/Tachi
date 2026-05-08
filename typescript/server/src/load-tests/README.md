@@ -6,7 +6,7 @@ Stress **`POST /api/v1/import/file`** against a **running** Tachi instance using
 
 - Server reachable (e.g. `http://127.0.0.1:8080` when using local `PORT`).
 - Accounts with **`submit_score`**:
-  - **Session:** login cookie (see below) — **one in-flight import per user**, so keep **`--concurrency 1`** unless you only care about rate limits.
+  - **Session:** login cookie (see below) - **one in-flight import per user**, so keep **`--concurrency 1`** unless you only care about rate limits.
   - **API tokens:** one token per parallel slot. Generate many tokens with the seeder (below).
 
 **Rate limiting:** In dev, score imports are limited to **5 per minute per IP** unless you set:
@@ -96,5 +96,5 @@ just load-test-score-import -- \
 
 ## Files
 
-- `score-import-load-cli.ts` — multipart client.
-- `seed-stress-api-tokens.ts` — bulk token seeder for dev DBs.
+- `score-import-load-cli.ts` - multipart client.
+- `seed-stress-api-tokens.ts` - bulk token seeder for dev DBs.

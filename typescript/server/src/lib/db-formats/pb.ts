@@ -92,13 +92,13 @@ export const SELECT_PB_DOCUMENT_WITH_LEADERBOARD = [
 export async function ToPbScoreDocument(row: PbDocumentJoinRow): Promise<PBScoreDocument> {
 	const composedRows = await DB.selectFrom("pb_composed_from")
 		.where("pb_id", "=", row.row_id)
-		.select("score_id")
+		.select(["score_id", "merge_name"])
 		.execute();
 
 	const composedFrom: [PBReference, ...PBReference[]] =
 		composedRows.length > 0
-			? (composedRows.map((c, i) => ({
-					name: i === 0 ? "Primary" : `Merge${i}`,
+			? (composedRows.map((c) => ({
+					name: c.merge_name,
 					scoreID: c.score_id,
 				})) as [PBReference, ...PBReference[]])
 			: [{ name: "Primary", scoreID: "unknown" }];

@@ -7,10 +7,10 @@ import { collectDefaultMetrics, Counter, Histogram, Registry } from "prom-client
 /** Dedicated listener for `GET /metrics` (see `main.ts`). */
 export const METRICS_PORT = 9779;
 
-/** Seconds — aligns with typical Prometheus HTTP latency buckets, with extra resolution under 100ms. */
+/** Seconds - aligns with typical Prometheus HTTP latency buckets, with extra resolution under 100ms. */
 const HTTP_DURATION_BUCKETS = [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10];
 
-/** Seconds — score imports can run from sub-second to tens of minutes. */
+/** Seconds - score imports can run from sub-second to tens of minutes. */
 const SCORE_IMPORT_DURATION_BUCKETS = [0.25, 0.5, 1, 2, 5, 10, 30, 60, 120, 300, 600, 1800];
 
 let scoreImportDurationSeconds: Histogram | null = null;

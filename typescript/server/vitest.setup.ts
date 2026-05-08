@@ -18,7 +18,7 @@ const POSTGRES_HOST = "tachi-postgres";
 const POSTGRES_USER = "tachi";
 const POSTGRES_PASS = "tachi";
 
-// Set POSTGRES_URL before any app code is imported — config.ts reads it at load time.
+// Set POSTGRES_URL before any app code is imported - config.ts reads it at load time.
 process.env.POSTGRES_URL = `postgresql://${POSTGRES_USER}:${POSTGRES_PASS}@${POSTGRES_HOST}/${WORKER_DB_NAME}`;
 
 // Now that env vars are set, we can safely import external packages.
@@ -92,7 +92,7 @@ async function resetDatabase() {
 		const { clearGameStatsCacheForTests } = await import("#server/router/api/v1/games/router");
 		clearGameStatsCacheForTests();
 	} catch {
-		// ignore — router not loaded in edge test contexts
+		// ignore - router not loaded in edge test contexts
 	}
 }
 

@@ -155,7 +155,7 @@ export async function deleteOrphanScoreForUser(
 
 /**
  * Lists orphan_score rows for a user, newest first, with keyset pagination on `row_id` + `time_inserted`.
- * @param afterRowID — `row_id` of the last item from the previous page (omit on first page).
+ * @param afterRowID - `row_id` of the last item from the previous page (omit on first page).
  */
 export async function listOrphanScoresForUser(opts: {
 	afterRowID?: string;

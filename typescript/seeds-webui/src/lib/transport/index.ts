@@ -58,7 +58,7 @@ export type JsonPatch = JsonPatchOp[];
 export interface SeedsTransport {
 	readonly mode: "dev" | "github";
 
-	// Read-side — always available.
+	// Read-side - always available.
 	listCollections(): Promise<CollectionName[]>;
 	listBranches(): Promise<{ branches: Branch[]; current: Branch | null }>;
 	listCommits(opts: { branch?: string; cursor?: string; file?: string }): Promise<CommitPage>;
@@ -67,7 +67,7 @@ export interface SeedsTransport {
 	// branch HEAD" in github.
 	getCollection(name: CollectionName, rev?: string): Promise<unknown[]>;
 
-	// Write-side — populated only in dev mode.
+	// Write-side - populated only in dev mode.
 	writeCollection?: (name: CollectionName, patch: JsonPatch) => Promise<void>;
 	runSort?: () => Promise<void>;
 	gitStatus?: () => Promise<GitStatus>;

@@ -60,7 +60,6 @@ describe("CreatePBMergeFor (Postgres)", () => {
 				judgements: s.mongo.judgements ?? {},
 			});
 
-			// eslint-disable-next-line no-await-in-loop
 			await DB.insertInto("score")
 				.values({
 					id: scoreId,

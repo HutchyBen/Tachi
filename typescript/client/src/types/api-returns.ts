@@ -97,6 +97,11 @@ export interface SessionReturns<GPT extends V3Game = V3Game> {
 	user: UserDocument;
 }
 
+export interface SessionAdjacentReturns {
+	prev: SessionDocument | null;
+	next: SessionDocument | null;
+}
+
 export interface UGPTChartPBComposition<GPT extends V3Game = V3Game> {
 	scores: ScoreDocument<GPT>[];
 	chart: ChartDocument<GPT>;

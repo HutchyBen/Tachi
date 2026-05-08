@@ -120,7 +120,6 @@ const IIDX_PROFILE_RATING_VALUE_CELL_STYLE: NonNullable<
 	GPTClientImplementation<GamesForGroup["iidx"]>["profileRatingAlgRowStyle"]
 > = {
 	ktLampRating: { backgroundColor: ChangeOpacity(COLOUR_SET.purple, 0.12) },
-	ktLampRatingNC: { backgroundColor: ChangeOpacity(COLOUR_SET.blue, 0.14) },
 	ktLampRatingHC: { backgroundColor: ChangeOpacity(COLOUR_SET.orange, 0.14) },
 	ktLampRatingEXHC: { backgroundColor: ChangeOpacity(COLOUR_SET.gold, 0.12) },
 	BPI: { backgroundColor: ChangeOpacity(COLOUR_SET.paleBlue, 0.12) },

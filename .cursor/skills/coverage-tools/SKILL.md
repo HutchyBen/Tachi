@@ -36,9 +36,9 @@ Implementation: workspace package `typescript/coverage-tools` (`bun run --filter
 
 Edit `typescript/coverage-tools/src/manifest.ts`: add a `CoverageSource` with:
 
-- `id` — short name for `--packages`
-- `packageRoot` — e.g. `typescript/my-pkg`
-- `coverageFinal` — path to `coverage/coverage-final.json` relative to repo root (Vitest default unless `coverage.reportsDirectory` overrides)
+- `id` - short name for `--packages`
+- `packageRoot` - e.g. `typescript/my-pkg`
+- `coverageFinal` - path to `coverage/coverage-final.json` relative to repo root (Vitest default unless `coverage.reportsDirectory` overrides)
 
 ## Programmatic use
 
@@ -50,6 +50,6 @@ import { buildReport, COVERAGE_SOURCES } from "tachi-coverage-tools";
 
 ## Related files
 
-- `typescript/coverage-tools/src/manifest.ts` — source registry
-- `typescript/coverage-tools/src/report-coverage.ts` — CLI flags and `buildReport`
-- `Justfile-test` — `coverage-report` recipe
+- `typescript/coverage-tools/src/manifest.ts` - source registry
+- `typescript/coverage-tools/src/report-coverage.ts` - CLI flags and `buildReport`
+- `Justfile-test` - `coverage-report` recipe

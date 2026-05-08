@@ -22,10 +22,10 @@ try {
 	// Do NOT use document.open() / document.write() / document.close() here.
 	// document.open() fires unload/beforeunload/pagehide events, which Vite's HMR
 	// client intercepts to close its WebSocket. The HMR reconnection logic then
-	// triggers a full page reload, re-running this module, failing again — an
+	// triggers a full page reload, re-running this module, failing again - an
 	// infinite refresh loop.
 	//
-	// Do NOT throw either — an uncaught module-evaluation error is another signal
+	// Do NOT throw either - an uncaught module-evaluation error is another signal
 	// that Vite HMR uses to trigger a reload.
 	//
 	// Instead, use direct DOM mutation (no unload events) and console.error.

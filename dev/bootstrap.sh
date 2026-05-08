@@ -39,7 +39,7 @@ function seedMinioCdn {
 	# Debian package `minio-client` installs the `minio-client` binary (same CLI as upstream `mc`).
 	# override endpoint with MINIO_ENDPOINT (devcontainer sets http://tachi-s3:9000).
 	if ! command -v minio-client &> /dev/null; then
-		echo "Couldn't find MinIO client (minio-client). On Debian: apt install minio-client — see Dockerfile.dev."
+		echo "Couldn't find MinIO client (minio-client). On Debian: apt install minio-client - see Dockerfile.dev."
 		exit 1
 	fi
 

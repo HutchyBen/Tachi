@@ -7,10 +7,12 @@ describe("buildEmailConfig", () => {
 		expect(() => buildEmailConfig({})).toThrow(/TACHI_EMAIL_FROM is required/u);
 	});
 
-	it("builds Postmark transport when TACHI_EMAIL_AUTH_POSTMARK is true", () => {
+	it("builds Postmark transport when host is smtp.postmarkapp.com", () => {
 		const cfg = buildEmailConfig({
 			TACHI_EMAIL_FROM: "from@example.com",
-			TACHI_EMAIL_AUTH_POSTMARK: "true",
+			TACHI_EMAIL_HOST: "smtp.postmarkapp.com",
+			TACHI_EMAIL_PORT: "587",
+			TACHI_EMAIL_SECURE: "false",
 			TACHI_EMAIL_AUTH_PASS: "pm-token",
 		});
 		expect(cfg.TRANSPORT_OPS).toMatchObject({
@@ -21,10 +23,11 @@ describe("buildEmailConfig", () => {
 		});
 	});
 
-	it("uses TACHI_EMAIL_AUTH_USER when POSTMARK and only user is set", () => {
+	it("uses TACHI_EMAIL_AUTH_USER for Postmark when only user is set", () => {
 		const cfg = buildEmailConfig({
 			TACHI_EMAIL_FROM: "from@example.com",
-			TACHI_EMAIL_AUTH_POSTMARK: "1",
+			TACHI_EMAIL_HOST: "smtp.postmarkapp.com",
+			TACHI_EMAIL_PORT: "587",
 			TACHI_EMAIL_AUTH_USER: "only-user-token",
 		});
 		expect(cfg.TRANSPORT_OPS).toMatchObject({
@@ -32,19 +35,32 @@ describe("buildEmailConfig", () => {
 		});
 	});
 
-	it("throws when POSTMARK is true but no token is given", () => {
+	it("matches Postmark host case-insensitively for auth token rules", () => {
+		const cfg = buildEmailConfig({
+			TACHI_EMAIL_FROM: "from@example.com",
+			TACHI_EMAIL_HOST: "SMTP.POSTMARKAPP.COM",
+			TACHI_EMAIL_PORT: "587",
+			TACHI_EMAIL_AUTH_PASS: "pm-token",
+		});
+		expect(cfg.TRANSPORT_OPS).toMatchObject({
+			host: "SMTP.POSTMARKAPP.COM",
+			auth: { user: "pm-token", pass: "pm-token" },
+		});
+	});
+
+	it("throws when Postmark host is set but no token is given", () => {
 		expect(() =>
 			buildEmailConfig({
 				TACHI_EMAIL_FROM: "a@b.com",
-				TACHI_EMAIL_AUTH_POSTMARK: "true",
+				TACHI_EMAIL_HOST: "smtp.postmarkapp.com",
+				TACHI_EMAIL_PORT: "587",
 			}),
 		).toThrow(/TACHI_EMAIL_AUTH_PASS or TACHI_EMAIL_AUTH_USER/u);
 	});
 
-	it("builds generic SMTP without auth when POSTMARK is false", () => {
+	it("builds generic SMTP without auth", () => {
 		const cfg = buildEmailConfig({
 			TACHI_EMAIL_FROM: "dev@localhost",
-			TACHI_EMAIL_AUTH_POSTMARK: "false",
 			TACHI_EMAIL_HOST: "tachi-mailpit",
 			TACHI_EMAIL_PORT: "1025",
 			TACHI_EMAIL_SECURE: "false",
@@ -59,7 +75,6 @@ describe("buildEmailConfig", () => {
 	it("includes auth when user and/or pass are set for generic SMTP", () => {
 		const cfg = buildEmailConfig({
 			TACHI_EMAIL_FROM: "a@b.com",
-			TACHI_EMAIL_AUTH_POSTMARK: "false",
 			TACHI_EMAIL_HOST: "smtp.example",
 			TACHI_EMAIL_PORT: "587",
 			TACHI_EMAIL_SECURE: "false",
@@ -77,7 +92,6 @@ describe("buildEmailConfig", () => {
 	it("defaults TACHI_EMAIL_SECURE to false", () => {
 		const cfg = buildEmailConfig({
 			TACHI_EMAIL_FROM: "a@b.com",
-			TACHI_EMAIL_AUTH_POSTMARK: "false",
 			TACHI_EMAIL_HOST: "h",
 			TACHI_EMAIL_PORT: "25",
 		});
@@ -88,7 +102,6 @@ describe("buildEmailConfig", () => {
 		expect(() =>
 			buildEmailConfig({
 				TACHI_EMAIL_FROM: "a@b.com",
-				TACHI_EMAIL_AUTH_POSTMARK: "false",
 				TACHI_EMAIL_PORT: "1025",
 			}),
 		).toThrow(/TACHI_EMAIL_HOST is required/u);
@@ -98,7 +111,6 @@ describe("buildEmailConfig", () => {
 		expect(() =>
 			buildEmailConfig({
 				TACHI_EMAIL_FROM: "a@b.com",
-				TACHI_EMAIL_AUTH_POSTMARK: "false",
 				TACHI_EMAIL_HOST: "localhost",
 			}),
 		).toThrow(/TACHI_EMAIL_PORT is required/u);
@@ -108,7 +120,6 @@ describe("buildEmailConfig", () => {
 		expect(() =>
 			buildEmailConfig({
 				TACHI_EMAIL_FROM: "a@b.com",
-				TACHI_EMAIL_AUTH_POSTMARK: "false",
 				TACHI_EMAIL_HOST: "localhost",
 				TACHI_EMAIL_PORT: "nope",
 			}),

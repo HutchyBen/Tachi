@@ -47,7 +47,7 @@ async function finalizeHits(
 
 /**
  * Search a user's sessions for one GPT: `websearch_to_tsquery` on `session.textsearch`, optional
- * short-query exact match, then pg_trgm / ILIKE — same strategy as
+ * short-query exact match, then pg_trgm / ILIKE - same strategy as
  * {@link SearchSongsForGameFtsAndTrgm} / {@link SearchFoldersForGameFtsAndTrgm}.
  *
  * Returns full {@link SessionDocument}s (no follow-up `WHERE id IN (...)` on `session`).

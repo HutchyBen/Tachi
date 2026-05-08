@@ -10,6 +10,8 @@ export default interface PbComposedFromTable {
   pb_id: ColumnType<pb_row_id, pb_row_id, pb_row_id>;
 
   score_id: ColumnType<score_id, score_id, score_id>;
+
+  merge_name: ColumnType<string, string, string>;
 }
 
 export type PbComposedFrom = Selectable<PbComposedFromTable>;

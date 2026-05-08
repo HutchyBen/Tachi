@@ -72,7 +72,6 @@ export const TestingIIDXSPScorePB: PBScoreDocument<"iidx-sp"> = {
 	calculatedData: {
 		BPI: 10.1,
 		ktLampRating: 0,
-		ktLampRatingNC: 0,
 		ktLampRatingHC: 0,
 		ktLampRatingEXHC: 0,
 	},
@@ -202,7 +201,6 @@ export const TestingIIDXSPScore: ScoreDocument<"iidx-sp"> = {
 	calculatedData: {
 		BPI: null,
 		ktLampRating: 10,
-		ktLampRatingNC: 10,
 		ktLampRatingHC: 0,
 		ktLampRatingEXHC: 0,
 	},

@@ -150,7 +150,7 @@ describe("DDR profileCalcs (flareSkill, Postgres)", () => {
 
 	it("counts at most 30 PBs per flare category (global flare order, per-category index)", async () => {
 		const { id: userId } = await seedUser();
-		// 31 CLASSIC rows, flareSkill 1031..1001 — sorted desc; index 30 is dropped (top < 30 keeps 0..29).
+		// 31 CLASSIC rows, flareSkill 1031..1001 - sorted desc; index 30 is dropped (top < 30 keeps 0..29).
 		for (let i = 0; i < 31; i++) {
 			await seedDdrPbRow(userId, {
 				flareSkill: 1031 - i,

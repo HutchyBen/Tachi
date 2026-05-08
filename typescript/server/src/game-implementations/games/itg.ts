@@ -12,7 +12,7 @@ import { GoalFmtPercent, GradeGoalFormatter } from "./_common";
 export const ITG_STAMINA_IMPL: GameImplementation<"itg-stamina"> = {
 	chartSpecificValidators: {},
 	scoreDeriver: (scoreData, _chart) => ({
-		// *important*: don't check survivedPercent === 100 — floating point can
+		// *important*: don't check survivedPercent === 100 - floating point can
 		// produce a 100% survived-percent on a fail for very long charts.
 		finalPercent:
 			scoreData.lamp === "FAILED" ? scoreData.survivedPercent : 100 + scoreData.scorePercent,

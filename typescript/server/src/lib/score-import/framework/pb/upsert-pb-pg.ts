@@ -103,6 +103,7 @@ export async function upsertPbFromMongoDoc(
 				pbDoc.composedFrom.map((ref) => ({
 					pb_id: pbId,
 					score_id: ref.scoreID,
+					merge_name: ref.name,
 				})),
 			)
 			.execute();

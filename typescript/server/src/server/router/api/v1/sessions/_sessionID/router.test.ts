@@ -167,6 +167,66 @@ describe("GET /api/v1/sessions/:sessionID/folder-raises", () => {
 	});
 });
 
+describe("GET /api/v1/sessions/:sessionID/adjacent", () => {
+	async function seedThreeSessions() {
+		const { id: userId } = await seedUser({ username: "adjacent_user" });
+
+		const sessionIds = ["adj_session_oldest", "adj_session_middle", "adj_session_newest"];
+
+		for (const [i, id] of sessionIds.entries()) {
+			const t = new Date(2024, 0, 1 + i).toISOString();
+
+			await DB.insertInto("session")
+				.values({
+					id,
+					user_id: userId,
+					game: "iidx-sp",
+					name: `Session ${i}`,
+					description: null,
+					time_inserted: t,
+					time_started: t,
+					time_ended: t,
+					calculated_data: JSON.stringify({}),
+					highlight: false,
+				})
+				.execute();
+		}
+
+		return { userId, sessionIds };
+	}
+
+	it("returns both neighbors for the middle session", async () => {
+		const { sessionIds } = await seedThreeSessions();
+
+		const res = await mockApi.get(`/api/v1/sessions/${sessionIds[1]}/adjacent`);
+
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.body.prev?.sessionID).toBe(sessionIds[0]);
+		expect(res.body.body.next?.sessionID).toBe(sessionIds[2]);
+	});
+
+	it("returns null next for the newest session", async () => {
+		const { sessionIds } = await seedThreeSessions();
+
+		const res = await mockApi.get(`/api/v1/sessions/${sessionIds[2]}/adjacent`);
+
+		expect(res.status).toBe(200);
+		expect(res.body.body.next).toBeNull();
+		expect(res.body.body.prev?.sessionID).toBe(sessionIds[1]);
+	});
+
+	it("returns null prev for the oldest session", async () => {
+		const { sessionIds } = await seedThreeSessions();
+
+		const res = await mockApi.get(`/api/v1/sessions/${sessionIds[0]}/adjacent`);
+
+		expect(res.status).toBe(200);
+		expect(res.body.body.prev).toBeNull();
+		expect(res.body.body.next?.sessionID).toBe(sessionIds[1]);
+	});
+});
+
 describe("PATCH /api/v1/sessions/:sessionID", () => {
 	it("updates the session name when authorised", async () => {
 		const { sessionId, userId } = await seedSessionFixture();

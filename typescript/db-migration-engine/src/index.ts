@@ -142,7 +142,7 @@ async function withAdvisoryLock<T>(client: Client, fn: () => Promise<T>): Promis
 
 /**
  * Apply all pending migrations from migrationsDir against the given connection.
- * Safe to call on every startup — already-applied migrations are skipped.
+ * Safe to call on every startup - already-applied migrations are skipped.
  * Throws if a previously-applied migration's file has been modified (checksum mismatch).
  */
 export async function applyMigrations(
@@ -180,7 +180,7 @@ export async function applyMigrations(
 						continue;
 					}
 
-					// Previously attempted and failed — clear the record and retry.
+					// Previously attempted and failed - clear the record and retry.
 					await client.query(
 						`DELETE FROM "_migration" WHERE version = $1 AND success = false`,
 						[migration.version],
@@ -188,7 +188,7 @@ export async function applyMigrations(
 				}
 
 				console.log(
-					`[migrate] Applying ${migration.version} — ${migration.description}...`,
+					`[migrate] Applying ${migration.version} - ${migration.description}...`,
 				);
 
 				const start = process.hrtime.bigint();
@@ -334,7 +334,7 @@ export async function revertLastMigration(
 
 			const downSql = readFileSync(downPath, "utf8");
 
-			console.log(`[migrate] Reverting ${latestVersion} — ${latest.description}...`);
+			console.log(`[migrate] Reverting ${latestVersion} - ${latest.description}...`);
 
 			const start = process.hrtime.bigint();
 

@@ -1,7 +1,7 @@
 .git
 .bun
 
-# Env files — keep secrets out of the build context; runtime env comes from orchestrator / secrets.
+# Env files - keep secrets out of the build context; runtime env comes from orchestrator / secrets.
 .env
 .env.*
 **/.env

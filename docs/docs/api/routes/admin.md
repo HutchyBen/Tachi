@@ -69,7 +69,7 @@ Empty Object.
 
 `POST /api/v1/admin/recalc-pbs`
 
-Inserts every distinct `(user_id, chart_id)` from the **`score`** table into **`pb_dirty`**, then **drains** `pb_dirty` and downstream **`session_dirty`** / **`game_profile_dirty`** queues until nothing remains (same batching as the background worker, but the HTTP request waits until idle). Intended when PBs may be out of sync (e.g. after a bad migration). There is **no request body** and no filter—always all distinct pairs that appear on scores.
+Inserts every distinct `(user_id, chart_id)` from the **`score`** table into **`pb_dirty`**, then **drains** `pb_dirty` and downstream **`session_dirty`** / **`game_profile_dirty`** queues until nothing remains (same batching as the background worker, but the HTTP request waits until idle). Intended when PBs may be out of sync (e.g. after a bad migration). There is **no request body** and no filter-always all distinct pairs that appear on scores.
 
 ### Permissions
 
@@ -191,7 +191,7 @@ Empty Object.
 
 `POST /api/v1/admin/recalc`
 
-Enqueues **every chart** into **`score_rederive`**, then **drains** `score_rederive` and downstream **`pb_dirty`**, **`session_dirty`**, and **`game_profile_dirty`** queues until nothing remains (the request waits until idle). Re-runs `scoreDeriver` and `scoreCalcs` for every score. There is **no request body** and no filter—always all charts.
+Enqueues **every chart** into **`score_rederive`**, then **drains** `score_rederive` and downstream **`pb_dirty`**, **`session_dirty`**, and **`game_profile_dirty`** queues until nothing remains (the request waits until idle). Re-runs `scoreDeriver` and `scoreCalcs` for every score. There is **no request body** and no filter-always all charts.
 
 ### Permissions
 

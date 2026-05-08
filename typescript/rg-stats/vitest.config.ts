@@ -19,7 +19,7 @@ export default defineConfig({
 			exclude: [
 				"src/**/*.test.ts",
 				"src/test-utils/**",
-				// Barrel only re-exports algorithms — no executable lines to cover.
+				// Barrel only re-exports algorithms - no executable lines to cover.
 				"src/index.ts",
 				// Type-only / unused by current test surface (Tap nyc also did not require these).
 				"src/util/types.ts",

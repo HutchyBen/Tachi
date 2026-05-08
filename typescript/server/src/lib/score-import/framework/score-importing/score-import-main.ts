@@ -303,7 +303,7 @@ export async function HandlePostImportSteps(
 	// best score).
 	const pbTimeStart = process.hrtime.bigint();
 
-	// processing PBs is a playtype-specific action. As such, we need to split chartIDs
+	// processing PBs is a game-specific action. As such, we need to split chartIDs
 	// accordingly
 	const chartIDsSeparatedByGame: ChartIDGameMap = {};
 

@@ -1,6 +1,6 @@
 Dockerfile
 
-# Env files — mirror repo root `.dockerignore` when this package is build context alone.
+# Env files - mirror repo root `.dockerignore` when this package is build context alone.
 .env
 .env.*
 **/.env

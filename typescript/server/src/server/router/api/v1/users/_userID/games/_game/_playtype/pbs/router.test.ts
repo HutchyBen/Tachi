@@ -114,7 +114,7 @@ async function seedIidxChartPb(opts: { userId: number; withComposition?: boolean
 
 	if (opts.withComposition) {
 		await DB.insertInto("pb_composed_from")
-			.values({ pb_id: pbIns.row_id, score_id: scoreId })
+			.values({ pb_id: pbIns.row_id, score_id: scoreId, name: "Default" })
 			.execute();
 	}
 

@@ -1,7 +1,7 @@
 export type Row = Record<string, unknown>;
 
 // Candidate primary keys, in priority order. The first one present on a row is
-// used. `id` is listed before `songID` because chart documents carry both —
+// used. `id` is listed before `songID` because chart documents carry both -
 // we want to key a chart by *its* id, not by the song it belongs to.
 export const PK_KEYS = [
 	"id",

@@ -407,7 +407,7 @@ async function HydrateCheckAndInsertScore(
 		}
 	} else {
 		if (importId === null && !directCommit) {
-			log.debug(`Skipped score — missing import id.`);
+			log.debug(`Skipped score - missing import id.`);
 			return null;
 		}
 

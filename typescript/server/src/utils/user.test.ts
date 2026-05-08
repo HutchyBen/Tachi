@@ -86,7 +86,7 @@ describe("GetUsersRankingAndOutOf", () => {
 		expect(result).toEqual({ ranking: 3, outOf: 5 });
 	});
 
-	it("handles tied ratings — only strictly greater counts", async () => {
+	it("handles tied ratings - only strictly greater counts", async () => {
 		const user1 = await seedUser({ username: "tied_a" });
 		const user2 = await seedUser({ username: "tied_b" });
 		const user3 = await seedUser({ username: "tied_c" });

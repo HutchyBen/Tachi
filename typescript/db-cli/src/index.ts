@@ -254,7 +254,7 @@ migrateCmd
 			for (const info of infos) {
 				const status =
 					info.success === null ? "Pending" : info.success ? "Applied" : "Failed";
-				const appliedAt = info.appliedAt ? formatDate(info.appliedAt) : "—";
+				const appliedAt = info.appliedAt ? formatDate(info.appliedAt) : "-";
 				const desc =
 					info.description.length > descWidth - 2
 						? `${info.description.slice(0, descWidth - 5)}...`

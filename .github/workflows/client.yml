@@ -69,7 +69,7 @@ jobs:
           VITE_RECAPTCHA_KEY: "6LcsYbIpAAAAAEJffjIXmbQcxj_SBZG7BnSPjF4L"
           VITE_SERVER_URL: "https://v3-boku.tachi.ac"
           VITE_DISCORD: "https://discord.gg/E4n8ZZF5ES"
-          VITE_CDN_URL: "https://cdn-boku.tachi.ac"
+          VITE_CDN_URL: "https://cdn-v3-boku.tachi.ac"
           TACHI_NAME: "Bokutachi"
           BUILD_OUT_DIR: /tmp/boku
 
@@ -83,7 +83,7 @@ jobs:
           VITE_MIN_CLIENT_ID: "A0DBDBB063CD800530EF01C6488B282137E0191E"
           VITE_DISCORD: "https://discord.gg/NNgGJbpQUj"
           VITE_TCHIC_MODE: "kamai"
-          VITE_CDN_URL: "https://cdn-kamai.tachi.ac"
+          VITE_CDN_URL: "https://cdn-v3-kamai.tachi.ac"
           VITE_GIT_REPO: "GitHub:zkldi/Tachi"
           VITE_RECAPTCHA_KEY: "6LcsYbIpAAAAAEJffjIXmbQcxj_SBZG7BnSPjF4L"
           TACHI_NAME: "Kamaitachi"
@@ -95,7 +95,7 @@ jobs:
           VITE_MANDATE_LOGIN: true
           VITE_SERVER_URL: "https://dev.tachi.ac"
           VITE_TCHIC_MODE: "omni"
-          VITE_CDN_URL: "https://cdn-staging.tachi.ac"
+          VITE_CDN_URL: "https://cdn-dev.tachi.ac"
           VITE_GIT_REPO: "GitHub:zkldi/Tachi"
           VITE_RECAPTCHA_KEY: "6LcsYbIpAAAAAEJffjIXmbQcxj_SBZG7BnSPjF4L"
           TACHI_NAME: "Tachi Dev"

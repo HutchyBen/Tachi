@@ -20,9 +20,7 @@ const options = program.opts();
 const DEBUG = options.debug;
 
 const db = new Database(options.db, { readonly: true });
-const dbRows = db
-	.query(`SELECT * FROM Charts WHERE path LIKE '%${options.filter}%'`)
-	.all();
+const dbRows = db.query(`SELECT * FROM Charts WHERE path LIKE '%${options.filter}%'`).all();
 console.log(`Found ${dbRows.length} charts.`);
 
 const songs = ReadCollection("songs-usc.json");

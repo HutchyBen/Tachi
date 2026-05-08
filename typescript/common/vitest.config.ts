@@ -8,7 +8,7 @@ export default defineConfig({
 			NODE_ENV: "test",
 		},
 		exclude: [
-			// Compiled output — not test sources.
+			// Compiled output - not test sources.
 			"build/**",
 		],
 		coverage: {

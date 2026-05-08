@@ -1,6 +1,6 @@
 # tachi-seeds-webui
 
-The seeds workstation. Browse, query, diff over git history — and, in
+The seeds workstation. Browse, query, diff over git history - and, in
 localdev, edit `db/seeds/*.json` directly.
 
 ## Running

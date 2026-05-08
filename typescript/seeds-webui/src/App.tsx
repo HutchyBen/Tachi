@@ -22,7 +22,7 @@ const queryClient = new QueryClient({
 
 // Load the editing routes lazily via a single dynamic import. The import is
 // only reached when EDIT_MODE is true; since EDIT_MODE is replaced with the
-// literal `false` during `vite build`, rollup drops the entire expression —
+// literal `false` during `vite build`, rollup drops the entire expression -
 // which means `editRoutes.ts` and every page it references is never emitted
 // into the prod bundle.
 type EditRoute = { component: React.ComponentType; path: string };

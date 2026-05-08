@@ -146,7 +146,7 @@ describe("GET /api/v1/users/:userID/games/:game/scores/:chartID", () => {
 		expect(res.body.success).toBe(true);
 		expect(res.body.body).toEqual([]);
 
-		// Other user may have scores on the same chart — still empty for target.
+		// Other user may have scores on the same chart - still empty for target.
 		await DB.insertInto("score")
 			.values({
 				id: `sc-ugpt-empty-other-${seedCounter}`,

@@ -3,7 +3,7 @@ name: mongo-migration-constraints
 description: Migrates server code from MongoDB to Postgres without modifying the legacy Mongo service. Never edits typescript/server/src/services/mongo/ (especially db.ts). Requires removing MONGODB_KILL imports and replacing usage with Postgres (Kysely) in migrated files. Use during Mongo-to-Postgres migration, when migrating routers/actions/utils off #services/mongo/db, or when the user says not to touch mongo/db.ts.
 ---
 
-# Mongo → Postgres migration — off-limits Mongo layer
+# Mongo → Postgres migration - off-limits Mongo layer
 
 ## Hard rules
 

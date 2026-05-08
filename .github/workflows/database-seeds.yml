@@ -60,7 +60,7 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           printf '%s' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
 
-      - name: Deploy updates
+      - name: Deploy seeds
         env:
           TACHI_HOST: ${{ secrets.TACHI_HOST }}
-        run: ssh "ci@${TACHI_HOST}" /home/ci/tachi-devops/scripts/deploy_seeds.sh
+        run: ssh -i ~/.ssh/id_rsa "ci@${TACHI_HOST}" /home/ci/tachi-deploy/scripts/deploy-seeds.sh "${{ github.sha }}"

@@ -99,6 +99,7 @@ export async function finalizeImportToPostgres(
 		await db
 			.insertInto("import_game")
 			.values(games.map((game) => ({ id: importID, game })))
+			.onConflict((oc) => oc.columns(["id", "game"]).doNothing())
 			.execute();
 	}
 
@@ -113,6 +114,7 @@ export async function finalizeImportToPostgres(
 					message: err.message,
 				})),
 			)
+			.onConflict((oc) => oc.column("row_id").doNothing())
 			.execute();
 	}
 
@@ -130,6 +132,7 @@ export async function finalizeImportToPostgres(
 					new: d.new,
 				})),
 			)
+			.onConflict((oc) => oc.column("row_id").doNothing())
 			.execute();
 	}
 
@@ -145,6 +148,7 @@ export async function finalizeImportToPostgres(
 					type: s.type.toLowerCase() as "appended" | "created",
 				})),
 			)
+			.onConflict((oc) => oc.columns(["import_id", "session_id"]).doNothing())
 			.execute();
 	}
 
@@ -169,6 +173,7 @@ export async function finalizeImportToPostgres(
 					new_progress_human: g.new.progressHuman,
 				})),
 			)
+			.onConflict((oc) => oc.column("row_id").doNothing())
 			.execute();
 	}
 
@@ -187,6 +192,7 @@ export async function finalizeImportToPostgres(
 					new_progress: q.new.progress,
 				})),
 			)
+			.onConflict((oc) => oc.column("row_id").doNothing())
 			.execute();
 	}
 
@@ -211,23 +217,6 @@ export async function finalizeImportToPostgres(
 			quest_secs: timing.questMs,
 			total_secs: timing.totalMs,
 		})
-		.onConflict((oc) =>
-			oc.column("id").doUpdateSet({
-				timestamp: tsNow,
-				import_secs_avg: timing.importMs / n,
-				import_parse_secs_avg: timing.importParseMs / n,
-				pb_secs_avg: timing.pbMs / n,
-				session_secs_avg: timing.sessionMs / n,
-				parse_secs: timing.parseMs,
-				import_secs: timing.importMs,
-				import_parse_secs: timing.importParseMs,
-				session_secs: timing.sessionMs,
-				pb_secs: timing.pbMs,
-				ugs_secs: timing.ugsMs,
-				goal_secs: timing.goalMs,
-				quest_secs: timing.questMs,
-				total_secs: timing.totalMs,
-			}),
-		)
+		.onConflict((oc) => oc.column("id").doNothing())
 		.execute();
 }

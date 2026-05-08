@@ -221,7 +221,7 @@ export async function FindITGChartsByHashGSv3(hash: string): Promise<Array<Chart
 }
 
 /**
- * Beatoraja IR: chart by `data.hashSHA256` — BMS first, then PMS (SHA256 only; not MD5).
+ * Beatoraja IR: chart by `data.hashSHA256` - BMS first, then PMS (SHA256 only; not MD5).
  */
 export async function FindBeatorajaChartOnHashSHA256(
 	hash: string,
@@ -284,6 +284,18 @@ export async function SongHasAnyChart(game: GameGroup, songID: string): Promise<
 }
 
 /**
+ * In Game IDs are sometimes arrays of inGameIDs. I don't personally like this - makes the sql very
+ * complex, but whatever.
+ */
+function sqlChartDataInGameIDEquals(inGameID: number) {
+	return sql<boolean>`(
+		(jsonb_typeof(chart.data::jsonb->'inGameID') = 'number' AND (chart.data::jsonb->>'inGameID')::int = ${inGameID})
+		OR
+		(jsonb_typeof(chart.data::jsonb->'inGameID') = 'array' AND (chart.data::jsonb->'inGameID') @> to_jsonb(${inGameID}::int))
+	)`;
+}
+
+/**
  * Find a chart on its in-game-ID, playtype and difficulty.
  */
 export async function FindChartOnInGameID(
@@ -295,7 +307,7 @@ export async function FindChartOnInGameID(
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
 		.where("chart.game", "=", game)
-		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
+		.where(sqlChartDataInGameIDEquals(inGameID))
 		.where("chart.difficulty", "=", difficulty as string)
 		.executeTakeFirst();
 
@@ -318,7 +330,7 @@ export async function FindChartOnInGameIDPrimary(
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
 		.where("chart.game", "=", game)
-		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
+		.where(sqlChartDataInGameIDEquals(inGameID))
 		.where("chart.difficulty", "=", difficulty as string)
 		.where("chart.is_primary", "=", true)
 		.executeTakeFirst();
@@ -342,7 +354,7 @@ export async function FindIIDXChartOnInGameID(
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
 		.where("chart.game", "=", "iidx-sp")
-		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
+		.where(sqlChartDataInGameIDEquals(inGameID))
 		.where(sql<SqlBool>`(chart.data->>'2dxtraSet') IS NULL`)
 		.where("chart.is_primary", "=", true)
 		.where("chart.difficulty", "=", difficulty as string)
@@ -369,7 +381,7 @@ export async function FindIIDXChartOnInGameIDVersion(
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
 		.where("chart.game", "=", game)
-		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
+		.where(sqlChartDataInGameIDEquals(inGameID))
 		.where(sql<SqlBool>`(chart.data->>'2dxtraSet') IS NULL`)
 		.where("chart.difficulty", "=", difficulty as string)
 		.where(sql<boolean>`${sql.lit(String(version))} = ANY(chart.versions)`)
@@ -395,7 +407,7 @@ export async function FindChartOnInGameIDVersion<TGame extends V3Game = V3Game>(
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
 		.where("chart.game", "=", game)
-		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
+		.where(sqlChartDataInGameIDEquals(inGameID))
 		.where("chart.difficulty", "=", difficulty as string)
 		.where(sql<boolean>`${sql.lit(String(version))} = ANY(chart.versions)`)
 		.executeTakeFirst();
@@ -490,7 +502,7 @@ export async function FindSDVXChartOnInGameID(
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
 		.where("chart.game", "=", "sdvx")
-		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
+		.where(sqlChartDataInGameIDEquals(inGameID))
 		.where("chart.is_primary", "=", true);
 
 	q =
@@ -516,7 +528,7 @@ export async function FindSDVXChartOnInGameIDVersion(
 		.innerJoin("song", "song.id", "chart.song_id")
 		.select(SELECT_CHART)
 		.where("chart.game", "=", "sdvx")
-		.where(sql<boolean>`(chart.data::jsonb->>'inGameID')::int = ${inGameID}`)
+		.where(sqlChartDataInGameIDEquals(inGameID))
 		.where(sql<boolean>`${sql.lit(String(version))} = ANY(chart.versions)`);
 
 	q =
@@ -640,7 +652,7 @@ export async function FindUSCChartsByHashSHA1(hash: string): Promise<Array<Chart
  * Returns the N most popular charts for this game + playtype.
  * Popularity is determined by how many rows exist in Postgres `score` for each chart.
  *
- * @param _scoreCollection — ignored; kept for API compatibility with the old Mongo implementation.
+ * @param _scoreCollection - ignored; kept for API compatibility with the old Mongo implementation.
  */
 export async function FindChartsOnPopularity(
 	game: V3Game,

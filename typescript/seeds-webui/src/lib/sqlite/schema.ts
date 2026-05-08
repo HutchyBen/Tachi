@@ -3,12 +3,12 @@
 // Strategy: *per-collection* tables mirror the on-disk files exactly
 // (so a row in `charts_iidx_sp` corresponds 1:1 to a JSON object in
 // `db/seeds/charts-iidx-sp.json`). We project the scalar fields we
-// query on into columns and keep the rest as a JSON blob — SQLite's
+// query on into columns and keep the rest as a JSON blob - SQLite's
 // `json_extract` makes that queryable when needed.
 //
 // Cross-cutting questions ("how many charts does iidx-sp have across all
 // versions?") get answered by materialised views built over per-collection
-// tables. We build the union of charts/songs lazily — i.e. the view DDL
+// tables. We build the union of charts/songs lazily - i.e. the view DDL
 // references every `charts_<game>` table that has been created.
 //
 // Table name convention: lowercase, '-' -> '_', strip '.json'.

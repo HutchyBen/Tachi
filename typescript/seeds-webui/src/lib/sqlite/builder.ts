@@ -4,7 +4,7 @@ import { getSqlite } from "./client";
 
 // Fast content hash for JSON payloads. We hash the serialised string because
 // getCollection returns parsed JSON; this matches what scripts/bundle-current-seeds
-// stores (sha256(prefix-16) of the raw file bytes — close enough for change detection).
+// stores (sha256(prefix-16) of the raw file bytes - close enough for change detection).
 async function hashJson(value: unknown): Promise<string> {
 	const s = JSON.stringify(value);
 	const buf = new TextEncoder().encode(s);
@@ -36,7 +36,7 @@ export async function* buildSqliteFromTransport(
 		const name = names[i]!;
 		const rows = await transport.getCollection(name, rev);
 		const hash = await hashJson(rows);
-		// When rev !== undefined we *always* re-ingest — the caller is looking at
+		// When rev !== undefined we *always* re-ingest - the caller is looking at
 		// a specific commit, not the working copy, and we don't cache historical
 		// loads to avoid OPFS bloat.
 		if (rev === undefined && meta[name] === hash) {

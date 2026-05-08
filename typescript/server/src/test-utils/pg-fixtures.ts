@@ -61,8 +61,8 @@ interface SeedUserOpts {
  * Insert an `account` row (and optionally `priv_account_credential` /
  * `account_settings`) and return the resulting data.
  *
- * - `withCredential: true` — also inserts `priv_account_credential`
- * - `withSettings: true`   — also inserts `account_settings`
+ * - `withCredential: true` - also inserts `priv_account_credential`
+ * - `withSettings: true`   - also inserts `account_settings`
  */
 export async function seedUser(opts?: SeedUserOpts) {
 	const username = opts?.username ?? "test_user";

@@ -6,18 +6,19 @@ import DebugContent from "#components/util/DebugContent";
 import Divider from "#components/util/Divider";
 import EditableText from "#components/util/EditableText";
 import Icon from "#components/util/Icon";
+import LinkButton from "#components/util/LinkButton";
 import Loading from "#components/util/Loading";
 import useApiQuery from "#components/util/query/useApiQuery";
 import { UserContext } from "#context/UserContext";
 import { UserSettingsContext } from "#context/UserSettingsContext";
-import { type SessionReturns } from "#types/api-returns";
+import { type SessionAdjacentReturns, type SessionReturns } from "#types/api-returns";
 import { type UGPT } from "#types/react";
 import { APIFetchV1 } from "#util/api";
 import { CreateChartMap, CreateScoreIDMap, CreateSongMap } from "#util/data";
 import React, { useContext, useMemo, useState } from "react";
 import { Badge, Button, Col, Row } from "react-bootstrap";
 import { Redirect, useParams } from "react-router-dom";
-import { GameToGameGroup, GetGameGroupConfig } from "tachi-common";
+import { GameToGameGroup, GetGameGroupConfig, type SessionDocument } from "tachi-common";
 
 export default function SpecificSessionPage({ reqUser, game }: UGPT) {
 	const { sessionID } = useParams<{ sessionID: string }>();
@@ -127,8 +128,20 @@ function SessionPage({ data, game }: { data: SessionReturns } & UGPT) {
 		);
 	};
 
+	const { data: adjacentData } = useApiQuery<SessionAdjacentReturns>(
+		`/sessions/${session.sessionID}/adjacent`,
+	);
+
 	return (
 		<Row className="justify-content-center">
+			<Col xs={12}>
+				<SessionNavRow
+					adjacent={adjacentData ?? null}
+					currentName={session.name}
+					game={game}
+					username={user.username}
+				/>
+			</Col>
 			<Col className="text-center" xs={12}>
 				<div className="d-flex flex-column gap-2 flex-wrap justify-content-center align-items-center">
 					<EditableText
@@ -257,5 +270,48 @@ function SessionPage({ data, game }: { data: SessionReturns } & UGPT) {
 				</Col>
 			)}
 		</Row>
+	);
+}
+
+function SessionNavRow({
+	adjacent,
+	currentName,
+	game,
+	username,
+}: {
+	adjacent: SessionAdjacentReturns | null;
+	currentName: string;
+	game: string;
+	username: string;
+}) {
+	const sessionUrl = (s: SessionDocument) =>
+		`/u/${username}/games/${s.game}/sessions/${s.sessionID}`;
+
+	return (
+		<div className="d-flex align-items-center justify-content-between mb-4">
+			<div style={{ minWidth: "140px" }}>
+				{adjacent?.prev ? (
+					<LinkButton to={sessionUrl(adjacent.prev)} variant="outline-secondary">
+						&laquo; Prev
+					</LinkButton>
+				) : (
+					<Button disabled variant="outline-secondary">
+						&laquo; Prev
+					</Button>
+				)}
+			</div>
+			<span className="text-muted text-truncate px-2">{currentName}</span>
+			<div style={{ minWidth: "140px" }} className="text-end">
+				{adjacent?.next ? (
+					<LinkButton to={sessionUrl(adjacent.next)} variant="outline-secondary">
+						Next &raquo;
+					</LinkButton>
+				) : (
+					<Button disabled variant="outline-secondary">
+						Next &raquo;
+					</Button>
+				)}
+			</div>
+		</div>
 	);
 }

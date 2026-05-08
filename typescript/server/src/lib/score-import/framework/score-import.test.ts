@@ -2,8 +2,14 @@ import { seedUser } from "#actions/test-utils/api-tokens";
 import { CDNRetrieve } from "#lib/cdn/cdn";
 import { LoadImportDocumentById } from "#lib/db-formats/import-document";
 import DB from "#services/pg/db";
-import { FakeSmallBatchManual, Testing511Song, Testing511SPA } from "#test-utils/test-data";
+import {
+	FakeSmallBatchManual,
+	Testing511Song,
+	Testing511SPA,
+	TestingJubeatSong,
+} from "#test-utils/test-data";
 import { Sleep } from "#utils/misc";
+import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { MakeScoreImport } from "./score-import";
@@ -109,4 +115,274 @@ describe("MakeScoreImport (ported from score-import.oldtest.ts)", () => {
 			]);
 		},
 	);
+});
+
+const JUBEAT_ARRAY_IG_FIRST = 80000037;
+
+function mkBatchManualMulterFile(body: object): Express.Multer.File {
+	return {
+		buffer: Buffer.from(JSON.stringify(body), "utf-8"),
+	} as Express.Multer.File;
+}
+
+function jubeatScoreLine(opts: {
+	identifier: number | string;
+	musicRate?: number;
+	score?: number;
+	timeAchieved: number;
+}) {
+	return {
+		difficulty: "ADV" as const,
+		identifier: String(opts.identifier),
+		judgements: {
+			good: 0,
+			great: 0,
+			miss: 0,
+			perfect: 100,
+			poor: 0,
+		},
+		lamp: "CLEAR" as const,
+		matchType: "inGameID" as const,
+		musicRate: opts.musicRate ?? 96.5,
+		score: opts.score ?? 920_000,
+		timeAchieved: opts.timeAchieved,
+	};
+}
+
+async function seedJubeatChartArrayInGameID(opts: { chartId: string; legacyId: number }) {
+	await DB.insertInto("song")
+		.values({
+			id: `${TestingJubeatSong.id}-smoke-${opts.chartId}`,
+			legacy_id: opts.legacyId,
+			game_group: "jubeat",
+			title: TestingJubeatSong.title,
+			artist: TestingJubeatSong.artist,
+			search_terms: TestingJubeatSong.searchTerms,
+			alt_titles: TestingJubeatSong.altTitles,
+			data: TestingJubeatSong.data,
+			fts_document: "",
+		})
+		.execute();
+
+	await DB.insertInto("chart")
+		.values({
+			id: opts.chartId,
+			legacy_id: String(opts.legacyId),
+			game: "jubeat",
+			song_id: `${TestingJubeatSong.id}-smoke-${opts.chartId}`,
+			difficulty: "ADV",
+			level: "6",
+			level_num: 6,
+			is_primary: true,
+			versions: ["festo"],
+			data: JSON.stringify({
+				inGameID: [JUBEAT_ARRAY_IG_FIRST, 50_000_020],
+				noteCount: 100,
+				musicBar: [0, 1, 2, 3],
+			}),
+		})
+		.execute();
+}
+
+async function seedJubeatChartScalarInGameID(opts: {
+	chartId: string;
+	inGameID: number;
+	legacyId: number;
+	songIdSuffix: string;
+}) {
+	await DB.insertInto("song")
+		.values({
+			id: `${TestingJubeatSong.id}-${opts.songIdSuffix}`,
+			legacy_id: opts.legacyId,
+			game_group: "jubeat",
+			title: TestingJubeatSong.title,
+			artist: TestingJubeatSong.artist,
+			search_terms: TestingJubeatSong.searchTerms,
+			alt_titles: TestingJubeatSong.altTitles,
+			data: TestingJubeatSong.data,
+			fts_document: "",
+		})
+		.execute();
+
+	await DB.insertInto("chart")
+		.values({
+			id: opts.chartId,
+			legacy_id: String(opts.legacyId),
+			game: "jubeat",
+			song_id: `${TestingJubeatSong.id}-${opts.songIdSuffix}`,
+			difficulty: "ADV",
+			level: "6",
+			level_num: 6,
+			is_primary: true,
+			versions: ["festo"],
+			data: JSON.stringify({
+				inGameID: opts.inGameID,
+				noteCount: 100,
+				musicBar: [0, 1, 2, 3],
+			}),
+		})
+		.execute();
+}
+
+describe("batch-manual score import (smoke)", () => {
+	beforeEach(async () => {
+		await seedUser({
+			username: "test_batch_manual_smoke",
+			email: "batch-manual-smoke@example.com",
+			withCredential: true,
+			withSettings: true,
+		});
+	});
+
+	it("file/batch-manual: jubeat inGameID matches chart with array inGameID and commits scores", async () => {
+		const chartId = "chart-smoke-jubeat-array-ingameid";
+		await seedJubeatChartArrayInGameID({ chartId, legacyId: 9_001 });
+
+		const baseMs = Date.UTC(2024, 5, 1, 12, 0, 0, 0);
+		const batch = {
+			meta: { game: "jubeat", playtype: "Single", service: "smoke-test" },
+			scores: [jubeatScoreLine({ identifier: JUBEAT_ARRAY_IG_FIRST, timeAchieved: baseMs })],
+		};
+
+		const importID = "import-smoke-jubeat-array";
+		const doc = await MakeScoreImport({
+			importID,
+			importType: "file/batch-manual",
+			parserArguments: [mkBatchManualMulterFile(batch), {}],
+			userID: 1,
+			userIntent: true,
+		});
+
+		expect(doc.scoreIDs).toHaveLength(1);
+		expect(doc.errors).toHaveLength(0);
+
+		const nCommitted = await DB.selectFrom("score")
+			.select((eb) => eb.fn.countAll<number>().as("c"))
+			.where("import_id", "=", importID)
+			.where("committed", "=", true)
+			.executeTakeFirst();
+
+		expect(Number(nCommitted?.c)).toBe(1);
+	});
+
+	it("second import of identical data reports no sessions", async () => {
+		await seedJubeatChartScalarInGameID({
+			chartId: "chart-dedup-sessions",
+			inGameID: 20_000_001,
+			legacyId: 9_010,
+			songIdSuffix: "dedup-sessions-song",
+		});
+
+		const baseMs = Date.UTC(2024, 3, 1, 14, 0, 0, 0);
+		const batch = {
+			meta: { game: "jubeat", playtype: "Single", service: "dedup-test" },
+			scores: [jubeatScoreLine({ identifier: 20_000_001, timeAchieved: baseMs })],
+		};
+
+		const doc1 = await MakeScoreImport({
+			importID: "import-dedup-sessions-1",
+			importType: "file/batch-manual",
+			parserArguments: [mkBatchManualMulterFile(batch), {}],
+			userID: 1,
+			userIntent: true,
+		});
+
+		// Sanity check: first import should have created exactly one session
+		expect(doc1.createdSessions).toHaveLength(1);
+		expect(doc1.createdSessions[0]?.type).toBe("Created");
+
+		const doc2 = await MakeScoreImport({
+			importID: "import-dedup-sessions-2",
+			importType: "file/batch-manual",
+			parserArguments: [mkBatchManualMulterFile(batch), {}],
+			userID: 1,
+			userIntent: true,
+		});
+
+		// Second import of identical data should claim no sessions — no new scores
+		// were actually committed, so no session was touched.
+		expect(doc2.createdSessions).toHaveLength(0);
+	});
+
+	it("file/batch-manual: two session groups appending the same nearby session finalizes import_session without error", async () => {
+		await seedJubeatChartScalarInGameID({
+			chartId: "chart-smoke-jubeat-dup-a",
+			inGameID: 10_000_001,
+			legacyId: 9_002,
+			songIdSuffix: "smoke2-song-a",
+		});
+		await seedJubeatChartScalarInGameID({
+			chartId: "chart-smoke-jubeat-dup-b",
+			inGameID: 10_000_002,
+			legacyId: 9_003,
+			songIdSuffix: "smoke2-song-b",
+		});
+
+		const baseMs = Date.UTC(2024, 5, 10, 8, 0, 0, 0);
+		const sessionId = `Q${"a".repeat(40)}`;
+
+		const sixHoursMs = 6 * 60 * 60 * 1000;
+		const oneHourMs = 60 * 60 * 1000;
+
+		await DB.insertInto("session")
+			.values({
+				id: sessionId,
+				user_id: 1,
+				game: "jubeat",
+				name: "preseed-smoke",
+				description: null,
+				time_inserted: UnixMillisecondsToISO8601(Date.now()),
+				time_started: UnixMillisecondsToISO8601(baseMs),
+				time_ended: UnixMillisecondsToISO8601(baseMs + sixHoursMs),
+				calculated_data: JSON.stringify({ jubility: null }),
+				highlight: false,
+			})
+			.execute();
+
+		const batch = {
+			meta: { game: "jubeat", playtype: "Single", service: "smoke-test" },
+			scores: [
+				jubeatScoreLine({
+					identifier: 10_000_001,
+					musicRate: 95.0,
+					score: 910_000,
+					timeAchieved: baseMs + oneHourMs,
+				}),
+				jubeatScoreLine({
+					identifier: 10_000_002,
+					musicRate: 97.0,
+					score: 925_000,
+					timeAchieved: baseMs + 5 * oneHourMs,
+				}),
+			],
+		};
+
+		const importID = "import-smoke-jubeat-session-meta";
+		const doc = await MakeScoreImport({
+			importID,
+			importType: "file/batch-manual",
+			parserArguments: [mkBatchManualMulterFile(batch), {}],
+			userID: 1,
+			userIntent: true,
+		});
+
+		expect(doc.scoreIDs).toHaveLength(2);
+		expect(doc.errors).toHaveLength(0);
+
+		const nCommitted = await DB.selectFrom("score")
+			.select((eb) => eb.fn.countAll<number>().as("c"))
+			.where("import_id", "=", importID)
+			.where("committed", "=", true)
+			.executeTakeFirst();
+
+		expect(Number(nCommitted?.c)).toBe(2);
+
+		const importSessionRows = await DB.selectFrom("import_session")
+			.select("session_id")
+			.where("import_id", "=", importID)
+			.execute();
+
+		expect(importSessionRows).toHaveLength(1);
+		expect(importSessionRows[0]?.session_id).toBe(sessionId);
+	});
 });

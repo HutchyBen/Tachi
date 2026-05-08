@@ -1,30 +1,39 @@
 # Build context must be the repo root (same as GHA docker-push: context `.`).
 # Respects .dockerignore (see repo root). Full tree copy keeps workspace installs correct.
-# docker build -f docker/Dockerfile.server --target prod-unified --build-arg COMMIT_HASH="$(git rev-parse --short HEAD)" -t tachi-server:local .
-# docker build -f docker/Dockerfile.server --target prod-api .
-# docker build -f docker/Dockerfile.server --target prod-job-worker .
-# docker build -f docker/Dockerfile.server --target prod-cron-worker .
+# docker build -f docker/Dockerfile.server \
+#   --build-arg VERSION="$(jq -r .version typescript/server/package.json)" \
+#   --build-arg COMMIT_HASH="$(git rev-parse --short HEAD)" -t tachi-server:local .
+#
+# Default CMD runs the API server. Override to run a worker:
+#   docker run tachi-server:local bun run ./typescript/server/src/job-queue-worker.ts
+#   docker run tachi-server:local bun run ./typescript/server/src/cron-worker.ts
+#
+# Worker containers use a file-based heartbeat (/tmp/worker-heartbeat) rather than HTTP,
+# so their HEALTHCHECK must be configured at the deployment layer (compose/k8s), not here.
 #
 # NOTE: bun build --compile is NOT used here because it's
 # FUCKING BROKEN
 
-FROM oven/bun:alpine AS base
+FROM oven/bun:alpine AS deps
 WORKDIR /app
-
-# --- install: full tree so bun sees every workspace package ---
-FROM base AS deps
-
 COPY . .
 RUN bun install --frozen-lockfile
 
-# --- API image ---
-FROM oven/bun:alpine AS prod-api
+FROM oven/bun:alpine AS prod
 
+ARG VERSION
 ARG COMMIT_HASH
+# Fail the build if either arg is omitted (Docker has no required-ARG syntax).
+RUN set -eu; \
+	: "${VERSION:?Dockerfile.server: VERSION build-arg is required}"; \
+	: "${COMMIT_HASH:?Dockerfile.server: COMMIT_HASH build-arg is required}";
+
+ENV VERSION=${VERSION}
 ENV COMMIT_HASH=${COMMIT_HASH}
 ENV MIGRATIONS_DIR=/app/db/migrations
 ENV PORT=8080
 
+# curl is only needed by the API healthcheck below; workers don't use it.
 RUN apk add --no-cache curl
 
 WORKDIR /app
@@ -32,50 +41,7 @@ COPY --from=deps /app .
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=15s --timeout=5s --start-period=30s \
-  CMD curl -sf http://localhost:8080/.deploy/up || exit 1
-
-CMD ["bun", "run", "./typescript/server/src/main.ts"]
-
-# --- Job queue worker (no HTTP port) ---
-FROM oven/bun:alpine AS prod-job-worker
-
-ARG COMMIT_HASH
-ENV COMMIT_HASH=${COMMIT_HASH}
-ENV MIGRATIONS_DIR=/app/db/migrations
-
-WORKDIR /app
-COPY --from=deps /app .
-
-CMD ["bun", "run", "./typescript/server/src/job-queue-worker.ts"]
-
-# --- Cron worker (no HTTP port) ---
-FROM oven/bun:alpine AS prod-cron-worker
-
-ARG COMMIT_HASH
-ENV COMMIT_HASH=${COMMIT_HASH}
-ENV MIGRATIONS_DIR=/app/db/migrations
-
-WORKDIR /app
-COPY --from=deps /app .
-
-CMD ["bun", "run", "./typescript/server/src/cron-worker.ts"]
-
-# --- All-in-one image.
-FROM oven/bun:alpine AS prod-unified
-
-ARG COMMIT_HASH
-ENV COMMIT_HASH=${COMMIT_HASH}
-ENV MIGRATIONS_DIR=/app/db/migrations
-ENV PORT=8080
-
-RUN apk add --no-cache curl
-
-WORKDIR /app
-COPY --from=deps /app .
-
-EXPOSE 8080
-
+# Matches the default CMD (API server). Worker deployments must override this.
 HEALTHCHECK --interval=15s --timeout=5s --start-period=30s \
   CMD curl -sf http://localhost:8080/.deploy/up || exit 1
 

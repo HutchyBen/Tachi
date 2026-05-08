@@ -215,7 +215,7 @@ function tsReq(ms: number): string {
 // ──────────────────────────────────────────────────────────────────────────────
 // API permission helpers
 // (Old MongoDB data uses dash-separated permission names, not the underscore
-// form in the current APIPermissions type — kept as plain string lookups.)
+// form in the current APIPermissions type - kept as plain string lookups.)
 // ──────────────────────────────────────────────────────────────────────────────
 
 /** Extract one Postgres pm_* column from a MongoDB requestedPermissions array. */
@@ -371,7 +371,7 @@ async function main(): Promise<void> {
 	const chartIdMap = buildChartIdMap(SEEDS_DIR);
 
 	// ══════════════════════════════════════════════════════════════════════════
-	// LEVEL 0 — No FK dependencies
+	// LEVEL 0 - No FK dependencies
 	// ══════════════════════════════════════════════════════════════════════════
 
 	console.log("\n── Level 0 ──────────────────────────────────────────────────────");
@@ -489,7 +489,7 @@ async function main(): Promise<void> {
 	}
 
 	// ══════════════════════════════════════════════════════════════════════════
-	// LEVEL 1 — Depend on account and/or level-0 tables
+	// LEVEL 1 - Depend on account and/or level-0 tables
 	// ══════════════════════════════════════════════════════════════════════════
 
 	console.log("\n── Level 1 ──────────────────────────────────────────────────────");
@@ -894,7 +894,7 @@ async function main(): Promise<void> {
 			game: mongoGameToPg(a.game, (a as { playtype?: string }).playtype),
 			user_id: a.userID,
 			class_set: a.classSet as string,
-			// classOldValue can be null in Mongo; Postgres requires a string — use empty string.
+			// classOldValue can be null in Mongo; Postgres requires a string - use empty string.
 			class_prev_value: a.classOldValue ?? "",
 			class_value: a.classValue,
 			timestamp: tsReq(a.timeAchieved),
@@ -1049,18 +1049,18 @@ async function main(): Promise<void> {
 
 				if (skipped > 0) {
 					console.warn(
-						`  [import_session] Skipped ${skipped} row(s) — session not found`,
+						`  [import_session] Skipped ${skipped} row(s) - session not found`,
 					);
 				}
 			}
 
-			// Base rows first — children have FK references to import(id).
+			// Base rows first - children have FK references to import(id).
 			await batchInsert("import", importRows);
 			await batchInsert("import_game", importGameRows);
 			await batchInsert("import_error", importErrorRows);
 			await batchInsert("import_class", importClassRows);
 			await batchInsert("import_session", importSessionRows);
-			// import_goal and import_quest are intentionally skipped — the
+			// import_goal and import_quest are intentionally skipped - the
 			// historical data doesn't align with reality.
 		},
 		"import + children",
@@ -1088,7 +1088,7 @@ async function main(): Promise<void> {
 
 		for (const gs of goalSubs) {
 			if (!existingGoalIds.has(gs.goalID)) {
-				console.warn(`  [goal_sub] Skipping — goal ${gs.goalID} not found in DB`);
+				console.warn(`  [goal_sub] Skipping - goal ${gs.goalID} not found in DB`);
 				continue;
 			}
 
@@ -1170,7 +1170,7 @@ async function main(): Promise<void> {
 		const skipped = folderViews.length - viewRows.length;
 
 		if (skipped > 0) {
-			console.warn(`  [folder_view] Skipping ${skipped} row(s) — folder not found in DB`);
+			console.warn(`  [folder_view] Skipping ${skipped} row(s) - folder not found in DB`);
 		}
 
 		for (let i = 0; i < viewRows.length; i = i + INSERT_CHUNK) {
@@ -1207,7 +1207,7 @@ async function main(): Promise<void> {
 	}
 
 	// ══════════════════════════════════════════════════════════════════════════
-	// LEVEL 2 — Depend on level 1 tables
+	// LEVEL 2 - Depend on level 1 tables
 	// ══════════════════════════════════════════════════════════════════════════
 
 	console.log("\n── Level 2 ──────────────────────────────────────────────────────");
@@ -1244,7 +1244,7 @@ async function main(): Promise<void> {
 			console.warn(
 				`  ${
 					apiTokens.length - validTokens.length
-				} API tokens skipped — null token/userID or deleted oauth2 client`,
+				} API tokens skipped - null token/userID or deleted oauth2 client`,
 			);
 		}
 
@@ -1332,7 +1332,7 @@ async function main(): Promise<void> {
 			}
 
 			if (skipped > 0) {
-				console.warn(`  [import_timing] Skipped ${skipped} row(s) — import not found`);
+				console.warn(`  [import_timing] Skipped ${skipped} row(s) - import not found`);
 			}
 
 			await batchInsert("import_timing", rows);
@@ -1341,7 +1341,7 @@ async function main(): Promise<void> {
 	);
 
 	// ══════════════════════════════════════════════════════════════════════════
-	// LEVEL 3 — Large collections: scores and PBs (cursor-streamed)
+	// LEVEL 3 - Large collections: scores and PBs (cursor-streamed)
 	// ══════════════════════════════════════════════════════════════════════════
 
 	console.log("\n── Level 3 (streaming) ──────────────────────────────────────────");
@@ -1397,7 +1397,7 @@ async function main(): Promise<void> {
 
 				if (chartSid === undefined) {
 					throw new Error(
-						`  [score] Skipping score ${s.scoreID} — no sid for chartID ${s.chartID}`,
+						`  [score] Skipping score ${s.scoreID} - no sid for chartID ${s.chartID}`,
 					);
 				}
 

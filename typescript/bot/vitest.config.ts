@@ -32,7 +32,7 @@ export default defineConfig({
 			DISCORD_SERVER_ID: "test-server-id",
 		},
 
-		// Parallel test execution — each worker gets its own isolated Postgres database.
+		// Parallel test execution - each worker gets its own isolated Postgres database.
 		fileParallelism: true,
 		globalSetup: "./vitest.globalSetup.ts",
 		setupFiles: "./vitest.setup.ts",

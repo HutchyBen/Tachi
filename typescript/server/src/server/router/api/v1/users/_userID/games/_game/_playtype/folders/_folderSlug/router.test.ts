@@ -154,7 +154,7 @@ describe("GET /api/v1/users/:userID/games/:game/folders/:folderID/timeline", () 
 
 		const baseSd = TestingIIDXSPScore.scoreData;
 
-		// Chart A: CLEAR lamp, null time — sorts first in final array (null → 0).
+		// Chart A: CLEAR lamp, null time - sorts first in final array (null → 0).
 		await insertIidxSpScore({
 			id: "tl_s_a",
 			userId,
@@ -178,7 +178,7 @@ describe("GET /api/v1/users/:userID/games/:game/folders/:folderID/timeline", () 
 			scoreData: baseSd,
 			timeAchievedMs: 100,
 		});
-		// EASY CLEAR (index 3) — does not satisfy CLEAR floor (index 4).
+		// EASY CLEAR (index 3) - does not satisfy CLEAR floor (index 4).
 		await insertIidxSpScore({
 			id: "tl_s_b_easy",
 			userId,

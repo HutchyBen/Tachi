@@ -25,7 +25,7 @@ function mergeSongRowsById(baseSongs: Row[], headSongs: Row[]): Map<string, Row>
 
 // seeds.tachi.ac always points at the canonical upstream. We use this for
 // every GitHub link in the diff header (commits, compare, PRs). This is a
-// deliberate hardcode — the dev transport doesn't know what remote the
+// deliberate hardcode - the dev transport doesn't know what remote the
 // local clone is pointing at, and for the hosted site it's always this repo.
 const GITHUB_REPO_URL = "https://github.com/zkldi/Tachi";
 
@@ -341,7 +341,7 @@ function CommitHeader({
 					</div>
 					<div className="commit-header-meta">
 						<span>
-							<strong>{commit?.author.name ?? "—"}</strong>
+							<strong>{commit?.author.name ?? "-"}</strong>
 							{commit?.author.email ? (
 								<span className="text-muted"> &lt;{commit.author.email}&gt;</span>
 							) : null}

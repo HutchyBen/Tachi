@@ -91,5 +91,5 @@ describe("POST /api/v1/games/:game/charts/resolve", () => {
 });
 
 describe("GET /api/v1/games/:game/charts (popular & search)", () => {
-	it.todo("requires large IIDX chart/PB corpus — port from router.oldtest.ts");
+	it.todo("requires large IIDX chart/PB corpus - port from router.oldtest.ts");
 });

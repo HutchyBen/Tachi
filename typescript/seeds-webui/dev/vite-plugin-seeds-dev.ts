@@ -15,7 +15,7 @@ import {
 } from "./util/git";
 import { applyPatch, type JsonPatch } from "./util/json-patch";
 
-// vite-plugin-seeds-dev — mounts /__seeds/* dev-only endpoints against the
+// vite-plugin-seeds-dev - mounts /__seeds/* dev-only endpoints against the
 // local repo's db/seeds directory so the seeds-webui can:
 //
 //   - GET  /__seeds/ping              feature probe

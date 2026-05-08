@@ -7,7 +7,7 @@ import { basicSetup, EditorView } from "codemirror";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
- * Replaces the default CodeMirror colors in dark mode — `defaultHighlightStyle` uses #708
+ * Replaces the default CodeMirror colors in dark mode - `defaultHighlightStyle` uses #708
  * (purple) for keywords, which is nearly unreadable on the seeds-webui near-black page.
  * When `themeType: "dark"`, this becomes the only non-fallback highlighter, so the purple
  * palette is not used.
@@ -33,7 +33,7 @@ const sqlEditorHighlightDark = HighlightStyle.define(
 	{ themeType: "dark" },
 );
 
-/** `data-bs-theme` on <html> — must drive CodeMirror's `EditorView.darkTheme` or the caret stays light-theme (black) on a dark page. */
+/** `data-bs-theme` on <html> - must drive CodeMirror's `EditorView.darkTheme` or the caret stays light-theme (black) on a dark page. */
 function useBootstrapPageDark(): boolean {
 	const [isDark, setIsDark] = useState(
 		() => document.documentElement.getAttribute("data-bs-theme") !== "light",
@@ -64,7 +64,7 @@ export type SqlEditorProps = {
 	value: string;
 };
 
-/** Surfaces, caret, and panels — all use Bootstrap CSS variables so light/dark track the page. */
+/** Surfaces, caret, and panels - all use Bootstrap CSS variables so light/dark track the page. */
 // Use baseTheme: `&light` / `&dark` are only expanded in buildTheme(..., lightDarkIDs), not in EditorView.theme().
 const surfaceTheme = EditorView.baseTheme({
 	"&": {
@@ -75,7 +75,7 @@ const surfaceTheme = EditorView.baseTheme({
 		fontFeatureSettings: '"liga" 0, "calt" 0',
 	},
 	// Caret: drawSelection defaults to black / #ddd for &dark, but the editor was not getting
-	// `EditorView.darkTheme` — keep an explicit color so the caret always matches body text.
+	// `EditorView.darkTheme` - keep an explicit color so the caret always matches body text.
 	".cm-cursor, .cm-dropCursor": {
 		borderLeft: "1.2px solid var(--bs-body-color)",
 	},

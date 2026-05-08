@@ -46,7 +46,7 @@ function buildList(): Array<CronTaskDef> {
 		},
 		{
 			id: "drain_stats_queues",
-			schedule: "* * * * *",
+			schedule: "* * * * *", // TODO(zk): really? this is so lazy
 			description:
 				"Drain score_rederive, pb_dirty, session_dirty, game_profile_dirty (ordered)",
 			run: drainStatsQueuesInOrder,

@@ -4,7 +4,7 @@ import { GetSessionFolderRaises } from "#lib/folders/get-session-folder-raises";
 import { withSession, withSessionOwner } from "#lib/router/middleware";
 import { success } from "#lib/router/typed-router";
 import { API_V1_ROUTER } from "#server/router/api/v1/router";
-import { GetSessionData } from "#utils/queries/sessions";
+import { GetAdjacentSessions, GetSessionData } from "#utils/queries/sessions";
 import { GetUserWithID } from "#utils/user";
 import { ExpectedErr } from "bliss";
 
@@ -42,6 +42,18 @@ API_V1_ROUTER.add("GET /sessions/:sessionID/folder-raises", withSession, async (
 	const raises = await GetSessionFolderRaises(ctx.sessionDoc);
 
 	return success("Retrieved folder raises.", raises);
+});
+
+/**
+ * Returns the chronologically adjacent sessions (prev = older, next = newer)
+ * for the same user and game.
+ *
+ * @name GET /api/v1/sessions/:sessionID/adjacent
+ */
+API_V1_ROUTER.add("GET /sessions/:sessionID/adjacent", withSession, async ({ ctx }) => {
+	const { prev, next } = await GetAdjacentSessions(ctx.sessionDoc);
+
+	return success("Retrieved adjacent sessions.", { next, prev });
 });
 
 /**

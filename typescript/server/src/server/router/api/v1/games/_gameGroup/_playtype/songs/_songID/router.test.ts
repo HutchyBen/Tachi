@@ -141,7 +141,7 @@ describe("GET /api/v1/games/iidx-sp/songs/:songID", () => {
 	});
 
 	it("only returns charts for the requested playtype", async () => {
-		// Insert a DP chart for the same song — should not appear in the SP response.
+		// Insert a DP chart for the same song - should not appear in the SP response.
 		await DB.insertInto("chart")
 			.values({
 				id: "C_TEST_IIDX_DP_CHART",

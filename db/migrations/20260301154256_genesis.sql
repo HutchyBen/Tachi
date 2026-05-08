@@ -128,6 +128,9 @@ CREATE TABLE "job_queue" (
 CREATE INDEX job_queue_partial_index_btree
 ON job_queue (created_at, status)
 WHERE status = 0;
+CREATE INDEX job_queue_dequeue_idx
+ON job_queue (scheduled_for ASC, created_at ASC)
+WHERE status = 0;
 
 CREATE TABLE "cron_task" (
 	id TEXT PRIMARY KEY,
@@ -706,7 +709,6 @@ CREATE TABLE "import_timing" (
 CREATE TABLE "score" (
 	id TEXT PRIMARY KEY NOT NULL,
 
-	-- TODO(zk): Redundant? joins on session(id).
 	user_id BIGINT REFERENCES account(id) NOT NULL,
 	chart_id TEXT REFERENCES chart(id) NOT NULL,
 
@@ -915,6 +917,7 @@ CREATE TABLE "pb" (
 CREATE TABLE "pb_composed_from" (
 	pb_id UUID REFERENCES pb(row_id) NOT NULL,
 	score_id TEXT REFERENCES score(id) NOT NULL,
+	merge_name TEXT NOT NULL,
 
 	PRIMARY KEY (pb_id, score_id)
 );
@@ -1047,7 +1050,7 @@ CREATE TABLE "quest" (
 	name TEXT NOT NULL,
 	description TEXT NOT NULL,
 
-	-- Array<QuestSection> — sections with titles, descs, and goal references.
+	-- Array<QuestSection> - sections with titles, descs, and goal references.
 	-- Too structured/variable to flatten usefully.
 	quest_data JSONB NOT NULL
 );
@@ -1131,7 +1134,7 @@ CREATE INDEX score_user_recent_idx ON score (user_id, time_added DESC);
 CREATE INDEX score_user_highlights_idx ON score (user_id, time_added DESC)
 	WHERE highlight = true;
 
--- "All scores on chart X" — chart pages, playcount, import duplicate check.
+-- "All scores on chart X" - chart pages, playcount, import duplicate check.
 -- Needed separately because score_user_chart_idx has user_id as the left column.
 CREATE INDEX score_chart_idx ON score (chart_id);
 
@@ -1142,7 +1145,7 @@ CREATE INDEX score_import_uncommitted_idx ON score (import_id)
 
 CREATE UNIQUE INDEX orphan_score_orphan_id_key ON orphan_score (orphan_id);
 
--- pb (5M rows) — hottest table
+-- pb (5M rows) - hottest table
 -- The single most important index in the schema.
 -- Serves: chart_leaderboard view, leaderboard pagination, and the COUNT rank
 -- queries ("how many PBs beat mine?"). chart_id partitions the 5M rows into
@@ -1215,8 +1218,8 @@ CREATE INDEX folder_view_user_idx ON folder_view (user_id, last_viewed DESC);
 -- so game-first lookups need their own index.
 CREATE INDEX game_stats_snapshot_game_idx ON game_stats_snapshot (game, timestamp DESC);
 
--- chart — general
--- "All charts for song X" — song pages, chart listing. Postgres does NOT
+-- chart - general
+-- "All charts for song X" - song pages, chart listing. Postgres does NOT
 -- auto-index FK columns, so this needs to be explicit.
 CREATE INDEX chart_song_idx ON chart (song_id);
 
@@ -1232,7 +1235,7 @@ CREATE UNIQUE INDEX chart_primary_song_difficulty_idx
 	ON chart (game, song_id, difficulty)
 	WHERE is_primary = true;
 
--- chart — game-specific JSONB expression indexes
+-- chart - game-specific JSONB expression indexes
 -- Partial expression indexes mirroring the per-game Mongo collections.
 -- Used during score import to look up charts by their game-native ID or hash.
 
@@ -1304,3 +1307,19 @@ CREATE TABLE "priv_discord_user_map" (
 
 CREATE UNIQUE INDEX priv_discord_user_map_user_id_idx ON priv_discord_user_map (user_id);
 -- <== End bot
+
+-- Optional read-only role used by Grafana (may not exist in local/dev).
+DO $grant$
+BEGIN
+	IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'grafana_ro') THEN
+		EXECUTE 'GRANT USAGE ON SCHEMA public TO grafana_ro';
+		EXECUTE 'GRANT SELECT ON ALL TABLES IN SCHEMA public TO grafana_ro';
+		EXECUTE 'GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO grafana_ro';
+	END IF;
+	IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'grafana_ro')
+		AND EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'tachi') THEN
+		EXECUTE 'ALTER DEFAULT PRIVILEGES FOR ROLE tachi IN SCHEMA public GRANT SELECT ON TABLES TO grafana_ro';
+		EXECUTE 'ALTER DEFAULT PRIVILEGES FOR ROLE tachi IN SCHEMA public GRANT SELECT ON SEQUENCES TO grafana_ro';
+	END IF;
+END
+$grant$;

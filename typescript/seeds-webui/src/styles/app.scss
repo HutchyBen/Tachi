@@ -253,7 +253,7 @@ code {
 }
 
 // ---------------------------------------------------------------------------
-// Git status strip — appears under the header in dev mode.
+// Git status strip - appears under the header in dev mode.
 // ---------------------------------------------------------------------------
 
 .git-strip {
@@ -519,7 +519,7 @@ code {
 		}
 	}
 
-	// Row-expand column — narrow, center-aligned, no hover bg.
+	// Row-expand column - narrow, center-aligned, no hover bg.
 	.result-col-expand {
 		width: 2rem;
 		padding: 0.35rem 0.25rem 0.35rem 0.5rem;
@@ -709,7 +709,7 @@ code {
 }
 
 // ---------------------------------------------------------------------------
-// Skeleton loading placeholder — used anywhere a list of rows is loading.
+// Skeleton loading placeholder - used anywhere a list of rows is loading.
 // ---------------------------------------------------------------------------
 
 @keyframes skeleton-shimmer {
@@ -791,7 +791,7 @@ code {
 }
 
 // ---------------------------------------------------------------------------
-// Ingest toast — pinned bottom-right overlay that reports sqlite build
+// Ingest toast - pinned bottom-right overlay that reports sqlite build
 // progress from anywhere in the app. Non-blocking; slides up on mount and
 // fades out once the database is ready.
 // ---------------------------------------------------------------------------
@@ -934,7 +934,7 @@ code {
 }
 
 // ---------------------------------------------------------------------------
-// Diff view — card-per-row with field-level highlighting. Readable over the
+// Diff view - card-per-row with field-level highlighting. Readable over the
 // previous ellipsised table.
 // ---------------------------------------------------------------------------
 
@@ -1296,7 +1296,7 @@ $diff-chg-border: rgba(245, 177, 76, 0.4);
 }
 
 // ---------------------------------------------------------------------------
-// Seed document list — Collection page renderer.
+// Seed document list - Collection page renderer.
 //
 // Each seed document is a collapsible row: a one-line summary header with
 // optional edit/delete buttons, and a pretty-printed JSON block when open.
@@ -1597,7 +1597,7 @@ $diff-chg-border: rgba(245, 177, 76, 0.4);
 }
 
 // ---------------------------------------------------------------------------
-// Floating drafts bar — pinned bottom-left, shown when there are staged edits
+// Floating drafts bar - pinned bottom-left, shown when there are staged edits
 // and the user is not already on /drafts.
 // ---------------------------------------------------------------------------
 

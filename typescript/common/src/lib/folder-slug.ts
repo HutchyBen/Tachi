@@ -351,7 +351,7 @@ function encodeBmsTableKey(game: string, key: string): string {
 	}
 
 	throw new Error(
-		`No BMS_TABLES row for game=${JSON.stringify(game)} prefix=${JSON.stringify(key)} — add a BMSTableInfo entry or use an ascii-only prefix.`,
+		`No BMS_TABLES row for game=${JSON.stringify(game)} prefix=${JSON.stringify(key)} - add a BMSTableInfo entry or use an ascii-only prefix.`,
 	);
 }
 

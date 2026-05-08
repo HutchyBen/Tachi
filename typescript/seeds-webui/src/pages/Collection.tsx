@@ -197,7 +197,7 @@ export function Collection() {
 
 			{!schema && EDIT_MODE ? (
 				<div className="alert alert-warning mono">
-					No zod schema found for this collection — editing is unavailable.
+					No zod schema found for this collection - editing is unavailable.
 				</div>
 			) : null}
 

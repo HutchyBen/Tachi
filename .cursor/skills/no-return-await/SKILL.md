@@ -9,7 +9,7 @@ description: Prefer `return` over `return await` in async functions when the awa
 
 In an `async function`, **`return await x` and `return x` are equivalent** for callers when `x` is a Promise (or thenable): both return a Promise with the same fulfillment and rejection.
 
-Prefer **`return x`** — the extra `await` adds a microtask and obscures that you are simply forwarding the result.
+Prefer **`return x`** - the extra `await` adds a microtask and obscures that you are simply forwarding the result.
 
 ```typescript
 // Prefer
@@ -17,7 +17,7 @@ async function load() {
 	return fetchData();
 }
 
-// Avoid (unless you need await for control flow — see below)
+// Avoid (unless you need await for control flow - see below)
 async function load() {
 	return await fetchData();
 }
@@ -40,7 +40,7 @@ async function safeLoad() {
 }
 ```
 
-- **`finally`** that must run after the inner work settles (same idea — often needs `await` in the `try`).
+- **`finally`** that must run after the inner work settles (same idea - often needs `await` in the `try`).
 
 If there is **no** `try`/`catch`/`finally` depending on that promise settling inside the function, **do not** use `return await`.
 

@@ -61,7 +61,7 @@ type AdminJobQueueFilters = { job_kind?: string; scope?: string; status?: number
 type AdminActionFilters = { kind?: string; username?: string };
 
 // ─── Output schema helpers ────────────────────────────────────────────────────
-// Opaque MongoDB document — validates the value is a record but does not
+// Opaque MongoDB document - validates the value is a record but does not
 // constrain individual fields. Pass `T` so `z.infer` and handler output types
 // match the API document type (runtime validation stays shallow).
 function doc<T = Record<string, unknown>>(): z.ZodType<T> {
@@ -72,7 +72,7 @@ function docArray<T = Record<string, unknown>>(): z.ZodType<T[]> {
 	return z.array(z.record(z.string(), z.unknown())) as z.ZodType<T[]>;
 }
 
-// Empty success body — mutation endpoints that carry no return payload.
+// Empty success body - mutation endpoints that carry no return payload.
 const empty = z.object({});
 
 export const API_V1_SPEC = {
@@ -624,7 +624,7 @@ export const API_V1_SPEC = {
 	// Users /:userID/games/:game (UGPT)
 	// ────────────────────────────────────────────────
 
-	// User games — literal gameGroup segments (game-specific)
+	// User games - literal gameGroup segments (game-specific)
 	"GET /users/:userID/games/:game/custom-tables/:tableUrlName": {
 		description:
 			"HTML stub for a user-specific custom BMS table; things like their rivals, etc.",
@@ -1259,7 +1259,7 @@ export const API_V1_SPEC = {
 		}),
 	},
 
-	// Games — BMS / IIDX literal paths (game-specific)
+	// Games - BMS / IIDX literal paths (game-specific)
 	"GET /games/:game/custom-tables": {
 		description: "List custom BMS tables available.",
 		input: z.object({}),
@@ -1620,6 +1620,15 @@ export const API_V1_SPEC = {
 			highlight: z.boolean().optional(),
 		}),
 		output: empty,
+	},
+
+	"GET /sessions/:sessionID/adjacent": {
+		description: "Retrieve the chronologically adjacent sessions (prev/next) for this session.",
+		input: z.object({}),
+		output: z.strictObject({
+			prev: doc<SessionDocument>().nullable(),
+			next: doc<SessionDocument>().nullable(),
+		}),
 	},
 
 	"GET /sessions/:sessionID/folder-raises": {

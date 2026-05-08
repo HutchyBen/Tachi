@@ -23,7 +23,7 @@ try {
 	} else {
 		transporter.verify((err) => {
 			if (err) {
-				// Do NOT throw here — this is an async callback and the throw would
+				// Do NOT throw here - this is an async callback and the throw would
 				// become an uncaught exception, crashing the process. Log and exit instead.
 				log.fatal({ err }, `Could not connect to email server.`);
 				process.exit(1);
@@ -65,7 +65,7 @@ export function SendEmail(
 			headers: transporter.options.headers,
 		})
 		.catch((err: unknown) => {
-			log.info(
+			log.error(
 				{
 					err,
 					subject,
@@ -74,5 +74,6 @@ export function SendEmail(
 				},
 				`Failed to send email to ${to}.`,
 			);
+			throw err;
 		});
 }

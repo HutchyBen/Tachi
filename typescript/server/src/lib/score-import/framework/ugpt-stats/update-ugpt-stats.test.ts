@@ -126,7 +126,6 @@ describe("UpdateUsersGamePlaytypeStats (ported from update-ugpt-stats.oldtest.ts
 		const ratings = typeof gp.ratings === "string" ? JSON.parse(gp.ratings) : gp.ratings;
 		expect(ratings).toMatchObject({
 			ktLampRating: expect.any(Number),
-			ktLampRatingNC: expect.any(Number),
 			ktLampRatingHC: expect.any(Number),
 			ktLampRatingEXHC: expect.any(Number),
 		});
@@ -175,7 +174,6 @@ describe("UpdateUsersGamePlaytypeStats (ported from update-ugpt-stats.oldtest.ts
 					calculatedData: {
 						BPI: 10.1,
 						ktLampRating: e,
-						ktLampRatingNC: e,
 						ktLampRatingHC: e,
 						ktLampRatingEXHC: e,
 					},

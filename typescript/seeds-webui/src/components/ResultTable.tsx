@@ -39,7 +39,7 @@ interface ResultTableProps {
 //     Pass `expandedContent` for custom content (e.g. a diff); otherwise the
 //     detail is the whole row as pretty-printed JSON.
 //   - `rowDetailMode="inline"` (with `expandedContent`) shows that detail
-//     under every row with no chevron or click — e.g. Bulk edit previews.
+//     under every row with no chevron or click - e.g. Bulk edit previews.
 export function ResultTable({
 	result,
 	maxRows = 500,

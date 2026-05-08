@@ -5,7 +5,7 @@ import { type Kysely, sql } from "kysely";
 
 /**
  * Folder membership SQL (see tests in `folders.test.ts`).
- * Does not import the global `DB` module — safe for scripts that only set `POSTGRES_URL`.
+ * Does not import the global `DB` module - safe for scripts that only set `POSTGRES_URL`.
  */
 export async function BuildFolderQuery(folderID: string, db: Kysely<Database>) {
 	const folder = await db
@@ -75,7 +75,7 @@ export async function GetFolderChartIDs(folderID: string, db: Kysely<Database>) 
 
 /**
  * Evaluates `folder.where` SQL (same as a full rebuild). Used by
- * {@link rebuildFolderChartLookup}; do not call for normal reads — use {@link GetFolderChartIDs}.
+ * {@link rebuildFolderChartLookup}; do not call for normal reads - use {@link GetFolderChartIDs}.
  */
 export async function computeFolderChartIdsFromFolderSql(folderID: string, db: Kysely<Database>) {
 	const { folderQuery } = await BuildFolderQuery(folderID, db);

@@ -14,6 +14,16 @@ pg.types.setTypeParser(pg.types.builtins.INT8, (val) => Number(val));
 
 const pool = new Pool({ connectionString: Env.POSTGRES_URL });
 
+if (process.env.NODE_ENV === "test") {
+	// Swallow 57P01 (admin_shutdown) errors that arrive on idle pool connections
+	// during test teardown. Prevents some flakiness in CI.
+	pool.on("error", (err: { code?: string } & Error) => {
+		if (err.code !== "57P01") {
+			throw err;
+		}
+	});
+}
+
 const DB = new Kysely<Database>({
 	dialect: new PostgresDialect({ pool }),
 });

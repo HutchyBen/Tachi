@@ -6,7 +6,7 @@ import { type z } from "zod";
 //
 // Replaces the previous schema-driven field-tree form. Seeds documents are
 // complex enough (discriminated unions, per-game chart data, etc.) that a
-// generated form was always going to be leaky — it's cleaner to just edit
+// generated form was always going to be leaky - it's cleaner to just edit
 // the raw JSON and let the schema tell you exactly what's wrong.
 //
 // Behaviour:

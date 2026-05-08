@@ -12,7 +12,7 @@
 			}
 		]
 	},
-	"description": "Tachi API — endpoint latencies, score import durations, error rates & system health",
+	"description": "Tachi API - endpoint latencies, score import durations, error rates & system health",
 	"editable": true,
 	"fiscalYearStartMonth": 0,
 	"graphTooltip": 1,

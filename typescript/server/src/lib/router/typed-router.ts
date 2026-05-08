@@ -192,7 +192,7 @@ export class TypedRouter<S extends AnyRouterSpec> {
 				if (!outputParseResult.success) {
 					log.error(
 						{ route, issues: outputParseResult.error.issues },
-						"TypedRouter: output validation failed — handler returned body not matching spec output schema",
+						"TypedRouter: output validation failed - handler returned body not matching spec output schema",
 					);
 				}
 

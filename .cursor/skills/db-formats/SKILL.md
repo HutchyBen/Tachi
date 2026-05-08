@@ -23,8 +23,8 @@ description: Guidance on using db-formats/ column lists (SELECT_*) and document 
 
 Every Postgres table that is returned through the API needs two things in `src/lib/db-formats/<table>.ts`:
 
-1. **`SELECT_*`** — a `const` array of `"table.column"` strings listing exactly the columns needed
-2. **`To*Document`** — a mapper function that converts a typed Kysely row to the matching `tachi-common` document type
+1. **`SELECT_*`** - a `const` array of `"table.column"` strings listing exactly the columns needed
+2. **`To*Document`** - a mapper function that converts a typed Kysely row to the matching `tachi-common` document type
 
 ```typescript
 // src/lib/db-formats/my-table.ts
@@ -47,7 +47,7 @@ export function ToMyDocument(
 }
 ```
 
-The `Selection<Database, "table", (typeof SELECT_*)[number]>` type ensures the mapper only receives columns that were actually selected — Kysely will error at compile time if the select array and mapper fall out of sync.
+The `Selection<Database, "table", (typeof SELECT_*)[number]>` type ensures the mapper only receives columns that were actually selected - Kysely will error at compile time if the select array and mapper fall out of sync.
 
 ---
 
@@ -116,7 +116,7 @@ const { clientSecret: _secret, ...publicDoc } = ToAPIClientDocument(row);
 3. Export `To<Entity>Document` typed with `Selection<Database, "table", (typeof SELECT_<TABLE>)[number]>`
 4. Return the matching `tachi-common` document type (import from `"tachi-common"`)
 5. Apply all naming/shape conventions from the table above
-6. Import and use `SELECT_*` + `To*Document` in the router/util — never `.selectAll()`
+6. Import and use `SELECT_*` + `To*Document` in the router/util - never `.selectAll()`
 
 ---
 

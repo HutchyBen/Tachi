@@ -12,8 +12,8 @@ export type SeedDocSummaryOpts = {
 };
 
 /**
- * Human-readable one-liner for a seeds row — same rules as the collection
- * browser list (FormatChart for charts with a song, title — artist for songs,
+ * Human-readable one-liner for a seeds row - same rules as the collection
+ * browser list (FormatChart for charts with a song, title - artist for songs,
  * etc.).
  */
 export function prettySeedDocSummary(
@@ -52,7 +52,7 @@ export function prettySeedDocSummary(
 		case "songs": {
 			const title = str(doc.title);
 			const artist = str(doc.artist);
-			return artist ? `${title} — ${artist}` : title;
+			return artist ? `${title} - ${artist}` : title;
 		}
 		case "folders":
 		case "tables": {

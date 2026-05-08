@@ -31,6 +31,6 @@ export const ACTION_ResendVerifyEmail = MakeAction("RESEND_VERIFY_EMAIL", async 
 
 	const { text, html } = EmailFormatVerifyEmail(taker.acct.username, newToken);
 
-	void SendEmail(verifyInfo.email, "Email Verification", html, text);
+	await SendEmail(verifyInfo.email, "Email Verification", html, text);
 	return {};
 });

@@ -54,7 +54,7 @@ export async function listBranches(
 			}
 		}
 	} catch {
-		// detached head — leave current null.
+		// detached head - leave current null.
 	}
 
 	return { branches, current };
@@ -129,7 +129,7 @@ export async function statusPorcelain(
 			branch = m?.[1] ?? null;
 			continue;
 		}
-		// Porcelain format: " XY path" — strip the two-char status + space.
+		// Porcelain format: " XY path" - strip the two-char status + space.
 		changed.push(line.slice(3));
 	}
 	return { branch, changed, hasUncommitted: changed.length > 0 };

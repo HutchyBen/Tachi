@@ -47,7 +47,7 @@ export default function AdminOperationsPage() {
 								}}
 								value={announcementGame === "" ? "" : announcementGame}
 							>
-								<option value="">— Site-wide —</option>
+								<option value="">- Site-wide -</option>
 								{TachiConfig.GAME_GROUPS.map((g) => (
 									<option key={g} value={g}>
 										{g}
@@ -62,7 +62,7 @@ export default function AdminOperationsPage() {
 									onChange={(e) => setAnnouncementPlaytype(e.target.value)}
 									value={announcementPlaytype}
 								>
-									<option value="">—</option>
+									<option value="">-</option>
 									{announcementGameConfig.playtypes.map((pt) => (
 										<option key={pt} value={pt}>
 											{FormatGame(

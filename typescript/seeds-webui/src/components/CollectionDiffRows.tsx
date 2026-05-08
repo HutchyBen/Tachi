@@ -126,14 +126,14 @@ function FieldTable({ fields }: { fields: FieldDelta[] }) {
 						<td className="diff-fields-path mono">{f.path}</td>
 						<td className="diff-fields-before">
 							{f.kind === "added" ? (
-								<span className="text-muted">—</span>
+								<span className="text-muted">-</span>
 							) : (
 								<pre className="mono">{formatValue(f.before)}</pre>
 							)}
 						</td>
 						<td className="diff-fields-after">
 							{f.kind === "removed" ? (
-								<span className="text-muted">—</span>
+								<span className="text-muted">-</span>
 							) : (
 								<pre className="mono">{formatValue(f.after)}</pre>
 							)}

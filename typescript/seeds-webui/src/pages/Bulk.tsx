@@ -174,7 +174,7 @@ export function Bulk() {
 			}
 		}
 		if (rejections.length > 0) {
-			setError(`Bulk merge rejected — would not satisfy schema:\n${rejections.join("\n")}`);
+			setError(`Bulk merge rejected - would not satisfy schema:\n${rejections.join("\n")}`);
 			return;
 		}
 

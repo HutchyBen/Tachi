@@ -91,7 +91,7 @@ export function CommitSparkline({ commits, days = 90 }: CommitSparklineProps) {
 							y={y}
 						>
 							<title>
-								{b.day} — {b.count} commit{b.count === 1 ? "" : "s"}
+								{b.day} - {b.count} commit{b.count === 1 ? "" : "s"}
 							</title>
 						</rect>
 					);

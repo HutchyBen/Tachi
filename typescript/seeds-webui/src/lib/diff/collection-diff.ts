@@ -46,7 +46,7 @@ export function fieldDeltas(a: Row, b: Row, prefix = ""): FieldDelta[] {
 			out.push({ before: av, kind: "removed", path });
 			continue;
 		}
-		// Recurse into plain objects (but not arrays — arrays are treated as
+		// Recurse into plain objects (but not arrays - arrays are treated as
 		// atomic scalar values, which is the right call for things like
 		// `tierlistData` or chart `data`).
 		if (
@@ -196,7 +196,7 @@ export function singleDocumentDiff(
 
 export function formatValue(v: unknown): string {
 	if (v === undefined) {
-		return "—";
+		return "-";
 	}
 	if (v === null) {
 		return "null";

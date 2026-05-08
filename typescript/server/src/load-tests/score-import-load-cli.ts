@@ -1,7 +1,7 @@
 /**
  * HTTP stress harness: multipart POST /api/v1/import/file against a live Tachi instance.
  *
- * Uses real fixtures under src/test-utils/test-data/ (CSV, XML, JSON) — not MER.
+ * Uses real fixtures under src/test-utils/test-data/ (CSV, XML, JSON) - not MER.
  *
  * One in-flight import per user (409 if you exceed). Use a token pool sized ≥ concurrency.
  *
@@ -155,7 +155,7 @@ function maybeMutateFileBody(
 			return buf;
 		}
 	}
-	// XML / others: suffix a harmless byte that most XML parsers ignore after root — skip
+	// XML / others: suffix a harmless byte that most XML parsers ignore after root - skip
 	return buf;
 }
 

@@ -23,7 +23,7 @@ async function* streamPlaylog(apiId: string, log: KtLogger): AsyncIterable<MytWa
 	try {
 		for await (const item of client.getPlaylog(request)) {
 			if (!item.info) {
-				log.warn(`Received WACCA playlog stream item with no info — skipping.`);
+				log.warn(`Received WACCA playlog stream item with no info - skipping.`);
 				continue;
 			}
 

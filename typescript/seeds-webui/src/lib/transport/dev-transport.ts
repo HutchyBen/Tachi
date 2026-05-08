@@ -77,7 +77,7 @@ export function makeDevTransport(): SeedsTransport {
 	};
 }
 
-// Server-Sent Events helper — the dev plugin streams stdout/stderr line-by-line
+// Server-Sent Events helper - the dev plugin streams stdout/stderr line-by-line
 // plus a final `exit` event, so we wrap it as an AsyncIterable<RunEvent>.
 async function* streamSSE<T>(pathname: string, body: unknown): AsyncIterable<T> {
 	const res = await fetch(`${BASE}${pathname}`, {

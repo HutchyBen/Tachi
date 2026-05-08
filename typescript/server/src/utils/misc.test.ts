@@ -56,8 +56,8 @@ describe("IsValidURL", () => {
 		expect(IsValidURL("ftp://example.com")).toBeFalsy();
 	});
 
-	// expect(IsValidURL("http://example")).toBe(false) — lol this is valid???? insane.
-	// expect(IsValidURL("http:/example.com")).toBe(false) — this is also valid, the JS URL parser is ridiculously lenient. Whatever.
+	// expect(IsValidURL("http://example")).toBe(false) - lol this is valid???? insane.
+	// expect(IsValidURL("http:/example.com")).toBe(false) - this is also valid, the JS URL parser is ridiculously lenient. Whatever.
 });
 
 describe("RoundToNDecimalPlaces", () => {
