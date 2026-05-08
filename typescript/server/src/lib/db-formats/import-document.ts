@@ -11,6 +11,7 @@ export const SELECT_IMPORT = [
 	"import.import_type",
 	"import.user_intent",
 	"import.service",
+	"import.status",
 ] as const;
 
 export const SELECT_IMPORT_TRACKER = [

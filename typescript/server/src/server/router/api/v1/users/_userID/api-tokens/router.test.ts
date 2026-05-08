@@ -172,7 +172,6 @@ describe("POST /api/v1/users/:userID/api-tokens/create", () => {
 			.set("Cookie", cookie)
 			.send({
 				clientID: "OAUTH2_CLIENT_ID",
-				permissions: [],
 			});
 
 		expect(res.status).toBe(200);

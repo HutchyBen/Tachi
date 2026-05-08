@@ -407,7 +407,7 @@ export const API_V1_SPEC = {
 		input: z.object({
 			clientID: z.string().optional(),
 			identifier: z.string().optional(),
-			permissions: z.array(z.string()),
+			permissions: z.array(z.string()).optional(),
 		}),
 		output: doc<APITokenDocument>(),
 	},
