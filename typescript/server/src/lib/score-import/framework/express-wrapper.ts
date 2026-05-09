@@ -1,3 +1,4 @@
+import type { ParserArguments } from "#lib/score-import/worker/types";
 import type {
 	ImportDocument,
 	ImportTypes,
@@ -7,10 +8,11 @@ import type {
 } from "tachi-common";
 
 import { log } from "#lib/log/log";
+import { AwaitScoreImportWorkerResult } from "#lib/score-import/worker/await-worker-result";
+import { EnqueueScoreImportJob } from "#lib/score-import/worker/enqueue-pg";
+import { ServerConfig } from "#lib/setup/config";
 import { Random20Hex } from "#utils/misc";
 import { ExpectedErr } from "bliss";
-
-import type { ParserArguments } from "../worker/types";
 
 import { MakeScoreImport } from "./score-import";
 import ScoreImportFatalError from "./score-importing/score-import-error";
@@ -36,13 +38,21 @@ export async function ExpressWrappedScoreImportMain<I extends ImportTypes>(
 	log.debug("Received import request.");
 
 	try {
-		const res = await MakeScoreImport({
+		const jobData = {
 			importID,
 			importType,
 			userIntent,
 			userID,
 			parserArguments,
-		});
+		};
+
+		let res: ImportDocument;
+		if (ServerConfig.USE_EXTERNAL_SCORE_IMPORT_WORKER) {
+			await EnqueueScoreImportJob(jobData);
+			res = await AwaitScoreImportWorkerResult(importID);
+		} else {
+			res = await MakeScoreImport(jobData);
+		}
 
 		return {
 			statusCode: 200,
@@ -54,7 +64,7 @@ export async function ExpressWrappedScoreImportMain<I extends ImportTypes>(
 		};
 	} catch (err) {
 		// `ACTION_ScoreImport` throws `ExpectedErr` (mapped from `ScoreImportFatalError`); the
-		// external-worker guard in `MakeScoreImport` still throws `ScoreImportFatalError`.
+		// await helper throws `ScoreImportFatalError` when the worker records a failed import.
 		if (ExpectedErr.is(err) || err instanceof ScoreImportFatalError) {
 			const description = ExpectedErr.is(err) ? err.reason : err.message;
 			const statusCode = ExpectedErr.is(err) ? err.code : err.statusCode;
