@@ -101,7 +101,7 @@ function seedsChartDocumentSchemaForGame<G extends V3Game>(game: G) {
 export const SEEDS_CHART_DOCUMENT_SCHEMAS = Object.fromEntries(
 	ALL_GAMES.map((game) => [game, seedsChartDocumentSchemaForGame(game)]),
 ) as {
-	readonly [G in V3Game]: ReturnType<typeof seedsChartDocumentSchemaForGame>;
+	readonly [G in V3Game]: ReturnType<typeof seedsChartDocumentSchemaForGame<G>>;
 };
 
 export type SEEDS_ChartDocument<TGame extends V3Game = V3Game> = z.infer<
@@ -136,7 +136,7 @@ function seedsSongDocumentSchemaForGroup<G extends GameGroup>(group: G) {
 export const SEEDS_SONG_DOCUMENT_SCHEMAS = Object.fromEntries(
 	allSupportedGameGroups.map((group) => [group, seedsSongDocumentSchemaForGroup(group)]),
 ) as {
-	readonly [G in GameGroup]: ReturnType<typeof seedsSongDocumentSchemaForGroup>;
+	readonly [G in GameGroup]: ReturnType<typeof seedsSongDocumentSchemaForGroup<G>>;
 };
 
 export type SEEDS_SongDocument<G extends GameGroup = GameGroup> = z.infer<
