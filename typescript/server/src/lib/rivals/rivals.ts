@@ -71,12 +71,13 @@ function metricValueFromPbRow(
 	v3Game: Game,
 	data: unknown,
 	derivedData: unknown,
+	judgements: unknown,
 	metricKey: string,
 ): number | null {
 	const scoreData = pgScoreDataToAPI(v3Game, {
 		data,
 		derived: derivedData,
-		judgements: {},
+		judgements,
 	} as PgScoreData<Game>);
 	const v = (scoreData as Record<string, unknown>)[metricKey];
 	return typeof v === "number" && !Number.isNaN(v) ? v : null;
@@ -240,7 +241,14 @@ export async function UpdatePlayersRivalRankings(userID: integer, game: V3Game) 
 
 	const userPBs = await DB.selectFrom("pb")
 		.innerJoin("chart", "chart.id", "pb.chart_id")
-		.select(["pb.row_id", "pb.chart_id", "pb.data", "pb.derived_data", "pb.calculated_data"])
+		.select([
+			"pb.row_id",
+			"pb.chart_id",
+			"pb.data",
+			"pb.derived_data",
+			"pb.calculated_data",
+			"pb.judgements",
+		])
 		.where("pb.user_id", "=", userID)
 		.where("chart.game", "=", game)
 		.where("pb.lens", "is", null)
@@ -256,21 +264,34 @@ export async function UpdatePlayersRivalRankings(userID: integer, game: V3Game) 
 		chart_id: string;
 		data: unknown;
 		derived_data: unknown;
+		judgements: unknown;
 		user_id: number;
 	}> = [];
 
 	if (rivalIDs.length > 0) {
 		rivalPBs = await DB.selectFrom("pb")
-			.select(["user_id", "chart_id", "data", "derived_data"])
-			.where("user_id", "in", rivalIDs)
-			.where("chart_id", "in", chartIds)
-			.where("lens", "is", null)
+			.select([
+				"pb.user_id",
+				"pb.chart_id",
+				"pb.data",
+				"pb.derived_data",
+				"pb.judgements",
+			])
+			.where("pb.user_id", "in", rivalIDs)
+			.where("pb.chart_id", "in", chartIds)
+			.where("pb.lens", "is", null)
 			.execute();
 	}
 
 	await Promise.all(
 		userPBs.map(async (pb) => {
-			const userVal = metricValueFromPbRow(game, pb.data, pb.derived_data, metricKey);
+			const userVal = metricValueFromPbRow(
+				game,
+				pb.data,
+				pb.derived_data,
+				pb.judgements,
+				metricKey,
+			);
 			if (userVal === null) {
 				return;
 			}
@@ -280,7 +301,13 @@ export async function UpdatePlayersRivalRankings(userID: integer, game: V3Game) 
 				if (r.chart_id !== pb.chart_id) {
 					continue;
 				}
-				const rivalVal = metricValueFromPbRow(game, r.data, r.derived_data, metricKey);
+				const rivalVal = metricValueFromPbRow(
+					game,
+					r.data,
+					r.derived_data,
+					r.judgements,
+					metricKey,
+				);
 				if (rivalVal !== null && rivalVal > userVal) {
 					betterCount++;
 				}

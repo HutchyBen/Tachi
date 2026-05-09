@@ -80,6 +80,7 @@ export async function GetBestJubilityOnSongs(
 			pb.data,
 			pb.derived_data,
 			pb.calculated_data,
+			pb.judgements,
 			pb.ranking_value,
 			pb.ranking_value_tb1,
 			pb.ranking_value_tb2,

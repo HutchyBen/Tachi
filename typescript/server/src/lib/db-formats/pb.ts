@@ -15,6 +15,7 @@ export interface PbDocumentJoinRow {
 	data: unknown;
 	derived_data: unknown;
 	calculated_data: unknown;
+	judgements: unknown;
 	ranking_value: number;
 	ranking_value_tb1: number | null;
 	ranking_value_tb2: number | null;
@@ -61,6 +62,7 @@ export const SELECT_PB_DOCUMENT_JOIN = [
 	"pb.data",
 	"pb.derived_data",
 	"pb.calculated_data",
+	"pb.judgements",
 	"pb.ranking_value",
 	"pb.ranking_value_tb1",
 	"pb.ranking_value_tb2",
@@ -103,14 +105,11 @@ export async function ToPbScoreDocument(row: PbDocumentJoinRow): Promise<PBScore
 				})) as [PBReference, ...PBReference[]])
 			: [{ name: "Primary", scoreID: "unknown" }];
 
-	const scoreData = pgScoreDataToAPI(
-		row.chart_game as V3Game,
-		{
-			data: row.data,
-			derived: row.derived_data,
-			judgements: {},
-		} as Parameters<typeof pgScoreDataToAPI>[1],
-	);
+	const scoreData = pgScoreDataToAPI(row.chart_game as V3Game, {
+		data: row.data,
+		derived: row.derived_data,
+		judgements: row.judgements,
+	} as Parameters<typeof pgScoreDataToAPI>[1]);
 
 	const rawCd = row.calculated_data;
 	const cd = (rawCd ?? {}) as Record<string, unknown>;
