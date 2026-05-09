@@ -25,6 +25,15 @@ process.env.POSTGRES_URL = `postgresql://${POSTGRES_USER}:${POSTGRES_PASS}@${POS
 import pg from "pg";
 import { afterAll, beforeAll, beforeEach } from "vitest";
 
+const TIMING = process.env.TACHI_VITEST_TIMING === "1";
+const workerWallStart = performance.now();
+
+let msCreateWorkerDb = 0;
+let resetCalls = 0;
+let msResetDatabaseTotal = 0;
+let msResetDatabaseMax = 0;
+let msRateLimitCacheTotal = 0;
+
 const { Client } = pg;
 
 function adminClient() {
@@ -42,9 +51,13 @@ async function createWorkerDatabase() {
 	await client.connect();
 
 	try {
+		const t0 = performance.now();
 		await client.query(
 			`CREATE DATABASE "${WORKER_DB_NAME}" TEMPLATE tachi_server_test_template`,
 		);
+		if (TIMING) {
+			msCreateWorkerDb += performance.now() - t0;
+		}
 	} finally {
 		await client.end();
 	}
@@ -75,16 +88,18 @@ async function resetDatabase() {
 	const { sql } = await import("kysely");
 
 	await sql`
-		DO $$ DECLARE
-			row RECORD;
+		DO $$
+		DECLARE
+			tables_sql text;
 		BEGIN
-			FOR row IN (
-				SELECT table_name
-				FROM information_schema.tables
-				WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
-			) LOOP
-				EXECUTE 'TRUNCATE TABLE ' || quote_ident(row.table_name) || ' RESTART IDENTITY CASCADE';
-			END LOOP;
+			SELECT string_agg(quote_ident(table_name), ', ' ORDER BY table_name)
+			INTO tables_sql
+			FROM information_schema.tables
+			WHERE table_schema = 'public' AND table_type = 'BASE TABLE';
+
+			IF tables_sql IS NOT NULL AND tables_sql <> '' THEN
+				EXECUTE 'TRUNCATE TABLE ' || tables_sql || ' RESTART IDENTITY CASCADE';
+			END IF;
 		END $$;
 	`.execute(db);
 
@@ -115,27 +130,68 @@ beforeEach(async (ctx) => {
 		return;
 	}
 
+	const tReset0 = performance.now();
 	await resetDatabase();
+	if (TIMING) {
+		const d = performance.now() - tReset0;
+		resetCalls += 1;
+		msResetDatabaseTotal += d;
+		msResetDatabaseMax = Math.max(msResetDatabaseMax, d);
+	}
 	// Login-heavy router tests share the in-memory login rate limiter; reset each
 	// test so AggressiveRateLimit (15 / 10 min) does not 429 and omit Set-Cookie.
+	const tRl0 = performance.now();
 	const { ClearTestingRateLimitCache } = await import("#server/middleware/rate-limiter");
 	ClearTestingRateLimitCache();
+	if (TIMING) {
+		msRateLimitCacheTotal += performance.now() - tRl0;
+	}
 });
 
 afterAll(async () => {
+	let msCloseMock = 0;
+	let msClosePg = 0;
+	let msDropDb = 0;
+
 	try {
+		const t0 = performance.now();
 		const { CloseServerConnection } = await import("#test-utils/mock-api");
 		await CloseServerConnection();
+		msCloseMock = performance.now() - t0;
 	} catch {
 		// No mock HTTP server in this worker, or close failed.
 	}
 
 	try {
+		const t0 = performance.now();
 		const { ClosePgConnection } = await import("#services/pg/db");
 		await ClosePgConnection();
+		msClosePg = performance.now() - t0;
 	} catch {
 		// Pool may not have been initialised if no test ran a query.
 	}
 
+	const tDrop0 = performance.now();
 	await dropWorkerDatabase();
+	msDropDb = performance.now() - tDrop0;
+
+	if (TIMING) {
+		const wallMs = performance.now() - workerWallStart;
+		const avgReset = resetCalls > 0 ? msResetDatabaseTotal / resetCalls : 0;
+		console.error(
+			[
+				`[vitest-timing] worker=${WORKER_ID}`,
+				`create_db_ms=${msCreateWorkerDb.toFixed(1)}`,
+				`reset_calls=${resetCalls}`,
+				`reset_total_ms=${msResetDatabaseTotal.toFixed(1)}`,
+				`reset_avg_ms=${avgReset.toFixed(1)}`,
+				`reset_max_ms=${msResetDatabaseMax.toFixed(1)}`,
+				`rate_limit_cache_reset_total_ms=${msRateLimitCacheTotal.toFixed(1)}`,
+				`teardown_close_mock_ms=${msCloseMock.toFixed(1)}`,
+				`teardown_close_pg_ms=${msClosePg.toFixed(1)}`,
+				`teardown_drop_db_ms=${msDropDb.toFixed(1)}`,
+				`worker_wall_ms=${wallMs.toFixed(1)}`,
+			].join(" "),
+		);
+	}
 }, 60_000);
