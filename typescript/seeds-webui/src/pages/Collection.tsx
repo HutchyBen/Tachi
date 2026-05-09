@@ -15,9 +15,13 @@ import { useQuery, useQueryClient } from "react-query";
 import { useParams } from "react-router-dom";
 import { GameToGameGroup } from "tachi-common/config/config";
 
+/** Rows rendered per page — keeps DOM small while SQLite still loads full filtered sets. */
+const COLLECTION_PAGE_SIZE = 500;
+
 export function Collection() {
 	const { name } = useParams<{ name: string }>();
 	const [filter, setFilter] = useState("");
+	const [page, setPage] = useState(0);
 	const [drawer, setDrawer] = useState<DrawerState | null>(null);
 	const { ready } = useIngest();
 	const qc = useQueryClient();
@@ -74,15 +78,19 @@ export function Collection() {
 	const rows = useQuery(
 		["collection-rows", table, filter, songTable],
 		async () => {
-			const params: unknown[] = filter ? [filter] : [];
 			if (flav === "charts" && songTable) {
 				// Join song title/artist so SeedDocItem can show meaningful info.
-				const where = filter ? `WHERE c.raw LIKE '%' || ? || '%'` : "";
+				// Match filter against chart JSON *or* joined song JSON so queries like a song title still find rows (issue #67).
+				const where = filter
+					? `WHERE (c.raw LIKE '%' || ? || '%' OR IFNULL(s.raw, '') LIKE '%' || ? || '%')`
+					: "";
+				const chartParams: unknown[] = filter ? [filter, filter] : [];
 				return getSqlite().query(
 					`SELECT c.raw, s.raw FROM "${table}" c LEFT JOIN "${songTable}" s ON c.songID = s.id ${where}`,
-					params,
+					chartParams,
 				);
 			}
+			const params: unknown[] = filter ? [filter] : [];
 			const where = filter ? `WHERE raw LIKE '%' || ? || '%'` : "";
 			return getSqlite().query(`SELECT raw FROM "${table}" ${where}`, params);
 		},
@@ -108,6 +116,28 @@ export function Collection() {
 		}
 		return out;
 	}, [rows.data, flav, chartGame]);
+
+	const entryCount = entries.length;
+	const totalPages =
+		entryCount === 0 ? 0 : Math.ceil(entryCount / COLLECTION_PAGE_SIZE);
+
+	useEffect(() => {
+		setPage(0);
+	}, [name, filter]);
+
+	useEffect(() => {
+		if (totalPages === 0) {
+			return;
+		}
+		setPage((p) => Math.min(p, totalPages - 1));
+	}, [totalPages]);
+
+	const pageIndex = totalPages === 0 ? 0 : Math.min(page, totalPages - 1);
+	const sliceStart = pageIndex * COLLECTION_PAGE_SIZE;
+	const pageEntries = useMemo(
+		() => entries.slice(sliceStart, sliceStart + COLLECTION_PAGE_SIZE),
+		[entries, sliceStart],
+	);
 
 	function openEdit(doc: Record<string, unknown>) {
 		setDrawer({ initial: doc, mode: "edit" });
@@ -178,7 +208,11 @@ export function Collection() {
 				<input
 					className="form-control"
 					onChange={(e) => setFilter(e.target.value)}
-					placeholder="filter (LIKE match against raw JSON)"
+					placeholder={
+						flav === "charts" && songTable
+							? "filter (chart JSON or joined song JSON)"
+							: "filter (LIKE match against raw JSON)"
+					}
 					style={{ flex: 1, minWidth: 240 }}
 					value={filter}
 				/>
@@ -204,14 +238,40 @@ export function Collection() {
 			{rows.isLoading ? (
 				<div className="text-muted">Loading…</div>
 			) : (
-				<SeedDocList
-					canEdit={EDIT_MODE && !!schema}
-					collectionName={name}
-					entries={entries}
-					onDelete={(entry) => void stageDelete(entry)}
-					onEdit={(entry) => openEdit(entry.doc)}
-					total={rows.data?.rows.length ?? 0}
-				/>
+				<>
+					{totalPages > 1 ? (
+						<div className="d-flex flex-wrap align-items-center gap-2 mb-2">
+							<button
+								className="btn btn-sm btn-outline-secondary"
+								disabled={pageIndex <= 0}
+								onClick={() => setPage((p) => Math.max(0, p - 1))}
+								type="button"
+							>
+								Previous
+							</button>
+							<span className="text-muted mono small">
+								Page {pageIndex + 1} / {totalPages} ({entryCount.toLocaleString()} rows)
+							</span>
+							<button
+								className="btn btn-sm btn-outline-secondary"
+								disabled={pageIndex >= totalPages - 1}
+								onClick={() => setPage((p) => p + 1)}
+								type="button"
+							>
+								Next
+							</button>
+						</div>
+					) : null}
+					<SeedDocList
+						canEdit={EDIT_MODE && !!schema}
+						collectionName={name}
+						entries={pageEntries}
+						entryKeyOffset={sliceStart}
+						onDelete={(entry) => void stageDelete(entry)}
+						onEdit={(entry) => openEdit(entry.doc)}
+						totalEntryCount={entryCount}
+					/>
+				</>
 			)}
 
 			{drawer && schema ? (
@@ -248,7 +308,8 @@ function summariseEntry(collectionName: string, entry: SeedDocEntry): string {
 
 function SeedDocList({
 	entries,
-	total,
+	totalEntryCount,
+	entryKeyOffset,
 	collectionName,
 	canEdit,
 	onEdit,
@@ -257,13 +318,16 @@ function SeedDocList({
 	canEdit: boolean;
 	collectionName: string;
 	entries: SeedDocEntry[];
+	entryKeyOffset: number;
 	onDelete: (entry: SeedDocEntry) => void;
 	onEdit: (entry: SeedDocEntry) => void;
-	total: number;
+	totalEntryCount: number;
 }) {
-	if (entries.length === 0) {
+	if (totalEntryCount === 0) {
 		return <div className="text-muted mono">No documents.</div>;
 	}
+
+	const rangeEnd = entryKeyOffset + entries.length;
 
 	return (
 		<div className="seed-doc-list">
@@ -272,12 +336,16 @@ function SeedDocList({
 					canEdit={canEdit}
 					collectionName={collectionName}
 					entry={entry}
-					key={i}
+					key={entryKeyOffset + i}
 					onDelete={onDelete}
 					onEdit={onEdit}
 				/>
 			))}
-			<div className="result-foot">{total.toLocaleString()} rows</div>
+			<div className="result-foot">
+				{entries.length < totalEntryCount
+					? `Showing ${(entryKeyOffset + 1).toLocaleString()}–${rangeEnd.toLocaleString()} of ${totalEntryCount.toLocaleString()} rows`
+					: `${totalEntryCount.toLocaleString()} rows`}
+			</div>
 		</div>
 	);
 }
