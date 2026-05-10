@@ -111,7 +111,7 @@ describe("ACTION_CreateApiToken", () => {
 		const result = await ACTION_CreateApiToken(taker, { clientID: "CXTestClient" });
 
 		expect(result.wasExisting).toBe(false);
-		expect(result.token).toMatch(/^T[0-9a-f]{40}$/u);
+		expect(result.token).toMatch(/^[0-9a-f]{40}$/u);
 	});
 
 	it("copies the client's permissions onto the new token", async () => {
@@ -210,7 +210,7 @@ describe("ACTION_CreateApiToken", () => {
 
 		const result = await ACTION_CreateApiToken(taker, { permissions: ["submit_score"] });
 
-		expect(result.token).toMatch(/^T[0-9a-f]{40}$/u);
+		expect(result.token).toMatch(/^[0-9a-f]{40}$/u);
 	});
 
 	// ── Isolation ─────────────────────────────────────────────────────────────
