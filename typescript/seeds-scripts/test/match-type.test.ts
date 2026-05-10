@@ -80,6 +80,11 @@ const MATCH_TYPE_CHECKS: Record<
 			return s.data.ddrSongHash;
 		},
 	},
+	gcmInGameIDSpecialChart: {
+		type: "CHARTS",
+		// redundant - no check needed
+		fn: (c: ChartDocument) => c.chartID,
+	},
 };
 
 let exitCode = 0;
