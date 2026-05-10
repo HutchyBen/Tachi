@@ -63,4 +63,4 @@ jobs:
       - name: Deploy seeds
         env:
           TACHI_HOST: ${{ secrets.TACHI_HOST }}
-        run: ssh -i ~/.ssh/id_rsa "ci@${TACHI_HOST}" /home/ci/tachi-deploy/swarm/deploy-seeds.sh "${{ github.sha }}"
+        run: ssh -i ~/.ssh/id_rsa "ci@${TACHI_HOST}" /home/ci/tachi-deploy/scripts/deploy-seeds.sh "${{ github.sha }}"
