@@ -205,6 +205,73 @@ describe("ResolveSongAndChart (Postgres)", () => {
 		return 9_200_000 + ++legacySeq;
 	}
 
+	it("rejects gcmInGameIDSpecialChart on non-GCM games", async () => {
+		const r: MatchTypeResolver = {
+			game: "wacca",
+			version: null,
+			identifier: "1",
+			matchType: "gcmInGameIDSpecialChart",
+		};
+
+		await expect(ResolveSongAndChart(r, mkLog())).rejects.toMatchObject({
+			message: expect.stringMatching(/gcmInGameIDSpecialChart/u),
+		});
+	});
+
+	it("resolves gcmInGameIDSpecialChart when that in-game ID matches exactly one chart", async () => {
+		const suffix = `${Date.now()}-gcm-uniq`;
+		const legacySongId = nextLegacySongId();
+		const inGameID = 8_800_000 + Math.floor(Math.random() * 1000);
+		await seedMaimaiChart({
+			suffix,
+			legacySongId,
+			inGameID,
+			inGameStrID: `str-gcm-${suffix}`,
+			difficulty: "Master",
+		});
+
+		const r: MatchTypeResolver = {
+			game: "maimai",
+			version: null,
+			identifier: String(inGameID),
+			matchType: "gcmInGameIDSpecialChart",
+		};
+
+		const got = await ResolveSongAndChart(r, mkLog());
+		expect(got).not.toBeNull();
+		expect(got!.chart.data).toMatchObject({ inGameID });
+		expect(got!.chart.difficulty).toBe("Master");
+	});
+
+	it("returns null for gcmInGameIDSpecialChart when multiple charts share the in-game ID", async () => {
+		const suffix = `${Date.now()}-gcm-dup`;
+		const legacySongId = nextLegacySongId();
+		const inGameID = 8_801_000 + Math.floor(Math.random() * 1000);
+		await seedMaimaiChart({
+			suffix: `${suffix}-a`,
+			legacySongId: legacySongId,
+			inGameID,
+			inGameStrID: `str-gcm-a-${suffix}`,
+			difficulty: "Master",
+		});
+		await seedMaimaiChart({
+			suffix: `${suffix}-b`,
+			legacySongId: legacySongId + 1,
+			inGameID,
+			inGameStrID: `str-gcm-b-${suffix}`,
+			difficulty: "Expert",
+		});
+
+		const r: MatchTypeResolver = {
+			game: "maimai",
+			version: null,
+			identifier: String(inGameID),
+			matchType: "gcmInGameIDSpecialChart",
+		};
+
+		expect(await ResolveSongAndChart(r, mkLog())).toBeNull();
+	});
+
 	it("resolves tachiSongID + chart via PTDF", async () => {
 		const suffix = `${Date.now()}-tachi`;
 		const legacySongId = nextLegacySongId();

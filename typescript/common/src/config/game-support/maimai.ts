@@ -165,5 +165,11 @@ export const GAME_MAIMAI_CONF = {
 	preferences: z.strictObject({}),
 	scoreMeta: z.strictObject({}),
 
-	supportedMatchTypes: ["songTitle", "tachiSongID", "inGameID", "inGameStrID"],
+	supportedMatchTypes: [
+		"gcmInGameIDSpecialChart",
+		"songTitle",
+		"tachiSongID",
+		"inGameID",
+		"inGameStrID",
+	],
 } as const satisfies INTERNAL_GAME_CONFIG;

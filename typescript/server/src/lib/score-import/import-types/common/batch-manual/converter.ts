@@ -11,6 +11,7 @@ import ScoreImportFatalError from "#lib/score-import/framework/score-importing/s
 import { staticAssertUnreachable } from "#utils/misc";
 import {
 	FindBMSChartOnHash,
+	FindChartOnInGameIDIfUnique,
 	FindChartOnInGameIDPrimary,
 	FindChartOnInGameIDVersion,
 	FindChartOnInGameStrIDPrimary,
@@ -409,6 +410,32 @@ export async function ResolveSongAndChart(
 			}
 
 			const chart = await FindUSCChartOnSHA1(resolver.identifier, game);
+
+			if (!chart) {
+				return null;
+			}
+
+			const song = await FindSongOnID(gameGroup, chart.song.id);
+
+			if (!song) {
+				log.error(`Song-Chart desync on ${chart.song.id}.`);
+				throw new InternalFailure(`Failed to get song for a chart that exists.`);
+			}
+
+			return { song, chart };
+		}
+
+		case "gcmInGameIDSpecialChart": {
+			const gcmGames = ["chunithm", "ongeki", "maimai", "maimaidx"] as const;
+			if (!gcmGames.includes(game as (typeof gcmGames)[number])) {
+				throw new InvalidScoreFailure(
+					`gcmInGameIDSpecialChart matchType can only be used on CHUNITHM, O.N.G.E.K.I., maimai, or maimai DX.`,
+				);
+			}
+
+			const inGameID = Number(resolver.identifier);
+
+			const chart = await FindChartOnInGameIDIfUnique(game, inGameID);
 
 			if (!chart) {
 				return null;

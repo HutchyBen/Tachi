@@ -236,5 +236,5 @@ export const GAME_ONGEKI_CONF = {
 
 	scoreMeta: z.strictObject({}),
 
-	supportedMatchTypes: ["songTitle", "tachiSongID", "inGameID"],
+	supportedMatchTypes: ["gcmInGameIDSpecialChart", "songTitle", "tachiSongID", "inGameID"],
 } as const satisfies INTERNAL_GAME_CONFIG;

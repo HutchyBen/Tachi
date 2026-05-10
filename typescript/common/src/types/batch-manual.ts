@@ -13,7 +13,12 @@ import type { MongoExtractMetrics } from "./metrics";
 import type { AllFieldsNullableOptional } from "./utils";
 
 // These MatchTypes don't need `difficulty` set in the batch manual.
-type MatchTypesNoDifficulty = "bmsChartHash" | "itgChartHash" | "popnChartHash" | "uscChartHash";
+type MatchTypesNoDifficulty =
+	| "bmsChartHash"
+	| "gcmInGameIDSpecialChart"
+	| "itgChartHash"
+	| "popnChartHash"
+	| "uscChartHash";
 
 // These MatchTypes need `difficulty` set in the batch manual.
 type MatchTypesWithDifficulty =

@@ -343,6 +343,29 @@ export async function FindChartOnInGameIDPrimary(
 }
 
 /**
+ * If exactly one chart for {@link game} has this in-game ID (same matching rules as {@link FindChartOnInGameID}),
+ * return it; otherwise return null (including when there are no matches).
+ */
+export async function FindChartOnInGameIDIfUnique(
+	game: V3Game,
+	inGameID: number,
+): Promise<ChartDocument | null> {
+	const rows = await DB.selectFrom("chart")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_CHART)
+		.where("chart.game", "=", game)
+		.where(sqlChartDataInGameIDEquals(inGameID))
+		.limit(2)
+		.execute();
+
+	if (rows.length !== 1) {
+		return null;
+	}
+
+	return ToChartDocument(rows[0]!);
+}
+
+/**
  * Finds a non-custom chart on its in-game-ID, playtype and difficulty.
  * This explicitly ignores 2dxtra charts, and is necessary to use for iidx to disambiguate.
  */

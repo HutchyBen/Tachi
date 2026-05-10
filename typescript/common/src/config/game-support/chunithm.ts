@@ -203,5 +203,5 @@ export const GAME_CHUNITHM_CONF = {
 
 	scoreMeta: z.strictObject({}),
 
-	supportedMatchTypes: ["inGameID", "songTitle", "tachiSongID"],
+	supportedMatchTypes: ["gcmInGameIDSpecialChart", "inGameID", "songTitle", "tachiSongID"],
 } as const satisfies INTERNAL_GAME_CONFIG;

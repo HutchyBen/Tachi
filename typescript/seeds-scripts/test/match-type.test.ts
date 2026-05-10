@@ -19,6 +19,13 @@ for (const game of ALL_GAMES) {
 	const gameConfig = GetGameConfig(game);
 
 	for (const matchType of gameConfig.supportedMatchTypes) {
+		// `gcmInGameIDSpecialChart` resolves only when an in-game ID is held by a single chart;
+		// normal GCM charts intentionally share IDs across difficulties, so a global uniqueness
+		// check like the other match types does not apply.
+		if (matchType === "gcmInGameIDSpecialChart") {
+			continue;
+		}
+
 		uniquenessChecks.push({ game, matchType });
 	}
 }
