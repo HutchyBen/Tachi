@@ -89,7 +89,7 @@ export const ACTION_CreateApiToken = MakeAction(
 			);
 		}
 
-		const token = `T${Random20Hex()}`;
+		const token = Random20Hex();
 
 		await DB.insertInto("priv_api_token")
 			.values({
