@@ -30,7 +30,7 @@ export const SEEDS_V3_GAME_GROUP_SCHEMA = z.enum(
 
 function difficultyZodSchema<G extends V3Game>(game: G): z.ZodType<Difficulties[G]> {
 	const d = GetSpecificGameConfig(game).difficulties as DifficultyConfig;
-	if (d.type === "DYNAMIC") {
+	if (d.type === "DYNAMIC" || d.type === "CHUGEKIMAI_STYLE") {
 		return z.string() as unknown as z.ZodType<Difficulties[G]>;
 	}
 	const order = d.order as ReadonlyArray<string>;

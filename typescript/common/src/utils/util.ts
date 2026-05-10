@@ -79,11 +79,11 @@ export function FormatDifficultyShort(chart: ChartDocument): string {
 	if (gameConfig.difficulties.type === "FIXED") {
 		const diff = gameConfig.difficulties.format[chart.difficulty] ?? chart.difficulty;
 
-		return `${diff} ${chart.level}`;
+		return `${diff} ${chart.level}`.trim();
 	}
 
 	// TODO cap string length
-	return `${chart.difficulty} ${chart.level}`;
+	return `${chart.difficulty} ${chart.level}`.trim();
 }
 
 /**

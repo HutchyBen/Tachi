@@ -15,7 +15,7 @@ export const CHUNITHM_IMPL: GameImplementation<"chunithm"> = {
 		grade: GetGrade(CHUNITHM_GBOUNDARIES, scoreData.score),
 	}),
 	scoreCalcs: (scoreData, _derivedData, chart) => ({
-		rating: CHUNITHMRating.calculate(scoreData.score, chart.levelNum),
+		rating: chart.levelNum > 0 ? CHUNITHMRating.calculate(scoreData.score, chart.levelNum) : 0,
 	}),
 	pbRankingValues: (pb) => ({
 		ranking: pb.scoreData.score,

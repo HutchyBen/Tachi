@@ -715,7 +715,6 @@ export const CHUNITHMBBKKSong: SongDocument<"chunithm"> = {
 	altTitles: [],
 	artist: "nora2r",
 	data: {
-		displayVersion: "CHUNITHM",
 		duration: 128.541,
 		genre: "VARIETY",
 	},
@@ -733,6 +732,7 @@ export const CHUNITHMBBKKChart: ChartDocument<"chunithm"> = {
 	level: "3",
 	data: {
 		inGameID: 3,
+		displayVersion: "CHUNITHM",
 	},
 	isPrimary: true,
 	versions: ["paradiselost"],
@@ -1546,7 +1546,6 @@ export const TestingChunithmSongConverter: SongDocument<"chunithm"> = {
 	altTitles: [],
 	artist: "分島花音「selector infected WIXOSS」",
 	data: {
-		displayVersion: "crystalplus",
 		genre: "POPS & ANIME",
 		duration: 120,
 	},
@@ -1559,6 +1558,7 @@ export const TestingChunithmChartConverter: ChartDocument<"chunithm"> = {
 	game: "chunithm",
 	chartID: "fbba26a6a223b1dd0bf8ef139cfee83114b91086",
 	data: {
+		displayVersion: "CHUNITHM CRYSTAL PLUS",
 		inGameID: 956,
 	},
 	difficulty: "MASTER",
@@ -1567,6 +1567,33 @@ export const TestingChunithmChartConverter: ChartDocument<"chunithm"> = {
 	levelNum: 12,
 	song: TestingChunithmSongConverter,
 	versions: ["paradiselost", "sun", "sun-omni", "sunplus-omni", "luminous-omni"],
+};
+
+export const TestingChunithmWESongConverter: SongDocument<"chunithm"> = {
+	altTitles: [],
+	artist: "from PACA PACA PASSION Special",
+	data: {
+		duration: 135.275,
+		genre: "VARIETY",
+	},
+	id: "S19d35e0c127c7e441ce",
+	searchTerms: ["xl techno more dance"],
+	title: "XL TECHNO -More Dance Remix-",
+};
+
+export const TestingChunithmWEChartConverter: ChartDocument<"chunithm"> = {
+	game: "chunithm",
+	data: {
+		displayVersion: "CHUNITHM NEW PLUS",
+		inGameID: 8235,
+	},
+	difficulty: "割☆4",
+	chartID: "C19e10e7a402af3865b8",
+	isPrimary: true,
+	level: "",
+	levelNum: 0,
+	song: TestingChunithmWESongConverter,
+	versions: ["verse-omni", "xverse-omni", "xversex-omni"],
 };
 
 export const TestingMaimaiDXSongConverter: SongDocument<"maimaidx"> = {

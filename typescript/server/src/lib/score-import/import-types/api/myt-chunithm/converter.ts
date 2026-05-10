@@ -5,7 +5,6 @@ import type { EmptyObject } from "#utils/types";
 import {
 	InternalFailure,
 	InvalidScoreFailure,
-	SkipScoreFailure,
 	SongOrChartNotFoundFailure,
 } from "#lib/score-import/framework/common/converter-failures";
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
@@ -14,7 +13,7 @@ import {
 	ChunithmComboStatus,
 	ChunithmLevel,
 } from "#proto/generated/chunithm/common_pb";
-import { FindChartOnInGameID } from "#utils/queries/charts";
+import { FindChartOnInGameID, FindChartOnInGameIDIfUnique } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
 
 import type { MytChunithmScore } from "./types";
@@ -63,8 +62,6 @@ const ConvertAPIMytChunithm: ConverterFunction<MytChunithmScore, EmptyObject> = 
 		throw new InvalidScoreFailure(
 			`Can't process a score with unspecified difficulty (musicId ${data.info.musicId})`,
 		);
-	} else if (difficulty === "WORLD'S END") {
-		throw new SkipScoreFailure("WORLD'S END charts are not supported");
 	}
 
 	const clearLamp = CLEAR_LAMPS[data.info.clearStatus];
@@ -79,7 +76,10 @@ const ConvertAPIMytChunithm: ConverterFunction<MytChunithmScore, EmptyObject> = 
 		throw new InvalidScoreFailure("Can't process a score with an invalid combo status");
 	}
 
-	const chart = await FindChartOnInGameID("chunithm", data.info.musicId, difficulty);
+	const chart =
+		data.info.level === ChunithmLevel.WORLDS_END
+			? await FindChartOnInGameIDIfUnique("chunithm", data.info.musicId)
+			: await FindChartOnInGameID("chunithm", data.info.musicId, difficulty);
 
 	if (chart === null) {
 		throw new SongOrChartNotFoundFailure(

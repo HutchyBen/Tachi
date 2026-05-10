@@ -5353,6 +5353,39 @@
 	},
 	{
 		"game": "chunithm",
+		"id": "F19e1132aed9eff9eb51",
+		"inactive": false,
+		"legacyFolderID": "Fc9b70c67ebea3a108f0b4864403233c2950de7f0792ae4ccd9739b6e31d63e34",
+		"searchTerms": [],
+		"slug": "advanced-xversex-intl",
+		"title": "ADVANCED (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.difficulty = 'ADVANCED'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bb3537b009",
+		"inactive": false,
+		"legacyFolderID": "Ffa01f4285bd9fdd4e355376acfd0e4cad88859580241f1e3015b2aebbec6b885",
+		"searchTerms": [],
+		"slug": "advanced-xversex-omni",
+		"title": "ADVANCED (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.difficulty = 'ADVANCED'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc56bd21fd8c",
+		"inactive": false,
+		"legacyFolderID": "F42fea96c5203dba80465e03f31e81911fcd8d0184a47ff0103e4b190009b6af8",
+		"searchTerms": [],
+		"slug": "advanced-xversex",
+		"title": "ADVANCED (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "chart.difficulty = 'ADVANCED'"
+	},
+	{
+		"game": "chunithm",
 		"id": "F19d35f0cf27da677596",
 		"inactive": false,
 		"legacyFolderID": "Fc6fe5786e00a80396ddf1b2e5d8c935ff1599ea7f3dee623365f51fb2a14eab8",
@@ -5562,6 +5595,39 @@
 	},
 	{
 		"game": "chunithm",
+		"id": "F19e1132aed9dbff75bb",
+		"inactive": false,
+		"legacyFolderID": "Fdd4b38839861f45cada10c710d166b76527065977dce54d461804c73b3f44a27",
+		"searchTerms": [],
+		"slug": "basic-xversex-intl",
+		"title": "BASIC (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.difficulty = 'BASIC'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bbeed72f04",
+		"inactive": false,
+		"legacyFolderID": "F11b5c7bcb30c01f5ca305ad33db6937bc9986085bcb6516ef10ebd9500432ff6",
+		"searchTerms": [],
+		"slug": "basic-xversex-omni",
+		"title": "BASIC (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.difficulty = 'BASIC'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc56aa442ecc",
+		"inactive": false,
+		"legacyFolderID": "Fd9936430e2632d963b24bec9b007b0d8c86174c78246c4d474746c2618199991",
+		"searchTerms": [],
+		"slug": "basic-xversex",
+		"title": "BASIC (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "chart.difficulty = 'BASIC'"
+	},
+	{
+		"game": "chunithm",
 		"id": "F19d35f0cf27b30ee26a",
 		"inactive": false,
 		"legacyFolderID": "F0c3eaf9249fa04e8501d0680c4fdcfd53cc947ce14d8fd7ededd124633c4fd66",
@@ -5767,6 +5833,39 @@
 		"slug": "expert-xverse-omni",
 		"title": "EXPERT (X-VERSE Omnimix)",
 		"versionFilter": ["xverse-omni"],
+		"where": "chart.difficulty = 'EXPERT'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e1132aed94102ef1e",
+		"inactive": false,
+		"legacyFolderID": "F7adea00133170ed8e8956aeea7c6f471faba03a8b72feb1edae67b9a22be88ae",
+		"searchTerms": [],
+		"slug": "expert-xversex-intl",
+		"title": "EXPERT (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.difficulty = 'EXPERT'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bbbbec3d13",
+		"inactive": false,
+		"legacyFolderID": "F4d32c8c9186952f94b3a0f81588ec24fbbd12734ac0fb8e9c00f99ec1f86bb1d",
+		"searchTerms": [],
+		"slug": "expert-xversex-omni",
+		"title": "EXPERT (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.difficulty = 'EXPERT'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc56f1a52764",
+		"inactive": false,
+		"legacyFolderID": "F24a34ff7b47fc7544d62d369ee234f1ff73a3ef965f10d28ece4bdac356953e5",
+		"searchTerms": [],
+		"slug": "expert-xversex",
+		"title": "EXPERT (X-VERSE-X)",
+		"versionFilter": ["xversex"],
 		"where": "chart.difficulty = 'EXPERT'"
 	},
 	{
@@ -5991,6 +6090,39 @@
 	},
 	{
 		"game": "chunithm",
+		"id": "F19e1132aed8adba66bc",
+		"inactive": false,
+		"legacyFolderID": "F10f8ced62275119617b2cc090628b11f6c6261801360c829232a5ad0af213fda",
+		"searchTerms": [],
+		"slug": "1-xversex-intl",
+		"title": "Level 1 (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '1'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37b982c2b9cf",
+		"inactive": false,
+		"legacyFolderID": "F046baf57512b957afe7af67ef4b611066fce3a2cb8901134f8cce668b0103017",
+		"searchTerms": [],
+		"slug": "1-xversex-omni",
+		"title": "Level 1 (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '1'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc543b933eb8",
+		"inactive": false,
+		"legacyFolderID": "F6e5a873bd9d50c2b8a87e5221ddae1aaddacb41789b3bba3459a3dcee34270ce",
+		"searchTerms": [],
+		"slug": "1-xversex",
+		"title": "Level 1 (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "chart.level = '1'"
+	},
+	{
+		"game": "chunithm",
 		"id": "F19d35f0cf2739f2c8f4",
 		"inactive": false,
 		"legacyFolderID": "F7b6305ea7ed5ec5bef5f980b1d012e61f195cda4bc9968918c303d864af1b1d6",
@@ -6207,6 +6339,39 @@
 		"slug": "10-xverse-omni",
 		"title": "Level 10 (X-VERSE Omnimix)",
 		"versionFilter": ["xverse-omni"],
+		"where": "chart.level = '10'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e1132aed9736e3a8d",
+		"inactive": false,
+		"legacyFolderID": "Fc5cfb7274045b12cb9e36c1837e869bcade076a60b34b70c9badfc2c4b8152a3",
+		"searchTerms": [],
+		"slug": "10-xversex-intl",
+		"title": "Level 10 (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '10'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bbefc0d6b4",
+		"inactive": false,
+		"legacyFolderID": "F9704e9719e8be9753d75c9c03cd6c9f3317ed8fdc1f98cb5789dc007c1a6a786",
+		"searchTerms": [],
+		"slug": "10-xversex-omni",
+		"title": "Level 10 (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '10'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc55d5610c8f",
+		"inactive": false,
+		"legacyFolderID": "F4f0e94ea6e2b08e9422056a5648a102344f2c518ec4368033745b94c7630e136",
+		"searchTerms": [],
+		"slug": "10-xversex",
+		"title": "Level 10 (X-VERSE-X)",
+		"versionFilter": ["xversex"],
 		"where": "chart.level = '10'"
 	},
 	{
@@ -6431,6 +6596,39 @@
 	},
 	{
 		"game": "chunithm",
+		"id": "F19e1132aed9b32b44e9",
+		"inactive": false,
+		"legacyFolderID": "F0090ef80fb39cb81013333743217862a3ba04b51464389b95beed62a049c501f",
+		"searchTerms": [],
+		"slug": "10p-xversex-intl",
+		"title": "Level 10+ (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '10+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bbae779b3a",
+		"inactive": false,
+		"legacyFolderID": "F98a017f4874848297ab02df0c83d545e4a40726cafa2a0c0e709b664009c630c",
+		"searchTerms": [],
+		"slug": "10p-xversex-omni",
+		"title": "Level 10+ (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '10+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc5517a525e6",
+		"inactive": false,
+		"legacyFolderID": "F2e67b3d7ca0a121619174e910ebdfcbc9ca265076563125837e8de00ea0da61d",
+		"searchTerms": [],
+		"slug": "10p-xversex",
+		"title": "Level 10+ (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "chart.level = '10+'"
+	},
+	{
+		"game": "chunithm",
 		"id": "F19d35f0cf278298af17",
 		"inactive": false,
 		"legacyFolderID": "F3427c117fc3a0c77297f72e646480576ab6de2d6ee61290ebb348160a69091e2",
@@ -6647,6 +6845,39 @@
 		"slug": "11-xverse-omni",
 		"title": "Level 11 (X-VERSE Omnimix)",
 		"versionFilter": ["xverse-omni"],
+		"where": "chart.level = '11'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e1132aed9bd3f6937",
+		"inactive": false,
+		"legacyFolderID": "F21e3258edbaf730c5480013df5fd4b2277539643032d5d691aa0a641bd306a05",
+		"searchTerms": [],
+		"slug": "11-xversex-intl",
+		"title": "Level 11 (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '11'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bbf2c08943",
+		"inactive": false,
+		"legacyFolderID": "F80761cb1277a5aee8493a8083fc494970481c725b03b016553f483363841d684",
+		"searchTerms": [],
+		"slug": "11-xversex-omni",
+		"title": "Level 11 (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '11'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc5517d207d5",
+		"inactive": false,
+		"legacyFolderID": "F2172a8dca42ba8693d4f68617fa1938add765726b6c97935fdb7f0bc9831b158",
+		"searchTerms": [],
+		"slug": "11-xversex",
+		"title": "Level 11 (X-VERSE-X)",
+		"versionFilter": ["xversex"],
 		"where": "chart.level = '11'"
 	},
 	{
@@ -6871,6 +7102,39 @@
 	},
 	{
 		"game": "chunithm",
+		"id": "F19e1132aed9d5bdefe7",
+		"inactive": false,
+		"legacyFolderID": "F2f010029e193be66257f4561541ff327bf5a024359ef4fd0d6182d6c640cde35",
+		"searchTerms": [],
+		"slug": "11p-xversex-intl",
+		"title": "Level 11+ (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '11+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bb9906d0cc",
+		"inactive": false,
+		"legacyFolderID": "F10d0d4c83a4a4677d7fa1896d61e5a1ddcc8f3dac3ec878766f509c575b3e6a7",
+		"searchTerms": [],
+		"slug": "11p-xversex-omni",
+		"title": "Level 11+ (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '11+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc557e0390fa",
+		"inactive": false,
+		"legacyFolderID": "F4f9b014e489769f20c84a0126789e112e94a4eafed23096a23a80eac02d35d9a",
+		"searchTerms": [],
+		"slug": "11p-xversex",
+		"title": "Level 11+ (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "chart.level = '11+'"
+	},
+	{
+		"game": "chunithm",
 		"id": "F19d35f0cf27657568a0",
 		"inactive": false,
 		"legacyFolderID": "F8904dc7b23bb9a3e00e02c7c85ca77db7554240b240da394862ea5d073b5001f",
@@ -7087,6 +7351,39 @@
 		"slug": "12-xverse-omni",
 		"title": "Level 12 (X-VERSE Omnimix)",
 		"versionFilter": ["xverse-omni"],
+		"where": "chart.level = '12'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e1132aed90e433e59",
+		"inactive": false,
+		"legacyFolderID": "Faafed2efd314c61bfe45e8c8a69300378ebca4df75380d7982aeaf8468421a05",
+		"searchTerms": [],
+		"slug": "12-xversex-intl",
+		"title": "Level 12 (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '12'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bbf1070df0",
+		"inactive": false,
+		"legacyFolderID": "Ff6b2a6e0bf89c46b9b8bac47c5381c6f2d8baf995c2a5191d32e357bf96c46c7",
+		"searchTerms": [],
+		"slug": "12-xversex-omni",
+		"title": "Level 12 (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '12'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc5694198e37",
+		"inactive": false,
+		"legacyFolderID": "F092db5414cef718cbad0c13728d3081013b7b9d457c8d37681437349bff3beec",
+		"searchTerms": [],
+		"slug": "12-xversex",
+		"title": "Level 12 (X-VERSE-X)",
+		"versionFilter": ["xversex"],
 		"where": "chart.level = '12'"
 	},
 	{
@@ -7311,6 +7608,39 @@
 	},
 	{
 		"game": "chunithm",
+		"id": "F19e1132aed9f7b87a5a",
+		"inactive": false,
+		"legacyFolderID": "Fea7f965d7ecee5d5668a58c64fd4dfb1ddc6f8636ab710283298a88db4b94802",
+		"searchTerms": [],
+		"slug": "12p-xversex-intl",
+		"title": "Level 12+ (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '12+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bb713549f8",
+		"inactive": false,
+		"legacyFolderID": "F0d13b80fdc09e892bcd1dd2572478d02cda14c69a824cc08374bdea8fb28ed97",
+		"searchTerms": [],
+		"slug": "12p-xversex-omni",
+		"title": "Level 12+ (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '12+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc560f7f7394",
+		"inactive": false,
+		"legacyFolderID": "F95d7ce9892133a32e5fd00f51b5263f3ed3896ccd5fea9b40a9089a39620b8c5",
+		"searchTerms": [],
+		"slug": "12p-xversex",
+		"title": "Level 12+ (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "chart.level = '12+'"
+	},
+	{
+		"game": "chunithm",
 		"id": "F19d35f0cf270eb84616",
 		"inactive": false,
 		"legacyFolderID": "Fb61d80c8da317a07ae548a04b354c9938d3ae3f61f7e327f826bb8386632032e",
@@ -7527,6 +7857,39 @@
 		"slug": "13-xverse-omni",
 		"title": "Level 13 (X-VERSE Omnimix)",
 		"versionFilter": ["xverse-omni"],
+		"where": "chart.level = '13'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e1132aed976bdf743",
+		"inactive": false,
+		"legacyFolderID": "F606bfab292fe5e9a48b6948164cc910efeac633a442bb0c85fa97920d72ef5eb",
+		"searchTerms": [],
+		"slug": "13-xversex-intl",
+		"title": "Level 13 (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '13'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bb4c27fe1b",
+		"inactive": false,
+		"legacyFolderID": "Fbe791782c90d97ea66387b24a4c9ba27417288695d23357eb5c42601d0971171",
+		"searchTerms": [],
+		"slug": "13-xversex-omni",
+		"title": "Level 13 (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '13'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc564c7e6449",
+		"inactive": false,
+		"legacyFolderID": "Ffd9ec0a570ea29f202a5605da98b2e3c80198b7bfa797d07ba0ae82dca7d8667",
+		"searchTerms": [],
+		"slug": "13-xversex",
+		"title": "Level 13 (X-VERSE-X)",
+		"versionFilter": ["xversex"],
 		"where": "chart.level = '13'"
 	},
 	{
@@ -7751,6 +8114,39 @@
 	},
 	{
 		"game": "chunithm",
+		"id": "F19e1132aed97da1fb0c",
+		"inactive": false,
+		"legacyFolderID": "F32baaf1d05c9c04a13bcfa9fb3140a0441572a1257814a6db51c31792e94b11e",
+		"searchTerms": [],
+		"slug": "13p-xversex-intl",
+		"title": "Level 13+ (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '13+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bb7beccbe3",
+		"inactive": false,
+		"legacyFolderID": "F89246a8bd6a99232abf90ba6dd0c2ac232d8bf1c59fd206fc01d9f59a6b1b6d2",
+		"searchTerms": [],
+		"slug": "13p-xversex-omni",
+		"title": "Level 13+ (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '13+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc56c1e6a6c4",
+		"inactive": false,
+		"legacyFolderID": "Fdb17af717a8e9fc2be7f752e44456e02bb8a7dec373fec0daa6cb93093f511d4",
+		"searchTerms": [],
+		"slug": "13p-xversex",
+		"title": "Level 13+ (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "chart.level = '13+'"
+	},
+	{
+		"game": "chunithm",
 		"id": "F19d35f0cf27de2bcf32",
 		"inactive": false,
 		"legacyFolderID": "F4edb32d69ea6044883da052dd8fdb79880b5145d152c3467b949c7e76326532f",
@@ -7967,6 +8363,39 @@
 		"slug": "14-xverse-omni",
 		"title": "Level 14 (X-VERSE Omnimix)",
 		"versionFilter": ["xverse-omni"],
+		"where": "chart.level = '14'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e1132aed9e49c975f",
+		"inactive": false,
+		"legacyFolderID": "F7d137f460e821299ad548693c87c7614b549d91221ad99ee265bc481b31d134f",
+		"searchTerms": [],
+		"slug": "14-xversex-intl",
+		"title": "Level 14 (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '14'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bb0e09e6a0",
+		"inactive": false,
+		"legacyFolderID": "Fcbc1caf33e1d94d62808b0c8952db361347105da71f5d87b0a6811808cef21bc",
+		"searchTerms": [],
+		"slug": "14-xversex-omni",
+		"title": "Level 14 (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '14'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc567c7c5ec5",
+		"inactive": false,
+		"legacyFolderID": "F664c48e83b824d9cd26fe9c4397f069bd4bf3aaae321c24228a9ffa22832713b",
+		"searchTerms": [],
+		"slug": "14-xversex",
+		"title": "Level 14 (X-VERSE-X)",
+		"versionFilter": ["xversex"],
 		"where": "chart.level = '14'"
 	},
 	{
@@ -8191,6 +8620,39 @@
 	},
 	{
 		"game": "chunithm",
+		"id": "F19e1132aed907bb4b59",
+		"inactive": false,
+		"legacyFolderID": "Fad07d35afa8aa489bfd0e759a532f98a6605a5568926b539d9b00e9e2d84e97a",
+		"searchTerms": [],
+		"slug": "14p-xversex-intl",
+		"title": "Level 14+ (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '14+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bb04925adc",
+		"inactive": false,
+		"legacyFolderID": "F7a8789ff51f1ceef4b0f3c4df44c8995c8a24a663d2416dc30448d394381e0d5",
+		"searchTerms": [],
+		"slug": "14p-xversex-omni",
+		"title": "Level 14+ (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '14+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc560e1eb801",
+		"inactive": false,
+		"legacyFolderID": "F174211aa08a1008bf4d8cacfe827a61efd17030439d7ff31c29bf10806fc4520",
+		"searchTerms": [],
+		"slug": "14p-xversex",
+		"title": "Level 14+ (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "chart.level = '14+'"
+	},
+	{
+		"game": "chunithm",
 		"id": "F19d35f0cf27d4932034",
 		"inactive": false,
 		"legacyFolderID": "Fb8dd20c5b26b296bab04c0ec33435cbae06eb073b78ead6270a9d037bb714cd8",
@@ -8407,6 +8869,39 @@
 		"slug": "15-xverse-omni",
 		"title": "Level 15 (X-VERSE Omnimix)",
 		"versionFilter": ["xverse-omni"],
+		"where": "chart.level = '15'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e1132aed9b084a510",
+		"inactive": false,
+		"legacyFolderID": "Fd638681ec631f679030a0210f376256935c1a6f43fddd8853628f2a40604736f",
+		"searchTerms": [],
+		"slug": "15-xversex-intl",
+		"title": "Level 15 (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '15'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bb42946cca",
+		"inactive": false,
+		"legacyFolderID": "F587a8266b8f531dbb356b84e904aabb8e13c145ed286a21035102e4325b3c3ea",
+		"searchTerms": [],
+		"slug": "15-xversex-omni",
+		"title": "Level 15 (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '15'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc56342ab62c",
+		"inactive": false,
+		"legacyFolderID": "Feae02c25894cfae29ff6ffad1421941fa04423e52b180431e562cfaaa416fde3",
+		"searchTerms": [],
+		"slug": "15-xversex",
+		"title": "Level 15 (X-VERSE-X)",
+		"versionFilter": ["xversex"],
 		"where": "chart.level = '15'"
 	},
 	{
@@ -8631,6 +9126,39 @@
 	},
 	{
 		"game": "chunithm",
+		"id": "F19e1132aed90d57c3bd",
+		"inactive": false,
+		"legacyFolderID": "F5bbc22eaa30ef98e60f083a06c099a9555fc1d3bb55085e756fe7c25a1b82dde",
+		"searchTerms": [],
+		"slug": "15p-xversex-intl",
+		"title": "Level 15+ (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '15+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bb188e7b06",
+		"inactive": false,
+		"legacyFolderID": "F0801e7113bd88f3d05aa4a82a5e124b73e7041de6b447982fde3bf006219d175",
+		"searchTerms": [],
+		"slug": "15p-xversex-omni",
+		"title": "Level 15+ (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '15+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc56528cc277",
+		"inactive": false,
+		"legacyFolderID": "F4571a6b220034ecad2b3317bd6af3d388295c8716dab778b39b7661ad4f194ba",
+		"searchTerms": [],
+		"slug": "15p-xversex",
+		"title": "Level 15+ (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "chart.level = '15+'"
+	},
+	{
+		"game": "chunithm",
 		"id": "F19d35f0cf274229136a",
 		"inactive": false,
 		"legacyFolderID": "F5f1f2f243c69ac61afcc2fca47dac27b18017882c9b965bab7c420c0cc6e23e0",
@@ -8639,6 +9167,39 @@
 		"title": "Level 15+ (X-VERSE)",
 		"versionFilter": ["xverse"],
 		"where": "chart.level = '15+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e1132aed9451e5040",
+		"inactive": false,
+		"legacyFolderID": "Fcba47513351918a76f87a7d8742e480a39bc6ff0c3dc15eadeecf2537924e654",
+		"searchTerms": [],
+		"slug": "16-xversex-intl",
+		"title": "Level 16 (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '16'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bb5c79a68b",
+		"inactive": false,
+		"legacyFolderID": "F99a7b481c33198beedd0b7e74fc7b57c820d3cc9a292e25e20c60a37345b2c89",
+		"searchTerms": [],
+		"slug": "16-xversex-omni",
+		"title": "Level 16 (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '16'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc563f711f40",
+		"inactive": false,
+		"legacyFolderID": "Fe4c4c4b575bb5879ba5190614ae383c605d792fad0808dd34862c05aa9972332",
+		"searchTerms": [],
+		"slug": "16-xversex",
+		"title": "Level 16 (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "chart.level = '16'"
 	},
 	{
 		"game": "chunithm",
@@ -8847,6 +9408,39 @@
 		"slug": "2-xverse-omni",
 		"title": "Level 2 (X-VERSE Omnimix)",
 		"versionFilter": ["xverse-omni"],
+		"where": "chart.level = '2'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e1132aed91ed85687",
+		"inactive": false,
+		"legacyFolderID": "F72f41c91fa5a8f3ee48243195b0440e5100f21794b03d285b10f42f9f88abcb1",
+		"searchTerms": [],
+		"slug": "2-xversex-intl",
+		"title": "Level 2 (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '2'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37ba45b34d77",
+		"inactive": false,
+		"legacyFolderID": "F8df7ba7b714f991d1065f129a8890db8946093a5f80202f9d2f5895f5958798d",
+		"searchTerms": [],
+		"slug": "2-xversex-omni",
+		"title": "Level 2 (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '2'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc55287bad8f",
+		"inactive": false,
+		"legacyFolderID": "Fe570dcfab418ee0f286ce1971bfe4000be2e3f142c9ddf5b23ef98f86e9b0e61",
+		"searchTerms": [],
+		"slug": "2-xversex",
+		"title": "Level 2 (X-VERSE-X)",
+		"versionFilter": ["xversex"],
 		"where": "chart.level = '2'"
 	},
 	{
@@ -9071,6 +9665,39 @@
 	},
 	{
 		"game": "chunithm",
+		"id": "F19e1132aed91f237fb1",
+		"inactive": false,
+		"legacyFolderID": "F5f6bc79ced64f3ee70ae45dcf32b563fb0f1521f2b3238f63025434fdba039b5",
+		"searchTerms": [],
+		"slug": "3-xversex-intl",
+		"title": "Level 3 (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '3'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37ba843454f7",
+		"inactive": false,
+		"legacyFolderID": "F8a77555d699299f906dc9d817fc2cb5034f18b758053a73bef801ee9705ecb2b",
+		"searchTerms": [],
+		"slug": "3-xversex-omni",
+		"title": "Level 3 (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '3'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc558277dafd",
+		"inactive": false,
+		"legacyFolderID": "F51fdf5c56ea9617650d660c46eb856bd6dd674a931020893a6eb7934dc3aa3ff",
+		"searchTerms": [],
+		"slug": "3-xversex",
+		"title": "Level 3 (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "chart.level = '3'"
+	},
+	{
+		"game": "chunithm",
 		"id": "F19d35f0cf27848aa874",
 		"inactive": false,
 		"legacyFolderID": "F0a416172c558455b1eca4f40d19e3fb3b19c4a4d119eeb36bed0debb00944567",
@@ -9287,6 +9914,39 @@
 		"slug": "4-xverse-omni",
 		"title": "Level 4 (X-VERSE Omnimix)",
 		"versionFilter": ["xverse-omni"],
+		"where": "chart.level = '4'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e1132aed9ea455a3f",
+		"inactive": false,
+		"legacyFolderID": "F60105b126c3008d8820b4033973e7bc1e8cb775b0bbd68f6c1e532dc6ad48efd",
+		"searchTerms": [],
+		"slug": "4-xversex-intl",
+		"title": "Level 4 (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '4'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37ba58c7db33",
+		"inactive": false,
+		"legacyFolderID": "F431baa61334b0bc27bca3ec45ad2e347c86e460b9e8b5a35b8db0515326c2456",
+		"searchTerms": [],
+		"slug": "4-xversex-omni",
+		"title": "Level 4 (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '4'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc55eef1fdd3",
+		"inactive": false,
+		"legacyFolderID": "F6170c950710c83a645127d1ea93449f04b66c92bbe5cdce36282029de2d8e6d1",
+		"searchTerms": [],
+		"slug": "4-xversex",
+		"title": "Level 4 (X-VERSE-X)",
+		"versionFilter": ["xversex"],
 		"where": "chart.level = '4'"
 	},
 	{
@@ -9511,6 +10171,39 @@
 	},
 	{
 		"game": "chunithm",
+		"id": "F19e1132aed9a17113e0",
+		"inactive": false,
+		"legacyFolderID": "F34d3c213fda72df0e11ded23e42b57ff55f37ddef0ff1b854862d27a85dc660f",
+		"searchTerms": [],
+		"slug": "5-xversex-intl",
+		"title": "Level 5 (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '5'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bae9ab5154",
+		"inactive": false,
+		"legacyFolderID": "F756cc9ebec74fa5a447e06a664d6e121dc30937ed91d4d01511afa53302dfa34",
+		"searchTerms": [],
+		"slug": "5-xversex-omni",
+		"title": "Level 5 (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '5'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc5507ea9c3a",
+		"inactive": false,
+		"legacyFolderID": "F8b055dac77d7ecbbbee146519ef9c58b37cf12da1ebe819ebc2186c1d0342c53",
+		"searchTerms": [],
+		"slug": "5-xversex",
+		"title": "Level 5 (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "chart.level = '5'"
+	},
+	{
+		"game": "chunithm",
 		"id": "F19d35f0cf2754d64434",
 		"inactive": false,
 		"legacyFolderID": "F06bddb855c74f0f0b06ab9623a86521104f7b6918b1416bf83927490c5e3f6d9",
@@ -9727,6 +10420,39 @@
 		"slug": "6-xverse-omni",
 		"title": "Level 6 (X-VERSE Omnimix)",
 		"versionFilter": ["xverse-omni"],
+		"where": "chart.level = '6'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e1132aed9bfa93f48",
+		"inactive": false,
+		"legacyFolderID": "F5ac4f99c7f376736657e31ed5f4d7906a3271d438feabb7043cd8ad104ec7be2",
+		"searchTerms": [],
+		"slug": "6-xversex-intl",
+		"title": "Level 6 (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '6'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37ba9b1489bf",
+		"inactive": false,
+		"legacyFolderID": "F5e060d04246aa31438370080c0802f0fad2691cd144584427f733b7edc5cd5bc",
+		"searchTerms": [],
+		"slug": "6-xversex-omni",
+		"title": "Level 6 (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '6'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc552838dcda",
+		"inactive": false,
+		"legacyFolderID": "F64abf7f8637477e3849c752d6e8c87a20e16ebe4e278a8c9c4991266182aacf2",
+		"searchTerms": [],
+		"slug": "6-xversex",
+		"title": "Level 6 (X-VERSE-X)",
+		"versionFilter": ["xversex"],
 		"where": "chart.level = '6'"
 	},
 	{
@@ -9951,6 +10677,39 @@
 	},
 	{
 		"game": "chunithm",
+		"id": "F19e1132aed9429a5793",
+		"inactive": false,
+		"legacyFolderID": "Fd1af559fd214f76e4ea6c87b90a9d31ef11c9cdadc015a93cfbc4d84d9ac4833",
+		"searchTerms": [],
+		"slug": "7-xversex-intl",
+		"title": "Level 7 (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '7'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37ba5060a6b9",
+		"inactive": false,
+		"legacyFolderID": "Fa355606d58a58846c002b2d20d0189dd0fb291e39fa67ac64ea3cae047bef66c",
+		"searchTerms": [],
+		"slug": "7-xversex-omni",
+		"title": "Level 7 (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '7'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc55fcf6a9e8",
+		"inactive": false,
+		"legacyFolderID": "F987577057b78b90b364e769692668309c6f488e4bdfb8801db5ce66b5d110304",
+		"searchTerms": [],
+		"slug": "7-xversex",
+		"title": "Level 7 (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "chart.level = '7'"
+	},
+	{
+		"game": "chunithm",
 		"id": "F19d35f0cf277847ff8f",
 		"inactive": false,
 		"legacyFolderID": "F4d0778cfb84315310c148b546b9e3407b9c9ba824e490761cccc7320867c927b",
@@ -10167,6 +10926,39 @@
 		"slug": "7p-xverse-omni",
 		"title": "Level 7+ (X-VERSE Omnimix)",
 		"versionFilter": ["xverse-omni"],
+		"where": "chart.level = '7+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e1132aed9cf988704",
+		"inactive": false,
+		"legacyFolderID": "F2aae0124c8b8a615cbd69d42e55bd48024d0560e3961e8bff15b7ffaf8d13931",
+		"searchTerms": [],
+		"slug": "7p-xversex-intl",
+		"title": "Level 7+ (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '7+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37ba014b179a",
+		"inactive": false,
+		"legacyFolderID": "F534d618e580a79183d2950457831e07f2d62d514bf0350c269f9045adb53a683",
+		"searchTerms": [],
+		"slug": "7p-xversex-omni",
+		"title": "Level 7+ (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '7+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc550c77c4fb",
+		"inactive": false,
+		"legacyFolderID": "Fb42bf4ce4579bbe67cd43b1e208de17cf6b9a5dac19e88956c45181ed5dc4fc9",
+		"searchTerms": [],
+		"slug": "7p-xversex",
+		"title": "Level 7+ (X-VERSE-X)",
+		"versionFilter": ["xversex"],
 		"where": "chart.level = '7+'"
 	},
 	{
@@ -10391,6 +11183,39 @@
 	},
 	{
 		"game": "chunithm",
+		"id": "F19e1132aed96c6066aa",
+		"inactive": false,
+		"legacyFolderID": "F26d428a90c674a18ebdaa8106094dd2a05aa0c23818feb0cbb09a46546b336ca",
+		"searchTerms": [],
+		"slug": "8-xversex-intl",
+		"title": "Level 8 (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '8'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bac0e82159",
+		"inactive": false,
+		"legacyFolderID": "Fe7f6fc3ee2ba1f95358bcc8bfb82c4233ceedb9e3ea916db73a9acd0e5eaa549",
+		"searchTerms": [],
+		"slug": "8-xversex-omni",
+		"title": "Level 8 (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '8'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc55301b1559",
+		"inactive": false,
+		"legacyFolderID": "Ff42bffee424d0b9c1de0ff319780220acd408726b1ad5480fb0fed1c993810cc",
+		"searchTerms": [],
+		"slug": "8-xversex",
+		"title": "Level 8 (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "chart.level = '8'"
+	},
+	{
+		"game": "chunithm",
 		"id": "F19d35f0cf2729d1938a",
 		"inactive": false,
 		"legacyFolderID": "Ff943cdbcd5e3ef9dbf82bd0a6bf83997878d521477e4a1c24279155ea8f90742",
@@ -10607,6 +11432,39 @@
 		"slug": "8p-xverse-omni",
 		"title": "Level 8+ (X-VERSE Omnimix)",
 		"versionFilter": ["xverse-omni"],
+		"where": "chart.level = '8+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e1132aed95b06cde5",
+		"inactive": false,
+		"legacyFolderID": "F24d5ec0095262d4246dfa8804d1111df045a41520b0df11c63fbeb42aaed0209",
+		"searchTerms": [],
+		"slug": "8p-xversex-intl",
+		"title": "Level 8+ (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '8+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bbd2ad6133",
+		"inactive": false,
+		"legacyFolderID": "Fef182d656bb469a87dad86453267d503ff58274a6b418b7c953ea7b8876d9bd6",
+		"searchTerms": [],
+		"slug": "8p-xversex-omni",
+		"title": "Level 8+ (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '8+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc553d6ef6c1",
+		"inactive": false,
+		"legacyFolderID": "F84665df97a08b65e4008f40d1e982c2cecc5ad51c06ec93849b2d0506201435e",
+		"searchTerms": [],
+		"slug": "8p-xversex",
+		"title": "Level 8+ (X-VERSE-X)",
+		"versionFilter": ["xversex"],
 		"where": "chart.level = '8+'"
 	},
 	{
@@ -10831,6 +11689,39 @@
 	},
 	{
 		"game": "chunithm",
+		"id": "F19e1132aed95ef0d3e8",
+		"inactive": false,
+		"legacyFolderID": "Fd2160b4d66198e290952f5a3a98387f68bf67a9740e812ae0b4538977aefda10",
+		"searchTerms": [],
+		"slug": "9-xversex-intl",
+		"title": "Level 9 (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '9'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bb50400032",
+		"inactive": false,
+		"legacyFolderID": "F5d833fd17fffddc0b83b84d27c0428a94d3c7a186469c8d2d490788940515ce6",
+		"searchTerms": [],
+		"slug": "9-xversex-omni",
+		"title": "Level 9 (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '9'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc555e445dfb",
+		"inactive": false,
+		"legacyFolderID": "Ffe7f8bf0009a8c74a90d5e4b5594433b5c58c218fa5799c7b09a9db4e1493af3",
+		"searchTerms": [],
+		"slug": "9-xversex",
+		"title": "Level 9 (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "chart.level = '9'"
+	},
+	{
+		"game": "chunithm",
 		"id": "F19d35f0cf279a0ead47",
 		"inactive": false,
 		"legacyFolderID": "F8682445afed83b8ed7595629415ed705867f133f9e92345e1662232ad0e13961",
@@ -11051,6 +11942,39 @@
 	},
 	{
 		"game": "chunithm",
+		"id": "F19e1132aed9dab974ce",
+		"inactive": false,
+		"legacyFolderID": "Fd85bb3a0573d701a915f8a0e1906d00c5f2394e0613e47906cd4ff4d15bead29",
+		"searchTerms": [],
+		"slug": "9p-xversex-intl",
+		"title": "Level 9+ (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.level = '9+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bb81d953d4",
+		"inactive": false,
+		"legacyFolderID": "Fcc2d1cdb532e72862f5f29054c09bb0813c614fb9fedd5a4a89e03ea7d3dd48b",
+		"searchTerms": [],
+		"slug": "9p-xversex-omni",
+		"title": "Level 9+ (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.level = '9+'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc55a684b301",
+		"inactive": false,
+		"legacyFolderID": "F86dfbec3e4315695b8a726acabdb456d1bebf58d65754c480badf5bf226f9582",
+		"searchTerms": [],
+		"slug": "9p-xversex",
+		"title": "Level 9+ (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "chart.level = '9+'"
+	},
+	{
+		"game": "chunithm",
 		"id": "F19d35f0cf27294a1bd6",
 		"inactive": false,
 		"legacyFolderID": "Fe6f718c84cf23f0b344de37e30f86e01c9708a2ae9d6c13f97a6542a2bc6671b",
@@ -11260,6 +12184,39 @@
 	},
 	{
 		"game": "chunithm",
+		"id": "F19e1132aed96c4def62",
+		"inactive": false,
+		"legacyFolderID": "F8e0da9418524adebca50c8be8d756653416c99657630c573806ad8e975e3b218",
+		"searchTerms": [],
+		"slug": "master-xversex-intl",
+		"title": "MASTER (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.difficulty = 'MASTER'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bbb459684a",
+		"inactive": false,
+		"legacyFolderID": "Ff4049e46e3508d5da864ac84b2363c49551bfdce3f122f3e97156bdfcb9c9379",
+		"searchTerms": [],
+		"slug": "master-xversex-omni",
+		"title": "MASTER (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.difficulty = 'MASTER'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc56a413583a",
+		"inactive": false,
+		"legacyFolderID": "Fa5c39072a8dd2192276d18a788f64e5b303e1c12ad370cc218708c1858d7246f",
+		"searchTerms": [],
+		"slug": "master-xversex",
+		"title": "MASTER (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "chart.difficulty = 'MASTER'"
+	},
+	{
+		"game": "chunithm",
 		"id": "F19d35f0cf27aabd54d1",
 		"inactive": false,
 		"legacyFolderID": "F14463ead732fa6f8bb8d050fd439f9823dbd77aa700c1a17436efe92565b29e5",
@@ -11344,6 +12301,39 @@
 		"slug": "master-ultima-xverse-omni",
 		"title": "MASTER+ULTIMA (X-VERSE Omnimix)",
 		"versionFilter": ["xverse-omni"],
+		"where": "chart.difficulty IN ('MASTER', 'ULTIMA')"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e1132aed9188aec3b",
+		"inactive": false,
+		"legacyFolderID": "F364f7a7e028a84c7a958623aa248b150ebc864aa5fbc845d5e2eb1a5cef11767",
+		"searchTerms": [],
+		"slug": "master-ultima-xversex-intl",
+		"title": "MASTER+ULTIMA (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.difficulty IN ('MASTER', 'ULTIMA')"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bb14a959d9",
+		"inactive": false,
+		"legacyFolderID": "Fdf0e7a0c4ec84cb934692334bf6470e0ec2448ab99bb82ff6d7cfb43928b7816",
+		"searchTerms": [],
+		"slug": "master-ultima-xversex-omni",
+		"title": "MASTER+ULTIMA (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.difficulty IN ('MASTER', 'ULTIMA')"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc566a6592e1",
+		"inactive": false,
+		"legacyFolderID": "F7badfe2da255a015185ea153b6179e850affe2a2a91654bf762564c67ea47e98",
+		"searchTerms": [],
+		"slug": "master-ultima-xversex",
+		"title": "MASTER+ULTIMA (X-VERSE-X)",
+		"versionFilter": ["xversex"],
 		"where": "chart.difficulty IN ('MASTER', 'ULTIMA')"
 	},
 	{
@@ -11557,6 +12547,39 @@
 	},
 	{
 		"game": "chunithm",
+		"id": "F19e1132aed9576a26f4",
+		"inactive": false,
+		"legacyFolderID": "F714deb8914270717a5056f73dc39e38f234a4cec1f6df65fac543fdaf7a56c20",
+		"searchTerms": [],
+		"slug": "ultima-xversex-intl",
+		"title": "ULTIMA (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "chart.difficulty = 'ULTIMA'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bb5bdc000e",
+		"inactive": false,
+		"legacyFolderID": "Fef28dce0e07241dd62a08d56095b14bb61fe55d848e9d2efc795d78f7f049daf",
+		"searchTerms": [],
+		"slug": "ultima-xversex-omni",
+		"title": "ULTIMA (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "chart.difficulty = 'ULTIMA'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc56831f9fc8",
+		"inactive": false,
+		"legacyFolderID": "F51b95ce56fe0329a69a308758ca85e682b2932f85f7e5eb73f608c81c2890938",
+		"searchTerms": [],
+		"slug": "ultima-xversex",
+		"title": "ULTIMA (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "chart.difficulty = 'ULTIMA'"
+	},
+	{
+		"game": "chunithm",
 		"id": "F19d35f0cf27aff7befc",
 		"inactive": false,
 		"legacyFolderID": "F205e23b63ffede2e7cc8a8ad71a270316bec837be31401393ab6250329479f22",
@@ -11565,6 +12588,83 @@
 		"title": "ULTIMA (X-VERSE)",
 		"versionFilter": ["xverse"],
 		"where": "chart.difficulty = 'ULTIMA'"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e114b02f403109d69",
+		"inactive": false,
+		"legacyFolderID": "Ff8f5ec2b2aaee5946ce1ad4d9c0d85bf62bfa963a66b6494eebe834182f5e0eb",
+		"searchTerms": [],
+		"slug": "worlds-end-verse-omni",
+		"title": "WORLD'S END (VERSE Omnimix)",
+		"versionFilter": ["verse-omni"],
+		"where": "((jsonb_typeof(chart.data->'inGameID') = 'number' AND (chart.data->>'inGameID')::int >= 8000) OR (jsonb_typeof(chart.data->'inGameID') = 'array' AND jsonb_path_match(chart.data->'inGameID', '!exists($.* ? (@ < 8000))')))"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e114a3545dc610925",
+		"inactive": false,
+		"legacyFolderID": "Fa27f071f2f04136d4719f283ddf7bb3a716587f0d52807ba748237660d7121a1",
+		"searchTerms": [],
+		"slug": "worlds-end-verse",
+		"title": "WORLD'S END (VERSE)",
+		"versionFilter": ["verse"],
+		"where": "((jsonb_typeof(chart.data->'inGameID') = 'number' AND (chart.data->>'inGameID')::int >= 8000) OR (jsonb_typeof(chart.data->'inGameID') = 'array' AND jsonb_path_match(chart.data->'inGameID', '!exists($.* ? (@ < 8000))')))"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e114383ad7782914c",
+		"inactive": false,
+		"legacyFolderID": "F12ad787aff38d2eff1c509b2edd1fdfd903b5128b7a99657e030e8e275c720a8",
+		"searchTerms": [],
+		"slug": "worlds-end-xverse-omni",
+		"title": "WORLD'S END (X-VERSE Omnimix)",
+		"versionFilter": ["xverse-omni"],
+		"where": "((jsonb_typeof(chart.data->'inGameID') = 'number' AND (chart.data->>'inGameID')::int >= 8000) OR (jsonb_typeof(chart.data->'inGameID') = 'array' AND jsonb_path_match(chart.data->'inGameID', '!exists($.* ? (@ < 8000))')))"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e1132aed90416dbfc",
+		"inactive": false,
+		"legacyFolderID": "F14d53464ca145adf7896d2ef3da5c96236838b826cb6e88ff251de2ba5938ceb",
+		"searchTerms": [],
+		"slug": "worlds-end-xversex-intl",
+		"title": "WORLD'S END (X-VERSE-X International)",
+		"versionFilter": ["xversex-intl"],
+		"where": "((jsonb_typeof(chart.data->'inGameID') = 'number' AND (chart.data->>'inGameID')::int >= 8000) OR (jsonb_typeof(chart.data->'inGameID') = 'array' AND jsonb_path_match(chart.data->'inGameID', '!exists($.* ? (@ < 8000))')))"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10eb37bb1b8140a2",
+		"inactive": false,
+		"legacyFolderID": "Fc844630d008e315984f1077e7e85c1688dbab471d571630ea6950913522159dd",
+		"searchTerms": [],
+		"slug": "worlds-end-xversex-omni",
+		"title": "WORLD'S END (X-VERSE-X Omnimix)",
+		"versionFilter": ["xversex-omni"],
+		"where": "((jsonb_typeof(chart.data->'inGameID') = 'number' AND (chart.data->>'inGameID')::int >= 8000) OR (jsonb_typeof(chart.data->'inGameID') = 'array' AND jsonb_path_match(chart.data->'inGameID', '!exists($.* ? (@ < 8000))')))"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e10a9fc56b898ab29",
+		"inactive": false,
+		"legacyFolderID": "F72f5642a159f264b3de74e3ec486b0169e48bd8b016438df92333d47e1ab7687",
+		"searchTerms": [],
+		"slug": "worlds-end-xversex",
+		"title": "WORLD'S END (X-VERSE-X)",
+		"versionFilter": ["xversex"],
+		"where": "((jsonb_typeof(chart.data->'inGameID') = 'number' AND (chart.data->>'inGameID')::int >= 8000) OR (jsonb_typeof(chart.data->'inGameID') = 'array' AND jsonb_path_match(chart.data->'inGameID', '!exists($.* ? (@ < 8000))')))"
+	},
+	{
+		"game": "chunithm",
+		"id": "F19e114180cc71d17cd8",
+		"inactive": false,
+		"legacyFolderID": "F692942a465068bf9aaa14030a9cb6656220920ce4ef6e2471680a5435670cd32",
+		"searchTerms": [],
+		"slug": "worlds-end-xverse",
+		"title": "WORLD'S END (X-VERSE)",
+		"versionFilter": ["xverse"],
+		"where": "((jsonb_typeof(chart.data->'inGameID') = 'number' AND (chart.data->>'inGameID')::int >= 8000) OR (jsonb_typeof(chart.data->'inGameID') = 'array' AND jsonb_path_match(chart.data->'inGameID', '!exists($.* ? (@ < 8000))')))"
 	},
 	{
 		"game": "ddr-dp",

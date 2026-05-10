@@ -11,7 +11,12 @@ import {
 } from "#proto/generated/chunithm/common_pb";
 import DB from "#services/pg/db";
 import { dmf } from "#test-utils/misc";
-import { TestingChunithmChartConverter, TestingChunithmSongConverter } from "#test-utils/test-data";
+import {
+	TestingChunithmChartConverter,
+	TestingChunithmSongConverter,
+	TestingChunithmWEChartConverter,
+	TestingChunithmWESongConverter,
+} from "#test-utils/test-data";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import type { MytChunithmScore } from "./types";
@@ -42,39 +47,49 @@ const parsedScore = {
 	},
 } as MytChunithmScore;
 
-async function seedKillyJokerMaster() {
-	await DB.insertInto("song")
-		.values({
-			id: TestingChunithmSongConverter.id,
-			legacy_id: 956,
-			game_group: "chunithm",
-			title: TestingChunithmSongConverter.title,
-			artist: TestingChunithmSongConverter.artist,
-			search_terms: TestingChunithmSongConverter.searchTerms,
-			alt_titles: TestingChunithmSongConverter.altTitles,
-			data: TestingChunithmSongConverter.data,
-			fts_document: "",
-		})
-		.execute();
+async function seedSongs() {
+	for (const [index, song] of Object.entries([
+		TestingChunithmSongConverter,
+		TestingChunithmWESongConverter,
+	])) {
+		await DB.insertInto("song")
+			.values({
+				id: song.id,
+				legacy_id: Number(index),
+				game_group: "chunithm",
+				title: song.title,
+				artist: song.artist,
+				search_terms: song.searchTerms,
+				alt_titles: song.altTitles,
+				data: song.data,
+				fts_document: "",
+			})
+			.execute();
+	}
 
-	await DB.insertInto("chart")
-		.values({
-			id: TestingChunithmChartConverter.chartID,
-			legacy_id: TestingChunithmChartConverter.chartID,
-			game: "chunithm",
-			song_id: TestingChunithmSongConverter.id,
-			difficulty: TestingChunithmChartConverter.difficulty,
-			level: TestingChunithmChartConverter.level,
-			level_num: TestingChunithmChartConverter.levelNum,
-			is_primary: TestingChunithmChartConverter.isPrimary,
-			versions: TestingChunithmChartConverter.versions,
-			data: TestingChunithmChartConverter.data,
-		})
-		.execute();
+	for (const [index, chart] of Object.entries([
+		TestingChunithmChartConverter,
+		TestingChunithmWEChartConverter,
+	])) {
+		await DB.insertInto("chart")
+			.values({
+				id: chart.chartID,
+				legacy_id: index,
+				game: "chunithm",
+				song_id: chart.song.id,
+				difficulty: chart.difficulty,
+				level: chart.level,
+				level_num: chart.levelNum,
+				is_primary: chart.isPrimary,
+				versions: chart.versions,
+				data: chart.data,
+			})
+			.execute();
+	}
 }
 
 describe("ConvertAPIMytChunithm", () => {
-	beforeEach(seedKillyJokerMaster);
+	beforeEach(seedSongs);
 
 	function convert(modifier: DeepPartial<MytChunithmScore> = {}) {
 		return ConvertAPIMytChunithm(dmf(parsedScore, modifier), {}, "api/myt-chunithm", log);
@@ -109,19 +124,39 @@ describe("ConvertAPIMytChunithm", () => {
 				},
 			},
 		});
-	});
 
-	it("rejects WORLD'S END charts", async () => {
-		await expect(
-			convert({
-				info: {
-					musicId: 8032,
-					level: ChunithmLevel.WORLDS_END,
+		const res2 = await convert({
+			info: {
+				musicId: 8235,
+				level: ChunithmLevel.WORLDS_END,
+			},
+		});
+
+		expect(res2).toStrictEqual({
+			song: TestingChunithmWESongConverter,
+			chart: TestingChunithmWEChartConverter,
+			dryScore: {
+				service: "MYT",
+				game: "chunithm",
+				scoreMeta: {},
+				timeAchieved: ParseDateFromString("2024-02-05T00:00:00.000Z"),
+				comment: null,
+				importType: "api/myt-chunithm",
+				scoreData: {
+					score: 1001715,
+					clearLamp: "CLEAR",
+					noteLamp: "NONE",
+					judgements: {
+						jcrit: 1459,
+						justice: 37,
+						attack: 4,
+						miss: 10,
+					},
+					optional: {
+						maxCombo: 493,
+					},
 				},
-			}),
-		).rejects.toMatchObject({
-			failureType: "SkipScore",
-			message: /WORLD'S END charts are not supported/u,
+			},
 		});
 	});
 

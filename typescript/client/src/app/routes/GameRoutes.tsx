@@ -45,7 +45,7 @@ import {
 	type SongDocument,
 	type V3Game,
 } from "tachi-common";
-import { type FixedDifficulties } from "tachi-common/types/game-config-utils";
+import { type ChuGekiMaiDifficulties, type FixedDifficulties } from "tachi-common/types/game-config-utils";
 
 export default function GameRoutes() {
 	const { game: gameParam } = useParams<{ game: string }>();
@@ -321,17 +321,39 @@ function SongInfoHeader({
 } & GamePT &
 	SongsReturn) {
 	const gameConfig = GetGameConfig(game);
+	const sortedCharts = charts.slice(0);
 
-	const sortedCharts = charts.slice(0).sort(
-		gameConfig.difficulties.type === "DYNAMIC"
-			? StrSOV((x) => x.difficulty)
-			: NumericSOV((x) =>
-					// can TS *really* not infer this?
-					(gameConfig.difficulties as FixedDifficulties<string>).order.indexOf(
-						x.difficulty,
-					),
-				),
-	);
+	if (gameConfig.difficulties.type === "DYNAMIC") {
+		sortedCharts.sort(StrSOV((x) => x.difficulty));
+	} else if (gameConfig.difficulties.type === "CHUGEKIMAI_STYLE") {
+		const difficulties = gameConfig.difficulties as ChuGekiMaiDifficulties<string>;
+
+		sortedCharts.sort((a, b) => {
+			const difficultyIndexA = difficulties.order.indexOf(a.difficulty);
+			const difficultyIndexB = difficulties.order.indexOf(b.difficulty);
+
+			// if both difficulties are from the fixed set, order by fixed set
+			if (difficultyIndexA !== -1 && difficultyIndexB !== -1) {
+				return difficultyIndexA - difficultyIndexB;
+			}
+
+			// if both difficulties are not from the fixed set, order by difficulty name
+			if (difficultyIndexA === -1 && difficultyIndexB === -1) {
+				return a.difficulty.localeCompare(b.difficulty);
+			}
+
+			// prefer difficulties from the fixed set
+			if (difficultyIndexA === -1) {
+				return 1;
+			}
+
+			return -1;
+		});
+	} else {
+		const difficulties = gameConfig.difficulties as FixedDifficulties<string>;
+
+		sortedCharts.sort(NumericSOV((x) => difficulties.order.indexOf(x.difficulty)));
+	}
 
 	const gameGroup = GameToGameGroup(game);
 

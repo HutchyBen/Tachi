@@ -13,7 +13,6 @@ export const GAME_GROUP_CHUNITHM_CONF = {
 	playtypes: ["Single"],
 	songData: z.strictObject({
 		genre: z.string(),
-		displayVersion: z.string(),
 		duration: z.number().optional(),
 	}),
 } as const satisfies INTERNAL_GAME_GROUP_CONFIG;
@@ -134,11 +133,8 @@ export const GAME_CHUNITHM_CONF = {
 	defaultSessionRatingAlg: "naiveRating",
 	defaultProfileRatingAlg: "naiveRating",
 
-	// This game technically has a dynamic set of difficulties, with a chart being
-	// able to have as many WORLD'S END charts as it likes. However, this is a little
-	// awkward to implement, and I can't be bothered. Sorry!
 	difficulties: {
-		type: "FIXED",
+		type: "CHUGEKIMAI_STYLE",
 		order: ["BASIC", "ADVANCED", "EXPERT", "MASTER", "ULTIMA"],
 		format: {
 			BASIC: "B",
@@ -193,10 +189,14 @@ export const GAME_CHUNITHM_CONF = {
 		xverse: "X-VERSE",
 		"xverse-intl": "X-VERSE International",
 		"xverse-omni": "X-VERSE Omnimix",
+		xversex: "X-VERSE-X",
+		"xversex-intl": "X-VERSE-X International",
+		"xversex-omni": "X-VERSE-X Omnimix",
 	},
 
 	chartData: z.strictObject({
-		inGameID: zodNonNegativeInt,
+		inGameID: z.union([z.array(zodNonNegativeInt), zodNonNegativeInt]),
+		displayVersion: z.string(),
 	}),
 
 	preferences: z.strictObject({}),

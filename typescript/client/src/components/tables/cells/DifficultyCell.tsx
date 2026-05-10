@@ -86,7 +86,11 @@ export function DisplayLevelNum({
 	level: string;
 	levelNum: number;
 	prefix?: string;
-}) {
+}) {	
+	if (game === "chunithm" && level === "" && levelNum === 0) {
+		return null;
+	}
+
 	if (["chunithm", "maimai", "maimaidx", "ongeki", "wacca"].includes(game)) {
 		return (
 			<Muted>

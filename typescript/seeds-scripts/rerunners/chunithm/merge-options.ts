@@ -3,17 +3,17 @@ import { XMLParser } from "fast-xml-parser";
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import path from "path";
 import {
-	type ChartDocument,
+	type SEEDS_ChartDocument,
 	type Difficulties,
 	type integer,
-	LEGACY_GetGamePTConfig,
-	type SongDocument,
+	GetGameConfig,
+	type SEEDS_SongDocument,
 } from "tachi-common";
 
 import { log } from "../../log";
-import { CreateChartID, ReadCollection, WriteCollection } from "../../util";
+import { CreateChartID, CreateSongID, ReadCollection, WriteCollection } from "../../util";
 
-const OMNIMIX_OPTION_NAMES = ["AOMN", "AOLD", "AKON"];
+const OMNIMIX_OPTION_NAMES = ["AOMN", "AOLD", "AKON", "A300"];
 const DISPLAY_VERSIONS = [
 	"CHUNITHM",
 	"CHUNITHM PLUS",
@@ -35,8 +35,33 @@ const DISPLAY_VERSIONS = [
 	"CHUNITHM LUMINOUS PLUS",
 	"CHUNITHM VERSE",
 	"CHUNITHM X-VERSE",
+	"CHUNITHM X-VERSE-X",
 ];
-const VERSIONS = ["paradiselost", "sun", "sunplus", "luminous", "luminousplus", "verse", "xverse"];
+const VERSIONS = [
+	"paradiselost",
+	"sun",
+	"sunplus",
+	"luminous",
+	"luminousplus",
+	"verse",
+	"xverse",
+	"xversex",
+];
+
+// WE charts that need extra disambiguators. Mapping of inGameID to the disambiguator.
+const DIFFICULTY_EXTRAS = new Map<integer, string>([
+	// Genesis type-?
+	[8190, "A"],
+	[8191, "B"],
+	[8192, "C"],
+	// Random
+	[8244, "LASTMORN"],
+	[8245, "Implexrough"],
+	[8246, "Shannon's Theorem"],
+	[8247, "Just Say It"],
+	[8248, "2anyFirst"],
+	[8249, "Alt Futur"],
+]);
 
 interface IDWithDisplayName {
 	id: string;
@@ -55,11 +80,10 @@ interface MusicFumenData {
 
 interface MusicXML {
 	MusicData: {
-		artistName: IDWithDisplayName;
+		releaseTagName: IDWithDisplayName;
 		disableFlag: boolean;
-		fumens: {
-			MusicFumenData: MusicFumenData[];
-		};
+		name: IDWithDisplayName;
+		artistName: IDWithDisplayName;
 		// I know it's supposed to be a list, but CHUNITHM has never had multi-genre songs
 		// and also the XML parser returns it as an object.
 		genreNames: {
@@ -67,10 +91,12 @@ interface MusicXML {
 				StringID: IDWithDisplayName;
 			};
 		};
-
-		name: IDWithDisplayName;
-
-		releaseTagName: IDWithDisplayName;
+		cueFileName: IDWithDisplayName;
+		worldsEndTagName: IDWithDisplayName;
+		starDifType: string;
+		fumens: {
+			MusicFumenData: MusicFumenData[];
+		};
 	};
 }
 
@@ -80,6 +106,19 @@ function calculateLevel(level: integer, levelDecimal: integer) {
 
 function calculateLevelNum(data: Pick<MusicFumenData, "level" | "levelDecimal">) {
 	return Number(`${data.level}.${data.levelDecimal}`);
+}
+
+function randomHex(byteLength: number): string {
+	const buf = new Uint8Array(byteLength);
+
+	globalThis.crypto.getRandomValues(buf);
+
+	let hex = "";
+	for (let i = 0; i < buf.length; i++) {
+		hex += buf[i]!.toString(16).padStart(2, "0");
+	}
+
+	return hex;
 }
 
 if (require.main !== module) {
@@ -99,7 +138,7 @@ const program = new Command()
 const options = program.opts();
 
 const baseVersion = options.version.replace(/(-intl|-omni)$/u, "");
-const tachiVersions = Object.keys(LEGACY_GetGamePTConfig("chunithm", "Single").versions);
+const tachiVersions = Object.keys(GetGameConfig("chunithm").versions);
 
 if (!VERSIONS.includes(baseVersion)) {
 	throw new Error(
@@ -120,17 +159,26 @@ if (!tachiVersions.includes(options.version)) {
 const isOmnimixVersion = /-omni$/u.test(options.version);
 const isLatestVersion = VERSIONS.indexOf(baseVersion) === VERSIONS.length - 1;
 
-const existingSongDocs: Array<SongDocument<"chunithm">> = ReadCollection("songs-chunithm.json");
-const existingChartDocs: Array<ChartDocument<"chunithm">> = ReadCollection("charts-chunithm.json");
+const existingSongDocs: Array<SEEDS_SongDocument<"chunithm">> =
+	ReadCollection("songs-chunithm.json");
+const existingChartDocs: Array<SEEDS_ChartDocument<"chunithm">> =
+	ReadCollection("charts-chunithm.json");
 
 const songMap = new Map(existingSongDocs.map((s) => [s.id, s]));
-const songTitleMap = new Map(existingSongDocs.map((s) => [s.title, s]));
-const inGameIDToSongIDMap = new Map<number, number>();
-const existingCharts = new Map<string, ChartDocument<"chunithm">>();
+const songTitleArtistMap = new Map(existingSongDocs.map((s) => [`${s.title} - ${s.artist}`, s]));
+const inGameIDToSongIDMap = new Map<number, string>();
+const existingCharts = new Map<string, SEEDS_ChartDocument<"chunithm">>();
 
 for (const chart of existingChartDocs) {
-	inGameIDToSongIDMap.set(chart.data.inGameID, chart.song.id);
-	existingCharts.set(`${chart.data.inGameID}-${chart.difficulty}`, chart);
+	if (Array.isArray(chart.data.inGameID)) {
+		for (const igid of chart.data.inGameID) {
+			inGameIDToSongIDMap.set(igid, chart.songID);
+			existingCharts.set(`${igid}-${chart.difficulty}`, chart);
+		}
+	} else {
+		inGameIDToSongIDMap.set(chart.data.inGameID, chart.songID);
+		existingCharts.set(`${chart.data.inGameID}-${chart.difficulty}`, chart);
+	}
 }
 
 const parser = new XMLParser({
@@ -143,8 +191,8 @@ const parser = new XMLParser({
 	},
 });
 
-const newSongs: Array<SongDocument<"chunithm">> = [];
-const newCharts: Array<ChartDocument<"chunithm">> = [];
+const newSongs: Array<SEEDS_SongDocument<"chunithm">> = [];
+const newCharts: Array<SEEDS_ChartDocument<"chunithm">> = [];
 
 for (const optionsDir of options.input) {
 	for (const option of readdirSync(optionsDir)) {
@@ -195,13 +243,53 @@ for (const optionsDir of options.input) {
 			const musicData = data.MusicData;
 			const inGameID = Number(musicData.name.id);
 
-			if (inGameID >= 8000 || inGameID === 50 || inGameID === 81) {
+			if (inGameID === 50 || inGameID === 81) {
 				// Ignoring WORLD'S END charts, the basic tutorial chart,
 				// and the master tutorial chart.
 				continue;
 			}
 
-			let tachiSongID = inGameIDToSongIDMap.get(inGameID);
+			const displayVersion = DISPLAY_VERSIONS[Number(musicData.releaseTagName.id)];
+
+			if (!displayVersion) {
+				throw new Error(
+					`Unknown version ID ${musicData.releaseTagName.id}. Update seeds/scripts/rerunners/chunithm/merge-options.ts.`,
+				);
+			}
+
+			let tachiSongID: string | undefined;
+			let isChildWE: boolean = true;
+
+			// Attempt to relate the WORLD'S END chart to the parent song. This can be done using the cueFileID,
+			// since generally the WORLD'S END chart and the regular chart share the same audio. This is however
+			// *not* the case for Random, since like the BMS gimmick, it has 6 different WE charts, each with
+			// their own audio.
+			if (inGameID >= 8000) {
+				// happy path: uses same cue file as the regular song
+				tachiSongID = inGameIDToSongIDMap.get(Number(musicData.cueFileName.id));
+				isChildWE = tachiSongID !== undefined;
+
+				// fallback 1: lookup by title - artist
+				if (tachiSongID === undefined) {
+					const tachiSong = songTitleArtistMap.get(
+						`${musicData.name.str} - ${musicData.artistName.str}`,
+					);
+
+					tachiSongID = tachiSong?.id;
+					isChildWE = tachiSongID !== undefined;
+				}
+
+				// fallback 2: worlds end exclusive song
+				if (tachiSongID === undefined) {
+					tachiSongID = inGameIDToSongIDMap.get(inGameID);
+					isChildWE = false;
+				}
+
+				// at this point if tachiSongID is still undefined then it's very likely a new WE
+			} else {
+				tachiSongID = inGameIDToSongIDMap.get(inGameID);
+				isChildWE = false;
+			}
 
 			// Has this song been disabled in-game?
 			if (musicData.disableFlag) {
@@ -226,11 +314,13 @@ for (const optionsDir of options.input) {
 
 			// New song?
 			if (tachiSongID === undefined) {
-				const existingTitle = songTitleMap.get(musicData.name.str);
+				const existingTitle = songTitleArtistMap.get(
+					`${musicData.name.str} - ${musicData.artistName.str}`,
+				);
 
 				if (existingTitle) {
 					log.warn(
-						`A song called ${musicData.name.str} already exists in songs-chunithm (ID ${existingTitle.id}). Is this a duplicate with a given inGameID?`,
+						`A song called ${musicData.artistName.str} - ${musicData.name.str} already exists in songs-chunithm (ID ${existingTitle.id}). Is this a duplicate with a given inGameID?`,
 					);
 
 					if (options.force) {
@@ -241,24 +331,16 @@ for (const optionsDir of options.input) {
 					}
 				}
 
-				tachiSongID = inGameID;
+				tachiSongID = CreateSongID();
 
-				const displayVersion = DISPLAY_VERSIONS[Number(musicData.releaseTagName.id)];
-
-				if (!displayVersion) {
-					throw new Error(
-						`Unknown version ID ${musicData.releaseTagName.id}. Update seeds/scripts/rerunners/chunithm/merge-options.ts.`,
-					);
-				}
-
-				const songDoc: SongDocument<"chunithm"> = {
+				const songDoc: SEEDS_SongDocument<"chunithm"> = {
 					title: musicData.name.str,
 					altTitles: [],
 					searchTerms: [],
 					artist: musicData.artistName.str,
 					id: tachiSongID,
+					legacySongID: inGameID,
 					data: {
-						displayVersion,
 						genre: musicData.genreNames.list.StringID.str,
 					},
 				};
@@ -268,109 +350,186 @@ for (const optionsDir of options.input) {
 				songMap.set(tachiSongID, songDoc);
 
 				log.info(`Added new song ${songDoc.artist} - ${songDoc.title}.`);
-			} else if (songMap.has(tachiSongID)) {
+			} else if (!isChildWE && songMap.has(tachiSongID)) {
 				const songDoc = songMap.get(tachiSongID)!;
-
-				const displayVersion = DISPLAY_VERSIONS[Number(musicData.releaseTagName.id)];
-
-				if (!displayVersion) {
-					throw new Error(
-						`Unknown version ID ${musicData.releaseTagName.id}. Update seeds/scripts/rerunners/chunithm/merge-options.ts.`,
-					);
-				}
 
 				songDoc.title = musicData.name.str;
 				songDoc.artist = musicData.artistName.str;
-				songDoc.data.displayVersion = displayVersion;
 				songDoc.data.genre = musicData.genreNames.list.StringID.str;
-			} else {
+			} else if (!isChildWE) {
 				throw new Error(
 					`CONSISTENCY ERROR: Song ID ${tachiSongID} does not belong to any songs!`,
 				);
 			}
 
-			for (const difficulty of musicData.fumens.MusicFumenData) {
-				const difficultyName = difficulty.type.data;
+			for (const fumenData of musicData.fumens.MusicFumenData) {
+				const difficultyName = fumenData.type.data;
 
-				const exists = existingCharts.get(`${inGameID}-${difficultyName}`);
-				const level = calculateLevel(
-					Number(difficulty.level),
-					Number(difficulty.levelDecimal),
-				);
-				const levelNum = calculateLevelNum(difficulty);
+				if (difficultyName === "WORLD'S END") {
+					// starDifType can be 1, 3, 5, 7, 9 which corresponds to ☆1-5.
+					let difficulty = `${musicData.worldsEndTagName.str}☆${Math.floor((Number(musicData.starDifType) + 1) / 2)}`;
+					const disambiguator = DIFFICULTY_EXTRAS.get(inGameID);
 
-				if (exists) {
-					const displayName = `${musicData.artistName.str} - ${musicData.name.str} [${difficultyName}] (${exists.chartID})`;
-					const versionIndex = exists.versions.indexOf(options.version);
+					if (disambiguator !== undefined) {
+						difficulty = `${difficulty} (${disambiguator})`;
+					}
 
-					if (!difficulty.enable) {
-						if (versionIndex !== -1) {
+					const exists = existingCharts.get(`${inGameID}-${difficulty}`);
+
+					if (exists) {
+						const displayName = `${musicData.artistName.str} - ${musicData.name.str} [${difficulty}] (${exists.id})`;
+						const versionIndex = exists.versions.indexOf(options.version);
+
+						if (!fumenData.enable) {
+							if (versionIndex !== -1) {
+								log.info(
+									`Removing ${displayName} from version ${options.version} because it has been disabled.`,
+								);
+								exists.versions.splice(versionIndex, 1);
+							}
+
+							continue;
+						}
+
+						if (versionIndex === -1) {
+							log.info(`Adding ${displayName} to version ${options.version}.`);
+							exists.versions.push(options.version);
+						}
+
+						if (isLatestVersion && exists.difficulty !== difficulty) {
 							log.info(
-								`Removing ${displayName} from version ${options.version} because it has been disabled.`,
+								`Chart ${displayName} has had a difficulty change: ${exists.difficulty} -> ${difficulty}`,
 							);
-							exists.versions.splice(versionIndex, 1);
+							exists.difficulty = difficulty;
+						}
+
+						if (isLatestVersion && exists.data.displayVersion !== displayVersion) {
+							log.info(
+								`Chart ${displayName} has had a displayVersion change: ${exists.data.displayVersion} -> ${displayVersion}`,
+							);
+							exists.data.displayVersion = displayVersion;
 						}
 
 						continue;
 					}
 
-					if (versionIndex === -1) {
-						log.info(`Adding ${displayName} to version ${options.version}.`);
-						exists.versions.push(options.version);
+					if (!fumenData.enable) {
+						continue;
 					}
 
-					if (isLatestVersion && exists.level !== level) {
-						log.info(
-							`Chart ${displayName} has had a level change: ${exists.level} -> ${level}`,
-						);
-						exists.level = level;
-					}
+					const chartDoc: SEEDS_ChartDocument<"chunithm"> = {
+						id: CreateChartID(),
+						legacyChartID: randomHex(20),
+						songID: tachiSongID,
+						difficulty,
+						isPrimary: true,
+						level: "",
+						levelNum: 0,
+						versions: [options.version],
+						data: {
+							inGameID,
+							displayVersion,
+						},
+					};
 
-					if (isLatestVersion && exists.levelNum !== levelNum) {
-						log.info(
-							`Chart ${displayName} has had a levelNum change: ${exists.levelNum} -> ${levelNum}`,
-						);
-						exists.levelNum = levelNum;
-					}
+					newCharts.push(chartDoc);
 
-					continue;
-				}
+					// A later option may modify a new song in an earlier option, so we have to keep
+					// track of that too. Awesome.
+					existingCharts.set(`${inGameID}-${difficulty}`, chartDoc);
 
-				if (!difficulty.enable) {
-					continue;
-				}
-
-				if (difficultyName === "WORLD'S END") {
-					log.warn(
-						`Song ${musicData.artistName.str} - ${musicData.name.str} (inGameID=${musicData.name.id}) contains a WORLD'S END chart, which should be impossible. Refusing to process this difficulty.`,
+					log.info(
+						`Added chart ${musicData.artistName.str} - ${musicData.name.str} [${difficulty}] (${chartDoc.id}).`,
 					);
-					continue;
+				} else {
+					const level = calculateLevel(
+						Number(fumenData.level),
+						Number(fumenData.levelDecimal),
+					);
+					const levelNum = calculateLevelNum(fumenData);
+					const exists = existingCharts.get(`${inGameID}-${difficultyName}`);
+
+					if (exists) {
+						const displayName = `${musicData.artistName.str} - ${musicData.name.str} [${difficultyName}] (${exists.id})`;
+						const versionIndex = exists.versions.indexOf(options.version);
+
+						if (!fumenData.enable) {
+							if (versionIndex !== -1) {
+								log.info(
+									`Removing ${displayName} from version ${options.version} because it has been disabled.`,
+								);
+								exists.versions.splice(versionIndex, 1);
+							}
+
+							continue;
+						}
+
+						if (versionIndex === -1) {
+							log.info(`Adding ${displayName} to version ${options.version}.`);
+							exists.versions.push(options.version);
+						}
+
+						if (isLatestVersion && exists.level !== level) {
+							log.info(
+								`Chart ${displayName} has had a level change: ${exists.level} -> ${level}`,
+							);
+							exists.level = level;
+						}
+
+						if (isLatestVersion && exists.levelNum !== levelNum) {
+							log.info(
+								`Chart ${displayName} has had a levelNum change: ${exists.levelNum} -> ${levelNum}`,
+							);
+							exists.levelNum = levelNum;
+						}
+
+						if (
+							isLatestVersion &&
+							difficultyName !== "ULTIMA" &&
+							exists.data.displayVersion !== displayVersion
+						) {
+							log.info(
+								`Chart ${displayName} has had a displayVersion change: ${exists.data.displayVersion} -> ${displayVersion}`,
+							);
+							exists.data.displayVersion = displayVersion;
+						}
+
+						continue;
+					}
+
+					if (!fumenData.enable) {
+						continue;
+					}
+
+					const chartDisplayVersion =
+						difficultyName === "ULTIMA"
+							? `CHUNITHM ${GetGameConfig("chunithm").versions[baseVersion]}`
+							: displayVersion;
+					const chartDoc: SEEDS_ChartDocument<"chunithm"> = {
+						id: CreateChartID(),
+						legacyChartID: randomHex(20),
+						songID: tachiSongID,
+						difficulty: difficultyName as Difficulties["chunithm"],
+						isPrimary: true,
+						level,
+						levelNum,
+						versions: [options.version],
+						data: {
+							inGameID,
+							displayVersion: chartDisplayVersion,
+						},
+					};
+
+					newCharts.push(chartDoc);
+
+					// A later option may modify a new song in an earlier option, so we have to keep
+					// track of that too. Awesome.
+					existingCharts.set(`${inGameID}-${difficultyName}`, chartDoc);
+
+					log.info(
+						`Added chart ${musicData.artistName.str} - ${musicData.name.str} [${difficultyName}] (${chartDoc.id}).`,
+					);
 				}
-
-				const chartDoc: ChartDocument<"chunithm"> = {
-					game: "chunithm",
-					chartID: CreateChartID(),
-					songID: tachiSongID,
-					difficulty: difficultyName as Difficulties["chunithm"],
-					isPrimary: true,
-					level,
-					levelNum,
-					versions: [options.version],
-					playtype: "Single",
-					data: {
-						inGameID,
-					},
-				};
-
-				newCharts.push(chartDoc);
-
-				// A later option may modify a new song in an earlier option, so we have to keep
-				// track of that too. Awesome.
-				existingCharts.set(`${inGameID}-${difficultyName}`, chartDoc);
-
-				log.info(
-					`Added chart ${musicData.artistName.str} - ${musicData.name.str} [${difficultyName}] (${chartDoc.chartID}).`,
-				);
 			}
 		}
 	}
