@@ -1,11 +1,13 @@
-import { GetChartByIdForGame } from "#lib/db-formats/chart";
+import { GetChartByIdForGame, GetChartsBySongId } from "#lib/db-formats/chart";
 import {
 	GetPBOnChart,
 	LoadPbDocumentsForUserPrimaryCharts,
 	LoadPbDocumentsForUserPrimaryChartsSortedByAlg,
 	LoadPbsByUserIdsAndChartPgId,
 	LoadPbsForUserOnChartsByPgIds,
+	LoadPbsForUserOnSongPgId,
 } from "#lib/db-formats/pb";
+import { GetSongByID } from "#lib/db-formats/song";
 import { log } from "#lib/log/log";
 import { GetRivalUsers } from "#lib/rivals/rivals";
 import { withUserGameProfile } from "#lib/router/middleware";
@@ -20,6 +22,7 @@ import { FilterChartsAndSongs, GetScoreIDsFromComposed } from "#utils/scores";
 import { GetUsersWithIDs } from "#utils/user";
 import { ExpectedErr } from "bliss";
 import {
+	GameToGameGroup,
 	LEGACY_GameToGameGroupPT,
 	LEGACY_GetGamePTConfig,
 	type MatchTypeResolver,
@@ -134,6 +137,38 @@ API_V1_ROUTER.add(
 			chart: got.chart,
 			pb,
 			song: got.song,
+		});
+	},
+);
+
+/**
+ * Returns all of a user's personal bests on every chart for a song.
+ *
+ * @name GET /api/v1/users/:userID/games/:game/pbs/song/:songID
+ */
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/pbs/song/:songID",
+	withUserGameProfile,
+	async ({ ctx, params }) => {
+		const { requestedUser: user, game } = ctx;
+
+		const songRow = await GetSongByID(GameToGameGroup(game), params.songID);
+		if (!songRow) {
+			throw new ExpectedErr(404, "This song does not exist.");
+		}
+
+		const chartsForSong = await GetChartsBySongId(game, params.songID);
+		if (chartsForSong.length === 0) {
+			throw new ExpectedErr(404, "This song does not exist for this game.");
+		}
+
+		const pbs = await LoadPbsForUserOnSongPgId(user.id, game, params.songID);
+		const { songs, charts } = await GetRelevantSongsAndCharts(pbs);
+
+		return success(`Retrieved ${pbs.length} personal bests for this song.`, {
+			charts,
+			pbs,
+			songs,
 		});
 	},
 );

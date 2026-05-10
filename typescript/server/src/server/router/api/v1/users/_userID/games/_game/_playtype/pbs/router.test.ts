@@ -118,7 +118,7 @@ async function seedIidxChartPb(opts: { userId: number; withComposition?: boolean
 			.execute();
 	}
 
-	return { chartPg, chartLegacy, scoreId };
+	return { chartPg, chartLegacy, scoreId, songPg };
 }
 
 async function insertPbOnChart(opts: {
@@ -283,6 +283,103 @@ describe("GET /api/v1/users/:userID/games/:game/pbs/:chartID/leaderboard-adjacen
 		);
 		expect(aboveRanks).toContain(1);
 		expect(belowRanks).toContain(3);
+	});
+});
+
+describe("GET /api/v1/users/:userID/games/:game/pbs/song/:songID", () => {
+	it("returns 404 when the song does not exist", async () => {
+		const { id } = await seedUser({ username: "ugpt_pb_song_missing" });
+		await seedIidxSpProfile(id);
+
+		const res = await mockApi.get(
+			`/api/v1/users/${id}/games/iidx-sp/pbs/song/nonexistent-song-id-000`,
+		);
+
+		expect(res.status).toBe(404);
+		expect(res.body.success).toBe(false);
+	});
+
+	it("returns PBs for every chart on the song the user has played", async () => {
+		const { id: userId } = await seedUser({ username: "ugpt_pb_song_multi" });
+		await seedIidxSpProfile(userId);
+
+		const n = ++seedCounter;
+		const songPg = `S_UGPT_PB_MULT_${n}`;
+		const chartPgA = `C_UGPT_PB_MULT_A_${n}`;
+		const chartPgB = `C_UGPT_PB_MULT_B_${n}`;
+
+		await DB.insertInto("song")
+			.values({
+				id: songPg,
+				legacy_id: 91_000 + n,
+				game_group: "iidx",
+				title: "Multi difficulty PB",
+				artist: "Tester",
+				search_terms: [],
+				alt_titles: [],
+				data: { displayVersion: "1", genre: "TEST" },
+				fts_document: "",
+			})
+			.execute();
+
+		for (const [chartPg, difficulty] of [
+			[chartPgA, "ANOTHER"],
+			[chartPgB, "HYPER"],
+		] as const) {
+			await DB.insertInto("chart")
+				.values({
+					id: chartPg,
+					legacy_id: `${chartPg}_leg`,
+					game: "iidx-sp",
+					song_id: songPg,
+					difficulty,
+					level: "10",
+					level_num: 10,
+					is_primary: true,
+					versions: ["27"],
+					data: { inGameID: 1000, notecount: 786 },
+				})
+				.execute();
+
+			await insertPbOnChart({
+				userId,
+				chartPg,
+				calculatedData: { ktLampRating: difficulty === "ANOTHER" ? 80 : 40 },
+			});
+		}
+
+		const res = await mockApi.get(
+			`/api/v1/users/${userId}/games/iidx-sp/pbs/song/${songPg}`,
+		);
+
+		expect(res.status).toBe(200);
+		expect(res.body.body.pbs).toHaveLength(2);
+		const chartIds = res.body.body.pbs
+			.map((p: { chartID: string }) => p.chartID)
+			.sort();
+		expect(chartIds).toEqual([chartPgA, chartPgB].sort());
+		expect(res.body.body.charts).toHaveLength(2);
+		expect(res.body.body.songs).toHaveLength(1);
+		expect(res.body.body.songs[0].id).toBe(songPg);
+	});
+
+	it("returns empty PBs when the user has not played any chart of the song", async () => {
+		const { id: userId } = await seedUser({ username: "ugpt_pb_song_empty" });
+		await seedIidxSpProfile(userId);
+
+		const { songPg } = await seedIidxChartPb({ userId });
+
+		const { id: otherId } = await seedUser({ username: "ugpt_pb_song_empty_b" });
+		await seedIidxSpProfile(otherId);
+
+		const res = await mockApi.get(
+			`/api/v1/users/${otherId}/games/iidx-sp/pbs/song/${songPg}`,
+		);
+
+		expect(res.status).toBe(200);
+		expect(res.body.body.pbs).toHaveLength(0);
+		expect(res.body.body.charts).toHaveLength(0);
+		expect(res.body.body.songs).toHaveLength(0);
 	});
 });
 

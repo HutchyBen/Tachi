@@ -775,6 +775,16 @@ export const API_V1_SPEC = {
 		}),
 	},
 
+	"GET /users/:userID/games/:game/pbs/song/:songID": {
+		description: "All user PBs for every chart of the given song in this game.",
+		input: z.object({}),
+		output: z.strictObject({
+			pbs: docArray<PBScoreDocument>(),
+			charts: docArray<ChartDocument>(),
+			songs: docArray<SongDocument>(),
+		}),
+	},
+
 	"GET /users/:userID/games/:game/pbs/:chartID": {
 		description: "User's PB on a specific chart.",
 		input: z.object({ getComposition: z.string().optional() }),

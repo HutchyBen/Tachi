@@ -182,6 +182,26 @@ export async function LoadPbsForUserOnChartsByPgIds(
 	return Promise.all(rows.map((r) => ToPbScoreDocument(r as PbDocumentJoinRow)));
 }
 
+/** PBs for a user on all charts of a song in this GPT (`chart.game` + `song.id`), newest `time_achieved` first. */
+export async function LoadPbsForUserOnSongPgId(
+	userId: number,
+	v3Game: Game,
+	songPgId: string,
+): Promise<PBScoreDocument[]> {
+	const rows = await DB.selectFrom("pb")
+		.innerJoin("chart_leaderboard", "chart_leaderboard.row_id", "pb.row_id")
+		.innerJoin("chart", "chart.id", "pb.chart_id")
+		.innerJoin("song", "song.id", "chart.song_id")
+		.select(SELECT_PB_DOCUMENT_WITH_LEADERBOARD)
+		.where("pb.user_id", "=", userId)
+		.where("chart.game", "=", v3Game)
+		.where("chart.song_id", "=", songPgId)
+		.orderBy("pb.time_achieved", "desc")
+		.execute();
+
+	return Promise.all(rows.map((r) => ToPbScoreDocument(r as PbDocumentJoinRow)));
+}
+
 /** Every PB on a chart (Postgres `chart.id`), e.g. beatoraja IR leaderboard. */
 export async function LoadAllPbsForChartPgId(chartPgId: string): Promise<PBScoreDocument[]> {
 	const rows = await DB.selectFrom("pb")
