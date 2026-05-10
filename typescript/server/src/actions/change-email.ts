@@ -9,7 +9,7 @@ import { ExpectedErr, log } from "bliss";
 
 export const ACTION_ChangeEmail = MakeAction(
 	"CHANGE_EMAIL",
-	async (taker, { email, "!password": password }) => {
+	async (taker, { "!email": email, "!password": password }) => {
 		await DB.transaction()
 			.setIsolationLevel("serializable")
 			.execute(async (txn) => {

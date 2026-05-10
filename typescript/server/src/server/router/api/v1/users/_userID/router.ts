@@ -202,6 +202,8 @@ API_V1_ROUTER.add("GET /users/:userID/email", withRequestedUser, withSelf, async
 /**
  * Change what email is associated with this account.
  *
+ * @param !email - The new email address (validated).
+ *
  * @name POST /api/v1/users/:userID/change-email
  */
 API_V1_ROUTER.add(
@@ -213,7 +215,7 @@ API_V1_ROUTER.add(
 
 		await ACTION_ChangeEmail(
 			{ acct: { id: user.id, username: user.username }, ip: req.ip },
-			{ "!password": input["!password"], email: input.email },
+			{ "!password": input["!password"], "!email": input["!email"] },
 		);
 
 		return success("Re-sent email verification to new email.", null);

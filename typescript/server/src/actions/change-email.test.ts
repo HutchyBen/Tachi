@@ -28,7 +28,7 @@ describe("ACTION_ChangeEmail", () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
 		await expect(
-			ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": "wrongpassword" }),
+			ACTION_ChangeEmail(taker, { "!email": NEW_EMAIL, "!password": "wrongpassword" }),
 		).rejects.toMatchObject({ code: 401 });
 	});
 
@@ -36,7 +36,7 @@ describe("ACTION_ChangeEmail", () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
 		await expect(
-			ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": "wrongpassword" }),
+			ACTION_ChangeEmail(taker, { "!email": NEW_EMAIL, "!password": "wrongpassword" }),
 		).rejects.toThrow();
 
 		const action = await DB.selectFrom("action")
@@ -51,7 +51,7 @@ describe("ACTION_ChangeEmail", () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
 		await expect(
-			ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": "wrongpassword" }),
+			ACTION_ChangeEmail(taker, { "!email": NEW_EMAIL, "!password": "wrongpassword" }),
 		).rejects.toThrow();
 
 		const row = await DB.selectFrom("priv_account_credential")
@@ -74,7 +74,7 @@ describe("ACTION_ChangeEmail", () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
 		await expect(
-			ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD }),
+			ACTION_ChangeEmail(taker, { "!email": NEW_EMAIL, "!password": PASSWORD }),
 		).rejects.toMatchObject({ code: 409 });
 	});
 
@@ -88,7 +88,7 @@ describe("ACTION_ChangeEmail", () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
 		await expect(
-			ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD }),
+			ACTION_ChangeEmail(taker, { "!email": NEW_EMAIL, "!password": PASSWORD }),
 		).rejects.toThrow();
 
 		const action = await DB.selectFrom("action")
@@ -109,7 +109,7 @@ describe("ACTION_ChangeEmail", () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
 		await expect(
-			ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD }),
+			ACTION_ChangeEmail(taker, { "!email": NEW_EMAIL, "!password": PASSWORD }),
 		).rejects.toThrow();
 
 		const row = await DB.selectFrom("priv_account_credential")
@@ -124,7 +124,7 @@ describe("ACTION_ChangeEmail", () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
 		await expect(
-			ACTION_ChangeEmail(taker, { email: "old@example.com", "!password": PASSWORD }),
+			ACTION_ChangeEmail(taker, { "!email": "old@example.com", "!password": PASSWORD }),
 		).rejects.toMatchObject({ code: 409 });
 	});
 
@@ -133,7 +133,7 @@ describe("ACTION_ChangeEmail", () => {
 	it("returns an empty object on success", async () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		const result = await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
+		const result = await ACTION_ChangeEmail(taker, { "!email": NEW_EMAIL, "!password": PASSWORD });
 
 		expect(result).toEqual({});
 	});
@@ -141,7 +141,7 @@ describe("ACTION_ChangeEmail", () => {
 	it("updates the stored email to the new address", async () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
+		await ACTION_ChangeEmail(taker, { "!email": NEW_EMAIL, "!password": PASSWORD });
 
 		const row = await DB.selectFrom("priv_account_credential")
 			.select("email")
@@ -154,7 +154,7 @@ describe("ACTION_ChangeEmail", () => {
 	it("inserts a verify-email token for the new address", async () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
+		await ACTION_ChangeEmail(taker, { "!email": NEW_EMAIL, "!password": PASSWORD });
 
 		const row = await DB.selectFrom("priv_verify_email_token")
 			.selectAll()
@@ -167,7 +167,7 @@ describe("ACTION_ChangeEmail", () => {
 	it("generates a non-empty hex token", async () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
+		await ACTION_ChangeEmail(taker, { "!email": NEW_EMAIL, "!password": PASSWORD });
 
 		const row = await DB.selectFrom("priv_verify_email_token")
 			.select("token")
@@ -180,7 +180,7 @@ describe("ACTION_ChangeEmail", () => {
 	it("keeps exactly one token row for the user after the change", async () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
+		await ACTION_ChangeEmail(taker, { "!email": NEW_EMAIL, "!password": PASSWORD });
 
 		const rows = await DB.selectFrom("priv_verify_email_token")
 			.select("token")
@@ -195,7 +195,7 @@ describe("ACTION_ChangeEmail", () => {
 
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
+		await ACTION_ChangeEmail(taker, { "!email": NEW_EMAIL, "!password": PASSWORD });
 
 		const rows = await DB.selectFrom("priv_verify_email_token")
 			.select(["token", "email"])
@@ -217,7 +217,7 @@ describe("ACTION_ChangeEmail", () => {
 
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
+		await ACTION_ChangeEmail(taker, { "!email": NEW_EMAIL, "!password": PASSWORD });
 
 		const row = await DB.selectFrom("priv_verify_email_token")
 			.select("token")
@@ -236,7 +236,7 @@ describe("ACTION_ChangeEmail", () => {
 
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
+		await ACTION_ChangeEmail(taker, { "!email": NEW_EMAIL, "!password": PASSWORD });
 
 		const row = await DB.selectFrom("priv_account_credential")
 			.select("email")
@@ -251,7 +251,7 @@ describe("ACTION_ChangeEmail", () => {
 	it("writes a GOOD action row to the audit log on success", async () => {
 		const taker = { ip: "10.0.0.1", acct: { id: userId, username } };
 
-		await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
+		await ACTION_ChangeEmail(taker, { "!email": NEW_EMAIL, "!password": PASSWORD });
 
 		const action = await DB.selectFrom("action")
 			.selectAll()
@@ -269,7 +269,7 @@ describe("ACTION_ChangeEmail", () => {
 	it("does not store the plaintext password in the audit log input", async () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
+		await ACTION_ChangeEmail(taker, { "!email": NEW_EMAIL, "!password": PASSWORD });
 
 		const action = await DB.selectFrom("action")
 			.select("input")
@@ -279,10 +279,10 @@ describe("ACTION_ChangeEmail", () => {
 		expect(JSON.stringify(action.input)).not.toContain(PASSWORD);
 	});
 
-	it("records the new email address in the audit log input", async () => {
+	it("omits private fields from the audit log input", async () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		await ACTION_ChangeEmail(taker, { email: NEW_EMAIL, "!password": PASSWORD });
+		await ACTION_ChangeEmail(taker, { "!email": NEW_EMAIL, "!password": PASSWORD });
 
 		const action = await DB.selectFrom("action")
 			.select("input")
@@ -291,6 +291,6 @@ describe("ACTION_ChangeEmail", () => {
 
 		const input = action.input as Record<string, unknown>;
 
-		expect(input).toMatchObject({ email: NEW_EMAIL });
+		expect(input).toEqual({});
 	});
 });

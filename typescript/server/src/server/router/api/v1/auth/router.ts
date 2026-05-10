@@ -103,10 +103,10 @@ API_V1_ROUTER.add("POST /auth/register", aggressiveRL, async ({ input, req }) =>
 	const newUser = await ANON_ACTION_Register(
 		{ ip: req.ip },
 		{
-			email: input.email,
+			"!email": input["!email"],
 			"!password": input["!password"],
-			inviteCode: input.inviteCode ?? null,
-			captcha: input.captcha ?? "",
+			"!inviteCode": input.inviteCode ?? null,
+			"!captcha": input.captcha ?? "",
 			username: input.username,
 		},
 	);
@@ -186,7 +186,7 @@ API_V1_ROUTER.add("POST /auth/logout", ({ req, res }) => {
 /**
  * Creates a password reset code for a user.
  *
- * @param email - The email associated with the account you want to reset.
+ * @param !email - The email associated with the account you want to reset.
  *
  * @name POST /api/v1/auth/forgot-password
  */
@@ -199,7 +199,7 @@ API_V1_ROUTER.add("POST /auth/forgot-password", hyperAggressiveRL, async ({ inpu
 	});
 
 	try {
-		await ANON_ACTION_ForgotPassword({ ip: req.ip }, { email: input.email });
+		await ANON_ACTION_ForgotPassword({ ip: req.ip }, { "!email": input["!email"] });
 	} catch (_err) {
 		// error is logged elsewhere.
 	}

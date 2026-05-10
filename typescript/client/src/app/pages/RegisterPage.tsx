@@ -70,7 +70,7 @@ export default function RegisterPage() {
 						"!password": values["!password"],
 						inviteCode: values.inviteCode,
 						username: values.username.trim(),
-						email: values.email,
+						"!email": values.email,
 						captcha: values.captcha,
 					}),
 					headers: {

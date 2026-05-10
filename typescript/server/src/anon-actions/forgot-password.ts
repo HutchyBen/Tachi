@@ -8,7 +8,7 @@ import { ExpectedErr, log } from "bliss";
 
 export const ANON_ACTION_ForgotPassword = MakeAnonAction(
 	"FORGOT_PASSWORD",
-	async (taker, { email }) => {
+	async (taker, { "!email": email }) => {
 		if (taker.ip === null) {
 			throw new ExpectedErr(400, "IP address is required to send a password reset email.");
 		}

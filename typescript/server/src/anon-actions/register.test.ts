@@ -23,9 +23,9 @@ describe("ANON_ACTION_Register", () => {
 		const result = await ANON_ACTION_Register(taker, {
 			username: "newuser",
 			"!password": "securepassword",
-			email: "newuser@example.com",
-			captcha: "test",
-			inviteCode,
+			"!email": "newuser@example.com",
+			"!captcha": "test",
+			"!inviteCode": inviteCode,
 		});
 
 		expect(Number(result.userID)).toBeGreaterThan(0);
@@ -35,9 +35,9 @@ describe("ANON_ACTION_Register", () => {
 		await ANON_ACTION_Register(taker, {
 			username: "newuser",
 			"!password": "securepassword",
-			email: "newuser@example.com",
-			captcha: "test",
-			inviteCode,
+			"!email": "newuser@example.com",
+			"!captcha": "test",
+			"!inviteCode": inviteCode,
 		});
 
 		const user = await DB.selectFrom("account")
@@ -52,9 +52,9 @@ describe("ANON_ACTION_Register", () => {
 		const { userID } = await ANON_ACTION_Register(taker, {
 			username: "newuser",
 			"!password": "securepassword",
-			email: "NewUser@Example.COM",
-			captcha: "test",
-			inviteCode,
+			"!email": "NewUser@Example.COM",
+			"!captcha": "test",
+			"!inviteCode": inviteCode,
 		});
 
 		const cred = await DB.selectFrom("priv_account_credential")
@@ -69,9 +69,9 @@ describe("ANON_ACTION_Register", () => {
 		await ANON_ACTION_Register(taker, {
 			username: "newuser",
 			"!password": "securepassword",
-			email: "newuser@example.com",
-			captcha: "test",
-			inviteCode,
+			"!email": "newuser@example.com",
+			"!captcha": "test",
+			"!inviteCode": inviteCode,
 		});
 
 		const invite = await DB.selectFrom("priv_invite")
@@ -87,9 +87,9 @@ describe("ANON_ACTION_Register", () => {
 		await ANON_ACTION_Register(taker, {
 			username: "newuser",
 			"!password": "securepassword",
-			email: "newuser@example.com",
-			captcha: "test",
-			inviteCode,
+			"!email": "newuser@example.com",
+			"!captcha": "test",
+			"!inviteCode": inviteCode,
 		});
 
 		const action = await DB.selectFrom("action")
@@ -111,9 +111,9 @@ describe("ANON_ACTION_Register", () => {
 			ANON_ACTION_Register(taker, {
 				username: "test_user",
 				"!password": "securepassword",
-				email: "other@example.com",
-				captcha: "test",
-				inviteCode,
+				"!email": "other@example.com",
+				"!captcha": "test",
+				"!inviteCode": inviteCode,
 			}),
 		).rejects.toMatchObject({ code: 409 });
 	});
@@ -123,9 +123,9 @@ describe("ANON_ACTION_Register", () => {
 			ANON_ACTION_Register(taker, {
 				username: "TEST_USER",
 				"!password": "securepassword",
-				email: "other@example.com",
-				captcha: "test",
-				inviteCode,
+				"!email": "other@example.com",
+				"!captcha": "test",
+				"!inviteCode": inviteCode,
 			}),
 		).rejects.toMatchObject({ code: 409 });
 	});
@@ -135,9 +135,9 @@ describe("ANON_ACTION_Register", () => {
 			ANON_ACTION_Register(taker, {
 				username: "brandnewuser",
 				"!password": "securepassword",
-				email: "test@example.com",
-				captcha: "test",
-				inviteCode,
+				"!email": "test@example.com",
+				"!captcha": "test",
+				"!inviteCode": inviteCode,
 			}),
 		).rejects.toMatchObject({ code: 409 });
 	});
@@ -147,9 +147,9 @@ describe("ANON_ACTION_Register", () => {
 			ANON_ACTION_Register(taker, {
 				username: "brandnewuser",
 				"!password": "securepassword",
-				email: "TEST@EXAMPLE.COM",
-				captcha: "test",
-				inviteCode,
+				"!email": "TEST@EXAMPLE.COM",
+				"!captcha": "test",
+				"!inviteCode": inviteCode,
 			}),
 		).rejects.toMatchObject({ code: 409 });
 	});
@@ -161,9 +161,9 @@ describe("ANON_ACTION_Register", () => {
 			ANON_ACTION_Register(taker, {
 				username: "brandnewuser",
 				"!password": "securepassword",
-				email: "brandnewuser@example.com",
-				captcha: "test",
-				inviteCode: null,
+				"!email": "brandnewuser@example.com",
+				"!captcha": "test",
+				"!inviteCode": null,
 			}),
 		).rejects.toMatchObject({ code: 400 });
 	});
@@ -173,9 +173,9 @@ describe("ANON_ACTION_Register", () => {
 			ANON_ACTION_Register(taker, {
 				username: "brandnewuser",
 				"!password": "securepassword",
-				email: "brandnewuser@example.com",
-				captcha: "test",
-				inviteCode: "BOGUS_CODE",
+				"!email": "brandnewuser@example.com",
+				"!captcha": "test",
+				"!inviteCode": "BOGUS_CODE",
 			}),
 		).rejects.toThrow();
 	});
@@ -185,9 +185,9 @@ describe("ANON_ACTION_Register", () => {
 			ANON_ACTION_Register(taker, {
 				username: "test_user",
 				"!password": "securepassword",
-				email: "other@example.com",
-				captcha: "test",
-				inviteCode,
+				"!email": "other@example.com",
+				"!captcha": "test",
+				"!inviteCode": inviteCode,
 			}),
 		).rejects.toThrow();
 
@@ -204,9 +204,9 @@ describe("ANON_ACTION_Register", () => {
 			ANON_ACTION_Register(taker, {
 				username: "newuser",
 				"!password": "securepassword",
-				email: "newuser@example.com",
-				captcha: "test",
-				inviteCode: "BOGUS_CODE",
+				"!email": "newuser@example.com",
+				"!captcha": "test",
+				"!inviteCode": "BOGUS_CODE",
 			}),
 		).rejects.toThrow();
 
@@ -224,9 +224,9 @@ describe("ANON_ACTION_Register", () => {
 		const first = await ANON_ACTION_Register(taker, {
 			username: "firstuser",
 			"!password": "securepassword",
-			email: "first@example.com",
-			captcha: "test",
-			inviteCode,
+			"!email": "first@example.com",
+			"!captcha": "test",
+			"!inviteCode": inviteCode,
 		});
 
 		// Need a fresh invite for the next successful signup.
@@ -243,9 +243,9 @@ describe("ANON_ACTION_Register", () => {
 				ANON_ACTION_Register(taker, {
 					username: `baduser${i}`,
 					"!password": "securepassword",
-					email: `bad${i}@example.com`,
-					captcha: "test",
-					inviteCode: "BOGUS_CODE",
+					"!email": `bad${i}@example.com`,
+					"!captcha": "test",
+					"!inviteCode": "BOGUS_CODE",
 				}),
 			).rejects.toThrow();
 		}
@@ -253,9 +253,9 @@ describe("ANON_ACTION_Register", () => {
 		const second = await ANON_ACTION_Register(taker, {
 			username: "seconduser",
 			"!password": "securepassword",
-			email: "second@example.com",
-			captcha: "test",
-			inviteCode: secondInvite,
+			"!email": "second@example.com",
+			"!captcha": "test",
+			"!inviteCode": secondInvite,
 		});
 
 		// If sequences are gap-free, the second real user should be first.id + 1
@@ -271,9 +271,9 @@ describe("ANON_ACTION_Register", () => {
 			ANON_ACTION_Register(taker, {
 				username: "test_user",
 				"!password": "securepassword",
-				email: "other@example.com",
-				captcha: "test",
-				inviteCode,
+				"!email": "other@example.com",
+				"!captcha": "test",
+				"!inviteCode": inviteCode,
 			}),
 		).rejects.toThrow();
 
@@ -290,9 +290,9 @@ describe("ANON_ACTION_Register", () => {
 			ANON_ACTION_Register(taker, {
 				username: "brandnewuser",
 				"!password": "securepassword",
-				email: "test@example.com",
-				captcha: "test",
-				inviteCode,
+				"!email": "test@example.com",
+				"!captcha": "test",
+				"!inviteCode": inviteCode,
 			}),
 		).rejects.toThrow();
 
@@ -308,9 +308,9 @@ describe("ANON_ACTION_Register", () => {
 		await ANON_ACTION_Register(taker, {
 			username: "newuser",
 			"!password": "securepassword",
-			email: "newuser@example.com",
-			captcha: "test",
-			inviteCode,
+			"!email": "newuser@example.com",
+			"!captcha": "test",
+			"!inviteCode": inviteCode,
 		});
 
 		const action = await DB.selectFrom("action")
@@ -345,9 +345,9 @@ describe("ANON_ACTION_Register - bootstrap invite", () => {
 		const result = await ANON_ACTION_Register(taker, {
 			username: "firstadmin",
 			"!password": "securepassword",
-			email: "admin@example.com",
-			captcha: "test",
-			inviteCode: BOOTSTRAP_CODE,
+			"!email": "admin@example.com",
+			"!captcha": "test",
+			"!inviteCode": BOOTSTRAP_CODE,
 		});
 
 		const account = await DB.selectFrom("account")
@@ -362,9 +362,9 @@ describe("ANON_ACTION_Register - bootstrap invite", () => {
 		await ANON_ACTION_Register(taker, {
 			username: "firstadmin",
 			"!password": "securepassword",
-			email: "admin@example.com",
-			captcha: "test",
-			inviteCode: BOOTSTRAP_CODE,
+			"!email": "admin@example.com",
+			"!captcha": "test",
+			"!inviteCode": BOOTSTRAP_CODE,
 		});
 
 		const invites = await DB.selectFrom("priv_invite")
@@ -381,9 +381,9 @@ describe("ANON_ACTION_Register - bootstrap invite", () => {
 			ANON_ACTION_Register(taker, {
 				username: "seconduser",
 				"!password": "securepassword",
-				email: "second@example.com",
-				captcha: "test",
-				inviteCode: BOOTSTRAP_CODE,
+				"!email": "second@example.com",
+				"!captcha": "test",
+				"!inviteCode": BOOTSTRAP_CODE,
 			}),
 		).rejects.toMatchObject({ code: 400 });
 	});
@@ -393,9 +393,9 @@ describe("ANON_ACTION_Register - bootstrap invite", () => {
 			ANON_ACTION_Register(taker, {
 				username: "firstadmin",
 				"!password": "securepassword",
-				email: "admin@example.com",
-				captcha: "test",
-				inviteCode: "WRONG_CODE",
+				"!email": "admin@example.com",
+				"!captcha": "test",
+				"!inviteCode": "WRONG_CODE",
 			}),
 		).rejects.toThrow();
 	});
@@ -407,9 +407,9 @@ describe("ANON_ACTION_Register - bootstrap invite", () => {
 			ANON_ACTION_Register(taker, {
 				username: "firstadmin",
 				"!password": "securepassword",
-				email: "admin@example.com",
-				captcha: "test",
-				inviteCode: "NONEXISTENT",
+				"!email": "admin@example.com",
+				"!captcha": "test",
+				"!inviteCode": "NONEXISTENT",
 			}),
 		).rejects.toThrow();
 	});

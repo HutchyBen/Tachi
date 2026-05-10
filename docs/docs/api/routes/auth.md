@@ -83,7 +83,7 @@ POST /api/v1/auth/login
 | :----------------------------: | :------------------------------------: | :------------------------------------------------------------------------------------------------------------------: |
 |           `username`           |                 String                 | A string between 3 and 20 characters. The first character must be A-Z, _ or -. The other 19 may be A-Z, 0-9, _ or -. |
 |          `!password`           |                 String                 |                                           An 8 character or longer string.                                           |
-|            `email`             |                 String                 |                                                                                                                      |
+|           `!email`             |                 String                 |                   Valid email. The `!` prefix keeps this field out of server request logs.                    |
 | `inviteCode` (Kamaitachi Only) | String (Undefined/Unused on Bokutachi) |                                If on Kamaitachi, this is the user's invitation code.                                 |
 |           `captcha`            |                 String                 |                                                                                                                      |
 
@@ -106,7 +106,7 @@ POST /api/v1/auth/register
 	"username": "newGuy",
 	"!password": "my_password",
 	"captcha": "herebedragons",
-	"email": "test@example.com"
+	"!email": "test@example.com"
 }
 ```
 
@@ -229,7 +229,7 @@ returned as part of the HTTP request.
 
 | Property |  Type  |                                                   Description                                                   |
 | :------: | :----: | :-------------------------------------------------------------------------------------------------------------: |
-| `email`  | String | A user's email. If the email does not correspond to any accounts, 202 is returned anyway as a security measure. |
+| `!email` | String | A user's email. If the email does not correspond to any accounts, 202 is returned anyway as a security measure. Request logs omit this field. |
 
 ### Response
 
@@ -241,7 +241,7 @@ Empty Object. The endpoint immediately returns 202 to avoid giving away informat
 
 ```js
 {
-	"email": "zkldiv@gmail.com"
+	"!email": "zkldiv@gmail.com"
 }
 ```
 

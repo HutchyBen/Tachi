@@ -125,7 +125,7 @@ export const API_V1_SPEC = {
 		input: z.object({
 			username: z.string(),
 			"!password": z.string(),
-			email: z.string(),
+			"!email": z.email(),
 			inviteCode: z.string().optional(),
 			captcha: z.string().optional(),
 		}),
@@ -152,7 +152,7 @@ export const API_V1_SPEC = {
 
 	"POST /auth/forgot-password": {
 		description: "Request a password reset email.",
-		input: z.object({ email: z.string() }),
+		input: z.object({ "!email": z.email() }),
 		output: empty,
 	},
 
@@ -286,7 +286,7 @@ export const API_V1_SPEC = {
 
 	"POST /users/:userID/change-email": {
 		description: "Change the authenticated user's email address.",
-		input: z.object({ email: z.string(), "!password": z.string() }),
+		input: z.object({ "!email": z.email(), "!password": z.string() }),
 		output: z.null(),
 	},
 

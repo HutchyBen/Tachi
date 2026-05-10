@@ -20,7 +20,7 @@ describe("POST /api/v1/auth/register", () => {
 		const res = await mockApi.post("/api/v1/auth/register").send({
 			username: "newuser",
 			"!password": "securepassword",
-			email: "newuser@example.com",
+			"!email": "newuser@example.com",
 			captcha: "test",
 			inviteCode,
 		});
@@ -42,7 +42,7 @@ describe("POST /api/v1/auth/register", () => {
 		const res = await mockApi.post("/api/v1/auth/register").send({
 			username: "Test_User",
 			"!password": "securepassword",
-			email: "other@example.com",
+			"!email": "other@example.com",
 			captcha: "test",
 			inviteCode,
 		});
@@ -55,7 +55,7 @@ describe("POST /api/v1/auth/register", () => {
 		const res = await mockApi.post("/api/v1/auth/register").send({
 			username: "brandnewuser",
 			"!password": "securepassword",
-			email: "test@example.com",
+			"!email": "test@example.com",
 			captcha: "test",
 			inviteCode,
 		});
@@ -68,7 +68,7 @@ describe("POST /api/v1/auth/register", () => {
 		const res = await mockApi.post("/api/v1/auth/register").send({
 			username: "brandnewuser",
 			"!password": "securepassword",
-			email: "not-an-email",
+			"!email": "not-an-email",
 			captcha: "test",
 			inviteCode,
 		});
@@ -81,7 +81,7 @@ describe("POST /api/v1/auth/register", () => {
 		const res = await mockApi.post("/api/v1/auth/register").send({
 			username: "brandnewuser",
 			"!password": "short",
-			email: "brandnewuser@example.com",
+			"!email": "brandnewuser@example.com",
 			captcha: "test",
 			inviteCode,
 		});
@@ -97,7 +97,7 @@ describe("POST /api/v1/auth/register", () => {
 		const res = await mockApi.post("/api/v1/auth/register").send({
 			username,
 			"!password": "securepassword",
-			email: "someone@example.com",
+			"!email": "someone@example.com",
 			captcha: "test",
 			inviteCode,
 		});
@@ -110,7 +110,7 @@ describe("POST /api/v1/auth/register", () => {
 		const res = await mockApi.post("/api/v1/auth/register").send({
 			username: "brandnewuser",
 			"!password": "securepassword",
-			email: "brandnewuser@example.com",
+			"!email": "brandnewuser@example.com",
 			captcha: "test",
 		});
 
@@ -122,7 +122,7 @@ describe("POST /api/v1/auth/register", () => {
 		await mockApi.post("/api/v1/auth/register").send({
 			username: "test_user",
 			"!password": "securepassword",
-			email: "other@example.com",
+			"!email": "other@example.com",
 			captcha: "test",
 			inviteCode,
 		});
@@ -139,7 +139,7 @@ describe("POST /api/v1/auth/register", () => {
 		await mockApi.post("/api/v1/auth/register").send({
 			username: "newuser",
 			"!password": "securepassword",
-			email: "newuser@example.com",
+			"!email": "newuser@example.com",
 			captcha: "test",
 			inviteCode,
 		});

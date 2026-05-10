@@ -18,13 +18,13 @@ describe("ANON_ACTION_ForgotPassword", () => {
 	// ── Happy path ─────────────────────────────────────────────────────────────
 
 	it("returns { silentlyRejected: false } when the email is found", async () => {
-		const result = await ANON_ACTION_ForgotPassword(taker, { email: user.email });
+		const result = await ANON_ACTION_ForgotPassword(taker, { "!email": user.email });
 
 		expect(result).toEqual({ silentlyRejected: false });
 	});
 
 	it("inserts a password reset token into priv_password_reset_token", async () => {
-		await ANON_ACTION_ForgotPassword(taker, { email: user.email });
+		await ANON_ACTION_ForgotPassword(taker, { "!email": user.email });
 
 		const row = await DB.selectFrom("priv_password_reset_token")
 			.select("token")
@@ -35,7 +35,7 @@ describe("ANON_ACTION_ForgotPassword", () => {
 	});
 
 	it("generates a token starting with M followed by 40 hex characters", async () => {
-		await ANON_ACTION_ForgotPassword(taker, { email: user.email });
+		await ANON_ACTION_ForgotPassword(taker, { "!email": user.email });
 
 		const row = await DB.selectFrom("priv_password_reset_token")
 			.select("token")
@@ -47,15 +47,15 @@ describe("ANON_ACTION_ForgotPassword", () => {
 
 	it("lowercases the email before the lookup, so lookups are case-insensitive", async () => {
 		const result = await ANON_ACTION_ForgotPassword(taker, {
-			email: "TEST@EXAMPLE.COM",
+			"!email": "TEST@EXAMPLE.COM",
 		});
 
 		expect(result).toEqual({ silentlyRejected: false });
 	});
 
 	it("each call inserts a new token row rather than updating the existing one", async () => {
-		await ANON_ACTION_ForgotPassword(taker, { email: user.email });
-		await ANON_ACTION_ForgotPassword(taker, { email: user.email });
+		await ANON_ACTION_ForgotPassword(taker, { "!email": user.email });
+		await ANON_ACTION_ForgotPassword(taker, { "!email": user.email });
 
 		const rows = await DB.selectFrom("priv_password_reset_token")
 			.select("token")
@@ -67,7 +67,7 @@ describe("ANON_ACTION_ForgotPassword", () => {
 	});
 
 	it("writes a GOOD action row to the audit log on success", async () => {
-		await ANON_ACTION_ForgotPassword(taker, { email: user.email });
+		await ANON_ACTION_ForgotPassword(taker, { "!email": user.email });
 
 		const action = await DB.selectFrom("action")
 			.selectAll()
@@ -87,7 +87,7 @@ describe("ANON_ACTION_ForgotPassword", () => {
 		const nullIpTaker = { ip: null };
 
 		await expect(
-			ANON_ACTION_ForgotPassword(nullIpTaker, { email: user.email }),
+			ANON_ACTION_ForgotPassword(nullIpTaker, { "!email": user.email }),
 		).rejects.toMatchObject({ code: 400 });
 	});
 
@@ -95,7 +95,7 @@ describe("ANON_ACTION_ForgotPassword", () => {
 		const nullIpTaker = { ip: null };
 
 		await expect(
-			ANON_ACTION_ForgotPassword(nullIpTaker, { email: user.email }),
+			ANON_ACTION_ForgotPassword(nullIpTaker, { "!email": user.email }),
 		).rejects.toThrow();
 
 		const action = await DB.selectFrom("action")
@@ -110,7 +110,7 @@ describe("ANON_ACTION_ForgotPassword", () => {
 		const nullIpTaker = { ip: null };
 
 		await expect(
-			ANON_ACTION_ForgotPassword(nullIpTaker, { email: user.email }),
+			ANON_ACTION_ForgotPassword(nullIpTaker, { "!email": user.email }),
 		).rejects.toThrow();
 
 		const rows = await DB.selectFrom("priv_password_reset_token")
@@ -125,13 +125,13 @@ describe("ANON_ACTION_ForgotPassword", () => {
 
 	it("throws when no account is registered with the given email", async () => {
 		await expect(
-			ANON_ACTION_ForgotPassword(taker, { email: "nobody@example.com" }),
+			ANON_ACTION_ForgotPassword(taker, { "!email": "nobody@example.com" }),
 		).rejects.toThrow();
 	});
 
 	it("writes a THROW action row when the email is not found (dead executeTakeFirstOrThrow)", async () => {
 		await expect(
-			ANON_ACTION_ForgotPassword(taker, { email: "nobody@example.com" }),
+			ANON_ACTION_ForgotPassword(taker, { "!email": "nobody@example.com" }),
 		).rejects.toThrow();
 
 		const action = await DB.selectFrom("action")
@@ -147,7 +147,7 @@ describe("ANON_ACTION_ForgotPassword", () => {
 
 	it("does not insert any token when the email is not found", async () => {
 		await expect(
-			ANON_ACTION_ForgotPassword(taker, { email: "nobody@example.com" }),
+			ANON_ACTION_ForgotPassword(taker, { "!email": "nobody@example.com" }),
 		).rejects.toThrow();
 
 		const rows = await DB.selectFrom("priv_password_reset_token")
@@ -167,7 +167,7 @@ describe("ANON_ACTION_ForgotPassword", () => {
 			withCredential: true,
 		});
 
-		await ANON_ACTION_ForgotPassword(taker, { email: user.email });
+		await ANON_ACTION_ForgotPassword(taker, { "!email": user.email });
 
 		const otherRows = await DB.selectFrom("priv_password_reset_token")
 			.select("token")

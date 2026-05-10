@@ -28,7 +28,7 @@ function bootstrapCodeMatches(input: string, expected: string): boolean {
 
 export const ANON_ACTION_Register = MakeAnonAction(
 	"REGISTER",
-	async (taker, { email, "!password": password, inviteCode, username, captcha }) => {
+	async (taker, { "!email": email, "!password": password, "!inviteCode": inviteCode, username, "!captcha": captcha }) => {
 		// force lowercase for emails to avoid case-confusion in lookups...
 		email = email.toLowerCase();
 

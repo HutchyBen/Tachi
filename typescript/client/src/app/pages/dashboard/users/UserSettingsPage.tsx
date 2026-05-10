@@ -139,7 +139,7 @@ function ChangeEmailForm({ reqUser }: { reqUser: UserDocument }) {
 					method: "POST",
 					...FetchJSONBody({
 						"!password": values["!password"],
-						email: values.email,
+						"!email": values.email,
 					}),
 				},
 				true,

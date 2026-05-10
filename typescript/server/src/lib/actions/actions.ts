@@ -56,7 +56,7 @@ export const ActionSignatures = {
 	},
 	CHANGE_EMAIL: {
 		input: z.object({
-			email: z.email(),
+			"!email": z.email(),
 			"!password": z.string().min(8),
 		}),
 		output: z.object({}),
@@ -425,10 +425,10 @@ export const ActionSignatures = {
 export const AnonActionSignatures = {
 	REGISTER: {
 		input: z.object({
-			email: z.email(),
+			"!email": z.email(),
 			"!password": z.string().min(8),
-			captcha: z.string(),
-			inviteCode: z.string().nullable(),
+			"!captcha": z.string(),
+			"!inviteCode": z.string().nullable(),
 			username: z.string().regex(/^[a-zA-Z_-][a-zA-Z0-9_-]{2,20}$/u),
 		}),
 		output: z.object({
@@ -443,7 +443,7 @@ export const AnonActionSignatures = {
 	},
 	FORGOT_PASSWORD: {
 		input: z.object({
-			email: z.email(),
+			"!email": z.email(),
 		}),
 		output: z.object({
 			silentlyRejected: z.boolean(),
