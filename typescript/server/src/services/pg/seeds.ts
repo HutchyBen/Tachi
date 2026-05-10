@@ -532,7 +532,6 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 		}
 
 		// goals — upsert so seed edits (renamed goals, updated criteria) are applied
-		let goalIds: Array<string>;
 		{
 			log.info("[goal]");
 			const seeds = readSeedFile<SEEDS_GoalDocument>(seedsDir, "goals.json");
@@ -554,7 +553,6 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 					.execute();
 			}
 
-			goalIds = rows.map((r) => r.id);
 			log.info(`  ${rows.length} goals\n`);
 		}
 
@@ -644,7 +642,8 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 		// deletion — the error surfaces via throwFriendlyFkError below.
 		//
 		// Deletion order: children before parents.
-		//   table → folder → chart → song → goal → quest → questline → bms
+		//   table → folder → chart → song → quest → questline → bms
+		// (goal rows are not pruned — goals removed from seeds are left in DB.)
 
 		log.info("[stale-delete]");
 
@@ -710,21 +709,6 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 
 				throw err;
 			}
-		}
-
-		// goal — goal_sub / import_goal block (intentional)
-		try {
-			const n = await deleteSeedStale(txn, "goal", "goal.id", goalIds);
-
-			if (n > 0n) {
-				log.info(`  removed ${n} stale goal(s)`);
-			}
-		} catch (err) {
-			if (isForeignKeyViolation(err)) {
-				throwFriendlyFkError("goal", err);
-			}
-
-			throw err;
 		}
 
 		// quest — quest_sub / import_quest block (intentional); questline_quest cleared
