@@ -18,7 +18,9 @@ export async function BuildFolderQuery(folderID: string, db: Kysely<Database>) {
 		throw new Error(`Folder with ID '${folderID}' not found.`);
 	}
 
-	const interpolateWhereRaw = sql.raw(folder.where);
+	// Parentheses: `folder.where` is spliced before ANDs on chart.game / versions; without
+	// them, `A OR B AND chart.game = …` parses as `A OR (B AND …)` instead of `(A OR B) AND …`.
+	const interpolateWhereRaw = sql.raw(`(${folder.where})`);
 
 	// JOIN song so predicates can use `song.` (song-type folders from `5-folders-to-sql-queries.ts`).
 	if (folder.version_filter) {

@@ -124,6 +124,89 @@ describe("BuildFolderQuery", () => {
 		expect((rows[0] as { id: string }).id).toBe(chartB);
 	});
 
+	it("wraps folder.where so OR does not bypass chart.game (and version_filter) ANDs", async () => {
+		const { folderId, folderLegacy, songId, chartA, chartB } = ids("bfq-or");
+		const otherGameChart = `${chartA}-other`;
+
+		await DB.insertInto("song")
+			.values({
+				id: songId,
+				legacy_id: 9_800_010,
+				game_group: "iidx",
+				title: "OR precedence song",
+				artist: "Z",
+				search_terms: [],
+				alt_titles: [],
+				fts_document: "",
+				data: JSON.stringify({}),
+			})
+			.execute();
+
+		await DB.insertInto("chart")
+			.values([
+				{
+					id: chartA,
+					legacy_id: chartA,
+					game: "iidx-sp",
+					song_id: songId,
+					level: "9",
+					level_num: 9,
+					is_primary: true,
+					difficulty: "NORMAL",
+					versions: ["epolis"],
+					data: JSON.stringify({}),
+				},
+				{
+					id: chartB,
+					legacy_id: chartB,
+					game: "iidx-sp",
+					song_id: songId,
+					level: "10",
+					level_num: 10,
+					is_primary: true,
+					difficulty: "HYPER",
+					versions: ["epolis"],
+					data: JSON.stringify({}),
+				},
+				{
+					id: otherGameChart,
+					legacy_id: otherGameChart,
+					game: "sdvx",
+					song_id: songId,
+					level: "9",
+					level_num: 9,
+					is_primary: true,
+					difficulty: "EXHAUST",
+					versions: ["epolis"],
+					data: JSON.stringify({}),
+				},
+			])
+			.execute();
+
+		await DB.insertInto("folder")
+			.values({
+				id: folderId,
+				legacy_id: folderLegacy,
+				game: "iidx-sp",
+				inactive: false,
+				title: "OR game filter",
+				slug: folderId,
+				where: "chart.level_num = 9 OR chart.level_num = 10",
+				version_filter: ["epolis"],
+				search_terms: [],
+			})
+			.execute();
+
+		const { folderQuery: built } = await BuildFolderQuery(folderId);
+		const { rows } = await built.execute(DB);
+		const got = new Set((rows as Array<{ id: string }>).map((r) => r.id));
+
+		expect(got.size).toBe(2);
+		expect(got.has(chartA)).toBe(true);
+		expect(got.has(chartB)).toBe(true);
+		expect(got.has(otherGameChart)).toBe(false);
+	});
+
 	it("with version_filter, requires overlapping chart.versions", async () => {
 		const { folderId, folderLegacy, songId, chartA, chartB } = ids("bfq2");
 
