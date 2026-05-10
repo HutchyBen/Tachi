@@ -3,8 +3,8 @@
 
 import type { account_id } from './Account';
 import type { default as GameGroup } from './GameGroup';
-import type { default as ImportStatus } from './ImportStatus';
 import type { default as ImportType } from './ImportType';
+import type { default as ImportStatus } from './ImportStatus';
 import type { ColumnType, Selectable, Insertable, Updateable } from 'kysely';
 
 /** Identifier type for public.import */

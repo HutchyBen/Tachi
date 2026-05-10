@@ -105,11 +105,14 @@ export async function ToPbScoreDocument(row: PbDocumentJoinRow): Promise<PBScore
 				})) as [PBReference, ...PBReference[]])
 			: [{ name: "Primary", scoreID: "unknown" }];
 
-	const scoreData = pgScoreDataToAPI(row.chart_game as V3Game, {
-		data: row.data,
-		derived: row.derived_data,
-		judgements: row.judgements,
-	} as Parameters<typeof pgScoreDataToAPI>[1]);
+	const scoreData = pgScoreDataToAPI(
+		row.chart_game as V3Game,
+		{
+			data: row.data,
+			derived: row.derived_data,
+			judgements: row.judgements,
+		} as Parameters<typeof pgScoreDataToAPI>[1],
+	);
 
 	const rawCd = row.calculated_data;
 	const cd = (rawCd ?? {}) as Record<string, unknown>;

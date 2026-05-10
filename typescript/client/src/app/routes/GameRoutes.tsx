@@ -45,7 +45,10 @@ import {
 	type SongDocument,
 	type V3Game,
 } from "tachi-common";
-import { type ChuGekiMaiDifficulties, type FixedDifficulties } from "tachi-common/types/game-config-utils";
+import {
+	type ChuGekiMaiDifficulties,
+	type FixedDifficulties,
+} from "tachi-common/types/game-config-utils";
 
 export default function GameRoutes() {
 	const { game: gameParam } = useParams<{ game: string }>();

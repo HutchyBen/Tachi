@@ -7,52 +7,39 @@
  * Required env vars:
  *   POSTGRES_URL – PostgreSQL connection string
  *
- * Optional env vars:
- *   SEEDS_DIR – path to the seeds/collections directory
+ * Required env vars:
+ *   SEEDS_DIR         – path to the seeds/collections directory
+ *   SEEDS_COMMIT_HASH – git commit SHA to tag the import with (for audit logs)
  *
  * Run with:
  *   just db-load-seeds
  */
 
-import type { Database } from "tachi-db";
+import { buildChartIdMap, importSeeds, ImportSeedsSubsetForTests } from "../services/pg/seeds";
 
-import { Kysely, PostgresDialect } from "kysely";
-import path from "path";
-import { Pool } from "pg";
-
-import { buildChartIdMap, importSeeds, importSeedsSubset } from "../services/pg/seeds";
-
-export { buildChartIdMap, importSeeds, importSeedsSubset };
+export { buildChartIdMap, importSeeds, ImportSeedsSubsetForTests as importSeedsSubset };
 
 // ── Standalone entrypoint ──────────────────────────────────────────────────
 
-const DEFAULT_SEEDS_DIR = path.resolve(__dirname, "../../../../db/seeds");
-
 if (require.main === module) {
-	const POSTGRES_URL = process.env.POSTGRES_URL;
+	const seedsDir = process.env.SEEDS_DIR;
+	const commitHash = process.env.SEEDS_COMMIT_HASH;
 
-	if (!POSTGRES_URL) {
-		console.error("[import-seeds] POSTGRES_URL is not set.");
+	if (!seedsDir) {
+		console.error("SEEDS_DIR is not set.");
 		process.exit(1);
 	}
 
-	const seedsDir = process.env.SEEDS_DIR ?? DEFAULT_SEEDS_DIR;
+	if (!commitHash) {
+		console.error("SEEDS_COMMIT_HASH is not set.");
+		process.exit(1);
+	}
 
-	const pg = new Kysely<Database>({
-		dialect: new PostgresDialect({
-			pool: new Pool({ connectionString: POSTGRES_URL }),
-		}),
-	});
+	// Import inline to avoid loading the full server at module-eval time.
+	const { ACTION_ImportSeeds } = await import("../actions/import-seeds");
+	const { DefaultAdminUser } = await import("../lib/jobs/default-admin-user");
 
-	console.log("=== import-seeds → PostgreSQL ===\n");
+	const taker = await DefaultAdminUser.actionTaker();
 
-	importSeeds(pg, seedsDir)
-		.then(() => {
-			console.log("Done.");
-		})
-		.catch((err) => {
-			console.error(err);
-			process.exit(1);
-		})
-		.finally(() => pg.destroy());
+	await ACTION_ImportSeeds(taker, { commitHash, seedsDir });
 }

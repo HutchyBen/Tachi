@@ -298,6 +298,13 @@ export const ActionSignatures = {
 			rowCount: z.number().int(),
 		}),
 	},
+	IMPORT_SEEDS: {
+		input: z.object({
+			commitHash: z.string(),
+			seedsDir: z.string(),
+		}),
+		output: z.object({}),
+	},
 	SET_USER_SUPPORTER_STATUS: {
 		input: z.object({
 			userID: z.number().int().positive(),

@@ -14,7 +14,7 @@ export function rebuildFolderChartLookup(
 	db: Kysely<Database>,
 	options?: { folderId?: string },
 ): Promise<{ folderCount: number; rowCount: number }> {
-	return db.transaction().execute(async (txn) => {
+	const run = async (txn: Kysely<Database>) => {
 		const singleFolderId = options?.folderId;
 
 		if (singleFolderId !== undefined) {
@@ -63,5 +63,11 @@ export function rebuildFolderChartLookup(
 		}
 
 		return { folderCount: folderIds.length, rowCount };
-	});
+	};
+
+	if (db.isTransaction) {
+		return run(db);
+	}
+
+	return db.transaction().execute(run);
 }

@@ -86,7 +86,7 @@ export function DisplayLevelNum({
 	level: string;
 	levelNum: number;
 	prefix?: string;
-}) {	
+}) {
 	if (game === "chunithm" && level === "" && levelNum === 0) {
 		return null;
 	}

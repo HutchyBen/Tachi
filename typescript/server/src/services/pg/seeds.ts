@@ -1,17 +1,16 @@
 import {
 	ALL_GAMES,
-	type BMSCourseDocument,
 	type ChartDocument,
-	computeFolderSlug,
-	type FolderDocument,
-	type GoalDocument,
 	LEGACY_GameGroupPTToGame,
 	type LEGACY_Playtype,
-	type QuestDocument,
-	type QuestlineDocument,
-	type SeedFolderRow,
-	type SongDocument,
-	type TableDocument,
+	type SEEDS_BMSCourseDocument,
+	type SEEDS_ChartDocument,
+	type SEEDS_FolderDocument,
+	type SEEDS_GoalDocument,
+	type SEEDS_QuestDocument,
+	type SEEDS_QuestlineDocument,
+	type SEEDS_SongDocument,
+	type SEEDS_TableDocument,
 	type V3Game,
 } from "tachi-common";
 /* eslint-disable no-await-in-loop */
@@ -33,40 +32,10 @@ import type {
 
 import { ComputeChartStabilityChecksum } from "#game-implementations/utils/derivation-checksum";
 import { rebuildFolderChartLookup } from "#lib/folders/rebuild-folder-chart-lookup";
+import { log } from "#lib/log/log";
 import fs from "fs";
-import { type Insertable, type Kysely, sql } from "kysely";
+import { type Insertable, type Kysely, type RawBuilder, sql } from "kysely";
 import path from "path";
-
-// ── Seed types ─────────────────────────────────────────────────────────────
-
-type SeedSong = { id: string; legacySongID?: number } & Omit<SongDocument, "id">;
-// songID is now a hex string (migrated from the old integer FK).
-type SeedChart = {
-	id: string;
-	legacyChartID?: string;
-	songID: string;
-} & Omit<ChartDocument, "songID">;
-// After 3-migrate-folders-tables.ts: folderID → legacyFolderID + id, game+playtype → game.
-// After 5-folders-to-sql-queries.ts: `where` is the SQL predicate (no leading WHERE).
-type SeedFolder = {
-	game: string;
-	id: string;
-	legacyFolderID?: string;
-	/** URL slug; becomes `folder.slug`. */
-	slug?: string;
-	/** Chart version filter; becomes `folder.version_filter`. */
-	versionFilter?: Array<string>;
-	/** SQL WHERE body from `5-folders-to-sql-queries.ts`; becomes `folder.where`. */
-	where: string;
-} & Omit<FolderDocument, "data" | "folderID" | "game" | "playtype" | "type">;
-// After 3-migrate-folders-tables.ts: tableID → legacyTableID + id, game+playtype → game.
-// `folders` entries are folder slugs (unique per game); see `6-tables-folder-refs-to-slugs.ts`.
-type SeedTable = {
-	folders: Array<string>;
-	game: string;
-	id: string;
-	legacyTableID?: string;
-} & Omit<TableDocument, "folders" | "game" | "playtype" | "tableID">;
 
 /**
  * Maps `goals.json` / `quests.json` / `questlines.json` fields where `game` may be a
@@ -88,40 +57,16 @@ function seedJsonGameToPg(game: string, playtype: string | undefined, label: str
 
 const INSERT_CHUNK = 500;
 
-/** Resolves chart version filter from seed `versionFilter`. */
-function seedFolderVersionFilter(f: SeedFolder): Array<string> | null {
-	if (f.versionFilter && f.versionFilter.length > 0) {
-		return f.versionFilter;
-	}
-
-	return null;
-}
-
-/** Canonical folder slug for a seed row (matches `folder.slug` in Postgres). */
-function seedFolderResolvedSlug(f: SeedFolder): string {
-	const seedRow: SeedFolderRow = {
-		game: f.game,
-		id: f.id,
-		title: f.title,
-		versionFilter: f.versionFilter,
-		where: f.where,
-		slug: f.slug,
-	};
-
-	return f.slug ?? computeFolderSlug(seedRow);
-}
-
 /** Maps `game\\0slug` → folder id for resolving `tables.json` folder refs. */
-function buildFolderGameSlugToIdMap(folders: Array<SeedFolder>): Map<string, string> {
+function buildFolderGameSlugToIdMap(folders: Array<SEEDS_FolderDocument>): Map<string, string> {
 	const m = new Map<string, string>();
 
 	for (const f of folders) {
-		const slug = seedFolderResolvedSlug(f);
-		const key = `${f.game}\0${slug}`;
+		const key = `${f.game}\0${f.slug}`;
 
 		if (m.has(key)) {
 			throw new Error(
-				`Duplicate folder slug ${JSON.stringify(slug)} for game ${JSON.stringify(f.game)}`,
+				`Duplicate folder slug ${JSON.stringify(f.slug)} for game ${JSON.stringify(f.game)}`,
 			);
 		}
 
@@ -131,24 +76,11 @@ function buildFolderGameSlugToIdMap(folders: Array<SeedFolder>): Map<string, str
 	return m;
 }
 
-function readJsonSeed<T>(seedsDir: string, filename: string): Array<T> {
+function readSeedFile<T>(seedsDir: string, filename: string): Array<T> {
 	return JSON.parse(fs.readFileSync(path.join(seedsDir, filename), "utf-8")) as Array<T>;
 }
 
-async function chunkedDeletePg(
-	pg: Kysely<Database>,
-	table: keyof Database,
-	column: string,
-	ids: ReadonlyArray<string>,
-): Promise<void> {
-	for (let i = 0; i < ids.length; i = i + INSERT_CHUNK) {
-		const chunk = ids.slice(i, i + INSERT_CHUNK);
-
-		await (pg.deleteFrom(table as never) as any).where(column, "in", chunk).execute();
-	}
-}
-
-async function batchIgnorePg<T extends keyof Database>(
+async function batchInsertOnConflictDoNothing<T extends keyof Database>(
 	pg: Kysely<Database>,
 	table: T,
 	rows: ReadonlyArray<Insertable<Database[T]>>,
@@ -168,121 +100,60 @@ async function batchIgnorePg<T extends keyof Database>(
 	}
 }
 
-async function upsertSongsForGameGroup(
-	pg: Kysely<Database>,
-	gameGroup: GameGroup,
-	songs: Array<SeedSong>,
-): Promise<void> {
-	const songRows: Array<NewSong> = [];
+/**
+ * Deletes rows from a seed-owned table where the id column is NOT in keepIds.
+ * Pass a scope (`{ column, value }`) to restrict deletion to a specific
+ * game/game_group so that rows belonging to non-seed-covered games are untouched.
+ * Uses `= ANY($1::text[])` to send keepIds as a single array parameter rather than
+ * generating a huge `NOT IN (…)` list.
+ *
+ * Returns the number of rows deleted.
+ */
+async function deleteSeedStale(
+	db: Kysely<Database>,
+	table: keyof Database,
+	idColumn: string,
+	keepIds: ReadonlyArray<string>,
+	scope?: { column: string; value: string },
+): Promise<bigint> {
+	let q = db.deleteFrom(table as never) as any;
 
-	for (const s of songs) {
-		if (!s.id) {
-			throw new Error(
-				`Song ${gameGroup}:${s.legacySongID} is missing an id. Run 1-migrate-to-pg-style.ts first.`,
-			);
-		}
-
-		const searchTerms = s.searchTerms ?? [];
-		const altTitles = s.altTitles ?? [];
-
-		songRows.push({
-			id: s.id,
-			legacy_id:
-				s.legacySongID ??
-				(() => {
-					throw new Error(`Song ${gameGroup}:${s.id} is missing legacySongID.`);
-				})(),
-			game_group: gameGroup,
-			title: s.title,
-			artist: s.artist,
-			search_terms: searchTerms,
-			alt_titles: altTitles,
-			data: JSON.stringify(s.data),
-			fts_document: [...searchTerms, ...altTitles].filter(Boolean).join(" "),
-		});
+	if (scope !== undefined) {
+		q = q.where(scope.column, "=", scope.value);
 	}
 
-	for (let i = 0; i < songRows.length; i = i + INSERT_CHUNK) {
-		const chunk = songRows.slice(i, i + INSERT_CHUNK);
+	const result = await q
+		.where(sql`NOT (${sql.ref(idColumn)} = ANY(${sql.val(keepIds)}::text[]))`)
+		.executeTakeFirst();
 
-		await pg
-			.insertInto("song")
-			.values(chunk)
-			.onConflict((oc) =>
-				oc.column("id").doUpdateSet({
-					title: sql`excluded.title`,
-					artist: sql`excluded.artist`,
-					data: sql`excluded.data`,
-					search_terms: sql`excluded.search_terms`,
-					alt_titles: sql`excluded.alt_titles`,
-					fts_document: sql`excluded.fts_document`,
-				}),
-			)
-			.execute();
-	}
+	return BigInt(result?.numDeletedRows ?? 0);
 }
 
-async function upsertChartsForPgGame(
-	pg: Kysely<Database>,
-	game: V3Game,
-	charts: Array<SeedChart>,
-): Promise<void> {
-	if (charts.length === 0) {
-		return;
-	}
+/** Returns true if the error is a Postgres foreign-key violation (code 23503). */
+function isForeignKeyViolation(err: unknown): boolean {
+	return (
+		typeof err === "object" &&
+		err !== null &&
+		"code" in err &&
+		(err as { code: unknown }).code === "23503"
+	);
+}
 
-	const chartRows: Array<NewChart> = [];
+/**
+ * Re-throws a FK violation as a friendlier error that names the seed table being
+ * cleaned up and includes the Postgres detail string.
+ */
+function throwFriendlyFkError(table: string, err: unknown): never {
+	const detail =
+		typeof err === "object" && err !== null && "detail" in err
+			? String((err as { detail: unknown }).detail)
+			: String(err);
 
-	for (const c of charts) {
-		if (!c.id) {
-			throw new Error(
-				`Chart ${c.legacyChartID ?? "(unknown)"}` +
-					` (${game}) is missing an id. Run 1-migrate-to-pg-style.ts first.`,
-			);
-		}
-
-		if (!c.legacyChartID) {
-			throw new Error(
-				`Chart ${c.id} (${game}) is missing legacyChartID. Run 1-migrate-to-pg-style.ts first.`,
-			);
-		}
-
-		const checksum = ComputeChartStabilityChecksum(game, c as unknown as ChartDocument);
-
-		chartRows.push({
-			id: c.id,
-			legacy_id: c.legacyChartID,
-			game: game,
-			song_id: c.songID,
-			level: c.level,
-			level_num: c.levelNum,
-			is_primary: c.isPrimary,
-			difficulty: c.difficulty,
-			versions: (c.versions ?? []).map(String),
-			data: JSON.stringify(c.data),
-			derivation_checksum: checksum,
-		});
-	}
-
-	for (let i = 0; i < chartRows.length; i = i + INSERT_CHUNK) {
-		const chunk = chartRows.slice(i, i + INSERT_CHUNK);
-
-		await pg
-			.insertInto("chart")
-			.values(chunk)
-			.onConflict((oc) =>
-				oc.column("id").doUpdateSet({
-					level: sql`excluded.level`,
-					level_num: sql`excluded.level_num`,
-					is_primary: sql`excluded.is_primary`,
-					difficulty: sql`excluded.difficulty`,
-					versions: sql`excluded.versions`,
-					data: sql`excluded.data`,
-					derivation_checksum: sql`excluded.derivation_checksum`,
-				}),
-			)
-			.execute();
-	}
+	throw new Error(
+		`Seeds apply blocked: cannot delete stale rows from "${table}" because user data still references them.\n` +
+			`Postgres detail: ${detail}\n` +
+			`(Roll back the seed change that removed those rows, or delete the referencing user data first.)`,
+	);
 }
 
 export type ImportSeedsSubsetOptions = {
@@ -295,7 +166,7 @@ export type ImportSeedsSubsetOptions = {
 /**
  * Loads a bounded slice of real seed JSON (songs + optional charts) for tests or tooling.
  */
-export async function importSeedsSubset(
+export async function ImportSeedsSubsetForTests(
 	pg: Kysely<Database>,
 	seedsDir: string,
 	options: ImportSeedsSubsetOptions,
@@ -311,13 +182,34 @@ export async function importSeedsSubset(
 			throw new Error(`seed file not found: ${filepath}`);
 		}
 
-		const all = readJsonSeed<SeedSong>(seedsDir, filename);
+		const all = readSeedFile<SEEDS_SongDocument>(seedsDir, filename);
 		const songs = all.slice(0, maxSongsPerGame);
-
-		await upsertSongsForGameGroup(pg, gg, songs);
+		const songRows: Array<NewSong> = [];
 
 		for (const s of songs) {
+			songRows.push({
+				id: s.id,
+				legacy_id: s.legacySongID,
+				game_group: gg,
+				title: s.title,
+				artist: s.artist,
+				search_terms: s.searchTerms,
+				alt_titles: s.altTitles,
+				data: JSON.stringify(s.data),
+				fts_document: [...s.searchTerms, ...s.altTitles].filter(Boolean).join(" "),
+			});
+
 			loadedSongIds.add(s.id);
+		}
+
+		for (let i = 0; i < songRows.length; i = i + INSERT_CHUNK) {
+			const rows = songRows.slice(i, i + INSERT_CHUNK);
+
+			await pg
+				.insertInto("song")
+				.values(rows)
+				.onConflict((oc) => oc.column("id").doUpdateSet(OnConflictSetAll(rows[0] ?? {})))
+				.execute();
 		}
 	}
 
@@ -334,11 +226,42 @@ export async function importSeedsSubset(
 
 		for (const file of filesForGame) {
 			const game = file.replace(/^charts-/u, "").replace(/\.json$/u, "") as V3Game;
-			const charts = readJsonSeed<SeedChart>(seedsDir, file).filter((c) =>
+			const charts = readSeedFile<SEEDS_ChartDocument>(seedsDir, file).filter((c) =>
 				loadedSongIds.has(c.songID),
 			);
 
-			await upsertChartsForPgGame(pg, game, charts);
+			if (charts.length === 0) {
+				continue;
+			}
+
+			const chartRows: Array<NewChart> = charts.map((c) => ({
+				id: c.id,
+				legacy_id: c.legacyChartID,
+				game,
+				song_id: c.songID,
+				level: c.level,
+				level_num: c.levelNum,
+				is_primary: c.isPrimary,
+				difficulty: c.difficulty,
+				versions: c.versions.map(String),
+				data: JSON.stringify(c.data),
+				derivation_checksum: ComputeChartStabilityChecksum(
+					game,
+					c as unknown as ChartDocument,
+				),
+			}));
+
+			for (let i = 0; i < chartRows.length; i = i + INSERT_CHUNK) {
+				const rows = chartRows.slice(i, i + INSERT_CHUNK);
+
+				await pg
+					.insertInto("chart")
+					.values(rows)
+					.onConflict((oc) =>
+						oc.column("id").doUpdateSet(OnConflictSetAll(rows[0] ?? {})),
+					)
+					.execute();
+			}
 		}
 	}
 }
@@ -376,326 +299,490 @@ export function buildChartIdMap(seedsDir: string): Map<string, string> {
 // ── Core import logic ──────────────────────────────────────────────────────
 
 export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promise<void> {
-	const readCollection = <T>(filename: string) => readJsonSeed<T>(seedsDir, filename);
-
 	const files = new Set<string>(fs.readdirSync(seedsDir));
 	const songFiles = [...files].filter((f) => f.startsWith("songs-") && f.endsWith(".json"));
-	const chartFiles: Array<string> = [...files].filter(
-		(f) => f.startsWith("charts-") && f.endsWith(".json"),
-	);
+	const chartFiles = [...files].filter((f) => f.startsWith("charts-") && f.endsWith(".json"));
 
-	// ── songs ──────────────────────────────────────────────────────────────
-	{
-		console.log("[song]");
-		let total = 0;
+	await pg.transaction().execute(async (txn) => {
+		// for each collection
+		// upsert data (add new rows and update rows that have changed)
+		// then delete all rows that have been removed (rare, rows should basically never be removed)
 
-		for (const file of songFiles) {
-			const gameGroup = file.replace(/^songs-/u, "").replace(/\.json$/u, "") as GameGroup;
-			const songs = readCollection<SeedSong>(file);
+		// ── Phase 1: Upsert ────────────────────────────────────────────────
 
-			await upsertSongsForGameGroup(pg, gameGroup, songs);
+		// songs
+		const songIdsByGroup: Array<{ gameGroup: GameGroup; ids: Array<string> }> = [];
+		{
+			log.info("[song]");
+			let total = 0;
 
-			total = total + songs.length;
-			console.log(`  ${gameGroup}: ${songs.length} songs`);
-		}
+			for (const file of songFiles) {
+				const gameGroup = file.replace(/^songs-/u, "").replace(/\.json$/u, "") as GameGroup;
+				const seeds = readSeedFile<SEEDS_SongDocument>(seedsDir, file);
+				const rows: Array<NewSong> = [];
 
-		console.log(`  Total: ${total}\n`);
-	}
+				for (const s of seeds) {
+					rows.push({
+						id: s.id,
+						legacy_id: s.legacySongID,
+						game_group: gameGroup,
+						title: s.title,
+						artist: s.artist,
+						search_terms: s.searchTerms,
+						alt_titles: s.altTitles,
+						data: JSON.stringify(s.data),
+						fts_document: [...s.searchTerms, ...s.altTitles].filter(Boolean).join(" "),
+					});
+				}
 
-	// ── charts ─────────────────────────────────────────────────────────────
-	{
-		console.log("[chart]");
-		let total = 0;
+				for (let i = 0; i < rows.length; i = i + INSERT_CHUNK) {
+					await txn
+						.insertInto("song")
+						.values(rows.slice(i, i + INSERT_CHUNK))
+						.onConflict((oc) =>
+							oc.column("id").doUpdateSet(OnConflictSetAll(rows[0] ?? {})),
+						)
+						.execute();
+				}
 
-		for (const file of chartFiles) {
-			// After 2-split-charts-by-playtype.ts the filename IS the PgGame
-			// (e.g. "charts-iidx-sp.json" → "iidx-sp", "charts-chunithm.json" → "chunithm").
-			const pgGame = file.replace(/^charts-/u, "").replace(/\.json$/u, "") as PgGame;
-			const charts = readCollection<SeedChart>(file);
-
-			await upsertChartsForPgGame(pg, pgGame, charts);
-
-			total = total + charts.length;
-			console.log(`  ${pgGame}: ${charts.length} charts`);
-		}
-
-		console.log(`  Total: ${total}\n`);
-	}
-
-	// ── folders ────────────────────────────────────────────────────────────
-	let folderSeedList: Array<SeedFolder> | undefined;
-
-	if (files.has("folders.json")) {
-		console.log("[folder]");
-		folderSeedList = readCollection<SeedFolder>("folders.json");
-
-		const folderRows: Array<NewFolder> = folderSeedList.map((f) => {
-			if (typeof f.where !== "string" || f.where.trim() === "") {
-				throw new Error(
-					`Folder "${f.title}" (${f.id}) has no non-empty "where" SQL string. ` +
-						`Run seeds-scripts/rerunners/v3/5-folders-to-sql-queries.ts on folders.json.`,
-				);
+				songIdsByGroup.push({ gameGroup, ids: rows.map((r) => r.id) });
+				total = total + rows.length;
+				log.info(`  ${gameGroup}: ${rows.length} songs`);
+				// rows goes out of scope here; GC can reclaim it
 			}
 
-			const slug = seedFolderResolvedSlug(f);
+			log.info(`  Total: ${total}\n`);
+		}
 
-			if (f.slug !== undefined && f.slug !== slug) {
-				throw new Error(
-					`Folder "${f.title}" (${f.id}): folders.json slug ${JSON.stringify(f.slug)} does not match computed ${JSON.stringify(slug)}`,
-				);
+		// charts
+		const chartIdsByGame: Array<{ game: PgGame; ids: Array<string> }> = [];
+		{
+			log.info("[chart]");
+			let total = 0;
+
+			for (const file of chartFiles) {
+				const game = file.replace(/^charts-/u, "").replace(/\.json$/u, "") as PgGame;
+				const seeds = readSeedFile<SEEDS_ChartDocument>(seedsDir, file);
+
+				if (seeds.length === 0) {
+					continue;
+				}
+
+				const rows: Array<NewChart> = [];
+
+				for (const c of seeds) {
+					rows.push({
+						id: c.id,
+						legacy_id: c.legacyChartID,
+						game,
+						song_id: c.songID,
+						level: c.level,
+						level_num: c.levelNum,
+						is_primary: c.isPrimary,
+						difficulty: c.difficulty,
+						versions: c.versions.map(String),
+						data: JSON.stringify(c.data),
+						derivation_checksum: ComputeChartStabilityChecksum(
+							game,
+							c as unknown as ChartDocument,
+						),
+					});
+				}
+
+				for (let i = 0; i < rows.length; i = i + INSERT_CHUNK) {
+					await txn
+						.insertInto("chart")
+						.values(rows.slice(i, i + INSERT_CHUNK))
+						.onConflict((oc) =>
+							oc.column("id").doUpdateSet(OnConflictSetAll(rows[0] ?? {})),
+						)
+						.execute();
+				}
+
+				chartIdsByGame.push({ game, ids: rows.map((r) => r.id) });
+				total = total + rows.length;
+				log.info(`  ${game}: ${rows.length} charts`);
+				// rows goes out of scope here; GC can reclaim it
 			}
 
-			return {
+			log.info(`  Total: ${total}\n`);
+		}
+
+		// folders
+		// folderSlugToId is kept for the tables block below.
+		let folderIds: Array<string>;
+		let folderSlugToId: Map<string, string>;
+		let folderCount: number;
+		{
+			log.info("[folder]");
+			const seeds = readSeedFile<SEEDS_FolderDocument>(seedsDir, "folders.json");
+			folderSlugToId = buildFolderGameSlugToIdMap(seeds);
+			const rows: Array<NewFolder> = seeds.map((f) => ({
 				id: f.id,
-				legacy_id:
-					f.legacyFolderID ??
-					(() => {
-						throw new Error(
-							`Folder "${f.title}" is missing legacyFolderID. Run 3-migrate-folders-tables.ts first.`,
-						);
-					})(),
+				legacy_id: f.legacyFolderID,
 				game: f.game as PgGame,
 				inactive: f.inactive,
 				title: f.title,
-				slug,
+				slug: f.slug,
 				where: f.where,
-				version_filter: seedFolderVersionFilter(f),
-				search_terms: f.searchTerms ?? [],
-			};
-		});
+				version_filter:
+					f.versionFilter && f.versionFilter.length > 0 ? f.versionFilter : null,
+				search_terms: f.searchTerms,
+			}));
 
-		for (let i = 0; i < folderRows.length; i = i + INSERT_CHUNK) {
-			const chunk = folderRows.slice(i, i + INSERT_CHUNK);
+			for (let i = 0; i < rows.length; i = i + INSERT_CHUNK) {
+				await txn
+					.insertInto("folder")
+					.values(rows.slice(i, i + INSERT_CHUNK))
+					.onConflict((oc) =>
+						oc.column("id").doUpdateSet(OnConflictSetAll(rows[0] ?? {})),
+					)
+					.execute();
+			}
 
-			await pg
-				.insertInto("folder")
-				.values(chunk)
-				.onConflict((oc) =>
-					oc.column("id").doUpdateSet({
-						inactive: sql`excluded.inactive`,
-						title: sql`excluded.title`,
-						slug: sql`excluded.slug`,
-						where: sql`excluded.where`,
-						version_filter: sql`excluded.version_filter`,
-						search_terms: sql`excluded.search_terms`,
-					}),
-				)
-				.execute();
+			folderIds = rows.map((r) => r.id);
+			folderCount = rows.length;
+			log.info(`  ${folderCount} folders\n`);
+			// seeds and rows go out of scope here
 		}
 
-		console.log(`  ${folderSeedList.length} folders\n`);
-	}
+		// tables — preclear default_value for seeded games first so the deferrable
+		// exclusion constraint `one_default_table_per_game` is never transiently
+		// violated when moving the default between tables. (Alternatively:
+		// SET CONSTRAINTS one_default_table_per_game DEFERRED for this transaction.)
+		let tableIds: Array<string>;
+		let tfRows: Array<NewTableFolder>;
+		let tableCount: number;
+		{
+			log.info("[table / table_folder]");
+			const seeds = readSeedFile<SEEDS_TableDocument>(seedsDir, "tables.json");
+			const rows: Array<NewTable> = seeds.map((t) => ({
+				id: t.id,
+				legacy_id: t.legacyTableID,
+				game: t.game as PgGame,
+				inactive: t.inactive,
+				title: t.title,
+				default_value: t.default,
+			}));
 
-	// ── tables ─────────────────────────────────────────────────────────────
-	if (files.has("tables.json")) {
-		console.log("[table / table_folder]");
+			tfRows = seeds.flatMap((t) =>
+				t.folders.map((folderSlug, ordering) => {
+					const folderId = folderSlugToId.get(`${t.game}\0${folderSlug}`);
 
-		if (folderSeedList === undefined) {
-			throw new Error(
-				"tables.json requires folders.json to resolve folder slugs to ids for table_folder rows.",
+					if (folderId === undefined) {
+						throw new Error(
+							`Table "${t.title}" (${t.id}): unknown folder slug ${folderSlug} for game ${t.game}`,
+						);
+					}
+
+					return { table_id: t.id, folder_id: folderId, ordering };
+				}),
 			);
+
+			const gamesInSeeds = [...new Set(rows.map((r) => r.game))];
+
+			if (gamesInSeeds.length > 0) {
+				await txn
+					.updateTable("table")
+					.set({ default_value: false })
+					.where("table.game", "in", gamesInSeeds)
+					.execute();
+			}
+
+			for (let i = 0; i < rows.length; i = i + INSERT_CHUNK) {
+				await txn
+					.insertInto("table")
+					.values(rows.slice(i, i + INSERT_CHUNK))
+					.onConflict((oc) =>
+						oc.column("id").doUpdateSet(OnConflictSetAll(rows[0] ?? {})),
+					)
+					.execute();
+			}
+
+			tableIds = rows.map((r) => r.id);
+			tableCount = rows.length;
+			// seeds, rows, and folderSlugToId go out of scope here
 		}
 
-		const folderSlugToId = buildFolderGameSlugToIdMap(folderSeedList);
-		const tables = readCollection<SeedTable>("tables.json");
+		// bms_course_lookup
+		let courseMd5sums: Array<string>;
+		{
+			log.info("[bms_course_lookup]");
+			const seeds = readSeedFile<SEEDS_BMSCourseDocument>(seedsDir, "bms-course-lookup.json");
+			const rows: Array<NewBmsCourseLookup> = seeds.map((c) => ({
+				md5sums: c.md5sums,
+				title: c.title,
+				set: c.set as string,
+				game: c.game as PgGame,
+				value: c.value as string,
+			}));
 
-		const tableRows: Array<NewTable> = tables.map((t) => ({
-			id: t.id,
-			legacy_id:
-				t.legacyTableID ??
-				(() => {
-					throw new Error(
-						`Table "${t.title}" is missing legacyTableID. Run 3-migrate-folders-tables.ts first.`,
-					);
-				})(),
-			game: t.game as PgGame,
-			inactive: t.inactive,
-			title: t.title,
-			default_value: t.default,
-		}));
+			for (let i = 0; i < rows.length; i = i + INSERT_CHUNK) {
+				await txn
+					.insertInto("bms_course_lookup")
+					.values(rows.slice(i, i + INSERT_CHUNK))
+					.onConflict((oc) =>
+						oc.column("md5sums").doUpdateSet(OnConflictSetAll(rows[0] ?? {})),
+					)
+					.execute();
+			}
 
-		for (let i = 0; i < tableRows.length; i = i + INSERT_CHUNK) {
-			const chunk = tableRows.slice(i, i + INSERT_CHUNK);
-
-			await pg
-				.insertInto("table")
-				.values(chunk)
-				.onConflict((oc) =>
-					oc.column("id").doUpdateSet({
-						inactive: sql`excluded.inactive`,
-						title: sql`excluded.title`,
-						default_value: sql`excluded.default_value`,
-					}),
-				)
-				.execute();
+			courseMd5sums = rows.map((r) => r.md5sums);
+			log.info(`  ${rows.length} BMS courses\n`);
 		}
 
-		const tableIds = tables.map((t) => t.id);
-
-		await chunkedDeletePg(pg, "table_folder", "table_id", tableIds);
-
-		const tfRows: Array<NewTableFolder> = tables.flatMap((t) =>
-			t.folders.map((folderSlug, ordering) => {
-				const folderId = folderSlugToId.get(`${t.game}\0${folderSlug}`);
-
-				if (folderId === undefined) {
-					throw new Error(
-						`Table "${t.title}" (${t.id}): unknown folder slug ${JSON.stringify(folderSlug)} for game ${JSON.stringify(t.game)} (check tables.json / folders.json; run seeds-scripts/rerunners/v3/6-tables-folder-refs-to-slugs.ts if migrating from folder ids).`,
-					);
-				}
-
-				return {
-					table_id: t.id,
-					folder_id: folderId,
-					ordering,
-				};
-			}),
-		);
-
-		await batchIgnorePg(pg, "table_folder", tfRows);
-		console.log(`  ${tables.length} tables, ${tfRows.length} table-folder rows\n`);
-	}
-
-	// ── bms_course_lookup ──────────────────────────────────────────────────
-	if (files.has("bms-course-lookup.json")) {
-		console.log("[bms_course_lookup]");
-		const courses = readCollection<BMSCourseDocument>("bms-course-lookup.json");
-
-		const courseRows: Array<NewBmsCourseLookup> = courses.map((c) => ({
-			md5sums: c.md5sums,
-			title: c.title,
-			set: c.set as string,
-			game: c.game as PgGame,
-			value: c.value as string,
-		}));
-
-		await batchIgnorePg(pg, "bms_course_lookup", courseRows);
-		console.log(`  ${courses.length} BMS courses\n`);
-	}
-
-	// ── goals ──────────────────────────────────────────────────────────────
-	if (files.has("goals.json")) {
-		console.log("[goal]");
-		const goals = readCollection<GoalDocument>("goals.json");
-
-		const goalRows: Array<NewGoal> = goals.map((g) => {
-			const gWithPlaytype = g as { playtype?: string } & GoalDocument;
-
-			return {
+		// goals — upsert so seed edits (renamed goals, updated criteria) are applied
+		let goalIds: Array<string>;
+		{
+			log.info("[goal]");
+			const seeds = readSeedFile<SEEDS_GoalDocument>(seedsDir, "goals.json");
+			const rows: Array<NewGoal> = seeds.map((g) => ({
 				id: g.goalID,
-				game: seedJsonGameToPg(
-					gWithPlaytype.game,
-					gWithPlaytype.playtype,
-					`goal ${g.goalID}`,
-				),
+				game: seedJsonGameToPg(g.game, g.playtype, `goal ${g.goalID}`),
 				name: g.name,
 				charts: JSON.stringify(g.charts),
 				criteria: JSON.stringify(g.criteria),
-			};
-		});
+			}));
 
-		// Goals are never updated once created - only new ones are inserted.
-		await batchIgnorePg(pg, "goal", goalRows);
-		console.log(`  ${goals.length} goals\n`);
-	}
+			for (let i = 0; i < rows.length; i = i + INSERT_CHUNK) {
+				await txn
+					.insertInto("goal")
+					.values(rows.slice(i, i + INSERT_CHUNK))
+					.onConflict((oc) =>
+						oc.column("id").doUpdateSet(OnConflictSetAll(rows[0] ?? {})),
+					)
+					.execute();
+			}
 
-	// ── quests ─────────────────────────────────────────────────────────────
-	if (files.has("quests.json")) {
-		console.log("[quest]");
-		const quests = readCollection<QuestDocument>("quests.json");
+			goalIds = rows.map((r) => r.id);
+			log.info(`  ${rows.length} goals\n`);
+		}
 
-		const questRows: Array<NewQuest> = quests.map((q) => {
-			const qWithPlaytype = q as { playtype?: string } & QuestDocument;
-
-			return {
+		// quests
+		let questIds: Array<string>;
+		{
+			log.info("[quest]");
+			const seeds = readSeedFile<SEEDS_QuestDocument>(seedsDir, "quests.json");
+			const rows: Array<NewQuest> = seeds.map((q) => ({
 				id: q.questID,
-				game: seedJsonGameToPg(
-					qWithPlaytype.game,
-					qWithPlaytype.playtype,
-					`quest ${q.questID}`,
-				),
+				game: seedJsonGameToPg(q.game, q.playtype, `quest ${q.questID}`),
 				name: q.name,
 				description: q.desc,
 				quest_data: JSON.stringify(q.questData),
-			};
-		});
+			}));
 
-		for (let i = 0; i < questRows.length; i = i + INSERT_CHUNK) {
-			const chunk = questRows.slice(i, i + INSERT_CHUNK);
+			for (let i = 0; i < rows.length; i = i + INSERT_CHUNK) {
+				await txn
+					.insertInto("quest")
+					.values(rows.slice(i, i + INSERT_CHUNK))
+					.onConflict((oc) =>
+						oc.column("id").doUpdateSet(OnConflictSetAll(rows[0] ?? {})),
+					)
+					.execute();
+			}
 
-			await pg
-				.insertInto("quest")
-				.values(chunk)
-				.onConflict((oc) =>
-					oc.column("id").doUpdateSet({
-						name: sql`excluded.name`,
-						description: sql`excluded.description`,
-						quest_data: sql`excluded.quest_data`,
-					}),
-				)
-				.execute();
+			questIds = rows.map((r) => r.id);
+			log.info(`  ${rows.length} quests\n`);
 		}
 
-		console.log(`  ${quests.length} quests\n`);
-	}
-
-	// ── questlines ─────────────────────────────────────────────────────────
-	if (files.has("questlines.json")) {
-		console.log("[questline / questline_quest]");
-		const questlines = readCollection<QuestlineDocument>("questlines.json");
-
-		const qlRows: Array<NewQuestline> = questlines.map((ql) => {
-			const qlWithPlaytype = ql as { playtype?: string } & QuestlineDocument;
-
-			return {
+		// questlines
+		let questlineIds: Array<string>;
+		let qlqRows: Array<NewQuestlineQuest>;
+		let qlCount: number;
+		{
+			log.info("[questline / questline_quest]");
+			const seeds = readSeedFile<SEEDS_QuestlineDocument>(seedsDir, "questlines.json");
+			const rows: Array<NewQuestline> = seeds.map((ql) => ({
 				id: ql.questlineID,
-				game: seedJsonGameToPg(
-					qlWithPlaytype.game,
-					qlWithPlaytype.playtype,
-					`questline ${ql.questlineID}`,
-				),
+				game: seedJsonGameToPg(ql.game, ql.playtype, `questline ${ql.questlineID}`),
 				name: ql.name,
 				description: ql.desc,
-			};
-		});
+			}));
 
-		for (let i = 0; i < qlRows.length; i = i + INSERT_CHUNK) {
-			const chunk = qlRows.slice(i, i + INSERT_CHUNK);
+			let order = 0;
 
-			await pg
-				.insertInto("questline")
-				.values(chunk)
-				.onConflict((oc) =>
-					oc.column("id").doUpdateSet({
-						name: sql`excluded.name`,
-						description: sql`excluded.description`,
-					}),
-				)
-				.execute();
+			qlqRows = seeds.flatMap((ql) => {
+				order = 0;
+
+				return ql.quests.map((questId) => ({
+					questline_id: ql.questlineID,
+					quest_id: questId,
+					sort_order: order++,
+				}));
+			});
+
+			for (let i = 0; i < rows.length; i = i + INSERT_CHUNK) {
+				await txn
+					.insertInto("questline")
+					.values(rows.slice(i, i + INSERT_CHUNK))
+					.onConflict((oc) =>
+						oc.column("id").doUpdateSet(OnConflictSetAll(rows[0] ?? {})),
+					)
+					.execute();
+			}
+
+			questlineIds = rows.map((r) => r.id);
+			qlCount = rows.length;
+			// seeds and rows go out of scope here
 		}
 
-		const qlIds = questlines.map((ql) => ql.questlineID);
+		// ── Phase 2: Full-replace seed-only junction tables ────────────────
+		// These tables are derived purely from seeds — delete everything and
+		// reinsert from seeds so the DB matches the files exactly.
 
-		await chunkedDeletePg(pg, "questline_quest", "questline_id", qlIds);
+		await txn.deleteFrom("table_folder").execute();
+		await batchInsertOnConflictDoNothing(txn, "table_folder", tfRows);
+		log.info(`  ${tableCount} tables, ${tfRows.length} table-folder rows\n`);
 
-		let order = 0;
-		const qlqRows: Array<NewQuestlineQuest> = questlines.flatMap((ql) => {
-			order = 0;
+		await txn.deleteFrom("questline_quest").execute();
+		await batchInsertOnConflictDoNothing(txn, "questline_quest", qlqRows);
+		log.info(`  ${qlCount} questlines, ${qlqRows.length} questline-quest rows\n`);
 
-			return ql.quests.map((questId) => ({
-				questline_id: ql.questlineID,
-				quest_id: questId,
-				sort_order: order++,
-			}));
-		});
+		// ── Phase 3: Delete stale seed rows (dependency order) ─────────────
+		// Junction tables are already clean (phase 2). User-data FKs
+		// (score→chart, pb→chart, goal_sub→goal, etc.) intentionally block
+		// deletion — the error surfaces via throwFriendlyFkError below.
+		//
+		// Deletion order: children before parents.
+		//   table → folder → chart → song → goal → quest → questline → bms
 
-		await batchIgnorePg(pg, "questline_quest", qlqRows);
-		console.log(`  ${questlines.length} questlines, ${qlqRows.length} questline-quest rows\n`);
+		log.info("[stale-delete]");
+
+		// "table" — no user FKs; table_folder already cleared
+		{
+			const n = await deleteSeedStale(txn, "table", "table.id", tableIds);
+
+			if (n > 0n) {
+				log.info(`  removed ${n} stale table(s)`);
+			}
+		}
+
+		// folder — folder_chart_lookup cascades; folder_view blocks (intentional)
+		try {
+			const n = await deleteSeedStale(txn, "folder", "folder.id", folderIds);
+
+			if (n > 0n) {
+				log.info(`  removed ${n} stale folder(s)`);
+			}
+		} catch (err) {
+			if (isForeignKeyViolation(err)) {
+				throwFriendlyFkError("folder", err);
+			}
+
+			throw err;
+		}
+
+		// chart — folder_chart_lookup cascades; score/pb block (intentional)
+		for (const { game, ids } of chartIdsByGame) {
+			try {
+				const n = await deleteSeedStale(txn, "chart", "chart.id", ids, {
+					column: "chart.game",
+					value: game,
+				});
+
+				if (n > 0n) {
+					log.info(`  removed ${n} stale chart(s) [${game}]`);
+				}
+			} catch (err) {
+				if (isForeignKeyViolation(err)) {
+					throwFriendlyFkError("chart", err);
+				}
+
+				throw err;
+			}
+		}
+
+		// song — chart blocks (intentional)
+		for (const { gameGroup, ids } of songIdsByGroup) {
+			try {
+				const n = await deleteSeedStale(txn, "song", "song.id", ids, {
+					column: "song.game_group",
+					value: gameGroup,
+				});
+
+				if (n > 0n) {
+					log.info(`  removed ${n} stale song(s) [${gameGroup}]`);
+				}
+			} catch (err) {
+				if (isForeignKeyViolation(err)) {
+					throwFriendlyFkError("song", err);
+				}
+
+				throw err;
+			}
+		}
+
+		// goal — goal_sub / import_goal block (intentional)
+		try {
+			const n = await deleteSeedStale(txn, "goal", "goal.id", goalIds);
+
+			if (n > 0n) {
+				log.info(`  removed ${n} stale goal(s)`);
+			}
+		} catch (err) {
+			if (isForeignKeyViolation(err)) {
+				throwFriendlyFkError("goal", err);
+			}
+
+			throw err;
+		}
+
+		// quest — quest_sub / import_quest block (intentional); questline_quest cleared
+		try {
+			const n = await deleteSeedStale(txn, "quest", "quest.id", questIds);
+
+			if (n > 0n) {
+				log.info(`  removed ${n} stale quest(s)`);
+			}
+		} catch (err) {
+			if (isForeignKeyViolation(err)) {
+				throwFriendlyFkError("quest", err);
+			}
+
+			throw err;
+		}
+
+		// questline — questline_quest cleared; no user FKs
+		{
+			const n = await deleteSeedStale(txn, "questline", "questline.id", questlineIds);
+
+			if (n > 0n) {
+				log.info(`  removed ${n} stale questline(s)`);
+			}
+		}
+
+		// bms_course_lookup — PK is md5sums (not id); no referencing FKs
+		{
+			const n = await deleteSeedStale(
+				txn,
+				"bms_course_lookup",
+				"bms_course_lookup.md5sums",
+				courseMd5sums,
+			);
+
+			if (n > 0n) {
+				log.info(`  removed ${n} stale BMS course(s)`);
+			}
+		}
+
+		// ── Phase 4: Rebuild folder_chart_lookup ───────────────────────────
+		// Full DELETE + reinsert cache derived from folder SQL predicates.
+		// Rows for deleted folders/charts are already gone via ON DELETE CASCADE,
+		// but we do a full rebuild anyway to keep the cache consistent.
+		log.info("[folder_chart_lookup]");
+		const lookupStats = await rebuildFolderChartLookup(txn);
+
+		log.info(`  ${lookupStats.folderCount} folders, ${lookupStats.rowCount} lookup rows\n`);
+	});
+}
+
+// look at what you're inserting. for all fields, generate ON CONFLICT DO UPDATE (all fields) = excluded.(all fields)
+function OnConflictSetAll(exampleRow: Record<string, unknown>) {
+	const toSet: Record<string, RawBuilder<unknown>> = {};
+
+	for (const key of Object.keys(exampleRow)) {
+		toSet[key] = sql`excluded.${sql.ref(key)}`;
 	}
 
-	// ── folder_chart_lookup (chart → folders cache; see rebuildFolderChartLookup) ──
-	console.log("[folder_chart_lookup]");
-	const lookupStats = await rebuildFolderChartLookup(pg);
-
-	console.log(`  ${lookupStats.folderCount} folders, ${lookupStats.rowCount} lookup rows\n`);
+	return toSet;
 }

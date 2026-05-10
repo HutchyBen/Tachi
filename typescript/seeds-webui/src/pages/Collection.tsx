@@ -118,8 +118,7 @@ export function Collection() {
 	}, [rows.data, flav, chartGame]);
 
 	const entryCount = entries.length;
-	const totalPages =
-		entryCount === 0 ? 0 : Math.ceil(entryCount / COLLECTION_PAGE_SIZE);
+	const totalPages = entryCount === 0 ? 0 : Math.ceil(entryCount / COLLECTION_PAGE_SIZE);
 
 	useEffect(() => {
 		setPage(0);
@@ -250,7 +249,8 @@ export function Collection() {
 								Previous
 							</button>
 							<span className="text-muted mono small">
-								Page {pageIndex + 1} / {totalPages} ({entryCount.toLocaleString()} rows)
+								Page {pageIndex + 1} / {totalPages} ({entryCount.toLocaleString()}{" "}
+								rows)
 							</span>
 							<button
 								className="btn btn-sm btn-outline-secondary"

@@ -133,7 +133,10 @@ describe("ACTION_ChangeEmail", () => {
 	it("returns an empty object on success", async () => {
 		const taker = { ip: "127.0.0.1", acct: { id: userId, username } };
 
-		const result = await ACTION_ChangeEmail(taker, { "!email": NEW_EMAIL, "!password": PASSWORD });
+		const result = await ACTION_ChangeEmail(taker, {
+			"!email": NEW_EMAIL,
+			"!password": PASSWORD,
+		});
 
 		expect(result).toEqual({});
 	});

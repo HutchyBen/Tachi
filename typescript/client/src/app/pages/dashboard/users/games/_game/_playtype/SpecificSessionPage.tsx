@@ -338,8 +338,16 @@ function MobileSessionNav({
 				>
 					<span style={{ fontSize: "1.1rem" }}>&laquo;</span>
 					<div style={{ minWidth: 0 }}>
-						<div style={{ fontSize: "0.7rem", letterSpacing: "0.05em", textTransform: "uppercase", opacity: 0.6 }}>
-							&laquo; #{sessionIndex - 1} &middot; {formatSessionTimeDiff(currentSession, prev)}
+						<div
+							style={{
+								fontSize: "0.7rem",
+								letterSpacing: "0.05em",
+								textTransform: "uppercase",
+								opacity: 0.6,
+							}}
+						>
+							&laquo; #{sessionIndex - 1} &middot;{" "}
+							{formatSessionTimeDiff(currentSession, prev)}
 						</div>
 						<div className="text-truncate" style={{ fontWeight: 600 }}>
 							{prev.name}
@@ -347,7 +355,10 @@ function MobileSessionNav({
 					</div>
 				</LinkButton>
 			) : !bottom ? (
-				<div className="flex-fill py-2 px-3 border border-secondary rounded d-flex align-items-center gap-2" style={{ opacity: 0.25 }}>
+				<div
+					className="flex-fill py-2 px-3 border border-secondary rounded d-flex align-items-center gap-2"
+					style={{ opacity: 0.25 }}
+				>
 					<span style={{ fontSize: "1.1rem" }}>&laquo;</span>
 					<div style={{ fontSize: "0.85rem" }}>No earlier session</div>
 				</div>
@@ -360,8 +371,16 @@ function MobileSessionNav({
 					variant="outline-secondary"
 				>
 					<div style={{ minWidth: 0 }}>
-						<div style={{ fontSize: "0.7rem", letterSpacing: "0.05em", textTransform: "uppercase", opacity: 0.6 }}>
-							#{sessionIndex + 1} &middot; {formatSessionTimeDiff(currentSession, next)} &raquo;
+						<div
+							style={{
+								fontSize: "0.7rem",
+								letterSpacing: "0.05em",
+								textTransform: "uppercase",
+								opacity: 0.6,
+							}}
+						>
+							#{sessionIndex + 1} &middot;{" "}
+							{formatSessionTimeDiff(currentSession, next)} &raquo;
 						</div>
 						<div className="text-truncate" style={{ fontWeight: 600 }}>
 							{next.name}
@@ -370,7 +389,10 @@ function MobileSessionNav({
 					<span style={{ fontSize: "1.1rem" }}>&raquo;</span>
 				</LinkButton>
 			) : bottom ? (
-				<div className="flex-fill py-2 px-3 border border-secondary rounded d-flex align-items-center justify-content-end gap-2" style={{ opacity: 0.25 }}>
+				<div
+					className="flex-fill py-2 px-3 border border-secondary rounded d-flex align-items-center justify-content-end gap-2"
+					style={{ opacity: 0.25 }}
+				>
 					<div style={{ fontSize: "0.85rem" }}>No later session</div>
 					<span style={{ fontSize: "1.1rem" }}>&raquo;</span>
 				</div>
@@ -482,8 +504,8 @@ function SessionNavRow({
 								opacity: 0.6,
 							}}
 						>
-							{formatSessionTimeDiff(currentSession, adjacent.next)} &middot;
-							#{sessionIndex + 1} &raquo;
+							{formatSessionTimeDiff(currentSession, adjacent.next)} &middot; #
+							{sessionIndex + 1} &raquo;
 						</span>
 						<span
 							className="text-truncate w-100 mt-1"

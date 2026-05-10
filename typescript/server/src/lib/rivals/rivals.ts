@@ -270,13 +270,7 @@ export async function UpdatePlayersRivalRankings(userID: integer, game: V3Game) 
 
 	if (rivalIDs.length > 0) {
 		rivalPBs = await DB.selectFrom("pb")
-			.select([
-				"pb.user_id",
-				"pb.chart_id",
-				"pb.data",
-				"pb.derived_data",
-				"pb.judgements",
-			])
+			.select(["pb.user_id", "pb.chart_id", "pb.data", "pb.derived_data", "pb.judgements"])
 			.where("pb.user_id", "in", rivalIDs)
 			.where("pb.chart_id", "in", chartIds)
 			.where("pb.lens", "is", null)

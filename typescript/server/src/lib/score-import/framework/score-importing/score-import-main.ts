@@ -102,13 +102,13 @@ export default async function ScoreImportMain<D, C>(
 			void SetJobProgress(job, "Parsing score data.");
 
 			const parseTimeStart = process.hrtime.bigint();
-		const {
-			iterable,
-			context,
-			gameGroup: game,
-			classProvider: classProvider,
-			service,
-		} = await InputParser(log);
+			const {
+				iterable,
+				context,
+				gameGroup: game,
+				classProvider: classProvider,
+				service,
+			} = await InputParser(log);
 
 			const parseTime = GetMillisecondsSince(parseTimeStart);
 

@@ -1,7 +1,7 @@
 import { GetChartsBySongId } from "#lib/db-formats/chart";
 import { SearchGlobalGameSongsAndCharts } from "#lib/search/song-charts";
 import DB from "#services/pg/db";
-import { importSeedsSubset } from "#services/pg/seeds";
+import { ImportSeedsSubsetForTests } from "#services/pg/seeds";
 import { resolveSeedsDir, seedsJsonAvailable } from "#test-utils/seed-paths";
 import { FindChartsOnPopularity } from "#utils/queries/charts";
 import { sql } from "kysely";
@@ -740,7 +740,7 @@ describe("SearchSongsForGameFtsAndTrgm (real seed subset)", () => {
 	it.skipIf(!seedsJsonAvailable())(
 		"finds known IIDX titles from a small songs-iidx slice",
 		async () => {
-			await importSeedsSubset(DB, resolveSeedsDir(), {
+			await ImportSeedsSubsetForTests(DB, resolveSeedsDir(), {
 				gameGroups: ["iidx"],
 				maxSongsPerGame: 80,
 				includeCharts: false,
