@@ -60,10 +60,7 @@ export function CreateEnumIndexes<TGame extends V3Game>(game: TGame, metrics: an
 		indexes[key] = index;
 	}
 
-	for (const [key, conf] of [
-		...Object.entries(gameConfig.providedMetrics),
-		...Object.entries(gameConfig.derivedMetrics),
-	]) {
+	for (const [key, conf] of Object.entries(gameConfig.optionalMetrics)) {
 		if (conf.type !== "ENUM") {
 			continue;
 		}
@@ -86,7 +83,7 @@ export function CreateEnumIndexes<TGame extends V3Game>(game: TGame, metrics: an
 			);
 		}
 
-		indexes[key] = index;
+		optionalIndexes[key] = index;
 	}
 
 	return {

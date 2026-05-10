@@ -342,6 +342,24 @@ export const DDR_IMPL: GameImplementation<DDRGames> = {
 				base.scoreData.optional.exScore = score.scoreData.optional.exScore;
 			},
 		),
+		CreatePBMergeFor(
+			"largest",
+			{
+				type: "REGULAR",
+				metric: "flare",
+			},
+			"Best Flare",
+			(base, score) => {
+				base.scoreData.optional.flare =
+					score.scoreData.lamp !== "FAILED"
+						? score.scoreData.optional.flare
+						: base.scoreData.optional.flare;
+				base.calculatedData.flareSkill =
+					score.scoreData.lamp !== "FAILED"
+						? score.calculatedData.flareSkill
+						: base.calculatedData.flareSkill;
+			},
+		),
 	],
 	sessionCalcs: (arr) => ({
 		flareSkill: SessionAvgBest10For("flareSkill")(arr),
