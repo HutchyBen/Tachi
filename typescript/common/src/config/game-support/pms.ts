@@ -127,7 +127,8 @@ export const GAME_PMS_CONTROLLER_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["CHART"],
-		format: {},
+		formatShort: {},
+		formatLong: {},
 		default: "CHART",
 	},
 

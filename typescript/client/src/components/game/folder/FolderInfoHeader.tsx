@@ -69,7 +69,10 @@ export default function FolderInfoHeader({
 											onEnumBreakdownRowClick={
 												onBreakdownEnumValueClick
 													? (enumValueLabel: string) => {
-															onBreakdownEnumValueClick(metric, enumValueLabel);
+															onBreakdownEnumValueClick(
+																metric,
+																enumValueLabel,
+															);
 														}
 													: undefined
 											}

@@ -128,7 +128,7 @@ export const GAME_MAIMAI_CONF = {
 	difficulties: {
 		type: "CHUGEKIMAI_STYLE",
 		order: ["Easy", "Basic", "Advanced", "Expert", "Master", "Re:Master"],
-		format: {
+		formatShort: {
 			Easy: "ESY",
 			Basic: "BAS",
 			Advanced: "ADV",
@@ -136,6 +136,7 @@ export const GAME_MAIMAI_CONF = {
 			Master: "MAS",
 			"Re:Master": "Re:MAS",
 		},
+		formatLong: {},
 		default: "Master",
 	},
 

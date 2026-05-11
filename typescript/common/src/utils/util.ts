@@ -45,12 +45,12 @@ export function FormatInt(v: number): string {
 	return Math.floor(v).toFixed(0);
 }
 
-export function FormatDifficulty(chart: ChartDocument): string {
-	const gameGroup = GameToGameGroup(chart.game);
-	if (gameGroup === "ongeki" || gameGroup === "chunithm" || gameGroup === "maimaidx") {
-		return `${chart.difficulty} ${chart.level}`.trim();
-	}
-	return FormatDifficultyShort(chart);
+/**
+ * Formats a chart's difficulty into a longer variant. This handles a lot of
+ * game-specific strange edge cases.
+ */
+export function FormatDifficultyLong(chart: ChartDocument): string {
+	return FormatDifficultyInternal(chart, false);
 }
 
 /**
@@ -58,6 +58,10 @@ export function FormatDifficulty(chart: ChartDocument): string {
  * game-specific strange edge cases.
  */
 export function FormatDifficultyShort(chart: ChartDocument): string {
+	return FormatDifficultyInternal(chart, true);
+}
+
+function FormatDifficultyInternal(chart: ChartDocument, short: boolean): string {
 	const gameGroup = GameToGameGroup(chart.game);
 	const gameConfig = GetGameConfig(chart.game);
 
@@ -84,7 +88,14 @@ export function FormatDifficultyShort(chart: ChartDocument): string {
 		gameConfig.difficulties.type === "FIXED" ||
 		gameConfig.difficulties.type === "CHUGEKIMAI_STYLE"
 	) {
-		const diff = gameConfig.difficulties.format[chart.difficulty] ?? chart.difficulty;
+		let diff;
+		if (short) {
+			diff = gameConfig.difficulties.formatShort[chart.difficulty];
+		} else {
+			diff = gameConfig.difficulties.formatLong[chart.difficulty];
+		}
+
+		diff ??= chart.difficulty;
 
 		return `${diff} ${chart.level}`.trim();
 	}
@@ -97,7 +108,7 @@ export function FormatDifficultyShort(chart: ChartDocument): string {
  * Formats a chart's difficulty for searching, such as forwarding this query to youtube.
  */
 export function FormatDifficultySearch(chart: ChartDocument): string | null {
-	return FormatDifficulty(chart);
+	return FormatDifficultyLong(chart);
 }
 
 export function FormatGame(game: V3Game): string {
@@ -189,7 +200,7 @@ export function FormatChart(chart: ChartDocument): string {
 	if (gameConfig.difficulties.type === "DYNAMIC") {
 		diff = chart.difficulty;
 	} else {
-		diff = gameConfig.difficulties.format[chart.difficulty] ?? chart.difficulty;
+		diff = gameConfig.difficulties.formatShort[chart.difficulty] ?? chart.difficulty;
 	}
 
 	// return the most recent version this chart appeared in if it

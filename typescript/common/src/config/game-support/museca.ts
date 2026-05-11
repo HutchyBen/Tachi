@@ -86,7 +86,8 @@ export const GAME_MUSECA_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["Green", "Yellow", "Red"],
-		format: { Green: "G", Yellow: "Y", Red: "R" },
+		formatShort: { Green: "G", Yellow: "Y", Red: "R" },
+		formatLong: {},
 		default: "Red",
 	},
 

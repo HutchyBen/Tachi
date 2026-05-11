@@ -12,11 +12,11 @@ import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import { type integer } from "tachi-common";
 
-import tachitableStyles from "./TachiTable.module.scss";
 import FilterDirectivesIndicator from "./FilterDirectivesIndicator";
 import NoDataWrapper from "./NoDataWrapper";
 import PageSelector from "./PageSelector";
 import SortableTH from "./SortableTH";
+import tachitableStyles from "./TachiTable.module.scss";
 
 const DEFAULT_TACHI_PAGE_LEN_OPTIONS: integer[] = [10, 25, 50, 100, 1000];
 
@@ -105,6 +105,11 @@ export default function TachiTable<D>({
 	defaultReverseSort?: boolean;
 	defaultSortMode?: string;
 	entryName: string;
+	/**
+	 * When `nonce` changes (desktop breakpoints only), replaces the filter text — e.g.
+	 * syncing from folder breakdown → table filter.
+	 */
+	externalSearchPreset?: { nonce: number; search: string } | null;
 	headers: Header<D>[];
 	noBottomDisplayPager?: boolean;
 	noTopDisplayStr?: boolean;
@@ -114,11 +119,6 @@ export default function TachiTable<D>({
 	/** Stable keys for tbody rows (e.g. chartID) so filtering reconciles instead of re-mounting. */
 	rowKey?: (row: D) => Key;
 	searchFunctions?: SearchFunctions<D>;
-	/**
-	 * When `nonce` changes (desktop breakpoints only), replaces the filter text — e.g.
-	 * syncing from folder breakdown → table filter.
-	 */
-	externalSearchPreset?: { nonce: number; search: string } | null;
 }) {
 	const [search, setSearch] = useState("");
 	const lastExternalNonce = useRef<number | undefined>(undefined);

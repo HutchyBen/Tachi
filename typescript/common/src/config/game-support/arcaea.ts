@@ -102,12 +102,13 @@ export const GAME_ARCAEA_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["Past", "Present", "Future", "Beyond"],
-		format: {
+		formatShort: {
 			Past: "PST",
 			Present: "PRS",
 			Future: "FTR",
 			Beyond: "BYD",
 		},
+		formatLong: {},
 		default: "Future",
 	},
 

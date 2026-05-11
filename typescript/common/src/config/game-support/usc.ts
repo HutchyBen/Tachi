@@ -91,7 +91,8 @@ export const GAME_USC_CONTROLLER_CONF = {
 		order: ["NOV", "ADV", "EXH", "INF"],
 		// deliberately not ported to v3 - formatting of charts as
 		// "CON EXH" etc.
-		format: {},
+		formatShort: {},
+		formatLong: {},
 		default: "EXH",
 	},
 

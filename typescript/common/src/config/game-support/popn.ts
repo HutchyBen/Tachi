@@ -120,12 +120,13 @@ export const GAME_POPN_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["Easy", "Normal", "Hyper", "EX"],
-		format: {
+		formatShort: {
 			Easy: "E",
 			Normal: "N",
 			Hyper: "H",
 			EX: "EX",
 		},
+		formatLong: {},
 		default: "EX",
 	},
 

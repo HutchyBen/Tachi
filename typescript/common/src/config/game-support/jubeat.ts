@@ -99,7 +99,7 @@ export const GAME_JUBEAT_SINGLE_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["BSC", "ADV", "EXT", "HARD BSC", "HARD ADV", "HARD EXT"],
-		format: {
+		formatShort: {
 			BSC: "BSC",
 			ADV: "ADV",
 			EXT: "EXT",
@@ -107,6 +107,7 @@ export const GAME_JUBEAT_SINGLE_CONF = {
 			"HARD ADV": "H. ADV",
 			"HARD EXT": "H. EXT",
 		},
+		formatLong: {},
 		default: "EXT",
 	},
 

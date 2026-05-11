@@ -188,7 +188,7 @@ export const GAME_MAIMAI_DX_CONF = {
 			"DX Master",
 			"DX Re:Master",
 		],
-		format: {
+		formatShort: {
 			Basic: "BAS",
 			Advanced: "ADV",
 			Expert: "EXP",
@@ -200,6 +200,7 @@ export const GAME_MAIMAI_DX_CONF = {
 			"DX Master": "DX MAS",
 			"DX Re:Master": "DX Re:MAS",
 		},
+		formatLong: {},
 		default: "Master",
 	},
 

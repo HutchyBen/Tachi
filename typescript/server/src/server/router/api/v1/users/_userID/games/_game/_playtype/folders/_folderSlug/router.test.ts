@@ -257,17 +257,14 @@ describe("GET /api/v1/users/:userID/games/:game/folders/:folderSlug/evolution", 
 		const uid = `${Date.now()}_${Math.floor(Math.random() * 100_000)}`;
 
 		async function insScore(scoreId: string, lamp: string, iso: string) {
-			const { data, derived, judgements } = mongoScoreDataToPg(
-				"iidx-sp",
-				{
-					score: 1400,
-					lamp,
-					percent: 93,
-					optional: {},
-					judgements: { pgreat: 1, great: 0 },
-					grade: "AAA",
-				} as ScoreData<"iidx-sp">,
-			);
+			const { data, derived, judgements } = mongoScoreDataToPg("iidx-sp", {
+				score: 1400,
+				lamp,
+				percent: 93,
+				optional: {},
+				judgements: { pgreat: 1, great: 0 },
+				grade: "AAA",
+			} as ScoreData<"iidx-sp">);
 
 			await DB.insertInto("score")
 				.values({

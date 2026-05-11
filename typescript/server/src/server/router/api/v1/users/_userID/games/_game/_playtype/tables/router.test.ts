@@ -138,17 +138,14 @@ describe("GET /api/v1/users/:userID/games/:game/tables/:tableID", () => {
 			const uid = `${Date.now()}_${Math.floor(Math.random() * 100_000)}`;
 
 			async function insScore(scoreId: string, lamp: string, iso: string) {
-				const { data, derived, judgements } = mongoScoreDataToPg(
-					"iidx-sp",
-					{
-						score: 1400,
-						lamp,
-						percent: 93,
-						optional: {},
-						judgements: { pgreat: 1, great: 0 },
-						grade: "AAA",
-					} as ScoreData<"iidx-sp">,
-				);
+				const { data, derived, judgements } = mongoScoreDataToPg("iidx-sp", {
+					score: 1400,
+					lamp,
+					percent: 93,
+					optional: {},
+					judgements: { pgreat: 1, great: 0 },
+					grade: "AAA",
+				} as ScoreData<"iidx-sp">);
 
 				await DB.insertInto("score")
 					.values({
@@ -190,9 +187,7 @@ describe("GET /api/v1/users/:userID/games/:game/tables/:tableID", () => {
 			expect(lampEvents[0].value).toBe("EASY CLEAR");
 			expect(lampEvents[1].value).toBe("HARD CLEAR");
 
-			expect(res.body.body.folderChartIDs["ugtfolder"]).toContain(
-				TestingIIDXSPScorePB.chartID,
-			);
+			expect(res.body.body.folderChartIDs.ugtfolder).toContain(TestingIIDXSPScorePB.chartID);
 		});
 
 		it("returns 404 when the table does not exist", async () => {

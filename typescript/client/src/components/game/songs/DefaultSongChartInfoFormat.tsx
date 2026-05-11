@@ -1,6 +1,11 @@
 import { DisplayLevelNum } from "#components/tables/cells/DifficultyCell";
 import React from "react";
-import { type ChartDocument, FormatDifficulty, type SongDocument, type V3Game } from "tachi-common";
+import {
+	type ChartDocument,
+	FormatDifficultyLong,
+	type SongDocument,
+	type V3Game,
+} from "tachi-common";
 
 export default function DefaultSongChartInfoFormat({
 	song,
@@ -18,7 +23,7 @@ export default function DefaultSongChartInfoFormat({
 			</h4>
 			{chart && (
 				<>
-					<h5>({FormatDifficulty(chart)})</h5>
+					<h5>({FormatDifficultyLong(chart)})</h5>
 					<h6>
 						<DisplayLevelNum
 							game={game}

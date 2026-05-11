@@ -59,10 +59,7 @@ export default function TableFolderViewer({
 
 	const gameConfig = useMemo(() => GetGameConfig(game), [game]);
 
-	const evolutionScope = useMemo(
-		() => ({ kind: "table" as const, table }),
-		[table],
-	);
+	const evolutionScope = useMemo(() => ({ kind: "table" as const, table }), [table]);
 
 	if (error) {
 		return <ApiError error={error} />;

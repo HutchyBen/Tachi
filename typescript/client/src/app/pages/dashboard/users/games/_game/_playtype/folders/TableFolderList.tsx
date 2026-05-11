@@ -4,10 +4,7 @@ import { GPT_CLIENT_IMPLEMENTATIONS } from "#lib/game-implementations";
 import { APIFetchV1 } from "#util/api";
 import React, { useContext, useMemo } from "react";
 import { Link } from "react-router-dom";
-import {
-	GetGameConfig,
-	type TableDocument,
-} from "tachi-common";
+import { GetGameConfig, type TableDocument } from "tachi-common";
 
 import FolderEnumProgressBar from "./FolderEnumProgressBar";
 import folderTableStyles from "./FolderTablePage.module.scss";

@@ -165,7 +165,7 @@ export interface UGPTFolderEvolutionReturns {
 	songs: SongDocument<GameGroup>[];
 }
 
-export type UGPTEvolutionReplayReturns = UGPTTableEvolutionReturns | UGPTFolderEvolutionReturns;
+export type UGPTEvolutionReplayReturns = UGPTFolderEvolutionReturns | UGPTTableEvolutionReturns;
 
 export interface UGPTFolderReturns<GPT extends V3Game = V3Game> {
 	folder: FolderDocument;

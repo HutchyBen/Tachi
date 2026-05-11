@@ -37,7 +37,15 @@ import React, {
 	useState,
 } from "react";
 import { Col, Collapse, Form, Row } from "react-bootstrap";
-import { Link, Redirect, Route, Switch, useHistory, useLocation, useParams } from "react-router-dom";
+import {
+	Link,
+	Redirect,
+	Route,
+	Switch,
+	useHistory,
+	useLocation,
+	useParams,
+} from "react-router-dom";
 import {
 	COLOUR_SET,
 	EnumIndexToValue,
@@ -107,7 +115,9 @@ export default function SpecificFolderPage({ reqUser, game }: Props) {
 
 		queueMicrotask(() => {
 			const anchor = document.getElementById(FOLDER_FOLDER_TABLE_SCROLL_INTO_VIEW_ID);
-			if (!anchor) return;
+			if (!anchor) {
+				return;
+			}
 
 			const y =
 				anchor.getBoundingClientRect().top +

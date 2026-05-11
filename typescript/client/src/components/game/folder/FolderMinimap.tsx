@@ -125,11 +125,14 @@ function FolderMinimapMain({
 
 	// Switchboard tabs / unmount can leave portalled Bootstrap tooltips in <body> while React
 	// state still has show=true; drop those nodes so nothing sticks.
-	useLayoutEffect(() => () => {
+	useLayoutEffect(
+		() => () => {
 			document.querySelectorAll(".tooltip-folder-minimap").forEach((el) => {
 				el.remove();
 			});
-		}, [enumMetric]);
+		},
+		[enumMetric],
+	);
 
 	return (
 		<div className="row">

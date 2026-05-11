@@ -26,16 +26,15 @@ import { CreateRankingHeader } from "../headers/RankingHeader";
 
 export type FolderEnumBreakdownTablePreset = {
 	metricKey: string;
-	valueLabel: string;
 	nonce: number;
+	valueLabel: string;
 };
 
 /** Scroll target used when jumping from folder breakdown chips to this table (desktop-only flow). */
-export const FOLDER_FOLDER_TABLE_SCROLL_INTO_VIEW_ID =
-	"folder-folder-table-scroll-anchor";
+export const FOLDER_FOLDER_TABLE_SCROLL_INTO_VIEW_ID = "folder-folder-table-scroll-anchor";
 
 function formatFolderEnumTableFilter(metricKey: string, valueLabel: string): string {
-	const escaped = valueLabel.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+	const escaped = valueLabel.replace(/\\/gu, "\\\\").replace(/"/gu, '\\"');
 	return `${metricKey}=="${escaped}"`;
 }
 
@@ -45,8 +44,8 @@ export default function FolderTable({
 	folderBreakdownEnumTablePreset = null,
 }: {
 	dataset: FolderDataset;
-	game: V3Game;
 	folderBreakdownEnumTablePreset?: FolderEnumBreakdownTablePreset | null;
+	game: V3Game;
 }) {
 	const defaultRating = useScoreRatingAlg(game);
 

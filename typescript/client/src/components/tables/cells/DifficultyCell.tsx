@@ -6,7 +6,7 @@ import { ChangeOpacity } from "#util/color-opacity";
 import React from "react";
 import {
 	type ChartDocument,
-	FormatDifficulty,
+	FormatDifficultyLong,
 	FormatDifficultyShort,
 	type V3Game,
 } from "tachi-common";
@@ -59,7 +59,9 @@ export default function DifficultyCell({
 			? DIFFICULTY_CELL_WIDTH_PX + 16
 			: DIFFICULTY_CELL_WIDTH_PX;
 
-	const nativeTitleTooltip = [FormatDifficulty(chart), chart.level].filter(Boolean).join(" — ");
+	const nativeTitleTooltip = [FormatDifficultyLong(chart), chart.level]
+		.filter(Boolean)
+		.join(" — ");
 
 	return (
 		<td
@@ -77,7 +79,7 @@ export default function DifficultyCell({
 			{!alwaysShort && (
 				<div className="d-none d-lg-block">
 					<span className={truncLineCls} style={{ minWidth: 0 }}>
-						{FormatDifficulty(chart)}
+						{FormatDifficultyLong(chart)}
 					</span>
 				</div>
 			)}

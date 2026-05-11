@@ -96,7 +96,7 @@ export const GAME_GITADORA_GITA_CONF = {
 			"BASS EXTREME",
 			"BASS MASTER",
 		],
-		format: {
+		formatShort: {
 			BASIC: "G-BSC",
 			ADVANCED: "G-ADV",
 			EXTREME: "G-EXT",
@@ -106,6 +106,7 @@ export const GAME_GITADORA_GITA_CONF = {
 			"BASS EXTREME": "B-EXT",
 			"BASS MASTER": "B-MAS",
 		},
+		formatLong: {},
 		default: "EXTREME",
 	},
 
@@ -141,12 +142,13 @@ export const GAME_GITADORA_DORA_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["BASIC", "ADVANCED", "EXTREME", "MASTER"],
-		format: {
+		formatShort: {
 			BASIC: "D-BSC",
 			ADVANCED: "D-ADV",
 			EXTREME: "D-EXT",
 			MASTER: "D-MAS",
 		},
+		formatLong: {},
 		default: "EXTREME",
 	},
 } as const satisfies INTERNAL_GAME_CONFIG;

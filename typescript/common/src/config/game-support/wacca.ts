@@ -115,12 +115,13 @@ export const GAME_WACCA_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["NORMAL", "HARD", "EXPERT", "INFERNO"],
-		format: {
+		formatShort: {
 			NORMAL: "NRM",
 			HARD: "HRD",
 			EXPERT: "EXP",
 			INFERNO: "INF",
 		},
+		formatLong: {},
 		default: "EXPERT",
 	},
 

@@ -38,7 +38,7 @@ import { Redirect, Route, Switch, useParams } from "react-router-dom";
 import {
 	type ChartDocument,
 	COLOUR_SET,
-	FormatDifficulty,
+	FormatDifficultyLong,
 	type GamesForGroup,
 	GameToGameGroup,
 	GetGameConfig,
@@ -472,7 +472,7 @@ function DifficultyButton({
 							: undefined,
 				}}
 			>
-				{FormatDifficulty(chart)}
+				{FormatDifficultyLong(chart)}
 				{chart.isPrimary ? (
 					""
 				) : (

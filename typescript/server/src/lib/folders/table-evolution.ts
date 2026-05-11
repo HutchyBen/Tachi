@@ -1,20 +1,20 @@
+import type { ConfEnumScoreMetric } from "tachi-common/types/metrics";
+
 import { SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart";
 import { GetSongsByIDs } from "#lib/db-formats/song";
 import DB from "#services/pg/db";
 import { GetScoresForTableEvolution } from "#utils/queries/scores";
 import {
+	type ChartDocument,
+	type FolderDocument,
 	GetGameConfig,
 	GetScoreEnumConfs,
 	type integer,
-	type ChartDocument,
-	type FolderDocument,
 	type ScoreDocument,
 	type SongDocument,
 	type TableDocument,
 	type V3Game,
 } from "tachi-common";
-
-import type { ConfEnumScoreMetric } from "tachi-common/types/metrics";
 
 import { GetFolderChartIDs } from "./folders";
 
@@ -29,7 +29,9 @@ export interface TableEvolutionEvent {
 	value: string;
 }
 
-export async function GetTableEvolutionFolderChartMembership(folders: Array<FolderDocument>): Promise<{
+export async function GetTableEvolutionFolderChartMembership(
+	folders: Array<FolderDocument>,
+): Promise<{
 	distinctChartIDs: Array<string>;
 	folderChartIDs: Record<string, Array<string>>;
 }> {
@@ -77,12 +79,17 @@ export function ComputeTableEvolutionEvents(
 	let currentChartID: string | undefined;
 	const prevMaxForMetric: Record<string, integer> = {};
 
-	const readEnumIdx = (scoreData: ScoreDocument["scoreData"], metric: string): integer | undefined => {
+	const readEnumIdx = (
+		scoreData: ScoreDocument["scoreData"],
+		metric: string,
+	): integer | undefined => {
 		const fromRoot = scoreData.enumIndexes?.[metric as keyof typeof scoreData.enumIndexes] as
 			| integer
 			| undefined;
 		const fromOptional =
-			scoreData.optional?.enumIndexes?.[metric as keyof typeof scoreData.optional.enumIndexes];
+			scoreData.optional?.enumIndexes?.[
+				metric as keyof typeof scoreData.optional.enumIndexes
+			];
 
 		const coerced = typeof fromOptional === "number" ? fromOptional : undefined;
 
@@ -160,7 +167,8 @@ export async function LoadTableEvolutionPayload(
 }> {
 	const enumConfs = GetScoreEnumConfs(GetGameConfig(game));
 
-	const { distinctChartIDs, folderChartIDs } = await GetTableEvolutionFolderChartMembership(folders);
+	const { distinctChartIDs, folderChartIDs } =
+		await GetTableEvolutionFolderChartMembership(folders);
 
 	const scores = await GetScoresForTableEvolution(userID, game, distinctChartIDs);
 	const events = ComputeTableEvolutionEvents(scores, enumConfs);
@@ -183,7 +191,9 @@ export async function LoadFolderEvolutionPayload(
 }> {
 	const enumConfs = GetScoreEnumConfs(GetGameConfig(game));
 
-	const { distinctChartIDs, folderChartIDs } = await GetTableEvolutionFolderChartMembership([folder]);
+	const { distinctChartIDs, folderChartIDs } = await GetTableEvolutionFolderChartMembership([
+		folder,
+	]);
 
 	const scores = await GetScoresForTableEvolution(userID, game, distinctChartIDs);
 	const events = ComputeTableEvolutionEvents(scores, enumConfs);

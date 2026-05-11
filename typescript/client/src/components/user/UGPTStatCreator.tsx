@@ -12,7 +12,7 @@ import React, { type ChangeEventHandler, useContext, useEffect, useState } from 
 import { Button, Form, Modal } from "react-bootstrap";
 import {
 	type FolderDocument,
-	FormatDifficulty,
+	FormatDifficultyLong,
 	GetGameConfig,
 	GetScoreMetricConf,
 	GetScoreMetrics,
@@ -177,7 +177,7 @@ function UGPTStatInnerSearchyBit({ game, onCreate, setShow }: GamePT & Props) {
 
 				data.push({
 					chartID: chart.chartID,
-					name: `${song!.title} ${FormatDifficulty(chart)}`,
+					name: `${song!.title} ${FormatDifficultyLong(chart)}`,
 				});
 			}
 

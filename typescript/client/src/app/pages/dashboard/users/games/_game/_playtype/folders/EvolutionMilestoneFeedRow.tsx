@@ -54,7 +54,9 @@ export default function EvolutionMilestoneFeedRow({
 							</>
 						) : chart ? (
 							<>
-								<span className="fst-italic text-body-secondary">Unknown chart</span>
+								<span className="fst-italic text-body-secondary">
+									Unknown chart
+								</span>
 								<span className="text-body-secondary fw-normal ms-2 small text-nowrap">
 									({FormatDifficultyShort(chart)})
 								</span>

@@ -4,7 +4,7 @@ function pathnameOnlyForRouteMatch(str: string): string {
 	try {
 		return new URL(str).pathname;
 	} catch {
-		return str.split(/[?#]/)[0];
+		return str.split(/[?#]/u)[0];
 	}
 }
 

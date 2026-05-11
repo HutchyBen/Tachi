@@ -65,8 +65,7 @@ export default function FolderEnumProgressBar({
 	const bucket = stats.stats[enumMetric] ?? {};
 
 	const minRelIx = conf.values.indexOf(conf.minimumRelevantValue);
-	const valueIndexFloor =
-		clipToMinimumRelevance && minRelIx !== -1 ? minRelIx : 0;
+	const valueIndexFloor = clipToMinimumRelevance && minRelIx !== -1 ? minRelIx : 0;
 
 	const segments: Array<{ count: number; label: string; rawFill: string }> = [];
 	let filled = 0;
@@ -136,18 +135,18 @@ export default function FolderEnumProgressBar({
 								</>
 							}
 						>
-						<div
-							className={`h-100 ${barStyles.folderEnumBarSegment} ${animateSegments ? barStyles.folderEnumBarSegmentAnimated : ""}`}
-							style={{
-								...(animateSegments
-									? { animationDelay: `${0.05 + segIndex * 0.055}s` }
-									: {}),
-								backgroundColor: fill,
-								flex: "none",
-								minWidth: seg.count ? "4px" : 0,
-								width: `${pct}%`,
-							}}
-						>
+							<div
+								className={`h-100 ${barStyles.folderEnumBarSegment} ${animateSegments ? barStyles.folderEnumBarSegmentAnimated : ""}`}
+								style={{
+									...(animateSegments
+										? { animationDelay: `${0.05 + segIndex * 0.055}s` }
+										: {}),
+									backgroundColor: fill,
+									flex: "none",
+									minWidth: seg.count ? "4px" : 0,
+									width: `${pct}%`,
+								}}
+							>
 								{showInlinePct && (
 									<span className={barStyles.folderEnumBarLabel}>
 										{inlinePctText}

@@ -130,9 +130,16 @@ export interface FixedDifficulties<Difficulty extends string> {
 	order: ReadonlyArray<Difficulty>;
 
 	/**
-	 * How should we format these difficulty names?
+	 * How should we format these difficulty names for short usage?
+	 * if not specified, will use the difficulty name as-is
 	 */
-	format: Partial<Record<Difficulty, string>>;
+	formatShort: Partial<Record<Difficulty, string>>;
+
+	/**
+	 * How should we format these difficulty names for long, full usage?
+	 * if not specified, will use the difficulty name as-is
+	 */
+	formatLong: Partial<Record<Difficulty, string>>;
 
 	default: Difficulty;
 }
@@ -161,7 +168,13 @@ export interface ChuGekiMaiDifficulties<TDifficulty extends string> {
 	 * Dynamic ones (i.e. ones not in the Order set) are not formatted - they are printed
 	 * exactly as-is.
 	 */
-	format: Partial<Record<TDifficulty, string>>;
+	formatShort: Partial<Record<TDifficulty, string>>;
+
+	/**
+	 * How should we format these difficulty names for long, full usage?
+	 * if not specified, will use the difficulty name as-is
+	 */
+	formatLong: Partial<Record<TDifficulty, string>>;
 
 	default: TDifficulty;
 }

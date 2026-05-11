@@ -36,7 +36,7 @@ import { useQuery } from "react-query";
 import { Link, Route, Switch } from "react-router-dom";
 import {
 	type ChartDocument,
-	FormatDifficulty,
+	FormatDifficultyLong,
 	GameToGameGroup,
 	GetGameGroupConfig,
 	type integer,
@@ -54,7 +54,7 @@ export default function GPTChartPage({
 	song: SongDocument;
 } & GamePT) {
 	const formatSongTitle = `${song.artist} - ${song.title}`;
-	const formatDiff = chart ? FormatDifficulty(chart) : "Loading...";
+	const formatDiff = chart ? FormatDifficultyLong(chart) : "Loading...";
 
 	useSetSubheader(
 		[

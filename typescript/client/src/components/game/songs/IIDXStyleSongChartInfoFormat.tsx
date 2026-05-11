@@ -1,6 +1,11 @@
 import { FormatTables } from "#util/misc";
 import React from "react";
-import { type ChartDocument, FormatDifficulty, type SongDocument, type V3Game } from "tachi-common";
+import {
+	type ChartDocument,
+	FormatDifficultyLong,
+	type SongDocument,
+	type V3Game,
+} from "tachi-common";
 
 export default function IIDXStyleSongChartInfoFormat({
 	song,
@@ -26,5 +31,5 @@ function LevelText(chart: ChartDocument) {
 		const hasLevel = Object.keys(chart.data.tableFolders).length > 0;
 		return hasLevel ? FormatTables(chart.data.tableFolders) : "No Level";
 	}
-	return FormatDifficulty(chart);
+	return FormatDifficultyLong(chart);
 }

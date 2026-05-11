@@ -160,7 +160,8 @@ export const GAME_SDVX_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["NOV", "ADV", "EXH", "INF", "GRV", "HVN", "VVD", "XCD", "MXM", "ULT"],
-		format: {}, // they're all already short enough
+		formatShort: {}, // they're all already short enough
+		formatLong: {},
 		default: "EXH",
 	},
 

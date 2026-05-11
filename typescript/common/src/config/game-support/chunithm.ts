@@ -137,13 +137,14 @@ export const GAME_CHUNITHM_CONF = {
 	difficulties: {
 		type: "CHUGEKIMAI_STYLE",
 		order: ["BASIC", "ADVANCED", "EXPERT", "MASTER", "ULTIMA"],
-		format: {
+		formatShort: {
 			BASIC: "B",
 			ADVANCED: "A",
 			EXPERT: "E",
 			MASTER: "M",
 			ULTIMA: "U",
 		},
+		formatLong: {},
 		default: "MASTER",
 	},
 

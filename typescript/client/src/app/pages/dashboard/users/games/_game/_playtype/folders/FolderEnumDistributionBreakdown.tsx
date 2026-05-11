@@ -14,17 +14,12 @@ function distributionRowChrome(enumColour: string | undefined): {
 	fillStrong: string | undefined;
 	trackBg: string;
 } {
-	const fallbackTrack =
-		"color-mix(in srgb, var(--bs-secondary) 14%, transparent)";
-	const fallbackFillStrong =
-		"color-mix(in srgb, var(--bs-secondary) 42%, transparent)";
+	const fallbackTrack = "color-mix(in srgb, var(--bs-secondary) 14%, transparent)";
+	const fallbackFillStrong = "color-mix(in srgb, var(--bs-secondary) 42%, transparent)";
 
 	const borderLeftColor = enumColour ?? "var(--bs-secondary)";
 
-	if (
-		enumColour &&
-		(enumColour.startsWith("#") || enumColour.startsWith("rgb"))
-	) {
+	if (enumColour && (enumColour.startsWith("#") || enumColour.startsWith("rgb"))) {
 		try {
 			return {
 				borderLeftColor: enumColour,
@@ -97,8 +92,7 @@ export default function FolderEnumDistributionBreakdown({
 	const bucket = stats.stats[enumMetric] ?? {};
 
 	const minRelIx = conf.values.indexOf(conf.minimumRelevantValue);
-	const valueIndexFloor =
-		clipToMinimumRelevance && minRelIx !== -1 ? minRelIx : 0;
+	const valueIndexFloor = clipToMinimumRelevance && minRelIx !== -1 ? minRelIx : 0;
 
 	if (total === 0) {
 		return <small className="text-body-secondary">No charts in this folder.</small>;
@@ -115,13 +109,10 @@ export default function FolderEnumDistributionBreakdown({
 		const pct = total > 0 ? (100 * count) / total : 0;
 		const chipFill = colours?.[label];
 		const chrome = distributionRowChrome(chipFill);
-		const pctWidth =
-			pct > 0 ? `${ToFixedFloor(Math.min(100, Math.max(0, pct)), 3)}%` : "0%";
+		const pctWidth = pct > 0 ? `${ToFixedFloor(Math.min(100, Math.max(0, pct)), 3)}%` : "0%";
 
-		const clickableRow =
-			Boolean(onEnumBreakdownRowClick && isLg && count > 0);
-		const rowHoverChromeClass =
-			clickableRow ? breakdownStyles.enumRowInteractive : "";
+		const clickableRow = Boolean(onEnumBreakdownRowClick && isLg && count > 0);
+		const rowHoverChromeClass = clickableRow ? breakdownStyles.enumRowInteractive : "";
 
 		const rowShellStyle = {
 			backgroundColor: chrome.trackBg,
@@ -201,9 +192,19 @@ export default function FolderEnumDistributionBreakdown({
 	const remainderPct = total > 0 ? (100 * remainder) / total : 0;
 
 	return (
-		<div className={selected ? "border border-primary border-opacity-75 pb-3 pe-2 pt-2 ps-2 rounded-4 shadow-sm bg-primary bg-opacity-10" : undefined}>
+		<div
+			className={
+				selected
+					? "border border-primary border-opacity-75 pb-3 pe-2 pt-2 ps-2 rounded-4 shadow-sm bg-primary bg-opacity-10"
+					: undefined
+			}
+		>
 			<div
-				className={suppressTopRule ? undefined : "mt-3 border-secondary border-opacity-25 border-top pt-3"}
+				className={
+					suppressTopRule
+						? undefined
+						: "mt-3 border-secondary border-opacity-25 border-top pt-3"
+				}
 			>
 				<div className="align-items-center d-flex flex-wrap gap-2 justify-content-between mb-2">
 					{onActivate ? (

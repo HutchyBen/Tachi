@@ -353,7 +353,8 @@ export const GAME_BMS_7K_CONF = {
 		// "CHART" isn't a very creative name, but this is in a similar vein to how
 		// games with no playtypes use the value "Single".
 		order: ["CHART"],
-		format: {},
+		formatShort: {},
+		formatLong: {},
 		default: "CHART",
 	},
 

@@ -176,13 +176,14 @@ export const GAME_DDR_SP_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: DDR_DIFFICULTIES,
-		format: {
+		formatShort: {
 			BEGINNER: "BEG",
 			BASIC: "BAS",
 			DIFFICULT: "DIF",
 			EXPERT: "EXP",
 			CHALLENGE: "CHA",
 		},
+		formatLong: {},
 		default: "EXPERT",
 	},
 

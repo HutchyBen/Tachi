@@ -1,11 +1,9 @@
-import type {
-	FolderStatsInfo,
-	TableEvolutionEventAPI,
-} from "#types/api-returns";
+import type { FolderStatsInfo, TableEvolutionEventAPI } from "#types/api-returns";
+
 import {
-	GetScoreMetricConf,
 	type FolderDocument,
 	type GameConfig,
+	GetScoreMetricConf,
 	type integer,
 	type TableDocument,
 	type UserDocument,

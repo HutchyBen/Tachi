@@ -185,13 +185,14 @@ export const GAME_ONGEKI_CONF = {
 	difficulties: {
 		type: "FIXED",
 		order: ["BASIC", "ADVANCED", "EXPERT", "MASTER", "LUNATIC"],
-		format: {
+		formatShort: {
 			BASIC: "BAS",
 			ADVANCED: "ADV",
 			EXPERT: "EXP",
 			MASTER: "MAS",
 			LUNATIC: "LUN",
 		},
+		formatLong: {},
 		default: "MASTER",
 	},
 
