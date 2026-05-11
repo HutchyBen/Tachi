@@ -4,6 +4,7 @@ import {
 	GetFolderChartsAndSongs,
 	GetPBsOnFolder,
 } from "#lib/folders/folders";
+import { LoadFolderEvolutionPayload } from "#lib/folders/table-evolution";
 import { withSelf, withUserGameProfile } from "#lib/router/middleware";
 import { success } from "#lib/router/typed-router";
 import { API_V1_ROUTER } from "#server/router/api/v1/router";
@@ -164,5 +165,32 @@ API_V1_ROUTER.add(
 			scores,
 			songs,
 		});
+	},
+);
+
+/**
+ * **Folder evolution:** distinct enum milestones (per metric, per chart) at or above each metric's
+ * `minimumRelevantValue`, scoped to charts in this folder — same semantics as table evolution.
+ *
+ * @name GET /api/v1/users/:userID/games/:game/folders/:folderSlug/evolution
+ */
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/folders/:folderSlug/evolution",
+	withUserGameProfile,
+	async ({ ctx, params }) => {
+		const { requestedUser: user, game } = ctx;
+
+		const folder = await LoadFolderDocumentByGameAndSlug(game, params.folderSlug);
+
+		if (!folder || folder.game !== game) {
+			throw new ExpectedErr(404, "This folder does not exist.");
+		}
+
+		const body = await LoadFolderEvolutionPayload(user.id, game, folder);
+
+		return success(
+			`Returned ${body.events.length} folder evolution events for ${folder.title}.`,
+			body,
+		);
 	},
 );

@@ -913,6 +913,30 @@ export const API_V1_SPEC = {
 		}),
 	},
 
+	"GET /users/:userID/games/:game/tables/:tableID/evolution": {
+		description:
+			"Table evolution: strict per-chart enum milestones at or above each metric minimumRelevantValue; events sorted by play time.",
+		input: z.object({}),
+		output: z.strictObject({
+			charts: docArray<ChartDocument>(),
+			events: z.array(
+				z.strictObject({
+					chartID: z.string(),
+					enumIndex: z.number(),
+					metric: z.string(),
+					scoreID: z.string(),
+					timeAchieved: z.number().nullable(),
+					timeAdded: z.number(),
+					value: z.string(),
+				}),
+			),
+			folderChartIDs: z.record(z.string(), z.array(z.string())),
+			folders: docArray<FolderDocument>(),
+			songs: docArray<SongDocument>(),
+			table: doc<TableDocument>(),
+		}),
+	},
+
 	// ────────────────────────────────────────────────
 	// UGPT Showcase
 	// ────────────────────────────────────────────────
@@ -1027,6 +1051,30 @@ export const API_V1_SPEC = {
 			charts: docArray<ChartDocument>(),
 			folder: doc<FolderDocument>(),
 			scores: docArray<ScoreDocument>(),
+			songs: docArray<SongDocument>(),
+		}),
+	},
+
+	"GET /users/:userID/games/:game/folders/:folderSlug/evolution": {
+		description:
+			"Folder evolution: strict per-chart enum milestones at or above each metric minimumRelevantValue; events sorted by play time.",
+		input: z.object({}),
+		output: z.strictObject({
+			charts: docArray<ChartDocument>(),
+			events: z.array(
+				z.strictObject({
+					chartID: z.string(),
+					enumIndex: z.number(),
+					metric: z.string(),
+					scoreID: z.string(),
+					timeAchieved: z.number().nullable(),
+					timeAdded: z.number(),
+					value: z.string(),
+				}),
+			),
+			folder: doc<FolderDocument>(),
+			folderChartIDs: z.record(z.string(), z.array(z.string())),
+			folders: docArray<FolderDocument>(),
 			songs: docArray<SongDocument>(),
 		}),
 	},

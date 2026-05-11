@@ -6,12 +6,13 @@ import { UserSettingsContext } from "#context/UserSettingsContext";
 import { WindowContext } from "#context/WindowContext";
 import { CopyToClipboard } from "#util/misc";
 import { ComposeSearchFunction, type SearchFunctions } from "#util/ztable/search";
-import React, { type Key, useContext, useMemo, useState } from "react";
+import React, { type Key, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "react-bootstrap";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import { type integer } from "tachi-common";
 
+import tachitableStyles from "./TachiTable.module.scss";
 import FilterDirectivesIndicator from "./FilterDirectivesIndicator";
 import NoDataWrapper from "./NoDataWrapper";
 import PageSelector from "./PageSelector";
@@ -98,6 +99,7 @@ export default function TachiTable<D>({
 	noBottomDisplayPager = false,
 	pageLenOptions = DEFAULT_TACHI_PAGE_LEN_OPTIONS,
 	rowKey,
+	externalSearchPreset = undefined,
 }: {
 	dataset: D[];
 	defaultReverseSort?: boolean;
@@ -112,8 +114,15 @@ export default function TachiTable<D>({
 	/** Stable keys for tbody rows (e.g. chartID) so filtering reconciles instead of re-mounting. */
 	rowKey?: (row: D) => Key;
 	searchFunctions?: SearchFunctions<D>;
+	/**
+	 * When `nonce` changes (desktop breakpoints only), replaces the filter text — e.g.
+	 * syncing from folder breakdown → table filter.
+	 */
+	externalSearchPreset?: { nonce: number; search: string } | null;
 }) {
 	const [search, setSearch] = useState("");
+	const lastExternalNonce = useRef<number | undefined>(undefined);
+	const [highlightFilterPulse, setHighlightFilterPulse] = useState(false);
 
 	const searchFunction = useMemo(
 		() => (searchFunctions ? ComposeSearchFunction(searchFunctions) : undefined),
@@ -161,6 +170,55 @@ export default function TachiTable<D>({
 	const {
 		breakpoint: { isLg },
 	} = useContext(WindowContext);
+
+	const filterChromeClass = useMemo(() => {
+		const hasFilterText = search.trim().length > 0;
+
+		return [
+			tachitableStyles.filterBarChrome,
+			hasFilterText ? tachitableStyles.filterBarChromeActive : "",
+			highlightFilterPulse ? tachitableStyles.searchFilterFlash : "",
+		]
+			.filter(Boolean)
+			.join(" ");
+	}, [highlightFilterPulse, search]);
+
+	useEffect(() => {
+		if (!externalSearchPreset || !isLg) {
+			return;
+		}
+
+		const { nonce, search: presetSearch } = externalSearchPreset;
+
+		if (lastExternalNonce.current === nonce) {
+			return;
+		}
+
+		lastExternalNonce.current = nonce;
+		setSearch(presetSearch);
+
+		let canceled = false;
+		setHighlightFilterPulse(false);
+
+		const raf = window.requestAnimationFrame(() => {
+			if (!canceled) {
+				setHighlightFilterPulse(true);
+			}
+		});
+
+		const t = window.setTimeout(() => {
+			if (!canceled) {
+				setHighlightFilterPulse(false);
+			}
+		}, 1250);
+
+		return () => {
+			canceled = true;
+			window.cancelAnimationFrame(raf);
+			window.clearTimeout(t);
+		};
+	}, [externalSearchPreset?.nonce, externalSearchPreset?.search, isLg]);
+
 	return (
 		<div>
 			<div className="hstack justify-content-between">
@@ -168,20 +226,25 @@ export default function TachiTable<D>({
 					<div className="d-none d-lg-flex align-self-center">{displayStr}</div>
 				)}
 				{searchFunctions && (
-					<InputGroup className="ms-lg-auto" style={{ maxWidth: isLg ? 384 : undefined }}>
-						<Form.Control
-							onChange={(e) => setSearch(e.target.value)}
-							placeholder={`Filter ${entryName}`}
-							type="text"
-							value={search}
-						/>
-						{dataset[0] && (
-							<FilterDirectivesIndicator
-								doc={dataset[0]}
-								searchFunctions={searchFunctions}
+					<div
+						className={`ms-lg-auto ${filterChromeClass}`}
+						style={{ maxWidth: isLg ? 384 : undefined }}
+					>
+						<InputGroup>
+							<Form.Control
+								onChange={(e) => setSearch(e.target.value)}
+								placeholder={`Filter ${entryName}`}
+								type="text"
+								value={search}
 							/>
-						)}
-					</InputGroup>
+							{dataset[0] && (
+								<FilterDirectivesIndicator
+									doc={dataset[0]}
+									searchFunctions={searchFunctions}
+								/>
+							)}
+						</InputGroup>
+					</div>
 				)}
 			</div>
 			<div className="px-0 mt-4 mb-4 overflow-x-auto overflow-x-lg-hidden">

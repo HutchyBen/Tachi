@@ -13,6 +13,11 @@ export function FormatDate(ms: number) {
 	return DateTime.fromMillis(ms).toLocaleString(DateTime.DATE_HUGE);
 }
 
+/** Local time of day only; use with {@link FormatDate} when the calendar date is shown separately. */
+export function FormatTimeOfDay(ms: number) {
+	return DateTime.fromMillis(ms).toLocaleString(DateTime.TIME_SIMPLE);
+}
+
 export function FormatDuration(ms: number) {
 	return humaniseDuration(ms, {
 		units: ["d", "h", "m"],

@@ -1,93 +1,88 @@
+import FolderEnumDistributionBreakdown from "#app/pages/dashboard/users/games/_game/_playtype/folders/FolderEnumDistributionBreakdown";
 import Card from "#components/layout/page/Card";
-import Divider from "#components/util/Divider";
-import Icon from "#components/util/Icon";
-import SelectButton from "#components/util/SelectButton";
-import { useBucket } from "#components/util/useBucket";
+import ApiError from "#components/util/ApiError";
+import Loading from "#components/util/Loading";
+import useApiQuery from "#components/util/query/useApiQuery";
 import { GPT_CLIENT_IMPLEMENTATIONS } from "#lib/game-implementations";
+import { type UGPTFolderSlugStatsReturns } from "#types/api-returns";
 import { type GamePT } from "#types/react";
-import { type FolderDataset } from "#types/tables";
-import { UppercaseFirst } from "#util/misc";
-import React, { useMemo, useState } from "react";
-import { GetGameConfig, GetScoreEnumConfs, type UserDocument } from "tachi-common";
-
-import FolderMinimap from "./FolderMinimap";
-import FolderScoreAverages from "./FolderScoreAverages";
-import FolderScoreDistributionChart from "./FolderScoreDistributionChart";
+import React, { useMemo } from "react";
+import { GetGameConfig, GetScoreMetrics, type UserDocument } from "tachi-common";
 
 export default function FolderInfoHeader({
-	game,
-	reqUser,
-	folderDataset,
+	folderSlug,
 	folderTitle,
+	game,
+	onBreakdownEnumValueClick,
+	reqUser,
 }: {
-	folderDataset: FolderDataset;
+	folderSlug: string;
 	folderTitle: string;
+	onBreakdownEnumValueClick?: (metricKey: string, enumValueLabel: string) => void;
 	reqUser: UserDocument;
 } & GamePT) {
-	const preferredDefaultEnum = useBucket(game);
-
-	const [currentGraph, setCurrentGraph] = useState<string>(`${preferredDefaultEnum}-stats`);
-
-	const enumGraphs = ["minimap", "stats"];
+	const folderStatsUrl = `/users/${reqUser.id}/games/${game}/folders/${folderSlug}/stats`;
+	const {
+		data: folderStatsBody,
+		error: folderStatsError,
+		isLoading: folderStatsLoading,
+	} = useApiQuery<UGPTFolderSlugStatsReturns>(folderStatsUrl);
 
 	const gameConfig = GetGameConfig(game);
-	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
-	const enumConf = GetScoreEnumConfs(gameConfig);
-
-	const [metric, type] = useMemo(() => currentGraph.split("-"), [currentGraph]);
+	const enumMetrics = useMemo(() => GetScoreMetrics(gameConfig, "ENUM"), [gameConfig]);
+	const enumColourMaps = GPT_CLIENT_IMPLEMENTATIONS[game].enumColours as
+		| Record<string, Record<string, string>>
+		| undefined;
 
 	return (
 		<Card header={`${reqUser.username}'s ${folderTitle} Breakdown`}>
-			<div className="col-12 d-flex justify-content-center">
-				<div className="btn-group">
-					{enumGraphs.flatMap((g) =>
-						Object.keys(enumConf).flatMap((en) => (
-							<SelectButton
-								className={
-									g === "minimap" ? "d-none d-lg-block text-wrap" : "text-wrap"
-								}
-								id={`${en}-${g}`}
-								key={`${en}-${g}`}
-								setValue={setCurrentGraph}
-								value={currentGraph}
-							>
-								{/* @ts-expect-error zzz */}
-								<Icon type={gptImpl.enumIcons[en]} /> {UppercaseFirst(en)}{" "}
-								{UppercaseFirst(g)}
-							</SelectButton>
-						)),
-					)}
-					<SelectButton
-						className="text-wrap"
-						id="score"
-						setValue={setCurrentGraph}
-						value={currentGraph}
-					>
-						<Icon type="sort" /> Score Averages
-					</SelectButton>
-				</div>
+			<div className="vstack gap-3">
+				{folderStatsError ? (
+					<ApiError error={folderStatsError} />
+				) : folderStatsLoading ? (
+					<Loading />
+				) : (
+					(() => {
+						const liveFolderStats = folderStatsBody?.stats;
+						if (liveFolderStats === null || liveFolderStats === undefined) {
+							return (
+								<small className="text-body-secondary">
+									Could not load folder statistics.
+								</small>
+							);
+						}
+						return (
+							<div className="row g-3">
+								{enumMetrics.map((metric) => (
+									<div
+										className={
+											enumMetrics.length === 1 ? "col-12" : "col-12 col-md-6"
+										}
+										key={metric}
+									>
+										<FolderEnumDistributionBreakdown
+											clipToMinimumRelevance={false}
+											colours={enumColourMaps?.[metric]}
+											enumMetric={metric}
+											gameConfig={gameConfig}
+											onEnumBreakdownRowClick={
+												onBreakdownEnumValueClick
+													? (enumValueLabel: string) => {
+															onBreakdownEnumValueClick(metric, enumValueLabel);
+														}
+													: undefined
+											}
+											stats={liveFolderStats}
+											suppressTopRule
+										/>
+									</div>
+								))}
+							</div>
+						);
+					})()
+				)}
 			</div>
-			<div className="col-12">
-				<Divider />
-			</div>
-
-			{type === "stats" ? (
-				<FolderScoreDistributionChart
-					folderDataset={folderDataset}
-					game={game}
-					view={metric}
-				/>
-			) : type === "minimap" ? (
-				<FolderMinimap
-					enumMetric={metric}
-					folderDataset={folderDataset}
-					game={game}
-					reqUser={reqUser}
-				/>
-			) : (
-				<FolderScoreAverages folderDataset={folderDataset} game={game} reqUser={reqUser} />
-			)}
 		</Card>
 	);
 }

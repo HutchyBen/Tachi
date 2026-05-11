@@ -1,11 +1,11 @@
 import FolderInfoHeader from "#components/game/folder/FolderInfoHeader";
 import QuickTooltip from "#components/layout/misc/QuickTooltip";
-import Card from "#components/layout/page/Card";
 import DifficultyCell from "#components/tables/cells/DifficultyCell";
-import TimestampCell from "#components/tables/cells/TimestampCell";
-import TitleCell from "#components/tables/cells/TitleCell";
 import MiniTable from "#components/tables/components/MiniTable";
-import FolderTable from "#components/tables/folders/FolderTable";
+import FolderTable, {
+	FOLDER_FOLDER_TABLE_SCROLL_INTO_VIEW_ID,
+	type FolderEnumBreakdownTablePreset,
+} from "#components/tables/folders/FolderTable";
 import ScoreCoreCells from "#components/tables/game-core-cells/ScoreCoreCells";
 import ApiError from "#components/util/ApiError";
 import Divider from "#components/util/Divider";
@@ -23,13 +23,10 @@ import { type GPTRatingSystem } from "#lib/types";
 import { type UGPTFolderReturns } from "#types/api-returns";
 import { type FolderDataset } from "#types/tables";
 import { ChangeOpacity } from "#util/color-opacity";
-import { ONE_DAY } from "#util/constants/time";
 import { CreateChartIDMap, CreateChartLink, CreateSongMap } from "#util/data";
-import { DistinctArr, ToFixedFloor, UppercaseFirst } from "#util/misc";
+import { DistinctArr, ToFixedFloor } from "#util/misc";
 import { NumericSOV, StrSOV } from "#util/sorts";
-import { FormatDate } from "#util/time";
 import React, {
-	type CSSProperties,
 	type SetStateAction,
 	useCallback,
 	useContext,
@@ -40,25 +37,25 @@ import React, {
 	useState,
 } from "react";
 import { Col, Collapse, Form, Row } from "react-bootstrap";
-import { Link, Route, Switch, useHistory, useLocation, useParams } from "react-router-dom";
+import { Link, Redirect, Route, Switch, useHistory, useLocation, useParams } from "react-router-dom";
 import {
-	type ChartDocument,
 	COLOUR_SET,
 	EnumIndexToValue,
 	FormatDifficultyShort,
 	GetGameConfig,
 	GetScoreEnumConfs,
 	type integer,
-	type ScoreDocument,
-	type SongDocument,
 	type UserDocument,
 	type V3Game,
 } from "tachi-common";
-import { type ConfEnumScoreMetric } from "tachi-common/types/metrics";
 
 import FolderComparePage from "./FolderComparePage";
 import FolderQuestsPage from "./FolderQuestsPage";
 import tierlistStyles from "./SpecificFolderPage.module.scss";
+import TableEvolutionReplay from "./TableEvolutionReplay";
+
+/** Extra offset when jumping from breakdown → folder table (`scrollIntoView` start − this). */
+const FOLDER_BREAKDOWN_TABLE_SCROLL_EXTRA_OFFSET_PX = 50;
 
 interface Props {
 	reqUser: UserDocument;
@@ -96,7 +93,29 @@ export default function SpecificFolderPage({ reqUser, game }: Props) {
 		folderDataset.sort(StrSOV((x) => x.__related.song.title));
 
 		return folderDataset;
-	}, [data]);
+	}, [data, reqUser]);
+
+	const [folderTableEnumPreset, setFolderTableEnumPreset] =
+		useState<FolderEnumBreakdownTablePreset | null>(null);
+
+	const onBreakdownEnumValueClick = useCallback((metricKey: string, valueLabel: string) => {
+		setFolderTableEnumPreset((p) => ({
+			metricKey,
+			valueLabel,
+			nonce: (p?.nonce ?? 0) + 1,
+		}));
+
+		queueMicrotask(() => {
+			const anchor = document.getElementById(FOLDER_FOLDER_TABLE_SCROLL_INTO_VIEW_ID);
+			if (!anchor) return;
+
+			const y =
+				anchor.getBoundingClientRect().top +
+				window.scrollY -
+				FOLDER_BREAKDOWN_TABLE_SCROLL_EXTRA_OFFSET_PX;
+			window.scrollTo({ behavior: "smooth", top: Math.max(0, y) });
+		});
+	}, []);
 
 	const folderInfoHeader = useMemo(() => {
 		if (!folderDataset || !data) {
@@ -105,13 +124,14 @@ export default function SpecificFolderPage({ reqUser, game }: Props) {
 
 		return (
 			<FolderInfoHeader
-				folderDataset={folderDataset}
+				folderSlug={folderSlug}
 				folderTitle={data.folder.title}
 				game={game}
+				onBreakdownEnumValueClick={onBreakdownEnumValueClick}
 				reqUser={reqUser}
 			/>
 		);
-	}, [folderDataset]);
+	}, [data, folderSlug, folderDataset, game, onBreakdownEnumValueClick, reqUser]);
 
 	const base = `${useUGPTBase({ reqUser, game })}/folders/${folderSlug}`;
 
@@ -146,9 +166,6 @@ export default function SpecificFolderPage({ reqUser, game }: Props) {
 								<Icon type="sort-alpha-up" /> Tierlist View
 							</SelectLinkButton>
 						)}
-					<SelectLinkButton className="text-wrap" to={`${base}/timeline`}>
-						<Icon type="stream" /> Timeline View
-					</SelectLinkButton>
 					<SelectLinkButton className="text-wrap" to={`${base}/compare`}>
 						<Icon type="users" /> Compare Against User
 					</SelectLinkButton>
@@ -163,7 +180,13 @@ export default function SpecificFolderPage({ reqUser, game }: Props) {
 			<div className="col-12">
 				<Switch>
 					<Route exact path={base}>
-						<FolderTable dataset={folderDataset} game={game} />
+						<FolderNormalView
+							data={data}
+							folderDataset={folderDataset}
+							folderTableEnumPreset={folderTableEnumPreset}
+							game={game}
+							reqUser={reqUser}
+						/>
 					</Route>
 					<Route exact path={`${base}/tierlist`}>
 						<TierlistBreakdown
@@ -174,7 +197,7 @@ export default function SpecificFolderPage({ reqUser, game }: Props) {
 						/>
 					</Route>
 					<Route exact path={`${base}/timeline`}>
-						<TimelineView folderSlug={folderSlug} game={game} reqUser={reqUser} />
+						<Redirect to={base} />
 					</Route>
 					<Route exact path={`${base}/compare`}>
 						<FolderComparePage folder={data.folder} game={game} reqUser={reqUser} />
@@ -188,244 +211,39 @@ export default function SpecificFolderPage({ reqUser, game }: Props) {
 	);
 }
 
-/** Total `<td>` count per timeline score row (index, difficulty, title, scores, timestamp). */
-function folderTimelineColumnCount(game: V3Game): integer {
-	const headersLen = GPT_CLIENT_IMPLEMENTATIONS[game].scoreHeaders.length;
-	return 5 + headersLen;
-}
-
-function TimelineView({ game, reqUser, folderSlug }: { folderSlug: string } & Props) {
-	const gameConfig = GetGameConfig(game);
-	const enumConfs = GetScoreEnumConfs(gameConfig);
-
-	const [selectedEnum, setSelectedEnum] = useState<string>(gameConfig.preferredDefaultEnum);
-	const [enumConf, setEnumConf] = useState<ConfEnumScoreMetric<string>>(enumConfs[selectedEnum]!);
-
-	const [value, setValue] = useState<string>(enumConf.minimumRelevantValue);
-
-	useEffect(() => {
-		setValue(enumConfs[selectedEnum]!.minimumRelevantValue);
-		setEnumConf(enumConfs[selectedEnum]!);
-	}, [selectedEnum]);
-
-	return (
-		<>
-			<Card cardBodyClassName="vstack gap-4" header="Timeline View">
-				<h5 className="text-center">
-					The timeline view shows the order in which you achieved something in a folder!
-					You can choose the criteria up here.
-				</h5>
-				<div className="d-flex flex-column flex-lg-row gap-4">
-					<Form.Select
-						onChange={(e) => setSelectedEnum(e.target.value)}
-						value={selectedEnum}
-					>
-						{Object.keys(enumConfs).map((e) => (
-							<option key={e} value={e}>
-								{UppercaseFirst(e)}
-							</option>
-						))}
-					</Form.Select>
-					<Form.Select onChange={(e) => setValue(e.target.value)} value={value}>
-						{enumConf.values
-							.slice(enumConf.values.indexOf(enumConf.minimumRelevantValue))
-							.map((e) => (
-								<option key={e}>{e}</option>
-							))}
-					</Form.Select>
-				</div>
-			</Card>
-			<hr />
-			<TimelineMain {...{ reqUser, game, folderSlug, enumMetric: selectedEnum, value }} />
-		</>
-	);
-}
-
-function TimelineMain({
-	reqUser,
+function FolderNormalView({
+	data,
+	folderDataset,
+	folderTableEnumPreset,
 	game,
-	folderSlug,
-	enumMetric: enumMetric,
-	value,
+	reqUser,
 }: {
-	enumMetric: string;
-	folderSlug: string;
-	value: string;
+	data: UGPTFolderReturns;
+	folderDataset: FolderDataset;
+	folderTableEnumPreset: FolderEnumBreakdownTablePreset | null;
 } & Props) {
-	const { data, error } = useApiQuery<{
-		charts: ChartDocument[];
-		scores: ScoreDocument[];
-		songs: SongDocument[];
-	}>(
-		`/users/${
-			reqUser.id
-		}/games/${game}/folders/${folderSlug}/timeline?criteriaValue=${encodeURIComponent(
-			value,
-		)}&criteriaType=${encodeURIComponent(enumMetric)}`,
+	const gameConfig = useMemo(() => GetGameConfig(game), [game]);
+
+	const evolutionFolderScope = useMemo(
+		() => ({ folder: data.folder, kind: "folder" as const }),
+		[data.folder],
 	);
-
-	if (error) {
-		return <ApiError error={error} />;
-	}
-
-	if (!data) {
-		return <Loading />;
-	}
-
-	const scoreDataset = [];
-
-	const songMap = CreateSongMap(data.songs);
-	const chartMap = CreateChartIDMap(data.charts);
-
-	for (const score of data.scores) {
-		scoreDataset.push({
-			...score,
-			__related: {
-				song: songMap.get(score.songID)!,
-				chart: chartMap.get(score.chartID)!,
-			},
-		});
-	}
-
-	scoreDataset.sort(NumericSOV((x) => x.timeAchieved ?? Infinity));
-
-	const columnCount = folderTimelineColumnCount(game);
-	const folderTimelineScoreColVar = GPT_CLIENT_IMPLEMENTATIONS[game].scoreHeaders.length + 1;
-
-	const timelineRows = [];
-
-	let lastDay = 0;
-	let index = 1;
-	let hasHitNulls = false;
-
-	for (const scoreData of scoreDataset) {
-		if (scoreData.timeAchieved !== null) {
-			// Insane hack to floor a date to the beginning of that
-			// day.
-			const dayNum = new Date(scoreData.timeAchieved).setHours(0, 0, 0, 0);
-
-			if (!lastDay || lastDay !== dayNum) {
-				lastDay = dayNum;
-				timelineRows.push(
-					<TimelineDivider
-						columnCount={columnCount}
-						key={`folder-timeline-day-${dayNum}`}
-					>
-						{FormatDate(scoreData.timeAchieved)}
-					</TimelineDivider>,
-				);
-			}
-		} else if (!hasHitNulls) {
-			timelineRows.push(
-				<TimelineDivider columnCount={columnCount} key="folder-timeline-unknown-time">
-					Unknown Time
-				</TimelineDivider>,
-			);
-			hasHitNulls = true;
-		}
-
-		timelineRows.push(
-			<TimelineElement index={index} key={scoreData.scoreID} scoreData={scoreData} />,
-		);
-		index++;
-	}
-
-	const emptyTimelineRow =
-		timelineRows.length === 0 ? (
-			<tr>
-				<td
-					className="py-5 text-center text-body-secondary fst-italic"
-					colSpan={columnCount}
-				>
-					No scores match this folder and criteria yet.
-				</td>
-			</tr>
-		) : null;
 
 	return (
 		<>
-			<div className="text-center">
-				<h1 className="display-4">Total Progress</h1>
-				<h1 className="display-4">
-					{data.scores.length}
-					<span className="text-body-secondary" style={{ fontSize: "1.1rem" }}>
-						/{data.charts.length}
-					</span>
-				</h1>
-			</div>
+			<TableEvolutionReplay
+				game={game}
+				gameConfig={gameConfig}
+				reqUser={reqUser}
+				scope={evolutionFolderScope}
+			/>
 			<Divider />
-			<div className="timeline timeline-2 timeline-folder">
-				<div className="folder-timeline-table-wrap">
-					<table
-						className="table table-hover table-sm mb-0 folder-timeline-table text-center"
-						style={
-							{
-								["--folder-timeline-score-cols" as string]:
-									folderTimelineScoreColVar,
-							} as CSSProperties
-						}
-					>
-						<tbody>{emptyTimelineRow ?? timelineRows}</tbody>
-					</table>
-				</div>
-			</div>
-			<Divider />
-			<div className="text-center">
-				<h1 className="display-4">Total Progress</h1>
-				<h1 className="display-4">
-					{data.scores.length}
-					<span className="text-body-secondary" style={{ fontSize: "1.1rem" }}>
-						/{data.charts.length}
-					</span>
-				</h1>
-			</div>
+			<FolderTable
+				dataset={folderDataset}
+				folderBreakdownEnumTablePreset={folderTableEnumPreset}
+				game={game}
+			/>
 		</>
-	);
-}
-
-function TimelineDivider({ children, columnCount }: { children: string; columnCount: integer }) {
-	return (
-		<tr className="folder-timeline-date-row">
-			<td colSpan={columnCount}>
-				<span className="folder-timeline-date-heading">{children}</span>
-			</td>
-		</tr>
-	);
-}
-
-function TimelineElement({
-	scoreData,
-	index,
-}: {
-	index: integer;
-	scoreData: {
-		__related: {
-			chart: ChartDocument;
-			song: SongDocument;
-		};
-	} & ScoreDocument;
-}) {
-	return (
-		<tr className="folder-timeline-score-row timeline-hover">
-			<td style={{ fontSize: "1.15rem" }}>
-				<b>#{index}</b>
-				{Date.now() - scoreData.timeAdded < ONE_DAY && (
-					<span className="ms-2 label label-inline label-primary fw-bolder">NEW!</span>
-				)}
-			</td>
-			<DifficultyCell alwaysShort chart={scoreData.__related.chart} game={scoreData.game} />
-			<TitleCell
-				chart={scoreData.__related.chart}
-				game={scoreData.game}
-				song={scoreData.__related.song}
-			/>
-			<ScoreCoreCells
-				chart={scoreData.__related.chart}
-				game={scoreData.game}
-				score={scoreData}
-			/>
-			<TimestampCell tableFixedLayoutCompat time={scoreData.timeAchieved} />
-		</tr>
 	);
 }
 

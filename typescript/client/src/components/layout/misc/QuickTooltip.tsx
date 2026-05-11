@@ -22,7 +22,6 @@ export default function QuickTooltip({
 	tooltipContent: React.ReactChild | undefined;
 	wide?: boolean;
 }) {
-	const [popperArmed, setPopperArmed] = useState(false);
 	const [show, setShow] = useState(false);
 	const [mousedOver, setMousedOver] = useState(false);
 
@@ -59,26 +58,8 @@ export default function QuickTooltip({
 		});
 	}
 
-	const armPopper = () => {
-		if (!popperArmed) {
-			setPopperArmed(true);
-			setShow(true);
-		}
-	};
-
-	if (!popperArmed) {
-		return React.cloneElement(children, {
-			onMouseEnter: (e: React.MouseEvent) => {
-				armPopper();
-				children.props.onMouseEnter?.(e);
-			},
-			onFocus: (e: React.FocusEvent) => {
-				armPopper();
-				children.props.onFocus?.(e);
-			},
-		});
-	}
-
+	// Mount OverlayTrigger from the first paint. A lazy first render used cloneElement only,
+	// then swapped to OverlayTrigger on hover; that remounted the trigger and restarted CSS animations.
 	return (
 		<OverlayTrigger
 			delay={overlayDelay}

@@ -140,3 +140,29 @@ export async function GetFolderTimelineScores(
 
 	return scores;
 }
+
+/**
+ * Full score history on the charts, ordered like {@link GetFolderTimelineScores}: by `chart.id`,
+ * then `time_achieved` ascending (unknown play time sorts last via infinity), then `time_added`.
+ * Used by table evolution to detect strict PB increases per `(chart × metric)` in chronological order.
+ */
+export async function GetScoresForTableEvolution(
+	userID: integer,
+	game: V3Game,
+	chartIDs: string[],
+): Promise<Array<ScoreDocument>> {
+	if (chartIDs.length === 0) {
+		return [];
+	}
+
+	const rows = await scoreDocumentJoin()
+		.where("score.user_id", "=", userID)
+		.where("score.game", "=", game)
+		.where("chart.id", "in", chartIDs)
+		.orderBy("chart.id")
+		.orderBy(sql`coalesce(score.time_achieved, 'infinity'::timestamptz) asc`)
+		.orderBy("score.time_added", "asc")
+		.execute();
+
+	return rows.map((r) => ToScoreDocument(r as ScoreDocumentJoinRow));
+}

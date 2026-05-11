@@ -1,10 +1,11 @@
 import Muted from "#components/util/Muted";
 import usePreferredRanking from "#components/util/usePreferredRanking";
 import useScoreRatingAlg from "#components/util/useScoreRatingAlg";
+import { WindowContext } from "#context/WindowContext";
 import { type FolderDataset } from "#types/tables";
 import { NumericSOV, StrSOV } from "#util/sorts";
 import { CreateDefaultFolderSearchParams } from "#util/tables/create-search";
-import React, { memo, useCallback, useMemo, useState } from "react";
+import React, { memo, useCallback, useContext, useMemo, useState } from "react";
 import { Alert, Button } from "react-bootstrap";
 import { type PBScoreDocument, type ScoreRatingAlgorithms, type V3Game } from "tachi-common";
 
@@ -23,7 +24,30 @@ import { GetGPTCoreHeaders } from "../headers/GameHeaders";
 import { EmptyHeader, FolderIndicatorHeader } from "../headers/IndicatorHeader";
 import { CreateRankingHeader } from "../headers/RankingHeader";
 
-export default function FolderTable({ dataset, game }: { dataset: FolderDataset; game: V3Game }) {
+export type FolderEnumBreakdownTablePreset = {
+	metricKey: string;
+	valueLabel: string;
+	nonce: number;
+};
+
+/** Scroll target used when jumping from folder breakdown chips to this table (desktop-only flow). */
+export const FOLDER_FOLDER_TABLE_SCROLL_INTO_VIEW_ID =
+	"folder-folder-table-scroll-anchor";
+
+function formatFolderEnumTableFilter(metricKey: string, valueLabel: string): string {
+	const escaped = valueLabel.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+	return `${metricKey}=="${escaped}"`;
+}
+
+export default function FolderTable({
+	dataset,
+	game,
+	folderBreakdownEnumTablePreset = null,
+}: {
+	dataset: FolderDataset;
+	game: V3Game;
+	folderBreakdownEnumTablePreset?: FolderEnumBreakdownTablePreset | null;
+}) {
 	const defaultRating = useScoreRatingAlg(game);
 
 	const preferredRanking = usePreferredRanking();
@@ -34,7 +58,25 @@ export default function FolderTable({ dataset, game }: { dataset: FolderDataset;
 	);
 	const [usePaginatedView, setUsePaginatedView] = useState(false);
 
+	const {
+		breakpoint: { isLg },
+	} = useContext(WindowContext);
+
 	const folderSearchFunctions = useMemo(() => CreateDefaultFolderSearchParams(game), [game]);
+
+	const externalPreset = useMemo(() => {
+		if (!folderBreakdownEnumTablePreset || !isLg) {
+			return null;
+		}
+
+		return {
+			search: formatFolderEnumTableFilter(
+				folderBreakdownEnumTablePreset.metricKey,
+				folderBreakdownEnumTablePreset.valueLabel,
+			),
+			nonce: folderBreakdownEnumTablePreset.nonce,
+		};
+	}, [folderBreakdownEnumTablePreset, isLg]);
 
 	const headers: Header<FolderDataset[0]>[] = [
 		ChartHeader(game, (k) => k),
@@ -58,7 +100,7 @@ export default function FolderTable({ dataset, game }: { dataset: FolderDataset;
 	);
 
 	return (
-		<>
+		<div id={FOLDER_FOLDER_TABLE_SCROLL_INTO_VIEW_ID}>
 			<Alert className="mb-4" variant="warning">
 				<div className="d-flex flex-column flex-md-row align-items-md-center gap-3">
 					<p className="flex-grow-1 mb-0">
@@ -79,6 +121,7 @@ export default function FolderTable({ dataset, game }: { dataset: FolderDataset;
 			<TachiTable
 				dataset={dataset}
 				entryName="Charts"
+				externalSearchPreset={externalPreset}
 				headers={headers}
 				key={usePaginatedView ? "folder-paginated" : "folder-full"}
 				pageLen={usePaginatedView ? 10 : 1000}
@@ -87,7 +130,7 @@ export default function FolderTable({ dataset, game }: { dataset: FolderDataset;
 				rowKey={(d) => d.chartID}
 				searchFunctions={folderSearchFunctions}
 			/>
-		</>
+		</div>
 	);
 }
 

@@ -135,11 +135,49 @@ export interface UGPTTableReturns {
 	table: TableDocument;
 }
 
+/** Rows returned by `GET .../tables/:tableID/evolution`. */
+export interface TableEvolutionEventAPI {
+	chartID: string;
+	enumIndex: integer;
+	metric: string;
+	scoreID: string;
+	timeAchieved: number | null;
+	timeAdded: number;
+	value: string;
+}
+
+export interface UGPTTableEvolutionReturns {
+	charts: ChartDocument[];
+	events: TableEvolutionEventAPI[];
+	folderChartIDs: Record<string, string[]>;
+	folders: FolderDocument[];
+	songs: SongDocument<GameGroup>[];
+	table: TableDocument;
+}
+
+/** Same event/chart payloads as table evolution; scoped to a single folder. */
+export interface UGPTFolderEvolutionReturns {
+	charts: ChartDocument[];
+	events: TableEvolutionEventAPI[];
+	folder: FolderDocument;
+	folderChartIDs: Record<string, string[]>;
+	folders: FolderDocument[];
+	songs: SongDocument<GameGroup>[];
+}
+
+export type UGPTEvolutionReplayReturns = UGPTTableEvolutionReturns | UGPTFolderEvolutionReturns;
+
 export interface UGPTFolderReturns<GPT extends V3Game = V3Game> {
 	folder: FolderDocument;
 	songs: SongDocument<GameGroup>[];
 	charts: ChartDocument<GPT>[];
 	pbs: PBScoreDocument<GPT>[];
+}
+
+/** `GET .../folders/:folderSlug/stats`. */
+export interface UGPTFolderSlugStatsReturns {
+	folder: FolderDocument;
+	stats: FolderStatsInfo | null;
 }
 
 export interface GPTFolderReturns<GPT extends V3Game = V3Game> {

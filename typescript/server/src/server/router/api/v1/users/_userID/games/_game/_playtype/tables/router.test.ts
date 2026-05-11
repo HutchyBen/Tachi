@@ -76,6 +76,13 @@ describe("GET /api/v1/users/:userID/games/:game/tables/:tableID", () => {
 			.values({ table_id: tableUuid, folder_id: folderId, ordering: 0 })
 			.execute();
 
+		await DB.insertInto("folder_chart_lookup")
+			.values({
+				folder_id: folderId,
+				chart_id: chartId,
+			})
+			.execute();
+
 		await DB.insertInto("game_profile")
 			.values({
 				user_id: 1,
@@ -123,5 +130,77 @@ describe("GET /api/v1/users/:userID/games/:game/tables/:tableID", () => {
 		const res = await mockApi.get("/api/v1/users/1/games/iidx-sp/tables/bad_table");
 
 		expect(res.status).toBe(404);
+	});
+
+	describe("GET /evolution", () => {
+		beforeEach(async () => {
+			const chartId = TestingIIDXSPScorePB.chartID;
+			const uid = `${Date.now()}_${Math.floor(Math.random() * 100_000)}`;
+
+			async function insScore(scoreId: string, lamp: string, iso: string) {
+				const { data, derived, judgements } = mongoScoreDataToPg(
+					"iidx-sp",
+					{
+						score: 1400,
+						lamp,
+						percent: 93,
+						optional: {},
+						judgements: { pgreat: 1, great: 0 },
+						grade: "AAA",
+					} as ScoreData<"iidx-sp">,
+				);
+
+				await DB.insertInto("score")
+					.values({
+						id: scoreId,
+						user_id: 1,
+						chart_id: chartId,
+						game: "iidx-sp",
+						session_id: null,
+						import_id: null,
+						data: JSON.stringify(data),
+						derived_data: JSON.stringify(derived),
+						judgements: JSON.stringify(judgements),
+						calculated_data: JSON.stringify({}),
+						meta: JSON.stringify({}),
+						time_achieved: iso,
+						time_added: iso,
+						highlight: false,
+						comment: null,
+					})
+					.execute();
+			}
+
+			await insScore(`sc_${uid}_1`, "FAILED", "2020-01-01T10:00:00.000Z");
+			await insScore(`sc_${uid}_2`, "EASY CLEAR", "2020-02-01T10:00:00.000Z");
+			await insScore(`sc_${uid}_3`, "HARD CLEAR", "2020-03-01T10:00:00.000Z");
+		});
+
+		it("returns lamp milestones chronologically above minimum relevance", async () => {
+			const res = await mockApi.get(
+				"/api/v1/users/1/games/iidx-sp/tables/mock_table/evolution",
+			);
+
+			expect(res.status).toBe(200);
+
+			const { events } = res.body.body;
+			const lampEvents = events.filter((e: { metric: string }) => e.metric === "lamp");
+
+			expect(lampEvents.length).toBe(2);
+			expect(lampEvents[0].value).toBe("EASY CLEAR");
+			expect(lampEvents[1].value).toBe("HARD CLEAR");
+
+			expect(res.body.body.folderChartIDs["ugtfolder"]).toContain(
+				TestingIIDXSPScorePB.chartID,
+			);
+		});
+
+		it("returns 404 when the table does not exist", async () => {
+			const res = await mockApi.get(
+				"/api/v1/users/1/games/iidx-sp/tables/ghost_table_xyz/evolution",
+			);
+
+			expect(res.status).toBe(404);
+		});
 	});
 });
