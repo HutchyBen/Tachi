@@ -9,6 +9,7 @@ import { FAST_SLOW_MAXCOMBO } from "./_common";
 
 export const GAME_GROUP_CHUNITHM_CONF = {
 	name: "CHUNITHM",
+	dynamicContent: false,
 	games: ["chunithm"],
 	playtypes: ["Single"],
 	songData: z.strictObject({

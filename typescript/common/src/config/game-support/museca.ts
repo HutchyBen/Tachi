@@ -9,6 +9,7 @@ import { FAST_SLOW_MAXCOMBO } from "./_common";
 
 export const GAME_GROUP_MUSECA_CONF = {
 	name: "MÚSECA",
+	dynamicContent: false,
 	games: ["museca"],
 	playtypes: ["Single"],
 	songData: z.strictObject({

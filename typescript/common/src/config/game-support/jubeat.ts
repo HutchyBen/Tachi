@@ -9,6 +9,7 @@ import { FAST_SLOW_MAXCOMBO } from "./_common";
 
 export const GAME_GROUP_JUBEAT_CONF = {
 	name: "jubeat",
+	dynamicContent: false,
 	games: ["jubeat"],
 	playtypes: ["Single"],
 	songData: z.strictObject({

@@ -9,6 +9,7 @@ import { FAST_SLOW_MAXCOMBO } from "./_common";
 
 export const GAME_GROUP_SDVX_CONF = {
 	name: "SOUND VOLTEX",
+	dynamicContent: false,
 	games: ["sdvx"],
 	playtypes: ["Single"],
 	songData: z.strictObject({

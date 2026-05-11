@@ -10,6 +10,7 @@ import { FAST_SLOW_MAXCOMBO } from "./_common";
 export const GAME_GROUP_IIDX_CONF = {
 	games: ["iidx-sp", "iidx-dp"],
 	name: "beatmania IIDX",
+	dynamicContent: false,
 	playtypes: ["SP", "DP"],
 	songData: z.strictObject({
 		genre: z.string(),

@@ -8,6 +8,7 @@ import { NoDecimalPlace } from "../config-utils";
 
 export const GAME_GROUP_ITG_CONF = {
 	name: "ITG",
+	dynamicContent: true,
 	games: ["itg-stamina"],
 	playtypes: ["Stamina"],
 	songData: z.strictObject({

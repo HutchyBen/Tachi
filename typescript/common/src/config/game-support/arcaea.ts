@@ -8,6 +8,7 @@ import { FAST_SLOW_MAXCOMBO } from "./_common";
 
 export const GAME_GROUP_ARCAEA_CONF = {
 	name: "Arcaea",
+	dynamicContent: false,
 	games: ["arcaea"],
 	// Potential future controller playtype support?
 	playtypes: ["Touch"],

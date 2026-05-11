@@ -85,6 +85,11 @@ export interface GameGroupConfig<G extends GameGroup = GameGroup> {
 	 * itself - basically, for sharing song data between games.
 	 */
 	readonly songData: ZodObject;
+	/**
+	 * Whether this game group's charts or songs are driven by dynamic / user-supplied
+	 * data rather than fixed arcade-style metadata.
+	 */
+	readonly dynamicContent: boolean;
 }
 
 /**

@@ -10,6 +10,7 @@ import { SDVXVFClasses } from "./sdvx";
 
 export const GAME_GROUP_USC_CONF = {
 	name: "USC",
+	dynamicContent: true,
 	games: ["usc-controller", "usc-keyboard"],
 	playtypes: ["Controller", "Keyboard"],
 	songData: z.strictObject({}),

@@ -9,6 +9,7 @@ import { FAST_SLOW_MAXCOMBO } from "./_common";
 
 export const GAME_GROUP_GITADORA_CONF = {
 	name: "GITADORA",
+	dynamicContent: false,
 	games: ["gitadora-gita", "gitadora-dora"],
 	playtypes: ["Gita", "Dora"],
 	songData: z.strictObject({}),

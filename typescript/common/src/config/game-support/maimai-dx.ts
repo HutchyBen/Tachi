@@ -9,6 +9,7 @@ import { FAST_SLOW_MAXCOMBO } from "./_common";
 
 export const GAME_GROUP_MAIMAI_DX_CONF = {
 	name: "maimai DX",
+	dynamicContent: false,
 	games: ["maimaidx"],
 	playtypes: ["Single"],
 	songData: z.strictObject({

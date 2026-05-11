@@ -9,6 +9,7 @@ import { FAST_SLOW_MAXCOMBO } from "./_common";
 
 export const GAME_GROUP_POPN_CONF = {
 	name: "pop'n music",
+	dynamicContent: false,
 	games: ["popn"],
 	playtypes: ["9B"],
 	songData: z.strictObject({

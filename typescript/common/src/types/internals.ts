@@ -75,6 +75,7 @@ export type INTERNAL_GAME_CONFIG = Readonly<{
  * codebase. @see {GameGroupConfig} for the exported version.
  */
 export type INTERNAL_GAME_GROUP_CONFIG<PT extends string = string> = Readonly<{
+	dynamicContent: boolean;
 	games: ReadonlyArray<V3Game>;
 	name: string;
 	playtypes: ReadonlyArray<PT>;

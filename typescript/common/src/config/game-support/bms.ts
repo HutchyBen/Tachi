@@ -9,6 +9,7 @@ import { FAST_SLOW_MAXCOMBO } from "./_common";
 
 export const GAME_GROUP_BMS_CONF = {
 	name: "BMS",
+	dynamicContent: true,
 	games: ["bms-7k", "bms-14k"],
 	playtypes: ["7K", "14K"],
 	songData: z.strictObject({

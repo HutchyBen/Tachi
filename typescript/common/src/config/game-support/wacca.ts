@@ -9,6 +9,7 @@ import { FAST_SLOW_MAXCOMBO } from "./_common";
 
 export const GAME_GROUP_WACCA_CONF = {
 	name: "WACCA",
+	dynamicContent: false,
 	games: ["wacca"],
 	playtypes: ["Single"],
 	songData: z.strictObject({

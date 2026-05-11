@@ -9,6 +9,7 @@ import { FAST_SLOW_MAXCOMBO } from "./_common";
 
 export const GAME_GROUP_ONGEKI_CONF = {
 	name: "O.N.G.E.K.I.",
+	dynamicContent: false,
 	games: ["ongeki"],
 	playtypes: ["Single"],
 	songData: z.strictObject({

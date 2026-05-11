@@ -9,6 +9,7 @@ import { GAME_BMS_7K_CONF } from "./bms";
 
 export const GAME_PMS_CONF = {
 	name: "PMS",
+	dynamicContent: true,
 	games: ["pms-controller", "pms-keyboard"],
 	playtypes: ["Controller", "Keyboard"],
 	songData: z.strictObject({

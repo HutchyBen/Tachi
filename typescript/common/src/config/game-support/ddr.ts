@@ -57,6 +57,7 @@ export const DDRFlare = [
 
 export const GAME_GROUP_DDR_CONF = {
 	name: "DDR",
+	dynamicContent: false,
 	games: ["ddr-sp", "ddr-dp"],
 	playtypes: ["SP", "DP"],
 	songData: z.strictObject({
