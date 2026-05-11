@@ -6,7 +6,7 @@ import { UserSettingsContext } from "#context/UserSettingsContext";
 import { WindowContext } from "#context/WindowContext";
 import { CopyToClipboard } from "#util/misc";
 import { ComposeSearchFunction, type SearchFunctions } from "#util/ztable/search";
-import React, { useContext, useState } from "react";
+import React, { type Key, useContext, useMemo, useState } from "react";
 import { Button } from "react-bootstrap";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
@@ -16,6 +16,8 @@ import FilterDirectivesIndicator from "./FilterDirectivesIndicator";
 import NoDataWrapper from "./NoDataWrapper";
 import PageSelector from "./PageSelector";
 import SortableTH from "./SortableTH";
+
+const DEFAULT_TACHI_PAGE_LEN_OPTIONS: integer[] = [10, 25, 50, 100, 1000];
 
 export interface ZTableTHProps {
 	changeSort: (str: string) => void;
@@ -94,6 +96,8 @@ export default function TachiTable<D>({
 	searchFunctions,
 	noTopDisplayStr = false,
 	noBottomDisplayPager = false,
+	pageLenOptions = DEFAULT_TACHI_PAGE_LEN_OPTIONS,
+	rowKey,
 }: {
 	dataset: D[];
 	defaultReverseSort?: boolean;
@@ -103,14 +107,20 @@ export default function TachiTable<D>({
 	noBottomDisplayPager?: boolean;
 	noTopDisplayStr?: boolean;
 	pageLen?: integer;
+	pageLenOptions?: integer[];
 	rowFunction: (data: D) => JSX.Element;
+	/** Stable keys for tbody rows (e.g. chartID) so filtering reconciles instead of re-mounting. */
+	rowKey?: (row: D) => Key;
 	searchFunctions?: SearchFunctions<D>;
 }) {
 	const [search, setSearch] = useState("");
 
-	const searchFunction = searchFunctions ? ComposeSearchFunction(searchFunctions) : undefined;
+	const searchFunction = useMemo(
+		() => (searchFunctions ? ComposeSearchFunction(searchFunctions) : undefined),
+		[searchFunctions],
+	);
 
-	const sortFunctions = GetSortFunctions(headers);
+	const sortFunctions = useMemo(() => GetSortFunctions(headers), [headers]);
 
 	const ztable = useZTable(dataset ?? [], {
 		search,
@@ -123,7 +133,7 @@ export default function TachiTable<D>({
 	});
 
 	const {
-		window,
+		pageWindow,
 		setPage,
 		pageState,
 		incrementPage,
@@ -137,11 +147,15 @@ export default function TachiTable<D>({
 		filteredDataset,
 	} = ztable;
 
-	const headersRow = ParseHeaders(headers, {
-		changeSort,
-		currentSortMode: sortMode,
-		reverseSort,
-	});
+	const headersRow = useMemo(
+		() =>
+			ParseHeaders(headers, {
+				changeSort,
+				currentSortMode: sortMode,
+				reverseSort,
+			}),
+		[headers, changeSort, sortMode, reverseSort],
+	);
 
 	const { settings } = useContext(UserSettingsContext);
 	const {
@@ -175,11 +189,20 @@ export default function TachiTable<D>({
 					<thead>{headersRow}</thead>
 					<tbody>
 						<NoDataWrapper>
-							{window.map((e, i) => (
-								<React.Fragment key={i + ztable.pageLen * (page - 1)}>
-									{e && rowFunction(e)}
-								</React.Fragment>
-							))}
+							{pageWindow.map((e, i) => {
+								const fallbackKey = i + ztable.pageLen * (page - 1);
+								return (
+									<React.Fragment
+										key={
+											rowKey && e !== null && e !== undefined
+												? rowKey(e)
+												: fallbackKey
+										}
+									>
+										{e && rowFunction(e)}
+									</React.Fragment>
+								);
+							})}
 						</NoDataWrapper>
 					</tbody>
 				</table>
@@ -192,10 +215,11 @@ export default function TachiTable<D>({
 							setValue={(e) => ztable.setPageLen(Number(e))}
 							value={ztable.pageLen.toString()}
 						>
-							<option value="10">10</option>
-							<option value="25">25</option>
-							<option value="50">50</option>
-							<option value="100">100</option>
+							{pageLenOptions.map((n) => (
+								<option key={n} value={String(n)}>
+									{n}
+								</option>
+							))}
 						</Select>
 					)}
 				</div>

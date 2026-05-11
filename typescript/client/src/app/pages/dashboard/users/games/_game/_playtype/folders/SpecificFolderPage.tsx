@@ -25,15 +25,26 @@ import { type FolderDataset } from "#types/tables";
 import { ChangeOpacity } from "#util/color-opacity";
 import { ONE_DAY } from "#util/constants/time";
 import { CreateChartIDMap, CreateChartLink, CreateSongMap } from "#util/data";
-import { DistinctArr, UppercaseFirst } from "#util/misc";
+import { DistinctArr, ToFixedFloor, UppercaseFirst } from "#util/misc";
 import { NumericSOV, StrSOV } from "#util/sorts";
 import { FormatDate } from "#util/time";
-import React, { useContext, useEffect, useMemo, useState } from "react";
-import { Col, Form, Row } from "react-bootstrap";
-import { Link, Route, Switch, useParams } from "react-router-dom";
+import React, {
+	type CSSProperties,
+	type SetStateAction,
+	useCallback,
+	useContext,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
+import { Col, Collapse, Form, Row } from "react-bootstrap";
+import { Link, Route, Switch, useHistory, useLocation, useParams } from "react-router-dom";
 import {
 	type ChartDocument,
 	COLOUR_SET,
+	EnumIndexToValue,
 	FormatDifficultyShort,
 	GetGameConfig,
 	GetScoreEnumConfs,
@@ -47,6 +58,7 @@ import { type ConfEnumScoreMetric } from "tachi-common/types/metrics";
 
 import FolderComparePage from "./FolderComparePage";
 import FolderQuestsPage from "./FolderQuestsPage";
+import tierlistStyles from "./SpecificFolderPage.module.scss";
 
 interface Props {
 	reqUser: UserDocument;
@@ -176,6 +188,12 @@ export default function SpecificFolderPage({ reqUser, game }: Props) {
 	);
 }
 
+/** Total `<td>` count per timeline score row (index, difficulty, title, scores, timestamp). */
+function folderTimelineColumnCount(game: V3Game): integer {
+	const headersLen = GPT_CLIENT_IMPLEMENTATIONS[game].scoreHeaders.length;
+	return 5 + headersLen;
+}
+
 function TimelineView({ game, reqUser, folderSlug }: { folderSlug: string } & Props) {
 	const gameConfig = GetGameConfig(game);
 	const enumConfs = GetScoreEnumConfs(gameConfig);
@@ -271,7 +289,10 @@ function TimelineMain({
 
 	scoreDataset.sort(NumericSOV((x) => x.timeAchieved ?? Infinity));
 
-	const elements = [];
+	const columnCount = folderTimelineColumnCount(game);
+	const folderTimelineScoreColVar = GPT_CLIENT_IMPLEMENTATIONS[game].scoreHeaders.length + 1;
+
+	const timelineRows = [];
 
 	let lastDay = 0;
 	let index = 1;
@@ -285,22 +306,41 @@ function TimelineMain({
 
 			if (!lastDay || lastDay !== dayNum) {
 				lastDay = dayNum;
-				elements.push(
-					<TimelineDivider key={scoreData.timeAchieved}>
+				timelineRows.push(
+					<TimelineDivider
+						columnCount={columnCount}
+						key={`folder-timeline-day-${dayNum}`}
+					>
 						{FormatDate(scoreData.timeAchieved)}
 					</TimelineDivider>,
 				);
 			}
 		} else if (!hasHitNulls) {
-			elements.push(<TimelineDivider key={index}>Unknown Time</TimelineDivider>);
+			timelineRows.push(
+				<TimelineDivider columnCount={columnCount} key="folder-timeline-unknown-time">
+					Unknown Time
+				</TimelineDivider>,
+			);
 			hasHitNulls = true;
 		}
 
-		elements.push(
+		timelineRows.push(
 			<TimelineElement index={index} key={scoreData.scoreID} scoreData={scoreData} />,
 		);
 		index++;
 	}
+
+	const emptyTimelineRow =
+		timelineRows.length === 0 ? (
+			<tr>
+				<td
+					className="py-5 text-center text-body-secondary fst-italic"
+					colSpan={columnCount}
+				>
+					No scores match this folder and criteria yet.
+				</td>
+			</tr>
+		) : null;
 
 	return (
 		<>
@@ -314,9 +354,20 @@ function TimelineMain({
 				</h1>
 			</div>
 			<Divider />
-			<div className="timeline timeline-2">
-				<div className="timeline-bar"></div>
-				{elements}
+			<div className="timeline timeline-2 timeline-folder">
+				<div className="folder-timeline-table-wrap">
+					<table
+						className="table table-hover table-sm mb-0 folder-timeline-table text-center"
+						style={
+							{
+								["--folder-timeline-score-cols" as string]:
+									folderTimelineScoreColVar,
+							} as CSSProperties
+						}
+					>
+						<tbody>{emptyTimelineRow ?? timelineRows}</tbody>
+					</table>
+				</div>
 			</div>
 			<Divider />
 			<div className="text-center">
@@ -332,11 +383,13 @@ function TimelineMain({
 	);
 }
 
-function TimelineDivider({ children }: { children: string }) {
+function TimelineDivider({ children, columnCount }: { children: string; columnCount: integer }) {
 	return (
-		<div className="w-100 text-center my-4">
-			<h4>{children}</h4>
-		</div>
+		<tr className="folder-timeline-date-row">
+			<td colSpan={columnCount}>
+				<span className="folder-timeline-date-heading">{children}</span>
+			</td>
+		</tr>
 	);
 }
 
@@ -353,41 +406,26 @@ function TimelineElement({
 	} & ScoreDocument;
 }) {
 	return (
-		<div className="timeline-item">
-			<span className="timeline-badge bg-primary"></span>
-			<div className="timeline-content d-flex align-items-center justify-content-between overflow-x-auto overflow-x-md-visible">
-				<span className="me-3 w-100" style={{ fontSize: "1.15rem" }}>
-					<MiniTable>
-						<tr>
-							<td>
-								<b>#{index}</b>
-								{Date.now() - scoreData.timeAdded < ONE_DAY && (
-									<span className="ms-2 label label-inline label-primary fw-bolder">
-										NEW!
-									</span>
-								)}
-							</td>
-							<DifficultyCell
-								alwaysShort
-								chart={scoreData.__related.chart}
-								game={scoreData.game}
-							/>
-							<TitleCell
-								chart={scoreData.__related.chart}
-								game={scoreData.game}
-								song={scoreData.__related.song}
-							/>
-							<ScoreCoreCells
-								chart={scoreData.__related.chart}
-								game={scoreData.game}
-								score={scoreData}
-							/>
-							<TimestampCell time={scoreData.timeAchieved} />
-						</tr>
-					</MiniTable>
-				</span>
-			</div>
-		</div>
+		<tr className="folder-timeline-score-row timeline-hover">
+			<td style={{ fontSize: "1.15rem" }}>
+				<b>#{index}</b>
+				{Date.now() - scoreData.timeAdded < ONE_DAY && (
+					<span className="ms-2 label label-inline label-primary fw-bolder">NEW!</span>
+				)}
+			</td>
+			<DifficultyCell alwaysShort chart={scoreData.__related.chart} game={scoreData.game} />
+			<TitleCell
+				chart={scoreData.__related.chart}
+				game={scoreData.game}
+				song={scoreData.__related.song}
+			/>
+			<ScoreCoreCells
+				chart={scoreData.__related.chart}
+				game={scoreData.game}
+				score={scoreData}
+			/>
+			<TimestampCell tableFixedLayoutCompat time={scoreData.timeAchieved} />
+		</tr>
 	);
 }
 
@@ -404,13 +442,59 @@ type InfoProps = {
 function TierlistBreakdown({ game, folderDataset, reqUser }: InfoProps) {
 	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
 
-	const [tierlist, setTierlist] = useState<string>(gptImpl.ratingSystems[0].name);
+	const history = useHistory();
+	const location = useLocation();
+
+	const canonicalFirstTier = gptImpl.ratingSystems[0]?.name ?? "";
+
+	const tierlist = useMemo((): string => {
+		const systems = gptImpl.ratingSystems as GPTRatingSystem<V3Game>[];
+		const fromQs = new URLSearchParams(location.search).get("tierlist");
+		if (!fromQs) {
+			return canonicalFirstTier;
+		}
+		const match = systems.find((s) => s.name === fromQs);
+		return match ? match.name : canonicalFirstTier;
+	}, [canonicalFirstTier, gptImpl.ratingSystems, location.search]);
+
+	const commitTierlistToUrl = useCallback(
+		(next: SetStateAction<string>) => {
+			const name = typeof next === "function" ? next(tierlist) : next;
+			const nextQs = new URLSearchParams(location.search);
+			nextQs.set("tierlist", name);
+			const s = nextQs.toString();
+			history.push({
+				pathname: location.pathname,
+				search: s.length > 0 ? `?${s}` : "",
+			});
+		},
+		[history, location.pathname, location.search, tierlist],
+	);
+
+	useEffect(() => {
+		const systems = gptImpl.ratingSystems as GPTRatingSystem<V3Game>[];
+		if (systems.length === 0) {
+			return;
+		}
+
+		const nextQs = new URLSearchParams(location.search);
+		const raw = nextQs.get("tierlist");
+		if (!raw || !systems.some((s) => s.name === raw)) {
+			nextQs.set("tierlist", systems[0].name);
+			const s = nextQs.toString();
+			history.replace({
+				pathname: location.pathname,
+				search: s.length > 0 ? `?${s}` : "",
+			});
+		}
+	}, [gptImpl.ratingSystems, history, location.pathname, location.search]);
+
 	const [useFancyColour, setUseFancyColour] = useState(false);
 	const [forceGridView, setForceGridView] = useState(false);
 
 	const playerStats = useMemo(
 		() => FolderDatasetAchievedStatus(folderDataset, game, tierlist),
-		[tierlist],
+		[folderDataset, game, tierlist],
 	);
 
 	const tierlistImpl = (gptImpl.ratingSystems as GPTRatingSystem<V3Game>[]).find(
@@ -431,7 +515,7 @@ function TierlistBreakdown({ game, folderDataset, reqUser }: InfoProps) {
 								className="btn-lg"
 								id={e.name}
 								key={e.name}
-								setValue={setTierlist}
+								setValue={commitTierlistToUrl}
 								value={tierlist}
 							>
 								{e.name}
@@ -479,6 +563,436 @@ function TierlistBreakdown({ game, folderDataset, reqUser }: InfoProps) {
 					tierlistImpl={tierlistImpl}
 					useFancyColour={useFancyColour}
 				/>
+			</Col>
+		</Row>
+	);
+}
+
+const TIERLIST_NOT_PLAYED_BUCKET_KEY = "__NOT_PLAYED__";
+const TIERLIST_UNKNOWN_BUCKET_KEY = "__UNKNOWN__";
+
+function tierlistRowEnumBucketKey(row: TierlistInfo, game: V3Game, enumMetric: string): string {
+	if (row.status === AchievedStatuses.NOT_PLAYED || !row.chart.__related.pb) {
+		return TIERLIST_NOT_PLAYED_BUCKET_KEY;
+	}
+	if (typeof row.score === "string" && row.score.length > 0) {
+		return row.score;
+	}
+
+	const pb = row.chart.__related.pb;
+	const idx = (pb.scoreData.enumIndexes as Record<string, integer | undefined>)[enumMetric];
+	if (typeof idx !== "number") {
+		return TIERLIST_UNKNOWN_BUCKET_KEY;
+	}
+
+	try {
+		const label = EnumIndexToValue(
+			game,
+			// @ts-expect-error GPTRatingSystem.enumName matches score enums on this GPT
+			enumMetric,
+			idx,
+		);
+		return label;
+	} catch {
+		return TIERLIST_UNKNOWN_BUCKET_KEY;
+	}
+}
+
+interface TierlistBucketBarSegment {
+	count: number;
+	fill: string;
+	label: string;
+}
+
+function computeTierlistBucketBarModel(
+	bucket: TierlistInfo[],
+	game: V3Game,
+	tierlistImpl: GPTRatingSystem<V3Game>,
+	useFancyColour: boolean,
+): { achieved: number; segments: TierlistBucketBarSegment[]; total: number } {
+	const total = bucket.length;
+
+	let achieved = 0;
+	for (const row of bucket) {
+		if (row.status === AchievedStatuses.ACHIEVED) {
+			achieved++;
+		}
+	}
+
+	const mutedBg = "var(--bs-secondary-bg)";
+
+	if (!useFancyColour) {
+		// Left → right: strongest progress first; "not played" on the far right.
+		const meta = [
+			{ internal: "__OK__", fill: "var(--bs-success)", label: "Done" },
+			{ internal: "__SB__", fill: "var(--bs-info)", label: "Score only" },
+			{ internal: "__FAIL__", fill: "var(--bs-danger)", label: "Not met" },
+			{ internal: "__NP__", fill: mutedBg, label: "Not played" },
+		] as const;
+		const tallies = new Map<string, number>(meta.map(({ internal }) => [internal, 0]));
+
+		for (const row of bucket) {
+			let k: "__FAIL__" | "__NP__" | "__OK__" | "__SB__";
+
+			switch (row.status) {
+				case AchievedStatuses.NOT_PLAYED:
+					k = "__NP__";
+					break;
+
+				case AchievedStatuses.FAILED:
+					k = "__FAIL__";
+					break;
+
+				case AchievedStatuses.ACHIEVED:
+					k = "__OK__";
+					break;
+
+				default:
+					k = "__SB__";
+					break;
+			}
+			const next = tallies.get(k)! + 1;
+
+			tallies.set(k, next);
+		}
+
+		const segments = meta
+			.map((entry) => ({
+				fill: entry.fill,
+				label: entry.label,
+				count: tallies.get(entry.internal)!,
+			}))
+			.filter((s) => s.count > 0);
+
+		return { achieved, segments, total };
+	}
+
+	const enumMetric = tierlistImpl.enumName;
+	const conf = GetScoreEnumConfs(GetGameConfig(game))[enumMetric];
+	const gptImpl = GPT_CLIENT_IMPLEMENTATIONS[game];
+
+	const counts = new Map<string, number>();
+	for (const row of bucket) {
+		const key = tierlistRowEnumBucketKey(row, game, enumMetric);
+
+		counts.set(key, (counts.get(key) ?? 0) + 1);
+	}
+
+	function resolveFill(key: string): string {
+		if (key === TIERLIST_NOT_PLAYED_BUCKET_KEY || key === TIERLIST_UNKNOWN_BUCKET_KEY) {
+			return mutedBg;
+		}
+
+		// Mirrors fancy colours on tier cards.
+		// @ts-expect-error enumColours keying on dynamic lamp/grade string
+		return gptImpl.enumColours[tierlistImpl.enumName][key] ?? mutedBg;
+	}
+
+	const orderedKeys: string[] = [];
+
+	// Left → right: best enum outcome first (end of conf.values[]); "not played" last.
+	if (conf?.type === "ENUM") {
+		for (let vi = conf.values.length - 1; vi >= 0; vi--) {
+			const v = conf.values[vi];
+			if ((counts.get(v) ?? 0) > 0) {
+				orderedKeys.push(v);
+			}
+		}
+	} else {
+		const restKeys = [...counts.keys()].filter(
+			(k) => k !== TIERLIST_NOT_PLAYED_BUCKET_KEY && k !== TIERLIST_UNKNOWN_BUCKET_KEY,
+		);
+		for (const k of restKeys.sort(StrSOV((x) => x)).reverse()) {
+			if ((counts.get(k) ?? 0) > 0) {
+				orderedKeys.push(k);
+			}
+		}
+	}
+
+	const unk = counts.get(TIERLIST_UNKNOWN_BUCKET_KEY) ?? 0;
+	const np = counts.get(TIERLIST_NOT_PLAYED_BUCKET_KEY) ?? 0;
+
+	if (unk > 0) {
+		orderedKeys.push(TIERLIST_UNKNOWN_BUCKET_KEY);
+	}
+	if (np > 0) {
+		orderedKeys.push(TIERLIST_NOT_PLAYED_BUCKET_KEY);
+	}
+
+	const segments: TierlistBucketBarSegment[] = orderedKeys.map((key) => ({
+		label:
+			key === TIERLIST_NOT_PLAYED_BUCKET_KEY
+				? "Not played"
+				: key === TIERLIST_UNKNOWN_BUCKET_KEY
+					? "Unknown"
+					: key,
+
+		count: counts.get(key) ?? 0,
+		fill: resolveFill(key),
+	}));
+
+	return { achieved, segments, total };
+}
+
+function tierlistBucketBarSegmentFill(seg: TierlistBucketBarSegment): string {
+	return seg.fill.startsWith("var(") ? seg.fill : ChangeOpacity(seg.fill, 0.92);
+}
+
+const TIERLIST_BAR_HEIGHT = "1.625rem";
+
+const MIN_TIERLIST_SEGMENT_WIDTH_PX_FOR_INLINE_LABEL = 30;
+
+function TierlistBucketProgressBar({
+	segments,
+	total,
+}: {
+	segments: TierlistBucketBarSegment[];
+	total: number;
+}) {
+	const barRef = useRef<HTMLDivElement>(null);
+	const [barWidthPx, setBarWidthPx] = useState(0);
+
+	useLayoutEffect(() => {
+		const el = barRef.current;
+		if (!el) {
+			return;
+		}
+
+		const update = () => {
+			setBarWidthPx(el.getBoundingClientRect().width);
+		};
+
+		update();
+		const ro = new ResizeObserver((entries) => {
+			const w = entries[0]?.contentRect.width;
+			if (w !== undefined) {
+				setBarWidthPx(w);
+			}
+		});
+		ro.observe(el);
+		return () => {
+			ro.disconnect();
+		};
+	}, []);
+
+	if (total === 0 || segments.every((s) => s.count === 0)) {
+		return null;
+	}
+
+	const visible = segments.filter((s) => s.count > 0);
+	let filled = 0;
+	for (const s of visible) {
+		filled += s.count;
+	}
+	const remainderWidthPct = total > 0 ? (100 * Math.max(0, total - filled)) / total : 0;
+
+	return (
+		<div
+			className={`border overflow-hidden rounded-3 ${tierlistStyles.tierlistBar}`}
+			dir="ltr"
+			lang="en"
+			ref={barRef}
+			style={{
+				backgroundColor: "var(--bs-secondary-bg)",
+				direction: "ltr",
+				display: "block",
+				height: TIERLIST_BAR_HEIGHT,
+				minHeight: "1.25rem",
+				unicodeBidi: "isolate",
+				width: "100%",
+			}}
+		>
+			<div
+				style={{
+					display: "flex",
+					flexDirection: "row",
+					height: "100%",
+					width: "100%",
+				}}
+			>
+				{visible.map((seg, segIndex) => {
+					const pct = total > 0 ? (100 * seg.count) / total : 0;
+					const fill = tierlistBucketBarSegmentFill(seg);
+					const segmentWidthPx = barWidthPx > 0 ? (pct / 100) * barWidthPx : 0;
+					const showInlinePct =
+						segmentWidthPx >= MIN_TIERLIST_SEGMENT_WIDTH_PX_FOR_INLINE_LABEL;
+					const inlinePctText = `${Math.round(pct)}%`;
+
+					return (
+						<QuickTooltip
+							key={`${seg.label}-${seg.fill}-${segIndex}`}
+							tooltipContent={
+								<>
+									<div>{seg.label}</div>
+									<div>{ToFixedFloor(pct, 2)}%</div>
+									<Muted>
+										({seg.count} / {total})
+									</Muted>
+								</>
+							}
+						>
+							<div
+								className={`h-100 ${tierlistStyles.tierlistBarSegment}`}
+								style={{
+									animationDelay: `${0.05 + segIndex * 0.055}s`,
+									backgroundColor: fill,
+									flex: "none",
+									minWidth: seg.count ? "4px" : 0,
+									width: `${pct}%`,
+								}}
+							>
+								{showInlinePct && (
+									<span className={tierlistStyles.tierlistBarLabel}>
+										{inlinePctText}
+									</span>
+								)}
+							</div>
+						</QuickTooltip>
+					);
+				})}
+				{remainderWidthPct > 0 && (
+					<div
+						aria-hidden
+						className={`h-100 ${tierlistStyles.tierlistBarRemainder}`}
+						style={{
+							animationDelay: `${0.05 + visible.length * 0.055}s`,
+							backgroundColor: "transparent",
+							flex: "none",
+							width: `${remainderWidthPct}%`,
+						}}
+					/>
+				)}
+			</div>
+		</div>
+	);
+}
+
+function tierlistBucketTitleText(bucket: TierlistInfo[]): string {
+	const inner = DistinctArr(bucket.map((e) => e.text ?? "No Tierlist Data")).join(", ");
+	const value = bucket[0].value;
+	if (value !== null && value !== undefined) {
+		return `${value} (${inner})`;
+	}
+	return inner;
+}
+
+function TierlistBucketsSummaryTable({
+	buckets,
+	expandedBucketIndices,
+	game,
+	onTierActivate,
+	tierlistImpl,
+	useFancyColour,
+}: {
+	buckets: TierlistInfo[][];
+	expandedBucketIndices: Set<number>;
+	game: V3Game;
+	onTierActivate: (bucketIndex: number) => void;
+	tierlistImpl: GPTRatingSystem<V3Game>;
+	useFancyColour: boolean;
+}) {
+	if (buckets.length === 0) {
+		return null;
+	}
+
+	return (
+		<Row className="mb-4">
+			<Col xs={12}>
+				<h5 className="mb-2 text-body-secondary">Summary</h5>
+				<div className="table-responsive">
+					<table className="mb-0 table table-bordered table-sm align-middle tierlist-summary-table">
+						<thead>
+							<tr>
+								<th className="text-start text-nowrap">Tier</th>
+								<th className="text-start" style={{ minWidth: "12rem" }}>
+									Distribution
+								</th>
+								<th
+									className={`text-center text-nowrap ${tierlistStyles.tierlistSummaryMetHeader}`}
+								>
+									Met
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							{buckets.map((bucket, i) => {
+								const barModel = computeTierlistBucketBarModel(
+									bucket,
+									game,
+									tierlistImpl,
+									useFancyColour,
+								);
+								const tierKey =
+									bucket[0].value !== null && bucket[0].value !== undefined
+										? String(bucket[0].value)
+										: "novalue";
+								const toGo = barModel.total - barModel.achieved;
+								const tierComplete =
+									barModel.total > 0 && barModel.achieved === barModel.total;
+
+								return (
+									<tr
+										aria-controls={`tierlist-bucket-panel-${i}`}
+										aria-expanded={expandedBucketIndices.has(i)}
+										className="tierlist-summary-row"
+										key={`tierlist-summary-${tierKey}-${i}`}
+										onClick={() => onTierActivate(i)}
+										onKeyDown={(evt) => {
+											if (evt.key === "Enter" || evt.key === " ") {
+												evt.preventDefault();
+												onTierActivate(i);
+											}
+										}}
+										role="button"
+										tabIndex={0}
+									>
+										<td className="fw-medium text-nowrap">
+											{tierlistBucketTitleText(bucket)}
+										</td>
+										<td className="py-2">
+											<div className="w-100" dir="ltr" lang="en">
+												<TierlistBucketProgressBar
+													segments={barModel.segments}
+													total={barModel.total}
+												/>
+											</div>
+										</td>
+										<td className="text-center">
+											<div className="align-items-center d-flex flex-column gap-0">
+												<div
+													className={`fw-bold ${tierlistStyles.tierlistMetFraction} ${tierlistStyles.tierlistMetFractionCenter}`}
+												>
+													<span
+														className={
+															tierComplete
+																? "text-success"
+																: barModel.achieved === 0
+																	? "text-body-secondary"
+																	: "text-body"
+														}
+													>
+														{barModel.achieved}
+													</span>
+													<span className="fs-6 fw-semibold text-body-secondary">
+														/
+													</span>
+													<span className="fs-6 fw-semibold text-body-secondary">
+														{barModel.total}
+													</span>
+												</div>
+												{toGo > 0 && toGo < 5 ? (
+													<span className="small text-body-secondary text-nowrap">
+														{`${toGo} to go!`}
+													</span>
+												) : null}
+											</div>
+										</td>
+									</tr>
+								);
+							})}
+						</tbody>
+					</table>
+				</div>
 			</Col>
 		</Row>
 	);
@@ -556,38 +1070,151 @@ function TierlistInfoLadder({
 		}
 
 		return buckets;
-	}, [playerStats]);
+	}, [folderDataset, tierlistImpl, playerStats]);
 
-	if (buckets.length === 0) {
-		return <Row className="justify-content-center">Got no tierlist data to show you!</Row>;
-	}
+	const nonEmptyBuckets = useMemo(() => buckets.filter((e) => e.length > 0), [buckets]);
+
+	const [expandedBucketIndices, setExpandedBucketIndices] = useState<Set<number>>(
+		() => new Set(),
+	);
+
+	useEffect(() => {
+		setExpandedBucketIndices(new Set());
+	}, [buckets]);
+
+	const activateTierFromSummary = useCallback((i: number) => {
+		setExpandedBucketIndices((prev) => {
+			const next = new Set(prev);
+			next.add(i);
+			return next;
+		});
+		queueMicrotask(() => {
+			document.getElementById(`tierlist-tier-section-${i}`)?.scrollIntoView({
+				behavior: "smooth",
+				block: "start",
+			});
+		});
+	}, []);
 
 	return (
 		<>
-			{buckets
-				.filter((e) => e.length > 0)
-				.map((bucket, i) => (
-					<div className="mb-4" key={i}>
-						<div className="fs-3 mb-4 text-center">
-							{bucket[0].value} (
-							{DistinctArr(bucket.map((e) => e.text ?? "No Tierlist Data")).join(
-								", ",
-							)}
-							)
-						</div>
+			<TierlistBucketsSummaryTable
+				buckets={nonEmptyBuckets}
+				expandedBucketIndices={expandedBucketIndices}
+				game={game}
+				onTierActivate={activateTierFromSummary}
+				tierlistImpl={tierlistImpl}
+				useFancyColour={useFancyColour}
+			/>
+			{nonEmptyBuckets.length === 0 ? (
+				<Row className="justify-content-center">Got no tierlist data to show you!</Row>
+			) : (
+				nonEmptyBuckets.map((bucket, i) => {
+					const expanded = expandedBucketIndices.has(i);
+					const barModel = computeTierlistBucketBarModel(
+						bucket,
+						game,
+						tierlistImpl,
+						useFancyColour,
+					);
+					const toGo = barModel.total - barModel.achieved;
+					const tierComplete = barModel.total > 0 && barModel.achieved === barModel.total;
+					const tierKey =
+						bucket[0].value !== null && bucket[0].value !== undefined
+							? String(bucket[0].value)
+							: "novalue";
 
-						<TierlistBucket
-							{...{
-								bucket,
-								game,
-								reqUser,
-								useFancyColour,
-								tierlistImpl,
-								forceGridView,
-							}}
-						/>
-					</div>
-				))}
+					function toggleTierBucket() {
+						setExpandedBucketIndices((prev) => {
+							const next = new Set(prev);
+							if (next.has(i)) {
+								next.delete(i);
+							} else {
+								next.add(i);
+							}
+							return next;
+						});
+					}
+
+					return (
+						<div
+							className="mb-4"
+							id={`tierlist-tier-section-${i}`}
+							key={`tierlist-tier-${tierKey}-${i}`}
+							style={{ scrollMarginTop: "4.5rem" }}
+						>
+							<div className="w-100">
+								<div
+									aria-controls={`tierlist-bucket-panel-${i}`}
+									aria-expanded={expanded}
+									className="cursor-pointer mb-2 rounded-3 tierlist-collapsed-hit w-100"
+									onClick={toggleTierBucket}
+									onKeyDown={(evt) => {
+										if (evt.key === "Enter" || evt.key === " ") {
+											evt.preventDefault();
+											toggleTierBucket();
+										}
+									}}
+									role="button"
+									tabIndex={0}
+								>
+									<div className="d-inline-flex flex-row justify-content-center align-items-center fs-3 px-3 py-2 text-body text-center w-100 gap-2 mb-2">
+										<Icon type={expanded ? "chevron-down" : "chevron-right"} />
+										<span>{tierlistBucketTitleText(bucket)}</span>
+									</div>
+									<div className="px-3 pb-3 w-100">
+										<div className="align-items-baseline d-flex justify-content-between gap-3 mb-2">
+											<div
+												className={`fs-4 fw-bold tabular-nums ${tierlistStyles.tierlistMetFraction}`}
+											>
+												<span
+													className={
+														tierComplete
+															? "text-success"
+															: barModel.achieved === 0
+																? "text-body-secondary"
+																: "text-body"
+													}
+												>
+													{barModel.achieved}
+												</span>
+												<span className="fs-6 fw-semibold text-body-secondary">
+													/
+												</span>
+												<span className="fs-6 fw-semibold text-body-secondary">
+													{barModel.total}
+												</span>
+											</div>
+											{toGo > 0 && toGo < 5 ? (
+												<span className="small text-body-secondary text-nowrap">{`${toGo} to go!`}</span>
+											) : null}
+										</div>
+										<TierlistBucketProgressBar
+											segments={barModel.segments}
+											total={barModel.total}
+										/>
+									</div>
+								</div>
+							</div>
+
+							<Collapse in={expanded}>
+								<div id={`tierlist-bucket-panel-${i}`}>
+									<TierlistBucket
+										{...{
+											bucket,
+											game,
+											reqUser,
+											useFancyColour,
+											tierlistImpl,
+											forceGridView,
+										}}
+									/>
+								</div>
+							</Collapse>
+						</div>
+					);
+				})
+			)}
 		</>
 	);
 }

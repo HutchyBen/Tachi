@@ -10,8 +10,8 @@ import { PoyashiBPI } from "rg-stats";
 import {
 	type ChartDocument,
 	type GamesForGroup,
-	GetGrade,
 	IIDXLIKE_GBOUNDARIES,
+	IIDXLikeGetGrade,
 	type integer,
 	type PBScoreDocument,
 	type ScoreDocument,
@@ -74,48 +74,46 @@ export default function BPICell({
 		chart.data.notecount,
 	);
 
-	const { score: TGAverageCell, delta: TGDeltaCell } = FormatAverage(
-		bpiTargetScore,
-		iidxPlaytype,
-		chart.data.notecount,
-	);
+	const showTargetColumn = isRequestingUser && bpiTarget !== 0;
+
+	const targetFmt = showTargetColumn
+		? FormatAverage(bpiTargetScore, iidxPlaytype, chart.data.notecount)
+		: null;
 
 	const headers = ["皆伝 Average", "World Record"];
 
-	if (isRequestingUser) {
+	if (showTargetColumn) {
 		headers.unshift(`Your Target (BPI ${bpiTarget})`);
 	}
 
+	const tooltipTable = (
+		<div className="bpi-tooltip-stack text-center">
+			<MiniTable headers={headers}>
+				<tr>
+					{showTargetColumn && targetFmt ? targetFmt.score : null}
+					{KDAverageCell}
+					{WRAverageCell}
+				</tr>
+				<tr>
+					{showTargetColumn && targetFmt ? targetFmt.delta : null}
+					{KDDeltaCell}
+					{WRDeltaCell}
+				</tr>
+			</MiniTable>
+			<Divider className="my-2" />
+			<Muted>
+				BPI Coefficient:{" "}
+				{IsNullish(chart.data.bpiCoefficient) || chart.data.bpiCoefficient === -1
+					? 1.175
+					: chart.data.bpiCoefficient}
+			</Muted>
+		</div>
+	);
+
 	return (
-		<>
-			<QuickTooltip
-				tooltipContent={
-					<>
-						<MiniTable headers={headers}>
-							<tr>
-								{isRequestingUser ? TGAverageCell : null}
-								{KDAverageCell}
-								{WRAverageCell}
-							</tr>
-							<tr>
-								{isRequestingUser ? TGDeltaCell : null}
-								{KDDeltaCell}
-								{WRDeltaCell}
-							</tr>
-						</MiniTable>
-						<Divider />
-						<Muted>
-							BPI Coefficient:{" "}
-							{IsNullish(chart.data.bpiCoefficient) ||
-							chart.data.bpiCoefficient === -1
-								? 1.175
-								: chart.data.bpiCoefficient}
-						</Muted>
-					</>
-				}
-				wide
-			>
-				<td>
+		<td>
+			<QuickTooltip tooltipContent={tooltipTable} wide>
+				<span className="cursor-default d-inline-block w-100">
 					<strong className="underline-on-hover">{bpi?.toFixed(2)}</strong>
 					<br />
 
@@ -138,18 +136,28 @@ export default function BPICell({
 							</>
 						)}
 					</div>
-				</td>
+				</span>
 			</QuickTooltip>
-		</>
+		</td>
 	);
 }
 
-function FormatAverage(score: integer, playtype: "DP" | "SP", notecount: integer) {
-	const percent = (100 * score) / (notecount * 2);
+function FormatAverage(exScore: integer, playtype: "DP" | "SP", notecount: integer) {
+	const percent = notecount > 0 ? (100 * exScore) / (notecount * 2) : 0;
 
-	const grade = GetGrade(IIDXLIKE_GBOUNDARIES, percent);
+	const grade = IIDXLikeGetGrade(exScore, notecount);
 
 	const iidxGame = playtype === "SP" ? "iidx-sp" : "iidx-dp";
+
+	const formatNumFn =
+		percent > 0
+			? (deltaPercent: number) => {
+					const maxPts = Math.floor(exScore / (percent / 100));
+					const v = (deltaPercent / 100) * maxPts;
+
+					return Math.round(v).toFixed(0);
+				}
+			: (deltaPercent: number) => deltaPercent.toFixed(2);
 
 	return {
 		score: (
@@ -157,10 +165,17 @@ function FormatAverage(score: integer, playtype: "DP" | "SP", notecount: integer
 				colour={GPT_CLIENT_IMPLEMENTATIONS[iidxGame].enumColours.grade[grade]}
 				grade={grade}
 				percent={percent}
-				score={score}
+				score={exScore}
 			/>
 		),
-		delta: <DeltaCell grade={grade} gradeBoundaries={IIDXLIKE_GBOUNDARIES} value={percent} />,
+		delta: (
+			<DeltaCell
+				formatNumFn={formatNumFn}
+				grade={grade}
+				gradeBoundaries={IIDXLIKE_GBOUNDARIES}
+				value={percent}
+			/>
+		),
 	};
 }
 

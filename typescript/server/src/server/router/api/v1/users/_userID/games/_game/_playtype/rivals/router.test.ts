@@ -69,6 +69,54 @@ describe("GET /api/v1/users/:userID/games/:game/rivals", () => {
 	});
 });
 
+describe("GET /api/v1/users/:userID/games/:game/rivals/activity", () => {
+	beforeEach(async () => {
+		await seedUser({ username: "rival_act_main", withCredential: true, withSettings: true });
+		await seedUser({
+			username: "rival_act_b",
+			email: "ractb@test.com",
+			withCredential: true,
+			withSettings: true,
+		});
+		await seedUser({
+			username: "rival_act_c",
+			email: "ractc@test.com",
+			withCredential: true,
+			withSettings: true,
+		});
+
+		await seedUgpt(1);
+		await seedUgpt(2);
+		await seedUgpt(3);
+
+		await DB.insertInto("game_rival")
+			.values([
+				{ user_id: 1, game: "iidx-sp", rival: 2 },
+				{ user_id: 1, game: "iidx-sp", rival: 3 },
+			])
+			.execute();
+	});
+
+	it("returns 200 with an activity payload", async () => {
+		const res = await mockApi.get("/api/v1/users/1/games/iidx-sp/rivals/activity");
+
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.body).toMatchObject({
+			achievedClasses: [],
+			charts: [],
+			goals: [],
+			goalSubs: [],
+			quests: [],
+			questSubs: [],
+			recentSessions: [],
+			recentlyHighlightedScores: [],
+			songs: [],
+			users: [],
+		});
+	});
+});
+
 describe("PUT /api/v1/users/:userID/games/:game/rivals", () => {
 	let cookie: string[];
 

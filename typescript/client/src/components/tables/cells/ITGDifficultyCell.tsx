@@ -6,6 +6,7 @@ import React from "react";
 import { type ChartDocument, COLOUR_SET } from "tachi-common";
 
 import MiniTable from "../components/MiniTable";
+import { DIFFICULTY_CELL_WIDTH_PX } from "./difficulty-cell-layout";
 
 const COLOUR_LOOKUP = {
 	Beginner: COLOUR_SET.paleBlue,
@@ -15,6 +16,8 @@ const COLOUR_LOOKUP = {
 	Expert: COLOUR_SET.pink,
 	Edit: COLOUR_SET.gray,
 };
+
+const truncLineCls = "d-block text-truncate";
 
 export default function ITGDifficultyCell({ chart }: { chart: ChartDocument<"itg-stamina"> }) {
 	let diff;
@@ -48,6 +51,15 @@ export default function ITGDifficultyCell({ chart }: { chart: ChartDocument<"itg
 		seconds = `0${seconds}`;
 	}
 
+	const lengthLabel = `(${minutes}:${seconds})`;
+
+	const nativeTitleTooltip = [
+		`${diff} [${chart.data.streamBPM?.toFixed() ?? "???"}]`,
+		chart.data.charter,
+		breakdown,
+		lengthLabel,
+	].join(" — ");
+
 	return (
 		<td
 			style={{
@@ -55,8 +67,13 @@ export default function ITGDifficultyCell({ chart }: { chart: ChartDocument<"itg
 					COLOUR_LOOKUP[chart.data.difficultyTag] ?? COLOUR_SET.gray,
 					0.2,
 				),
-				minWidth: "80px",
+				boxSizing: "border-box",
+				maxWidth: `${DIFFICULTY_CELL_WIDTH_PX}px`,
+				minWidth: 0,
+				overflow: "hidden",
+				width: `${DIFFICULTY_CELL_WIDTH_PX}px`,
 			}}
+			title={nativeTitleTooltip}
 		>
 			<QuickTooltip
 				tooltipContent={
@@ -106,16 +123,19 @@ export default function ITGDifficultyCell({ chart }: { chart: ChartDocument<"itg
 				}
 				wide
 			>
-				<div>
-					<span>
+				<div style={{ maxWidth: "100%", minWidth: 0 }}>
+					<span className={truncLineCls} style={{ minWidth: 0 }}>
 						{diff} [{chart.data.streamBPM?.toFixed() ?? "???"}]
 					</span>
-					<br />
-					<Muted>{chart.data.charter}</Muted>
-					<br />
-					<span style={{ fontSize: "0.9rem" }}>{breakdown}</span>
-					<br />
-					<span>
+					<Muted>
+						<span className={truncLineCls} style={{ minWidth: 0 }}>
+							{chart.data.charter}
+						</span>
+					</Muted>
+					<span className={truncLineCls} style={{ minWidth: 0, fontSize: "0.9rem" }}>
+						{breakdown}
+					</span>
+					<span className={truncLineCls} style={{ minWidth: 0 }}>
 						{chart.data.length > 60 * 16 ? (
 							<b>
 								({minutes}:{seconds})

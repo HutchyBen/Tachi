@@ -12,11 +12,14 @@ import {
 } from "tachi-common";
 
 import BMSOrPMSDifficultyCell from "./BMSOrPMSDifficultyCell";
+import { DIFFICULTY_CELL_WIDTH_PX } from "./difficulty-cell-layout";
 import ITGDifficultyCell from "./ITGDifficultyCell";
 import RatingSystemPart from "./RatingSystemPart";
 import USCDifficultyCell from "./USCDifficultyCell";
 
 type BMSGames = "bms-7k" | "bms-14k" | "pms-controller" | "pms-keyboard";
+
+const truncLineCls = "d-block text-truncate";
 
 export default function DifficultyCell({
 	game,
@@ -50,20 +53,44 @@ export default function DifficultyCell({
 		alwaysShort = true;
 	}
 
+	const difficultyCellWidthPx =
+		// EXHC makes it too long...
+		game === "iidx-sp" || game === "iidx-dp"
+			? DIFFICULTY_CELL_WIDTH_PX + 16
+			: DIFFICULTY_CELL_WIDTH_PX;
+
+	const nativeTitleTooltip = [FormatDifficulty(chart), chart.level].filter(Boolean).join(" — ");
+
 	return (
 		<td
 			style={{
+				boxSizing: "border-box",
+				minWidth: 0,
 				// @ts-expect-error yawn
 				backgroundColor: ChangeOpacity(gptImpl.difficultyColours[chart.difficulty]!, 0.2),
-				minWidth: "80px",
-				maxWidth: "100px",
+				maxWidth: `${difficultyCellWidthPx}px`,
+				overflow: "hidden",
+				width: `${difficultyCellWidthPx}px`,
 			}}
+			title={nativeTitleTooltip}
 		>
-			{!alwaysShort && <div className="d-none d-lg-block">{FormatDifficulty(chart)}</div>}
-			<div className={!alwaysShort ? "d-lg-none" : ""}>{FormatDifficultyShort(chart)}</div>
-			<DisplayLevelNum game={game} level={chart.level} levelNum={chart.levelNum} />
+			{!alwaysShort && (
+				<div className="d-none d-lg-block">
+					<span className={truncLineCls} style={{ minWidth: 0 }}>
+						{FormatDifficulty(chart)}
+					</span>
+				</div>
+			)}
+			<div className={!alwaysShort ? "d-lg-none" : undefined}>
+				<span className={truncLineCls} style={{ minWidth: 0 }}>
+					{FormatDifficultyShort(chart)}
+				</span>
+			</div>
+			<div className={truncLineCls} style={{ minWidth: 0 }}>
+				<DisplayLevelNum game={game} level={chart.level} levelNum={chart.levelNum} />
+			</div>
 			{!noTierlist && gptImpl.ratingSystems.length > 0 && (
-				<RatingSystemPart chart={chart} game={game} />
+				<RatingSystemPart chart={chart} game={game} truncateRatingsLines />
 			)}
 			{!chart.isPrimary && (
 				<QuickTooltip tooltipContent="This chart is an alternate, old chart.">

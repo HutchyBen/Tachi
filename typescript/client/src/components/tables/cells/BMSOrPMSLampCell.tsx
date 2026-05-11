@@ -4,6 +4,10 @@ import { IsNotNullish } from "#util/misc";
 import React from "react";
 import { type PBScoreDocument, type ScoreDocument } from "tachi-common";
 
+import { constrainedLampTdStyle } from "./delta-lamp-cell-layout";
+
+const truncLine = "d-block text-truncate";
+
 type BMSGames = "bms-7k" | "bms-14k" | "pms-controller" | "pms-keyboard";
 
 export default function BMSOrPMSLampCell({
@@ -11,19 +15,26 @@ export default function BMSOrPMSLampCell({
 }: {
 	score: PBScoreDocument<BMSGames> | ScoreDocument<BMSGames>;
 }) {
+	const bpPart = IsNotNullish(score.scoreData.optional.bp)
+		? `[BP: ${score.scoreData.optional.bp}]`
+		: null;
+	const titleTooltip = bpPart ? `${score.scoreData.lamp} ${bpPart}` : score.scoreData.lamp;
+
 	return (
 		<td
 			style={{
+				...constrainedLampTdStyle,
 				backgroundColor: ChangeOpacity(GetEnumColour(score, "lamp"), 0.2),
-				whiteSpace: "nowrap",
 			}}
+			title={titleTooltip}
 		>
-			<strong>{score.scoreData.lamp}</strong>
-			{IsNotNullish(score.scoreData.optional.bp) && (
-				<>
-					<br />
-					<small>[BP: {score.scoreData.optional.bp}]</small>
-				</>
+			<div className={truncLine} style={{ minWidth: 0 }}>
+				<strong>{score.scoreData.lamp}</strong>
+			</div>
+			{bpPart && (
+				<small className={truncLine} style={{ minWidth: 0 }}>
+					{bpPart}
+				</small>
 			)}
 		</td>
 	);

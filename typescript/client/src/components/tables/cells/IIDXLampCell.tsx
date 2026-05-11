@@ -10,6 +10,10 @@ import {
 	type ScoreDocument,
 } from "tachi-common";
 
+import { constrainedLampTdStyle } from "./delta-lamp-cell-layout";
+
+const truncLine = "d-block text-truncate";
+
 export default function IIDXLampCell({
 	sc,
 	chart,
@@ -63,34 +67,43 @@ export default function IIDXLampCell({
 		cbrkText = `[CB: ${cbrkCount}]`;
 	}
 
+	const titleTooltip = [
+		sc.scoreData.lamp,
+		bpText,
+		cbrkText,
+		sc.scoreData.lamp === "FAILED" && gaugeText ? gaugeText : null,
+	]
+		.filter(Boolean)
+		.join(" ");
+
 	return (
 		<td
 			style={{
+				...constrainedLampTdStyle,
 				backgroundColor: ChangeOpacity(GetEnumColour(sc, "lamp"), 0.2),
-				whiteSpace: "nowrap",
 			}}
+			title={titleTooltip}
 		>
-			<strong>{sc.scoreData.lamp}</strong>
+			<div className={truncLine} style={{ minWidth: 0 }}>
+				<strong>{sc.scoreData.lamp}</strong>
+			</div>
 
 			{bpText && (
-				<>
-					<br />
-					<small>{bpText}</small>
-				</>
+				<small className={truncLine} style={{ minWidth: 0 }}>
+					{bpText}
+				</small>
 			)}
 
 			{cbrkText && (
-				<>
-					<br />
-					<small>{cbrkText}</small>
-				</>
+				<small className={truncLine} style={{ minWidth: 0 }}>
+					{cbrkText}
+				</small>
 			)}
 
-			{sc.scoreData.lamp === "FAILED" && (
-				<>
-					<br />
-					<small className="text-body-secondary">{gaugeText}</small>
-				</>
+			{sc.scoreData.lamp === "FAILED" && gaugeText && (
+				<small className={`${truncLine} text-body-secondary`} style={{ minWidth: 0 }}>
+					{gaugeText}
+				</small>
 			)}
 		</td>
 	);

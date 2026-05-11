@@ -348,15 +348,11 @@ describe("GET /api/v1/users/:userID/games/:game/pbs/song/:songID", () => {
 			});
 		}
 
-		const res = await mockApi.get(
-			`/api/v1/users/${userId}/games/iidx-sp/pbs/song/${songPg}`,
-		);
+		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx-sp/pbs/song/${songPg}`);
 
 		expect(res.status).toBe(200);
 		expect(res.body.body.pbs).toHaveLength(2);
-		const chartIds = res.body.body.pbs
-			.map((p: { chartID: string }) => p.chartID)
-			.sort();
+		const chartIds = res.body.body.pbs.map((p: { chartID: string }) => p.chartID).sort();
 		expect(chartIds).toEqual([chartPgA, chartPgB].sort());
 		expect(res.body.body.charts).toHaveLength(2);
 		expect(res.body.body.songs).toHaveLength(1);
@@ -372,9 +368,7 @@ describe("GET /api/v1/users/:userID/games/:game/pbs/song/:songID", () => {
 		const { id: otherId } = await seedUser({ username: "ugpt_pb_song_empty_b" });
 		await seedIidxSpProfile(otherId);
 
-		const res = await mockApi.get(
-			`/api/v1/users/${otherId}/games/iidx-sp/pbs/song/${songPg}`,
-		);
+		const res = await mockApi.get(`/api/v1/users/${otherId}/games/iidx-sp/pbs/song/${songPg}`);
 
 		expect(res.status).toBe(200);
 		expect(res.body.body.pbs).toHaveLength(0);

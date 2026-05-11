@@ -473,6 +473,8 @@ export interface ScoreDocument<TGame extends V3Game = V3Game> {
 	comment: string | null;
 	timeAdded: integer;
 	scoreID: string;
+	/** Present when this score was imported or logged as part of a session. */
+	sessionID: string | null;
 	importType: ImportTypes | null;
 }
 

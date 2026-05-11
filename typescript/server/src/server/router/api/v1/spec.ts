@@ -611,7 +611,7 @@ export const API_V1_SPEC = {
 	"GET /users/:userID/integrations/kshook-sv6c/settings": {
 		description: "Get kshook-sv6c integration settings.",
 		input: z.object({}),
-		output: doc<KsHookSettingsDocument>(),
+		output: z.nullable(doc<KsHookSettingsDocument>()),
 	},
 
 	"PATCH /users/:userID/integrations/kshook-sv6c/settings": {
@@ -716,7 +716,7 @@ export const API_V1_SPEC = {
 			sessions: z.coerce.number().min(10).max(100).optional(),
 			startTime: z.coerce.number().optional(),
 		}),
-		output: z.record(z.string(), doc<ActivityPayload>()),
+		output: doc<ActivityPayload>(),
 	},
 
 	"DELETE /users/:userID/games/:game": {
@@ -1001,6 +1001,7 @@ export const API_V1_SPEC = {
 			charts: docArray<ChartDocument>(),
 			songs: docArray<SongDocument>(),
 			stats: z.unknown(),
+			pbs: docArray<PBScoreDocument>(),
 		}),
 	},
 
@@ -1022,7 +1023,12 @@ export const API_V1_SPEC = {
 			criteriaType: z.string(),
 			criteriaValue: z.string(),
 		}),
-		output: docArray<ScoreDocument>(),
+		output: z.strictObject({
+			charts: docArray<ChartDocument>(),
+			folder: doc<FolderDocument>(),
+			scores: docArray<ScoreDocument>(),
+			songs: docArray<SongDocument>(),
+		}),
 	},
 
 	// ────────────────────────────────────────────────
@@ -1204,7 +1210,7 @@ export const API_V1_SPEC = {
 			sessions: z.coerce.number().min(10).max(100).optional(),
 			startTime: z.coerce.number().optional(),
 		}),
-		output: z.record(z.string(), doc<ActivityPayload>()),
+		output: doc<ActivityPayload>(),
 	},
 
 	// ────────────────────────────────────────────────
@@ -1619,6 +1625,7 @@ export const API_V1_SPEC = {
 			songs: docArray<SongDocument>(),
 			scoreInfo: docArray<SessionScoreInfo>(),
 			user: doc<UserDocument>(),
+			index: z.number(),
 		}),
 	},
 

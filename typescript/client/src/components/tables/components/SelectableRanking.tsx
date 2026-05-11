@@ -3,6 +3,7 @@ import useLUGPTSettings from "#components/util/useLUGPTSettings";
 import { type SetState } from "#types/react";
 import React from "react";
 
+import { rankingColumnThStyle } from "../cells/ranking-cell-layout";
 import { type RankingViewMode } from "../cells/RankingCell";
 import SortableTH from "./SortableTH";
 import { type ZTableTHProps } from "./TachiTable";
@@ -33,36 +34,50 @@ export default function SelectableRanking({
 				reverseSort={reverseSort}
 				shortName="Ranking"
 				sortingName="Site Ranking"
+				style={rankingColumnThStyle}
 			/>
 		);
 	}
 
+	const sortHighlighted = currentSortMode === "Site Ranking";
+
 	return (
-		<th>
-			<div className="vstack gap-1 align-items-center justify-content-center">
+		<th style={rankingColumnThStyle}>
+			<div
+				className="vstack gap-0 justify-content-center"
+				style={{ marginInline: "auto", maxWidth: "100%", minWidth: 0 }}
+			>
 				<select
-					className="border-0 p-0.5 text-body fw-bolder rounded focus-ring focus-ring-light bg-transparent"
+					aria-label="Ranking scope"
+					className="border-0 fw-bolder rounded focus-ring focus-ring-light bg-transparent text-body p-0"
 					onChange={(v) => setRankingViewMode(v.target.value as RankingViewMode)}
+					style={{
+						display: "block",
+						fontSize: "0.55rem",
+						lineHeight: 1.1,
+						maxWidth: "100%",
+						width: "100%",
+					}}
+					title={rankingViewMode === "rival" ? "Rival Ranking" : "Global Ranking"}
 					value={rankingViewMode}
 				>
-					<option value="global">Global Ranking</option>
-					<option value="rival">Rival Ranking</option>
+					<option value="global">Global</option>
+					<option value="rival">Rival</option>
 				</select>
-				<div onClick={() => changeSort("Site Ranking")}>
-					<div className="d-flex justify-content-center gap-1">
+				<div
+					className="d-flex justify-content-center"
+					onClick={() => changeSort("Site Ranking")}
+				>
+					<div className="d-flex justify-content-center gap-0">
 						<Icon
 							className={
-								currentSortMode === "Rating" && reverseSort
-									? "opacity-100"
-									: "opacity-25"
+								sortHighlighted && reverseSort ? "opacity-100" : "opacity-25"
 							}
 							type="arrow-up"
 						/>
 						<Icon
 							className={
-								currentSortMode === "Rating" && !reverseSort
-									? "opacity-100"
-									: "opacity-25"
+								sortHighlighted && !reverseSort ? "opacity-100" : "opacity-25"
 							}
 							type="arrow-down"
 						/>

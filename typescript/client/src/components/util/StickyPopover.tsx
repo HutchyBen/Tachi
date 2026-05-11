@@ -55,7 +55,7 @@ export default function StickyPopover({
 			{displayChild}
 			<Overlay
 				placement={placement}
-				shouldUpdatePosition
+				shouldUpdatePosition={showPopover}
 				show={showPopover}
 				target={childNode}
 			>

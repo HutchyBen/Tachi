@@ -2,6 +2,10 @@ import { ChangeOpacity } from "#util/color-opacity";
 import React from "react";
 import { COLOUR_SET } from "tachi-common";
 
+import { constrainedLampTdStyle } from "./delta-lamp-cell-layout";
+
+const truncLine = "d-block text-truncate";
+
 export default function OngekiLampCell({
 	noteLamp,
 	bellLamp,
@@ -11,16 +15,31 @@ export default function OngekiLampCell({
 	colour: string;
 	noteLamp: "ALL BREAK" | "ALL BREAK+" | "CLEAR" | "FULL COMBO" | "LOSS";
 }) {
-	let content = <div>{noteLamp}</div>;
+	let content: React.ReactNode = (
+		<div className={truncLine} style={{ minWidth: 0 }}>
+			{noteLamp}
+		</div>
+	);
+	let title: string = noteLamp;
 
 	if (bellLamp !== "NONE") {
 		if (noteLamp === "CLEAR") {
-			content = <div>{bellLamp}</div>;
+			title = bellLamp;
+			content = (
+				<div className={truncLine} style={{ minWidth: 0 }}>
+					{bellLamp}
+				</div>
+			);
 		} else {
+			title = `${noteLamp} · ${bellLamp}`;
 			content = (
 				<span>
-					<div>{noteLamp}</div>
-					<div>{bellLamp}</div>
+					<div className={truncLine} style={{ minWidth: 0 }}>
+						{noteLamp}
+					</div>
+					<div className={truncLine} style={{ minWidth: 0 }}>
+						{bellLamp}
+					</div>
 				</span>
 			);
 		}
@@ -32,13 +51,13 @@ export default function OngekiLampCell({
 	return (
 		<td
 			style={{
-				verticalAlign: "middle",
+				...constrainedLampTdStyle,
 				background:
 					bellLamp === "FULL BELL"
 						? `linear-gradient(-45deg, ${lowCorner} 0%,${lowCorner} 12%,${low} 12%,${low} 100%)`
 						: low,
-				whiteSpace: "nowrap",
 			}}
+			title={title}
 		>
 			<strong>{content}</strong>
 		</td>

@@ -3,22 +3,28 @@ import { ChangeOpacity } from "#util/color-opacity";
 import React from "react";
 import { type PBScoreDocument, type ScoreDocument } from "tachi-common";
 
+import { constrainedLampTdStyle } from "./delta-lamp-cell-layout";
+
 export default function PopnLampCell({
 	score,
 }: {
 	score: PBScoreDocument<"popn"> | ScoreDocument<"popn">;
 }) {
+	const lamp = score.scoreData.lamp;
 	return (
 		<td
 			style={{
+				...constrainedLampTdStyle,
 				backgroundColor: ChangeOpacity(
-					GPT_CLIENT_IMPLEMENTATIONS.popn.enumColours.lamp[score.scoreData.lamp],
+					GPT_CLIENT_IMPLEMENTATIONS.popn.enumColours.lamp[lamp],
 					0.2,
 				),
-				whiteSpace: "nowrap",
 			}}
+			title={lamp}
 		>
-			<strong>{score.scoreData.lamp}</strong>
+			<div className="d-block text-truncate" style={{ minWidth: 0 }}>
+				<strong>{lamp}</strong>
+			</div>
 		</td>
 	);
 }

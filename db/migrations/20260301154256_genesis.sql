@@ -432,6 +432,7 @@ CREATE TABLE "folder" (
 	-- Used in URLs. should be short, but must be unique per game!
 	slug TEXT NOT NULL,
 
+	-- SQL predicate (no leading WHERE) for charts in this folder; matches seeds `where`.
 	-- Quoted: "where" is a reserved word in SQL.
 	"where" TEXT NOT NULL,
 

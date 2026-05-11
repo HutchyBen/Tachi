@@ -5,6 +5,11 @@ import { CreateChartLink } from "#util/data";
 import React from "react";
 import { type ChartDocument, type SongDocument, type V3Game } from "tachi-common";
 
+/** Fixed title column width; content truncates per line under `table-layout` fixed/auto. */
+const TITLE_CELL_WIDTH_PX = 275;
+
+const truncLineCls = "d-block text-truncate";
+
 export default function TitleCell({
 	game,
 	song,
@@ -27,6 +32,24 @@ export default function TitleCell({
 	let backgroundImage = undefined;
 	let center = false;
 
+	const tooltipParts = [
+		song.title,
+		!noArtist ? song.artist : undefined,
+		"subtitle" in song.data && song.data.subtitle ? song.data.subtitle : undefined,
+		showAltTitles && song.altTitles.length !== 0
+			? `AKA ${song.altTitles.join(", ")}`
+			: undefined,
+		showSearchTerms && song.searchTerms.length !== 0
+			? `Search Terms: ${song.searchTerms.join(", ")}`
+			: undefined,
+		chart && !chart.isPrimary ? `(${chart.versions.join("/")})` : undefined,
+		comment ? `"${comment}"` : undefined,
+	];
+
+	const tooltipTitle = tooltipParts.some(Boolean)
+		? tooltipParts.filter(Boolean).join(" — ")
+		: undefined;
+
 	if (game === "popn" && chart) {
 		backgroundImage = `url(${ToCDNURL(
 			`/misc/popn/banners/${(chart as any).data.inGameID}.png`,
@@ -45,67 +68,64 @@ export default function TitleCell({
 
 	return (
 		<td
-			className="fading-image-td-left"
+			className="fading-image-td-left title-cell-wrapper"
 			style={{
+				boxSizing: "border-box",
+				maxWidth: `${TITLE_CELL_WIDTH_PX}px`,
+				minWidth: 0,
+				overflow: "hidden",
 				textAlign: "left",
-				minWidth: "140px",
-				maxWidth: "300px",
+				width: `${TITLE_CELL_WIDTH_PX}px`,
 				["--image-url" as string]: backgroundImage,
 				backgroundPosition: center ? "center" : undefined,
 			}}
+			title={tooltipTitle}
 		>
 			{game === "popn" && (
 				<>
-					{(song as SongDocument<"popn">).data.genre === song.title ||
-					(song as SongDocument<"popn">).data.genre === null ? (
-						<Muted>Unknown Genre</Muted>
-					) : (
-						(song as SongDocument<"popn">).data.genre
-					)}
-					<br />
+					<span className={`${truncLineCls} pb-1`}>
+						{(song as SongDocument<"popn">).data.genre === song.title ||
+						(song as SongDocument<"popn">).data.genre === null ? (
+							<Muted>Unknown Genre</Muted>
+						) : (
+							(song as SongDocument<"popn">).data.genre
+						)}
+					</span>
 				</>
 			)}
-			<GentleLink to={chart ? CreateChartLink(chart) : ""}>
-				{song.title}
+			<GentleLink
+				className="title-cell-link d-block w-100"
+				style={{ minWidth: 0 }}
+				to={chart ? CreateChartLink(chart) : ""}
+			>
+				<span className={truncLineCls} style={{ fontSize: "0.9725rem" }}>
+					{song.title}
+				</span>
 
-				{!noArtist && (
-					<>
-						<br />
-						<small>{song.artist}</small>
-					</>
-				)}
+				{!noArtist && <small className={`${truncLineCls} text-body`}>{song.artist}</small>}
 				{"subtitle" in song.data && song.data.subtitle && (
-					<>
-						<br />
-						<Muted>{song.data.subtitle}</Muted>
-					</>
+					<small className={`${truncLineCls} text-body-secondary`}>
+						{song.data.subtitle}
+					</small>
 				)}
 
 				{showAltTitles && song.altTitles.length !== 0 && (
-					<>
-						<br />
-						<Muted>AKA {song.altTitles.join(", ")}</Muted>
-					</>
+					<small className={`${truncLineCls} text-body-secondary`}>
+						AKA {song.altTitles.join(", ")}
+					</small>
 				)}
 				{showSearchTerms && song.searchTerms.length !== 0 && (
-					<>
-						<br />
-						<Muted>Search Terms: {song.searchTerms.join(", ")}</Muted>
-					</>
+					<small className={`${truncLineCls} text-body-secondary`}>
+						Search Terms: {song.searchTerms.join(", ")}
+					</small>
 				)}
 				{chart && !chart.isPrimary && (
-					<>
-						<br />
-						<small className="text-body-secondary">({chart.versions.join("/")})</small>
-					</>
+					<small className={`${truncLineCls} text-body-secondary`}>
+						({chart.versions.join("/")})
+					</small>
 				)}
 			</GentleLink>
-			{comment && (
-				<>
-					<br />
-					<small>"{comment}"</small>
-				</>
-			)}
+			{comment && <small className={truncLineCls}>&quot;{comment}&quot;</small>}
 		</td>
 	);
 }

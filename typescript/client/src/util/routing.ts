@@ -1,6 +1,15 @@
 import { EscapeStringRegexp } from "./misc";
 
+function pathnameOnlyForRouteMatch(str: string): string {
+	try {
+		return new URL(str).pathname;
+	} catch {
+		return str.split(/[?#]/)[0];
+	}
+}
+
 export function DoesMatchRoute(str: string, route: string, ends = true) {
+	const pathStr = pathnameOnlyForRouteMatch(str);
 	const comps = EscapeStringRegexp(route).split("/");
 
 	let regexStr = "";
@@ -19,5 +28,5 @@ export function DoesMatchRoute(str: string, route: string, ends = true) {
 	}
 
 	const regex = new RegExp(regexStr, "u");
-	return !!str.match(regex);
+	return !!pathStr.match(regex);
 }

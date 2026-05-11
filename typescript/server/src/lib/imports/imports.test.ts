@@ -45,6 +45,7 @@ async function insertIidxScore(opts: {
 	chartId: string;
 	importId: string | null;
 	scoreId: string;
+	sessionId: string | null;
 	userId: number;
 }) {
 	const doc = mkFakeScoreIIDXSP({
@@ -61,7 +62,7 @@ async function insertIidxScore(opts: {
 			user_id: opts.userId,
 			chart_id: opts.chartId,
 			game: "iidx-sp",
-			session_id: null,
+			session_id: opts.sessionId,
 			import_id: opts.importId,
 			data: JSON.stringify(data),
 			derived_data: JSON.stringify(derived),
@@ -99,9 +100,15 @@ describe("RevertImport", () => {
 			})
 			.execute();
 
-		await insertIidxScore({ userId, scoreId: "score_1", chartId, importId });
-		await insertIidxScore({ userId, scoreId: "score_2", chartId, importId });
-		await insertIidxScore({ userId, scoreId: "score_3", chartId, importId: null });
+		await insertIidxScore({ userId, scoreId: "score_1", chartId, importId, sessionId: null });
+		await insertIidxScore({ userId, scoreId: "score_2", chartId, importId, sessionId: null });
+		await insertIidxScore({
+			userId,
+			scoreId: "score_3",
+			chartId,
+			importId: null,
+			sessionId: null,
+		});
 
 		const importDoc = mkFakeImport({
 			importID: importId,
@@ -134,5 +141,92 @@ describe("RevertImport", () => {
 		expect(s1).toBeUndefined();
 		expect(s2).toBeUndefined();
 		expect(s3).toEqual({ id: "score_3" });
+	});
+
+	it("reverts an import whose session is linked in import_session (#82)", async () => {
+		const { id: userId } = await seedUser({ username: "revert_import_session_fk" });
+		const chartId = chart.chartID;
+		const importId = `revert-imp-sess-${Date.now()}`;
+		const sessionId = "sess-revert-import-session-fk";
+		const scoreId = "score_revert_import_session_fk";
+		const now = new Date().toISOString();
+
+		await DB.insertInto("session")
+			.values({
+				id: sessionId,
+				user_id: userId,
+				game: "iidx-sp",
+				name: "revert-me",
+				description: null,
+				time_inserted: now,
+				time_started: now,
+				time_ended: now,
+				calculated_data: JSON.stringify({}),
+				highlight: false,
+			})
+			.execute();
+
+		await DB.insertInto("import")
+			.values({
+				id: importId,
+				user_id: userId,
+				time_started: now,
+				time_finished: now,
+				game_group: "iidx",
+				import_type: "file/batch-manual" as never,
+				user_intent: true,
+				service: "test",
+				status: "completed",
+			})
+			.execute();
+
+		await DB.insertInto("import_session")
+			.values({
+				import_id: importId,
+				session_id: sessionId,
+				type: "created",
+			})
+			.execute();
+
+		await insertIidxScore({
+			userId,
+			scoreId,
+			chartId,
+			importId,
+			sessionId,
+		});
+
+		const importDoc = mkFakeImport({
+			importID: importId,
+			userID: userId,
+			scoreIDs: [scoreId],
+		});
+
+		const err = await RevertImport(importDoc);
+		expect(err).toBeNull();
+
+		const sess = await DB.selectFrom("session")
+			.select("session.id")
+			.where("session.id", "=", sessionId)
+			.executeTakeFirst();
+		expect(sess).toBeUndefined();
+
+		const link = await DB.selectFrom("import_session")
+			.select("import_session.row_id")
+			.where("import_session.session_id", "=", sessionId)
+			.executeTakeFirst();
+		expect(link).toBeUndefined();
+
+		const deletedScore = await DB.selectFrom("score")
+			.select("id")
+			.where("id", "=", scoreId)
+			.executeTakeFirst();
+		expect(deletedScore).toBeUndefined();
+
+		const deletedImport = await DB.selectFrom("import")
+			.select("id")
+			.where("id", "=", importId)
+			.executeTakeFirst();
+		expect(deletedImport).toBeUndefined();
 	});
 });

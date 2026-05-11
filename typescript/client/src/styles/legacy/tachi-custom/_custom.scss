@@ -112,3 +112,38 @@
 	transition: opacity 0.3s;
 	opacity: 0;
 }
+
+.tierlist-collapsed-hit {
+	transition: background-color 0.18s ease-out;
+
+	&:hover {
+		background-color: var(--bs-tertiary-bg);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--bs-primary);
+		outline-offset: 2px;
+	}
+}
+
+table.tierlist-summary-table {
+	tbody tr.tierlist-summary-row {
+		cursor: pointer;
+
+		td {
+			transition: background-color 0.18s ease-out;
+		}
+
+		&:hover td {
+			background-color: var(--bs-tertiary-bg);
+		}
+
+		&:focus-visible {
+			outline: 0;
+
+			td {
+				box-shadow: inset 0 0 0 2px var(--bs-primary);
+			}
+		}
+	}
+}

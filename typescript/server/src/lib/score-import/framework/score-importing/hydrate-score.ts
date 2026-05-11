@@ -43,6 +43,7 @@ export function HydrateScore(
 		songID: song.id,
 		chartID: chart.chartID,
 		scoreID,
+		sessionID: null,
 		isPrimary: chart.isPrimary,
 	};
 

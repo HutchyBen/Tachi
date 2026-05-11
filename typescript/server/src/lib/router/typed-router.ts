@@ -190,9 +190,25 @@ export class TypedRouter<S extends AnyRouterSpec> {
 				const outputParseResult = specEntry.output.safeParse(result.body);
 
 				if (!outputParseResult.success) {
+					const zodErr = outputParseResult.error;
+					const issueSummary = zodErr.issues
+						.map((i) => {
+							const pathStr = i.path.length > 0 ? i.path.join(".") : "(root)";
+							return `${pathStr}: ${i.message}`;
+						})
+						.join("; ");
+
 					log.error(
-						{ route, issues: outputParseResult.error.issues },
-						"TypedRouter: output validation failed - handler returned body not matching spec output schema",
+						{
+							route,
+							issues: zodErr.issues,
+							returnedBody: result.body,
+						},
+						`TypedRouter: output validation failed for "${route}" (${issueSummary})`,
+					);
+
+					throw new Error(
+						`TypedRouter: output validation failed for "${route}": ${issueSummary}`,
 					);
 				}
 

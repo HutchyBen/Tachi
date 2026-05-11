@@ -115,6 +115,8 @@ const Matchers: Record<Exclude<DirectiveModes, "=">, MatchFn> = {
 		!!(Array.isArray(dv) ? dv[0] : dv).toString().match(new RegExp(sv, "u"))?.length,
 };
 
+const NeutralMatchLower = (svLower: string, dv: string) => dv.toLowerCase().includes(svLower);
+
 const NeutralMatch = (sv: string, dv: string) => dv.toLowerCase().includes(sv.toLowerCase());
 
 const BooleanMatch = (sv: string, dv: boolean) => {
@@ -232,8 +234,20 @@ export function ComposeSearchFunction<D>(
 ): ZTableSearchFn<D> {
 	const allGetters = Object.values(valueGetters);
 
+	// `filter()` calls this once per row. Parsing directives is shared work; do it once per
+	// search string per composed function instance (one synchronous filter pass), not O(rows).
+	let parseCacheSearch = "";
+	let parseCacheDirectives: Directive[] = [];
+	let searchLowerCache = "";
+
 	return (search, data) => {
-		const directives = ParseDirectives(search);
+		if (search !== parseCacheSearch) {
+			parseCacheSearch = search;
+			parseCacheDirectives = ParseDirectives(search);
+			searchLowerCache = search.toLowerCase();
+		}
+
+		const directives = parseCacheDirectives;
 
 		if (directives.length === 0) {
 			return allGetters.some((vgOrHybrid) => {
@@ -255,7 +269,7 @@ export function ComposeSearchFunction<D>(
 					return null;
 				}
 
-				return NeutralMatch(search, GetStrData(v));
+				return NeutralMatchLower(searchLowerCache, GetStrData(v));
 			});
 		}
 
@@ -288,6 +302,9 @@ export function ComposeSearchFunction<D>(
 		}
 
 		if (skippedDirectives.length > 0) {
+			const skippedJoined = skippedDirectives.map((e) => e.originalStr).join(" ");
+			const skippedJoinedLower = skippedJoined.toLowerCase();
+
 			return allGetters.some((vgOrHybrid) => {
 				const v = GetValueGetter(vgOrHybrid)(data);
 
@@ -307,10 +324,7 @@ export function ComposeSearchFunction<D>(
 					return null;
 				}
 
-				return NeutralMatch(
-					skippedDirectives.map((e) => e.originalStr).join(" "),
-					GetStrData(v),
-				);
+				return NeutralMatchLower(skippedJoinedLower, GetStrData(v));
 			});
 		}
 

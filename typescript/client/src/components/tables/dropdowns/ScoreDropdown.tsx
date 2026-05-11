@@ -1,6 +1,7 @@
 import DebugContent from "#components/util/DebugContent";
 import HasDevModeOn from "#components/util/HasDevModeOn";
 import Icon from "#components/util/Icon";
+import LinkButton from "#components/util/LinkButton";
 import Loading from "#components/util/Loading";
 import useApiQuery from "#components/util/query/useApiQuery";
 import SelectButton from "#components/util/SelectButton";
@@ -14,11 +15,9 @@ import {
 	type PBScoreDocument,
 	type ScoreDocument,
 	type SongDocument,
-	UserAuthLevels,
 	type UserDocument,
 } from "tachi-common";
 
-import DeleteScoreBtn from "./components/DeleteScoreBtn";
 import DocComponentCreator, { type DocumentComponentType } from "./components/DocumentComponent";
 import DropdownStructure from "./components/DropdownStructure";
 import PBCompare from "./components/PBCompare";
@@ -48,7 +47,7 @@ export default function ScoreDropdown({
 	onScoreUpdate,
 }: {
 	chart: ChartDocument;
-	defaultView?: "debug" | "history" | "manage" | "moreInfo" | "rivals" | "targets" | "vsPB";
+	defaultView?: "debug" | "history" | "moreInfo" | "rivals" | "targets" | "vsPB";
 	onScoreUpdate?: (sc: ScoreDocument) => void;
 	scoreState: ScoreState;
 	song: SongDocument;
@@ -114,8 +113,6 @@ export default function ScoreDropdown({
 		);
 	} else if (view === "vsPB") {
 		body = <PBCompare data={data} DocComponent={DocComponent} scoreState={scoreState} />;
-	} else if (view === "manage") {
-		body = <DeleteScoreBtn score={thisScore} />;
 	} else if (view === "targets") {
 		if (currentUser) {
 			body = (
@@ -160,17 +157,20 @@ export default function ScoreDropdown({
 							<Icon type="users" /> Rivals
 						</SelectButton>
 					)}
-					{(currentUser?.id === user.id ||
-						currentUser?.authLevel === UserAuthLevels.ADMIN) && (
-						<SelectButton id="manage" setValue={setView} value={view}>
-							<Icon type="trash" /> Delete Score
-						</SelectButton>
-					)}
 					<HasDevModeOn>
 						<SelectButton id="debug" setValue={setView} value={view}>
 							<Icon type="bug" /> Debug Info
 						</SelectButton>
 					</HasDevModeOn>
+					{thisScore.sessionID && (
+						<LinkButton
+							className="text-body text-light-hover text-light-focus"
+							to={`/u/${user.username}/games/${thisScore.game}/sessions/${thisScore.sessionID}`}
+							variant="outline-secondary"
+						>
+							<Icon type="stream" /> Go to session
+						</LinkButton>
+					)}
 				</>
 			}
 		>

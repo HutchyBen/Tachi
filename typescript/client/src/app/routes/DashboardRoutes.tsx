@@ -1,4 +1,3 @@
-import SupportMePage from "#app/pages/dashboard/misc/SupportMePage";
 import SearchPage from "#app/pages/dashboard/search/SearchPage";
 import NotificationsPage from "#app/pages/dashboard/users/NotificationsPage";
 import { ErrorPage } from "#app/pages/ErrorPage";
@@ -84,9 +83,9 @@ export default function DashboardRoutes() {
 						<PrivacyPolicyPage />
 					</Route>
 
-					<Route exact path="/support">
+					{/* <Route exact path="/support">
 						<SupportMePage />
-					</Route>
+					</Route> */}
 
 					{/* this used to be called /dashboard/users/username, now it's called /u/username */}
 					<Route path="/users">
@@ -103,6 +102,10 @@ export default function DashboardRoutes() {
 
 					<Route path="/u/:userID">
 						<UserRoutes />
+					</Route>
+
+					<Route exact path="/games">
+						<Redirect to="/" />
 					</Route>
 
 					<Route path="/games/:game">

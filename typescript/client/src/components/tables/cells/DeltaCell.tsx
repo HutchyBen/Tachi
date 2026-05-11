@@ -1,6 +1,10 @@
 import React from "react";
 import { GetGradeDeltas, type GradeBoundary } from "tachi-common";
 
+import { constrainedDeltaTdStyle } from "./delta-lamp-cell-layout";
+
+const truncLine = "d-block text-truncate";
+
 export default function DeltaCell({
 	value,
 	grade,
@@ -13,7 +17,11 @@ export default function DeltaCell({
 	value: number;
 }) {
 	if (value === 0) {
-		return <td>N/A</td>;
+		return (
+			<td style={constrainedDeltaTdStyle} title="N/A">
+				N/A
+			</td>
+		);
 	}
 
 	// eslint-disable-next-line prefer-const
@@ -25,19 +33,29 @@ export default function DeltaCell({
 	}
 
 	if (closer === "upper") {
+		const primary = upper;
+		const secondary = lower;
 		return (
-			<td>
-				<strong>{upper}</strong>
-				<br />
-				<small className="text-body-secondary">{lower}</small>
+			<td style={constrainedDeltaTdStyle} title={`${primary} — ${secondary}`}>
+				<div className={truncLine} style={{ minWidth: 0 }}>
+					<strong>{primary}</strong>
+				</div>
+				<small className={`${truncLine} text-body-secondary`} style={{ minWidth: 0 }}>
+					{secondary}
+				</small>
 			</td>
 		);
 	} else {
+		const primary = lower;
+		const secondary = upper;
 		return (
-			<td>
-				<strong>{lower}</strong>
-				<br />
-				<small className="text-body-secondary">{upper}</small>
+			<td style={constrainedDeltaTdStyle} title={`${primary} — ${secondary}`}>
+				<div className={truncLine} style={{ minWidth: 0 }}>
+					<strong>{primary}</strong>
+				</div>
+				<small className={`${truncLine} text-body-secondary`} style={{ minWidth: 0 }}>
+					{secondary}
+				</small>
 			</td>
 		);
 	}

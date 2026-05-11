@@ -188,6 +188,7 @@ export function mkMockScore<TGame extends V3Game>(
 		comment: null,
 		importType: null,
 		scoreID: `TEST_${game}_SCORE`,
+		sessionID: null,
 		scoreMeta: {},
 		service: "TESTING",
 		timeAdded: 1,

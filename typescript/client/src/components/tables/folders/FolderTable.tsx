@@ -4,7 +4,8 @@ import useScoreRatingAlg from "#components/util/useScoreRatingAlg";
 import { type FolderDataset } from "#types/tables";
 import { NumericSOV, StrSOV } from "#util/sorts";
 import { CreateDefaultFolderSearchParams } from "#util/tables/create-search";
-import React, { useState } from "react";
+import React, { memo, useCallback, useMemo, useState } from "react";
+import { Alert, Button } from "react-bootstrap";
 import { type PBScoreDocument, type ScoreRatingAlgorithms, type V3Game } from "tachi-common";
 
 import DifficultyCell from "../cells/DifficultyCell";
@@ -31,6 +32,9 @@ export default function FolderTable({ dataset, game }: { dataset: FolderDataset;
 	const [rankingViewMode, setRankingViewMode] = useState<RankingViewMode>(
 		preferredRanking ?? "global",
 	);
+	const [usePaginatedView, setUsePaginatedView] = useState(false);
+
+	const folderSearchFunctions = useMemo(() => CreateDefaultFolderSearchParams(game), [game]);
 
 	const headers: Header<FolderDataset[0]>[] = [
 		ChartHeader(game, (k) => k),
@@ -46,22 +50,44 @@ export default function FolderTable({ dataset, game }: { dataset: FolderDataset;
 		["Last Raised", "Last Raised", NumericSOV((x) => x.__related.pb?.timeAchieved ?? 0)],
 	];
 
+	const rowFn = useCallback(
+		(data: FolderDataset[0]) => (
+			<Row data={data} game={game} rankingViewMode={rankingViewMode} rating={rating} />
+		),
+		[game, rankingViewMode, rating],
+	);
+
 	return (
-		<TachiTable
-			dataset={dataset}
-			entryName="Charts"
-			headers={headers}
-			rowFunction={(data) => (
-				<Row
-					data={data}
-					game={game}
-					key={data.chartID}
-					rankingViewMode={rankingViewMode}
-					rating={rating}
-				/>
-			)}
-			searchFunctions={CreateDefaultFolderSearchParams(game)}
-		/>
+		<>
+			<Alert className="mb-4" variant="warning">
+				<div className="d-flex flex-column flex-md-row align-items-md-center gap-3">
+					<p className="flex-grow-1 mb-0">
+						We're experimenting with a new view without pagination. If you're having
+						performance issues, please report it.
+					</p>
+					<Button
+						className="text-nowrap align-self-stretch align-self-md-auto fw-semibold"
+						onClick={() => setUsePaginatedView((v) => !v)}
+						variant="primary"
+					>
+						{usePaginatedView
+							? "Switch to full list (experiment)"
+							: "Switch back to paginated view"}
+					</Button>
+				</div>
+			</Alert>
+			<TachiTable
+				dataset={dataset}
+				entryName="Charts"
+				headers={headers}
+				key={usePaginatedView ? "folder-paginated" : "folder-full"}
+				pageLen={usePaginatedView ? 10 : 1000}
+				pageLenOptions={[1000, 100, 50, 25, 10]}
+				rowFunction={rowFn}
+				rowKey={(d) => d.chartID}
+				searchFunctions={folderSearchFunctions}
+			/>
+		</>
 	);
 }
 
@@ -100,47 +126,55 @@ function Row({
 	);
 }
 
-function RowInner({
-	data,
-	game,
-	rating,
-	rankingViewMode,
-	score,
-}: {
-	data: FolderDataset[0];
-	game: V3Game;
-	rankingViewMode: RankingViewMode;
-	rating: ScoreRatingAlgorithms[V3Game];
-	score: PBScoreDocument;
-}) {
-	// screw the rules of hooks
-	const scoreState = usePBState(score);
+const RowInner = memo(
+	({
+		data,
+		game,
+		rating,
+		rankingViewMode,
+		score,
+	}: {
+		data: FolderDataset[0];
+		game: V3Game;
+		rankingViewMode: RankingViewMode;
+		rating: ScoreRatingAlgorithms[V3Game];
+		score: PBScoreDocument;
+	}) => {
+		// screw the rules of hooks
+		const scoreState = usePBState(score);
 
-	return (
-		<DropdownRow
-			dropdown={
-				<PBDropdown
-					chart={data}
-					game={game}
-					scoreState={scoreState}
-					song={data.__related.song}
+		return (
+			<DropdownRow
+				dropdown={
+					<PBDropdown
+						chart={data}
+						game={game}
+						scoreState={scoreState}
+						song={data.__related.song}
+						userID={score.userID}
+					/>
+				}
+			>
+				<DifficultyCell chart={data} game={game} />
+				<IndicatorsCell highlight={scoreState.highlight} />
+				<TitleCell chart={data} game={game} song={data.__related.song} />
+				<td>
+					<Muted>PB</Muted>
+				</td>
+				<ScoreCoreCells chart={data} game={game} rating={rating} score={score} />
+				<RankingCell
+					rankingData={score.rankingData}
+					rankingViewMode={rankingViewMode}
 					userID={score.userID}
 				/>
-			}
-		>
-			<DifficultyCell chart={data} game={game} />
-			<IndicatorsCell highlight={scoreState.highlight} />
-			<TitleCell chart={data} game={game} song={data.__related.song} />
-			<td>
-				<Muted>PB</Muted>
-			</td>
-			<ScoreCoreCells chart={data} game={game} rating={rating} score={score} />
-			<RankingCell
-				rankingData={score.rankingData}
-				rankingViewMode={rankingViewMode}
-				userID={score.userID}
-			/>
-			<TimestampCell time={score.timeAchieved} />
-		</DropdownRow>
-	);
-}
+				<TimestampCell time={score.timeAchieved} />
+			</DropdownRow>
+		);
+	},
+	(prev, next) =>
+		prev.data === next.data &&
+		prev.score === next.score &&
+		prev.game === next.game &&
+		prev.rating === next.rating &&
+		prev.rankingViewMode === next.rankingViewMode,
+);

@@ -365,13 +365,13 @@ async function HydrateCheckAndInsertScore(
 		return null;
 	}
 
-	const existingCommitted = await DB.selectFrom("score")
+	// committed or not - don't import scores twice.
+	const existing = await DB.selectFrom("score")
 		.select("id")
 		.where("id", "=", scoreID)
-		.where("committed", "=", true)
 		.executeTakeFirst();
 
-	if (existingCommitted) {
+	if (existing) {
 		log.debug(`Skipped score.`);
 		return null;
 	}

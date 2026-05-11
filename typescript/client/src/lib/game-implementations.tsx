@@ -1,5 +1,6 @@
 import CHUNITHMJudgementCell from "#components/tables/cells/CHUNITHMJudgementCell";
 import CHUNITHMLampCell from "#components/tables/cells/CHUNITHMLampCell";
+import { constrainedLampTdStyle } from "#components/tables/cells/delta-lamp-cell-layout";
 import ITGJudgementCell from "#components/tables/cells/ITGJudgementCell";
 import JubeatJudgementCell from "#components/tables/cells/JubeatJudgementCell";
 import JubeatScoreCell from "#components/tables/cells/JubeatScoreCell";
@@ -729,14 +730,22 @@ export const GPT_CLIENT_IMPLEMENTATIONS: GPTClientImplementations = {
 				<ITGJudgementCell score={sc} />
 				<td
 					style={{
+						...constrainedLampTdStyle,
 						backgroundColor: ChangeOpacity(GetEnumColour(sc, "lamp"), 0.2),
 					}}
+					title={
+						sc.scoreData.lamp === "FAILED"
+							? `DIED @ ${Math.floor(sc.scoreData.survivedPercent)}%`
+							: sc.scoreData.lamp
+					}
 				>
-					{sc.scoreData.lamp === "FAILED" ? (
-						<strong>DIED @ {Math.floor(sc.scoreData.survivedPercent)}%</strong>
-					) : (
-						<strong>{sc.scoreData.lamp}</strong>
-					)}
+					<div className="d-block text-truncate" style={{ minWidth: 0 }}>
+						<strong>
+							{sc.scoreData.lamp === "FAILED"
+								? `DIED @ ${Math.floor(sc.scoreData.survivedPercent)}%`
+								: sc.scoreData.lamp}
+						</strong>
+					</div>
 				</td>
 			</>
 		),

@@ -3,6 +3,7 @@ import MiniTable from "#components/tables/components/MiniTable";
 import ScoreCoreCells from "#components/tables/game-core-cells/ScoreCoreCells";
 import ApiError from "#components/util/ApiError";
 import Divider from "#components/util/Divider";
+import Icon from "#components/util/Icon";
 import Loading from "#components/util/Loading";
 import useApiQuery from "#components/util/query/useApiQuery";
 import { GPT_CLIENT_IMPLEMENTATIONS } from "#lib/game-implementations";
@@ -12,7 +13,7 @@ import { ChangeOpacity } from "#util/color-opacity";
 import { ONE_WEEK } from "#util/constants/time";
 import { CreateChartLink } from "#util/data";
 import { NumericSOV } from "#util/sorts";
-import React, { useMemo } from "react";
+import React, { useLayoutEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
 	FormatChart,
@@ -122,10 +123,20 @@ function FolderMinimapMain({
 			.map((e) => e.scoreID);
 	}, [recentSession]);
 
+	// Switchboard tabs / unmount can leave portalled Bootstrap tooltips in <body> while React
+	// state still has show=true; drop those nodes so nothing sticks.
+	useLayoutEffect(() => {
+		return () => {
+			document.querySelectorAll(".tooltip-folder-minimap").forEach((el) => {
+				el.remove();
+			});
+		};
+	}, [enumMetric]);
+
 	return (
 		<div className="row">
 			<div className="col-12 col-lg-10 offset-lg-1">
-				<div className="scoreinfo-grid-minimap">
+				<div className="scoreinfo-grid-minimap" key={enumMetric}>
 					{sortedDataset.map((d) => (
 						<MinimapElement
 							data={d}
@@ -190,19 +201,21 @@ function MinimapElement({
 
 	return (
 		<QuickTooltip
-			max
+			delay={{ hide: 0, show: 0 }}
+			keepOpenWhenHoveringTooltip={false}
+			tooltipClassName="tooltip-folder-minimap"
 			tooltipContent={
-				<div className="w-100">
-					<span>{FormatChart(data)}</span>
-					<Divider />
+				<div className="folder-minimap-tooltip">
+					<div className="folder-minimap-tooltip-title">{FormatChart(data)}</div>
+					<Divider className="folder-minimap-tooltip-divider" />
 					{wasRecent && (
-						<>
-							<b>You raised this in your last session!</b>
-							<br />
-						</>
+						<div className="folder-minimap-tooltip-recent">
+							<Icon className="folder-minimap-tooltip-recent-icon" type="arrow-up" />
+							<span>Raised in your last session</span>
+						</div>
 					)}
 					{data.__related.pb ? (
-						<div className="w-100">
+						<div className="folder-minimap-tooltip-score">
 							<MiniTable>
 								<tr>
 									<ScoreCoreCells
@@ -215,7 +228,7 @@ function MinimapElement({
 							</MiniTable>
 						</div>
 					) : (
-						<span>Not Played</span>
+						<p className="folder-minimap-tooltip-empty mb-0">Not played</p>
 					)}
 				</div>
 			}

@@ -1,17 +1,14 @@
 import DistributionTable from "#components/game/folder/FolderDistributionTable";
 import Card from "#components/layout/page/Card";
-import DebounceSearch from "#components/util/DebounceSearch";
 import Divider from "#components/util/Divider";
 import Icon from "#components/util/Icon";
 import LinkButton from "#components/util/LinkButton";
-import Loading from "#components/util/Loading";
-import useApiQuery from "#components/util/query/useApiQuery";
 import SelectButton from "#components/util/SelectButton";
 import { useBucket } from "#components/util/useBucket";
 import useUGPTBase from "#components/util/useUGPTBase";
 import { UserContext } from "#context/UserContext";
 import { GPT_CLIENT_IMPLEMENTATIONS } from "#lib/game-implementations";
-import { type FolderStatsInfo, type UGPTFolderSearch } from "#types/api-returns";
+import { type FolderStatsInfo } from "#types/api-returns";
 import { type UGPT } from "#types/react";
 import { APIFetchV1 } from "#util/api";
 import { Reverse, UppercaseFirst } from "#util/misc";
@@ -23,58 +20,6 @@ import {
 	GetScoreMetrics,
 } from "tachi-common";
 import { type ConfEnumScoreMetric } from "tachi-common/types/metrics";
-
-export default function FoldersSearch({ reqUser, game }: UGPT) {
-	const [search, setSearch] = useState("");
-
-	const params = useMemo(() => new URLSearchParams({ search }), [search]);
-
-	const { data, error } = useApiQuery<UGPTFolderSearch>(
-		`/users/${reqUser.id}/games/${game}/folders?${params.toString()}`,
-	);
-
-	let body = <></>;
-
-	if (error) {
-		body = <>{error.description}</>;
-	} else if (!data) {
-		body = <Loading />;
-	} else {
-		const statMap = new Map();
-
-		for (const stat of data.stats) {
-			statMap.set(stat.slug, stat);
-		}
-
-		body = (
-			<>
-				{data.folders.length === 0 && (
-					<div className="col-12 text-center">Found nothin'.</div>
-				)}
-				{data.folders.map((e) => (
-					<FolderInfoComponent
-						folder={e}
-						folderStats={statMap.get(e.slug)!}
-						game={game}
-						key={e.slug}
-						reqUser={reqUser}
-					/>
-				))}
-			</>
-		);
-	}
-
-	return (
-		<>
-			<div className="col-12">
-				<DebounceSearch placeholder="Search all Folders..." setSearch={setSearch} />
-			</div>
-			<div className="col-12 mt-8">
-				<div className="row">{search !== "" && body}</div>
-			</div>
-		</>
-	);
-}
 
 export function FolderInfoComponent({
 	reqUser,

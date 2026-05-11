@@ -6,9 +6,12 @@ import { FormatTables } from "#util/misc";
 import React from "react";
 import { type ChartDocument, COLOUR_SET } from "tachi-common";
 
+import { DIFFICULTY_CELL_WIDTH_PX } from "./difficulty-cell-layout";
 import RatingSystemPart from "./RatingSystemPart";
 
 type USCGame = "usc-controller" | "usc-keyboard";
+
+const truncLineCls = "d-block text-truncate";
 
 export default function USCDifficultyCell({ chart }: { chart: ChartDocument<USCGame> }) {
 	const game: USCGame = chart.game as USCGame;
@@ -28,10 +31,18 @@ export default function USCDifficultyCell({ chart }: { chart: ChartDocument<USCG
 		<td
 			style={{
 				backgroundColor: bgColour,
+				boxSizing: "border-box",
+				maxWidth: `${DIFFICULTY_CELL_WIDTH_PX}px`,
+				minWidth: 0,
+				overflow: "hidden",
+				width: `${DIFFICULTY_CELL_WIDTH_PX}px`,
 			}}
+			title={levelText}
 		>
-			<span>{levelText}</span>
-			<RatingSystemPart chart={chart} game={game} />
+			<span className={truncLineCls} style={{ minWidth: 0 }}>
+				{levelText}
+			</span>
+			<RatingSystemPart chart={chart} game={game} truncateRatingsLines />
 			{!chart.isPrimary && (
 				<QuickTooltip tooltipContent="This chart is an alternate, old chart.">
 					<div>

@@ -16,6 +16,7 @@ export const SELECT_SCORE_DOCUMENT = [
 	"score.meta as score_meta",
 	"score.time_achieved as score_time_achieved",
 	"score.time_added as score_time_added",
+	"score.session_id as score_session_id",
 	"score.highlight as score_highlight",
 	"score.comment as score_comment",
 	"chart.id as chart_id",
@@ -37,6 +38,7 @@ export interface ScoreDocumentJoinRow {
 	score_meta: unknown;
 	score_time_achieved: string | null;
 	score_time_added: string;
+	score_session_id: string | null;
 	score_highlight: boolean;
 	score_comment: string | null;
 	chart_id: string;
@@ -82,6 +84,7 @@ export function ToScoreDocument(row: ScoreDocumentJoinRow): ScoreDocument {
 		comment: row.score_comment,
 		timeAdded: ISO8601ToUnixMilliseconds(row.score_time_added),
 		scoreID: row.score_id,
+		sessionID: row.score_session_id,
 		importType: row.import_import_type as ImportTypes | null,
 	};
 }

@@ -212,6 +212,7 @@ export const TestingIIDXSPScore: ScoreDocument<"iidx-sp"> = {
 	comment: null,
 	timeAdded: 1,
 	scoreID: "TESTING_SCORE_ID",
+	sessionID: null,
 	importType: "ir/direct-manual",
 };
 
@@ -239,6 +240,7 @@ export const TestingDDRSPScore: ScoreDocument<"ddr-sp"> = {
 		},
 	},
 	scoreID: "Te065000f08b49458f8b0aa3eabf0b857b79c562d7cf9eb34f6dabd7a1c3c3fa6",
+	sessionID: null,
 	scoreMeta: {},
 	service: "History (BATCH-MANUAL)",
 	songID: "s10",
@@ -276,6 +278,7 @@ export const TestingSDVXScore: ScoreDocument<"sdvx"> = {
 	comment: null,
 	timeAdded: 1,
 	scoreID: "TESTING_SCORE_SDVX_ID",
+	sessionID: null,
 	importType: "ir/direct-manual",
 };
 
@@ -391,6 +394,7 @@ export const TestingBMS7KScore: ScoreDocument<"bms-7k"> = {
 		},
 	},
 	scoreID: "test_bms_score",
+	sessionID: null,
 	scoreMeta: {},
 	service: "foo",
 	timeAchieved: null,

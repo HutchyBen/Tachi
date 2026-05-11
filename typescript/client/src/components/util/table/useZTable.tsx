@@ -1,5 +1,5 @@
 import deepmerge from "deepmerge";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { type integer } from "tachi-common";
 
 export type ZTableSortFn<D> = (a: D, b: D) => integer;
@@ -49,12 +49,18 @@ export function useZTable<D>(originalDataset: D[], providedOptions?: Partial<ZTa
 	// whether we're sorting descendingly or not.
 	const [reverseSort, setReverseSort] = useState(defaultReverseSort);
 
+	const prevSearchRef = useRef(search);
+	if (search !== prevSearchRef.current) {
+		prevSearchRef.current = search;
+		// One update with filter changes; bails out when page is already 1 (avoids extra commit on first keystroke).
+		setPage(1);
+	}
+
 	const dataset = useMemo(() => {
 		let mutatedSet = originalDataset;
 
 		if (search !== "") {
 			mutatedSet = mutatedSet.filter((v) => searchFunction(search, v));
-			setPage(1);
 		}
 
 		if (sortMode !== null) {
@@ -91,28 +97,32 @@ export function useZTable<D>(originalDataset: D[], providedOptions?: Partial<ZTa
 			return `Displaying no ${entryName}.`;
 		}
 
+		const filterSuffix = search !== "" ? ` (Filtered from ${originalDataset.length})` : "";
+
+		if (dataset.length <= pageLen) {
+			return `Displaying ${dataset.length} ${entryName}${filterSuffix}.`;
+		}
+
 		return `Displaying ${(page - 1) * pageLen + 1} to ${Math.min(
 			page * pageLen,
 			dataset.length,
-		)} of ${dataset.length} ${entryName}${
-			search !== "" ? ` (Filtered from ${originalDataset.length})` : ""
-		}.`;
-	}, [page, dataset, pageLen]);
+		)} of ${dataset.length} ${entryName}${filterSuffix}.`;
+	}, [page, dataset, pageLen, search, entryName, originalDataset.length]);
 
 	// Create a sliding window that can be used for pagination.
-	const window = useMemo(
+	const pageWindow = useMemo(
 		() => dataset.slice((page - 1) * pageLen, page * pageLen),
-		[page, dataset, search, pageLen],
+		[page, dataset, pageLen],
 	);
 
 	// simple utilities for previous and next buttons
-	const incrementPage = () => {
-		setPage(page + 1);
-	};
+	const incrementPage = useCallback(() => {
+		setPage((p) => p + 1);
+	}, []);
 
-	const decrementPage = () => {
-		setPage(page - 1);
-	};
+	const decrementPage = useCallback(() => {
+		setPage((p) => p - 1);
+	}, []);
 
 	const setInnerPageLen = (pageLen: number) => {
 		setPageLen(pageLen);
@@ -120,18 +130,21 @@ export function useZTable<D>(originalDataset: D[], providedOptions?: Partial<ZTa
 	};
 
 	// utility for sorting
-	const changeSort = (sort: string) => {
-		if (sortMode === sort) {
-			setReverseSort(!reverseSort);
-		} else {
-			setSortMode(sort);
-			// desc sort is default
-			setReverseSort(true);
-		}
-	};
+	const changeSort = useCallback(
+		(sort: string) => {
+			if (sortMode === sort) {
+				setReverseSort((r) => !r);
+			} else {
+				setSortMode(sort);
+				// desc sort is default
+				setReverseSort(true);
+			}
+		},
+		[sortMode],
+	);
 
 	return {
-		window,
+		pageWindow,
 		incrementPage,
 		decrementPage,
 		pageState,

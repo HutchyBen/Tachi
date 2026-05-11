@@ -1,4 +1,5 @@
 import { ACTION_SetRivals } from "#actions/set-rivals";
+import { GetRecentActivity } from "#lib/activity/activity";
 import { SYMBOL_TACHI_API_AUTH } from "#lib/constants/tachi";
 import { LoadPbDocumentsForUserSetSortedByCalculatedAlg } from "#lib/db-formats/pb";
 import { GetChallengerUsers, GetRivalIDs, GetRivalUsers } from "#lib/rivals/rivals";
@@ -6,7 +7,7 @@ import { withUserGameProfile } from "#lib/router/middleware";
 import { success } from "#lib/router/typed-router";
 import { API_V1_ROUTER } from "#server/router/api/v1/router";
 import { GetRelevantSongsAndCharts } from "#utils/db";
-import { IsString } from "#utils/misc";
+import { DedupeArr, IsString } from "#utils/misc";
 import { CheckStrScoreAlg } from "#utils/string-checks";
 import { GetUsersWithIDs, GetUserWithIDGuaranteed } from "#utils/user";
 import { ExpectedErr } from "bliss";
@@ -109,13 +110,26 @@ API_V1_ROUTER.add(
 );
 
 /**
- * Retrieve activity for this user's set of rivals.
- *
- * @note Activity routes delegate to CreateActivityRouteHandler, which sends its own response.
- * This handler is intentionally a no-op placeholder - the route is wired directly.
+ * Retrieve activity for this user and their rivals on this GPT (same user set as the PB leaderboard).
  *
  * @name GET /api/v1/users/:userID/games/:game/rivals/activity
  */
-API_V1_ROUTER.add("GET /users/:userID/games/:game/rivals/activity", withUserGameProfile, () => {
-	throw new ExpectedErr(501, "Not implemented via TypedRouter - wired directly.");
-});
+API_V1_ROUTER.add(
+	"GET /users/:userID/games/:game/rivals/activity",
+	withUserGameProfile,
+	async ({ ctx, input }) => {
+		const { requestedUser: user, game } = ctx;
+
+		const rivalIDs = await GetRivalIDs(user.id, game);
+		const userIDs = DedupeArr([user.id, ...rivalIDs]);
+
+		const data = await GetRecentActivity(
+			game,
+			{ userID: { $in: userIDs } },
+			input.sessions ?? 30,
+			input.startTime ?? null,
+		);
+
+		return success("Retrieved activity.", data);
+	},
+);
