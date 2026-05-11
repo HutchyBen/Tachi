@@ -823,7 +823,7 @@ const PRE_SCHEMAS = {
 		sentAt: p.isPositive,
 		read: "boolean",
 		body: {
-			type: p.isIn("RIVALED_BY", "QUEST_CHANGED"),
+			type: p.isIn("RIVALED_BY", "QUEST_CHANGED", "SITE_ANNOUNCEMENT", "ORPHANS_RESTORED"),
 			content: (self, parent) => {
 				const type = parent.type as NotificationBody["type"];
 
@@ -848,6 +848,13 @@ const PRE_SCHEMAS = {
 
 					case "SITE_ANNOUNCEMENT": {
 						subSchema = {};
+						break;
+					}
+
+					case "ORPHANS_RESTORED": {
+						subSchema = {
+							scoreCount: p.isPositiveNonZeroInteger,
+						};
 						break;
 					}
 				}

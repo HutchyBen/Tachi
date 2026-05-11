@@ -6,10 +6,10 @@ import type {
 	ImportTypeDataMap,
 	OrphanScoreDocument,
 } from "#lib/score-import/import-types/common/types";
-import type { GameGroup, ImportTypes, integer } from "tachi-common";
 import type { OrphanScore as PgOrphanScoreRow } from "tachi-db";
 
 import { SELECT_ORPHAN_SCORE } from "#lib/db-formats/orphan-score";
+import { SendNotification } from "#lib/notifications/notifications";
 import { Converters } from "#lib/score-import/import-types/converters";
 import DB from "#services/pg/db";
 import { GetBlacklist } from "#utils/queries/blacklist";
@@ -17,6 +17,7 @@ import { GetUserWithID } from "#utils/user";
 import { ExpectedErr } from "bliss";
 import fjsh from "fast-json-stable-hash";
 import { sql } from "kysely";
+import { type GameGroup, GetGameGroupConfig, type ImportTypes, type integer } from "tachi-common";
 
 import { type ConverterFailure, IsConverterFailure } from "../common/converter-failures";
 import { HandlePostImportSteps } from "../score-importing/score-import-main";
@@ -427,6 +428,8 @@ export async function DeorphanScores(filter: DeorphanScoresFilter, log: KtLogger
 	let removed = 0;
 	let processed = 0;
 
+	const restoredScoreCountByUser = new Map<integer, integer>();
+
 	for (const or of orphans) {
 		// We have to await like this to avoid mid-air race conditions,
 		// where two orphans attempt to deorphan to the same scoreID
@@ -445,12 +448,29 @@ export async function DeorphanScores(filter: DeorphanScoresFilter, log: KtLogger
 				failed++;
 			} else {
 				success++;
+				if (!GetGameGroupConfig(or.game).dynamicContent) {
+					restoredScoreCountByUser.set(
+						or.userID,
+						(restoredScoreCountByUser.get(or.userID) ?? 0) + 1,
+					);
+				}
 			}
 		} catch (err) {
 			log.error({ orphanID: or.orphanID, err }, `Failed to reprocess orphan.`);
 			failed++;
 		}
 	}
+
+	await Promise.all(
+		[...restoredScoreCountByUser.entries()].map(([userID, scoreCount]) => {
+			const title = `We've added new song data to the site, and ${scoreCount} of your scores have now been resolved to your profile.`;
+
+			return SendNotification(title, userID, {
+				type: "ORPHANS_RESTORED",
+				content: { scoreCount },
+			});
+		}),
+	);
 
 	return { processed, removed, failed, success };
 }

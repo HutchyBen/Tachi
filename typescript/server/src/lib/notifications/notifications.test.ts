@@ -31,6 +31,25 @@ describe("SendNotification", () => {
 			content: { questID: "q1", game: "iidx-sp" },
 		});
 	});
+
+	it("inserts ORPHANS_RESTORED with scoreCount payload", async () => {
+		await SendNotification("3 orphan scores were restored", userId, {
+			type: "ORPHANS_RESTORED",
+			content: { scoreCount: 3 },
+		});
+
+		const row = await DB.selectFrom("notification")
+			.select(SELECT_NOTIFICATION)
+			.where("notification.sent_to", "=", userId)
+			.where("notification.kind", "=", "orphans_restored")
+			.executeTakeFirstOrThrow();
+
+		expect(row.title).toBe("3 orphan scores were restored");
+		expect(row.payload).toEqual({
+			type: "ORPHANS_RESTORED",
+			content: { scoreCount: 3 },
+		});
+	});
 });
 
 describe("BulkSendNotification", () => {

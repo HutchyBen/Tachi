@@ -26,6 +26,12 @@ export type NotificationBody =
 			type: "RIVALED_BY"; // Emitted when the user is rivalled by someone.
 	  }
 	| {
+			content: {
+				scoreCount: integer;
+			};
+			type: "ORPHANS_RESTORED"; // Emitted after orphaned scores were successfully imported.
+	  }
+	| {
 			content: Record<string, never>;
 			type: "SITE_ANNOUNCEMENT"; // Emitted as a site announcement
 	  };

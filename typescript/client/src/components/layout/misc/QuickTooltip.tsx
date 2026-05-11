@@ -14,11 +14,11 @@ export default function QuickTooltip({
 }: {
 	children: JSX.Element;
 	delay?: number | { hide?: number; show?: number };
+	/** When false, the tooltip hides as soon as the pointer leaves the trigger (overlay is not hoverable). */
+	keepOpenWhenHoveringTooltip?: boolean;
 	max?: boolean;
 	style?: CSSProperties;
 	tooltipClassName?: string;
-	/** When false, the tooltip hides as soon as the pointer leaves the trigger (overlay is not hoverable). */
-	keepOpenWhenHoveringTooltip?: boolean;
 	tooltipContent: React.ReactChild | undefined;
 	wide?: boolean;
 }) {
@@ -88,14 +88,10 @@ export default function QuickTooltip({
 					className={overlayClass}
 					id={nanoid()}
 					onMouseEnter={
-						keepOpenWhenHoveringTooltip
-							? () => setMousedOver(true)
-							: undefined
+						keepOpenWhenHoveringTooltip ? () => setMousedOver(true) : undefined
 					}
 					onMouseLeave={
-						keepOpenWhenHoveringTooltip
-							? () => setMousedOver(false)
-							: undefined
+						keepOpenWhenHoveringTooltip ? () => setMousedOver(false) : undefined
 					}
 					style={style}
 				>

@@ -43,5 +43,7 @@ function NotifToURL(notif: NotificationDocument) {
 			return `/u/${notif.body.content.userID}/games/${notif.body.content.game}`;
 		case "SITE_ANNOUNCEMENT":
 			return null;
+		case "ORPHANS_RESTORED":
+			return `/u/${notif.sentTo}/orphans`;
 	}
 }
