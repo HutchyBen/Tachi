@@ -1,9 +1,24 @@
 import { APIFetchV1, type UnsuccessfulAPIFetchResponse } from "#util/api";
-import { type QueryKey, useQuery } from "react-query";
+import { type QueryClient, type QueryKey, useQuery, useQueryClient } from "react-query";
 import { type SuccessfulAPIResponse } from "tachi-common";
 
 export function UnfuckURLsV3GameToV2Format(url: string) {
 	return url;
+}
+
+/** Invalidate data fetched via useApiQuery (keys are URL path strings) without a full page reload. */
+export function invalidateUseApiQueryCache(queryClient: QueryClient) {
+	return queryClient.invalidateQueries({
+		predicate: (q) =>
+			Array.isArray(q.queryKey) &&
+			q.queryKey.length > 0 &&
+			q.queryKey.every((part) => typeof part === "string" && part.startsWith("/")),
+	});
+}
+
+export function useInvalidateUseApiQueryCache() {
+	const queryClient = useQueryClient();
+	return () => invalidateUseApiQueryCache(queryClient);
 }
 
 export default function useApiQuery<T>(

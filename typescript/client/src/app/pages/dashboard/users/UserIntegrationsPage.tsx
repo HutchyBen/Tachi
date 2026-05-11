@@ -14,9 +14,10 @@ import SelectLinkButton from "#components/util/SelectLinkButton";
 import { TachiConfig } from "#lib/config";
 import { type SetState } from "#types/react";
 import { APIFetchV1 } from "#util/api";
-import { allPermissions, DelayedPageReload } from "#util/misc";
+import { allPermissions } from "#util/misc";
 import React, { useEffect, useReducer, useState } from "react";
 import { Alert, Button, Col, Form, Modal, Row } from "react-bootstrap";
+import { useQueryClient } from "react-query";
 import { Link, Route, Switch } from "react-router-dom";
 import {
 	type APIPermissions,
@@ -167,7 +168,7 @@ function CreateNewOAuthClient({ setClients }: { setClients: SetState<TachiAPICli
 						onSubmit={async (e) => {
 							e.preventDefault();
 
-							const res = await APIFetchV1(
+							const res = await APIFetchV1<TachiAPIClientDocument>(
 								"/clients/create",
 								{
 									method: "POST",
@@ -188,7 +189,8 @@ function CreateNewOAuthClient({ setClients }: { setClients: SetState<TachiAPICli
 							);
 
 							if (res.success) {
-								DelayedPageReload();
+								setClients((prev) => [...prev, res.body]);
+								setShow(false);
 							}
 						}}
 					>
@@ -696,9 +698,9 @@ function KAIIntegrationStatus({
 	kaiType: "eag" | "flo" | "min";
 	userID: integer;
 }) {
-	const { data, error } = useApiQuery<{ authStatus: boolean }>(
-		`/users/${userID}/integrations/kai/${kaiType}`,
-	);
+	const queryClient = useQueryClient();
+	const kaiQueryKey = `/users/${userID}/integrations/kai/${kaiType}`;
+	const { data, error } = useApiQuery<{ authStatus: boolean }>(kaiQueryKey);
 
 	if (error) {
 		return <ApiError error={error} />;
@@ -730,7 +732,7 @@ function KAIIntegrationStatus({
 								);
 
 								if (res.success) {
-									window.location.reload();
+									await queryClient.invalidateQueries([kaiQueryKey]);
 								}
 							}}
 							variant="danger"

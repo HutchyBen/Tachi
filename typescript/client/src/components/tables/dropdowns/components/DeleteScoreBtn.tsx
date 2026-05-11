@@ -1,11 +1,12 @@
 import Icon from "#components/util/Icon";
+import { useInvalidateUseApiQueryCache } from "#components/util/query/useApiQuery";
 import { APIFetchV1 } from "#util/api";
-import { DelayedPageReload } from "#util/misc";
 import React, { useMemo, useReducer } from "react";
 import { type ScoreDocument } from "tachi-common";
 
 export default function DeleteScoreBtn({ score }: { score: ScoreDocument }) {
 	const [warn, upgWarn] = useReducer((r) => r + 1, 0);
+	const invalidateApiQueries = useInvalidateUseApiQueryCache();
 	const message = useMemo(() => {
 		if (warn === 0) {
 			return <Icon noPad type="trash" />;
@@ -36,7 +37,7 @@ export default function DeleteScoreBtn({ score }: { score: ScoreDocument }) {
 						},
 						true,
 						true,
-					).then(() => DelayedPageReload());
+					).then(() => invalidateApiQueries());
 				}
 			}}
 		>

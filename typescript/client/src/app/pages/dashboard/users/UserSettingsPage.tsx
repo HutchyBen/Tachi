@@ -6,10 +6,12 @@ import Icon from "#components/util/Icon";
 import Muted from "#components/util/Muted";
 import useApiQuery from "#components/util/query/useApiQuery";
 import SelectButton from "#components/util/SelectButton";
+import { BackgroundContext } from "#context/BackgroundContext";
+import { UserContext } from "#context/UserContext";
 import { UserSettingsContext } from "#context/UserSettingsContext";
 import { type SetState } from "#types/react";
 import { APIFetchV1, ToAPIURL } from "#util/api";
-import { DelayedPageReload, FetchJSONBody, UppercaseFirst } from "#util/misc";
+import { FetchJSONBody, UppercaseFirst } from "#util/misc";
 import { getStoredTheme, mediaQueryPrefers, setTheme, type Themes } from "#util/themeUtils";
 import { useFormik } from "formik";
 import React, { useContext, useEffect, useRef, useState } from "react";
@@ -19,6 +21,7 @@ import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import Stack from "react-bootstrap/Stack";
 import toast from "react-hot-toast";
+import { useQueryClient } from "react-query";
 import { type integer, type UserDocument, type UserSettingsDocument } from "tachi-common";
 
 interface Props {
@@ -537,10 +540,34 @@ function ImageForm({ reqUser }: { reqUser: UserDocument }) {
 	const pfpInput = useRef<HTMLInputElement>(null);
 	const [banner, setBanner] = useState<File | undefined>();
 	const bannerInput = useRef<HTMLInputElement>(null);
+	const [mediaNonce, setMediaNonce] = useState(0);
+
+	const queryClient = useQueryClient();
+	const { setBackground } = useContext(BackgroundContext);
+	const { user: ctxUser, setUser } = useContext(UserContext);
+
+	const mediaQs = mediaNonce > 0 ? `?v=${mediaNonce}` : "";
 
 	const handleReset = (ref: React.MutableRefObject<HTMLInputElement | null>) => {
 		if (ref.current) {
 			ref.current.value = "";
+		}
+	};
+
+	const afterMediaMutation = async (uploadType: "banner" | "pfp") => {
+		setMediaNonce((n) => n + 1);
+		if (uploadType === "banner") {
+			setBackground(ToAPIURL(`/users/${reqUser.id}/banner?v=${Date.now()}`));
+		}
+		await Promise.all([
+			queryClient.invalidateQueries([`/users/${reqUser.username}`]),
+			queryClient.invalidateQueries([`/users/${reqUser.id}`]),
+		]);
+		if (ctxUser?.id === reqUser.id) {
+			const r = await APIFetchV1<UserDocument>("/users/me", {}, true, true);
+			if (r.success) {
+				setUser(r.body);
+			}
 		}
 	};
 
@@ -563,12 +590,17 @@ function ImageForm({ reqUser }: { reqUser: UserDocument }) {
 				/>
 				<div className="d-flex justify-content-center my-4">
 					<ProfilePicture
-						src={pfp ? URL.createObjectURL(pfp) : ToAPIURL(`/users/${reqUser.id}/pfp`)}
+						src={
+							pfp
+								? URL.createObjectURL(pfp)
+								: ToAPIURL(`/users/${reqUser.id}/pfp`) + mediaQs
+						}
 						user={reqUser}
 					/>
 				</div>
 				<FileUploadController
 					file={pfp}
+					onMutationSuccess={afterMediaMutation}
 					reqUser={reqUser}
 					reset={() => handleReset(pfpInput)}
 					setFile={setPfp}
@@ -592,11 +624,12 @@ function ImageForm({ reqUser }: { reqUser: UserDocument }) {
 					src={
 						banner
 							? URL.createObjectURL(banner)
-							: ToAPIURL(`/users/${reqUser.id}/banner`)
+							: ToAPIURL(`/users/${reqUser.id}/banner`) + mediaQs
 					}
 				/>
 				<FileUploadController
 					file={banner}
+					onMutationSuccess={afterMediaMutation}
 					reqUser={reqUser}
 					reset={() => handleReset(bannerInput)}
 					setFile={setBanner}
@@ -608,6 +641,7 @@ function ImageForm({ reqUser }: { reqUser: UserDocument }) {
 }
 
 function SocialMediaForm({ reqUser }: { reqUser: UserDocument }) {
+	const queryClient = useQueryClient();
 	const placeholders = {
 		discord: "Discord Username",
 		twitter: "Twitter Handle",
@@ -648,7 +682,10 @@ function SocialMediaForm({ reqUser }: { reqUser: UserDocument }) {
 			);
 
 			if (rj.success) {
-				DelayedPageReload();
+				await Promise.all([
+					queryClient.invalidateQueries([`/users/${reqUser.username}`]),
+					queryClient.invalidateQueries([`/users/${reqUser.id}`]),
+				]);
 			}
 		},
 	});
@@ -710,8 +747,10 @@ function FileUploadController({
 	reqUser,
 	setFile,
 	reset,
+	onMutationSuccess,
 }: {
 	file?: File;
+	onMutationSuccess: (uploadType: "banner" | "pfp") => Promise<void> | void;
 	reqUser: UserDocument;
 	reset: () => void;
 	setFile: SetState<File | undefined>;
@@ -750,7 +789,7 @@ function FileUploadController({
 							);
 
 							if (res.success) {
-								DelayedPageReload();
+								await onMutationSuccess(type);
 							}
 						}
 					}}
@@ -782,7 +821,9 @@ function FileUploadController({
 						);
 
 						if (res.success) {
-							window.location.reload();
+							setFile(undefined);
+							reset();
+							await onMutationSuccess(type);
 						}
 					}}
 					variant="success"

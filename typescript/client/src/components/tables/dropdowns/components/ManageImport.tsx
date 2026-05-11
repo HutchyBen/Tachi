@@ -1,11 +1,12 @@
+import { useInvalidateUseApiQueryCache } from "#components/util/query/useApiQuery";
 import { APIFetchV1 } from "#util/api";
-import { DelayedPageReload } from "#util/misc";
 import React, { useMemo, useReducer } from "react";
 import { Button } from "react-bootstrap";
 import { type ImportDocument } from "tachi-common";
 
 export default function ManageImport({ importDoc }: { importDoc: ImportDocument }) {
 	const [warn, upgWarn] = useReducer((r) => r + 1, 0);
+	const invalidateApiQueries = useInvalidateUseApiQueryCache();
 	const message = useMemo(() => {
 		if (warn === 0) {
 			return "Undo Import (Requires Further Confirmation)";
@@ -39,7 +40,7 @@ export default function ManageImport({ importDoc }: { importDoc: ImportDocument 
 							},
 							true,
 							true,
-						).then(() => DelayedPageReload());
+						).then(() => invalidateApiQueries());
 					}
 				}}
 				variant="danger"

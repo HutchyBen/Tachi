@@ -146,10 +146,6 @@ export function FormatMillions(v: number) {
 	return v.toLocaleString();
 }
 
-export function DelayedPageReload(delay = 300) {
-	setTimeout(() => window.location.reload(), delay);
-}
-
 export function ShortDelayify(fn: () => void, delay = 300) {
 	setTimeout(fn, delay);
 }

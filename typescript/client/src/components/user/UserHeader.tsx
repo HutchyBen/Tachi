@@ -11,6 +11,7 @@ import { APIFetchV1 } from "#util/api";
 import { FormatDate } from "#util/time";
 import React, { useContext, useState } from "react";
 import { Button, Form, InputGroup, Modal } from "react-bootstrap";
+import { useQueryClient } from "react-query";
 import { UserAuthLevels, type UserDocument } from "tachi-common";
 
 import ProfileBadges from "./ProfileBadges";
@@ -42,12 +43,20 @@ export function UserHeaderBody({ reqUser }: { reqUser: UserDocument }) {
 	}
 
 	const { user: loggedInUser } = useContext(UserContext);
+	const queryClient = useQueryClient();
+
+	async function invalidateProfileQueries() {
+		await Promise.all([
+			queryClient.invalidateQueries([`/users/${reqUser.username}`]),
+			queryClient.invalidateQueries([`/users/${reqUser.id}`]),
+		]);
+	}
 
 	return (
 		<>
 			<div className="col-12 col-lg-3">
 				<div className="d-flex justify-content-center mb-3">
-					<ProfilePicture user={reqUser} />
+					<ProfilePicture key={reqUser.customPfpLocation ?? "default"} user={reqUser} />
 				</div>
 				<div className="d-flex align-items-center" style={{ flexDirection: "column" }}>
 					<ProfileBadges user={reqUser} />
@@ -69,7 +78,11 @@ export function UserHeaderBody({ reqUser }: { reqUser: UserDocument }) {
 										{ method: "DELETE" },
 										true,
 										true,
-									).then(() => window.location.reload())
+									).then(async (res) => {
+										if (res.success) {
+											await invalidateProfileQueries();
+										}
+									})
 								}
 								variant="danger"
 							>
@@ -83,7 +96,11 @@ export function UserHeaderBody({ reqUser }: { reqUser: UserDocument }) {
 										{ method: "POST" },
 										true,
 										true,
-									).then(() => window.location.reload())
+									).then(async (res) => {
+										if (res.success) {
+											await invalidateProfileQueries();
+										}
+									})
 								}
 								variant="primary"
 							>

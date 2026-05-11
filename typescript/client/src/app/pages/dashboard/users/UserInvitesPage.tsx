@@ -7,10 +7,11 @@ import Loading from "#components/util/Loading";
 import Muted from "#components/util/Muted";
 import useApiQuery from "#components/util/query/useApiQuery";
 import { APIFetchV1 } from "#util/api";
-import { CopyToClipboard, DelayedPageReload } from "#util/misc";
+import { CopyToClipboard } from "#util/misc";
 import { FormatTime } from "#util/time";
 import React from "react";
 import { Button, Col, Row } from "react-bootstrap";
+import { useQueryClient } from "react-query";
 import { Link } from "react-router-dom";
 import {
 	type integer,
@@ -25,6 +26,8 @@ export default function UserInvitesPage({ reqUser }: { reqUser: UserDocument }) 
 		[reqUser],
 		`${reqUser.username}'s Invites`,
 	);
+
+	const queryClient = useQueryClient();
 
 	const { data, error } = useApiQuery<{ invites: integer; limit: integer }>(
 		`/users/${reqUser.id}/invites/limit`,
@@ -72,7 +75,14 @@ export default function UserInvitesPage({ reqUser }: { reqUser: UserDocument }) 
 									);
 
 									if (r.success) {
-										DelayedPageReload();
+										await Promise.all([
+											queryClient.invalidateQueries([
+												`/users/${reqUser.id}/invites`,
+											]),
+											queryClient.invalidateQueries([
+												`/users/${reqUser.id}/invites/limit`,
+											]),
+										]);
 									}
 								}}
 							>
