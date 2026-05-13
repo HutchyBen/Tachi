@@ -570,7 +570,7 @@ export const API_V1_SPEC = {
 	"GET /users/:userID/integrations/cg/:cgType": {
 		description: "Get CG card info for the given CG type.",
 		input: z.object({}),
-		output: doc<CGCardInfo>(),
+		output: z.nullable(doc<CGCardInfo>()),
 	},
 
 	"PUT /users/:userID/integrations/cg/:cgType": {
@@ -1593,7 +1593,7 @@ export const API_V1_SPEC = {
 		input: z.object({ search: z.string() }),
 		output: z.strictObject({
 			quests: docArray<QuestDocument>(),
-			goals: z.record(z.string(), docArray<GoalDocument>()),
+			goals: docArray<GoalDocument>(),
 		}),
 	},
 
@@ -1615,7 +1615,7 @@ export const API_V1_SPEC = {
 		output: z.strictObject({
 			questlines: docArray<QuestlineDocument>(),
 			standalone: docArray<QuestDocument>(),
-			standaloneGoals: z.record(z.string(), docArray<GoalDocument>()),
+			standaloneGoals: docArray<GoalDocument>(),
 		}),
 	},
 
@@ -1625,7 +1625,7 @@ export const API_V1_SPEC = {
 		output: z.strictObject({
 			questline: doc<QuestlineDocument>(),
 			quests: docArray<QuestDocument>(),
-			goals: z.record(z.string(), docArray<GoalDocument>()),
+			goals: docArray<GoalDocument>(),
 		}),
 	},
 

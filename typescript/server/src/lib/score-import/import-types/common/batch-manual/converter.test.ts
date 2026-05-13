@@ -5,7 +5,8 @@ import DB from "#services/pg/db";
 import { randomBytes } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 
-import { ResolveSongAndChart } from "./converter";
+import { ConverterBatchManual, ResolveSongAndChart } from "./converter";
+import type { BatchManualContext } from "./types";
 
 function mkLog(): KtLogger {
 	return {
@@ -523,5 +524,27 @@ describe("ResolveSongAndChart (Postgres)", () => {
 		await expect(ResolveSongAndChart(r, mkLog())).rejects.toMatchObject({
 			message: expect.stringMatching(/sdvxInGameID/u),
 		});
+	});
+});
+
+describe("ConverterBatchManual", () => {
+	it("does not throw when legacy context stores game group + playtype (e.g. orphaned ir/direct-manual)", async () => {
+		const data = {
+			score: 1,
+			lamp: "CLEAR" as const,
+			matchType: "uscChartHash" as const,
+			identifier: "0000000000000000000000000000000000000000",
+		};
+
+		const context = {
+			game: "usc",
+			playtype: "Keyboard",
+			service: "test",
+			version: null,
+		} as unknown as BatchManualContext;
+
+		await expect(
+			ConverterBatchManual(data, context, "ir/direct-manual", mkLog()),
+		).rejects.toMatchObject({ failureType: "SongOrChartNotFound" });
 	});
 });
