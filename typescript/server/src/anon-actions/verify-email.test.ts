@@ -67,25 +67,30 @@ describe("ANON_ACTION_VerifyEmail", () => {
 
 	// ── Invalid code ───────────────────────────────────────────────────────────
 
-	it("throws when the code does not exist", async () => {
-		await expect(ANON_ACTION_VerifyEmail(taker, { code: "BOGUS_CODE" })).rejects.toThrow();
+	it("throws ExpectedErr when the code does not exist", async () => {
+		await expect(ANON_ACTION_VerifyEmail(taker, { code: "BOGUS_CODE" })).rejects.toMatchObject({
+			code: 400,
+			reason: "Invalid email verification code.",
+		});
 	});
 
-	it("writes a THROW action row when the code does not exist (unhandled NoResultError)", async () => {
-		await expect(ANON_ACTION_VerifyEmail(taker, { code: "BOGUS_CODE" })).rejects.toThrow();
+	it("writes a BAD action row when the code does not exist", async () => {
+		await expect(ANON_ACTION_VerifyEmail(taker, { code: "BOGUS_CODE" })).rejects.toMatchObject({
+			code: 400,
+		});
 
 		const action = await DB.selectFrom("action")
 			.select("result")
 			.where("kind", "=", "VERIFY_EMAIL")
 			.executeTakeFirstOrThrow();
 
-		// The action uses executeTakeFirstOrThrow which throws a raw NoResultError
-		// (not an ExpectedErr), so the audit framework marks it as THROW rather than BAD.
-		expect(action.result).toBe("THROW");
+		expect(action.result).toBe("BAD");
 	});
 
 	it("does not delete any token rows when the code does not exist", async () => {
-		await expect(ANON_ACTION_VerifyEmail(taker, { code: "BOGUS_CODE" })).rejects.toThrow();
+		await expect(ANON_ACTION_VerifyEmail(taker, { code: "BOGUS_CODE" })).rejects.toMatchObject({
+			code: 400,
+		});
 
 		const row = await DB.selectFrom("priv_verify_email_token")
 			.select("token")
@@ -97,10 +102,13 @@ describe("ANON_ACTION_VerifyEmail", () => {
 
 	// ── Token is single-use ────────────────────────────────────────────────────
 
-	it("throws on a second call with the same code after it has been consumed", async () => {
+	it("throws ExpectedErr on a second call with the same code after it has been consumed", async () => {
 		await ANON_ACTION_VerifyEmail(taker, { code: token });
 
-		await expect(ANON_ACTION_VerifyEmail(taker, { code: token })).rejects.toThrow();
+		await expect(ANON_ACTION_VerifyEmail(taker, { code: token })).rejects.toMatchObject({
+			code: 400,
+			reason: "Invalid email verification code.",
+		});
 	});
 
 	// ── Multiple tokens ────────────────────────────────────────────────────────
