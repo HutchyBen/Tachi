@@ -2,7 +2,9 @@
 # Respects .dockerignore (see repo root). Full tree copy keeps workspace installs correct.
 # docker build -f docker/Dockerfile.server \
 #   --build-arg VERSION="$(jq -r .version typescript/server/package.json)" \
-#   --build-arg COMMIT_HASH="$(git rev-parse --short HEAD)" -t tachi-server:local .
+#   --build-arg COMMIT_HASH="$(git rev-parse --short HEAD)" \
+#   --build-arg BUILD_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+#   -t tachi-server:local .
 #
 # Default CMD runs the API server. Override to run a worker:
 #   docker run tachi-server:local bun run ./typescript/server/src/job-queue-worker.ts
@@ -23,10 +25,12 @@ FROM oven/bun:alpine AS prod
 
 ARG VERSION
 ARG COMMIT_HASH
-# Fail the build if either arg is omitted (Docker has no required-ARG syntax).
+ARG BUILD_TIME
+# Fail the build if any arg is omitted (Docker has no required-ARG syntax).
 RUN set -eu; \
 	: "${VERSION:?Dockerfile.server: VERSION build-arg is required}"; \
-	: "${COMMIT_HASH:?Dockerfile.server: COMMIT_HASH build-arg is required}";
+	: "${COMMIT_HASH:?Dockerfile.server: COMMIT_HASH build-arg is required}"; \
+	: "${BUILD_TIME:?Dockerfile.server: BUILD_TIME build-arg is required}";
 
 ENV VERSION=${VERSION}
 ENV COMMIT_HASH=${COMMIT_HASH}
@@ -38,6 +42,12 @@ RUN apk add --no-cache curl
 
 WORKDIR /app
 COPY --from=deps /app .
+
+LABEL service="tachi-server" \
+      org.opencontainers.image.source="https://github.com/zkldi/Tachi3" \
+      org.opencontainers.image.revision="${COMMIT_HASH}" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.created="${BUILD_TIME}"
 
 EXPOSE 8080
 
