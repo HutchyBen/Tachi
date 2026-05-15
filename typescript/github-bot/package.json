@@ -16,14 +16,12 @@
 		"@octokit/webhooks-types": "catalog:",
 		"dotenv": "catalog:",
 		"express": "catalog:",
-		"node-fetch": "catalog:",
 		"prudence": "catalog:"
 	},
 	"devDependencies": {
 		"@typescript/native-preview": "catalog:",
 		"@types/express": "catalog:",
 		"@types/node": "catalog:",
-		"@types/node-fetch": "catalog:",
 		"typescript": "catalog:",
 		"eslint-config-tachi": "workspace:*"
 	},

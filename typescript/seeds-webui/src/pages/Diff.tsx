@@ -1,11 +1,12 @@
 import type { V3Game } from "tachi-common/types";
 
 import { DiffRows } from "#components/CollectionDiffRows";
+import { SEEDS_GITHUB_HTML_URL } from "#lib/config";
 import { type Row, summariseDiff } from "#lib/diff/collection-diff";
 import { type Commit, getTransport } from "#lib/transport/transport";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "react-query";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useHistory, useLocation } from "react-router-dom";
 import { GameToGameGroup } from "tachi-common/config/config";
 
 function mergeSongRowsById(baseSongs: Row[], headSongs: Row[]): Map<string, Row> {
@@ -22,12 +23,6 @@ function mergeSongRowsById(baseSongs: Row[], headSongs: Row[]): Map<string, Row>
 	}
 	return m;
 }
-
-// seeds.tachi.ac always points at the canonical upstream. We use this for
-// every GitHub link in the diff header (commits, compare, PRs). This is a
-// deliberate hardcode - the dev transport doesn't know what remote the
-// local clone is pointing at, and for the hosted site it's always this repo.
-const GITHUB_REPO_URL = "https://github.com/zkldi/Tachi";
 
 function useQueryParams() {
 	const location = useLocation();
@@ -90,11 +85,45 @@ function CommitPicker() {
 }
 
 export function Diff() {
+	const history = useHistory();
 	const location = useLocation();
 	const params = useQueryParams();
 	const base = params.get("base") ?? "";
 	const head = params.get("head") ?? "";
+	const explicitPrNumber = useMemo(() => {
+		const raw = params.get("pr");
+		if (raw && /^\d+$/u.test(raw)) {
+			return Number(raw);
+		}
+		return null;
+	}, [params]);
 	const hasPair = Boolean(base && head);
+
+	// Legacy boku.tachi.ac/utils/seeds links used ?repo=&sha=&compareRepo=&compareSHA=.
+	useEffect(() => {
+		const p = new URLSearchParams(location.search);
+		if (p.get("base") && p.get("head")) {
+			return;
+		}
+		const sha = p.get("sha");
+		const compareSHA = p.get("compareSHA");
+		const repo = p.get("repo");
+		const compareRepo = p.get("compareRepo");
+		if (sha && compareSHA && repo && compareRepo) {
+			const next = new URLSearchParams();
+			next.set("base", sha);
+			next.set("head", compareSHA);
+			const pr = p.get("pr");
+			if (pr) {
+				next.set("pr", pr);
+			}
+			const file = p.get("file");
+			if (file) {
+				next.set("file", file);
+			}
+			history.replace(`${location.pathname}?${next.toString()}`);
+		}
+	}, [history, location.pathname, location.search]);
 
 	const files = useQuery("collections", async () => (await getTransport()).listCollections());
 	const [file, setFile] = useState(() => {
@@ -199,6 +228,7 @@ export function Diff() {
 					<CommitHeader
 						base={base}
 						commit={headCommit.data ?? null}
+						explicitPrNumber={explicitPrNumber}
 						head={head}
 						loading={headCommit.isLoading}
 					/>
@@ -314,20 +344,23 @@ function CommitHeader({
 	base,
 	head,
 	commit,
+	explicitPrNumber,
 	loading,
 }: {
 	base: string;
 	commit: Commit | null;
+	explicitPrNumber: number | null;
 	head: string;
 	loading: boolean;
 }) {
 	const subject = commit?.message.split("\n")[0] ?? "";
 	const body = commit?.message.split("\n").slice(1).join("\n").trim() ?? "";
-	const prNumber = commit ? extractPrNumber(commit.message) : null;
+	const prNumber =
+		explicitPrNumber ?? (commit ? extractPrNumber(commit.message) : null);
 
-	const commitUrl = `${GITHUB_REPO_URL}/commit/${head}`;
-	const compareUrl = `${GITHUB_REPO_URL}/compare/${base}...${head}`;
-	const prUrl = prNumber ? `${GITHUB_REPO_URL}/pull/${prNumber}` : null;
+	const commitUrl = `${SEEDS_GITHUB_HTML_URL}/commit/${head}`;
+	const compareUrl = `${SEEDS_GITHUB_HTML_URL}/compare/${base}...${head}`;
+	const prUrl = prNumber ? `${SEEDS_GITHUB_HTML_URL}/pull/${prNumber}` : null;
 
 	return (
 		<div className="commit-header mb-4">
@@ -364,7 +397,7 @@ function CommitHeader({
 			<div className="commit-header-refs mono">
 				<span className="commit-ref">
 					<span className="label">base</span>
-					<a href={`${GITHUB_REPO_URL}/commit/${base}`} rel="noreferrer" target="_blank">
+					<a href={`${SEEDS_GITHUB_HTML_URL}/commit/${base}`} rel="noreferrer" target="_blank">
 						<code>{base.slice(0, 7)}</code>
 					</a>
 				</span>

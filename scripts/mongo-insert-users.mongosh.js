@@ -19,8 +19,7 @@ const USER_IDS =
 				.filter((n) => !Number.isNaN(n))
 		: DEFAULT_USER_IDS;
 
-const PASSWORD_HASH =
-	"$2b$12$XXXXXXXjo9lrnLGCree4e.tm7PSWwA5N.Lb8yLDzP8ytDt6cZAtuy";
+const PASSWORD_HASH = "$2b$12$XXXXXXXjo9lrnLGCree4e.tm7PSWwA5N.Lb8yLDzP8ytDt6cZAtuy";
 
 for (const userId of USER_IDS) {
 	const username = `mysteryman${userId}`;

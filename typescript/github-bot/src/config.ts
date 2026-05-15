@@ -32,6 +32,8 @@ function ParseEnvVars() {
 		privateKey: Buffer.from(process.env.BASE64_PRIVATE_KEY!, "base64").toString("utf-8"),
 		clientID: process.env.CLIENT_ID!,
 		clientSecret: process.env.CLIENT_SECRET!,
+		/** Origin of the static seeds web UI (no trailing slash). */
+		seedsWebuiOrigin: process.env.SEEDS_WEBUI_ORIGIN ?? "https://seeds.tachi.ac",
 	};
 }
 

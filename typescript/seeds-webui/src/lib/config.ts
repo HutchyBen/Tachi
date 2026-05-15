@@ -14,7 +14,10 @@ export const EDIT_MODE =
 
 // Target repo for the GitHub transport (used in prod and as a fallback in dev).
 // Format: "owner/repo". Configured via VITE_SEEDS_REPO in vite.config.ts.
-export const SEEDS_REPO = (import.meta.env.VITE_SEEDS_REPO as string | undefined) ?? "zkldi/tachi";
+export const SEEDS_REPO = (import.meta.env.VITE_SEEDS_REPO as string | undefined) ?? "zkldi/Tachi3";
+
+// Web URL for links in the diff UI (compare, commits, optional ?pr= from the GitHub bot).
+export const SEEDS_GITHUB_HTML_URL = `https://github.com/${SEEDS_REPO}`;
 
 export const SEEDS_DEFAULT_BRANCH =
 	(import.meta.env.VITE_SEEDS_BRANCH as string | undefined) ?? "main";

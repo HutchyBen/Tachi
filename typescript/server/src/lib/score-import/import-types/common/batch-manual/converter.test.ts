@@ -5,8 +5,9 @@ import DB from "#services/pg/db";
 import { randomBytes } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 
-import { ConverterBatchManual, ResolveSongAndChart } from "./converter";
 import type { BatchManualContext } from "./types";
+
+import { ConverterBatchManual, ResolveSongAndChart } from "./converter";
 
 function mkLog(): KtLogger {
 	return {

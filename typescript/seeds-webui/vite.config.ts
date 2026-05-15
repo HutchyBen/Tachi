@@ -40,7 +40,7 @@ export default defineConfig(({ command }) => ({
 	define: {
 		"import.meta.env.VITE_SEEDS_EDIT_MODE": JSON.stringify(command === "serve"),
 		"import.meta.env.VITE_SEEDS_REPO": JSON.stringify(
-			process.env.VITE_SEEDS_REPO ?? "zkldi/tachi",
+			process.env.VITE_SEEDS_REPO ?? "zkldi/Tachi3",
 		),
 		"import.meta.env.VITE_SEEDS_BRANCH": JSON.stringify(
 			process.env.VITE_SEEDS_BRANCH ?? "main",

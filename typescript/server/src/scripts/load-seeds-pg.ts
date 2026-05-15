@@ -61,7 +61,12 @@ if (require.main === module) {
 				);
 
 				await DB.transaction().execute(async (txn) => {
-					const { newUser } = await AddNewUser(txn, "admin", "password", "admin@example.com");
+					const { newUser } = await AddNewUser(
+						txn,
+						"admin",
+						"password",
+						"admin@example.com",
+					);
 					await txn
 						.updateTable("account")
 						.set({ auth_level: "admin" })

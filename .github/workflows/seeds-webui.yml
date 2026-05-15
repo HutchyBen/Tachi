@@ -46,6 +46,7 @@ jobs:
       - name: Production build
         run: bun run --filter tachi-seeds-webui build
         env:
+          VITE_SEEDS_REPO: zkldi/Tachi3
           BUILD_OUT_DIR: /tmp/seeds-webui
 
       - name: Bundle build output

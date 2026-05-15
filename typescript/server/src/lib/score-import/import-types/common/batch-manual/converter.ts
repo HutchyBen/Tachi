@@ -64,7 +64,7 @@ function ResolveBatchManualV3Game(context: BatchManualContext): BatchManualConte
 		return context.game;
 	}
 
-	const playtype = (context as BatchManualContext & { playtype?: unknown }).playtype;
+	const playtype = (context as { playtype?: unknown } & BatchManualContext).playtype;
 
 	if (
 		IsEnabledGameGroup(context.game) &&
@@ -78,7 +78,7 @@ function ResolveBatchManualV3Game(context: BatchManualContext): BatchManualConte
 		`Legacy batch-manual context could not be resolved to a V3 game (game=${JSON.stringify(
 			context.game,
 		)}, playtype=${JSON.stringify(
-			(context as BatchManualContext & { playtype?: unknown }).playtype,
+			(context as { playtype?: unknown } & BatchManualContext).playtype,
 		)}).`,
 	);
 }

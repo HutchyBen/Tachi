@@ -14,7 +14,8 @@
 		"lint-fix": "eslint ./src --fix",
 		"cron-worker": "bun run src/cron-worker.ts",
 		"job-queue-worker": "bun run src/job-queue-worker.ts",
-		"load-test:score-import": "bun run src/load-tests/score-import-load-cli.ts"
+		"load-test:score-import": "bun run src/load-tests/score-import-load-cli.ts",
+		"run-action": "bun run src/scripts/run-action.ts"
 	},
 	"author": "zk",
 	"license": "AGPL3",

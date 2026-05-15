@@ -34,21 +34,25 @@ export function CreateKaiReauthFunction(
 		);
 	}
 
-	const { CLIENT_ID, CLIENT_SECRET } = maybeCredentials;
+	const { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI } = maybeCredentials;
 
 	return async () => {
+		const url = `${KaiTypeToBaseURL(kaiType)}/oauth/token`;
 		let res;
 
 		try {
-			const url = `${KaiTypeToBaseURL(kaiType)}/oauth/token`;
+			const body = new URLSearchParams({
+				refresh_token: authDoc.refreshToken,
+				grant_type: "refresh_token",
+				client_secret: CLIENT_SECRET,
+				client_id: CLIENT_ID,
+			});
+			// Some OAuth servers (e.g. Passport-style) require redirect_uri on refresh
+			// to match the original authorization request.
+			body.append("redirect_uri", REDIRECT_URI);
 
 			res = await fetch(url, {
-				body: new URLSearchParams({
-					refresh_token: authDoc.refreshToken,
-					grant_type: "refresh_token",
-					client_secret: CLIENT_SECRET,
-					client_id: CLIENT_ID,
-				}).toString(),
+				body: body.toString(),
 				method: "POST",
 				headers: { "Content-Type": "application/x-www-form-urlencoded" },
 			});
@@ -65,6 +69,10 @@ export function CreateKaiReauthFunction(
 			const text = await res.text();
 
 			if (res.status === 400) {
+				log.error(
+					{ text, url },
+					`OAuth refresh returned 400 (often invalid refresh_token or redirect_uri mismatch).`,
+				);
 				// we now entirely expect this and have no way to fix it.
 				throw new ScoreImportFatalError(
 					400,

@@ -449,9 +449,9 @@ async function main(): Promise<void> {
 			(await pg.selectFrom("account").select("id").execute()).map((r) => r.id),
 		);
 
-		const orphans = await mongoDB.get<MongoOrphanChartQueueCollectionDocument>(
-			"orphan-chart-queue",
-		).find({});
+		const orphans = await mongoDB
+			.get<MongoOrphanChartQueueCollectionDocument>("orphan-chart-queue")
+			.find({});
 
 		const orphanRows: Array<NewOrphanChart> = [];
 		const orphanUserRows: Array<NewOrphanChartUser> = [];
@@ -474,7 +474,9 @@ async function main(): Promise<void> {
 
 			const gameSlug =
 				(o.game !== undefined && o.game !== "" ? o.game : undefined) ??
-				(gptLike !== undefined ? LEGACY_GPTStringToGame(gptLike as LEGACY_GPTString) : undefined) ??
+				(gptLike !== undefined
+					? LEGACY_GPTStringToGame(gptLike as LEGACY_GPTString)
+					: undefined) ??
 				chartDocGame;
 
 			if (gameSlug === undefined) {
@@ -564,9 +566,9 @@ async function main(): Promise<void> {
 	// ── account_settings + account_following ──────────────────────────────────
 	{
 		console.log("\n[account_settings / account_following]");
-		const settings = await mongoDB.get<MongoUserSettingsCollectionDocument>(
-			"user-settings",
-		).find({});
+		const settings = await mongoDB
+			.get<MongoUserSettingsCollectionDocument>("user-settings")
+			.find({});
 
 		const settingRows: Array<NewAccountSettings> = settings.map((s) => ({
 			user_id: s.userID,
@@ -594,9 +596,9 @@ async function main(): Promise<void> {
 	// ── account_username_change ───────────────────────────────────────────────
 	{
 		console.log("\n[account_username_change]");
-		const changes = await mongoDB.get<MongoUserNameChangesCollectionDocument>(
-			"user-name-changes",
-		).find({});
+		const changes = await mongoDB
+			.get<MongoUserNameChangesCollectionDocument>("user-name-changes")
+			.find({});
 
 		const changeRows: Array<NewAccountUsernameChange> = changes.map((c) => ({
 			user_id: c.userID,
@@ -629,9 +631,9 @@ async function main(): Promise<void> {
 	// ── priv_api_client ───────────────────────────────────────────────────────
 	{
 		console.log("\n[priv_api_client]");
-		const clients = await mongoDB.get<MongoApiClientsCollectionDocument>(
-			"api-clients",
-		).find({});
+		const clients = await mongoDB
+			.get<MongoApiClientsCollectionDocument>("api-clients")
+			.find({});
 
 		const clientRows: Array<NewPrivApiClient> = clients.map((c) => {
 			// Old MongoDB data uses dash-separated permission names ("customise-profile"),
@@ -682,9 +684,9 @@ async function main(): Promise<void> {
 	// ── priv_svc_kai_auth_token ───────────────────────────────────────────────
 	{
 		console.log("\n[priv_svc_kai_auth_token]");
-		const kaiTokens = await mongoDB.get<MongoKaiAuthTokensCollectionDocument>(
-			"kai-auth-tokens",
-		).find({});
+		const kaiTokens = await mongoDB
+			.get<MongoKaiAuthTokensCollectionDocument>("kai-auth-tokens")
+			.find({});
 
 		const tokenRows: Array<NewPrivSvcKaiAuthToken> = kaiTokens.map((k) => ({
 			user_id: k.userID,
@@ -700,9 +702,9 @@ async function main(): Promise<void> {
 	// ── priv_svc_cg_card_info ─────────────────────────────────────────────────
 	{
 		console.log("\n[priv_svc_cg_card_info]");
-		const cgCards = await mongoDB.get<MongoCgCardInfoCollectionDocument>(
-			"cg-card-info",
-		).find({});
+		const cgCards = await mongoDB
+			.get<MongoCgCardInfoCollectionDocument>("cg-card-info")
+			.find({});
 
 		const cgRows: Array<NewPrivSvcCgCardInfo> = [];
 
@@ -727,9 +729,9 @@ async function main(): Promise<void> {
 	// ── priv_svc_myt_card_info ────────────────────────────────────────────────
 	{
 		console.log("\n[priv_svc_myt_card_info]");
-		const mytCards = await mongoDB.get<MongoMytCardInfoCollectionDocument>(
-			"myt-card-info",
-		).find({});
+		const mytCards = await mongoDB
+			.get<MongoMytCardInfoCollectionDocument>("myt-card-info")
+			.find({});
 
 		const mytRows: Array<NewPrivSvcMytCardInfo> = [];
 
@@ -754,9 +756,9 @@ async function main(): Promise<void> {
 	// ── svc_fer_settings + priv_svc_fer_card ─────────────────────────────────
 	{
 		console.log("\n[svc_fer_settings / priv_svc_fer_card]");
-		const ferSettings = await mongoDB.get<MongoFerSettingsCollectionDocument>(
-			"fer-settings",
-		).find({});
+		const ferSettings = await mongoDB
+			.get<MongoFerSettingsCollectionDocument>("fer-settings")
+			.find({});
 
 		const ferRows: Array<NewSvcFerSettings> = ferSettings.map((f) => ({
 			user_id: f.userID,
@@ -796,9 +798,9 @@ async function main(): Promise<void> {
 	// ── import_lock ───────────────────────────────────────────────────────────
 	{
 		console.log("\n[import_lock]");
-		const importLocks = await mongoDB.get<MongoImportLocksCollectionDocument>(
-			"import-locks",
-		).find({});
+		const importLocks = await mongoDB
+			.get<MongoImportLocksCollectionDocument>("import-locks")
+			.find({});
 
 		const lockRows: Array<NewImportLock> = importLocks.map((l) => ({
 			user_id: l.userID,
@@ -813,9 +815,9 @@ async function main(): Promise<void> {
 	// ── invite_lock ───────────────────────────────────────────────────────────
 	{
 		console.log("\n[invite_lock]");
-		const inviteLocks = await mongoDB.get<MongoInviteLocksCollectionDocument>(
-			"invite-locks",
-		).find({});
+		const inviteLocks = await mongoDB
+			.get<MongoInviteLocksCollectionDocument>("invite-locks")
+			.find({});
 
 		const lockRows: Array<NewInviteLock> = [];
 
@@ -839,9 +841,9 @@ async function main(): Promise<void> {
 	// ── notification ──────────────────────────────────────────────────────────
 	{
 		console.log("\n[notification]");
-		const notifications = await mongoDB.get<MongoNotificationsCollectionDocument>(
-			"notifications",
-		).find({});
+		const notifications = await mongoDB
+			.get<MongoNotificationsCollectionDocument>("notifications")
+			.find({});
 
 		const notifRows: Array<NewNotification> = notifications.map((n) => ({
 			title: n.title,
@@ -862,12 +864,12 @@ async function main(): Promise<void> {
 	// `game-settings` (+ rivals) into those rows for mongo-to-pg.
 	{
 		console.log("\n[game_profile / game_rival]");
-		const ugptSettings = await mongoDB.get<MongoGameSettingsCollectionDocument>(
-			"game-settings",
-		).find({});
-		const gameStats = await mongoDB.get<MongoGameStatsCollectionDocument>(
-			"game-stats",
-		).find({});
+		const ugptSettings = await mongoDB
+			.get<MongoGameSettingsCollectionDocument>("game-settings")
+			.find({});
+		const gameStats = await mongoDB
+			.get<MongoGameStatsCollectionDocument>("game-stats")
+			.find({});
 
 		type ProfileKey = `${number}:${PgGame}`;
 		const profileByKey = new Map<ProfileKey, NewGameProfile>();
@@ -977,9 +979,9 @@ async function main(): Promise<void> {
 	// ── class_achievement ─────────────────────────────────────────────────────
 	{
 		console.log("\n[class_achievement]");
-		const achievements = await mongoDB.get<MongoClassAchievementsCollectionDocument>(
-			"class-achievements",
-		).find({});
+		const achievements = await mongoDB
+			.get<MongoClassAchievementsCollectionDocument>("class-achievements")
+			.find({});
 
 		const achievementRows: Array<NewClassAchievement> = achievements.map((a) => ({
 			game: mongoGameToPg(a.game, a.playtype),
@@ -1055,9 +1057,7 @@ async function main(): Promise<void> {
 			const scoreServiceMap = new Map(
 				(
 					await mongoDB
-						.get<Pick<MongoScoresCollectionDocument, "scoreID" | "service">>(
-							"scores",
-						)
+						.get<Pick<MongoScoresCollectionDocument, "scoreID" | "service">>("scores")
 						.find(
 							{ scoreID: { $in: firstScoreIds } },
 							{ projection: { scoreID: 1, service: 1 } },
@@ -1162,9 +1162,7 @@ async function main(): Promise<void> {
 	// ── goal_sub ──────────────────────────────────────────────────────────────
 	{
 		console.log("\n[goal_sub]");
-		const goalSubs = await mongoDB.get<MongoGoalSubsCollectionDocument>(
-			"goal-subs",
-		).find({});
+		const goalSubs = await mongoDB.get<MongoGoalSubsCollectionDocument>("goal-subs").find({});
 
 		const uniqueGoalIds = [...new Set(goalSubs.map((gs) => gs.goalID))];
 		const existingGoalIds = new Set(
@@ -1213,9 +1211,9 @@ async function main(): Promise<void> {
 	// ── quest_sub ─────────────────────────────────────────────────────────────
 	{
 		console.log("\n[quest_sub]");
-		const questSubs = await mongoDB.get<MongoQuestSubsCollectionDocument>(
-			"quest-subs",
-		).find({});
+		const questSubs = await mongoDB
+			.get<MongoQuestSubsCollectionDocument>("quest-subs")
+			.find({});
 
 		const questSubRows: Array<NewQuestSub> = questSubs.map((qs) => ({
 			quest_id: qs.questID,
