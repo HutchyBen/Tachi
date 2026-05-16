@@ -175,4 +175,4 @@ jobs:
       - name: Deploy on server
         env:
           TACHI_HOST: ${{ secrets.TACHI_HOST }}
-        run: ssh "ci@${TACHI_HOST}" "/home/ci/tachi-deploy/swarm/deploy-server.sh ${{ matrix.destination }} ${{ github.sha }}"
+        run: ssh "ci@${TACHI_HOST}" "/home/ci/tachi-deploy/operations/deploy.sh server ${{ matrix.destination }} ${{ github.sha }}"
