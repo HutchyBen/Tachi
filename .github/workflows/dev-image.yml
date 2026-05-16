@@ -34,6 +34,14 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Revision tag (YYYYMMDD-shortsha + full SHA aliases)
+        id: revision
+        run: |
+          set -eu
+          short=$(git rev-parse --short=7 HEAD)
+          d=$(TZ=UTC0 git log -1 --format=%cd --date=format:%Y%m%d HEAD)
+          echo "image_tag=${d}-${short}" >> "$GITHUB_OUTPUT"
+
       - name: Log in to GHCR
         if: ${{ github.event_name != 'pull_request' }}
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
@@ -54,6 +62,7 @@ jobs:
           tags: |
             ghcr.io/zkldi/tachi-dev:main
             ghcr.io/zkldi/tachi-dev:latest
+            ghcr.io/zkldi/tachi-dev:${{ steps.revision.outputs.image_tag }}
             ghcr.io/zkldi/tachi-dev:${{ github.sha }}
           cache-from: type=gha,scope=dev-image
           cache-to: type=gha,mode=max,scope=dev-image

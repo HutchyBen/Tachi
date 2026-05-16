@@ -18,8 +18,8 @@ server:
 	set -euo pipefail
 	cd typescript/server
 	VERSION="${VERSION:-"$(jq -r .version package.json)"}"
-	COMMIT_HASH="${COMMIT_HASH:-"$(git rev-parse --short HEAD)"}"
-	export VERSION COMMIT_HASH
+	VERSION_DETAIL="${VERSION_DETAIL:-$(TZ=UTC0 git log -1 --format=%cd --date=format:%Y%m%d HEAD)-$(git rev-parse --short=7 HEAD)}"
+	export VERSION VERSION_DETAIL
 	sidecar_pids=()
 	# Crons: Postgres-backed scheduler. Jobs: `job_queue` (SKIP LOCKED; run multiple for load).
 	if [[ -z "${TACHI_SERVER_NO_SIDECARS:-}" ]]; then

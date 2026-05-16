@@ -522,11 +522,21 @@ if (!version) {
 	version = "0.0.0";
 }
 
-let commitHash = process.env.COMMIT_HASH;
+/** Human-readable build identity: `{commit date UTC YYYYMMDD}-{short sha}`, e.g. `20260516-a1b2c3d`. */
+let versionDetail = process.env.VERSION_DETAIL?.trim();
 
-if (!commitHash) {
-	log.warn(`No COMMIT_HASH specified in environment. defaulting to unknown commit.`);
-	commitHash = "unknown";
+if (!versionDetail) {
+	const legacy = process.env.COMMIT_HASH?.trim();
+	if (legacy) {
+		versionDetail = legacy;
+	}
+}
+
+if (!versionDetail) {
+	log.warn(
+		`No VERSION_DETAIL (or COMMIT_HASH) specified in environment. defaulting detail to unknown.`,
+	);
+	versionDetail = "unknown";
 }
 
 export const Env = {
@@ -535,7 +545,7 @@ export const Env = {
 	POSTGRES_URL,
 	MIGRATIONS_DIR,
 	VERSION: version,
-	COMMIT_HASH: commitHash,
+	VERSION_DETAIL: versionDetail,
 	NODE_ENV: NODE_ENV as "dev" | "production" | "staging" | "test",
 	LOG_LEVEL: logLevel as "crit" | "debug" | "error" | "info" | "severe" | "verbose" | "warn",
 };

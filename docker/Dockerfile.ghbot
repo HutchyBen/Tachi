@@ -1,6 +1,6 @@
 # Build context must be the repo root. Full tree + .dockerignore (see repo root).
 # docker build -f docker/Dockerfile.ghbot \
-#   --build-arg COMMIT_HASH="$(git rev-parse --short HEAD)" \
+#   --build-arg GIT_REVISION="$(git rev-parse HEAD)" \
 #   --build-arg BUILD_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
 #   .
 
@@ -28,11 +28,11 @@ RUN bun build \
 # --- prod: nothing but the binary ---
 FROM alpine:3.21 AS prod
 
-ARG COMMIT_HASH
+ARG GIT_REVISION
 ARG BUILD_TIME
 # Fail the build if any arg is omitted (Docker has no required-ARG syntax).
 RUN set -eu; \
-	: "${COMMIT_HASH:?Dockerfile.ghbot: COMMIT_HASH build-arg is required}"; \
+	: "${GIT_REVISION:?Dockerfile.ghbot: GIT_REVISION build-arg is required}"; \
 	: "${BUILD_TIME:?Dockerfile.ghbot: BUILD_TIME build-arg is required}";
 
 RUN apk add --no-cache curl libstdc++ libgcc
@@ -41,7 +41,7 @@ COPY --from=build /ghbot /ghbot
 
 LABEL service="tachi-ghbot" \
       org.opencontainers.image.source="https://github.com/zkldi/Tachi3" \
-      org.opencontainers.image.revision="${COMMIT_HASH}" \
+      org.opencontainers.image.revision="${GIT_REVISION}" \
       org.opencontainers.image.created="${BUILD_TIME}"
 
 HEALTHCHECK --interval=15s --timeout=5s \

@@ -105,11 +105,21 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      image_tag: ${{ steps.revision.outputs.image_tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
+
+      - name: Revision tag (YYYYMMDD-shortsha + full SHA aliases)
+        id: revision
+        run: |
+          set -eu
+          short=$(git rev-parse --short=7 HEAD)
+          d=$(TZ=UTC0 git log -1 --format=%cd --date=format:%Y%m%d HEAD)
+          echo "image_tag=${d}-${short}" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GHCR
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
@@ -140,12 +150,14 @@ jobs:
           provenance: true
           sbom: true
           tags: |
+            ghcr.io/zkldi/tachi:${{ steps.revision.outputs.image_tag }}
             ghcr.io/zkldi/tachi:${{ github.sha }}
             ghcr.io/zkldi/tachi:main
             ghcr.io/zkldi/tachi:latest
           build-args: |
             VERSION=${{ steps.server_version.outputs.version }}
-            COMMIT_HASH=${{ github.sha }}
+            VERSION_DETAIL=${{ steps.revision.outputs.image_tag }}
+            GIT_REVISION=${{ github.sha }}
             BUILD_TIME=${{ steps.build_time.outputs.value }}
           cache-from: type=gha,scope=server-${{ github.ref_name }}
           cache-to: type=gha,mode=max,scope=server-${{ github.ref_name }}
@@ -170,10 +182,12 @@ jobs:
           GH_TOKEN: ${{ secrets.DEPLOY_DISPATCH_TOKEN }}
           DEST: ${{ matrix.destination }}
           SHA: ${{ github.sha }}
+          IMAGE_TAG: ${{ needs.docker-push.outputs.image_tag }}
         run: |
           gh api repos/zkldi/tachi-deploy/dispatches \
             -f event_type=deploy \
             -F "client_payload[app]=server" \
             -F "client_payload[dest]=${DEST}" \
-            -F "client_payload[sha]=${SHA}"
-          echo "::notice::Dispatched server@${DEST} ${SHA} — logs: https://github.com/zkldi/tachi-deploy/actions/workflows/deploy.yml"
+            -F "client_payload[sha]=${SHA}" \
+            -F "client_payload[image_tag]=${IMAGE_TAG}"
+          echo "::notice::Dispatched server@${DEST} ${IMAGE_TAG} (${SHA}) — logs: https://github.com/zkldi/tachi-deploy/actions/workflows/deploy.yml"

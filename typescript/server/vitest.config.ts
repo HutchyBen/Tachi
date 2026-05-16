@@ -38,7 +38,7 @@ export default defineConfig({
 			MIGRATIONS_DIR: "/tachi/db/migrations",
 			LOG_LEVEL: "warn",
 			VERSION: "test",
-			COMMIT_HASH: "test",
+			VERSION_DETAIL: "test-detail",
 		},
 
 		// Parallel test execution - each worker gets its own isolated Postgres database.
