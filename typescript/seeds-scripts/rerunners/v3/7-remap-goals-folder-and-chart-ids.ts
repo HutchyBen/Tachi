@@ -3,7 +3,7 @@
  * `legacyFolderID`), `goals.json` may still reference legacy chart hashes and legacy
  * folder ids inside `charts.data`. Remap those references, recalculate `goalID` hashes
  * (same `{ charts, criteria, game }` convention as ../../util CreateGoalID), rewrite
- * `quests.json` goal refs when ids change, and write `goal-id-remap.json` so
+ * `quests.json` goal refs when ids change, and update `stability-map.json` `goals` so
  * mongo→postgres can translate subscriptions.
  */
 
@@ -41,6 +41,35 @@ interface GoalSeed {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SEEDS_DIR = path.join(__dirname, "../../../../db/seeds");
+const STABILITY_MAP_PATH = path.join(__dirname, "stability-map.json");
+
+interface StabilityMap {
+	songs: Record<string, string>;
+	charts: Record<string, string>;
+	folders: Record<string, string>;
+	tables: Record<string, string>;
+	goals: Record<string, string>;
+}
+
+function readStabilityMap(): StabilityMap {
+	if (fs.existsSync(STABILITY_MAP_PATH)) {
+		const raw = JSON.parse(fs.readFileSync(STABILITY_MAP_PATH, "utf-8")) as Partial<StabilityMap>;
+
+		return {
+			songs: raw.songs ?? {},
+			charts: raw.charts ?? {},
+			folders: raw.folders ?? {},
+			tables: raw.tables ?? {},
+			goals: raw.goals ?? {},
+		};
+	}
+
+	return { songs: {}, charts: {}, folders: {}, tables: {}, goals: {} };
+}
+
+function writeStabilityMap(map: StabilityMap): void {
+	fs.writeFileSync(STABILITY_MAP_PATH, `${JSON.stringify(map, null, "\t")}\n`);
+}
 
 const LEGACY_CHART_HEX_RE = /^[0-9a-f]{40}$/u;
 
@@ -275,14 +304,14 @@ for (const quest of quests) {
 fs.writeFileSync(questsPath, `${JSON.stringify(quests, null, "\t")}\n`);
 console.log(`quests.json: updated goal refs on ${questsUpdated} quests`);
 
-const remapPath = path.join(SEEDS_DIR, "goal-id-remap.json");
-fs.writeFileSync(remapPath, `${JSON.stringify(Object.fromEntries(translateMap), null, "\t")}\n`);
-
-console.log(`goal-id-remap.json: wrote ${translateMap.size} translations`);
+const stabilityMap = readStabilityMap();
+stabilityMap.goals = Object.fromEntries(translateMap);
+writeStabilityMap(stabilityMap);
+console.log(`stability-map.json: wrote ${translateMap.size} goal id translations`);
 
 const repoRoot = path.resolve(SEEDS_DIR, "..", "..");
 const biome = path.join(repoRoot, "node_modules", ".bin", "biome");
-const biomeResult = spawnSync(biome, ["format", "--write", goalsPath, questsPath, remapPath], {
+const biomeResult = spawnSync(biome, ["format", "--write", goalsPath, questsPath, STABILITY_MAP_PATH], {
 	cwd: repoRoot,
 	stdio: "inherit",
 });

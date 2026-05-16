@@ -291,19 +291,25 @@ export function buildChartIdMap(seedsDir: string): Map<string, string> {
 }
 
 /**
- * Optional map from `rerunners/v3/7-remap-goals-folder-and-chart-ids.ts` (`db/seeds/goal-id-remap.json`).
- * Mongo `goal-subs.goalID` may still use hashes from before legacy chart/folder ids were rewired.
+ * Optional `goals` map in `typescript/seeds-scripts/rerunners/v3/stability-map.json`
+ * (written by `7-remap-goals-folder-and-chart-ids.ts`). Mongo `goal-subs.goalID` may
+ * still use hashes from before legacy chart/folder ids were rewired.
  */
 export function buildGoalIdRemap(seedsDir: string): Map<string, string> {
-	const p = path.join(seedsDir, "goal-id-remap.json");
+	const p = path.resolve(seedsDir, "..", "..", "typescript", "seeds-scripts", "rerunners", "v3", "stability-map.json");
 
 	if (!fs.existsSync(p)) {
 		return new Map();
 	}
 
-	const raw = JSON.parse(fs.readFileSync(p, "utf-8")) as Record<string, string>;
+	const raw = JSON.parse(fs.readFileSync(p, "utf-8")) as { goals?: Record<string, string> };
+	const goals = raw.goals;
 
-	return new Map(Object.entries(raw));
+	if (goals === undefined) {
+		return new Map();
+	}
+
+	return new Map(Object.entries(goals));
 }
 
 // ── Core import logic ──────────────────────────────────────────────────────

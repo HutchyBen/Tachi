@@ -14,14 +14,23 @@ interface StabilityMap {
 	charts: Record<string, string>;
 	folders: Record<string, string>;
 	tables: Record<string, string>;
+	goals: Record<string, string>;
 }
 
 function readStabilityMap(): StabilityMap {
 	if (fs.existsSync(STABILITY_MAP_PATH)) {
-		return JSON.parse(fs.readFileSync(STABILITY_MAP_PATH, "utf-8")) as StabilityMap;
+		const raw = JSON.parse(fs.readFileSync(STABILITY_MAP_PATH, "utf-8")) as Partial<StabilityMap>;
+
+		return {
+			songs: raw.songs ?? {},
+			charts: raw.charts ?? {},
+			folders: raw.folders ?? {},
+			tables: raw.tables ?? {},
+			goals: raw.goals ?? {},
+		};
 	}
 
-	return { songs: {}, charts: {}, folders: {}, tables: {} };
+	return { songs: {}, charts: {}, folders: {}, tables: {}, goals: {} };
 }
 
 function writeStabilityMap(map: StabilityMap): void {

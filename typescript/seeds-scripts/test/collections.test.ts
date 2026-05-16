@@ -20,12 +20,9 @@ function FormatPrError(err, foreword = "Error") {
 let exitCode = 0;
 const suites: Array<{ good: boolean; name: string; report: unknown }> = [];
 
-/** Maps / metadata — not seed document arrays validated by {@link V3_SCHEMAS}. */
-const NON_SEED_JSON = new Set(["goal-id-remap.json"]);
-
 const collections = fs
 	.readdirSync(path.join(__dirname, "../../../db/seeds"))
-	.filter((e) => e.endsWith(".json") && !NON_SEED_JSON.has(path.basename(e)))
+	.filter((e) => e.endsWith(".json"))
 	.map((e) => path.basename(e)) as Array<AllCollections>;
 
 for (const collection of collections) {
