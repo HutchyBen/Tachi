@@ -355,8 +355,7 @@ function CommitHeader({
 }) {
 	const subject = commit?.message.split("\n")[0] ?? "";
 	const body = commit?.message.split("\n").slice(1).join("\n").trim() ?? "";
-	const prNumber =
-		explicitPrNumber ?? (commit ? extractPrNumber(commit.message) : null);
+	const prNumber = explicitPrNumber ?? (commit ? extractPrNumber(commit.message) : null);
 
 	const commitUrl = `${SEEDS_GITHUB_HTML_URL}/commit/${head}`;
 	const compareUrl = `${SEEDS_GITHUB_HTML_URL}/compare/${base}...${head}`;
@@ -397,7 +396,11 @@ function CommitHeader({
 			<div className="commit-header-refs mono">
 				<span className="commit-ref">
 					<span className="label">base</span>
-					<a href={`${SEEDS_GITHUB_HTML_URL}/commit/${base}`} rel="noreferrer" target="_blank">
+					<a
+						href={`${SEEDS_GITHUB_HTML_URL}/commit/${base}`}
+						rel="noreferrer"
+						target="_blank"
+					>
 						<code>{base.slice(0, 7)}</code>
 					</a>
 				</span>

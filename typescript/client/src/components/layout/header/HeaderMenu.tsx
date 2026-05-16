@@ -2,15 +2,16 @@ import useApiQuery from "#components/util/query/useApiQuery";
 import { AllLUGPTStatsContext } from "#context/AllLUGPTStatsContext";
 import { UserContext } from "#context/UserContext";
 import { UserSettingsContext } from "#context/UserSettingsContext";
+import { TachiConfig } from "#lib/config";
 import { type SetState } from "#types/react";
 import React, { useContext, useEffect } from "react";
 import Nav from "react-bootstrap/Nav";
+import { NavLink } from "react-router-dom";
 import { type UserGameStats } from "tachi-common";
 
 import GlobalInfoDropdown from "./GlobalInfoDropdown";
 import ImportScoresDropdown from "./ImportScoresDropdown";
 import UGPTDropdown from "./UGPTDropdown";
-import UtilsDropdown from "./UtilsDropdown";
 
 const toggleClassNames = "w-100 justify-content-between";
 const menuClassNames = "shadow-none shadow-lg-lg";
@@ -71,13 +72,25 @@ export function HeaderMenu({
 					style={dropdownMenuStyle}
 				/>
 			)}
+			{TachiConfig.QUEST_PROPOSALS_ENABLED && (
+				<NavLink
+					activeClassName="active"
+					className="h-14 d-flex align-items-center fw-semibold px-2 rounded text-decoration-none focus-visible-ring nav-link"
+					onClick={() => setState?.(false)}
+					to="/quests"
+				>
+					Quest Editor
+				</NavLink>
+			)}
 			{settings?.preferences.developerMode && (
-				<UtilsDropdown
-					className={toggleClassNames}
-					menuClassName={menuClassNames}
-					setState={setState}
-					style={dropdownMenuStyle}
-				/>
+				<NavLink
+					activeClassName="active"
+					className="h-14 d-flex align-items-center fw-semibold px-2 rounded text-decoration-none focus-visible-ring nav-link"
+					onClick={() => setState?.(false)}
+					to="/utils/imports"
+				>
+					Import Management
+				</NavLink>
 			)}
 		</Nav>
 	);

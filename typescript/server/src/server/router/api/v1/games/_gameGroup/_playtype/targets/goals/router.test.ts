@@ -64,19 +64,21 @@ describe("GET /api/v1/games/:game/targets/goals/popular", () => {
 		const { id: uid2 } = await seedUser({ username: `pop_u2_${Date.now()}` });
 
 		for (const uid of [uid1, uid2]) {
-			await DB.insertInto("goal_sub").values({
-				goal_id: goalId,
-				user_id: uid,
-				achieved: false,
-				time_achieved: null,
-				progress: null,
-				progress_human: "NO DATA",
-				out_of: 7,
-				out_of_human: "FULL COMBO",
-				last_interaction: null,
-				was_instantly_achieved: false,
-				was_assigned_standalone: true,
-			}).execute();
+			await DB.insertInto("goal_sub")
+				.values({
+					goal_id: goalId,
+					user_id: uid,
+					achieved: false,
+					time_achieved: null,
+					progress: null,
+					progress_human: "NO DATA",
+					out_of: 7,
+					out_of_human: "FULL COMBO",
+					last_interaction: null,
+					was_instantly_achieved: false,
+					was_assigned_standalone: true,
+				})
+				.execute();
 		}
 
 		const res = await mockApi.get("/api/v1/games/iidx-sp/targets/goals/popular");
@@ -93,12 +95,10 @@ describe("POST /api/v1/games/:game/targets/goals/format", () => {
 	it("returns a human-readable goal name for valid input", async () => {
 		const chartId = await seedMinimalIidxSpChart();
 
-		const res = await mockApi
-			.post("/api/v1/games/iidx-sp/targets/goals/format")
-			.send({
-				charts: { type: "single", data: chartId },
-				criteria: { mode: "single", key: "lamp", value: 7 },
-			});
+		const res = await mockApi.post("/api/v1/games/iidx-sp/targets/goals/format").send({
+			charts: { type: "single", data: chartId },
+			criteria: { mode: "single", key: "lamp", value: 7 },
+		});
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
@@ -107,12 +107,10 @@ describe("POST /api/v1/games/:game/targets/goals/format", () => {
 	});
 
 	it("returns 400 for an invalid chart reference", async () => {
-		const res = await mockApi
-			.post("/api/v1/games/iidx-sp/targets/goals/format")
-			.send({
-				charts: { type: "single", data: "C_does_not_exist" },
-				criteria: { mode: "single", key: "lamp", value: 7 },
-			});
+		const res = await mockApi.post("/api/v1/games/iidx-sp/targets/goals/format").send({
+			charts: { type: "single", data: "C_does_not_exist" },
+			criteria: { mode: "single", key: "lamp", value: 7 },
+		});
 
 		expect(res.status).toBe(400);
 		expect(res.body.success).toBe(false);
@@ -121,12 +119,10 @@ describe("POST /api/v1/games/:game/targets/goals/format", () => {
 	it("returns 400 for an invalid criteria key", async () => {
 		const chartId = await seedMinimalIidxSpChart();
 
-		const res = await mockApi
-			.post("/api/v1/games/iidx-sp/targets/goals/format")
-			.send({
-				charts: { type: "single", data: chartId },
-				criteria: { mode: "single", key: "not_a_real_metric", value: 0 },
-			});
+		const res = await mockApi.post("/api/v1/games/iidx-sp/targets/goals/format").send({
+			charts: { type: "single", data: chartId },
+			criteria: { mode: "single", key: "not_a_real_metric", value: 0 },
+		});
 
 		expect(res.status).toBe(400);
 		expect(res.body.success).toBe(false);
@@ -158,7 +154,9 @@ describe("GET /api/v1/games/:game/targets/goals/:goalID", () => {
 
 	it("returns 404 when the goal belongs to a different game", async () => {
 		const chartId = await seedMinimalIidxSpChart();
-		const { id: gameCheckUserId } = await seedUser({ username: `goal_game_check_${Date.now()}` });
+		const { id: gameCheckUserId } = await seedUser({
+			username: `goal_game_check_${Date.now()}`,
+		});
 		const goalId = await seedGoalWithSub(chartId, gameCheckUserId);
 
 		const res = await mockApi.get(`/api/v1/games/sdvx/targets/goals/${goalId}`);
@@ -173,41 +171,54 @@ describe("GET /api/v1/games/:game/targets/goals/:goalID", () => {
 		const chartId = await seedMinimalIidxSpChart();
 		const goalId = `G_ql_shape_${suffix}`;
 
-		await DB.insertInto("goal").values({
-			id: goalId,
-			game: "iidx-sp",
-			name: "Shape test goal",
-			charts: JSON.stringify({ type: "single", data: chartId }),
-			criteria: JSON.stringify({ mode: "single", key: "lamp", value: 4 }),
-		}).execute();
+		await DB.insertInto("goal")
+			.values({
+				id: goalId,
+				game: "iidx-sp",
+				name: "Shape test goal",
+				charts: JSON.stringify({ type: "single", data: chartId }),
+				criteria: JSON.stringify({ mode: "single", key: "lamp", value: 4 }),
+			})
+			.execute();
 
-		await DB.insertInto("quest").values({
-			id: qId,
-			game: "iidx-sp",
-			name: "Shape test quest",
-			description: "d",
-			quest_data: JSON.stringify([{ title: "s", goals: [{ goalID: goalId }] }]),
-		}).execute();
+		await DB.insertInto("quest")
+			.values({
+				id: qId,
+				game: "iidx-sp",
+				name: "Shape test quest",
+				description: "d",
+				quest_data: JSON.stringify([{ title: "s", goals: [{ goalID: goalId }] }]),
+			})
+			.execute();
 
-		await DB.insertInto("questline").values({
-			id: qlId,
-			game: "iidx-sp",
-			name: "Shape test questline",
-			description: "d",
-		}).execute();
+		await DB.insertInto("questline")
+			.values({
+				id: qlId,
+				game: "iidx-sp",
+				name: "Shape test questline",
+				description: "d",
+			})
+			.execute();
 
-		await DB.insertInto("questline_quest").values({
-			questline_id: qlId,
-			quest_id: qId,
-			sort_order: 0,
-		}).execute();
+		await DB.insertInto("questline_quest")
+			.values({
+				questline_id: qlId,
+				quest_id: qId,
+				sort_order: 0,
+			})
+			.execute();
 
 		const res = await mockApi.get(`/api/v1/games/iidx-sp/targets/quests/${qId}`);
 
 		expect(res.status).toBe(200);
 
-		const ql = (res.body.body.parentQuestlines as Array<{ questlineID: string; game: string; quests: string[] }>)
-			.find((x) => x.questlineID === qlId);
+		const ql = (
+			res.body.body.parentQuestlines as Array<{
+				game: string;
+				questlineID: string;
+				quests: string[];
+			}>
+		).find((x) => x.questlineID === qlId);
 
 		expect(ql).toBeDefined();
 		expect(ql?.game).toBe("iidx-sp");

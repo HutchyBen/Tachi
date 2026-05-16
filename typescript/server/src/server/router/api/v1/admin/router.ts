@@ -1,6 +1,7 @@
 import { ACTION_DeleteScore } from "#actions/delete-score";
 import { ACTION_DeleteSession } from "#actions/delete-session";
 import { ACTION_RebuildFolderChartLookup } from "#actions/rebuild-folder-chart-lookup";
+import { ACTION_SetUserQuestSubmitterStatus } from "#actions/set-user-quest-submitter-status";
 import { ACTION_SetUserSupporterStatus } from "#actions/set-user-supporter-status";
 import {
 	GetActions,
@@ -182,6 +183,38 @@ API_V1_ROUTER.add("POST /admin/rebuild-folder-chart-lookup", withAdmin, async ({
 		`Rebuilt folder_chart_lookup (${result.folderCount} folders, ${result.rowCount} rows).`,
 		result,
 	);
+});
+
+API_V1_ROUTER.add("POST /admin/quest-submitter/:userID", withAdmin, async ({ params, req }) => {
+	const target = await ResolveUser(params.userID);
+
+	if (!target) {
+		throw new ExpectedErr(404, "This user does not exist.");
+	}
+
+	const adminUserID = req[SYMBOL_TACHI_API_AUTH].userID!;
+	const adminUser = await GetUserWithIDGuaranteed(adminUserID);
+	const taker = { acct: { id: adminUser.id, username: adminUser.username }, ip: req.ip };
+
+	await ACTION_SetUserQuestSubmitterStatus(taker, { canSubmit: true, userID: target.id });
+
+	return success("Done.", {});
+});
+
+API_V1_ROUTER.add("DELETE /admin/quest-submitter/:userID", withAdmin, async ({ params, req }) => {
+	const target = await ResolveUser(params.userID);
+
+	if (!target) {
+		throw new ExpectedErr(404, "This user does not exist.");
+	}
+
+	const adminUserID = req[SYMBOL_TACHI_API_AUTH].userID!;
+	const adminUser = await GetUserWithIDGuaranteed(adminUserID);
+	const taker = { acct: { id: adminUser.id, username: adminUser.username }, ip: req.ip };
+
+	await ACTION_SetUserQuestSubmitterStatus(taker, { canSubmit: false, userID: target.id });
+
+	return success("Done.", {});
 });
 
 API_V1_ROUTER.add("POST /admin/reprocess-all-goals", withAdmin, () => {

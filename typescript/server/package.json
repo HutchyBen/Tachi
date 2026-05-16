@@ -32,6 +32,7 @@
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "catalog:",
+		"@octokit/app": "^16.1.2",
 		"@types/bcryptjs": "catalog:",
 		"@types/bunyan": "catalog:",
 		"@types/connect-redis": "catalog:",
@@ -53,6 +54,7 @@
 		"bunyan": "catalog:",
 		"commander": "catalog:",
 		"connect-redis": "catalog:",
+		"cron-parser": "catalog:",
 		"csv-parse": "catalog:",
 		"deepmerge": "catalog:",
 		"dotenv": "catalog:",
@@ -85,8 +87,7 @@
 		"tachi-db-migration-engine": "workspace:*",
 		"ts-node": "catalog:",
 		"typescript": "catalog:",
-		"zod": "catalog:",
-		"cron-parser": "catalog:"
+		"zod": "catalog:"
 	},
 	"nyc": {
 		"reporter": [

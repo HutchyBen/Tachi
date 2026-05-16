@@ -130,7 +130,7 @@ export default function ImportInfo({
 							are matched with data, all we have to display might be a hash.
 							<br />
 							<strong>SongOrChartNotFound</strong> means the score was still{" "}
-							<strong>saved as an orphan</strong> for nightly matching (around 00:01
+							<strong>saved as an orphan</strong> for nightly matching (around 1 AM
 							UTC) or manual reprocess - see{" "}
 							{user ? (
 								<Link to={`/u/${user.username}/orphans`}>Orphan scores</Link>

@@ -10,7 +10,7 @@ describe("ACTION_UpdateGoalSubscription", () => {
 	let userID: number;
 	let username: string;
 	let chartId: string;
-	let taker: { ip: string; acct: { id: number; username: string } };
+	let taker: { acct: { id: number; username: string }; ip: string };
 
 	const baseInput = {
 		game: "iidx-sp" as const,

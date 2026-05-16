@@ -9,7 +9,7 @@ import { type GamePT } from "#types/react";
 import { type RawQuestDocument, type RawQuestGoal, type RawQuestSection } from "#types/tachi";
 import { ChangeAtPosition, CopyToClipboard, DeleteInPosition } from "#util/misc";
 import React, { useState } from "react";
-import { Button, Collapse, Modal } from "react-bootstrap";
+import { Button, Modal } from "react-bootstrap";
 import { FormatGame } from "tachi-common";
 
 export default function EditableQuest({
@@ -53,7 +53,10 @@ export default function EditableQuest({
 							})
 						}
 						onDelete={() =>
-							onChange({ ...quest, rawQuestData: DeleteInPosition(quest.rawQuestData, i) })
+							onChange({
+								...quest,
+								rawQuestData: DeleteInPosition(quest.rawQuestData, i),
+							})
 						}
 						onMoveDown={
 							i < quest.rawQuestData.length - 1
@@ -226,7 +229,11 @@ function QuestSection({
 			)}
 
 			<div className="d-flex gap-2 mt-2">
-				<Button onClick={() => setShowGoalBuilder(true)} size="sm" variant="outline-success">
+				<Button
+					onClick={() => setShowGoalBuilder(true)}
+					size="sm"
+					variant="outline-success"
+				>
 					<Icon type="plus" /> Add Goal
 				</Button>
 				<Button
@@ -284,7 +291,9 @@ function EditableGoalRow({
 		<div className="d-flex align-items-center gap-2 rounded border px-2 py-1">
 			<Icon style={{ fontSize: "0.4rem" }} type="circle" />
 			<span className="flex-grow-1 small">{rawGoal.goal.name}</span>
-			{rawGoal.note && <span className="text-body-secondary small fst-italic">{rawGoal.note}</span>}
+			{rawGoal.note && (
+				<span className="text-body-secondary small fst-italic">{rawGoal.note}</span>
+			)}
 
 			<div className="d-flex gap-1 ms-auto">
 				<button
@@ -311,7 +320,7 @@ function EditableGoalRow({
 					title="Edit goal"
 					type="button"
 				>
-					<Icon type="pencil" />
+					<Icon type="pencil-alt" />
 				</button>
 				<button
 					className="btn btn-outline-danger btn-sm py-0"

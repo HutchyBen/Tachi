@@ -1,4 +1,3 @@
- 
 import type { Repository } from "@octokit/webhooks-types";
 
 import { App, createNodeMiddleware } from "@octokit/app";
@@ -33,10 +32,37 @@ function mkSeedDiffViewMsg(baseSha: string, headSha: string, prNumber: number) {
 	return `\nThis pull request changes files under \`db/seeds/\`. [View the seed diff in the Seeds web UI](${origin}/diff?${params.toString()}).`;
 }
 
+/**
+ * Create a rich comment for quest-proposal PRs, linking to the dedicated
+ * quest-preview page on seeds.tachi.ac in addition to the regular diff link.
+ */
+function mkQuestProposalMsg(baseSha: string, headSha: string, prNumber: number) {
+	const origin = ProcessEnv.seedsWebuiOrigin.replace(/\/$/u, "");
+
+	const diffParams = new URLSearchParams({
+		base: baseSha,
+		head: headSha,
+		file: "quests.json",
+		pr: String(prNumber),
+	});
+
+	const previewUrl = `${origin}/pr/${prNumber}`;
+	const diffUrl = `${origin}/diff?${diffParams.toString()}`;
+
+	return `🎯 **Quest Proposal**
+
+This PR was submitted via the Quest Editor.
+
+| | |
+|---|---|
+| **Preview quests** | [View on Seeds viewer](${previewUrl}) |
+| **Seed diff** | [quests.json diff](${diffUrl}) |
+
+_A reviewer will check the content and merge when it looks good. You can update this PR from the Quest Editor at any time._`;
+}
+
 function prTouchesSeeds(files: Array<{ filename: string }>): boolean {
-	return files.some(
-		(k) => k.filename.startsWith("db/seeds/") || k.filename === "db/seeds",
-	);
+	return files.some((k) => k.filename.startsWith("db/seeds/") || k.filename === "db/seeds");
 }
 
 async function listAllPullFiles(
@@ -52,13 +78,16 @@ async function listAllPullFiles(
 	for (;;) {
 		// GitHub returns up to 100 files per page; fetch pages sequentially.
 		// eslint-disable-next-line no-await-in-loop -- pagination must be sequential
-		const { data } = await octokit.request("GET /repos/{owner}/{repo}/pulls/{pull_number}/files", {
-			owner,
-			repo: repoName,
-			pull_number: pullNumber,
-			per_page: 100,
-			page,
-		});
+		const { data } = await octokit.request(
+			"GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
+			{
+				owner,
+				repo: repoName,
+				pull_number: pullNumber,
+				per_page: 100,
+				page,
+			},
+		);
 		const batch = data;
 		out.push(...batch);
 		if (batch.length < 100) {
@@ -82,24 +111,35 @@ app.webhooks.on(
 	["pull_request.opened", "pull_request.reopened", "pull_request.synchronize"],
 	async ({ octokit, payload }) => {
 		const repo = payload.repository as Repository;
+		const pr = payload.pull_request;
+		const isQuestProposal = pr.head.ref.startsWith("quest-proposal/");
+
+		// Quest-proposal PRs get a dedicated preview comment; all other PRs that
+		// touch db/seeds/ get the standard seed-diff link.
+		if (isQuestProposal) {
+			await sendMsg(
+				mkQuestProposalMsg(pr.base.sha, pr.head.sha, pr.number),
+				octokit,
+				repo,
+				pr.number,
+			);
+			return;
+		}
+
 		try {
 			const filesChanged = await listAllPullFiles(
 				octokit,
 				repo.owner.login,
 				repo.name,
-				payload.pull_request.number,
+				pr.number,
 			);
 
 			if (prTouchesSeeds(filesChanged)) {
 				await sendMsg(
-					mkSeedDiffViewMsg(
-						payload.pull_request.base.sha,
-						payload.pull_request.head.sha,
-						payload.pull_request.number,
-					),
+					mkSeedDiffViewMsg(pr.base.sha, pr.head.sha, pr.number),
 					octokit,
 					repo,
-					payload.pull_request.number,
+					pr.number,
 				);
 			}
 		} catch (err) {
@@ -115,18 +155,51 @@ ${err}
 
 *****
 
-${mkSeedDiffViewMsg(
-	payload.pull_request.base.sha,
-	payload.pull_request.head.sha,
-	payload.pull_request.number,
-)}`,
+${mkSeedDiffViewMsg(pr.base.sha, pr.head.sha, pr.number)}`,
 				octokit,
 				repo,
-				payload.pull_request.number,
+				pr.number,
 			);
 		}
 	},
 );
+
+app.webhooks.on(["pull_request.closed"], async ({ payload }) => {
+	const pr = payload.pull_request;
+
+	// Only fire for merged PRs whose branch starts with quest-proposal/
+	if (!pr.merged || !pr.head.ref.startsWith("quest-proposal/")) {
+		return;
+	}
+
+	if (!ProcessEnv.tachiApiOrigin || !ProcessEnv.tachiWebhookSecret) {
+		console.warn(
+			`Merged quest-proposal PR #${pr.number} but TACHI_API_ORIGIN or TACHI_WEBHOOK_SECRET are not set. Skipping server notification.`,
+		);
+		return;
+	}
+
+	try {
+		const res = await fetch(`${ProcessEnv.tachiApiOrigin}/proposals/webhook/merged`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				"x-tachi-webhook-secret": ProcessEnv.tachiWebhookSecret,
+			},
+			body: JSON.stringify({ prNumber: pr.number }),
+		});
+
+		if (!res.ok) {
+			console.error(
+				`Failed to notify Tachi server of merged PR #${pr.number}: ${res.status} ${res.statusText}`,
+			);
+		} else {
+			console.log(`Notified Tachi server: quest-proposal PR #${pr.number} merged.`);
+		}
+	} catch (err) {
+		console.error(`Error notifying Tachi server of merged PR #${pr.number}:`, err);
+	}
+});
 
 app.webhooks.on(["issue_comment.created"], async ({ octokit, payload }) => {
 	const body = payload.comment.body.trim();

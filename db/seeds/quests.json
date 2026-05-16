@@ -1,9 +1,8 @@
 [
 	{
 		"desc": "These goals are around 13.1 KtLampRating and 5-10BPI.",
-		"game": "iidx",
+		"game": "iidx-sp",
 		"name": "Post-Kaiden II",
-		"playtype": "SP",
 		"questData": [
 			{
 				"title": "Specific Clear Goals",
@@ -86,9 +85,8 @@
 	},
 	{
 		"desc": "Good luck, it's only harder from here on. On the bright side, you don't have to play dans anymore. These goals are around 13.0 KtLampRating and 0BPI.",
-		"game": "iidx",
+		"game": "iidx-sp",
 		"name": "Post-Kaiden I",
-		"playtype": "SP",
 		"questData": [
 			{
 				"title": "Specific Clear Goals",
@@ -171,9 +169,8 @@
 	},
 	{
 		"desc": "These goals are around 13.2 KtLampRating and 10-20BPI.",
-		"game": "iidx",
+		"game": "iidx-sp",
 		"name": "Post-Kaiden III",
-		"playtype": "SP",
 		"questData": [
 			{
 				"title": "Specific Clear Goals",
@@ -264,9 +261,8 @@
 	},
 	{
 		"desc": "These goals are around 13.3 KtLampRating and 20-30BPI.",
-		"game": "iidx",
+		"game": "iidx-sp",
 		"name": "Post-Kaiden IV",
-		"playtype": "SP",
 		"questData": [
 			{
 				"title": "Specific Clear Goals",
@@ -360,9 +356,8 @@
 	},
 	{
 		"desc": "This is the end of the line, for now. Good luck.",
-		"game": "iidx",
+		"game": "iidx-sp",
 		"name": "Post-Kaiden VI",
-		"playtype": "SP",
 		"questData": [
 			{
 				"title": "Specific Clear Goals",
@@ -433,9 +428,8 @@
 	},
 	{
 		"desc": "These goals are around 13.5 KtLampRating and 30-50BPI.",
-		"game": "iidx",
+		"game": "iidx-sp",
 		"name": "Post-Kaiden V",
-		"playtype": "SP",
 		"questData": [
 			{
 				"title": "Specific Clear Goals",
@@ -498,9 +492,8 @@
 	},
 	{
 		"desc": "These goals are aimed at players roughly between Chuuden and Kaiden.",
-		"game": "iidx",
+		"game": "iidx-sp",
 		"name": "Approaching Kaiden",
-		"playtype": "SP",
 		"questData": [
 			{
 				"title": "Specific Clear Goals",
@@ -595,9 +588,8 @@
 	},
 	{
 		"desc": "These goals are aimed at players roughly between 10th Dan and Chuuden.",
-		"game": "iidx",
+		"game": "iidx-sp",
 		"name": "Approaching Chuuden",
-		"playtype": "SP",
 		"questData": [
 			{
 				"title": "Specific Clear Goals",
@@ -672,9 +664,8 @@
 	},
 	{
 		"desc": "These goals are aimed at players roughly between 9th and 10th Dan.",
-		"game": "iidx",
+		"game": "iidx-sp",
 		"name": "Approaching 10th Dan",
-		"playtype": "SP",
 		"questData": [
 			{
 				"title": "Specific Clear Goals",
@@ -749,9 +740,8 @@
 	},
 	{
 		"desc": "These goals are aimed at players roughly between 8th and 9th Dan. Simultaneously, you'll be breaking into 12s around this time. Good luck!",
-		"game": "iidx",
+		"game": "iidx-sp",
 		"name": "Approaching 9th Dan",
-		"playtype": "SP",
 		"questData": [
 			{
 				"title": "Specific Clear Goals",
@@ -824,9 +814,8 @@
 	},
 	{
 		"desc": "These goals are aimed at players roughly between 13-14 VF.",
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"name": "Dandelion (15s-16s)",
-		"playtype": "Single",
 		"questData": [
 			{
 				"title": "Timing Goals",
@@ -881,9 +870,8 @@
 	},
 	{
 		"desc": "These goals are aimed at players roughly between 14-15 VF.",
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"name": "Cyan (16s)",
-		"playtype": "Single",
 		"questData": [
 			{
 				"title": "Timing Goals",
@@ -938,9 +926,8 @@
 	},
 	{
 		"desc": "These goals are aimed at players roughly between 15-16 VF.",
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"name": "Scarlet (17s)",
-		"playtype": "Single",
 		"questData": [
 			{
 				"title": "Timing Goals",
@@ -994,9 +981,8 @@
 	},
 	{
 		"desc": "These goals are aimed at players roughly between 16-17 VF.",
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"name": "Coral (Early 18s)",
-		"playtype": "Single",
 		"questData": [
 			{
 				"title": "Timing Goals",
@@ -1051,9 +1037,8 @@
 	},
 	{
 		"desc": "These goals are aimed at players roughly between 17-18 VF.",
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"name": "Argento (18s - Early 19s)",
-		"playtype": "Single",
 		"questData": [
 			{
 				"title": "Timing Goals",
@@ -1112,9 +1097,8 @@
 	},
 	{
 		"desc": "These goals are aimed at players roughly between 18-18.5 VF.",
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"name": "Eldora A (Mid-High 19s)",
-		"playtype": "Single",
 		"questData": [
 			{
 				"title": "Timing Goals",
@@ -1173,9 +1157,8 @@
 	},
 	{
 		"desc": "These goals are aimed at players roughly between 18.5-19 VF.",
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"name": "Eldora B (Early 20s)",
-		"playtype": "Single",
 		"questData": [
 			{
 				"title": "Timing Goals",
@@ -1231,9 +1214,8 @@
 	},
 	{
 		"desc": "These goals are aimed at players roughly between 19-19.5 VF.",
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"name": "Crimson A (20s)",
-		"playtype": "Single",
 		"questData": [
 			{
 				"title": "Timing Goals",
@@ -1287,9 +1269,8 @@
 	},
 	{
 		"desc": "This is the end of the road, for now.",
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"name": "Crimson B (Post-20s)",
-		"playtype": "Single",
 		"questData": [
 			{
 				"title": "Timing Goals",

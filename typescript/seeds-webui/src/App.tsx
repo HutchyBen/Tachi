@@ -6,6 +6,7 @@ import { Collection } from "#pages/Collection";
 import { Diff } from "#pages/Diff";
 import { Overview } from "#pages/Overview";
 import { Query } from "#pages/Query";
+import { QuestProposalPR } from "#pages/QuestProposalPR";
 import React, { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
@@ -63,6 +64,7 @@ export default function App() {
 							<Route exact path="/history" render={() => <Redirect to="/diff" />} />
 							<Route component={Diff} exact path="/diff" />
 							<Route component={Collection} exact path="/c/:name" />
+							<Route component={QuestProposalPR} exact path="/pr/:prNumber" />
 							{editRoutes.map((r) => (
 								<Route component={r.component} exact key={r.path} path={r.path} />
 							))}

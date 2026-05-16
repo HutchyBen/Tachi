@@ -1168,7 +1168,7 @@ async function main(): Promise<void> {
 
 		const uniqueMongoGoalIds = [...new Set(goalSubs.map((gs) => gs.goalID))];
 		const translatedIds = uniqueMongoGoalIds.map((gid) => goalIdRemap.get(gid) ?? gid);
-		const candidateGoalIdsForLookup = [...new Set([...uniqueMongoGoalIds, ...translatedIds])];
+		const candidateGoalIdsForLookup = [...new Set([...translatedIds, ...uniqueMongoGoalIds])];
 
 		const existingGoalIds = new Set(
 			candidateGoalIdsForLookup.length === 0

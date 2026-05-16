@@ -1,5 +1,5 @@
-import GoalBuilder from "#components/targets/GoalBuilder";
 import DeleteGoalsModal from "#components/targets/DeleteGoalsModal";
+import GoalBuilder from "#components/targets/GoalBuilder";
 import GoalSubInfo from "#components/targets/GoalSubInfo";
 import ApiError from "#components/util/ApiError";
 import Divider from "#components/util/Divider";
@@ -14,7 +14,7 @@ import { CreateGoalSubDataset } from "#util/data";
 import React, { useContext, useReducer, useState } from "react";
 import { Button, Col, Modal } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { type GoalDocument, FormatGame } from "tachi-common";
+import { FormatGame, type GoalDocument } from "tachi-common";
 
 export default function UGPTGoalsPage({ reqUser, game }: UGPT) {
 	const [showAdd, setShowAdd] = useState(false);
@@ -40,7 +40,9 @@ export default function UGPTGoalsPage({ reqUser, game }: UGPT) {
 	const userMap = new Map([[reqUser.id, reqUser]]);
 	const dataset = CreateGoalSubDataset(data, userMap);
 
-	const handleAddGoal = async (rawGoal: { goal: Pick<GoalDocument, "charts" | "criteria" | "name"> }) => {
+	const handleAddGoal = async (rawGoal: {
+		goal: Pick<GoalDocument, "charts" | "criteria" | "name">;
+	}) => {
 		await APIFetchV1(
 			`/users/${reqUser.id}/games/${game}/targets/goals/add-goal`,
 			{
@@ -120,11 +122,7 @@ export default function UGPTGoalsPage({ reqUser, game }: UGPT) {
 					<Modal.Title>Add New Goal</Modal.Title>
 				</Modal.Header>
 				<Modal.Body>
-					<GoalBuilder
-						confirmLabel="Add Goal"
-						game={game}
-						onCreate={handleAddGoal}
-					/>
+					<GoalBuilder confirmLabel="Add Goal" game={game} onCreate={handleAddGoal} />
 				</Modal.Body>
 			</Modal>
 

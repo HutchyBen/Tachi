@@ -77,12 +77,12 @@ export type RawQuestGoal = {
  * authoring questlines locally in the Quest Editor before uploading as seeds.
  */
 export type RawQuestlineDocument = {
+	desc: string;
+	/** V3Game identifier, e.g. `"iidx-sp"`. */
+	game: string;
+	name: string;
 	/** User-chosen slug / identifier (becomes `questlineID` in seeds). */
 	questlineID: string;
-	name: string;
-	desc: string;
-	game: string;
-	playtype: string;
 	/** Ordered list of `RawQuestDocument` references by their local index or slug. */
 	quests: Array<string>;
 };

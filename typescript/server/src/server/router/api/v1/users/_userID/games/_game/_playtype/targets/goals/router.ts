@@ -169,9 +169,7 @@ API_V1_ROUTER.add(
 
 		const taker = { acct: { id: sessionUser.id, username: sessionUser.username }, ip: req.ip };
 
-		const { ACTION_UpdateGoalSubscription } = await import(
-			"#actions/update-goal-subscription"
-		);
+		const { ACTION_UpdateGoalSubscription } = await import("#actions/update-goal-subscription");
 		const { GetGoalForIDGuaranteed, GetGoalSubscriptionForIDGuaranteed } = await import(
 			"#utils/db"
 		);

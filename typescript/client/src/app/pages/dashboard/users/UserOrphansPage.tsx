@@ -164,7 +164,7 @@ export default function UserOrphansPage({ reqUser }: { reqUser: UserDocument }) 
 				<p className="mb-2">
 					When an import cannot match a song or chart (SongOrChartNotFound), Tachi still
 					stores that datapoint as an <strong>orphan</strong>. Orphans are retried
-					automatically around <strong>00:01 UTC</strong> each day, or you can run a full
+					automatically around <strong>1 AM UTC</strong> each day, or you can run a full
 					reprocess below.
 				</p>
 				<p className="mb-0">

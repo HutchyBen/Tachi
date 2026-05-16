@@ -58,27 +58,31 @@ describe("GET /api/v1/users/:userID/games/:game/targets/goals", () => {
 		const chartId = await seedMinimalIidxSpChart();
 		const goalId = `G_get_${Date.now()}`;
 
-		await DB.insertInto("goal").values({
-			id: goalId,
-			game: "iidx-sp",
-			name: "Listed goal",
-			charts: JSON.stringify({ type: "single", data: chartId }),
-			criteria: JSON.stringify({ mode: "single", key: "lamp", value: 7 }),
-		}).execute();
+		await DB.insertInto("goal")
+			.values({
+				id: goalId,
+				game: "iidx-sp",
+				name: "Listed goal",
+				charts: JSON.stringify({ type: "single", data: chartId }),
+				criteria: JSON.stringify({ mode: "single", key: "lamp", value: 7 }),
+			})
+			.execute();
 
-		await DB.insertInto("goal_sub").values({
-			goal_id: goalId,
-			user_id: userId,
-			achieved: false,
-			time_achieved: null,
-			progress: null,
-			progress_human: "NO DATA",
-			out_of: 7,
-			out_of_human: "FULL COMBO",
-			last_interaction: null,
-			was_instantly_achieved: false,
-			was_assigned_standalone: true,
-		}).execute();
+		await DB.insertInto("goal_sub")
+			.values({
+				goal_id: goalId,
+				user_id: userId,
+				achieved: false,
+				time_achieved: null,
+				progress: null,
+				progress_human: "NO DATA",
+				out_of: 7,
+				out_of_human: "FULL COMBO",
+				last_interaction: null,
+				was_instantly_achieved: false,
+				was_assigned_standalone: true,
+			})
+			.execute();
 
 		const res = await mockApi.get(`/api/v1/users/${userId}/games/iidx-sp/targets/goals`);
 
@@ -187,27 +191,31 @@ describe("GET /api/v1/users/:userID/games/:game/targets/goals/:goalID", () => {
 		const chartId = await seedMinimalIidxSpChart();
 		const goalId = `G_single_${Date.now()}`;
 
-		await DB.insertInto("goal").values({
-			id: goalId,
-			game: "iidx-sp",
-			name: "Single test goal",
-			charts: JSON.stringify({ type: "single", data: chartId }),
-			criteria: JSON.stringify({ mode: "single", key: "lamp", value: 4 }),
-		}).execute();
+		await DB.insertInto("goal")
+			.values({
+				id: goalId,
+				game: "iidx-sp",
+				name: "Single test goal",
+				charts: JSON.stringify({ type: "single", data: chartId }),
+				criteria: JSON.stringify({ mode: "single", key: "lamp", value: 4 }),
+			})
+			.execute();
 
-		await DB.insertInto("goal_sub").values({
-			goal_id: goalId,
-			user_id: userId,
-			achieved: false,
-			time_achieved: null,
-			progress: null,
-			progress_human: "NO DATA",
-			out_of: 4,
-			out_of_human: "HARD CLEAR",
-			last_interaction: null,
-			was_instantly_achieved: false,
-			was_assigned_standalone: true,
-		}).execute();
+		await DB.insertInto("goal_sub")
+			.values({
+				goal_id: goalId,
+				user_id: userId,
+				achieved: false,
+				time_achieved: null,
+				progress: null,
+				progress_human: "NO DATA",
+				out_of: 4,
+				out_of_human: "HARD CLEAR",
+				last_interaction: null,
+				was_instantly_achieved: false,
+				was_assigned_standalone: true,
+			})
+			.execute();
 
 		const res = await mockApi.get(
 			`/api/v1/users/${userId}/games/iidx-sp/targets/goals/${goalId}`,

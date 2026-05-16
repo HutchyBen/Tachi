@@ -1,9 +1,8 @@
 [
 	{
 		"desc": "These are the official quests for IIDX SP. These aim to be generally useful, and don't focus too much on specific skills.",
-		"game": "iidx",
+		"game": "iidx-sp",
 		"name": "Kamaitachi Official IIDX SP Questline",
-		"playtype": "SP",
 		"questlineID": "kt-official-iidx-SP",
 		"quests": [
 			"7f01dd4bb78537a37f0d06456c9153f960b1ab1c",
@@ -20,9 +19,8 @@
 	},
 	{
 		"desc": "These are the official quests for SDVX. These aim to be generally useful, and don't focus too much on specific skills. These were primarily created by Okami and Winter.",
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"name": "Kamaitachi Official SDVX Questline",
-		"playtype": "Single",
 		"questlineID": "kt-official-sdvx",
 		"quests": [
 			"559ab57794351e6eab54f2aaec0e27d52c6b3c49",

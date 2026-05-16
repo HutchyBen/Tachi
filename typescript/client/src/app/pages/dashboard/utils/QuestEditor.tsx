@@ -15,17 +15,19 @@ import EditableQuest from "#components/targets/quests/editor/EditableQuest";
 import Divider from "#components/util/Divider";
 import EditableText from "#components/util/EditableText";
 import Icon from "#components/util/Icon";
-import Muted from "#components/util/Muted";
+import { UserContext } from "#context/UserContext";
 import { TachiConfig } from "#lib/config";
 import { type RawQuestDocument, type RawQuestlineDocument } from "#types/tachi";
+import { APIFetchV1 } from "#util/api";
 import { ChangeAtPosition, DeleteInPosition } from "#util/misc";
 import { p, type PrudenceSchema } from "prudence";
-import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Badge, Button, Col, Form, Modal, Row } from "react-bootstrap";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { Alert, Badge, Button, Col, Form, Modal, Row, Spinner } from "react-bootstrap";
 import {
+	ALL_GAMES,
 	FormatGame,
-	type GameGroup,
 	FormatPrError,
+	type GameGroup,
 	GetGameGroupConfig,
 	LEGACY_GameGroupPTToGame,
 	type LEGACY_GPTString,
@@ -43,16 +45,8 @@ const LOCAL_QUESTLINE_KEY = "LOCAL_QUESTLINES";
 const PR_LOCAL_QUESTS_SCHEMA: PrudenceSchema = {
 	json: [
 		{
-			game: p.isIn(TachiConfig.GAME_GROUPS),
-			playtype: (self, parent) => {
-				const gameConfig = GetGameGroupConfig(parent.game as GameGroup);
-
-				if (!(gameConfig.playtypes as ReadonlyArray<unknown>).includes(self)) {
-					return `Invalid playtype '${String(self)}' for ${String(parent.game)}`;
-				}
-
-				return true;
-			},
+			/** V3 game id (e.g. `iidx-sp`), matching {@link RawQuestDocument}. */
+			game: p.isIn(ALL_GAMES),
 			name: "string",
 			desc: "string",
 			rawQuestData: [
@@ -140,8 +134,25 @@ function downloadJson(data: unknown, filename: string) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+// ─── Proposal types (mirrors server API response) ────────────────────────────
+
+type MyProposal = {
+	createdAt: string;
+	prNumber: number;
+	proposalID: string;
+	prUrl: string;
+	rawQuestlines: Array<RawQuestlineDocument>;
+	rawQuests: Array<RawQuestDocument>;
+	status: string;
+	updatedAt: string;
+};
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function QuestEditor() {
-	useSetSubheader(["Developer Utils", "Quest & Questline Editor"]);
+	useSetSubheader(["Quest Editor"]);
+
+	const { user } = useContext(UserContext);
 
 	const initQuests = useMemo(() => loadLocalQuests(), []);
 	const initQuestlines = useMemo(() => loadLocalQuestlines(), []);
@@ -152,6 +163,35 @@ export default function QuestEditor() {
 
 	const [showImportQuests, setShowImportQuests] = useState(false);
 	const [showImportQuestlines, setShowImportQuestlines] = useState(false);
+	const [showSubmitModal, setShowSubmitModal] = useState(false);
+
+	// When non-null, we're updating an existing proposal rather than creating one
+	const [editingProposal, setEditingProposal] = useState<MyProposal | null>(null);
+
+	// My proposals list
+	const [proposals, setProposals] = useState<Array<MyProposal> | null>(null);
+	const [proposalsLoading, setProposalsLoading] = useState(false);
+
+	// ── Fetch my proposals ─────────────────────────────────────────────────────
+	const fetchProposals = useCallback(() => {
+		if (!user) {
+			return;
+		}
+
+		setProposalsLoading(true);
+
+		APIFetchV1<{ proposals: Array<MyProposal> }>("/proposals/mine").then((res) => {
+			setProposalsLoading(false);
+
+			if (res.success) {
+				setProposals(res.body.proposals);
+			}
+		});
+	}, [user]);
+
+	useEffect(() => {
+		fetchProposals();
+	}, [fetchProposals]);
 
 	// ── Persist to localStorage on every change ────────────────────────────────
 	useEffect(() => {
@@ -163,7 +203,7 @@ export default function QuestEditor() {
 	}, [questlines]);
 
 	// ── Derived ────────────────────────────────────────────────────────────────
-	const selectedQuest = selectedQuestIdx !== null ? quests[selectedQuestIdx] ?? null : null;
+	const selectedQuest = selectedQuestIdx !== null ? (quests[selectedQuestIdx] ?? null) : null;
 
 	const addQuest = (gptString: LEGACY_GPTString) => {
 		const [game, playtype] = gptString.split(":") as [GameGroup, LEGACY_Playtype];
@@ -183,14 +223,81 @@ export default function QuestEditor() {
 		});
 	};
 
+	const loadProposalIntoEditor = (proposal: MyProposal) => {
+		if (quests.length > 0 || questlines.length > 0) {
+			if (
+				!confirm(
+					"This will replace your current editor contents with the proposal's quests. Continue?",
+				)
+			) {
+				return;
+			}
+		}
+
+		setQuests(proposal.rawQuests);
+		setQuestlines(proposal.rawQuestlines);
+		setSelectedQuestIdx(null);
+		setEditingProposal(proposal);
+	};
+
+	const clearEditingProposal = () => {
+		setEditingProposal(null);
+	};
+
+	const handleAfterSubmit = () => {
+		setEditingProposal(null);
+		fetchProposals();
+	};
+
 	return (
 		<Row className="g-3">
 			<Col xs={12}>
-				<h2 className="mb-1">Quest &amp; Questline Editor</h2>
-				<p className="text-body-secondary small">
-					Build quests and questlines locally, then download the JSON files and submit
-					them as a PR to be included on the site.
-				</p>
+				<div className="d-flex align-items-start justify-content-between flex-wrap gap-2">
+					<div>
+						<h2 className="mb-1">Quest &amp; Questline Editor</h2>
+						<p className="text-body-secondary small mb-0">
+							Build quests locally and submit them to the community.
+						</p>
+					</div>
+					{user && quests.length > 0 && (
+						user.canSubmitQuests ? (
+							<Button onClick={() => setShowSubmitModal(true)} variant="success">
+								<Icon type="code-branch" />{" "}
+								{editingProposal
+									? `Update PR #${editingProposal.prNumber}`
+									: "Submit to Community"}
+							</Button>
+						) : (
+							<span className="text-body-secondary small text-end" style={{ maxWidth: "260px" }}>
+								<Icon type="lock" />{" "}
+								Want to submit quests to the community? Ask an admin to grant you
+								quest-submitter access.
+							</span>
+						)
+					)}
+				</div>
+
+				{/* Editing-proposal banner */}
+				{editingProposal && (
+					<Alert className="mt-3 mb-0 d-flex align-items-center justify-content-between" variant="info">
+						<span>
+							<Icon type="pencil" />{" "}
+							Editing{" "}
+							<a
+								href={editingProposal.prUrl}
+								rel="noopener noreferrer"
+								target="_blank"
+							>
+								PR #{editingProposal.prNumber}
+							</a>
+							{" — "}make your changes, then click <strong>Update PR</strong>.
+						</span>
+						<Button onClick={clearEditingProposal} size="sm" variant="outline-light">
+							Stop editing
+						</Button>
+					</Alert>
+				)}
+
 				<Divider />
 			</Col>
 
@@ -233,6 +340,7 @@ export default function QuestEditor() {
 								if (confirm("Delete all quests and start over?")) {
 									setQuests([]);
 									setSelectedQuestIdx(null);
+									setEditingProposal(null);
 								}
 							}}
 							size="sm"
@@ -276,10 +384,10 @@ export default function QuestEditor() {
 
 				<QuestlineComposer
 					onAddQuestline={(ql) => setQuestlines((prev) => [...prev, ql])}
+					onDelete={(idx) => setQuestlines(DeleteInPosition(questlines, idx))}
 					onUpdate={(updated, idx) =>
 						setQuestlines(ChangeAtPosition(questlines, updated, idx))
 					}
-					onDelete={(idx) => setQuestlines(DeleteInPosition(questlines, idx))}
 					questlines={questlines}
 					quests={quests}
 				/>
@@ -321,6 +429,20 @@ export default function QuestEditor() {
 				</div>
 			</Col>
 
+			{/* ── My Proposals panel ────────────────────────────────────────── */}
+			{user && (
+				<Col xs={12}>
+					<Divider />
+					<MyProposalsPanel
+						editingProposalID={editingProposal?.proposalID ?? null}
+						loading={proposalsLoading}
+						onLoad={loadProposalIntoEditor}
+						onWithdrawn={fetchProposals}
+						proposals={proposals}
+					/>
+				</Col>
+			)}
+
 			{/* Import modals */}
 			{showImportQuests && (
 				<ImportJsonModal
@@ -340,7 +462,176 @@ export default function QuestEditor() {
 					onImport={(data) => setQuestlines(data as RawQuestlineDocument[])}
 				/>
 			)}
+			{showSubmitModal && (
+				<SubmitProposalModal
+					editingProposal={editingProposal}
+					onAfterSubmit={handleAfterSubmit}
+					onHide={() => setShowSubmitModal(false)}
+					questlines={questlines}
+					quests={quests}
+				/>
+			)}
 		</Row>
+	);
+}
+
+// ─── MyProposalsPanel ─────────────────────────────────────────────────────────
+
+function statusBadge(status: string) {
+	switch (status) {
+		case "open":
+			return <Badge bg="success">Open</Badge>;
+		case "merged":
+			return <Badge bg="primary">Merged</Badge>;
+		case "closed":
+			return <Badge bg="secondary">Closed</Badge>;
+		default:
+			return <Badge bg="secondary">{status}</Badge>;
+	}
+}
+
+function MyProposalsPanel({
+	proposals,
+	loading,
+	editingProposalID,
+	onLoad,
+	onWithdrawn,
+}: {
+	editingProposalID: string | null;
+	loading: boolean;
+	onLoad: (p: MyProposal) => void;
+	onWithdrawn: () => void;
+	proposals: Array<MyProposal> | null;
+}) {
+	const [withdrawingID, setWithdrawingID] = useState<string | null>(null);
+
+	const handleWithdraw = async (proposal: MyProposal) => {
+		if (!confirm(`Withdraw PR #${proposal.prNumber}? This will close it on GitHub.`)) {
+			return;
+		}
+
+		setWithdrawingID(proposal.proposalID);
+
+		try {
+			const res = await APIFetchV1(`/proposals/${proposal.proposalID}`, {
+				method: "DELETE",
+			});
+
+			if (!res.success) {
+				alert(`Failed to withdraw: ${res.description}`);
+			} else {
+				onWithdrawn();
+			}
+		} finally {
+			setWithdrawingID(null);
+		}
+	};
+
+	return (
+		<div>
+			<div className="d-flex align-items-center justify-content-between mb-2">
+				<h5 className="mb-0">My Proposals</h5>
+				{loading && <Spinner animation="border" size="sm" />}
+			</div>
+
+			{proposals === null && !loading && (
+				<p className="text-body-secondary small">
+					Could not load proposals — are proposals enabled on this instance?
+				</p>
+			)}
+
+			{proposals !== null && proposals.length === 0 && (
+				<p className="text-body-secondary small">
+					No proposals yet. Build some quests and click{" "}
+					<strong>Submit to Community</strong>!
+				</p>
+			)}
+
+			{proposals !== null && proposals.length > 0 && (
+				<div className="d-flex flex-wrap gap-3">
+					{proposals.map((proposal) => {
+						const questNames = proposal.rawQuests.map((q) => q.name).join(", ");
+						const isEditing = editingProposalID === proposal.proposalID;
+
+						return (
+							<div
+								className={`border rounded p-3 ${isEditing ? "border-info" : ""}`}
+								key={proposal.proposalID}
+								style={{ minWidth: "260px", maxWidth: "340px" }}
+							>
+								<div className="d-flex align-items-start justify-content-between mb-1">
+									<span className="text-body-secondary small">
+										PR #{proposal.prNumber}
+									</span>
+									{statusBadge(proposal.status)}
+								</div>
+
+								<p className="mb-1 fw-semibold" style={{ fontSize: "0.9rem" }}>
+									{questNames}
+								</p>
+
+								<p className="text-body-secondary mb-2" style={{ fontSize: "0.75rem" }}>
+									{proposal.rawQuests[0]
+										? FormatGame(proposal.rawQuests[0].game as V3Game)
+										: ""}{" "}
+									· {new Date(proposal.createdAt).toLocaleDateString()}
+									{proposal.updatedAt !== proposal.createdAt && (
+										<>
+											{" · "}updated{" "}
+											{new Date(proposal.updatedAt).toLocaleDateString()}
+										</>
+									)}
+								</p>
+
+								<div className="d-flex gap-2 flex-wrap">
+									<a
+										className="btn btn-outline-secondary btn-sm py-0"
+										href={proposal.prUrl}
+										rel="noopener noreferrer"
+										target="_blank"
+									>
+										GitHub
+									</a>
+
+									{proposal.status === "open" && (
+										<>
+											{isEditing ? (
+												<span className="btn btn-info btn-sm py-0 disabled">
+													<Icon type="pencil" /> Editing…
+												</span>
+											) : (
+												<Button
+													onClick={() => onLoad(proposal)}
+													size="sm"
+													style={{ padding: "0 0.5rem" }}
+													variant="outline-primary"
+												>
+													<Icon type="pencil" /> Edit
+												</Button>
+											)}
+
+											<Button
+												disabled={withdrawingID === proposal.proposalID}
+												onClick={() => handleWithdraw(proposal)}
+												size="sm"
+												style={{ padding: "0 0.5rem" }}
+												variant="outline-danger"
+											>
+												{withdrawingID === proposal.proposalID ? (
+													<Spinner animation="border" size="sm" />
+												) : (
+													"Withdraw"
+												)}
+											</Button>
+										</>
+									)}
+								</div>
+							</div>
+						);
+					})}
+				</div>
+			)}
+		</div>
 	);
 }
 
@@ -359,16 +650,15 @@ function QuestList({
 }) {
 	const [gpt, setGpt] = useState<LEGACY_GPTString | null>(null);
 
-	const allGpts: Array<{ label: string; value: LEGACY_GPTString }> = TachiConfig.GAME_GROUPS.flatMap(
-		(gameGroup) => {
+	const allGpts: Array<{ label: string; value: LEGACY_GPTString }> =
+		TachiConfig.GAME_GROUPS.flatMap((gameGroup) => {
 			const config = GetGameGroupConfig(gameGroup);
 
 			return config.playtypes.map((pt) => ({
 				value: `${gameGroup}:${pt}` as LEGACY_GPTString,
 				label: FormatGame(LEGACY_GameGroupPTToGame(gameGroup, pt)),
 			}));
-		},
-	);
+		});
 
 	return (
 		<div className="d-flex flex-column gap-1 mb-3">
@@ -378,18 +668,14 @@ function QuestList({
 			{quests.map((quest, i) => (
 				<button
 					className={`btn btn-sm text-start text-truncate ${
-						selectedIdx === i
-							? "btn-primary"
-							: "btn-outline-secondary"
+						selectedIdx === i ? "btn-primary" : "btn-outline-secondary"
 					}`}
 					key={i}
 					onClick={() => onSelect(i)}
 					title={quest.name}
 					type="button"
 				>
-					<span className="small me-2 text-body-secondary">
-						{FormatGame(quest.game)}
-					</span>
+					<span className="small me-2 text-body-secondary">{FormatGame(quest.game)}</span>
 					{quest.name}
 				</button>
 			))}
@@ -442,18 +728,17 @@ function QuestlineComposer({
 	quests: Array<RawQuestDocument>;
 }) {
 	const [newName, setNewName] = useState("");
-	const [newGame, setNewGame] = useState<LEGACY_GPTString | "">("");
+	const [newGame, setNewGame] = useState<"" | LEGACY_GPTString>("");
 
-	const allGpts: Array<{ label: string; value: LEGACY_GPTString }> = TachiConfig.GAME_GROUPS.flatMap(
-		(gameGroup) => {
+	const allGpts: Array<{ label: string; value: LEGACY_GPTString }> =
+		TachiConfig.GAME_GROUPS.flatMap((gameGroup) => {
 			const config = GetGameGroupConfig(gameGroup);
 
 			return config.playtypes.map((pt) => ({
 				value: `${gameGroup}:${pt}` as LEGACY_GPTString,
 				label: FormatGame(LEGACY_GameGroupPTToGame(gameGroup, pt)),
 			}));
-		},
-	);
+		});
 
 	return (
 		<div className="d-flex flex-column gap-3 mb-3">
@@ -466,8 +751,8 @@ function QuestlineComposer({
 					key={idx}
 					onDelete={() => onDelete(idx)}
 					onUpdate={(updated) => onUpdate(updated, idx)}
-					quests={quests}
 					questline={ql}
+					quests={quests}
 				/>
 			))}
 
@@ -507,6 +792,8 @@ function QuestlineComposer({
 								LEGACY_Playtype,
 							];
 
+							const v3Game = LEGACY_GameGroupPTToGame(gameGroup, playtype);
+
 							const slug = newName
 								.trim()
 								.toLowerCase()
@@ -517,8 +804,7 @@ function QuestlineComposer({
 								questlineID: `${slug}-${Date.now()}`,
 								name: newName.trim(),
 								desc: "",
-								game: gameGroup,
-								playtype,
+								game: v3Game,
 								quests: [],
 							});
 
@@ -547,9 +833,7 @@ function QuestlineCard({
 	questline: RawQuestlineDocument;
 	quests: Array<RawQuestDocument>;
 }) {
-	const availableQuests = quests.filter(
-		(q) => !questline.quests.includes(q.name),
-	);
+	const availableQuests = quests.filter((q) => !questline.quests.includes(q.name));
 
 	const addQuestByName = (name: string) => {
 		if (!questline.quests.includes(name)) {
@@ -577,20 +861,22 @@ function QuestlineCard({
 		<div className="border rounded p-2">
 			<div className="d-flex align-items-start gap-2 mb-1">
 				<div className="flex-grow-1">
-				<EditableText
-					as="span"
-					authorised
-					initialText={questline.name}
-					onSubmit={(name) => onUpdate({ ...questline, name })}
-					placeholderText="Questline name"
-				/>
+					<EditableText
+						as="span"
+						authorised
+						initialText={questline.name}
+						onSubmit={(name) => onUpdate({ ...questline, name })}
+						placeholderText="Questline name"
+					/>
 					<EditableText
 						authorised
 						initialText={questline.desc}
 						onSubmit={(desc) => onUpdate({ ...questline, desc })}
 						placeholderText="Description…"
 					/>
-					<span className="text-body-secondary small">{questline.game} / {questline.playtype}</span>
+				<span className="text-body-secondary small">
+					{questline.game}
+				</span>
 				</div>
 				<button
 					className="btn btn-outline-danger btn-sm py-0"
@@ -662,6 +948,194 @@ function QuestlineCard({
 				</Form.Select>
 			)}
 		</div>
+	);
+}
+
+// ─── SubmitProposalModal ──────────────────────────────────────────────────────
+
+type SubmitResult = {
+	prNumber: number;
+	proposalID: string;
+	prUrl: string;
+	status: string;
+};
+
+function SubmitProposalModal({
+	editingProposal,
+	onAfterSubmit,
+	onHide,
+	questlines,
+	quests,
+}: {
+	editingProposal: MyProposal | null;
+	onAfterSubmit: () => void;
+	onHide: () => void;
+	questlines: Array<RawQuestlineDocument>;
+	quests: Array<RawQuestDocument>;
+}) {
+	const isUpdate = editingProposal !== null;
+
+	const [prTitle, setPrTitle] = useState("");
+	const [submitting, setSubmitting] = useState(false);
+	const [result, setResult] = useState<SubmitResult | null>(null);
+	const [err, setErr] = useState<string | null>(null);
+
+	const handleSubmit = async () => {
+		setErr(null);
+		setSubmitting(true);
+
+		try {
+			const res = isUpdate
+				? await APIFetchV1<SubmitResult>(`/proposals/${editingProposal.proposalID}`, {
+						method: "PUT",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({
+							quests,
+							questlines: questlines.length > 0 ? questlines : undefined,
+						}),
+					})
+				: await APIFetchV1<SubmitResult>("/proposals", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({
+							quests,
+							questlines: questlines.length > 0 ? questlines : undefined,
+							prTitle: prTitle.trim() || undefined,
+						}),
+					});
+
+			if (!res.success) {
+				setErr(res.description);
+				return;
+			}
+
+			setResult(res.body);
+			onAfterSubmit();
+		} catch (e) {
+			setErr((e as Error).message);
+		} finally {
+			setSubmitting(false);
+		}
+	};
+
+	return (
+		<Modal onHide={onHide} show>
+			<Modal.Header closeButton>
+				<Modal.Title>
+					{isUpdate ? `Update PR #${editingProposal.prNumber}` : "Submit to Community"}
+				</Modal.Title>
+			</Modal.Header>
+			<Modal.Body>
+				{result ? (
+					<div>
+						<Alert variant="success">
+							{isUpdate ? (
+								<>
+									<strong>PR updated!</strong> A new commit has been pushed to{" "}
+									<a href={result.prUrl} rel="noopener noreferrer" target="_blank">
+										PR #{result.prNumber}
+									</a>
+									.
+								</>
+							) : (
+								<>
+									<strong>PR opened!</strong> Your quests have been submitted for
+									review.
+								</>
+							)}
+						</Alert>
+						<a
+							className="btn btn-outline-primary btn-sm"
+							href={result.prUrl}
+							rel="noopener noreferrer"
+							target="_blank"
+						>
+							<Icon type="code-branch" /> View on GitHub
+						</a>
+					</div>
+				) : (
+					<>
+						{isUpdate ? (
+							<p className="text-body-secondary small">
+								This will push a new commit to{" "}
+								<a
+									href={editingProposal.prUrl}
+									rel="noopener noreferrer"
+									target="_blank"
+								>
+									PR #{editingProposal.prNumber}
+								</a>{" "}
+								with your updated quests.
+							</p>
+						) : (
+							<p className="text-body-secondary small">
+								This will open a pull request on GitHub with your quests. A
+								reviewer will check the content before it&apos;s merged into the
+								site.
+							</p>
+						)}
+
+						<h6>Quests ({quests.length})</h6>
+						<ul className="small">
+							{quests.map((q, i) => (
+								<li key={i}>
+									<strong>{q.name}</strong>{" "}
+									<span className="text-body-secondary">({q.game})</span>
+								</li>
+							))}
+						</ul>
+
+						{questlines.length > 0 && (
+							<>
+								<h6>Questlines ({questlines.length})</h6>
+								<ul className="small">
+									{questlines.map((ql, i) => (
+										<li key={i}>
+											<strong>{ql.name}</strong>
+										</li>
+									))}
+								</ul>
+							</>
+						)}
+
+						{!isUpdate && (
+							<Form.Group className="mt-3">
+								<Form.Label>PR title (optional)</Form.Label>
+								<Form.Control
+									maxLength={200}
+									onChange={(e) => setPrTitle(e.target.value)}
+									placeholder={`Add quest: ${quests.map((q) => q.name).join(", ")}`}
+									type="text"
+									value={prTitle}
+								/>
+							</Form.Group>
+						)}
+
+						{err && (
+							<Alert className="mt-3" variant="danger">
+								{err}
+							</Alert>
+						)}
+					</>
+				)}
+			</Modal.Body>
+			{!result && (
+				<Modal.Footer>
+					<Button disabled={submitting} onClick={onHide} variant="secondary">
+						Cancel
+					</Button>
+					<Button disabled={submitting} onClick={handleSubmit} variant="success">
+						{submitting
+							? isUpdate
+								? "Updating…"
+								: "Submitting…"
+							: isUpdate
+								? "Update PR"
+								: "Submit PR"}
+					</Button>
+				</Modal.Footer>
+			)}
+		</Modal>
 	);
 }
 

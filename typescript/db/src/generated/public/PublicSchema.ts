@@ -11,6 +11,7 @@ import type { default as InviteLockTable } from './InviteLock';
 import type { default as OrphanChartTable } from './OrphanChart';
 import type { default as GameRivalTable } from './GameRival';
 import type { default as GoalTable } from './Goal';
+import type { default as QuestProposalTable } from './QuestProposal';
 import type { default as ImportQuestTable } from './ImportQuest';
 import type { default as CronTaskExecutionTable } from './CronTaskExecution';
 import type { default as NotificationTable } from './Notification';
@@ -88,6 +89,8 @@ export default interface PublicSchema {
   game_rival: GameRivalTable;
 
   goal: GoalTable;
+
+  quest_proposal: QuestProposalTable;
 
   import_quest: ImportQuestTable;
 

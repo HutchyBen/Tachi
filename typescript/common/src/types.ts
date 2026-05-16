@@ -23,6 +23,8 @@ export interface TachiServerCoreConfig {
 	NAME: string;
 	TYPE: "boku" | "kamai" | "omni";
 	SIGNUPS_ENABLED: boolean;
+	/** True when the server is configured for community quest proposals (GitHub App). */
+	QUEST_PROPOSALS_ENABLED: boolean;
 }
 
 export * from "./types/api";

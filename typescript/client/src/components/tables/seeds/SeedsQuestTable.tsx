@@ -4,19 +4,14 @@ import { type CellsRenderFN, type QuestWithRelated } from "#types/seeds";
 import { StrSOV } from "#util/sorts";
 import { type SearchFunctions } from "#util/ztable/search";
 import React from "react";
-import {
-	type GameGroup,
-	type GoalDocument,
-	LEGACY_FormatGameGroupPT,
-	type LEGACY_Playtypes,
-} from "tachi-common";
+import { FormatGame, type GoalDocument, type V3Game } from "tachi-common";
 
 import { type Header } from "../components/TachiTable";
 
 export const SeedsQuestsHeaders: Header<QuestWithRelated>[] = [
 	["ID", "ID", StrSOV((x) => x.questID)],
 	["Name", "Name", StrSOV((x) => x.name)],
-	["GPT", "GPT", StrSOV((x) => x.game)],
+	["Game", "Game", StrSOV((x) => x.game)],
 	["Goals", "Goals"],
 ];
 
@@ -24,11 +19,7 @@ export const SeedsQuestSearchFns: SearchFunctions<QuestWithRelated> = {
 	name: (x) => x.name,
 	questID: (x) => x.questID,
 	game: (x) => x.game,
-	gpt: (x) =>
-		LEGACY_FormatGameGroupPT(
-			x.game as GameGroup,
-			x.playtype as LEGACY_Playtypes[typeof x.game],
-		),
+	gpt: (x) => FormatGame(x.game as V3Game),
 	goals: (x) =>
 		Object.values(x.__related.goals)
 			.map((e) => e!.name)
@@ -48,10 +39,7 @@ export const SeedsQuestCells: CellsRenderFN<QuestWithRelated> = ({
 			<strong>{data.name}</strong>
 		</td>
 		<td>
-			{LEGACY_FormatGameGroupPT(
-				data.game as GameGroup,
-				data.playtype as LEGACY_Playtypes[typeof data.game],
-			)}
+			{FormatGame(data.game as V3Game)}
 		</td>
 		<td>
 			<div style={{ maxHeight: "200px", overflowY: "auto" }}>

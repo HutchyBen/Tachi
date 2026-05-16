@@ -318,6 +318,7 @@ export interface UserDocument {
 	badges: Array<UserBadges>;
 	authLevel: UserAuthLevels;
 	isSupporter?: boolean;
+	canSubmitQuests?: boolean;
 }
 
 export interface SpecificUserGameStats<TGame extends V3Game> {

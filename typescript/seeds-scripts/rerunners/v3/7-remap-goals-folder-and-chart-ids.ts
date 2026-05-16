@@ -190,7 +190,12 @@ function remapChartsBlock(
 		case "folder":
 			return {
 				...charts,
-				data: resolveFolderGoalRef(charts.data, legacyToSeedFolder, canonicalFolderIds, context),
+				data: resolveFolderGoalRef(
+					charts.data,
+					legacyToSeedFolder,
+					canonicalFolderIds,
+					context,
+				),
 			};
 	}
 }
@@ -277,14 +282,10 @@ console.log(`goal-id-remap.json: wrote ${translateMap.size} translations`);
 
 const repoRoot = path.resolve(SEEDS_DIR, "..", "..");
 const biome = path.join(repoRoot, "node_modules", ".bin", "biome");
-const biomeResult = spawnSync(
-	biome,
-	["format", "--write", goalsPath, questsPath, remapPath],
-	{
-		cwd: repoRoot,
-		stdio: "inherit",
-	},
-);
+const biomeResult = spawnSync(biome, ["format", "--write", goalsPath, questsPath, remapPath], {
+	cwd: repoRoot,
+	stdio: "inherit",
+});
 
 if (biomeResult.status !== 0) {
 	throw new Error(`biome format exited ${biomeResult.status}`);

@@ -312,6 +312,13 @@ export const ActionSignatures = {
 		}),
 		output: z.object({}),
 	},
+	SET_USER_QUEST_SUBMITTER_STATUS: {
+		input: z.object({
+			userID: z.number().int().positive(),
+			canSubmit: z.boolean(),
+		}),
+		output: z.object({}),
+	},
 	PATCH_UGPT_SETTINGS: {
 		input: z.object({
 			userID: z.number().int(),

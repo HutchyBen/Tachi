@@ -48,6 +48,8 @@ export default interface AccountTable {
   auth_level: ColumnType<AuthLevel, AuthLevel | undefined, AuthLevel>;
 
   is_supporter: ColumnType<boolean, boolean | undefined, boolean>;
+
+  can_submit_quests: ColumnType<boolean, boolean | undefined, boolean>;
 }
 
 export type Account = Selectable<AccountTable>;

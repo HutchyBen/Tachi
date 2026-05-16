@@ -229,8 +229,8 @@ describe("PUT /api/v1/users/:userID/games/:game/targets/quests/:questID", () => 
 
 		expect(res.status).toBe(409);
 		// The error message must mention "quest", not "goal" (regression guard for the bug fix)
-		expect(res.body.description).toMatch(/quest/i);
-		expect(res.body.description).not.toMatch(/goal/i);
+		expect(res.body.description).toMatch(/quest/iu);
+		expect(res.body.description).not.toMatch(/goal/iu);
 	});
 });
 

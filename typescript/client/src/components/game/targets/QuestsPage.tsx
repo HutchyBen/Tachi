@@ -6,6 +6,7 @@ import ApiError from "#components/util/ApiError";
 import Divider from "#components/util/Divider";
 import Loading from "#components/util/Loading";
 import useApiQuery from "#components/util/query/useApiQuery";
+import { TachiConfig } from "#lib/config";
 import { type GamePT } from "#types/react";
 import { CreateGoalMap } from "#util/data";
 import React from "react";
@@ -48,9 +49,16 @@ function QuestlineSelector({ game }: GamePT) {
 			<Row>
 				<Col xs={12}>
 					<div className="w-100 text-center">
-						Looks like this game has no quests. If you want, you could{" "}
-						<Link to="/utils/quests">create your own</Link>, and submit them in the
-						discord!
+						Looks like this game has no quests.
+						{TachiConfig.QUEST_PROPOSALS_ENABLED ? (
+							<>
+								{" "}
+								If you want, you could <Link to="/quests">create your own</Link>, and
+								submit them in the discord!
+							</>
+						) : (
+							<> You can suggest new quests in the discord!</>
+						)}
 					</div>
 				</Col>
 			</Row>

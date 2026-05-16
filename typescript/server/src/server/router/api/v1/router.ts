@@ -23,6 +23,7 @@ await import("./activity/router");
 await import("./config/router");
 await import("./localdev/router");
 await import("./seeds/router");
+await import("./proposals/router");
 await import("./scores/_scoreID/router");
 
 await import("./users/_userID/router");

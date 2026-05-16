@@ -65,7 +65,10 @@ export const ACTION_UpdateGoalSubscription = MakeAction(
 			subResult === SubscribeFailReasons.ALREADY_SUBSCRIBED ||
 			subResult === SubscribeFailReasons.ALREADY_ACHIEVED
 		) {
-			throw new ExpectedErr(409, "Your updated goal conflicts with an existing subscription.");
+			throw new ExpectedErr(
+				409,
+				"Your updated goal conflicts with an existing subscription.",
+			);
 		}
 
 		return { newGoalID: newGoal.goalID, changed: true };

@@ -2008,6 +2008,18 @@ export const API_V1_SPEC = {
 		output: empty,
 	},
 
+	"POST /admin/quest-submitter/:userID": {
+		description: "Grant quest-submission permission to a user.",
+		input: z.object({}),
+		output: empty,
+	},
+
+	"DELETE /admin/quest-submitter/:userID": {
+		description: "Revoke quest-submission permission from a user.",
+		input: z.object({}),
+		output: empty,
+	},
+
 	"POST /admin/rebuild-folder-chart-lookup": {
 		description: "Rebuild the folder-chart lookup cache.",
 		input: z.object({ folderId: z.string().optional() }),
@@ -2080,6 +2092,108 @@ export const API_V1_SPEC = {
 		description: "Dev hint for first admin login.",
 		input: z.object({}),
 		output: z.strictObject({ username: z.string(), password: z.string() }),
+	},
+
+	// ────────────────────────────────────────────────
+	// Quest Proposals
+	// ────────────────────────────────────────────────
+
+	"POST /proposals": {
+		description: "Submit quest(s) as a GitHub PR. Requires GITHUB_APP_CONFIG to be set.",
+		input: z.object({
+			quests: z.array(z.record(z.string(), z.unknown())),
+			questlines: z.array(z.record(z.string(), z.unknown())).optional(),
+			prTitle: z.string().max(200).optional(),
+		}),
+		output: z.strictObject({
+			proposalID: z.string(),
+			prNumber: z.number(),
+			prUrl: z.string(),
+			status: z.string(),
+		}),
+	},
+
+	"GET /proposals": {
+		description: "List all open quest proposals.",
+		input: z.object({ page: z.coerce.number().int().optional() }),
+		output: z.strictObject({
+			proposals: z.array(
+				z.strictObject({
+					proposalID: z.string(),
+					prNumber: z.number(),
+					prUrl: z.string(),
+					status: z.string(),
+					submitterUsername: z.string(),
+					quests: z.array(z.strictObject({ name: z.string(), game: z.string() })),
+					createdAt: z.string(),
+				}),
+			),
+			page: z.number(),
+		}),
+	},
+
+	"GET /proposals/mine": {
+		description: "List the calling user's quest proposals.",
+		input: z.object({}),
+		output: z.strictObject({
+			proposals: z.array(
+				z.strictObject({
+					proposalID: z.string(),
+					prNumber: z.number(),
+					prUrl: z.string(),
+					status: z.string(),
+					rawQuests: z.unknown(),
+					rawQuestlines: z.unknown(),
+					createdAt: z.string(),
+					updatedAt: z.string(),
+				}),
+			),
+		}),
+	},
+
+	"GET /proposals/:proposalID": {
+		description: "Get a single quest proposal with live GitHub PR status.",
+		input: z.object({}),
+		output: z.strictObject({
+			proposalID: z.string(),
+			prNumber: z.number(),
+			prUrl: z.string(),
+			status: z.string(),
+			submitterUsername: z.string(),
+			rawQuests: z.unknown(),
+			rawQuestlines: z.unknown(),
+			createdAt: z.string(),
+			updatedAt: z.string(),
+		}),
+	},
+
+	"PUT /proposals/:proposalID": {
+		description: "Update quest content of an existing proposal (push new commit to branch).",
+		input: z.object({
+			quests: z.array(z.record(z.string(), z.unknown())),
+			questlines: z.array(z.record(z.string(), z.unknown())).optional(),
+			prTitle: z.string().max(200).optional(),
+		}),
+		output: z.strictObject({
+			proposalID: z.string(),
+			prNumber: z.number(),
+			prUrl: z.string(),
+		}),
+	},
+
+	"DELETE /proposals/:proposalID": {
+		description: "Withdraw (close) a quest proposal.",
+		input: z.object({}),
+		output: z.strictObject({ proposalID: z.string() }),
+	},
+
+	"POST /proposals/webhook/merged": {
+		description: "Internal webhook called by github-bot when a quest-proposal PR is merged.",
+		input: z.object({ prNumber: z.number() }),
+		output: z.strictObject({
+			updated: z.boolean(),
+			proposalID: z.string().optional(),
+		}),
 	},
 } as const satisfies AnyRouterSpec;
 

@@ -137,7 +137,9 @@ async function GetServerConfig() {
 	}
 
 	if (!parsed || typeof parsed !== "object" || !("success" in parsed)) {
-		log.error(`Server config response from ${url} was JSON but missing a success field. Can't run.`);
+		log.error(
+			`Server config response from ${url} was JSON but missing a success field. Can't run.`,
+		);
 		process.exit(1);
 	}
 

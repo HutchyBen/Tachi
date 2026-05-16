@@ -177,7 +177,7 @@ See previous example.
 This endpoint goes through all of the requesting user's [Orphanned Scores](../../codebase/import/orphans.md) and attempts to find them a parent song & chart.
 
 !!! note
-	Scores automatically attempt de-orphaning every day on Kamaitachi and Bokutachi,
+	Scores automatically attempt de-orphaning every day at 1 AM UTC on Kamaitachi and Bokutachi,
 	this endpoint just allows you to force a deorphaning, should you wish to.
 
 ### Permissions

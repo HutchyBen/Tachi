@@ -80,7 +80,9 @@ async function main(): Promise<void> {
 		process.exit(1);
 	}
 
-	const handler = authenticatedActionHandlers[actionName as ActionName] as AuthenticatedActionHandler;
+	const handler = authenticatedActionHandlers[
+		actionName as ActionName
+	] as AuthenticatedActionHandler;
 
 	let payload: Record<string, unknown> = {};
 	if (values["payload-file"]) {

@@ -1,5 +1,6 @@
 import QuickTooltip from "#components/layout/misc/QuickTooltip";
 import Card from "#components/layout/page/Card";
+import QuestProgressBar from "#components/targets/QuestProgressBar";
 import Divider from "#components/util/Divider";
 import GoalLink from "#components/util/GoalLink";
 import Icon from "#components/util/Icon";
@@ -12,7 +13,7 @@ import { GetGoalIDsFromQuest } from "#util/data";
 import { HumanisedJoinArray } from "#util/misc";
 import { FormatTime } from "#util/time";
 import React, { useContext, useState } from "react";
-import { Badge, Button, ProgressBar } from "react-bootstrap";
+import { Badge, Button } from "react-bootstrap";
 import {
 	FormatGame,
 	type GoalDocument,
@@ -44,8 +45,9 @@ export default function Quest({
 
 	const [show, setShow] = useState(!collapsible);
 
-	const subscribeBtn = user && (
-		questSub ? (
+	const subscribeBtn =
+		user &&
+		(questSub ? (
 			<Button
 				disabled={subscribing}
 				onClick={async () => {
@@ -62,7 +64,13 @@ export default function Quest({
 				size="sm"
 				variant="outline-danger"
 			>
-				{subscribing ? "Unsubscribing…" : <><Icon type="trash" /> Unsubscribe</>}
+				{subscribing ? (
+					"Unsubscribing…"
+				) : (
+					<>
+						<Icon type="trash" /> Unsubscribe
+					</>
+				)}
 			</Button>
 		) : (
 			<Button
@@ -81,10 +89,15 @@ export default function Quest({
 				size="sm"
 				variant="success"
 			>
-				{subscribing ? "Subscribing…" : <><Icon type="scroll" /> Subscribe</>}
+				{subscribing ? (
+					"Subscribing…"
+				) : (
+					<>
+						<Icon type="scroll" /> Subscribe
+					</>
+				)}
 			</Button>
-		)
-	);
+		));
 
 	return (
 		<Card
@@ -108,19 +121,19 @@ export default function Quest({
 								</Badge>
 							) : (
 								<>
-									<div className="d-flex justify-content-between small text-body-secondary mb-1">
-										<span>Progress</span>
-										<span>
+									<div className="d-flex justify-content-between align-items-baseline gap-2 small text-body-secondary mb-1">
+										<span className="fw-medium text-body">Progress</span>
+										<span className="text-end text-nowrap">
+											<span className="fw-semibold tabular-nums text-body">
+												{progressPct}%
+											</span>
+											<span className="mx-1 text-body-secondary">·</span>
 											{achievedGoals} / {totalGoals} goals
 										</span>
 									</div>
-									<ProgressBar
-										className="rounded-pill"
-										label={`${progressPct}%`}
-										now={progressPct}
-										striped={progressPct > 0 && progressPct < 100}
-										style={{ height: "12px" }}
-										variant={progressPct === 100 ? "success" : "primary"}
+									<QuestProgressBar
+										aria-label={`Quest progress: ${progressPct} percent, ${achievedGoals} of ${totalGoals} goals complete`}
+										percent={progressPct}
 									/>
 								</>
 							)}
@@ -179,9 +192,7 @@ function QuestSectionComponent({
 					</Badge>
 				)}
 			</div>
-			{section.desc && (
-				<p className="text-body-secondary small mb-2">{section.desc}</p>
-			)}
+			{section.desc && <p className="text-body-secondary small mb-2">{section.desc}</p>}
 			<hr className="mt-0 mb-3 opacity-10" />
 
 			{section.goals.length === 0 ? (
@@ -199,9 +210,7 @@ function QuestSectionComponent({
 							);
 						}
 
-						return (
-							<GoalCard game={game} goal={goal} key={i} note={goalRef.note} />
-						);
+						return <GoalCard game={game} goal={goal} key={i} note={goalRef.note} />;
 					})}
 				</div>
 			)}
@@ -274,7 +283,7 @@ function GoalCard({
 							title="Update this goal"
 							type="button"
 						>
-							<Icon type="pencil" />
+							<Icon type="pencil-alt" />
 						</button>
 					)}
 				</div>
@@ -315,10 +324,7 @@ export function InnerQuestSectionGoal({
 		return (
 			<>
 				<div className="w-100 d-flex align-items-center gap-2">
-					<Icon
-						style={{ verticalAlign: "middle", fontSize: "0.4rem" }}
-						type="circle"
-					/>
+					<Icon style={{ verticalAlign: "middle", fontSize: "0.4rem" }} type="circle" />
 					<GoalLink goal={goal} />
 					{onEdit && (
 						<button
@@ -327,7 +333,7 @@ export function InnerQuestSectionGoal({
 							title="Update this goal"
 							type="button"
 						>
-							<Icon type="pencil" />
+							<Icon type="pencil-alt" />
 						</button>
 					)}
 				</div>
@@ -353,11 +359,26 @@ export function InnerQuestSectionGoal({
 				>
 					<div>
 						{isAchieved ? (
-							<Icon colour="success" regular style={{ verticalAlign: "middle" }} type="check-square" />
+							<Icon
+								colour="success"
+								regular
+								style={{ verticalAlign: "middle" }}
+								type="check-square"
+							/>
 						) : inProgress ? (
-							<Icon colour="warning" regular style={{ verticalAlign: "middle" }} type="square" />
+							<Icon
+								colour="warning"
+								regular
+								style={{ verticalAlign: "middle" }}
+								type="square"
+							/>
 						) : (
-							<Icon colour="danger" regular style={{ verticalAlign: "middle" }} type="square" />
+							<Icon
+								colour="danger"
+								regular
+								style={{ verticalAlign: "middle" }}
+								type="square"
+							/>
 						)}
 					</div>
 				</QuickTooltip>
@@ -371,7 +392,7 @@ export function InnerQuestSectionGoal({
 						title="Update this goal"
 						type="button"
 					>
-						<Icon type="pencil" />
+						<Icon type="pencil-alt" />
 					</button>
 				)}
 

@@ -40,7 +40,7 @@ function buildList(): Array<CronTaskDef> {
 		},
 		{
 			id: "deorphan_scores",
-			schedule: "1 0 * * *",
+			schedule: "0 1 * * *",
 			description: "De-Orphan Scores",
 			run: DeorphanScoresMain,
 		},

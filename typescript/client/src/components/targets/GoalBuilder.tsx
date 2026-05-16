@@ -377,7 +377,11 @@ function CriteriaPicker({
 						game={game}
 						onChange={(mode, countNum) => {
 							if (mode === "single") {
-								setCriteria({ mode: "single", key: criteria.key, value: criteria.value });
+								setCriteria({
+									mode: "single",
+									key: criteria.key,
+									value: criteria.value,
+								});
 							} else {
 								setCriteria({ ...criteria, countNum: countNum ?? 0, mode });
 							}
@@ -409,7 +413,11 @@ function CriteriaValuePicker({
 	switch (conf.type) {
 		case "NULLABLE_GRAPH":
 		case "GRAPH":
-			return <span className="text-body-secondary small">Cannot set goals for graph metrics.</span>;
+			return (
+				<span className="text-body-secondary small">
+					Cannot set goals for graph metrics.
+				</span>
+			);
 
 		case "DECIMAL":
 		case "INTEGER":
@@ -457,9 +465,7 @@ function CriteriaModePicker({
 	criteria: GoalDocument["criteria"];
 	onChange: (mode: GoalDocument["criteria"]["mode"], countNum?: number) => void;
 } & GamePT) {
-	const [absCount, setAbsCount] = useState(
-		criteria.mode === "absolute" ? criteria.countNum : 10,
-	);
+	const [absCount, setAbsCount] = useState(criteria.mode === "absolute" ? criteria.countNum : 10);
 	const [perCount, setPerCount] = useState(
 		criteria.mode === "proportion" ? criteria.countNum * 100 : 10,
 	);
@@ -635,7 +641,9 @@ function ChartSelect({
 			loadOptions={loadOptions}
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			onChange={(data: any) =>
-				onChange(Array.isArray(data) ? data.map((e: { value: string }) => e.value) : data.value)
+				onChange(
+					Array.isArray(data) ? data.map((e: { value: string }) => e.value) : data.value,
+				)
 			}
 			placeholder="Search for a chart..."
 		/>

@@ -11,6 +11,7 @@ export { type default as InviteLockTable, type InviteLock, type NewInviteLock, t
 export { type orphan_chart_id, type default as OrphanChartTable, type OrphanChart, type NewOrphanChart, type OrphanChartUpdate } from './public/OrphanChart';
 export { type game_rival_game, type default as GameRivalTable, type GameRival, type NewGameRival, type GameRivalUpdate } from './public/GameRival';
 export { type goal_id, type default as GoalTable, type Goal, type NewGoal, type GoalUpdate } from './public/Goal';
+export { type quest_proposal_row_id, type default as QuestProposalTable, type QuestProposal, type NewQuestProposal, type QuestProposalUpdate } from './public/QuestProposal';
 export { type import_quest_row_id, type default as ImportQuestTable, type ImportQuest, type NewImportQuest, type ImportQuestUpdate } from './public/ImportQuest';
 export { type cron_task_execution_id, type default as CronTaskExecutionTable, type CronTaskExecution, type NewCronTaskExecution, type CronTaskExecutionUpdate } from './public/CronTaskExecution';
 export { type notification_row_id, type default as NotificationTable, type Notification, type NewNotification, type NotificationUpdate } from './public/Notification';

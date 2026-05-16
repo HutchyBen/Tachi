@@ -1,8 +1,6 @@
 import {
 	ALL_GAMES,
 	type ChartDocument,
-	LEGACY_GameGroupPTToGame,
-	type LEGACY_Playtype,
 	type SEEDS_BMSCourseDocument,
 	type SEEDS_ChartDocument,
 	type SEEDS_FolderDocument,
@@ -38,21 +36,17 @@ import { type Insertable, type Kysely, type RawBuilder, sql } from "kysely";
 import path from "path";
 
 /**
- * Maps `goals.json` / `quests.json` / `questlines.json` fields where `game` may be a
- * legacy {@link GameGroup} (e.g. "iidx") to the Postgres `game` enum (e.g. "iidx-sp").
+ * Maps a `game` field from seeds JSON (now always a V3Game, e.g. "iidx-sp") to
+ * the Postgres `game` enum.
  */
-function seedJsonGameToPg(game: string, playtype: string | undefined, label: string): PgGame {
+function seedJsonGameToPg(game: string, label: string): PgGame {
 	if ((ALL_GAMES as readonly string[]).includes(game)) {
 		return game as PgGame;
 	}
 
-	if (playtype === undefined) {
-		throw new Error(
-			`[seeds] ${label}: missing playtype for legacy game group ${JSON.stringify(game)}`,
-		);
-	}
-
-	return LEGACY_GameGroupPTToGame(game as GameGroup, playtype as LEGACY_Playtype) as PgGame;
+	throw new Error(
+		`[seeds] ${label}: unrecognised game ${JSON.stringify(game)}. Expected a V3Game string.`,
+	);
 }
 
 const INSERT_CHUNK = 500;
@@ -553,7 +547,7 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 			const seeds = readSeedFile<SEEDS_GoalDocument>(seedsDir, "goals.json");
 			const rows: Array<NewGoal> = seeds.map((g) => ({
 				id: g.goalID,
-				game: seedJsonGameToPg(g.game, g.playtype, `goal ${g.goalID}`),
+				game: seedJsonGameToPg(g.game, `goal ${g.goalID}`),
 				name: g.name,
 				charts: JSON.stringify(g.charts),
 				criteria: JSON.stringify(g.criteria),
@@ -579,7 +573,7 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 			const seeds = readSeedFile<SEEDS_QuestDocument>(seedsDir, "quests.json");
 			const rows: Array<NewQuest> = seeds.map((q) => ({
 				id: q.questID,
-				game: seedJsonGameToPg(q.game, q.playtype, `quest ${q.questID}`),
+				game: seedJsonGameToPg(q.game, `quest ${q.questID}`),
 				name: q.name,
 				description: q.desc,
 				quest_data: JSON.stringify(q.questData),
@@ -608,7 +602,7 @@ export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promi
 			const seeds = readSeedFile<SEEDS_QuestlineDocument>(seedsDir, "questlines.json");
 			const rows: Array<NewQuestline> = seeds.map((ql) => ({
 				id: ql.questlineID,
-				game: seedJsonGameToPg(ql.game, ql.playtype, `questline ${ql.questlineID}`),
+				game: seedJsonGameToPg(ql.game, `questline ${ql.questlineID}`),
 				name: ql.name,
 				description: ql.desc,
 			}));

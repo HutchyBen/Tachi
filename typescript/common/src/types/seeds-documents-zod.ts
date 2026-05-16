@@ -180,9 +180,8 @@ const seedsQuestSectionSchema = z.strictObject({
 
 export const SEEDS_QUEST_DOCUMENT_SCHEMA = z.strictObject({
 	desc: z.string(),
-	game: SEEDS_V3_GAME_GROUP_SCHEMA,
+	game: SEEDS_V3_GAME_SCHEMA,
 	name: z.string(),
-	playtype: z.string(),
 	questData: z.array(seedsQuestSectionSchema),
 	questID: z.string(),
 });
@@ -191,9 +190,8 @@ export type SEEDS_QuestDocument = z.infer<typeof SEEDS_QUEST_DOCUMENT_SCHEMA>;
 
 export const SEEDS_QUESTLINE_DOCUMENT_SCHEMA = z.strictObject({
 	desc: z.string(),
-	game: SEEDS_V3_GAME_GROUP_SCHEMA,
+	game: SEEDS_V3_GAME_SCHEMA,
 	name: z.string(),
-	playtype: z.string(),
 	questlineID: z.string(),
 	quests: z.array(z.string()),
 });
@@ -248,10 +246,9 @@ const SEEDS_GOAL_CHARTS_SCHEMA = z.discriminatedUnion("type", [
 export const SEEDS_GOAL_DOCUMENT_SCHEMA = z.strictObject({
 	charts: SEEDS_GOAL_CHARTS_SCHEMA,
 	criteria: SEEDS_GOAL_CRITERIA_SCHEMA,
-	game: SEEDS_V3_GAME_GROUP_SCHEMA,
+	game: SEEDS_V3_GAME_SCHEMA,
 	goalID: z.string(),
 	name: z.string(),
-	playtype: z.string(),
 });
 
 export type SEEDS_GoalDocument = z.infer<typeof SEEDS_GOAL_DOCUMENT_SCHEMA>;

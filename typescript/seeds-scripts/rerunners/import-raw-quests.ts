@@ -33,7 +33,7 @@ const newGoals: Array<GoalDocument> = [];
 function HydrateQuest(raw: RawQuestDocument): QuestDocument {
 	const questData: QuestDocument["questData"] = [];
 
-	const { game, playtype } = raw;
+	const { game } = raw;
 
 	for (const rawQuest of raw.rawQuestData) {
 		const goals: Array<{ goalID: string; note?: string }> = [];
@@ -45,7 +45,6 @@ function HydrateQuest(raw: RawQuestDocument): QuestDocument {
 				charts: rawGoal.goal.charts,
 				criteria: rawGoal.goal.criteria,
 				game,
-				playtype,
 				goalID,
 				name: rawGoal.goal.name,
 			} as GoalDocument;
@@ -69,7 +68,6 @@ function HydrateQuest(raw: RawQuestDocument): QuestDocument {
 		desc: raw.desc,
 		name: raw.name,
 		game,
-		playtype,
 		// just 20 random bytes. can't think of much more creative at the moment.
 		questID: CreateQuestID(),
 		questData,

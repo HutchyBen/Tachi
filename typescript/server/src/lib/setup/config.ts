@@ -89,6 +89,7 @@ const configSchema = z.object({
 		GAME_GROUPS: z.array(z.enum(allSupportedGameGroups as [GameGroup, ...GameGroup[]])),
 		IMPORT_TYPES: z.array(z.enum(allImportTypes as [ImportTypes, ...ImportTypes[]])),
 		SIGNUPS_ENABLED: z.boolean().default(true),
+		QUEST_PROPOSALS_ENABLED: z.boolean(),
 	}),
 	CDN_CONFIG: z.object({
 		WEB_LOCATION: z.string(),
@@ -109,6 +110,17 @@ const configSchema = z.object({
 				PATH: z.string(),
 			}),
 		])
+		.optional(),
+	GITHUB_APP_CONFIG: z
+		.object({
+			APP_ID: z.string(),
+			PRIVATE_KEY: z.string(),
+			INSTALLATION_ID: z.number().int(),
+			REPO_OWNER: z.string(),
+			REPO_NAME: z.string(),
+			/** Shared secret for the webhook endpoint that marks proposals as merged. */
+			WEBHOOK_SECRET: z.string(),
+		})
 		.optional(),
 });
 
@@ -215,6 +227,31 @@ function s3SaveLocation(
 		BUCKET: req(`${prefix}_BUCKET`),
 		...(keyPrefix !== undefined ? { KEY_PREFIX: keyPrefix } : {}),
 		...(region !== undefined ? { REGION: region } : {}),
+	};
+}
+
+function githubAppConfig(): TachiServerConfig["GITHUB_APP_CONFIG"] {
+	const appId = opt("TACHI_GITHUB_APP_ID");
+	if (appId === undefined) {
+		return undefined;
+	}
+	const b64Key = opt("TACHI_GITHUB_APP_BASE64_PRIVATE_KEY");
+	const owner = opt("TACHI_GITHUB_REPO_OWNER");
+	const repoName = opt("TACHI_GITHUB_REPO_NAME");
+	const installationId = opt("TACHI_GITHUB_INSTALLATION_ID");
+	const webhookSecret = opt("TACHI_GITHUB_WEBHOOK_SECRET");
+	if (!b64Key || !owner || !repoName || !installationId || !webhookSecret) {
+		throw new Error(
+			"TACHI_GITHUB_APP_ID is set but one or more of TACHI_GITHUB_APP_BASE64_PRIVATE_KEY, TACHI_GITHUB_REPO_OWNER, TACHI_GITHUB_REPO_NAME, TACHI_GITHUB_INSTALLATION_ID, TACHI_GITHUB_WEBHOOK_SECRET are missing.",
+		);
+	}
+	return {
+		APP_ID: appId,
+		PRIVATE_KEY: Buffer.from(b64Key, "base64").toString("utf-8"),
+		REPO_OWNER: owner,
+		REPO_NAME: repoName,
+		INSTALLATION_ID: Number.parseInt(installationId, 10),
+		WEBHOOK_SECRET: webhookSecret,
 	};
 }
 
@@ -385,6 +422,7 @@ const emailCfg = emailConfig();
 const inviteCfg = inviteCodeConfig();
 const bootstrapInvite = opt("TACHI_INVITE_ADMIN_INITIAL_INVITE_CODE")?.trim() || undefined;
 const seedsCfg = seedsConfig();
+const githubAppCfg = githubAppConfig();
 const clientDev = clientDevServer();
 const extWorkerConc = opt("TACHI_EXTERNAL_SCORE_IMPORT_WORKER_CONCURRENCY");
 
@@ -435,6 +473,7 @@ const configFromEnv: unknown = {
 		GAME_GROUPS: gameGroups,
 		IMPORT_TYPES: importTypes,
 		SIGNUPS_ENABLED: parseBool("TACHI_SIGNUPS_ENABLED", true) ?? true,
+		QUEST_PROPOSALS_ENABLED: githubAppCfg !== undefined,
 	},
 	CDN_CONFIG: {
 		WEB_LOCATION: req("TACHI_CDN_WEB_LOCATION"),
@@ -442,6 +481,7 @@ const configFromEnv: unknown = {
 		SAVE_LOCATION_PRIVATE: s3SaveLocation("TACHI_CDN_SAVE_LOCATION_PRIVATE"),
 	},
 	...(seedsCfg !== undefined ? { SEEDS_CONFIG: seedsCfg } : {}),
+	...(githubAppCfg !== undefined ? { GITHUB_APP_CONFIG: githubAppCfg } : {}),
 };
 
 const result = configSchema.safeParse(configFromEnv);

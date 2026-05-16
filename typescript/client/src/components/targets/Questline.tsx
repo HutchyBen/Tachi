@@ -1,6 +1,6 @@
 import QuickTooltip from "#components/layout/misc/QuickTooltip";
 import Card from "#components/layout/page/Card";
-import Divider from "#components/util/Divider";
+import QuestProgressBar from "#components/targets/QuestProgressBar";
 import Icon from "#components/util/Icon";
 import LinkButton from "#components/util/LinkButton";
 import Muted from "#components/util/Muted";
@@ -10,7 +10,7 @@ import { APIFetchV1 } from "#util/api";
 import { GetGoalIDsFromQuest } from "#util/data";
 import { FormatTime } from "#util/time";
 import React, { useContext, useState } from "react";
-import { Badge, Button, Collapse, ProgressBar } from "react-bootstrap";
+import { Badge, Button, Collapse } from "react-bootstrap";
 import { type QuestDocument, type QuestlineDocument } from "tachi-common";
 
 export default function Questline({
@@ -35,7 +35,9 @@ export default function Questline({
 					<div className="d-flex align-items-start justify-content-between gap-3">
 						<div>
 							<h4 className="mb-1">{questline.name}</h4>
-							<Muted>{totalQuests} {totalQuests === 1 ? "Quest" : "Quests"}</Muted>
+							<Muted>
+								{totalQuests} {totalQuests === 1 ? "Quest" : "Quests"}
+							</Muted>
 						</div>
 						{!quests && (
 							<div className="flex-shrink-0">
@@ -60,18 +62,21 @@ export default function Questline({
 								</Badge>
 							) : (
 								<>
-									<div className="d-flex justify-content-between small text-body-secondary mb-1">
-										<span>Questline Progress</span>
-										<span>
-											{achievedQuests} / {totalQuests} quests complete
+									<div className="d-flex justify-content-between align-items-baseline gap-2 small text-body-secondary mb-1">
+										<span className="fw-medium text-body">
+											Questline progress
+										</span>
+										<span className="text-end text-nowrap">
+											<span className="fw-semibold tabular-nums text-body">
+												{progressPct}%
+											</span>
+											<span className="mx-1 text-body-secondary">·</span>
+											{achievedQuests} / {totalQuests} quests
 										</span>
 									</div>
-									<ProgressBar
-										className="rounded-pill"
-										now={progressPct}
-										striped={progressPct > 0}
-										style={{ height: "10px" }}
-										variant="primary"
+									<QuestProgressBar
+										aria-label={`Questline progress: ${progressPct} percent, ${achievedQuests} of ${totalQuests} quests complete`}
+										percent={progressPct}
 									/>
 								</>
 							)}
@@ -140,7 +145,11 @@ function QuestTimelineNode({
 				{!isLast && (
 					<div
 						className="flex-grow-1 mt-1"
-						style={{ width: "2px", background: "var(--bs-border-color)", minHeight: "16px" }}
+						style={{
+							width: "2px",
+							background: "var(--bs-border-color)",
+							minHeight: "16px",
+						}}
 					/>
 				)}
 			</div>
@@ -222,7 +231,13 @@ function QuestSubscribeButton({ quest }: { quest: QuestDocument }) {
 					size="sm"
 					variant="outline-danger"
 				>
-					{loading ? "…" : <><Icon type="trash" /> Unsubscribe</>}
+					{loading ? (
+						"…"
+					) : (
+						<>
+							<Icon type="trash" /> Unsubscribe
+						</>
+					)}
 				</Button>
 			</QuickTooltip>
 		);
@@ -245,7 +260,13 @@ function QuestSubscribeButton({ quest }: { quest: QuestDocument }) {
 			size="sm"
 			variant="outline-success"
 		>
-			{loading ? "…" : <><Icon type="scroll" /> Subscribe</>}
+			{loading ? (
+				"…"
+			) : (
+				<>
+					<Icon type="scroll" /> Subscribe
+				</>
+			)}
 		</Button>
 	);
 }
@@ -271,9 +292,19 @@ export function InnerQuestInfo({ quest }: { quest: QuestDocument }) {
 				>
 					<div>
 						{questSub.achieved ? (
-							<Icon colour="success" regular style={{ verticalAlign: "middle" }} type="check-square" />
+							<Icon
+								colour="success"
+								regular
+								style={{ verticalAlign: "middle" }}
+								type="check-square"
+							/>
 						) : (
-							<Icon colour="danger" regular style={{ verticalAlign: "middle" }} type="square" />
+							<Icon
+								colour="danger"
+								regular
+								style={{ verticalAlign: "middle" }}
+								type="square"
+							/>
 						)}
 					</div>
 				</QuickTooltip>

@@ -1,3 +1,5 @@
+import MyProposalsPage from "#app/pages/dashboard/proposals/MyProposalsPage";
+import ProposalsPage from "#app/pages/dashboard/proposals/ProposalsPage";
 import SearchPage from "#app/pages/dashboard/search/SearchPage";
 import NotificationsPage from "#app/pages/dashboard/users/NotificationsPage";
 import { ErrorPage } from "#app/pages/ErrorPage";
@@ -8,17 +10,27 @@ import DashboardErrorBoundary from "#components/util/DashboardErrorBoundary";
 import { BackgroundContext } from "#context/BackgroundContext";
 import { BannedContext } from "#context/BannedContext";
 import { UserContext } from "#context/UserContext";
+import { TachiConfig } from "#lib/config";
 import { APIFetchV1, ToAPIURL } from "#util/api";
 import React, { useContext, useEffect, useState } from "react";
 import { Redirect, Route, Switch } from "react-router-dom";
 
 import { DashboardPage } from "../pages/dashboard/DashboardPage";
+import QuestEditor from "../pages/dashboard/utils/QuestEditor";
 import AdminRoutes from "./AdminRoutes";
 import GameRoutes from "./GameRoutes";
 import ImportRoutes from "./ImportRoutes";
 import { RedirectLegacyUserRoutes } from "./RedirectLegacyRoutes";
 import UserRoutes from "./UserRoutes";
 import UtilRoutes from "./UtilRoutes";
+
+function QuestEditorRoute() {
+	if (!TachiConfig.QUEST_PROPOSALS_ENABLED) {
+		return <Redirect to="/" />;
+	}
+
+	return <QuestEditor />;
+}
 
 export default function DashboardRoutes() {
 	const { user } = useContext(UserContext);
@@ -116,8 +128,28 @@ export default function DashboardRoutes() {
 						<ImportRoutes />
 					</Route>
 
+					<Route exact path="/utils/seeds">
+						<Redirect to="/" />
+					</Route>
+
+					<Route exact path="/utils/quests">
+						<Redirect to="/quests" />
+					</Route>
+
+					<Route exact path="/quests">
+						<QuestEditorRoute />
+					</Route>
+
 					<Route path="/utils">
 						<UtilRoutes />
+					</Route>
+
+					<Route exact path="/proposals">
+						<ProposalsPage />
+					</Route>
+
+					<Route exact path="/proposals/mine">
+						<MyProposalsPage />
 					</Route>
 
 					<Route path="/notifications">

@@ -38,6 +38,7 @@ globalThis.fetch = (url: string | Request | URL): Promise<Response> => {
 						NAME: "Test Tachi",
 						TYPE: "boku",
 						SIGNUPS_ENABLED: true,
+						QUEST_PROPOSALS_ENABLED: false,
 						GAME_GROUPS: ["iidx"],
 						IMPORT_TYPES: [...allImportTypes],
 					},

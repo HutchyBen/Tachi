@@ -7,9 +7,7 @@ afterAll(() => CloseServerConnection());
 
 async function seedQuest(suffix: string, goalId?: string) {
 	const questId = `q-rt-${suffix}`;
-	const questData = goalId
-		? [{ title: "Section", goals: [{ goalID: goalId }] }]
-		: [];
+	const questData = goalId ? [{ title: "Section", goals: [{ goalID: goalId }] }] : [];
 
 	await DB.insertInto("quest")
 		.values({
@@ -56,13 +54,15 @@ describe("GET /api/v1/games/:game/targets/quests", () => {
 		const goalId = `G_q_search_${Date.now()}`;
 		const suffix = `${Date.now()}-g`;
 
-		await DB.insertInto("goal").values({
-			id: goalId,
-			game: "iidx-sp",
-			name: "Search goal",
-			charts: JSON.stringify({ type: "single", data: chartId }),
-			criteria: JSON.stringify({ mode: "single", key: "lamp", value: 4 }),
-		}).execute();
+		await DB.insertInto("goal")
+			.values({
+				id: goalId,
+				game: "iidx-sp",
+				name: "Search goal",
+				charts: JSON.stringify({ type: "single", data: chartId }),
+				criteria: JSON.stringify({ mode: "single", key: "lamp", value: 4 }),
+			})
+			.execute();
 
 		const questId = await seedQuest(suffix, goalId);
 
@@ -117,25 +117,33 @@ describe("GET /api/v1/games/:game/targets/quests/:questID", () => {
 		const qlId = `ql-v3-${suffix}`;
 		const questId = await seedQuest(suffix);
 
-		await DB.insertInto("questline").values({
-			id: qlId,
-			game: "iidx-sp",
-			name: "V3 test questline",
-			description: "d",
-		}).execute();
+		await DB.insertInto("questline")
+			.values({
+				id: qlId,
+				game: "iidx-sp",
+				name: "V3 test questline",
+				description: "d",
+			})
+			.execute();
 
-		await DB.insertInto("questline_quest").values({
-			questline_id: qlId,
-			quest_id: questId,
-			sort_order: 0,
-		}).execute();
+		await DB.insertInto("questline_quest")
+			.values({
+				questline_id: qlId,
+				quest_id: questId,
+				sort_order: 0,
+			})
+			.execute();
 
 		const res = await mockApi.get(`/api/v1/games/iidx-sp/targets/quests/${questId}`);
 
 		expect(res.status).toBe(200);
 
 		const ql = (
-			res.body.body.parentQuestlines as Array<{ questlineID: string; game: string; quests: string[] }>
+			res.body.body.parentQuestlines as Array<{
+				game: string;
+				questlineID: string;
+				quests: string[];
+			}>
 		).find((x) => x.questlineID === qlId);
 
 		expect(ql).toBeDefined();

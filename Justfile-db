@@ -33,8 +33,16 @@ db-migrate-status POSTGRES_DB=DEFAULT_DB:
 
 # Load the seeds into the database.
 db-load-seeds POSTGRES_DB=DEFAULT_DB:
-	cd typescript/server && POSTGRES_URL="{{POSTGRES_URL}}/{{POSTGRES_DB}}" \
-		bun run src/scripts/load-seeds-pg.ts
+	#!/bin/bash
+	set -euo pipefail
+	cd typescript/server
+	export POSTGRES_URL="{{POSTGRES_URL}}/{{POSTGRES_DB}}"
+	export SEEDS_DIR="../../db/seeds"
+	if [[ -z "${SEEDS_COMMIT_HASH:-}" ]]; then
+		SEEDS_COMMIT_HASH="$(git rev-parse HEAD 2>/dev/null || echo local)"
+	fi
+	export SEEDS_COMMIT_HASH
+	bun run src/scripts/load-seeds-pg.ts
 
 # Reset templatedb from migrations, then dump schema and indexes for local debugging.
 db-schema: (db-cheap-reset "templatedb")

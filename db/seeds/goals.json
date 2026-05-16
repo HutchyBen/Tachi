@@ -9,10 +9,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G1a2499cae27572b8bddd861b28aaa01dbe4c885544f15fae5ed91765a7b924a9",
-		"name": "HARD CLEAR Feel The Beat (SP LEGGENDARIA 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR Feel The Beat (SP LEGGENDARIA 12)"
 	},
 	{
 		"charts": {
@@ -24,10 +23,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gdee336867a22a0a789ab45b863775f4351b6f70fbaa0ea1928c977179320d0ae",
-		"name": "EX HARD CLEAR 子供の落書き帳 (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "EX HARD CLEAR 子供の落書き帳 (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -39,14 +37,16 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G36f76a980802c1f06060e29f0d4d590fa06cb2ab2d5059b62e72489b98e0cdfe",
-		"name": "HARD CLEAR TITANS RETURN (SP LEGGENDARIA 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR TITANS RETURN (SP LEGGENDARIA 12)"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e10d6cf3457ce4", "C19d35e10f64eaa8c280"],
+			"data": [
+				"C19d35e10d6cf3457ce4",
+				"C19d35e10f64eaa8c280"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -54,10 +54,9 @@
 			"mode": "single",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G53d4c238478106b7a54b865f02d505f650c29b9bda8ff7ce229389b2bafd575a",
-		"name": "CLEAR either 灼熱Beach Side Bunny (SP ANOTHER 12) or 灼熱 Pt.2 Long Train Running (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "CLEAR either 灼熱Beach Side Bunny (SP ANOTHER 12) or 灼熱 Pt.2 Long Train Running (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -69,10 +68,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G4a86b8c4a0e2c60bbf713d1be8f4ba7e4892ede6954a499beb8100f41ce78391",
-		"name": "HARD CLEAR Timepiece phase II (CN Ver.) (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR Timepiece phase II (CN Ver.) (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -84,10 +82,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G6da6680177acd81b493da1c8163174b6ac517c6463b25f0259f377bc9f2a3966",
-		"name": "AAA AA (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "AAA AA (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -99,10 +96,9 @@
 			"mode": "single",
 			"value": 98
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G749a8d3ac2bf391d65aee7491bd64bf0b20097ac4c097bc9dd0f42bccf5da047",
-		"name": "Get 98% on Fly Above (SP ANOTHER 8)",
-		"playtype": "SP"
+		"name": "Get 98% on Fly Above (SP ANOTHER 8)"
 	},
 	{
 		"charts": {
@@ -114,10 +110,9 @@
 			"mode": "single",
 			"value": 98
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G825995e16f75db2a31953a41564f3ceabdb250a3388843daafd527098989d78f",
-		"name": "Get 98% on the trigger of innocence (SP ANOTHER 9)",
-		"playtype": "SP"
+		"name": "Get 98% on the trigger of innocence (SP ANOTHER 9)"
 	},
 	{
 		"charts": {
@@ -129,10 +124,9 @@
 			"mode": "single",
 			"value": 98
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G5b99b92615fc9d1554e8bec4264885d642a5dd5ab9daba82cfc840da6261fcb0",
-		"name": "Get 98% on CROSSROAD ～Left Story～ (SP ANOTHER 10)",
-		"playtype": "SP"
+		"name": "Get 98% on CROSSROAD ～Left Story～ (SP ANOTHER 10)"
 	},
 	{
 		"charts": {
@@ -144,10 +138,9 @@
 			"mode": "single",
 			"value": 8
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G39cde64528a80e9a7b22f6a612d5567945c9e1e7a6e6bdb7275ff39029d98a71",
-		"name": "MAX- mosaic (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "MAX- mosaic (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -159,10 +152,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G2634ee3209ddc4d87edb90c34471ea8603bf22885ac53daae36979fcfe656182",
-		"name": "AAA Happy Wedding (SP ANOTHER 8)",
-		"playtype": "SP"
+		"name": "AAA Happy Wedding (SP ANOTHER 8)"
 	},
 	{
 		"charts": {
@@ -174,10 +166,9 @@
 			"mode": "single",
 			"value": 8
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G1dafbb9a067708d0d52610a52d9e3d9efdd1ee8c40198f23a7bb219e78c5513b",
-		"name": "MAX- SHADE (SP ANOTHER 11)",
-		"playtype": "SP"
+		"name": "MAX- SHADE (SP ANOTHER 11)"
 	},
 	{
 		"charts": {
@@ -190,10 +181,9 @@
 			"mode": "proportion",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gf460944fe4fa8d1cd8b1db041e9475b33e4d25f6dc49b383ea144d4e5180dd4e",
-		"name": "HARD CLEAR 80% of the charts in the Level 12 (CastHour) folder",
-		"playtype": "SP"
+		"name": "HARD CLEAR 80% of the charts in the Level 12 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -206,10 +196,9 @@
 			"mode": "proportion",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G1f254c17d443890622d34cee5ea0e216184c9637f76e1266eb99e0540da9fdc6",
-		"name": "AAA 15% of the charts in the Level 12 (CastHour) folder",
-		"playtype": "SP"
+		"name": "AAA 15% of the charts in the Level 12 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -221,10 +210,9 @@
 			"mode": "single",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G8a7ec915d0613ce018202caa1e16dc9dbbf5ce18cb391110bc091e9136da6e00",
-		"name": "CLEAR Chrono Diver -PENDULUMs- (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "CLEAR Chrono Diver -PENDULUMs- (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -236,10 +224,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gcf8d759883e71996af9623499956d3d6ee6e591b7a58e6b8698469580ea2212d",
-		"name": "HARD CLEAR Verflucht (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR Verflucht (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -251,10 +238,9 @@
 			"mode": "single",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gd467e4325e60010906055a976204bffd89a5fa805fbcf898c62618a8f81a57a3",
-		"name": "CLEAR ECHIDNA (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "CLEAR ECHIDNA (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -266,10 +252,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G01d884675908fc9e06a7e5b477afd10bf932a06ccbef8dfa25d5eb40ebedc703",
-		"name": "HARD CLEAR Ganymede (SP LEGGENDARIA 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR Ganymede (SP LEGGENDARIA 12)"
 	},
 	{
 		"charts": {
@@ -281,10 +266,9 @@
 			"mode": "single",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G9cf0ca4046641e30a86ecfc206b095bc58c344907840e81a3f6f96ce7897dbc1",
-		"name": "CLEAR Time to Air (SP LEGGENDARIA 12)",
-		"playtype": "SP"
+		"name": "CLEAR Time to Air (SP LEGGENDARIA 12)"
 	},
 	{
 		"charts": {
@@ -296,10 +280,9 @@
 			"mode": "single",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G9ec817b5b48790e7655be86536ea9f3b977d4b8f33bd2c0fef4b5675eeef5bb4",
-		"name": "CLEAR Lords Of The Roundtable (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "CLEAR Lords Of The Roundtable (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -311,10 +294,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gb8464c140da50ad417aeaf8223fe260b3f88a992c6c88bb031d72cccba48a55a",
-		"name": "AAA snow storm (SP LEGGENDARIA 12)",
-		"playtype": "SP"
+		"name": "AAA snow storm (SP LEGGENDARIA 12)"
 	},
 	{
 		"charts": {
@@ -326,10 +308,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Ge0973c181b48cbf54a3f6d14946f867a0ac238c3cd39bc572f9e64601652ace3",
-		"name": "AAA カゴノトリ～弐式～ (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "AAA カゴノトリ～弐式～ (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -341,10 +322,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gb3bb20d0b86bf071d17a94a8a97b089486dcea29956d1e4561c17b0fe02afb36",
-		"name": "AAA (This Is Not) The Angels (SP ANOTHER 11)",
-		"playtype": "SP"
+		"name": "AAA (This Is Not) The Angels (SP ANOTHER 11)"
 	},
 	{
 		"charts": {
@@ -356,10 +336,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G999a566fdad5912d5ba7bdd4ecad09438215ba1cca2a7085ae7e9404178d44ae",
-		"name": "AAA quasar (SP ANOTHER 11)",
-		"playtype": "SP"
+		"name": "AAA quasar (SP ANOTHER 11)"
 	},
 	{
 		"charts": {
@@ -371,10 +350,9 @@
 			"mode": "single",
 			"value": 8
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gf4e2efb99bcbedcec5afe6128ad9b48c2329bc604e9f3676d8b77e4bc68708f6",
-		"name": "MAX- Sakura Reflection (SP ANOTHER 11)",
-		"playtype": "SP"
+		"name": "MAX- Sakura Reflection (SP ANOTHER 11)"
 	},
 	{
 		"charts": {
@@ -386,10 +364,9 @@
 			"mode": "single",
 			"value": 96
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gd1c17cae156a8cc9993adafce8924bfee58558c51d59eec87c687c281499dc8e",
-		"name": "Get 96% on Wanna Party? (SP ANOTHER 8)",
-		"playtype": "SP"
+		"name": "Get 96% on Wanna Party? (SP ANOTHER 8)"
 	},
 	{
 		"charts": {
@@ -402,10 +379,9 @@
 			"mode": "proportion",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G661132cce7d7b205f4ccc463073f7eccdd8ad0700539f5f86fff216be4a62799",
-		"name": "HARD CLEAR 70% of the charts in the Level 12 (CastHour) folder",
-		"playtype": "SP"
+		"name": "HARD CLEAR 70% of the charts in the Level 12 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -418,10 +394,9 @@
 			"mode": "proportion",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gd064ea10a7d7a330cde62b2047047bb7116f769b56082efb3fef7a95f9c0d125",
-		"name": "AAA 5% of the charts in the Level 12 (CastHour) folder",
-		"playtype": "SP"
+		"name": "AAA 5% of the charts in the Level 12 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -434,10 +409,9 @@
 			"mode": "proportion",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G34bcb7d0ec46bf486014ff7cccaf4b059572a58944d2c31ad628126ac8826358",
-		"name": "AAA 10% of the charts in the Level 11 (CastHour) folder",
-		"playtype": "SP"
+		"name": "AAA 10% of the charts in the Level 11 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -449,10 +423,9 @@
 			"mode": "single",
 			"value": 3
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Ge2ff55571ba96a533f278c0536473d0f16379e306b775cc1c63c20c5c833d201",
-		"name": "EASY CLEAR Mare Nectaris (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "EASY CLEAR Mare Nectaris (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -464,10 +437,9 @@
 			"mode": "single",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G16d80e16e4657d413c93b203c6938432159f53b93dc05ead19dca8614b5f9819",
-		"name": "CLEAR SAMURAI-Scramble (SP LEGGENDARIA 12)",
-		"playtype": "SP"
+		"name": "CLEAR SAMURAI-Scramble (SP LEGGENDARIA 12)"
 	},
 	{
 		"charts": {
@@ -479,10 +451,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G2f376d12b93d701297b28c53b6bbbce4b44a61156bc739288a2ed70fd4f6c5d1",
-		"name": "HARD CLEAR 疾風迅雷 (SP LEGGENDARIA 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR 疾風迅雷 (SP LEGGENDARIA 12)"
 	},
 	{
 		"charts": {
@@ -494,10 +465,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G48490053cd8c865b0b7341b8728f8dcfc6b22c7a93a06cd14b328d0811e12b36",
-		"name": "HARD CLEAR Verflucht (SP LEGGENDARIA 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR Verflucht (SP LEGGENDARIA 12)"
 	},
 	{
 		"charts": {
@@ -509,10 +479,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G53a3bad5acd46acc7ec0334bc4b4b2c317583e398e097bd219e148ccde0541f1",
-		"name": "EX HARD CLEAR お菓子の王国 (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "EX HARD CLEAR お菓子の王国 (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -524,10 +493,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gfbab43227c6ad53f49a2333114f97412467b657164750f0f5288a64982f42eeb",
-		"name": "AAA BITTER CHOCOLATE STRIKER (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "AAA BITTER CHOCOLATE STRIKER (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -539,10 +507,9 @@
 			"mode": "single",
 			"value": 8
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G19c09c3f23a7f2216d7a0fda3a525ce614f772a4fd455ccf40aa7f8f7a26b7ab",
-		"name": "MAX- 千年ノ理 (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "MAX- 千年ノ理 (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -554,10 +521,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gd29cd861d7aaf7d27050950e69126f8f92813e96804f440458f3009a4079cbd6",
-		"name": "AAA Blue Rain (SP LEGGENDARIA 12)",
-		"playtype": "SP"
+		"name": "AAA Blue Rain (SP LEGGENDARIA 12)"
 	},
 	{
 		"charts": {
@@ -569,10 +535,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gfb59b854a2d0f8dfc56cab487f4b43f4098cad073bfca42b99edb125d20e9c61",
-		"name": "AAA Rave Cannon (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "AAA Rave Cannon (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -584,10 +549,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G08ed442b3f0210371e99276442281c34d4f6703bbb301a229502ef5054f1ffd9",
-		"name": "AAA naughty girl@Queen's Palace (SP ANOTHER 11)",
-		"playtype": "SP"
+		"name": "AAA naughty girl@Queen's Palace (SP ANOTHER 11)"
 	},
 	{
 		"charts": {
@@ -599,10 +563,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G2be92dc54829e1da6016d6145b324b1a43e1ecefca262dd4bfdb68a9f35cc43f",
-		"name": "AAA L.F.O (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "AAA L.F.O (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -614,10 +577,9 @@
 			"mode": "single",
 			"value": 8
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G8392d2f9da662e5a7034af3e0264bb447e290d539ba4dc46ddc185f5063965d5",
-		"name": "MAX- quasar (SP ANOTHER 11)",
-		"playtype": "SP"
+		"name": "MAX- quasar (SP ANOTHER 11)"
 	},
 	{
 		"charts": {
@@ -629,10 +591,9 @@
 			"mode": "single",
 			"value": 99
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G786aa0be57281d82ebe04aefdc20f4722bb6ace8e9bcb8768db4db03b1375005",
-		"name": "Get 99% on Sleepless days (SP ANOTHER 9)",
-		"playtype": "SP"
+		"name": "Get 99% on Sleepless days (SP ANOTHER 9)"
 	},
 	{
 		"charts": {
@@ -644,10 +605,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gf0c07a8501880c2fe56826d3c8c852563851d40b47fde07c1aeff780a83cdc2b",
-		"name": "AAA Ganymede (SP ANOTHER 11)",
-		"playtype": "SP"
+		"name": "AAA Ganymede (SP ANOTHER 11)"
 	},
 	{
 		"charts": {
@@ -660,10 +620,9 @@
 			"mode": "proportion",
 			"value": 3
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G8eb9a981f9671033f078269ac98b382f46f844649a30cea54b3be26332fdfc47",
-		"name": "EASY CLEAR 100% of the charts in the Level 12 (CastHour) folder",
-		"playtype": "SP"
+		"name": "EASY CLEAR 100% of the charts in the Level 12 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -676,10 +635,9 @@
 			"mode": "proportion",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G0e1c4e8dc2bd01a3437ef728654b0edb63ad1b57f869e5cee651c1fe289b2b97",
-		"name": "AAA 30% of the charts in the Level 12 (CastHour) folder",
-		"playtype": "SP"
+		"name": "AAA 30% of the charts in the Level 12 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -691,10 +649,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G0195d9b1603ed74eaa038f5363cdd676eeb63b30a386746cb6b349aad6f09c96",
-		"name": "EX HARD CLEAR VANESSA (SP LEGGENDARIA 12)",
-		"playtype": "SP"
+		"name": "EX HARD CLEAR VANESSA (SP LEGGENDARIA 12)"
 	},
 	{
 		"charts": {
@@ -706,10 +663,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gbd03b00f85711c94f00fea90089076f48a9cccda65f23bd3ed3f4fb35e01ec8c",
-		"name": "EX HARD CLEAR 共鳴遊戯の華 (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "EX HARD CLEAR 共鳴遊戯の華 (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -721,10 +677,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G8e816f07a69b9ef1e0004ff1b0cba95fc41149a4b01c52f98f20f3f00ae07be3",
-		"name": "EX HARD CLEAR Sigmund (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "EX HARD CLEAR Sigmund (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -736,10 +691,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G6c8e79d4902b4cf743a8afe439b1a1e0abdb7f8f21eb5039c6a629532e60a906",
-		"name": "HARD CLEAR Mare Nectaris (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR Mare Nectaris (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -751,10 +705,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G57eb13343a058c69a5698d1ac367b92fd72ceb3da411e8dac0398a0768a5a4bb",
-		"name": "HARD CLEAR 冥 (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR 冥 (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -766,10 +719,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G7f083af0e8e9947647a900cdda9c31d034508dbaae52c0409443a3b3ad21d59f",
-		"name": "HARD CLEAR ICARUS (SP LEGGENDARIA 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR ICARUS (SP LEGGENDARIA 12)"
 	},
 	{
 		"charts": {
@@ -781,10 +733,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G3d1c87e9352934da393602ab72e09d975ead0e6967d11f55fedb62c45d5859f5",
-		"name": "AAA Red. by Full Metal Jacket (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "AAA Red. by Full Metal Jacket (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -796,10 +747,9 @@
 			"mode": "single",
 			"value": 8
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G83e9153d064fa975a7c189ce7e881fa9f086350f4499aff3f3358033075b75ec",
-		"name": "MAX- Summerlights(IIDX Edition) (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "MAX- Summerlights(IIDX Edition) (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -811,10 +761,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gd2a24516591b18582a3eff64136f2099cc177215a0e3efcedff01890733c0788",
-		"name": "AAA Ancient Scapes (SP LEGGENDARIA 12)",
-		"playtype": "SP"
+		"name": "AAA Ancient Scapes (SP LEGGENDARIA 12)"
 	},
 	{
 		"charts": {
@@ -826,10 +775,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G3663a80447cd30ab89384962e8e6b2b8c2ccbb4c7abd1c96b149bc8181c5eba2",
-		"name": "AAA Elemental Creation (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "AAA Elemental Creation (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -841,10 +789,9 @@
 			"mode": "single",
 			"value": 8
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G4c7474d686b61360150065ea71908db503e9052767e39c7551d7cc4ccdbd2552",
-		"name": "MAX- spiral galaxy (SP LEGGENDARIA 12)",
-		"playtype": "SP"
+		"name": "MAX- spiral galaxy (SP LEGGENDARIA 12)"
 	},
 	{
 		"charts": {
@@ -856,10 +803,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G324fc7b7a4f6b9c6c5600fc99efecd473ec3485a1dc8108be00b9682bf41bbf2",
-		"name": "AAA Dances with Snow Fairies (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "AAA Dances with Snow Fairies (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -871,10 +817,9 @@
 			"mode": "single",
 			"value": 8
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G886a5a0c91eb4a0ad9402c05b12e8f6d3fc652d3effea71d3485cf50a7dbd8c6",
-		"name": "MAX- AA (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "MAX- AA (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -886,10 +831,9 @@
 			"mode": "single",
 			"value": 99
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G3af77e883209462687918d0f436c1596d6e3fd6678841f6785e08361a75af46f",
-		"name": "Get 99% on CROSSROAD ～Left Story～ (SP ANOTHER 10)",
-		"playtype": "SP"
+		"name": "Get 99% on CROSSROAD ～Left Story～ (SP ANOTHER 10)"
 	},
 	{
 		"charts": {
@@ -901,10 +845,9 @@
 			"mode": "single",
 			"value": 97
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G78340b6bc4ce95763f797550a2941a04f1bcfcb8df5d4091d1a9ea5c24a1f7e2",
-		"name": "Get 97% on Wanna Party? (SP LEGGENDARIA 11)",
-		"playtype": "SP"
+		"name": "Get 97% on Wanna Party? (SP LEGGENDARIA 11)"
 	},
 	{
 		"charts": {
@@ -917,10 +860,9 @@
 			"mode": "proportion",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Ga96793d89c4924914e2a6f306277badffacf0990af24b2b3674e96f466951615",
-		"name": "HARD CLEAR 100% of the charts in the Level 12 (CastHour) folder",
-		"playtype": "SP"
+		"name": "HARD CLEAR 100% of the charts in the Level 12 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -933,10 +875,9 @@
 			"mode": "proportion",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G472d131ccef571f9cb2ee06e7261214f49bbc1e36a119e3c0cc366c98f23f500",
-		"name": "AAA 70% of the charts in the Level 12 (CastHour) folder",
-		"playtype": "SP"
+		"name": "AAA 70% of the charts in the Level 12 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -949,10 +890,9 @@
 			"mode": "proportion",
 			"value": 8
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G09f78b3a6b607c39b2fca68a7a4054323bb750b2fe70dc85ab13c72bf3d75860",
-		"name": "MAX- 15% of the charts in the Level 12 (CastHour) folder",
-		"playtype": "SP"
+		"name": "MAX- 15% of the charts in the Level 12 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -964,10 +904,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G7ac29a0cb0c338d930ffa76835b20049d1a81f81f69c794d3dcac8dfc6a0141e",
-		"name": "EX HARD CLEAR X-DEN (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "EX HARD CLEAR X-DEN (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -979,10 +918,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Ge7067c5fb15f67bac212093da736ffbd04aa13e2915ddbc4a08450d0d3ec4a97",
-		"name": "EX HARD CLEAR Mare Nectaris (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "EX HARD CLEAR Mare Nectaris (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -994,10 +932,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gacb2b831d861daf8f646169e0836465c9d1b75c879f9cae86ef70e37ac4526c2",
-		"name": "EX HARD CLEAR 冥 (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "EX HARD CLEAR 冥 (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1009,10 +946,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G18170eb62353e8bb450fcc44df2cd763b64c2dd853d943e310cf372599b7055f",
-		"name": "EX HARD CLEAR ICARUS (SP LEGGENDARIA 12)",
-		"playtype": "SP"
+		"name": "EX HARD CLEAR ICARUS (SP LEGGENDARIA 12)"
 	},
 	{
 		"charts": {
@@ -1024,10 +960,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gad8194c5f9050efcb8b12e150be83682769a61897dbd16d19851f6732951f88a",
-		"name": "FULL COMBO KAMAITACHI (SP LEGGENDARIA 12)",
-		"playtype": "SP"
+		"name": "FULL COMBO KAMAITACHI (SP LEGGENDARIA 12)"
 	},
 	{
 		"charts": {
@@ -1039,10 +974,9 @@
 			"mode": "single",
 			"value": 3700
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G5014da556b19342d379352a3befaff4d7271a65174dc91d8278c0c8295d2a429",
-		"name": "Get a score of 3,700 on 冥 (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "Get a score of 3,700 on 冥 (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1054,10 +988,9 @@
 			"mode": "single",
 			"value": 3600
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G2ff00b659f0ddf8610d606d53b02fdc8df69ff639db5c246f6c80a525c458db7",
-		"name": "Get a score of 3,600 on AA (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "Get a score of 3,600 on AA (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1069,14 +1002,16 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gd0616dd15eec949ccd49d727b22a5fd33352fdab418e8d464313b357aca7fa13",
-		"name": "AAA 灼熱Beach Side Bunny (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "AAA 灼熱Beach Side Bunny (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e10e17abee5636", "C19d35e10da1d3c16cda"],
+			"data": [
+				"C19d35e10e17abee5636",
+				"C19d35e10da1d3c16cda"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -1084,10 +1019,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G12f2b73cd600478a0c16c0fc6b382005b3a933865f3d11de127e499de9bcfb60",
-		"name": "AAA either Thor's Hammer (SP ANOTHER 12) or DIAVOLO (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "AAA either Thor's Hammer (SP ANOTHER 12) or DIAVOLO (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1100,10 +1034,9 @@
 			"mode": "proportion",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G2b883ffdbe765eaaebfac6e83bc0081b9c997ca0e3d1035d02ddff07d7fef2e1",
-		"name": "AAA 100% of the charts in the Level 12 (CastHour) folder",
-		"playtype": "SP"
+		"name": "AAA 100% of the charts in the Level 12 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -1116,10 +1049,9 @@
 			"mode": "proportion",
 			"value": 8
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G61da2b79d0434ff044ceff76352d9ba9748775d1e8baf43124c8ecb6b1c8d502",
-		"name": "MAX- 70% of the charts in the Level 12 (CastHour) folder",
-		"playtype": "SP"
+		"name": "MAX- 70% of the charts in the Level 12 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -1131,10 +1063,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G1c9806798380fd61a84e0b9c110c728cca54f643eadf620373f84cf042d95e36",
-		"name": "EX HARD CLEAR 卑弥呼 (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "EX HARD CLEAR 卑弥呼 (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1146,10 +1077,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gca3a6b342a136b9b6b7427ab653d76a516aadc1c9b0a7b079b98d5c04b984118",
-		"name": "EX HARD CLEAR Verflucht (SP LEGGENDARIA 12)",
-		"playtype": "SP"
+		"name": "EX HARD CLEAR Verflucht (SP LEGGENDARIA 12)"
 	},
 	{
 		"charts": {
@@ -1161,10 +1091,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gf151ed2cde8b6da5011d963a3f4e593c6010fd92646a7fb1c6d6738c2920a277",
-		"name": "EX HARD CLEAR 灼熱Beach Side Bunny (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "EX HARD CLEAR 灼熱Beach Side Bunny (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1176,10 +1105,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G2df81066938bb2ff7d0e166f026ec253a27fa4e8adbfe55e030872213dbb0af9",
-		"name": "EX HARD CLEAR 疾風迅雷 (SP LEGGENDARIA 12)",
-		"playtype": "SP"
+		"name": "EX HARD CLEAR 疾風迅雷 (SP LEGGENDARIA 12)"
 	},
 	{
 		"charts": {
@@ -1191,10 +1119,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G63a7f069f8942865d6ddf7b51bd8c5e1bc051671c5e3b565a8b1544d46c73b79",
-		"name": "AAA 冥 (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "AAA 冥 (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1206,10 +1133,9 @@
 			"mode": "single",
 			"value": 8
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gb6469efe0ad1fe92949ed1ccfc26115a2620cdd7be6ee041e99faaf6b571b90b",
-		"name": "MAX- BLACK.by X-Cross Fade (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "MAX- BLACK.by X-Cross Fade (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1221,10 +1147,9 @@
 			"mode": "single",
 			"value": 98
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G71cca18c17f15bbb8920c269f4c989fd064b750a8e4748b1ad767116f38a6e77",
-		"name": "Get 98% on LIGHTNING STRIKES (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "Get 98% on LIGHTNING STRIKES (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1236,10 +1161,9 @@
 			"mode": "single",
 			"value": 8
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gb07e04f91ccfc1eb1502800e1f54f7197829b7d1443838f5b7f2835d5d702abb",
-		"name": "MAX- Initiation (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "MAX- Initiation (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1252,10 +1176,9 @@
 			"mode": "proportion",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gfa235ed890bbc75bab98cd88bc07ebd83f65ce5b14ce3249af1fdf9d816be726",
-		"name": "AAA 95% of the charts in the Level 12 (CastHour) folder",
-		"playtype": "SP"
+		"name": "AAA 95% of the charts in the Level 12 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -1268,10 +1191,9 @@
 			"mode": "proportion",
 			"value": 8
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Ga9ed7c31b4262f6e5dfc58b3d00a8ccec11d0ba5e0b2e47c57b220919785b373",
-		"name": "MAX- 40% of the charts in the Level 12 (CastHour) folder",
-		"playtype": "SP"
+		"name": "MAX- 40% of the charts in the Level 12 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -1283,10 +1205,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Ga0695b5a44b0fc387d0fd8e7289fecb6a2254231bee6c5624695e44192f77d23",
-		"name": "HARD CLEAR Bad Maniacs (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR Bad Maniacs (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1298,10 +1219,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gbbda7dfac9675109f47f73efe54520db3d16f51876fd8a86e29eac5ec39a534e",
-		"name": "HARD CLEAR MENDES (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR MENDES (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1313,10 +1233,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G7265d66249d1d9bd54c1ae06b6c1936b984beef4a154ee137412bcf05d75b8e3",
-		"name": "HARD CLEAR quell～the seventh slave～ (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR quell～the seventh slave～ (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1328,10 +1247,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G063ef72be4cc1cb237dfa267d9f400b66cf337136c952daf4334df7ae7e41bfc",
-		"name": "HARD CLEAR 天空の夜明け (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR 天空の夜明け (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1343,10 +1261,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Ga56e3b9b26905c5a45da42bdd7080ba5341ad94d7a3a545b365fe17992cb2b65",
-		"name": "HARD CLEAR HAERETICUS (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR HAERETICUS (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1358,10 +1275,9 @@
 			"mode": "single",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gb8d3310edb53dd5f6a5d08da0f6e18e75ebca930698e39abe36a52662718f1b2",
-		"name": "CLEAR BLACK.by X-Cross Fade (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "CLEAR BLACK.by X-Cross Fade (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1373,10 +1289,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gb22d2a97955f9932a348b1596b6476ed6a7bdbc1d080b59a73cfd9fba6ebb7de",
-		"name": "HARD CLEAR Watch Out Pt.2 (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR Watch Out Pt.2 (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1388,10 +1303,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G8f28381abceaa26a9c3a76d3cfb7a630450da1dddb8cd82171f9a7b5173b8649",
-		"name": "EX HARD CLEAR era (nostalmix) (SP ANOTHER 9)",
-		"playtype": "SP"
+		"name": "EX HARD CLEAR era (nostalmix) (SP ANOTHER 9)"
 	},
 	{
 		"charts": {
@@ -1403,10 +1317,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G254bc6d16c8ed54da6d7ad88903a46b8500d24049537901e070055347379986d",
-		"name": "AAA mosaic (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "AAA mosaic (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1418,10 +1331,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G4b25b28d4afdfa58fee55c84a2963e1886886ae515ccab6274cd66a601b55c24",
-		"name": "AAA Hypersonik (SP ANOTHER 10)",
-		"playtype": "SP"
+		"name": "AAA Hypersonik (SP ANOTHER 10)"
 	},
 	{
 		"charts": {
@@ -1433,10 +1345,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G7c5055482429522f7482e7bdb97036d9a2c7e93f294ad4b39660d8e971884c29",
-		"name": "AAA PENDUAL TALISMAN (SP ANOTHER 11)",
-		"playtype": "SP"
+		"name": "AAA PENDUAL TALISMAN (SP ANOTHER 11)"
 	},
 	{
 		"charts": {
@@ -1448,10 +1359,9 @@
 			"mode": "single",
 			"value": 8
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G60b4be3a6aca95dd43fa1bf62215deabba42f7a40ab3e3eef78916705d0a38ea",
-		"name": "MAX- Dazzlin' Darlin (SP ANOTHER 10)",
-		"playtype": "SP"
+		"name": "MAX- Dazzlin' Darlin (SP ANOTHER 10)"
 	},
 	{
 		"charts": {
@@ -1463,10 +1373,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G332b29e41e4069bf16d5b4718408c8a8fe446aff4492c26b7ab4389a7df4286d",
-		"name": "AAA Make Me Your Own (SP ANOTHER 10)",
-		"playtype": "SP"
+		"name": "AAA Make Me Your Own (SP ANOTHER 10)"
 	},
 	{
 		"charts": {
@@ -1478,10 +1387,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G89dd2e38a992365ad2f80eb39fee7e686cb13c3a9a1343b266913fa63afa5a79",
-		"name": "AAA Line 4 Ruin (SP ANOTHER 11)",
-		"playtype": "SP"
+		"name": "AAA Line 4 Ruin (SP ANOTHER 11)"
 	},
 	{
 		"charts": {
@@ -1494,10 +1402,9 @@
 			"mode": "proportion",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G86ef585d023d76a34105a87a29532201fa5cf0977e5b1bb7c4cdbbb2bc0d7d02",
-		"name": "CLEAR 50% of the charts in the Level 12 (CastHour) folder",
-		"playtype": "SP"
+		"name": "CLEAR 50% of the charts in the Level 12 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -1510,10 +1417,9 @@
 			"mode": "proportion",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G45fecf25975b96b93ce9c81fac3fccac618516935bf278c025e5707312de92f2",
-		"name": "AAA 5% of the charts in the Level 11 (CastHour) folder",
-		"playtype": "SP"
+		"name": "AAA 5% of the charts in the Level 11 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -1526,10 +1432,9 @@
 			"mode": "proportion",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gb19e2023305b87213154c3a28e8c858141cf3fa113b6a15815b5d2b12009938d",
-		"name": "AAA 10% of the charts in the Level 10 (CastHour) folder",
-		"playtype": "SP"
+		"name": "AAA 10% of the charts in the Level 10 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -1541,10 +1446,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G29a70b3f17eae4f3b8256d0d832470d278a48147e839d4238e8a082193a96502",
-		"name": "HARD CLEAR AA (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR AA (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1556,10 +1460,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gcf40d565e86bf83a3eef2a7cb82deccf0addefa7221e7d9d4ea81d0d26da3d8d",
-		"name": "HARD CLEAR Scripted Connection⇒ A mix (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR Scripted Connection⇒ A mix (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1571,10 +1474,9 @@
 			"mode": "single",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gbabb92af4e18584e9641f97cc7bd63ebadffa8ca1fe410f56bc8cee0b8f308bf",
-		"name": "CLEAR Dr. Chemical & Killing Machine (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "CLEAR Dr. Chemical & Killing Machine (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1591,10 +1493,9 @@
 			"mode": "single",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gcd568e1f0bc9ed6c4c1e2736f7cfda2eef649931562bfbd79b4e40c07c8ecd4b",
-		"name": "CLEAR any one of Red. by Full Metal Jacket (SP ANOTHER 12), Watch Out Pt.2 (SP ANOTHER 12), 199024club -Re:BounceKiller- (SP ANOTHER 12) or Snake Stick (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "CLEAR any one of Red. by Full Metal Jacket (SP ANOTHER 12), Watch Out Pt.2 (SP ANOTHER 12), 199024club -Re:BounceKiller- (SP ANOTHER 12) or Snake Stick (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1606,10 +1507,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gfaf0ebec02f07c36c9f09efe37acd925cefcebbf092ccc3b40a23bf3b072835f",
-		"name": "HARD CLEAR 雪月花 (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR 雪月花 (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1621,10 +1521,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gea588214e18bc3879ee62164eb06c7356230f35be3ae75a71d83d01645532628",
-		"name": "AAA Sakura Reflection (SP ANOTHER 11)",
-		"playtype": "SP"
+		"name": "AAA Sakura Reflection (SP ANOTHER 11)"
 	},
 	{
 		"charts": {
@@ -1636,10 +1535,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G9973d2b6a16c70d30b0d302ace1ac6d523a4d6d7d1847134dc3c67d3fde218e7",
-		"name": "AAA Daisuke (SP ANOTHER 10)",
-		"playtype": "SP"
+		"name": "AAA Daisuke (SP ANOTHER 10)"
 	},
 	{
 		"charts": {
@@ -1651,10 +1549,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gfbbd23ea00d0c1e07e787e7f9e8a969bb1d3e50016037e7f831abcc8a76051d0",
-		"name": "AAA NO LIMIT -オレ達に限界は無い- (SP ANOTHER 10)",
-		"playtype": "SP"
+		"name": "AAA NO LIMIT -オレ達に限界は無い- (SP ANOTHER 10)"
 	},
 	{
 		"charts": {
@@ -1666,10 +1563,9 @@
 			"mode": "single",
 			"value": 8
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G7a1c16f3d0dfac597511a5ef7f102b8f05f1859aa5bb347ee980e6ffe9124153",
-		"name": "MAX- Sleepless days (SP ANOTHER 9)",
-		"playtype": "SP"
+		"name": "MAX- Sleepless days (SP ANOTHER 9)"
 	},
 	{
 		"charts": {
@@ -1682,10 +1578,9 @@
 			"mode": "proportion",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gb372c466966afbf3ebf70c5d3b701dab56fd376965797a6864ed163b20d2868a",
-		"name": "CLEAR 30% of the charts in the Level 12 (CastHour) folder",
-		"playtype": "SP"
+		"name": "CLEAR 30% of the charts in the Level 12 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -1698,10 +1593,9 @@
 			"mode": "proportion",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gcaf664e666e9d567941bddc60734e270cc273456074b66fa81921f0718419584",
-		"name": "AAA 1% of the charts in the Level 11 (CastHour) folder",
-		"playtype": "SP"
+		"name": "AAA 1% of the charts in the Level 11 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -1714,10 +1608,9 @@
 			"mode": "proportion",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G24421c36c33c601a8ec08fbc4de2713ff7fdbdf14e088fe0a6c4cd640e544d79",
-		"name": "AAA 5% of the charts in the Level 10 (CastHour) folder",
-		"playtype": "SP"
+		"name": "AAA 5% of the charts in the Level 10 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -1729,10 +1622,9 @@
 			"mode": "single",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G2788eba138e2919d69fc1c78da2af3d03d0dd5923bc816adcd13d977b9a07b51",
-		"name": "CLEAR The Sampling Paradise (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "CLEAR The Sampling Paradise (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1744,10 +1636,9 @@
 			"mode": "single",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G16b48da8eaa90d33762ebdd9157f318a6796c18233c2b7342fd60342c19f5a84",
-		"name": "CLEAR SOLID STATE SQUAD (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "CLEAR SOLID STATE SQUAD (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1759,10 +1650,9 @@
 			"mode": "single",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G89e418fe4063bd4ec408ab6f14fc2adeb8c6b083b78c035e86baa7fb08c49be5",
-		"name": "CLEAR Rave Cannon (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "CLEAR Rave Cannon (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1774,10 +1664,9 @@
 			"mode": "single",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gf6b5d259f395e82c4a0253318916d1ba879518018e59db87bd074794a1b4f744",
-		"name": "CLEAR Highcharge Divolt (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "CLEAR Highcharge Divolt (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1789,10 +1678,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G7036ef4e689adc7193a8e8eb21e35fee512ee1bf77f936a902e703da6039602e",
-		"name": "HARD CLEAR Venom (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "HARD CLEAR Venom (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1804,10 +1692,9 @@
 			"mode": "single",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G167348b8b1dd68884dd7ec4c7889fff8f71ff8d96aece8aac2de550acadab729",
-		"name": "CLEAR Broken (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "CLEAR Broken (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1819,10 +1706,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G809602ca08ef16ac69cbb376195cf646e9a259905283e123c9dff879c6c13594",
-		"name": "AAA 5.1.1. (SP ANOTHER 10)",
-		"playtype": "SP"
+		"name": "AAA 5.1.1. (SP ANOTHER 10)"
 	},
 	{
 		"charts": {
@@ -1834,10 +1720,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gf8ae63ad9fb57853c7431ea5a8ba962da3e2bd0d29df547fa9239642acd1aab8",
-		"name": "AAA chrono diver -fragment- (SP LEGGENDARIA 10)",
-		"playtype": "SP"
+		"name": "AAA chrono diver -fragment- (SP LEGGENDARIA 10)"
 	},
 	{
 		"charts": {
@@ -1849,10 +1734,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G03e0b772b28192e1503552d94e7ca9785d79e74f6682d922b3d8e550723c095c",
-		"name": "AAA ¡Viva! (SP ANOTHER 10)",
-		"playtype": "SP"
+		"name": "AAA ¡Viva! (SP ANOTHER 10)"
 	},
 	{
 		"charts": {
@@ -1864,10 +1748,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G712841f80690c78026f34dcf8ed885545168bcb065afa9987038c577c703fe0f",
-		"name": "AAA BRIDAL FESTIVAL !!! (SP ANOTHER 9)",
-		"playtype": "SP"
+		"name": "AAA BRIDAL FESTIVAL !!! (SP ANOTHER 9)"
 	},
 	{
 		"charts": {
@@ -1880,10 +1763,9 @@
 			"mode": "proportion",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G46b5ce2a764563eb431d3270836e49fd911c64cd502495d10bf2da1bba4dc01c",
-		"name": "CLEAR 15% of the charts in the Level 12 (CastHour) folder",
-		"playtype": "SP"
+		"name": "CLEAR 15% of the charts in the Level 12 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -1896,10 +1778,9 @@
 			"mode": "proportion",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G04446d20628c449092f4e5a74c5416315fde66b6fa9e9977f6d074619451f6bd",
-		"name": "HARD CLEAR 5% of the charts in the Level 12 (CastHour) folder",
-		"playtype": "SP"
+		"name": "HARD CLEAR 5% of the charts in the Level 12 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -1912,10 +1793,9 @@
 			"mode": "proportion",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G911d105e08b4c74f2ddb698efbb952b51753cb7dba4e35ad512e6104fd1064b6",
-		"name": "AAA 1% of the charts in the Level 10 (CastHour) folder",
-		"playtype": "SP"
+		"name": "AAA 1% of the charts in the Level 10 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -1927,10 +1807,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gab1c4a139570cfbee48db6c96f66cd39486d99911771340f11e05533aa4b3287",
-		"name": "HARD CLEAR quasar (SP ANOTHER 11)",
-		"playtype": "SP"
+		"name": "HARD CLEAR quasar (SP ANOTHER 11)"
 	},
 	{
 		"charts": {
@@ -1942,10 +1821,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G3b2d3447cae04f856cb6c51a4d924aeabefc2034c1dd8a823bd134c04cc3b9db",
-		"name": "HARD CLEAR Digitank System (SP ANOTHER 11)",
-		"playtype": "SP"
+		"name": "HARD CLEAR Digitank System (SP ANOTHER 11)"
 	},
 	{
 		"charts": {
@@ -1957,10 +1835,9 @@
 			"mode": "single",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G51eae5902c3a14284b515cf85001a6e94cc195f8b408865bd808074a11b0f947",
-		"name": "CLEAR SPECIAL SUMMER CAMPAIGN! (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "CLEAR SPECIAL SUMMER CAMPAIGN! (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1972,10 +1849,9 @@
 			"mode": "single",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gc275e614ee2303f13e217d7883a35ff4d3507a96f58db9e701023596c91d9a69",
-		"name": "CLEAR sakura storm (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "CLEAR sakura storm (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
@@ -1987,14 +1863,17 @@
 			"mode": "single",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G84b57d80510556b7aa49b3c01d76d4e4c29521d70c34fa97647a37676ea9362a",
-		"name": "CLEAR 千年ノ理 (SP ANOTHER 12)",
-		"playtype": "SP"
+		"name": "CLEAR 千年ノ理 (SP ANOTHER 12)"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e10e37c954e085", "C19d35e10fef1ca4f7d5", "C19d35e10dde016f1746"],
+			"data": [
+				"C19d35e10e37c954e085",
+				"C19d35e10fef1ca4f7d5",
+				"C19d35e10dde016f1746"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -2002,10 +1881,9 @@
 			"mode": "single",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Gf5cc6c22777f61ca37c672458970ffae60a6ffb238343fb0b22a838bba83b9c2",
-		"name": "CLEAR any one of examination leave (SP ANOTHER 11), Macuilxochitl (SP ANOTHER 11) or 532nm (SP ANOTHER 11)",
-		"playtype": "SP"
+		"name": "CLEAR any one of examination leave (SP ANOTHER 11), Macuilxochitl (SP ANOTHER 11) or 532nm (SP ANOTHER 11)"
 	},
 	{
 		"charts": {
@@ -2017,10 +1895,9 @@
 			"mode": "single",
 			"value": 5
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G15ae6ddaa4b63de46dd2371010df7864752996f8e904906faae0feb72c511d1a",
-		"name": "HARD CLEAR SHADE (SP ANOTHER 11)",
-		"playtype": "SP"
+		"name": "HARD CLEAR SHADE (SP ANOTHER 11)"
 	},
 	{
 		"charts": {
@@ -2032,10 +1909,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G0d44be3bae50f7554f0e696e39b726926f6bb750fd49426c848c84ed9bcbbaad",
-		"name": "AAA Element of SPADA (SP ANOTHER 9)",
-		"playtype": "SP"
+		"name": "AAA Element of SPADA (SP ANOTHER 9)"
 	},
 	{
 		"charts": {
@@ -2047,10 +1923,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G2a931695fbcb409c4e88590d1af4887a4b41c5787c625a45b2ca7b3a672fd034",
-		"name": "AAA the trigger of innocence (SP ANOTHER 9)",
-		"playtype": "SP"
+		"name": "AAA the trigger of innocence (SP ANOTHER 9)"
 	},
 	{
 		"charts": {
@@ -2062,10 +1937,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G00122bef622fadcfd27c3ae3472bc8f5a929a64ad5dd62f7dd7e6c67e595766f",
-		"name": "AAA Sweet Clapper (SP ANOTHER 10)",
-		"playtype": "SP"
+		"name": "AAA Sweet Clapper (SP ANOTHER 10)"
 	},
 	{
 		"charts": {
@@ -2078,10 +1952,9 @@
 			"mode": "proportion",
 			"value": 4
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "G39e38988b5fff299596322caf2d7e522d5af8c373560b3bd592fa58992a67a58",
-		"name": "CLEAR 10% of the charts in the Level 12 (CastHour) folder",
-		"playtype": "SP"
+		"name": "CLEAR 10% of the charts in the Level 12 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -2094,10 +1967,9 @@
 			"mode": "proportion",
 			"value": 7
 		},
-		"game": "iidx",
+		"game": "iidx-sp",
 		"goalID": "Ge1e31f0d0cbb42a4ade9ef4955f2e24527fdd26f43eac8d5be6f8df7b897d8f0",
-		"name": "AAA 1% of the charts in the Level 9 (CastHour) folder",
-		"playtype": "SP"
+		"name": "AAA 1% of the charts in the Level 9 (CastHour) folder"
 	},
 	{
 		"charts": {
@@ -2114,10 +1986,9 @@
 			"mode": "single",
 			"value": 9
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G1d5ca7dbac64333501d2addcdc5204b8f67ff97d8816b31148de032b3f88143b",
-		"name": "S any one of Paradission (ADV 12), Decoy (ADV 12), NEO GRAVITY (ADV 12) or Celestial stinger (ADV 12)",
-		"playtype": "Single"
+		"name": "S any one of Paradission (ADV 12), Decoy (ADV 12), NEO GRAVITY (ADV 12) or Celestial stinger (ADV 12)"
 	},
 	{
 		"charts": {
@@ -2129,10 +2000,9 @@
 			"mode": "single",
 			"value": 9
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Ga5f928c598496bb359148b3a369b2c39803a9e65829150f0719b5de89856350e",
-		"name": "S any chart in the Level 13 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "S any chart in the Level 13 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2145,14 +2015,17 @@
 			"mode": "absolute",
 			"value": 8
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Gf9361811b028db747f42efac21279b2309cc60b6c4928c2995f7d5dd44d003b1",
-		"name": "AAA+ 3 charts in the Level 14 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AAA+ 3 charts in the Level 14 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e120e2bd10f710", "C19d35e1207bcf55ca00", "C19d35e120dd312d5101"],
+			"data": [
+				"C19d35e120e2bd10f710",
+				"C19d35e1207bcf55ca00",
+				"C19d35e120dd312d5101"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -2160,10 +2033,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G37a14b574a6fa69869b81853cd18acc23ca6cc8e5a0e66ba52bc50d2adb37bb4",
-		"name": "AAA any one of The First Step (EXH 14), EGOISM -Rebuild- (EXH 14) or Still Lonesome (EXH 14)",
-		"playtype": "Single"
+		"name": "AAA any one of The First Step (EXH 14), EGOISM -Rebuild- (EXH 14) or Still Lonesome (EXH 14)"
 	},
 	{
 		"charts": {
@@ -2176,10 +2048,9 @@
 			"mode": "absolute",
 			"value": 7
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G7fe33015d02f9b19626121a96480e12cbe06905f3a33252b64ec9927857050e3",
-		"name": "AAA 5 charts in the Level 15 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AAA 5 charts in the Level 15 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2192,10 +2063,9 @@
 			"mode": "absolute",
 			"value": 6
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G26c265e7188e5a1536a818eb38fda52eaee3bfd7e71b3e1f029e0262ea6a782c",
-		"name": "AA+ 20 charts in the Level 15 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AA+ 20 charts in the Level 15 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2208,10 +2078,9 @@
 			"mode": "absolute",
 			"value": 2
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G94c2a3d6e936cf946d7b870caaed917eb9a00d644f68ac514387a13a1356b2c1",
-		"name": "EXCESSIVE CLEAR 10 charts in the Level 15 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "EXCESSIVE CLEAR 10 charts in the Level 15 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2224,10 +2093,9 @@
 			"mode": "absolute",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G909ef14ed7b214a25332693fe623ae65e2e0468f91def016d7a77f8d5779af46",
-		"name": "CLEAR 30 charts in the Level 15 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "CLEAR 30 charts in the Level 15 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2240,14 +2108,17 @@
 			"mode": "absolute",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G604f3063c34494062b11e181543cf881d408b67311695f750927b3f907e75cf5",
-		"name": "CLEAR 10 charts in the Level 16 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "CLEAR 10 charts in the Level 16 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e11b34740b1895", "C19d35e11dd0d9664428", "C19d35e11ccba56d68b0"],
+			"data": [
+				"C19d35e11b34740b1895",
+				"C19d35e11dd0d9664428",
+				"C19d35e11ccba56d68b0"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -2255,10 +2126,9 @@
 			"mode": "single",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Gd95a09ddc1ce7d3d139c7c622883d58c5541127c94d3fea1c3828f912ca412f0",
-		"name": "CLEAR any one of 孤独の番人 (EXH 16), 爆なな☆てすとロイヤー (EXH 16) or ポメグラネイト (EXH 16)",
-		"playtype": "Single"
+		"name": "CLEAR any one of 孤独の番人 (EXH 16), 爆なな☆てすとロイヤー (EXH 16) or ポメグラネイト (EXH 16)"
 	},
 	{
 		"charts": {
@@ -2271,10 +2141,9 @@
 			"mode": "absolute",
 			"value": 3
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G6f51d83a87ea6468d36357d2fbebad8248a1db01503d409f7bced22a17d21199",
-		"name": "ULTIMATE CHAIN 3 charts in the Level 13 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "ULTIMATE CHAIN 3 charts in the Level 13 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2287,10 +2156,9 @@
 			"mode": "absolute",
 			"value": 9
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G16448646d8f0ee92742e50607460ed9ab36ce77078f83336592c060360326d59",
-		"name": "S 3 charts in the Level 14 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "S 3 charts in the Level 14 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2303,14 +2171,17 @@
 			"mode": "absolute",
 			"value": 8
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G39a50e57d5a90612ce18d55ad410299f854a5d88c439582fd51facdbf9d338f1",
-		"name": "AAA+ 4 charts in the Level 15 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AAA+ 4 charts in the Level 15 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e11f958b637f1e", "C19d35e11aceb41230d4", "C19d35e11eddc2799df2"],
+			"data": [
+				"C19d35e11f958b637f1e",
+				"C19d35e11aceb41230d4",
+				"C19d35e11eddc2799df2"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -2318,10 +2189,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Gcfebd2e376a3480b9e6c033f117469b765582902c36339422ad9a9898402ee1f",
-		"name": "AAA any one of ARROW RAIN (EXH 16), GAMBOL (dfk SLC rmx) (INF 16) or Juggler's Maddness (EXH 16)",
-		"playtype": "Single"
+		"name": "AAA any one of ARROW RAIN (EXH 16), GAMBOL (dfk SLC rmx) (INF 16) or Juggler's Maddness (EXH 16)"
 	},
 	{
 		"charts": {
@@ -2334,14 +2204,16 @@
 			"mode": "absolute",
 			"value": 7
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Gcf2e16e52eeb5b2c5af03c96e37381eb1a2ca7ed1e5941fafbc297a5553381b0",
-		"name": "AAA 5 charts in the Level 16 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AAA 5 charts in the Level 16 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e12116d1a9fcfc", "C19d35e11bef7119bb6c"],
+			"data": [
+				"C19d35e12116d1a9fcfc",
+				"C19d35e11bef7119bb6c"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -2349,10 +2221,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G60ea64a9d5c8db898668210740f06c79924b37229dca4bda9c6908b2f958bfc6",
-		"name": "AA+ either VALKYRIE ASSAULT (EXH 16) or choux à la crème (EXH 16)",
-		"playtype": "Single"
+		"name": "AA+ either VALKYRIE ASSAULT (EXH 16) or choux à la crème (EXH 16)"
 	},
 	{
 		"charts": {
@@ -2365,10 +2236,9 @@
 			"mode": "absolute",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Gfe519c3456dff488fd95160e05e82566c09f994ef97daea3342ac39b7e5d73ff",
-		"name": "CLEAR 40 charts in the Level 16 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "CLEAR 40 charts in the Level 16 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2381,10 +2251,9 @@
 			"mode": "absolute",
 			"value": 2
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G60e9c01536ddd674ae7da090f6fed232d8de0358a0d253949d780133d12e5bf8",
-		"name": "EXCESSIVE CLEAR 15 charts in the Level 16 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "EXCESSIVE CLEAR 15 charts in the Level 16 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2397,10 +2266,9 @@
 			"mode": "absolute",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Ga6d0023afac9a643d7bfa255e678433ff5d320d4b3de803df57e1385e97a781b",
-		"name": "CLEAR 5 charts in the Level 17 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "CLEAR 5 charts in the Level 17 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2418,10 +2286,9 @@
 			"mode": "single",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G93ee06f15bec2deed7fb4c59221da49da778147972ebc070d3602f8beb78c13c",
-		"name": "CLEAR any one of D1g1t1ze b0dy (MXM 17), 逆さま♥シンデレラパレード (MXM 17), AXION (MXM 17), The Sampling Paradise (P*Light Remix) (EXH 17) or 黎明スケッチブック (MXM 17)",
-		"playtype": "Single"
+		"name": "CLEAR any one of D1g1t1ze b0dy (MXM 17), 逆さま♥シンデレラパレード (MXM 17), AXION (MXM 17), The Sampling Paradise (P*Light Remix) (EXH 17) or 黎明スケッチブック (MXM 17)"
 	},
 	{
 		"charts": {
@@ -2434,10 +2301,9 @@
 			"mode": "absolute",
 			"value": 3
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G2753016668b125fa4c054f8c5044e59ebee545a1cb4aa50f9a95af5e2afd600d",
-		"name": "ULTIMATE CHAIN 4 charts in the Level 14 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "ULTIMATE CHAIN 4 charts in the Level 14 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2450,10 +2316,9 @@
 			"mode": "absolute",
 			"value": 9
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Ga70c91a1d0c0240cfb3c0b3628b4b00e4250208335e09d2efd04cd137325d789",
-		"name": "S 4 charts in the Level 15 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "S 4 charts in the Level 15 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2466,10 +2331,9 @@
 			"mode": "absolute",
 			"value": 8
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G19bb3009f3b3af570179c740657bcd8ce468e0ae1a0cfddf138c31331657bdbc",
-		"name": "AAA+ 4 charts in the Level 16 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AAA+ 4 charts in the Level 16 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2486,10 +2350,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G9f3ef95935d9c7f41602019787938467d1fce5294f7c91850fe3d5840ee13fce",
-		"name": "AAA any one of Glorious Journey (EXH 16), Jack-the-Ripper◆ (EXH 16), 最終鬼畜妹フランドール・S (EXH 16) or KHAMEN BREAK (EXH 16)",
-		"playtype": "Single"
+		"name": "AAA any one of Glorious Journey (EXH 16), Jack-the-Ripper◆ (EXH 16), 最終鬼畜妹フランドール・S (EXH 16) or KHAMEN BREAK (EXH 16)"
 	},
 	{
 		"charts": {
@@ -2502,14 +2365,17 @@
 			"mode": "absolute",
 			"value": 7
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Gf5463e029bcc05da520e5cd0a7964c2cbdc36618c46506212fd5488c22679391",
-		"name": "AAA 5 charts in the Level 17 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AAA 5 charts in the Level 17 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e11f23dafc55df", "C19d35e11e354caa941e", "C19d35e11e0ea3dc1118"],
+			"data": [
+				"C19d35e11f23dafc55df",
+				"C19d35e11e354caa941e",
+				"C19d35e11e0ea3dc1118"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -2517,10 +2383,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G9c1ef5e70be5684ec6d0267e0fc0c526ed9d095338d7d9832ba4fa225daf12d1",
-		"name": "AA+ any one of GERBERA-For Finalists- (EXH 17), JOMANDA (EXH 17) or Destroy (GRV 17)",
-		"playtype": "Single"
+		"name": "AA+ any one of GERBERA-For Finalists- (EXH 17), JOMANDA (EXH 17) or Destroy (GRV 17)"
 	},
 	{
 		"charts": {
@@ -2533,10 +2398,9 @@
 			"mode": "absolute",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G7a12b47023c873d34f89671f2dd3d967af1fbc190ca6565d3a9d4e47a764372f",
-		"name": "CLEAR 50 charts in the Level 17 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "CLEAR 50 charts in the Level 17 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2549,10 +2413,9 @@
 			"mode": "absolute",
 			"value": 2
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G4f2f1e9c58fe75fc1d4adb980abbd4ccef0c8e2a458eebd2dfe5c61e402a1ba4",
-		"name": "EXCESSIVE CLEAR 20 charts in the Level 17 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "EXCESSIVE CLEAR 20 charts in the Level 17 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2564,10 +2427,9 @@
 			"mode": "single",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G7107e4419481cd400f06fe820457cfcc57868665d07f987ef19b129432a7ebf2",
-		"name": "CLEAR any chart in the Level 18 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "CLEAR any chart in the Level 18 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2585,10 +2447,9 @@
 			"mode": "single",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G6888d8c1566ce138427dfdd51ff1e7ebe5a7272b1ebf5ef88c119e0565f2d69c",
-		"name": "CLEAR any one of Booths of Fighters (EXH 17), Nofram (EXH 17), ULTRA B+K (MXM 17), Innocent Azure (MXM 18) or 狂水一華 (MXM 18)",
-		"playtype": "Single"
+		"name": "CLEAR any one of Booths of Fighters (EXH 17), Nofram (EXH 17), ULTRA B+K (MXM 17), Innocent Azure (MXM 18) or 狂水一華 (MXM 18)"
 	},
 	{
 		"charts": {
@@ -2601,10 +2462,9 @@
 			"mode": "absolute",
 			"value": 3
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G943e04101cb28a01426725ec45387a3a9de9bdbb999acaa0478f2e482c4da76b",
-		"name": "ULTIMATE CHAIN 5 charts in the Level 15 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "ULTIMATE CHAIN 5 charts in the Level 15 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2617,10 +2477,9 @@
 			"mode": "absolute",
 			"value": 9
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Ge8bef7d934fe71987f467f45f1c7d335062cc66470775c67f85fde23e8eea88a",
-		"name": "S 5 charts in the Level 16 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "S 5 charts in the Level 16 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2633,14 +2492,17 @@
 			"mode": "absolute",
 			"value": 8
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G202700527e32bf7de07b254e7b5c4a3629e8d15c428a5a1f22d2b20b21232a63",
-		"name": "AAA+ 5 charts in the Level 17 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AAA+ 5 charts in the Level 17 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e11de939fe3f5e", "C19d35e11da7a2b49a00", "C19d35e120185035c8e6"],
+			"data": [
+				"C19d35e11de939fe3f5e",
+				"C19d35e11da7a2b49a00",
+				"C19d35e120185035c8e6"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -2648,10 +2510,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G247303e9e1b7a1c4863c6024ec6e9bba3e8da377cf8ea44b925b296c98594d7e",
-		"name": "AAA any one of CENSORED!! (EXH 17), UROBØROS (EXH 17) or Into The Madness (MXM 17)",
-		"playtype": "Single"
+		"name": "AAA any one of CENSORED!! (EXH 17), UROBØROS (EXH 17) or Into The Madness (MXM 17)"
 	},
 	{
 		"charts": {
@@ -2664,14 +2525,17 @@
 			"mode": "absolute",
 			"value": 7
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G09ee2358ba001fc10bf09472c2f4b1edcf4a512c9a77661baf3cd37464ec0584",
-		"name": "AAA 20 charts in the Level 17 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AAA 20 charts in the Level 17 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e11f8e16a9bb3a", "C19d35e1200edabf797a", "C19d35e11f6e613ef1d7"],
+			"data": [
+				"C19d35e11f8e16a9bb3a",
+				"C19d35e1200edabf797a",
+				"C19d35e11f6e613ef1d7"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -2679,10 +2543,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G56caf3712a9a9805e1ee8eb7fe86673b64314baad10bbfc0e8c86b679051b444",
-		"name": "AA+ any one of She Turns Me On (GRV 18), Enchanté (MXM 18) or KIMIDORI Streak!! (MXM 18)",
-		"playtype": "Single"
+		"name": "AA+ any one of She Turns Me On (GRV 18), Enchanté (MXM 18) or KIMIDORI Streak!! (MXM 18)"
 	},
 	{
 		"charts": {
@@ -2695,10 +2558,9 @@
 			"mode": "absolute",
 			"value": 6
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G698f0bd2b5a3859478a49898f499bad6c84ec7989cec5822b5390ae33fcca96f",
-		"name": "AA+ 50 charts in the Level 17 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AA+ 50 charts in the Level 17 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2711,10 +2573,9 @@
 			"mode": "absolute",
 			"value": 2
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G65278d2891251faf37d35823634a41b75f05843239b9ec80961e1ffc99f023f2",
-		"name": "EXCESSIVE CLEAR 40 charts in the Level 17 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "EXCESSIVE CLEAR 40 charts in the Level 17 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2727,10 +2588,9 @@
 			"mode": "absolute",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Ge7914262f1dabad65f3c12a74f2fe9dc72e622e35bac5a5ab7da601907687c8f",
-		"name": "CLEAR 80 charts in the Level 17 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "CLEAR 80 charts in the Level 17 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2743,10 +2603,9 @@
 			"mode": "absolute",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G9096ca58f8aa719866a945404c0a03fdfb2ab9c6c0cd5628e8e82cfa22ca6162",
-		"name": "CLEAR 10 charts in the Level 18 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "CLEAR 10 charts in the Level 18 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2759,10 +2618,9 @@
 			"mode": "absolute",
 			"value": 3
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G780126a57153930857d9bb1e3a8aa071f60fe58bf3dbf11a49033b0f249fb483",
-		"name": "ULTIMATE CHAIN 5 charts in the Level 16 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "ULTIMATE CHAIN 5 charts in the Level 16 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2775,14 +2633,17 @@
 			"mode": "absolute",
 			"value": 8
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G2f368ae70e177729fbbe2b809198761ee4e374e8d64ecda15495df7a40e02cf2",
-		"name": "AAA+ 40 charts in the Level 17 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AAA+ 40 charts in the Level 17 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e11e8e7534f29c", "C19d35e11d3a7a55cb74", "C19d35e11cf85dbaf63d"],
+			"data": [
+				"C19d35e11e8e7534f29c",
+				"C19d35e11d3a7a55cb74",
+				"C19d35e11cf85dbaf63d"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -2790,10 +2651,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G130f6090577b551ba3a65bb2da44e5807d407c41f9dac35aa4ed259e0eb21d8f",
-		"name": "AAA any one of HE4VEN ～天国へようこそ～ (EXH 17), TOXIC VIBRATION (EXH 17) or False Cross (EXH 17)",
-		"playtype": "Single"
+		"name": "AAA any one of HE4VEN ～天国へようこそ～ (EXH 17), TOXIC VIBRATION (EXH 17) or False Cross (EXH 17)"
 	},
 	{
 		"charts": {
@@ -2806,14 +2666,17 @@
 			"mode": "absolute",
 			"value": 7
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Gc0447d29f102fc5bec6236e7cc2652568c0c32e01fcfb5f1fbc78d204b91b0d0",
-		"name": "AAA 15 charts in the Level 18 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AAA 15 charts in the Level 18 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e11dc9b7fe43ae", "C19d35e11f5114594be5", "C19d35e11ea4d05b7556"],
+			"data": [
+				"C19d35e11dc9b7fe43ae",
+				"C19d35e11f5114594be5",
+				"C19d35e11ea4d05b7556"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -2821,14 +2684,17 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Gf1dbcfa03d5e4496dea64d2093673b70762d6d66a3c5cc19cb329bd34d89841e",
-		"name": "AA+ any one of XROSS THE XOUL (GRV 18), Re：End of a Dream (MXM 18) or ΩVERSOUL (MXM 18)",
-		"playtype": "Single"
+		"name": "AA+ any one of XROSS THE XOUL (GRV 18), Re：End of a Dream (MXM 18) or ΩVERSOUL (MXM 18)"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e11e92fa2b5166", "C19d35e11d4a7886bcae", "C19d35e11e2960cc06d3"],
+			"data": [
+				"C19d35e11e92fa2b5166",
+				"C19d35e11d4a7886bcae",
+				"C19d35e11e2960cc06d3"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -2836,10 +2702,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G8980504c85d097d4b41a7a803ae476a050d2f82d00cb8c648feee4abc228d64c",
-		"name": "AA+ any one of Fin.ArcDeaR (MXM 19), Got more raves？ (HVN 19) or 極圏 (HVN 19)",
-		"playtype": "Single"
+		"name": "AA+ any one of Fin.ArcDeaR (MXM 19), Got more raves？ (HVN 19) or 極圏 (HVN 19)"
 	},
 	{
 		"charts": {
@@ -2852,10 +2717,9 @@
 			"mode": "absolute",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G1ba1112c67f42f72661953a758f9d0fa41798e73337a2e42851bef711e489f92",
-		"name": "CLEAR 90 charts in the Level 18 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "CLEAR 90 charts in the Level 18 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2868,10 +2732,9 @@
 			"mode": "absolute",
 			"value": 2
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G0f51e650348ed098980ff3ef3a09392e01cc66279959e3e6dde3cc502ead527c",
-		"name": "EXCESSIVE CLEAR 30 charts in the Level 18 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "EXCESSIVE CLEAR 30 charts in the Level 18 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2884,10 +2747,9 @@
 			"mode": "absolute",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G1a79132331135eca1bb77173e9ce844490b4624a7ecc5d7ffae02e40f4378404",
-		"name": "CLEAR 7 charts in the Level 19 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "CLEAR 7 charts in the Level 19 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2904,10 +2766,9 @@
 			"mode": "single",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Ge06603c39c07860b82c2d49cfe4303c386e8bd88cfafaf991932963112fbdf39",
-		"name": "CLEAR any one of НУМЛ (MXM 18), ムーニャポヨポヨスッポコニャーゴ (VVD 18), MeteorA (MXM 18) or SuperMiracleEnsemble (MXM 18)",
-		"playtype": "Single"
+		"name": "CLEAR any one of НУМЛ (MXM 18), ムーニャポヨポヨスッポコニャーゴ (VVD 18), MeteorA (MXM 18) or SuperMiracleEnsemble (MXM 18)"
 	},
 	{
 		"charts": {
@@ -2920,10 +2781,9 @@
 			"mode": "absolute",
 			"value": 3
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G3bf0295c50cf8431f0d2c6aa13595d7dc4dcdf0738ed4288453a9047c3f1fe86",
-		"name": "ULTIMATE CHAIN 15 charts in the Level 16 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "ULTIMATE CHAIN 15 charts in the Level 16 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2936,14 +2796,17 @@
 			"mode": "absolute",
 			"value": 9
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G475ca03a09c5035de96d162dbae307e016cb16f14d7215817b5fbf613c88ae35",
-		"name": "S 15 charts in the Level 17 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "S 15 charts in the Level 17 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e11eb0be169eed", "C19d35e11e1c4ce9fa55", "C19d35e120916329931b"],
+			"data": [
+				"C19d35e11eb0be169eed",
+				"C19d35e11e1c4ce9fa55",
+				"C19d35e120916329931b"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -2951,10 +2814,9 @@
 			"mode": "single",
 			"value": 8
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G044dccb6b25fc04451e9100bbfaa3b634dd3556c161f7b4a6c1da40d502913d6",
-		"name": "AAA+ any one of Poison AND÷OR Affection (MXM 17), DIABLOSIS::Nāga (EXH 17) or MilK (MXM 17)",
-		"playtype": "Single"
+		"name": "AAA+ any one of Poison AND÷OR Affection (MXM 17), DIABLOSIS::Nāga (EXH 17) or MilK (MXM 17)"
 	},
 	{
 		"charts": {
@@ -2967,10 +2829,9 @@
 			"mode": "absolute",
 			"value": 7
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G0a1437544cfd3bc60d98e11db00ec4aef55df24454e63fa986d6de3cbd9c02f7",
-		"name": "AAA 30 charts in the Level 18 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AAA 30 charts in the Level 18 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -2983,14 +2844,17 @@
 			"mode": "absolute",
 			"value": 8
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Gfbf6843a90e7657e22782f9cee31c2e6448047a4afae1432d7dffc6b7c1f8305",
-		"name": "AAA+ 15 charts in the Level 18 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AAA+ 15 charts in the Level 18 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e11db98d00c586", "C19d35e11db31802a858", "C19d35e11ca41c6a9a26"],
+			"data": [
+				"C19d35e11db98d00c586",
+				"C19d35e11db31802a858",
+				"C19d35e11ca41c6a9a26"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -2998,14 +2862,17 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G1bd1da343629dd0fa15bcfe24cc5cc0e67f0d67b255c9528b0428e47be9813ad",
-		"name": "AAA any one of REVOLVER (EXH 18), Demise Quartet (EXH 18) or Wish upon Twin Stars (GRV 18)",
-		"playtype": "Single"
+		"name": "AAA any one of REVOLVER (EXH 18), Demise Quartet (EXH 18) or Wish upon Twin Stars (GRV 18)"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e11c4418d22289", "C19d35e11fbaf4bc2192", "C19d35e11f64f3ed2258"],
+			"data": [
+				"C19d35e11c4418d22289",
+				"C19d35e11fbaf4bc2192",
+				"C19d35e11f64f3ed2258"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -3013,10 +2880,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G0515f7a6c498cc4ff2712a4178010910de0454c135b1fd0ea9710a96b019966a",
-		"name": "AA+ any one of Idola (HVN 18), Xevel (MXM 18) or Venomous Firefly (MXM 18)",
-		"playtype": "Single"
+		"name": "AA+ any one of Idola (HVN 18), Xevel (MXM 18) or Venomous Firefly (MXM 18)"
 	},
 	{
 		"charts": {
@@ -3029,10 +2895,9 @@
 			"mode": "absolute",
 			"value": 2
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Ge89577e221b6a55ff840aebd8f9ba403f6e219f9d034ea835e978292ec1cb479",
-		"name": "EXCESSIVE CLEAR 75 charts in the Level 18 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "EXCESSIVE CLEAR 75 charts in the Level 18 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -3045,10 +2910,9 @@
 			"mode": "absolute",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G8924c90d4678ac3d0495f6ad67ae4ea07c752a5a6d28b2629f26b8d98dbd9e5c",
-		"name": "CLEAR 35 charts in the Level 19 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "CLEAR 35 charts in the Level 19 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -3060,10 +2924,9 @@
 			"mode": "single",
 			"value": 2
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G607d0a0684e41637139fef8ff230f41bb909942c9a94f57f7d0485a0628264ce",
-		"name": "EXCESSIVE CLEAR any chart in the Level 19 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "EXCESSIVE CLEAR any chart in the Level 19 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -3075,10 +2938,9 @@
 			"mode": "single",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G72bbfc671c0f211355085393012b9835ac65d8491ff2431f878626f89df7eb07",
-		"name": "CLEAR any chart in the Level 20 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "CLEAR any chart in the Level 20 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -3091,10 +2953,9 @@
 			"mode": "absolute",
 			"value": 3
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G90bcbf690a855cc9be365f22c9fcfe47e1e73b158a2cc2ea228e14452825f354",
-		"name": "ULTIMATE CHAIN 10 charts in the Level 17 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "ULTIMATE CHAIN 10 charts in the Level 17 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -3107,10 +2968,9 @@
 			"mode": "absolute",
 			"value": 9
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G6358c8004675bb53ae6bde30a8cd93735aa8fd123438cd93256d70fbd6f29cc6",
-		"name": "S 15 charts in the Level 18 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "S 15 charts in the Level 18 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -3123,10 +2983,9 @@
 			"mode": "absolute",
 			"value": 8
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Gfb2a810bd50e3d3813a6fbd939119c340bf250cfa9843b65f61bdc8301b74ef9",
-		"name": "AAA+ 50 charts in the Level 18 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AAA+ 50 charts in the Level 18 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -3139,14 +2998,17 @@
 			"mode": "absolute",
 			"value": 7
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G4a159b7973fabd82ea7e51bc96d58fc94df7fe15077769d711a155445b9eff63",
-		"name": "AAA 100 charts in the Level 18 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AAA 100 charts in the Level 18 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e12093ed1d3609", "C19d35e11f256efc4a68", "C19d35e11fb0cc4f031b"],
+			"data": [
+				"C19d35e12093ed1d3609",
+				"C19d35e11f256efc4a68",
+				"C19d35e11fb0cc4f031b"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -3154,10 +3016,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G259ab31e08b751f67b3fc496de2c4ae262274962ec5589e2e4a2880b70d96857",
-		"name": "AAA any one of ANGER of the GOD (MXM 19), A Lasting Promise (MXM 19) or Elemental Creation (MXM 19)",
-		"playtype": "Single"
+		"name": "AAA any one of ANGER of the GOD (MXM 19), A Lasting Promise (MXM 19) or Elemental Creation (MXM 19)"
 	},
 	{
 		"charts": {
@@ -3174,10 +3035,9 @@
 			"mode": "single",
 			"value": 6
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G899d13fe5225f7fca4cc5a3ad77afe02ef7f03a874d3ee2ac5a1a177b9240acf",
-		"name": "AA+ any one of OUTERHEΛVEN (MXM 19), For UltraPlayers (HVN 19), Bangin' Burst (GRV 19) or Dyscontrolled Galaxy (MXM 19)",
-		"playtype": "Single"
+		"name": "AA+ any one of OUTERHEΛVEN (MXM 19), For UltraPlayers (HVN 19), Bangin' Burst (GRV 19) or Dyscontrolled Galaxy (MXM 19)"
 	},
 	{
 		"charts": {
@@ -3190,10 +3050,9 @@
 			"mode": "absolute",
 			"value": 6
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G9540d88dcc938ebb0ef124b5f031eadc0966c826023e9719c59e349487cee00d",
-		"name": "AA+ 2 charts in the Level 20 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AA+ 2 charts in the Level 20 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -3212,10 +3071,9 @@
 			"mode": "absolute",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G1f9940b18b32059b73851cfd2d813ed952f6ae55a917fba2f2318091d5323df9",
-		"name": "CLEAR KAC 2012 ULTIMATE MEDLEY -HISTORIA SOUND VOLTEX- (GRV 18), Unleashed Redness (MXM 18), Verflucht (MXM 18), ムーニャポヨポヨスッポコニャーゴ (VVD 18) and Joyeuse (VVD 18)",
-		"playtype": "Single"
+		"name": "CLEAR KAC 2012 ULTIMATE MEDLEY -HISTORIA SOUND VOLTEX- (GRV 18), Unleashed Redness (MXM 18), Verflucht (MXM 18), ムーニャポヨポヨスッポコニャーゴ (VVD 18) and Joyeuse (VVD 18)"
 	},
 	{
 		"charts": {
@@ -3228,10 +3086,9 @@
 			"mode": "proportion",
 			"value": 2
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G00b9df1cc7183235c56613655d77b35df8a9716a4ff456b86629269fa579a1a4",
-		"name": "EXCESSIVE CLEAR 40% of the charts in the Level 18 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "EXCESSIVE CLEAR 40% of the charts in the Level 18 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -3244,14 +3101,16 @@
 			"mode": "absolute",
 			"value": 2
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G465cbe195779daf0dd8449ead358f77dd3047c01538d8a8177fcca7f6c7732b9",
-		"name": "EXCESSIVE CLEAR 7 charts in the Level 19 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "EXCESSIVE CLEAR 7 charts in the Level 19 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e11f82f2e7ec28", "C19d35e11f2c731fd2f4"],
+			"data": [
+				"C19d35e11f82f2e7ec28",
+				"C19d35e11f2c731fd2f4"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -3259,10 +3118,9 @@
 			"mode": "single",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G9957c837ce04f4494df641b057cfc3161fdc8a4ec9898dc136548f46f75bc41e",
-		"name": "CLEAR either Xronièr (MXM 20) or I (MXM 20)",
-		"playtype": "Single"
+		"name": "CLEAR either Xronièr (MXM 20) or I (MXM 20)"
 	},
 	{
 		"charts": {
@@ -3275,10 +3133,9 @@
 			"mode": "absolute",
 			"value": 3
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G0f88e481ccc93429f62c7124103bb0d29c80eaf46265cb42ebf873fc1cded1ef",
-		"name": "ULTIMATE CHAIN 5 charts in the Level 18 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "ULTIMATE CHAIN 5 charts in the Level 18 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -3291,14 +3148,17 @@
 			"mode": "absolute",
 			"value": 9
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Gba598c9c26a325bb63a54c9fb6be633ef19f4c23e13f569204d3d586a4b6670e",
-		"name": "S 50 charts in the Level 18 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "S 50 charts in the Level 18 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e11edd1a77b160", "C19d35e11f95c08dff6e", "C19d35e11eff5f8f499e"],
+			"data": [
+				"C19d35e11edd1a77b160",
+				"C19d35e11f95c08dff6e",
+				"C19d35e11eff5f8f499e"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -3306,10 +3166,9 @@
 			"mode": "single",
 			"value": 8
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G13a74d151e58d9e4edea8c247804cacc51d435c831e355408ecfe4aef8131942",
-		"name": "AAA+ any one of Juggler's Maddness (MXM 18), ARROW RAIN (MXM 18) or BEAST BASS BOMB (MXM 18)",
-		"playtype": "Single"
+		"name": "AAA+ any one of Juggler's Maddness (MXM 18), ARROW RAIN (MXM 18) or BEAST BASS BOMB (MXM 18)"
 	},
 	{
 		"charts": {
@@ -3327,10 +3186,9 @@
 			"mode": "absolute",
 			"value": 7
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G6b92ca680c48f3df1ccf2772438f75abbcc1de394ec6c2ddd6e5fd7727cfef63",
-		"name": "AAA any 2 of V (MXM 18), Macuilxochitl (Latin Jazz Mix) (MXM 18), pique (MXM 18) or †渚の小悪魔ラヴリィ～レイディオ† (MXM 18)",
-		"playtype": "Single"
+		"name": "AAA any 2 of V (MXM 18), Macuilxochitl (Latin Jazz Mix) (MXM 18), pique (MXM 18) or †渚の小悪魔ラヴリィ～レイディオ† (MXM 18)"
 	},
 	{
 		"charts": {
@@ -3343,10 +3201,9 @@
 			"mode": "absolute",
 			"value": 8
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G011d1f17d3a353d69ad87465ea6962d8e83843c4f6cf0caf0e8a45792800ea09",
-		"name": "AAA+ 5 charts in the Level 19 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AAA+ 5 charts in the Level 19 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -3359,10 +3216,9 @@
 			"mode": "absolute",
 			"value": 7
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Ge11fd188ac70c54f6b37465777598f77980ab49565ab206118a5b85a73d47194",
-		"name": "AAA 25 charts in the Level 19 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AAA 25 charts in the Level 19 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -3381,14 +3237,17 @@
 			"mode": "absolute",
 			"value": 2
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G8bbc3e020dba18d3d294f2a51f722e1460b047324a80b15c44db4eb81de65729",
-		"name": "EXCESSIVE CLEAR any 4 of * Erm, could it be a Spatiotemporal ShockWAVE Syndrome...? (EXH 18), ムーニャポヨポヨスッポコニャーゴ (VVD 18), croiX (INF 18), 神話に芽吹く (MXM 18) or 準備運動 (MXM 18)",
-		"playtype": "Single"
+		"name": "EXCESSIVE CLEAR any 4 of * Erm, could it be a Spatiotemporal ShockWAVE Syndrome...? (EXH 18), ムーニャポヨポヨスッポコニャーゴ (VVD 18), croiX (INF 18), 神話に芽吹く (MXM 18) or 準備運動 (MXM 18)"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e120ba2a3794e5", "C19d35e11bf6ba32797b", "C19d35e11f2f083cda5a"],
+			"data": [
+				"C19d35e120ba2a3794e5",
+				"C19d35e11bf6ba32797b",
+				"C19d35e11f2f083cda5a"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -3396,10 +3255,9 @@
 			"mode": "single",
 			"value": 2
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G5882d96f0ef38eafb99037fdfc4e61a1fcc0038d5c19bef289f5ab055163f83d",
-		"name": "EXCESSIVE CLEAR any one of 色を喪った街 (MXM 19), Bangin' Burst (GRV 19) or Awakening (MXM 19)",
-		"playtype": "Single"
+		"name": "EXCESSIVE CLEAR any one of 色を喪った街 (MXM 19), Bangin' Burst (GRV 19) or Awakening (MXM 19)"
 	},
 	{
 		"charts": {
@@ -3412,10 +3270,9 @@
 			"mode": "absolute",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G3a85c5204e9708532cf7f0c038bc6e65cfc929a40d090faaf361a07fb6b8bfa6",
-		"name": "CLEAR 100 charts in the Level 19 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "CLEAR 100 charts in the Level 19 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -3428,10 +3285,9 @@
 			"mode": "absolute",
 			"value": 2
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G10db40bef5ef910ec3b247621889e66bc431220746a5e536c45d4f8bf0386f36",
-		"name": "EXCESSIVE CLEAR 35 charts in the Level 19 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "EXCESSIVE CLEAR 35 charts in the Level 19 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -3444,10 +3300,9 @@
 			"mode": "absolute",
 			"value": 3
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G5234d7e017a9d520b2714f84bd66ff9ac28e04573e4afff04249bcef6ed7c0ed",
-		"name": "ULTIMATE CHAIN 25 charts in the Level 18 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "ULTIMATE CHAIN 25 charts in the Level 18 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -3460,10 +3315,9 @@
 			"mode": "absolute",
 			"value": 9
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G10b47f5c3084d79bc92d45e616dcfb7dc3a7040aa3155fd49397352be6f5b6fa",
-		"name": "S 10 charts in the Level 19 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "S 10 charts in the Level 19 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -3476,14 +3330,17 @@
 			"mode": "proportion",
 			"value": 8
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G582b57b4ce8cf63c44690d329d9e80f9701a841ca3f8c8dc291dbdcfb545a38d",
-		"name": "AAA+ 50% of the charts in the Level 19 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AAA+ 50% of the charts in the Level 19 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e121160373cd93", "C19d35e11edb93dff80c", "C19d35e11fdc89943ed9"],
+			"data": [
+				"C19d35e121160373cd93",
+				"C19d35e11edb93dff80c",
+				"C19d35e11fdc89943ed9"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -3491,14 +3348,17 @@
 			"mode": "single",
 			"value": 8
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G7d14143c6d71c5a9412d4ee87816eba1b926e1f9e282d482cf4c8f8c1bdaebb0",
-		"name": "AAA+ any one of VALKYRIE ASSAULT (MXM 19), セイレーン ～悲壮の竪琴～ (MXM 19) or TENKAICHI ULTIMATE BOSSRUSH MEDLEY (MXM 19)",
-		"playtype": "Single"
+		"name": "AAA+ any one of VALKYRIE ASSAULT (MXM 19), セイレーン ～悲壮の竪琴～ (MXM 19) or TENKAICHI ULTIMATE BOSSRUSH MEDLEY (MXM 19)"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e11e1d061b96ca", "C19d35e11f838e8b8dc1", "C19d35e1210bfd434371"],
+			"data": [
+				"C19d35e11e1d061b96ca",
+				"C19d35e11f838e8b8dc1",
+				"C19d35e1210bfd434371"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -3506,10 +3366,9 @@
 			"mode": "single",
 			"value": 7
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G04fe718f0483fb71361bb3bd82d42674b25ca069823831c8907f52f7a68b88c0",
-		"name": "AAA any one of FLügeL《Λrp:ΣggyØ》 (GRV 19), Failnaught (MXM 19) or 飄える翼追い掛けて (MXM 19)",
-		"playtype": "Single"
+		"name": "AAA any one of FLügeL《Λrp:ΣggyØ》 (GRV 19), Failnaught (MXM 19) or 飄える翼追い掛けて (MXM 19)"
 	},
 	{
 		"charts": {
@@ -3522,10 +3381,9 @@
 			"mode": "absolute",
 			"value": 7
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G9c178aa1967a795a17a9eee9c84bbabd63b4cedc3223c5c6fd245839729718df",
-		"name": "AAA 4 charts in the Level 20 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "AAA 4 charts in the Level 20 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -3543,10 +3401,9 @@
 			"mode": "absolute",
 			"value": 2
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G54b92c7e85b819464c7bb21b9c1665fc745c13f289ebe2946ea36bc6f0e074ac",
-		"name": "EXCESSIVE CLEAR Joyeuse (VVD 18), ツマミ戦隊 タテレンジャー (MXM 18), 超越してしまった彼女と其を生み落した理由 (HVN 18) and Re：Elemental Creation (MXM 18)",
-		"playtype": "Single"
+		"name": "EXCESSIVE CLEAR Joyeuse (VVD 18), ツマミ戦隊 タテレンジャー (MXM 18), 超越してしまった彼女と其を生み落した理由 (HVN 18) and Re：Elemental Creation (MXM 18)"
 	},
 	{
 		"charts": {
@@ -3559,14 +3416,17 @@
 			"mode": "proportion",
 			"value": 2
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G647d4f2a60cf456a392b6f062725978732d1723ef93b0cc2dc1bb75302e9479b",
-		"name": "EXCESSIVE CLEAR 80% of the charts in the Level 19 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "EXCESSIVE CLEAR 80% of the charts in the Level 19 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
-			"data": ["C19d35e12099bc435ee4", "C19d35e1215439a4b677", "C19d35e12048a4a873fb"],
+			"data": [
+				"C19d35e12099bc435ee4",
+				"C19d35e1215439a4b677",
+				"C19d35e12048a4a873fb"
+			],
 			"type": "multi"
 		},
 		"criteria": {
@@ -3574,10 +3434,9 @@
 			"mode": "single",
 			"value": 2
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G1fb1cc0ee9612ead59f8792d4fe28ba527af5fecdea0b2198f9c7ac2c4d2abd4",
-		"name": "EXCESSIVE CLEAR any one of Xroniàl Xéro (MXM 19), 777 (MXM 19) or Ghost Family Living In Graveyard (MXM 19)",
-		"playtype": "Single"
+		"name": "EXCESSIVE CLEAR any one of Xroniàl Xéro (MXM 19), 777 (MXM 19) or Ghost Family Living In Graveyard (MXM 19)"
 	},
 	{
 		"charts": {
@@ -3590,10 +3449,9 @@
 			"mode": "absolute",
 			"value": 2
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "G5e9b6f5ab4339cbfcc62ab4f13f0ddb4c2576573e0f25f032602d11816acd846",
-		"name": "EXCESSIVE CLEAR 4 charts in the Level 20 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "EXCESSIVE CLEAR 4 charts in the Level 20 (EXCEED GEAR) folder"
 	},
 	{
 		"charts": {
@@ -3606,9 +3464,8 @@
 			"mode": "proportion",
 			"value": 1
 		},
-		"game": "sdvx",
+		"game": "sdvx-single",
 		"goalID": "Gf67e8bf457336de147cd7e3aa5fd27d3aaa33f057a66452c4a3eae73d73e0ef0",
-		"name": "CLEAR 100% of the charts in the Level 20 (EXCEED GEAR) folder",
-		"playtype": "Single"
+		"name": "CLEAR 100% of the charts in the Level 20 (EXCEED GEAR) folder"
 	}
 ]

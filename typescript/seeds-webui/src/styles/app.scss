@@ -1856,3 +1856,353 @@ $diff-chg-border: rgba(245, 177, 76, 0.4);
 .draft-diff-error {
 	color: var(--bs-danger-text-emphasis);
 }
+
+// ---------------------------------------------------------------------------
+// Quest Proposal PR page (/pr/:prNumber)
+// ---------------------------------------------------------------------------
+
+.pr-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+	margin-bottom: 1.5rem;
+	padding: 1rem 1.25rem;
+	background: var(--sw-panel-bg);
+	border: 1px solid var(--bs-border-color);
+	border-left: 3px solid $tachi-pink;
+	border-radius: var(--bs-border-radius);
+
+	.pr-header-main {
+		flex: 1;
+		min-width: 0;
+
+		.page-title {
+			margin-bottom: 0.35rem;
+		}
+	}
+
+	.pr-header-actions {
+		display: flex;
+		gap: 0.5rem;
+		flex-shrink: 0;
+		align-items: flex-start;
+		padding-top: 0.15rem;
+	}
+}
+
+.pr-meta {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+	font-size: 0.85rem;
+	color: var(--bs-secondary-color);
+
+	.pr-author {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+
+	.pr-avatar {
+		width: 1.25rem;
+		height: 1.25rem;
+		border-radius: 50%;
+		flex-shrink: 0;
+	}
+
+	.pr-branch code {
+		font-size: 0.8rem;
+	}
+}
+
+.pr-status-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.15rem 0.55rem;
+	border-radius: 999px;
+	font-size: 0.72rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	flex-shrink: 0;
+
+	&.badge-open {
+		background: rgba(62, 207, 142, 0.15);
+		color: #3ecf8e;
+		border: 1px solid rgba(62, 207, 142, 0.35);
+	}
+
+	&.badge-closed {
+		background: rgba(230, 92, 92, 0.15);
+		color: #e65c5c;
+		border: 1px solid rgba(230, 92, 92, 0.35);
+	}
+
+	&.badge-merged {
+		background: rgba(160, 100, 230, 0.15);
+		color: #a064e6;
+		border: 1px solid rgba(160, 100, 230, 0.35);
+	}
+}
+
+.quest-proposal-tag {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.15rem 0.55rem;
+	border-radius: var(--bs-border-radius-sm);
+	font-size: 0.72rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	background: var(--sw-glow);
+	color: var(--bs-primary);
+	border: 1px solid rgba($tachi-pink, 0.3);
+	flex-shrink: 0;
+}
+
+.btn-ghost {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.35rem 0.75rem;
+	border: 1px solid var(--bs-border-color);
+	border-radius: var(--bs-border-radius);
+	color: var(--bs-body-color);
+	text-decoration: none;
+	font-size: 0.82rem;
+	background: transparent;
+	transition:
+		border-color 120ms ease-in-out,
+		background-color 120ms ease-in-out;
+
+	&:hover {
+		border-color: rgba($tachi-pink, 0.5);
+		background: var(--sw-glow);
+		color: var(--bs-body-color);
+	}
+}
+
+.section-title {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	font-size: 1rem;
+	font-weight: 600;
+	margin: 0 0 0.85rem;
+
+	.section-count {
+		font-size: 0.72rem;
+		font-weight: 600;
+		padding: 0.1rem 0.45rem;
+		border-radius: 999px;
+		letter-spacing: 0.03em;
+
+		&.section-count-added {
+			background: rgba(62, 207, 142, 0.15);
+			color: #3ecf8e;
+			border: 1px solid rgba(62, 207, 142, 0.3);
+		}
+
+		&.section-count-changed {
+			background: rgba(245, 177, 76, 0.12);
+			color: #f5b14c;
+			border: 1px solid rgba(245, 177, 76, 0.3);
+		}
+	}
+}
+
+.quest-grid {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.quest-card {
+	background: var(--sw-panel-bg);
+	border: 1px solid var(--bs-border-color);
+	border-radius: var(--bs-border-radius);
+	padding: 0.85rem 1rem;
+
+	.quest-card-header {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-bottom: 0.4rem;
+		flex-wrap: wrap;
+	}
+
+	.quest-badge {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.1rem 0.42rem;
+		border-radius: 0.25rem;
+		font-size: 0.68rem;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		flex-shrink: 0;
+
+		&.quest-badge-new {
+			background: rgba(62, 207, 142, 0.15);
+			color: #3ecf8e;
+		}
+
+		&.quest-badge-updated {
+			background: rgba(245, 177, 76, 0.12);
+			color: #f5b14c;
+		}
+	}
+
+	.quest-game {
+		font-family: var(--sw-mono);
+		font-size: 0.75rem;
+		padding: 0.1rem 0.45rem;
+		background: var(--bs-body-tertiary-bg);
+		border: 1px solid var(--bs-border-color);
+		border-radius: var(--bs-border-radius-sm);
+		color: var(--bs-secondary-color);
+		flex-shrink: 0;
+	}
+
+	.quest-name {
+		font-size: 0.95rem;
+		font-weight: 600;
+	}
+
+	.quest-desc {
+		font-size: 0.85rem;
+		color: var(--bs-secondary-color);
+		margin: 0 0 0.65rem;
+		line-height: 1.5;
+	}
+
+	.quest-sections {
+		display: flex;
+		flex-direction: column;
+		gap: 0.65rem;
+	}
+
+	.quest-section {
+		.quest-section-title {
+			font-size: 0.8rem;
+			font-weight: 600;
+			color: var(--bs-secondary-color);
+			text-transform: uppercase;
+			letter-spacing: 0.06em;
+			margin: 0 0 0.35rem;
+		}
+	}
+
+	.quest-goals {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+	}
+
+	.questline-quests {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		align-items: center;
+		margin-top: 0.25rem;
+	}
+
+	.questline-step {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		font-size: 0.82rem;
+
+		.questline-step-num {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 1.3rem;
+			height: 1.3rem;
+			border-radius: 50%;
+			background: var(--bs-body-tertiary-bg);
+			border: 1px solid var(--bs-border-color);
+			font-size: 0.68rem;
+			font-weight: 600;
+			color: var(--bs-secondary-color);
+			flex-shrink: 0;
+		}
+	}
+}
+
+.goal-chip {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.15rem 0.55rem;
+	background: var(--bs-body-tertiary-bg);
+	border: 1px solid var(--bs-border-color);
+	border-radius: var(--bs-border-radius-sm);
+	font-size: 0.78rem;
+	color: var(--bs-body-color);
+	cursor: default;
+	max-width: 100%;
+	overflow-wrap: anywhere;
+
+	&.goal-chip-missing {
+		color: var(--bs-secondary-color);
+		font-style: italic;
+	}
+}
+
+.goal-note {
+	font-size: 0.78rem;
+	color: var(--bs-secondary-color);
+}
+
+.pr-not-quest-proposal {
+	margin-top: 1rem;
+	padding: 0.85rem 1rem;
+	background: var(--bs-body-tertiary-bg);
+	border: 1px solid var(--bs-border-color);
+	border-radius: var(--bs-border-radius);
+	font-size: 0.85rem;
+	color: var(--bs-secondary-color);
+
+	p {
+		margin: 0 0 0.35rem;
+
+		&:last-child {
+			margin: 0;
+		}
+	}
+}
+
+.pr-body-details {
+	margin-top: 1.25rem;
+
+	summary {
+		cursor: pointer;
+		font-size: 0.85rem;
+		color: var(--bs-secondary-color);
+		padding: 0.35rem 0;
+		user-select: none;
+
+		&:hover {
+			color: var(--bs-body-color);
+		}
+	}
+}
+
+.pr-body-pre {
+	margin: 0.5rem 0 0;
+	padding: 0.75rem 1rem;
+	background: var(--bs-body-tertiary-bg);
+	border: 1px solid var(--bs-border-color);
+	border-radius: var(--bs-border-radius);
+	font-size: 0.82rem;
+	line-height: 1.55;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+	max-height: 24rem;
+	overflow-y: auto;
+	font-family: var(--sw-mono);
+}
