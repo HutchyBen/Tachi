@@ -58,27 +58,25 @@ jobs:
           cache-from: type=gha,scope=${{ github.ref_name }}-bot
           cache-to: type=gha,mode=max,scope=${{ github.ref_name }}-bot
 
-  deploy:
+  dispatch-deploy:
+    # See server.yml for rationale — deploy logs live in the private tachi-deploy repo.
     runs-on: ubuntu-latest
     needs: [docker-push]
     if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
     strategy:
       fail-fast: false
-      max-parallel: 1
       matrix:
         destination: [boku, kamai, dev]
     steps:
-      - name: Enable SSH
+      - name: Dispatch deploy
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          GH_TOKEN: ${{ secrets.DEPLOY_DISPATCH_TOKEN }}
+          DEST: ${{ matrix.destination }}
+          SHA: ${{ github.sha }}
         run: |
-          mkdir -p ~/.ssh
-          printf '%s' "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          printf '%s' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-
-      - name: Deploy updates
-        env:
-          TACHI_HOST: ${{ secrets.TACHI_HOST }}
-        run: ssh "ci@${TACHI_HOST}" "/home/ci/tachi-deploy/operations/deploy.sh bot ${{ matrix.destination }} ${{ github.sha }}"
+          gh api repos/zkldi/tachi-deploy/dispatches \
+            -f event_type=deploy \
+            -F "client_payload[app]=bot" \
+            -F "client_payload[dest]=${DEST}" \
+            -F "client_payload[sha]=${SHA}"
+          echo "::notice::Dispatched bot@${DEST} ${SHA} — logs: https://github.com/zkldi/tachi-deploy/actions/workflows/deploy.yml"
