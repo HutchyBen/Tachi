@@ -5,6 +5,16 @@ FROM debian:13
 
 WORKDIR /tachi
 
+# Add the official PostgreSQL APT repository so we can install client tools
+# that match the server version (v18). The Debian-packaged postgresql-client
+# only provides v17 on Debian 13 (trixie).
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends gnupg curl ca-certificates \
+	&& curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+		| gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg \
+	&& echo "deb https://apt.postgresql.org/pub/repos/apt trixie-pgdg main" \
+		> /etc/apt/sources.list.d/pgdg.list
+
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
 	&& apt-get upgrade -y \
 	&& apt-get install -y \
@@ -13,7 +23,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
 		# docs pythonisms
 		python-is-python3 python3-setuptools pip mkdocs mkdocs-material \
 		# postgres client tools (psql, pg_dump, pg_restore, pg_isready, etc.)
-		postgresql-client \
+		postgresql-client-18 \
 		# nice to haves
 		gh fish just fzf curl wget parallel neovim fd-find bat rsync \
 		# MinIO CLI (binary is `minio-client`, not Midnight Commander's `mc`)

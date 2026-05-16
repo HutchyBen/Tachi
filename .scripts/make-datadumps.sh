@@ -1,28 +1,94 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# make-datadumps.sh — produce anonymised Tachi dataset dumps for distribution.
+#
+# For each named instance (e.g. "kamai", "boku") this script:
+#   1. Creates a temporary database anon-$instance on the local server
+#   2. Clones the source database into it via pg_dump | pg_restore
+#   3. Runs the TypeScript anonymiser to strip PII in place
+#   4. Dumps the anonymised copy to a gzip-compressed SQL file
+#   5. Drops the temporary database
+#
+# The resulting .sql.gz files can be loaded with:
+#   zcat tachi-kamai-2026-05.sql.gz | psql -d <target-db>
+#
+# ── Required configuration ──────────────────────────────────────────────────
+#
+#   SOURCE_BASE_URL  Base Postgres URL of the server to clone FROM, without a
+#                    database name. The instance name is appended automatically.
+#                    Example: postgresql://user:pass@prod-host:5432
+#
+#   LOCAL_BASE_URL   Base Postgres URL of the LOCAL server where anon copies are
+#                    created. Must not include a database name.
+#                    Example: postgresql://tachi:tachi@tachi-postgres
+#                    (Defaults to the value of SOURCE_BASE_URL.)
+#
+# ── Optional configuration ──────────────────────────────────────────────────
+#
+#   INSTANCES        Space-separated list of database names to process.
+#                    Default: "kamai boku"
+#
+#   TARGET_DIR       Directory to write the .sql.gz files into.
+#                    Default: <repo-root>/datasets
+#
+# ── Example ─────────────────────────────────────────────────────────────────
+#
+#   SOURCE_BASE_URL=postgresql://tachi:tachi@tachi-postgres \
+#   INSTANCES=kamai \
+#   .scripts/make-datadumps.sh
 
-# a script for making tachi's anonymised datasets.
-# designed to run on my machine
-# 
-# you are expected to have pnpm, mongo etc. in path.
+set -euo pipefail
 
-set -eox pipefail
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+SERVER_DIR="$SCRIPT_DIR/../typescript/server"
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-cd "$SCRIPT_DIR";
-cd ../server;
+if [[ -z "${SOURCE_BASE_URL:-}" ]]; then
+	echo "make-datadumps: SOURCE_BASE_URL is required." >&2
+	echo "  Example: SOURCE_BASE_URL=postgresql://user:pass@host:5432" >&2
+	exit 1
+fi
 
-# stuff based on my local system, modify as wished
-remote_port=12345
-target=../../tachi-datasets/datasets
+LOCAL_BASE_URL="${LOCAL_BASE_URL:-$SOURCE_BASE_URL}"
+INSTANCES="${INSTANCES:-kamai boku}"
+TARGET_DIR="${TARGET_DIR:-$SCRIPT_DIR/../datasets}"
 
-for kind in "kamai" "boku"; do
-	mongosh --eval "use anon-$kind" --eval "db.dropDatabase()"
+DATESTAMP="$(date +%Y-%m)"
 
-	mongodump --archive --port=$remote_port --db=$kind | mongorestore --archive --nsFrom="$kind.*" --nsTo="anon-$kind.*"
+mkdir -p "$TARGET_DIR"
 
-	ts-node src/scripts/anonymise-db localhost:27017/anon-$kind
+for instance in $INSTANCES; do
+	anon_db="anon-$instance"
+	source_url="${SOURCE_BASE_URL}/${instance}"
+	anon_url="${LOCAL_BASE_URL}/${anon_db}"
+	maintenance_url="${LOCAL_BASE_URL}/postgres"
+	output="$TARGET_DIR/tachi-$instance-$DATESTAMP.sql.gz"
 
-	TCHIS_CONF_LOCATION=$kind.dataset.conf.json5 bun run set-indexes
+	echo "==> [$instance] Starting dataset dump pipeline"
 
-	mongodump --db=anon-$kind --archive="$target/anon-$kind-$(date +%Y-%m).dump" --gzip
-done;
+	# 1. Create a fresh anon copy database
+	echo "  -> Creating $anon_db"
+	psql "$maintenance_url" -c "DROP DATABASE IF EXISTS \"$anon_db\""
+	psql "$maintenance_url" -c "CREATE DATABASE \"$anon_db\""
+
+	# 2. Clone the source database into the anon copy
+	echo "  -> Cloning ${source_url} into ${anon_db}"
+	pg_dump --format=custom "$source_url" \
+		| pg_restore --dbname="$anon_url" --no-owner --no-acl
+
+	# 3. Anonymise the copy in place
+	echo "  -> Anonymising $anon_db"
+	(cd "$SERVER_DIR" && bun run src/scripts/anonymise-db.ts -- --url "$anon_url")
+
+	# 4. Dump to a gzip-compressed plain SQL file
+	echo "  -> Dumping to $output"
+	pg_dump --format=plain --compress=9 --no-owner --no-acl "$anon_url" >"$output"
+
+	# 5. Drop the temporary anon database
+	echo "  -> Dropping $anon_db"
+	psql "$maintenance_url" -c "DROP DATABASE \"$anon_db\""
+
+	echo "  -> Done: $output ($(du -sh "$output" | cut -f1))"
+done
+
+echo ""
+echo "All dataset dumps complete. Files written to $TARGET_DIR:"
+ls -lh "$TARGET_DIR"/tachi-*-"$DATESTAMP".sql.gz
