@@ -71,3 +71,18 @@ export type RawQuestGoal = {
 	goal: Pick<GoalDocument, "charts" | "criteria" | "name">;
 	note?: string;
 };
+
+/**
+ * A questline document without a server-assigned `questlineID`. Used when
+ * authoring questlines locally in the Quest Editor before uploading as seeds.
+ */
+export type RawQuestlineDocument = {
+	/** User-chosen slug / identifier (becomes `questlineID` in seeds). */
+	questlineID: string;
+	name: string;
+	desc: string;
+	game: string;
+	playtype: string;
+	/** Ordered list of `RawQuestDocument` references by their local index or slug. */
+	quests: Array<string>;
+};

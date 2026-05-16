@@ -1,6 +1,6 @@
 import QuickTooltip from "#components/layout/misc/QuickTooltip";
 import Card from "#components/layout/page/Card";
-import AddNewGoalForQuestModal from "#components/targets/AddNewGoalForQuestModal";
+import GoalBuilder from "#components/targets/GoalBuilder";
 import Divider from "#components/util/Divider";
 import EditableText from "#components/util/EditableText";
 import Icon from "#components/util/Icon";
@@ -9,7 +9,7 @@ import { type GamePT } from "#types/react";
 import { type RawQuestDocument, type RawQuestGoal, type RawQuestSection } from "#types/tachi";
 import { ChangeAtPosition, CopyToClipboard, DeleteInPosition } from "#util/misc";
 import React, { useState } from "react";
-import { Button } from "react-bootstrap";
+import { Button, Collapse, Modal } from "react-bootstrap";
 import { FormatGame } from "tachi-common";
 
 export default function EditableQuest({
@@ -26,35 +26,23 @@ export default function EditableQuest({
 			header={
 				<div className="vstack gap-2">
 					<EditableText
-						as="h1"
+						as="h4"
 						authorised
 						initialText={quest.name}
-						onSubmit={(name) =>
-							onChange({
-								...quest,
-								name,
-							})
-						}
+						onSubmit={(name) => onChange({ ...quest, name })}
 						placeholderText={quest.name || "Untitled Quest"}
 					/>
-
 					<EditableText
 						authorised
 						initialText={quest.desc}
-						onSubmit={(desc) =>
-							onChange({
-								...quest,
-								desc,
-							})
-						}
+						onSubmit={(desc) => onChange({ ...quest, desc })}
 						placeholderText={quest.desc || "Please set a description."}
 					/>
-
-					<Muted>Game: {FormatGame(quest.game)}</Muted>
+					<Muted>{FormatGame(quest.game)}</Muted>
 				</div>
 			}
 		>
-			{quest.rawQuestData.map((e, i) => (
+			{quest.rawQuestData.map((section, i) => (
 				<React.Fragment key={i}>
 					<QuestSection
 						game={quest.game}
@@ -65,16 +53,32 @@ export default function EditableQuest({
 							})
 						}
 						onDelete={() =>
-							onChange({
-								...quest,
-								rawQuestData: DeleteInPosition(quest.rawQuestData, i),
-							})
+							onChange({ ...quest, rawQuestData: DeleteInPosition(quest.rawQuestData, i) })
 						}
-						section={e}
+						onMoveDown={
+							i < quest.rawQuestData.length - 1
+								? () => {
+										const arr = [...quest.rawQuestData];
+										[arr[i], arr[i + 1]] = [arr[i + 1]!, arr[i]!];
+										onChange({ ...quest, rawQuestData: arr });
+									}
+								: undefined
+						}
+						onMoveUp={
+							i > 0
+								? () => {
+										const arr = [...quest.rawQuestData];
+										[arr[i - 1], arr[i]] = [arr[i]!, arr[i - 1]!];
+										onChange({ ...quest, rawQuestData: arr });
+									}
+								: undefined
+						}
+						section={section}
 					/>
 					<Divider />
 				</React.Fragment>
 			))}
+
 			<div className="d-flex w-100 justify-content-center">
 				<Button
 					onClick={() =>
@@ -82,38 +86,31 @@ export default function EditableQuest({
 							...quest,
 							rawQuestData: [
 								...quest.rawQuestData,
-								{
-									title: "Untitled Section",
-									desc: "",
-									rawGoals: [],
-								},
+								{ title: "New Section", desc: "", rawGoals: [] },
 							],
 						})
 					}
 					variant="outline-success"
 				>
-					<Icon type="plus" />
-					Add New Quest Section
+					<Icon type="plus" /> Add Section
 				</Button>
 			</div>
+
 			<Divider />
-			<div className="d-flex w-100">
-				<div className="me-auto">
-					<QuickTooltip tooltipContent="Copy this quest to your clipboard in a pretty format.">
-						<Button
-							onClick={() => {
-								CopyToClipboard(FormatQuest(quest));
-							}}
-							variant="outline-info"
-						>
-							Copy To Clipboard
-						</Button>
-					</QuickTooltip>
-				</div>
+
+			<div className="d-flex w-100 gap-2">
+				<QuickTooltip tooltipContent="Copy this quest as a readable summary.">
+					<Button
+						onClick={() => CopyToClipboard(FormatQuestAsText(quest))}
+						variant="outline-info"
+					>
+						Copy Summary
+					</Button>
+				</QuickTooltip>
 				<div className="ms-auto">
 					<Button
 						onClick={() => {
-							if (confirm("Are you absolutely sure you want to delete this quest?")) {
+							if (confirm("Delete this quest?")) {
 								onDelete();
 							}
 						}}
@@ -132,158 +129,229 @@ function QuestSection({
 	game,
 	onChange,
 	onDelete,
+	onMoveUp,
+	onMoveDown,
 }: {
 	onChange: (newSection: RawQuestSection) => void;
 	onDelete: () => void;
+	onMoveDown?: () => void;
+	onMoveUp?: () => void;
 	section: RawQuestSection;
 } & GamePT) {
-	const [show, setShow] = useState(false);
+	const [showGoalBuilder, setShowGoalBuilder] = useState(false);
 
 	return (
-		<>
-			<div className="vstack gap-2">
-				<EditableText
-					as="h4"
-					authorised
-					initialText={section.title}
-					onSubmit={(title) =>
-						onChange({
-							...section,
-							title,
-						})
-					}
-					placeholderText="Untitled Section"
-				/>
-
-				<EditableText
-					authorised
-					initialText={section.desc}
-					onSubmit={(desc) =>
-						onChange({
-							...section,
-							desc,
-						})
-					}
-					placeholderText="No Description..."
-				/>
+		<div>
+			<div className="d-flex align-items-start gap-2 mb-2">
+				<div className="flex-grow-1">
+					<EditableText
+						as="h5"
+						authorised
+						initialText={section.title}
+						onSubmit={(title) => onChange({ ...section, title })}
+						placeholderText="Section Title"
+					/>
+					<EditableText
+						authorised
+						initialText={section.desc}
+						onSubmit={(desc) => onChange({ ...section, desc })}
+						placeholderText="Optional section description…"
+					/>
+				</div>
+				{/* Reorder buttons */}
+				<div className="d-flex flex-column gap-1">
+					<button
+						className="btn btn-outline-secondary btn-sm py-0"
+						disabled={!onMoveUp}
+						onClick={onMoveUp}
+						title="Move section up"
+						type="button"
+					>
+						<Icon type="chevron-up" />
+					</button>
+					<button
+						className="btn btn-outline-secondary btn-sm py-0"
+						disabled={!onMoveDown}
+						onClick={onMoveDown}
+						title="Move section down"
+						type="button"
+					>
+						<Icon type="chevron-down" />
+					</button>
+				</div>
 			</div>
-			<br />
+
 			{section.rawGoals.length === 0 ? (
-				<Muted>No Goals...</Muted>
+				<span className="text-body-secondary small">No goals yet.</span>
 			) : (
-				<ul>
-					{section.rawGoals.map((e, i) => (
-						<InnerQuestSectionGoal
+				<div className="d-flex flex-column gap-1 mb-2">
+					{section.rawGoals.map((rawGoal, i) => (
+						<EditableGoalRow
 							game={game}
 							key={i}
-							onInnerGoalChange={(newRawGoal) =>
-								onChange({
-									...section,
-									rawGoals: ChangeAtPosition(section.rawGoals, newRawGoal, i),
-								})
-							}
-							onInnerGoalDelete={() => {
+							onDelete={() =>
 								onChange({
 									...section,
 									rawGoals: DeleteInPosition(section.rawGoals, i),
-								});
-							}}
-							rawGoal={e}
+								})
+							}
+							onMoveDown={
+								i < section.rawGoals.length - 1
+									? () => {
+											const arr = [...section.rawGoals];
+											[arr[i], arr[i + 1]] = [arr[i + 1]!, arr[i]!];
+											onChange({ ...section, rawGoals: arr });
+										}
+									: undefined
+							}
+							onMoveUp={
+								i > 0
+									? () => {
+											const arr = [...section.rawGoals];
+											[arr[i - 1], arr[i]] = [arr[i]!, arr[i - 1]!];
+											onChange({ ...section, rawGoals: arr });
+										}
+									: undefined
+							}
+							onUpdate={(newGoal) =>
+								onChange({
+									...section,
+									rawGoals: ChangeAtPosition(section.rawGoals, newGoal, i),
+								})
+							}
+							rawGoal={rawGoal}
 						/>
 					))}
-				</ul>
+				</div>
 			)}
-			<br />
-			<div className="w-100 d-flex mt-8">
-				<Button onClick={() => setShow(true)} variant="outline-success">
+
+			<div className="d-flex gap-2 mt-2">
+				<Button onClick={() => setShowGoalBuilder(true)} size="sm" variant="outline-success">
 					<Icon type="plus" /> Add Goal
 				</Button>
 				<Button
 					className="ms-auto"
 					onClick={() => {
-						if (confirm("Are you absolutely sure you want to delete this section?")) {
+						if (confirm("Delete this section?")) {
 							onDelete();
 						}
 					}}
+					size="sm"
 					variant="outline-danger"
 				>
 					<Icon type="times" /> Delete Section
 				</Button>
 			</div>
-			{show && (
-				<AddNewGoalForQuestModal
-					game={game}
-					onCreate={(rawGoal) => {
-						onChange({
-							...section,
-							rawGoals: [...section.rawGoals, rawGoal],
-						});
-					}}
-					setShow={setShow}
-					show={show}
-				/>
-			)}
-		</>
+
+			{/* GoalBuilder modal */}
+			<Modal onHide={() => setShowGoalBuilder(false)} show={showGoalBuilder} size="xl">
+				<Modal.Header closeButton>
+					<Modal.Title>Add Goal to "{section.title}"</Modal.Title>
+				</Modal.Header>
+				<Modal.Body>
+					<GoalBuilder
+						confirmLabel="Add Goal"
+						game={game}
+						onCreate={(rawGoal) => {
+							onChange({ ...section, rawGoals: [...section.rawGoals, rawGoal] });
+							setShowGoalBuilder(false);
+						}}
+						showNote
+					/>
+				</Modal.Body>
+			</Modal>
+		</div>
 	);
 }
 
-function InnerQuestSectionGoal({
+function EditableGoalRow({
 	rawGoal,
 	game,
-	onInnerGoalChange,
-	onInnerGoalDelete,
+	onUpdate,
+	onDelete,
+	onMoveUp,
+	onMoveDown,
 }: {
-	onInnerGoalChange: (newRawGoal: RawQuestGoal) => void;
-	onInnerGoalDelete: () => void;
+	onDelete: () => void;
+	onMoveDown?: () => void;
+	onMoveUp?: () => void;
+	onUpdate: (newGoal: RawQuestGoal) => void;
 	rawGoal: RawQuestGoal;
 } & GamePT) {
-	const [show, setShow] = useState(false);
+	const [showEdit, setShowEdit] = useState(false);
 
 	return (
-		<li className="quest-goal">
-			<div className="w-100 d-flex">
-				<div className="me-auto">{rawGoal.goal.name}</div>
+		<div className="d-flex align-items-center gap-2 rounded border px-2 py-1">
+			<Icon style={{ fontSize: "0.4rem" }} type="circle" />
+			<span className="flex-grow-1 small">{rawGoal.goal.name}</span>
+			{rawGoal.note && <span className="text-body-secondary small fst-italic">{rawGoal.note}</span>}
 
-				<div className="ms-auto d-flex flex-nowrap">
-					<div className="text-hover-white">
-						<Icon onClick={() => setShow(true)} type="pencil-alt" />
-					</div>
-					<div className="ms-2 text-hover-white">
-						<Icon
-							onClick={() => {
-								if (
-									confirm(
-										`Are you sure you want to remove the goal "${rawGoal.goal.name}"?`,
-									)
-								) {
-									onInnerGoalDelete();
-								}
-							}}
-							type="trash"
-						/>
-					</div>
-				</div>
-			</div>
-			{rawGoal.note && <Muted>{rawGoal.note}</Muted>}
-			{show && (
-				<AddNewGoalForQuestModal
-					game={game}
-					initialState={rawGoal}
-					onCreate={(newRawGoal) => {
-						onInnerGoalChange(newRawGoal);
+			<div className="d-flex gap-1 ms-auto">
+				<button
+					className="btn btn-outline-secondary btn-sm py-0"
+					disabled={!onMoveUp}
+					onClick={onMoveUp}
+					title="Move up"
+					type="button"
+				>
+					<Icon type="chevron-up" />
+				</button>
+				<button
+					className="btn btn-outline-secondary btn-sm py-0"
+					disabled={!onMoveDown}
+					onClick={onMoveDown}
+					title="Move down"
+					type="button"
+				>
+					<Icon type="chevron-down" />
+				</button>
+				<button
+					className="btn btn-outline-warning btn-sm py-0"
+					onClick={() => setShowEdit(true)}
+					title="Edit goal"
+					type="button"
+				>
+					<Icon type="pencil" />
+				</button>
+				<button
+					className="btn btn-outline-danger btn-sm py-0"
+					onClick={() => {
+						if (confirm(`Remove goal "${rawGoal.goal.name}"?`)) {
+							onDelete();
+						}
 					}}
-					setShow={setShow}
-					show={show}
-				/>
+					title="Remove goal"
+					type="button"
+				>
+					<Icon type="trash" />
+				</button>
+			</div>
+
+			{showEdit && (
+				<Modal onHide={() => setShowEdit(false)} show size="xl">
+					<Modal.Header closeButton>
+						<Modal.Title>Edit Goal</Modal.Title>
+					</Modal.Header>
+					<Modal.Body>
+						<GoalBuilder
+							confirmLabel="Update Goal"
+							existingGoal={{ ...rawGoal.goal, goalID: "" } as any}
+							game={game}
+							onCreate={(updated) => {
+								onUpdate(updated);
+								setShowEdit(false);
+							}}
+							showNote
+						/>
+					</Modal.Body>
+				</Modal>
 			)}
-		</li>
+		</div>
 	);
 }
 
-function FormatQuest(quest: RawQuestDocument) {
-	let str = `# QUEST: ${quest.name}
-${quest.desc}
-(Game: ${FormatGame(quest.game)})`;
+function FormatQuestAsText(quest: RawQuestDocument): string {
+	let str = `# ${quest.name}\n${quest.desc}\n(${FormatGame(quest.game)})`;
 
 	for (const section of quest.rawQuestData) {
 		str += `\n\n### ${section.title}`;
@@ -295,10 +363,10 @@ ${quest.desc}
 		str += "\n";
 
 		for (const goal of section.rawGoals) {
-			str += `\n-- ${goal.goal.name}`;
+			str += `\n- ${goal.goal.name}`;
 
 			if (goal.note) {
-				str += `\n${goal.note}`;
+				str += `\n  ${goal.note}`;
 			}
 		}
 	}

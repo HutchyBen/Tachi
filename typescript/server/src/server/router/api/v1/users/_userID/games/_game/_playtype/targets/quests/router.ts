@@ -102,8 +102,12 @@ API_V1_ROUTER.add(
 API_V1_ROUTER.add(
 	"PUT /users/:userID/games/:game/targets/quests/:questID",
 	withUserGameProfile,
-	async ({ ctx, params }) => {
+	async ({ ctx, params, req }) => {
 		const { requestedUser: user, game } = ctx;
+
+		if (!req.session.tachi?.user) {
+			throw new ExpectedErr(401, "You are not authenticated.");
+		}
 
 		const { SubscribeFailReasons } = await import("#lib/constants/err-codes");
 		const { SubscribeToQuest } = await import("#lib/targets/quests");
@@ -146,7 +150,7 @@ API_V1_ROUTER.add(
 			.executeTakeFirst();
 
 		if (alreadySubscribed) {
-			throw new ExpectedErr(409, "You are already subscribed to this goal.");
+			throw new ExpectedErr(409, "You are already subscribed to this quest.");
 		}
 
 		const subResult = await SubscribeToQuest(user.id, quest, false);
@@ -167,8 +171,12 @@ API_V1_ROUTER.add(
 API_V1_ROUTER.add(
 	"DELETE /users/:userID/games/:game/targets/quests/:questID",
 	withUserGameProfile,
-	async ({ ctx, params }) => {
+	async ({ ctx, params, req }) => {
 		const { requestedUser: user, game } = ctx;
+
+		if (!req.session.tachi?.user) {
+			throw new ExpectedErr(401, "You are not authenticated.");
+		}
 
 		const { UnsubscribeFromQuest } = await import("#lib/targets/quests");
 

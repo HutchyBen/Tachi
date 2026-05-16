@@ -1,3 +1,4 @@
+import { ErrorPage } from "#app/pages/ErrorPage";
 import FolderInfoHeader from "#components/game/folder/FolderInfoHeader";
 import QuickTooltip from "#components/layout/misc/QuickTooltip";
 import DifficultyCell from "#components/tables/cells/DifficultyCell";
@@ -144,6 +145,15 @@ export default function SpecificFolderPage({ reqUser, game }: Props) {
 	}, [data, folderSlug, folderDataset, game, onBreakdownEnumValueClick, reqUser]);
 
 	const base = `${useUGPTBase({ reqUser, game })}/folders/${folderSlug}`;
+
+	if (error?.statusCode === 404) {
+		return (
+			<ErrorPage
+				customMessage={error.description ?? "This folder does not exist."}
+				statusCode={404}
+			/>
+		);
+	}
 
 	if (error) {
 		return <ApiError error={error} />;

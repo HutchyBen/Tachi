@@ -11,7 +11,6 @@ import {
 	LoadPbsOnChartForUserSearch,
 } from "#lib/db-formats/pb";
 import { SELECT_QUEST, SELECT_QUEST_SUB_WITH_QUEST_GAME } from "#lib/db-formats/quest";
-import { SELECT_QUESTLINE_ROW } from "#lib/db-formats/questline";
 import { GetSongByID, GetSongsByIDs } from "#lib/db-formats/song";
 import {
 	GetTableDocumentsForGame,
@@ -54,7 +53,11 @@ import {
 } from "#utils/db";
 import { EscapeForILIKE, IsString } from "#utils/misc";
 import { FindChartsOnPopularity } from "#utils/queries/charts";
-import { GetQuestlineById, GetQuestlinesForGame } from "#utils/queries/questlines";
+import {
+	GetQuestlineById,
+	GetQuestlinesForGame,
+	GetQuestlinesThatContainQuest,
+} from "#utils/queries/questlines";
 import {
 	CheckStrProfileAlg,
 	CheckStrScoreAlg,
@@ -673,9 +676,11 @@ API_V1_ROUTER.add("GET /games/:game/targets/recently-raised", withGame, async ({
  * @name GET /api/v1/games/:game/targets/goals/popular
  */
 API_V1_ROUTER.add("GET /games/:game/targets/goals/popular", withGame, async ({ ctx }) => {
-	const { gameGroup: _gameGroup, playtype } = LEGACY_GameToGameGroupPT(ctx.game);
+	const { gameGroup, playtype } = LEGACY_GameToGameGroupPT(ctx.game);
 
-	const goals = await GetMostSubscribedGoals({ game: ctx.game, playtype });
+	// GetMostSubscribedGoals internally converts GameGroup+playtype to V3Game for filtering
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const goals = await GetMostSubscribedGoals({ game: gameGroup as any, playtype });
 
 	return success(`Returned ${goals.length} goals.`, goals);
 });
@@ -800,23 +805,7 @@ API_V1_ROUTER.add("GET /games/:game/targets/quests/:questID", withGame, async ({
 	const users = await GetUsersWithIDs(questSubs.map((e) => e.userID));
 	const goals = await GetGoalsInQuest(quest);
 
-	const qlRows = await DB.selectFrom("questline")
-		.innerJoin("questline_quest", "questline_quest.questline_id", "questline.id")
-		.select(SELECT_QUESTLINE_ROW)
-		.where("questline_quest.quest_id", "=", quest.questID)
-		.execute();
-
-	const parentQuestlines = qlRows.map((ql) => {
-		const { gameGroup: gg, playtype: pt } = LEGACY_GameToGameGroupPT(ql.game);
-
-		return {
-			desc: ql.description,
-			game: gg,
-			name: ql.name,
-			playtype: pt,
-			questlineID: ql.id,
-		};
-	});
+	const parentQuestlines = await GetQuestlinesThatContainQuest(quest.questID);
 
 	return success(`Retrieved information about ${quest.name}.`, {
 		goals,

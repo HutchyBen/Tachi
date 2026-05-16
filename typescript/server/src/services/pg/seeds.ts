@@ -296,6 +296,22 @@ export function buildChartIdMap(seedsDir: string): Map<string, string> {
 	return map;
 }
 
+/**
+ * Optional map from `rerunners/v3/7-remap-goals-folder-and-chart-ids.ts` (`db/seeds/goal-id-remap.json`).
+ * Mongo `goal-subs.goalID` may still use hashes from before legacy chart/folder ids were rewired.
+ */
+export function buildGoalIdRemap(seedsDir: string): Map<string, string> {
+	const p = path.join(seedsDir, "goal-id-remap.json");
+
+	if (!fs.existsSync(p)) {
+		return new Map();
+	}
+
+	const raw = JSON.parse(fs.readFileSync(p, "utf-8")) as Record<string, string>;
+
+	return new Map(Object.entries(raw));
+}
+
 // ── Core import logic ──────────────────────────────────────────────────────
 
 export async function importSeeds(pg: Kysely<Database>, seedsDir: string): Promise<void> {

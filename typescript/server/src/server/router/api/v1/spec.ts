@@ -1174,6 +1174,19 @@ export const API_V1_SPEC = {
 		}),
 	},
 
+	"PUT /users/:userID/games/:game/targets/goals/:goalID": {
+		description: "Update a standalone goal subscription by replacing its definition.",
+		input: z.object({
+			criteria: z.unknown(),
+			charts: z.unknown(),
+		}),
+		output: z.strictObject({
+			changed: z.boolean(),
+			goal: doc<GoalDocument>(),
+			goalSub: doc<GoalSubscriptionDocument>(),
+		}),
+	},
+
 	"DELETE /users/:userID/games/:game/targets/goals/:goalID": {
 		description: "Unsubscribe from a goal.",
 		input: z.object({}),
@@ -1187,7 +1200,7 @@ export const API_V1_SPEC = {
 		output: z.strictObject({
 			questSubs: docArray<QuestSubscriptionDocument>(),
 			quests: docArray<QuestDocument>(),
-			goals: z.record(z.string(), docArray<GoalDocument>()),
+			goals: docArray<GoalDocument>(),
 		}),
 	},
 

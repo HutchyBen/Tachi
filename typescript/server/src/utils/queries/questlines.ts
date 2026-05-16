@@ -41,6 +41,51 @@ export async function GetQuestlinesForGame(game: V3Game): Promise<Array<Questlin
 }
 
 /**
+ * All questlines that contain a given quest, with `quests` ordered by `sort_order`.
+ */
+export async function GetQuestlinesThatContainQuest(
+	questID: string,
+): Promise<Array<QuestlineDocument>> {
+	const memberRows = await DB.selectFrom("questline_quest")
+		.select("questline_quest.questline_id")
+		.where("questline_quest.quest_id", "=", questID)
+		.execute();
+
+	if (memberRows.length === 0) {
+		return [];
+	}
+
+	const questlineIds = memberRows.map((r) => r.questline_id);
+
+	const qlRows = await DB.selectFrom("questline")
+		.select(SELECT_QUESTLINE)
+		.where("questline.id", "in", questlineIds)
+		.execute();
+
+	const qqRows = await DB.selectFrom("questline_quest")
+		.select([
+			"questline_quest.questline_id",
+			"questline_quest.quest_id",
+			"questline_quest.sort_order",
+		])
+		.where("questline_quest.questline_id", "in", questlineIds)
+		.orderBy("questline_quest.questline_id")
+		.orderBy("questline_quest.sort_order")
+		.execute();
+
+	const byQuestline = new Map<string, Array<string>>();
+
+	for (const row of qqRows) {
+		const list = byQuestline.get(row.questline_id) ?? [];
+
+		list.push(row.quest_id);
+		byQuestline.set(row.questline_id, list);
+	}
+
+	return qlRows.map((row) => ToQuestlineDocument(row, byQuestline.get(row.questline_id) ?? []));
+}
+
+/**
  * One questline by id, scoped to game. `quests` are ordered by `questline_quest.sort_order`.
  */
 export async function GetQuestlineById(

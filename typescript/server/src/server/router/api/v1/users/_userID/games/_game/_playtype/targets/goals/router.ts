@@ -145,6 +145,56 @@ API_V1_ROUTER.add(
 );
 
 /**
+ * Update a standalone goal subscription by replacing its definition.
+ *
+ * Creates a new goal from the provided charts/criteria and atomically swaps
+ * the user's subscription from the old goal to the new one. Progress is
+ * re-evaluated from scores on the next import — no migration is needed.
+ *
+ * Only standalone goals (not quest-assigned goals) may be updated this way.
+ *
+ * @name PUT /api/v1/users/:userID/games/:game/targets/goals/:goalID
+ */
+API_V1_ROUTER.add(
+	"PUT /users/:userID/games/:game/targets/goals/:goalID",
+	withUserGameProfile,
+	async ({ ctx, params, input, req }) => {
+		const { requestedUser: user, game } = ctx;
+
+		const sessionUser = req.session.tachi?.user;
+
+		if (!sessionUser) {
+			throw new ExpectedErr(401, "You are not authenticated.");
+		}
+
+		const taker = { acct: { id: sessionUser.id, username: sessionUser.username }, ip: req.ip };
+
+		const { ACTION_UpdateGoalSubscription } = await import(
+			"#actions/update-goal-subscription"
+		);
+		const { GetGoalForIDGuaranteed, GetGoalSubscriptionForIDGuaranteed } = await import(
+			"#utils/db"
+		);
+
+		const { newGoalID, changed } = await ACTION_UpdateGoalSubscription(taker, {
+			charts: input.charts as GoalDocument["charts"],
+			criteria: input.criteria as GoalDocument["criteria"],
+			game,
+			oldGoalID: params.goalID,
+			userID: user.id,
+		});
+
+		const newGoal = await GetGoalForIDGuaranteed(newGoalID);
+		const newGoalSub = await GetGoalSubscriptionForIDGuaranteed(newGoalID, user.id);
+
+		return success(
+			changed ? `Updated goal to '${newGoal.name}'.` : "Goal definition is unchanged.",
+			{ changed, goal: newGoal, goalSub: newGoalSub },
+		);
+	},
+);
+
+/**
  * Unsubscribe from a goal.
  *
  * @name DELETE /api/v1/users/:userID/games/:game/targets/goals/:goalID

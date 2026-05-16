@@ -349,6 +349,19 @@ export const ActionSignatures = {
 		}),
 		output: z.object({}),
 	},
+	UPDATE_GOAL_SUBSCRIPTION: {
+		input: z.object({
+			userID: z.number().int(),
+			game: z.enum(ALL_GAMES),
+			oldGoalID: z.string(),
+			charts: z.any(),
+			criteria: z.any(),
+		}),
+		output: z.object({
+			newGoalID: z.string(),
+			changed: z.boolean(),
+		}),
+	},
 	UPDATE_UGPT_SHOWCASE: {
 		input: z.object({
 			userID: z.number().int(),

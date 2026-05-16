@@ -50,6 +50,10 @@ export function GetGoalIDsFromQuest(quest: QuestDocument) {
 export async function GetGoalsInQuest(quest: QuestDocument) {
 	const goalIDs = GetGoalIDsFromQuest(quest);
 
+	if (goalIDs.length === 0) {
+		return [];
+	}
+
 	const goals = await DB.selectFrom("goal")
 		.select(SELECT_GOAL)
 		.where("goal.id", "in", goalIDs)
@@ -124,7 +128,7 @@ export async function EvaluateQuestProgress(userID: integer, quest: QuestDocumen
 
 	const goalSubMap = new Map<string, GoalSubscriptionDocument>();
 
-	if (isSubscribedToQuest) {
+	if (isSubscribedToQuest && goals.length > 0) {
 		const goalSubRows = await DB.selectFrom("goal_sub")
 			.innerJoin("goal", "goal.id", "goal_sub.goal_id")
 			.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
@@ -382,16 +386,18 @@ export async function UnsubscribeFromQuest(
 		.where("quest_sub.user_id", "=", questSub.userID)
 		.execute();
 
-	const goalSubRows = await DB.selectFrom("goal_sub")
-		.innerJoin("goal", "goal.id", "goal_sub.goal_id")
-		.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
-		.where("goal_sub.user_id", "=", questSub.userID)
-		.where("goal_sub.goal_id", "in", goalIDs)
-		.execute();
+	if (goalIDs.length > 0) {
+		const goalSubRows = await DB.selectFrom("goal_sub")
+			.innerJoin("goal", "goal.id", "goal_sub.goal_id")
+			.select(SELECT_GOAL_SUB_WITH_GOAL_GAME)
+			.where("goal_sub.user_id", "=", questSub.userID)
+			.where("goal_sub.goal_id", "in", goalIDs)
+			.execute();
 
-	const goalSubs = goalSubRows.map((r) => ToGoalSubscriptionDocument(r));
+		const goalSubs = goalSubRows.map((r) => ToGoalSubscriptionDocument(r));
 
-	await Promise.all(goalSubs.map((e) => UnsubscribeFromGoal(e, true)));
+		await Promise.all(goalSubs.map((e) => UnsubscribeFromGoal(e, true)));
+	}
 }
 
 /**

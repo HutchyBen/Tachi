@@ -36,22 +36,24 @@ export default function QuestlinePage({ game }: GamePT) {
 	}
 
 	const goalMap = CreateGoalMap(data.goals);
-
 	const questMap = CreateQuestMap(data.quests);
 
 	return (
 		<Row>
 			<Col xs={12}>
-				<Link to={`/games/${game}/quests`}>Go back to all questlines...</Link>
+				<Link to={`/games/${game}/quests`}>← Back to all questlines</Link>
 				<Divider />
+				{/* Summary card with timeline — the Questline component renders the
+				    vertical timeline nodes when a quests map is provided. */}
 				<Questline questline={data.questline} quests={questMap} />
 				<Divider />
 			</Col>
+
+			{/* Full quest cards below, anchored so timeline links scroll to them */}
 			{data.questline.quests.map((questID) => {
 				const quest = questMap.get(questID);
 
 				if (!quest) {
-					// shouldn't happen, but paste over it.
 					return null;
 				}
 

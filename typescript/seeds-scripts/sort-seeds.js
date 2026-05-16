@@ -77,6 +77,11 @@ function SortSeeds() {
 		const collPath = path.join(collectionsDir, collection);
 		let content = JSON.parse(fs.readFileSync(collPath));
 
+		// Auxiliary maps (non-array roots) coexist with seed collections — skip them.
+		if (!Array.isArray(content)) {
+			continue;
+		}
+
 		if (collection.startsWith("charts-")) {
 			content.sort(ChartSort);
 		} else if (collection.startsWith("songs-")) {

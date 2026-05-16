@@ -104,7 +104,7 @@ import type {
 	MongoUserSettingsCollectionDocument,
 } from "./migrate-to-postgres.mongo-docs";
 
-import { buildChartIdMap, importSeeds } from "./load-seeds-pg";
+import { buildChartIdMap, buildGoalIdRemap, importSeeds } from "./load-seeds-pg";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Connection setup
@@ -399,6 +399,8 @@ async function main(): Promise<void> {
 	// Maps old MongoDB chartID (40-char SHA1) → seed sid (16-char hex).
 	// Used to resolve chart_id FK references in scores and PBs.
 	const chartIdMap = buildChartIdMap(SEEDS_DIR);
+
+	const goalIdRemap = buildGoalIdRemap(SEEDS_DIR);
 
 	// ══════════════════════════════════════════════════════════════════════════
 	// LEVEL 0 - No FK dependencies
@@ -1164,15 +1166,18 @@ async function main(): Promise<void> {
 		console.log("\n[goal_sub]");
 		const goalSubs = await mongoDB.get<MongoGoalSubsCollectionDocument>("goal-subs").find({});
 
-		const uniqueGoalIds = [...new Set(goalSubs.map((gs) => gs.goalID))];
+		const uniqueMongoGoalIds = [...new Set(goalSubs.map((gs) => gs.goalID))];
+		const translatedIds = uniqueMongoGoalIds.map((gid) => goalIdRemap.get(gid) ?? gid);
+		const candidateGoalIdsForLookup = [...new Set([...uniqueMongoGoalIds, ...translatedIds])];
+
 		const existingGoalIds = new Set(
-			uniqueGoalIds.length === 0
+			candidateGoalIdsForLookup.length === 0
 				? []
 				: (
 						await pg
 							.selectFrom("goal")
 							.select("id")
-							.where("id", "in", uniqueGoalIds)
+							.where("id", "in", candidateGoalIdsForLookup)
 							.execute()
 					).map((r) => r.id),
 		);
@@ -1180,13 +1185,17 @@ async function main(): Promise<void> {
 		const goalSubRows: Array<NewGoalSub> = [];
 
 		for (const gs of goalSubs) {
-			if (!existingGoalIds.has(gs.goalID)) {
-				console.warn(`  [goal_sub] Skipping - goal ${gs.goalID} not found in DB`);
+			const resolvedGoalId = goalIdRemap.get(gs.goalID) ?? gs.goalID;
+
+			if (!existingGoalIds.has(resolvedGoalId)) {
+				console.warn(
+					`  [goal_sub] Skipping - goal ${gs.goalID} (resolved=${resolvedGoalId}) not found in DB`,
+				);
 				continue;
 			}
 
 			goalSubRows.push({
-				goal_id: gs.goalID,
+				goal_id: resolvedGoalId,
 				user_id: gs.userID,
 				last_interaction: ts(gs.lastInteraction),
 				progress: gs.progress,

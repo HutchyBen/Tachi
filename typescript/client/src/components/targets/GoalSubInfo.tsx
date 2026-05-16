@@ -5,10 +5,15 @@ import { type GoalSubDataset } from "#types/tables";
 import { NumericSOV } from "#util/sorts";
 import React, { useMemo, useState } from "react";
 import { Col } from "react-bootstrap";
+import { type GoalDocument } from "tachi-common";
 
 import { InnerQuestSectionGoal } from "./quests/Quest";
 
-export default function GoalSubInfo({ dataset }: { dataset: GoalSubDataset } & GamePT) {
+export default function GoalSubInfo({
+	dataset,
+	game,
+	onEditGoal,
+}: { dataset: GoalSubDataset; onEditGoal?: (goal: GoalDocument) => void } & GamePT) {
 	const [show, setShow] = useState<"achieved" | "all" | "unachieved">("all");
 
 	const { directGoals, folderGoals } = useMemo(() => {
@@ -73,6 +78,11 @@ export default function GoalSubInfo({ dataset }: { dataset: GoalSubDataset } & G
 								<InnerQuestSectionGoal
 									dependencies={e.__related.parentQuests.map((e) => e.name)}
 									goal={e.__related.goal}
+									onEdit={
+										e.wasAssignedStandalone && onEditGoal
+											? () => onEditGoal(e.__related.goal)
+											: undefined
+									}
 								/>
 							</div>
 						))}
@@ -86,6 +96,11 @@ export default function GoalSubInfo({ dataset }: { dataset: GoalSubDataset } & G
 								<InnerQuestSectionGoal
 									dependencies={e.__related.parentQuests.map((e) => e.name)}
 									goal={e.__related.goal}
+									onEdit={
+										e.wasAssignedStandalone && onEditGoal
+											? () => onEditGoal(e.__related.goal)
+											: undefined
+									}
 								/>
 							</div>
 						))}
