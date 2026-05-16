@@ -176,6 +176,16 @@ export const GAME_ONGEKI_CONF = {
 			formatter: ToDecimalPlaces(3),
 			associatedScoreAlgs: ["scoreRating", "starRating"],
 		},
+		scoreRating: {
+			description: "The average of your best 60 ScoreRatings.",
+			formatter: ToDecimalPlaces(3),
+			associatedScoreAlgs: ["scoreRating"],
+		},
+		starRating: {
+			description: "The average of your best 50 StarRatings.",
+			formatter: ToDecimalPlaces(3),
+			associatedScoreAlgs: ["starRating"],
+		},
 	},
 
 	defaultScoreRatingAlg: "rating",
@@ -184,12 +194,13 @@ export const GAME_ONGEKI_CONF = {
 
 	difficulties: {
 		type: "FIXED",
-		order: ["BASIC", "ADVANCED", "EXPERT", "MASTER", "LUNATIC"],
+		order: ["BASIC", "ADVANCED", "EXPERT", "MASTER", "Re:MASTER", "LUNATIC"],
 		formatShort: {
 			BASIC: "BAS",
 			ADVANCED: "ADV",
 			EXPERT: "EXP",
 			MASTER: "MAS",
+			"Re:MASTER": "Re:MAS",
 			LUNATIC: "LUN",
 		},
 		formatLong: {},
@@ -228,7 +239,6 @@ export const GAME_ONGEKI_CONF = {
 			"オンゲキ bright MEMORY Act.3",
 			"オンゲキ Re:Fresh",
 		]),
-		isReMaster: z.boolean().optional(),
 		maxPlatScore: z.number().int(),
 		inGameID: z.number().int(),
 		chartViewURL: z.string().optional(),
