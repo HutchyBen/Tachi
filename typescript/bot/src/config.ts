@@ -121,7 +121,27 @@ async function GetServerConfig() {
 	// This *should* be solved with top-level-await, but good luck actually getting
 	// typescript to output the right stuff here.
 
-	const res = await fetch(`${Env.TACHI_SERVER_LOCATION}/api/v1/config`).then((res) => res.json());
+	const url = `${Env.TACHI_SERVER_LOCATION}/api/v1/config`;
+	const httpRes = await fetch(url);
+	const text = await httpRes.text();
+
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(text);
+	} catch {
+		const preview = text.length > 500 ? `${text.slice(0, 500)}…` : text;
+		log.error(
+			`Expected JSON from ${url} (HTTP ${httpRes.status} ${httpRes.statusText}), but response was not valid JSON. Body preview:\n${preview}`,
+		);
+		process.exit(1);
+	}
+
+	if (!parsed || typeof parsed !== "object" || !("success" in parsed)) {
+		log.error(`Server config response from ${url} was JSON but missing a success field. Can't run.`);
+		process.exit(1);
+	}
+
+	const res = parsed as { body?: unknown; success: boolean };
 
 	if (!res.success) {
 		log.error(`Failed to fetch server info from ${Env.TACHI_SERVER_LOCATION}. Can't run.`);
