@@ -1442,6 +1442,9 @@ async function main(): Promise<void> {
 	// ── score ─────────────────────────────────────────────────────────────────
 	console.log("\n[score]");
 
+	let skippedNoChartSid = 0;
+	const skippedChartIdSample = new Set<string>();
+
 	await streamCollection<MongoScoresCollectionDocument>(
 		"scores",
 		async (docs) => {
@@ -1489,9 +1492,11 @@ async function main(): Promise<void> {
 				const chartSid = chartIdMap.get(s.chartID);
 
 				if (chartSid === undefined) {
-					throw new Error(
-						`  [score] Skipping score ${s.scoreID} - no sid for chartID ${s.chartID}`,
-					);
+					skippedNoChartSid++;
+					if (skippedChartIdSample.size < 24) {
+						skippedChartIdSample.add(s.chartID);
+					}
+					continue;
 				}
 
 				const sessionId = scoreToSession.get(s.scoreID) ?? null;
@@ -1533,6 +1538,10 @@ async function main(): Promise<void> {
 				});
 			}
 
+			if (rows.length === 0) {
+				return;
+			}
+
 			await pg
 				.insertInto("score")
 				.values(rows as never)
@@ -1540,6 +1549,13 @@ async function main(): Promise<void> {
 		},
 		"score",
 	);
+
+	if (skippedNoChartSid > 0) {
+		const ids = [...skippedChartIdSample].join(", ");
+		console.warn(
+			`  [score] Dropped ${skippedNoChartSid.toLocaleString()} score row(s): chart legacy id missing from seeds (sample legacy chart IDs: ${ids}).`,
+		);
+	}
 
 	// ── pb + pb_composed_from ─────────────────────────────────────────────────
 	console.log("\n[pb / pb_composed_from]");
