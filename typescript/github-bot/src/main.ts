@@ -75,7 +75,7 @@ async function listAllPullFiles(
 ): Promise<Array<{ filename: string }>> {
 	const out: Array<{ filename: string }> = [];
 	let page = 1;
-	for (;;) {
+	while (true) {
 		// GitHub returns up to 100 files per page; fetch pages sequentially.
 		// eslint-disable-next-line no-await-in-loop -- pagination must be sequential
 		const { data } = await octokit.request(

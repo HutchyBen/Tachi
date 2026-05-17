@@ -63,7 +63,7 @@ function checkRedundantJs(context, sourceNode) {
  */
 function findPackageRoot(startDir) {
 	let dir = startDir;
-	for (;;) {
+	while (true) {
 		const pkg = path.join(dir, "package.json");
 		if (fs.existsSync(pkg)) {
 			return dir;

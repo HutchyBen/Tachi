@@ -31,7 +31,7 @@ export function getDueFireTime(schedule: string, last: Date | null, now: Date): 
 	if (!last) {
 		let windowMs = 60_000;
 		const maxWindowMs = 800 * 24 * 60 * 60 * 1000;
-		for (;;) {
+		while (true) {
 			const start = new Date(Math.max(0, now.getTime() - windowMs));
 			const parsed = startAndFirstAfter(start);
 			if (parsed.first.getTime() <= now.getTime()) {

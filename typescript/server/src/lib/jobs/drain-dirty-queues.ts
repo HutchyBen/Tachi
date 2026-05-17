@@ -352,10 +352,10 @@ export async function drainStatsQueuesInOrder(): Promise<void> {
  * drain) - intended for admin synchronous recalc.
  */
 export async function drainStatsQueuesFully(): Promise<void> {
-	for (;;) {
+	while (true) {
 		let cycleMoved = 0;
 
-		for (;;) {
+		while (true) {
 			const n = await drainScoreRederive();
 
 			if (n === 0) {
@@ -365,7 +365,7 @@ export async function drainStatsQueuesFully(): Promise<void> {
 			cycleMoved += n;
 		}
 
-		for (;;) {
+		while (true) {
 			const n = await drainPbDirty();
 
 			if (n === 0) {
@@ -375,7 +375,7 @@ export async function drainStatsQueuesFully(): Promise<void> {
 			cycleMoved += n;
 		}
 
-		for (;;) {
+		while (true) {
 			const n = await drainSessionDirty();
 
 			if (n === 0) {
@@ -385,7 +385,7 @@ export async function drainStatsQueuesFully(): Promise<void> {
 			cycleMoved += n;
 		}
 
-		for (;;) {
+		while (true) {
 			const n = await drainGameProfileDirty();
 
 			if (n === 0) {
@@ -406,10 +406,10 @@ export async function drainStatsQueuesFully(): Promise<void> {
  * idle. No per-tick row cap - intended for admin synchronous PB recalc.
  */
 export async function drainPbDirtyAndDownstream(): Promise<void> {
-	for (;;) {
+	while (true) {
 		let cycleMoved = 0;
 
-		for (;;) {
+		while (true) {
 			const n = await drainPbDirty();
 
 			if (n === 0) {
@@ -419,7 +419,7 @@ export async function drainPbDirtyAndDownstream(): Promise<void> {
 			cycleMoved += n;
 		}
 
-		for (;;) {
+		while (true) {
 			const n = await drainSessionDirty();
 
 			if (n === 0) {
@@ -429,7 +429,7 @@ export async function drainPbDirtyAndDownstream(): Promise<void> {
 			cycleMoved += n;
 		}
 
-		for (;;) {
+		while (true) {
 			const n = await drainGameProfileDirty();
 
 			if (n === 0) {
