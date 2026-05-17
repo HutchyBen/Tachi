@@ -5,6 +5,9 @@
  * (same `{ charts, criteria, game }` convention as ../../util CreateGoalID), rewrite
  * `quests.json` goal refs when ids change, and update `stability-map.json` `goals` so
  * mongo→postgres can translate subscriptions.
+ *
+ * Expects each goal row’s {@link GoalSeed.game} to already be a canonical V3 string (run
+ * `3-migrate-goals-quests-questlines-game.ts` earlier in `just seeds-v3-migrate`).
  */
 
 import fs from "fs";
@@ -36,7 +39,8 @@ interface GoalSeed {
 	game: string;
 	goalID: string;
 	name: string;
-	playtype: string;
+	/** @deprecated Legacy field; omit on v3 seeds. */
+	playtype?: string;
 }
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

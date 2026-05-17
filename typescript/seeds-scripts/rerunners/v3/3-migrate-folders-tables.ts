@@ -1,5 +1,6 @@
 /**
- * Legacy Mongo → v3 hex ids for folders/tables. After this, run `4-tablefolders-to-object.ts`,
+ * Legacy Mongo → v3 hex ids for folders/tables. Also run `3-migrate-goals-quests-questlines-game.ts`
+ * in the same pass for goal/quest/questline `game` strings. After this, run `4-tablefolders-to-object.ts`,
  * `5-folders-to-sql-queries.ts`, then `6-tables-folder-refs-to-slugs.ts` so `tables.json`
  * references folders by slug.
  */

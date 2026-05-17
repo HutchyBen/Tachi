@@ -19,7 +19,7 @@
 	},
 	{
 		"desc": "These are the official quests for SDVX. These aim to be generally useful, and don't focus too much on specific skills. These were primarily created by Okami and Winter.",
-		"game": "sdvx-single",
+		"game": "sdvx",
 		"name": "Kamaitachi Official SDVX Questline",
 		"questlineID": "kt-official-sdvx",
 		"quests": [

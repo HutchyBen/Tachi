@@ -9,7 +9,6 @@ import {
 	type SEEDS_QuestlineDocument,
 	type SEEDS_SongDocument,
 	type SEEDS_TableDocument,
-	type V3Game,
 } from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import type {
@@ -36,8 +35,8 @@ import { type Insertable, type Kysely, type RawBuilder, sql } from "kysely";
 import path from "path";
 
 /**
- * Maps a `game` field from seeds JSON (now always a V3Game, e.g. "iidx-sp") to
- * the Postgres `game` enum.
+ * Maps a `game` field from seeds JSON (always a canonical V3Game, e.g. "iidx-sp") to the
+ * Postgres `game` enum. Run `just seeds-v3-migrate` if legacy shapes appear in repo seeds.
  */
 function seedJsonGameToPg(game: string, label: string): PgGame {
 	if ((ALL_GAMES as readonly string[]).includes(game)) {
