@@ -24,8 +24,16 @@ const PB_DIRTY_BATCH = 5000;
 const SCORE_REDERIVE_BATCH = 5000;
 const SESSION_DIRTY_BATCH = 5000;
 const GAME_PROFILE_DIRTY_BATCH = 500;
-/** Safety cap for one cron tick across score_rederive + pb_dirty + session + game_profile drains. */
-const STATS_QUEUE_DRAIN_CAP = 100_000;
+
+/** Number of charts to rederive concurrently inside one `drainScoreRederive` call. */
+const PARALLEL_CHART_WORKERS = 4;
+
+/** Per-queue row-processing caps for one cron tick. Each queue gets its own budget so a
+ * large `score_rederive` backlog cannot starve `pb_dirty` / session / game_profile drains. */
+const SCORE_REDERIVE_CAP = 50_000;
+const PB_DIRTY_CAP = 100_000;
+const SESSION_DIRTY_CAP = 50_000;
+const GAME_PROFILE_DIRTY_CAP = 5_000;
 
 /**
  * Drain the `pb_dirty` queue: group entries by (game, playtype, user_id),
@@ -87,6 +95,9 @@ export async function drainPbDirty(): Promise<number> {
  * Drain the `score_rederive` queue: for each chart, re-derive all scores,
  * then delete the queue entry. The score UPDATEs will fire `score_pb_dirty`
  * triggers, so PB recalculation happens automatically.
+ *
+ * Charts are processed PARALLEL_CHART_WORKERS at a time using a shared-iterator
+ * pool so all workers stay busy regardless of per-chart score counts.
  */
 export async function drainScoreRederive(): Promise<number> {
 	const rows = await DB.selectFrom("score_rederive")
@@ -101,16 +112,25 @@ export async function drainScoreRederive(): Promise<number> {
 
 	let totalScores = 0;
 
-	for (const row of rows) {
-		// eslint-disable-next-line no-await-in-loop
-		const updated = await rederiveScoresForChart(row.chart_id, log);
-
-		totalScores += updated;
+	for (let i = 0; i < rows.length; i += PARALLEL_CHART_WORKERS) {
+		const chunk = rows.slice(i, i + PARALLEL_CHART_WORKERS);
 
 		// eslint-disable-next-line no-await-in-loop
-		await DB.deleteFrom("score_rederive")
-			.where("score_rederive.chart_id", "=", row.chart_id)
-			.execute();
+		const counts = await Promise.all(
+			chunk.map(async (row) => {
+				const updated = await rederiveScoresForChart(row.chart_id, log);
+
+				await DB.deleteFrom("score_rederive")
+					.where("score_rederive.chart_id", "=", row.chart_id)
+					.execute();
+
+				return updated;
+			}),
+		);
+
+		for (const c of counts) {
+			totalScores += c;
+		}
 	}
 
 	log.debug(
@@ -225,16 +245,44 @@ export async function drainGameProfileDirty(): Promise<number> {
 
 /**
  * Drain `score_rederive`, then `pb_dirty`, then `session_dirty`, then `game_profile_dirty`,
- * repeating until a full pass does nothing or `STATS_QUEUE_DRAIN_CAP` row-processings is reached.
+ * repeating until a full pass does nothing. Each queue has its own per-tick row budget so
+ * a large `score_rederive` backlog cannot permanently starve the downstream queues.
  * PBs must run before game profiles (ratings read from `pb`).
  */
 export async function drainStatsQueuesInOrder(): Promise<void> {
-	let totalProcessed = 0;
+	const tickStart = Date.now();
 
-	while (totalProcessed < STATS_QUEUE_DRAIN_CAP) {
+	const queueSizes = await Promise.all([
+		DB.selectFrom("score_rederive")
+			.select((eb) => eb.fn.countAll<string>().as("n"))
+			.executeTakeFirst(),
+		DB.selectFrom("pb_dirty")
+			.select((eb) => eb.fn.countAll<string>().as("n"))
+			.executeTakeFirst(),
+		DB.selectFrom("session_dirty")
+			.select((eb) => eb.fn.countAll<string>().as("n"))
+			.executeTakeFirst(),
+		DB.selectFrom("game_profile_dirty")
+			.select((eb) => eb.fn.countAll<string>().as("n"))
+			.executeTakeFirst(),
+	]);
+
+	log.info(
+		{
+			score_rederive: Number(queueSizes[0]?.n ?? 0),
+			pb_dirty: Number(queueSizes[1]?.n ?? 0),
+			session_dirty: Number(queueSizes[2]?.n ?? 0),
+			game_profile_dirty: Number(queueSizes[3]?.n ?? 0),
+		},
+		"drainStatsQueuesInOrder: queue sizes at tick start",
+	);
+
+	while (true) {
 		let cycleMoved = 0;
 
-		while (totalProcessed < STATS_QUEUE_DRAIN_CAP) {
+		let srProcessed = 0;
+
+		while (srProcessed < SCORE_REDERIVE_CAP) {
 			// eslint-disable-next-line no-await-in-loop
 			const n = await drainScoreRederive();
 
@@ -242,11 +290,13 @@ export async function drainStatsQueuesInOrder(): Promise<void> {
 				break;
 			}
 
+			srProcessed += n;
 			cycleMoved += n;
-			totalProcessed += n;
 		}
 
-		while (totalProcessed < STATS_QUEUE_DRAIN_CAP) {
+		let pbProcessed = 0;
+
+		while (pbProcessed < PB_DIRTY_CAP) {
 			// eslint-disable-next-line no-await-in-loop
 			const n = await drainPbDirty();
 
@@ -254,11 +304,13 @@ export async function drainStatsQueuesInOrder(): Promise<void> {
 				break;
 			}
 
+			pbProcessed += n;
 			cycleMoved += n;
-			totalProcessed += n;
 		}
 
-		while (totalProcessed < STATS_QUEUE_DRAIN_CAP) {
+		let sessionProcessed = 0;
+
+		while (sessionProcessed < SESSION_DIRTY_CAP) {
 			// eslint-disable-next-line no-await-in-loop
 			const n = await drainSessionDirty();
 
@@ -266,11 +318,13 @@ export async function drainStatsQueuesInOrder(): Promise<void> {
 				break;
 			}
 
+			sessionProcessed += n;
 			cycleMoved += n;
-			totalProcessed += n;
 		}
 
-		while (totalProcessed < STATS_QUEUE_DRAIN_CAP) {
+		let gpProcessed = 0;
+
+		while (gpProcessed < GAME_PROFILE_DIRTY_CAP) {
 			// eslint-disable-next-line no-await-in-loop
 			const n = await drainGameProfileDirty();
 
@@ -278,14 +332,18 @@ export async function drainStatsQueuesInOrder(): Promise<void> {
 				break;
 			}
 
+			gpProcessed += n;
 			cycleMoved += n;
-			totalProcessed += n;
 		}
 
 		if (cycleMoved === 0) {
 			break;
 		}
 	}
+
+	const elapsedMs = Date.now() - tickStart;
+
+	log.info({ elapsedMs }, "drainStatsQueuesInOrder: tick complete");
 }
 
 /**

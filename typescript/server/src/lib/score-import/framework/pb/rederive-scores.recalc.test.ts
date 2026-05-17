@@ -94,6 +94,8 @@ async function insertSongAndChart(chartDoc: ChartDocument<"iidx-sp">) {
 	return { chartId, songId };
 }
 
+let insertIidxScoreCounter = 0;
+
 async function insertIidxScore(opts: {
 	chartId: string;
 	scoreData: ScoreData<"iidx-sp">;
@@ -103,6 +105,40 @@ async function insertIidxScore(opts: {
 	const now = new Date().toISOString();
 	const { data, derived, judgements } = mongoScoreDataToPg("iidx-sp", opts.scoreData);
 	const scoreId = `sc-recalc-${opts.chartId}`;
+
+	await DB.insertInto("score")
+		.values({
+			id: scoreId,
+			user_id: opts.userId,
+			chart_id: opts.chartId,
+			game: "iidx-sp",
+			session_id: opts.sessionId ?? null,
+			import_id: null,
+			data: JSON.stringify(data),
+			derived_data: JSON.stringify(derived),
+			judgements: JSON.stringify(judgements),
+			calculated_data: JSON.stringify({}),
+			meta: JSON.stringify({}),
+			time_achieved: now,
+			time_added: now,
+			highlight: false,
+			comment: null,
+		})
+		.execute();
+
+	return scoreId;
+}
+
+/** Like `insertIidxScore` but generates a unique score ID so multiple scores can be inserted for the same chart. */
+async function insertIidxScoreN(opts: {
+	chartId: string;
+	scoreData: ScoreData<"iidx-sp">;
+	sessionId?: string | null;
+	userId: number;
+}) {
+	const now = new Date().toISOString();
+	const { data, derived, judgements } = mongoScoreDataToPg("iidx-sp", opts.scoreData);
+	const scoreId = `sc-recalc-n-${opts.chartId}-${++insertIidxScoreCounter}`;
 
 	await DB.insertInto("score")
 		.values({
@@ -497,5 +533,165 @@ describe("rederiveScoresForChart / chart checksum recalc (Postgres)", () => {
 
 	it("drainStatsQueuesInOrder completes with empty queues", async () => {
 		await drainStatsQueuesInOrder();
+	});
+
+	it("bulk-updates all scores on a multi-score chart correctly", async () => {
+		const { id: userId } = await seedUser();
+		await seedIidxSpGameProfile(userId);
+
+		const chartId = `C_RECALC_BULK_${++recalcSeedCounter}`;
+		const songId = `S_RECALC_BULK_${recalcSeedCounter}`;
+		const doc10 = buildIidxSpChartDoc(chartId, songId, 10, 786);
+		await insertSongAndChart(doc10);
+
+		const scoreData = {
+			lamp: "CLEAR",
+			score: 1000,
+			grade: "AAA",
+			percent: 50,
+			optional: {},
+			judgements: { pgreat: 500, great: 0 },
+		} as ScoreData<"iidx-sp">;
+
+		const scoreIds = await Promise.all([
+			insertIidxScoreN({ chartId, userId, scoreData }),
+			insertIidxScoreN({ chartId, userId, scoreData }),
+			insertIidxScoreN({ chartId, userId, scoreData }),
+		]);
+
+		// Run rederive at level 10 first so derived_data / calculated_data are valid
+		await rederiveScoresForChart(chartId, log);
+
+		// Now bump to level 12 and re-derive
+		const doc12 = buildIidxSpChartDoc(chartId, songId, 12, 786);
+
+		await DB.updateTable("chart")
+			.set({
+				level: doc12.level,
+				level_num: doc12.levelNum,
+				derivation_checksum: ComputeChartStabilityChecksum("iidx-sp", doc12),
+			})
+			.where("chart.id", "=", chartId)
+			.execute();
+
+		await rederiveScoresForChart(chartId, log);
+
+		for (const scoreId of scoreIds) {
+			// eslint-disable-next-line no-await-in-loop
+			const row = await DB.selectFrom("score")
+				.select(["score.calculated_data"])
+				.where("score.id", "=", scoreId)
+				.executeTakeFirstOrThrow();
+
+			const calc = parseJsonb<{ ktLampRating: number }>(row.calculated_data);
+			expect(calc.ktLampRating).toBe(12);
+		}
+	});
+
+	it("skips UPDATE and pb_dirty enqueue when derived/calculated_data is unchanged", async () => {
+		const { id: userId } = await seedUser();
+		await seedIidxSpGameProfile(userId);
+
+		const chartId = `C_RECALC_NOOP_${++recalcSeedCounter}`;
+		const songId = `S_RECALC_NOOP_${recalcSeedCounter}`;
+		const doc10 = buildIidxSpChartDoc(chartId, songId, 10, 786);
+		await insertSongAndChart(doc10);
+
+		await insertIidxScore({
+			chartId,
+			userId,
+			scoreData: {
+				lamp: "CLEAR",
+				score: 1000,
+				grade: "AAA",
+				percent: 50,
+				optional: {},
+				judgements: { pgreat: 500, great: 0 },
+			} as ScoreData<"iidx-sp">,
+		});
+
+		// First pass: produces correct derived/calculated_data and enqueues pb_dirty
+		await rederiveScoresForChart(chartId, log);
+
+		// Drain pb_dirty so we can detect if a second rederive enqueues it again
+		await drainPbDirty();
+
+		const pbDirtyBefore = await DB.selectFrom("pb_dirty")
+			.select((eb) => eb.fn.countAll<string>().as("n"))
+			.where("pb_dirty.chart_id", "=", chartId)
+			.executeTakeFirstOrThrow();
+
+		expect(Number(pbDirtyBefore.n)).toBe(0);
+
+		// Second pass: chart is unchanged, so all scores should be skipped
+		const updated = await rederiveScoresForChart(chartId, log);
+
+		expect(updated).toBe(0);
+
+		const pbDirtyAfter = await DB.selectFrom("pb_dirty")
+			.select((eb) => eb.fn.countAll<string>().as("n"))
+			.where("pb_dirty.chart_id", "=", chartId)
+			.executeTakeFirstOrThrow();
+
+		// No new pb_dirty rows should be enqueued since no score was updated
+		expect(Number(pbDirtyAfter.n)).toBe(0);
+	});
+
+	it("drainScoreRederive removes queue entry after processing a multi-score chart", async () => {
+		const { id: userId } = await seedUser();
+		await seedIidxSpGameProfile(userId);
+
+		const chartId = `C_RECALC_DRAINMULTI_${++recalcSeedCounter}`;
+		const songId = `S_RECALC_DRAINMULTI_${recalcSeedCounter}`;
+		const docA = buildIidxSpChartDoc(chartId, songId, 9, 786);
+		await insertSongAndChart(docA);
+
+		const scoreData = {
+			lamp: "CLEAR",
+			score: 1000,
+			grade: "AAA",
+			percent: 50,
+			optional: {},
+			judgements: { pgreat: 500, great: 0 },
+		} as ScoreData<"iidx-sp">;
+
+		await Promise.all([
+			insertIidxScoreN({ chartId, userId, scoreData }),
+			insertIidxScoreN({ chartId, userId, scoreData }),
+		]);
+
+		const docB = buildIidxSpChartDoc(chartId, songId, 11, 786);
+
+		await DB.updateTable("chart")
+			.set({
+				level: docB.level,
+				level_num: docB.levelNum,
+				derivation_checksum: ComputeChartStabilityChecksum("iidx-sp", docB),
+			})
+			.where("chart.id", "=", chartId)
+			.execute();
+
+		const n = await drainScoreRederive();
+		expect(n).toBeGreaterThanOrEqual(1);
+
+		const stillQueued = await DB.selectFrom("score_rederive")
+			.select(["score_rederive.chart_id"])
+			.where("score_rederive.chart_id", "=", chartId)
+			.executeTakeFirst();
+
+		expect(stillQueued).toBeUndefined();
+
+		// Both scores should reflect the updated chart level
+		const scoreRows = await DB.selectFrom("score")
+			.select(["score.calculated_data"])
+			.where("score.chart_id", "=", chartId)
+			.execute();
+
+		expect(scoreRows).toHaveLength(2);
+
+		for (const row of scoreRows) {
+			const calc = parseJsonb<{ ktLampRating: number }>(row.calculated_data);
+			expect(calc.ktLampRating).toBe(11);
+		}
 	});
 });
