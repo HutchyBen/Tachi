@@ -106,7 +106,8 @@ export async function GetBestJubilityOnSongs(
 	return Promise.all(rows.rows.map((row) => ToPbScoreDocument(row)));
 }
 
-const CURRENT_JUBEAT_HOT_VERSION: Versions["jubeat"] = "beyond";
+/** Songs in this `displayVersion` bucket contribute to the hot jubility pick list. */
+export const CURRENT_JUBEAT_HOT_VERSION: Versions["jubeat"] = "beyond";
 
 export async function GetPBsForJubility(userID: integer) {
 	const hotSongRows = await DB.selectFrom("song")

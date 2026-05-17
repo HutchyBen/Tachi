@@ -1,4 +1,5 @@
 import {
+	CURRENT_JUBEAT_HOT_VERSION,
 	GetBestJubilityOnSongs,
 	GetPBsForJubility,
 	JUBEAT_IMPL,
@@ -6,9 +7,6 @@ import {
 import DB from "#services/pg/db";
 import { seedUser } from "#test-utils/pg-fixtures";
 import { describe, expect, it } from "vitest";
-
-/** Matches {@link CURRENT_JUBEAT_HOT_VERSION} in `jubeat.ts`. */
-const JUBEAT_HOT_DISPLAY_VERSION = "ave";
 
 let jubeatSeedCounter = 0;
 
@@ -114,7 +112,7 @@ describe("GetBestJubilityOnSongs (Postgres)", () => {
 
 		await seedJubeatSong({
 			songID,
-			displayVersion: JUBEAT_HOT_DISPLAY_VERSION,
+			displayVersion: CURRENT_JUBEAT_HOT_VERSION,
 		});
 		await seedJubeatChartPbOnSong(userId, songID, {
 			difficulty: "HARD BSC",
@@ -137,7 +135,7 @@ describe("GetBestJubilityOnSongs (Postgres)", () => {
 
 		await seedJubeatSong({
 			songID,
-			displayVersion: JUBEAT_HOT_DISPLAY_VERSION,
+			displayVersion: CURRENT_JUBEAT_HOT_VERSION,
 		});
 		await seedJubeatChartPbOnSong(userId, songID, {
 			difficulty: "BSC",
@@ -164,7 +162,7 @@ describe("GetBestJubilityOnSongs (Postgres)", () => {
 			songIDs.map((songID, i) =>
 				seedJubeatSongChartPb(userId, {
 					songID,
-					displayVersion: JUBEAT_HOT_DISPLAY_VERSION,
+					displayVersion: CURRENT_JUBEAT_HOT_VERSION,
 					difficulty: "EXT",
 					jubility: 100 + i,
 				}),
@@ -184,7 +182,7 @@ describe("GetBestJubilityOnSongs (Postgres)", () => {
 
 		await seedJubeatSongChartPb(userId, {
 			songID,
-			displayVersion: JUBEAT_HOT_DISPLAY_VERSION,
+			displayVersion: CURRENT_JUBEAT_HOT_VERSION,
 			difficulty: "NOT_A_REAL_BUCKET",
 			jubility: 9999,
 		});
@@ -205,12 +203,12 @@ describe("GetPBsForJubility (Postgres)", () => {
 		expect(bestScores).toEqual([]);
 	});
 
-	it("places ave songs in pickUp and non-ave songs in other", async () => {
+	it("places hot-pool songs in pickUp and other versions in other", async () => {
 		const { id: userId } = await seedUser();
 
 		await seedJubeatSongChartPb(userId, {
 			songID: "jubeat-prof-song-400200",
-			displayVersion: JUBEAT_HOT_DISPLAY_VERSION,
+			displayVersion: CURRENT_JUBEAT_HOT_VERSION,
 			difficulty: "EXT",
 			jubility: 50,
 		});
@@ -232,7 +230,7 @@ describe("GetPBsForJubility (Postgres)", () => {
 		expect(bestScores[0]!.calculatedData.jubility).toBe(80);
 	});
 
-	it("treats missing displayVersion as cold (IS DISTINCT FROM ave)", async () => {
+	it("treats missing displayVersion as cold (IS DISTINCT FROM hot pool)", async () => {
 		const { id: userId } = await seedUser();
 		const n = ++jubeatSeedCounter;
 		const songID = `jubeat-prof-song-${n}`;
@@ -301,7 +299,7 @@ describe("JUBEAT_IMPL.profileCalcs (Postgres)", () => {
 
 		await seedJubeatSongChartPb(userId, {
 			songID: "jubeat-prof-song-400300",
-			displayVersion: JUBEAT_HOT_DISPLAY_VERSION,
+			displayVersion: CURRENT_JUBEAT_HOT_VERSION,
 			difficulty: "EXT",
 			jubility: 100,
 		});
@@ -325,7 +323,7 @@ describe("JUBEAT_IMPL.profileCalcs (Postgres)", () => {
 			Array.from({ length: 3 }, (_, i) =>
 				seedJubeatSongChartPb(userId, {
 					songID: `jubeat-prof-song-400400${i}`,
-					displayVersion: JUBEAT_HOT_DISPLAY_VERSION,
+					displayVersion: CURRENT_JUBEAT_HOT_VERSION,
 					difficulty: "EXT",
 					jubility: 10 * (i + 1),
 				}),
@@ -342,7 +340,7 @@ describe("JUBEAT_IMPL.profileCalcs (Postgres)", () => {
 
 		await seedJubeatSongChartPb(userId, {
 			songID: "jubeat-prof-song-400500",
-			displayVersion: JUBEAT_HOT_DISPLAY_VERSION,
+			displayVersion: CURRENT_JUBEAT_HOT_VERSION,
 			difficulty: "EXT",
 			isPrimary: false,
 			jubility: 5000,
@@ -362,7 +360,7 @@ describe("JUBEAT_IMPL.profileCalcs (Postgres)", () => {
 			songIDs.map((songID, i) =>
 				seedJubeatSongChartPb(userId, {
 					songID,
-					displayVersion: JUBEAT_HOT_DISPLAY_VERSION,
+					displayVersion: CURRENT_JUBEAT_HOT_VERSION,
 					difficulty: "EXT",
 					jubility: 1000 + i,
 				}),
