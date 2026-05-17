@@ -38377,7 +38377,7 @@
 		"slug": "refreshomni-lunatic",
 		"title": "LUNATIC (Re:Fresh Omnimix)",
 		"versionFilter": ["refreshOmni"],
-		"where": "chart.data->>'isBonusTrack' = 'false' AND chart.data->>'isReMaster' = 'false' AND chart.difficulty = 'LUNATIC'"
+		"where": "chart.data->>'isReMaster' = 'false' AND chart.difficulty = 'LUNATIC'"
 	},
 	{
 		"game": "ongeki",
@@ -38398,17 +38398,6 @@
 		"searchTerms": [],
 		"slug": "refresh-lunatic",
 		"title": "LUNATIC (Re:Fresh)",
-		"versionFilter": ["refresh"],
-		"where": "chart.data->>'isBonusTrack' = 'false' AND chart.data->>'isReMaster' = 'false' AND chart.difficulty = 'LUNATIC'"
-	},
-	{
-		"game": "ongeki",
-		"id": "F19d35f0cf2aa17a39b1",
-		"inactive": true,
-		"legacyFolderID": "F2de5fd8f784e94c6e2c60c5960b1306aadb76c54ce9b502421813cfa66532a36",
-		"searchTerms": [],
-		"slug": "refresh-lunatic-old",
-		"title": "LUNATIC (Re:Fresh) (Old)",
 		"versionFilter": ["refresh"],
 		"where": "chart.data->>'isReMaster' = 'false' AND chart.difficulty = 'LUNATIC'"
 	},
@@ -38530,7 +38519,7 @@
 		"slug": "refreshomni-lunatic-remaster",
 		"title": "Re:MASTER (Re:Fresh Omnimix)",
 		"versionFilter": ["refreshOmni"],
-		"where": "chart.data->>'isBonusTrack' = 'false' AND chart.data->>'isReMaster' = 'true' AND chart.difficulty = 'LUNATIC'"
+		"where": "chart.data->>'isReMaster' = 'true' AND chart.difficulty = 'LUNATIC'"
 	},
 	{
 		"game": "ongeki",
@@ -38551,17 +38540,6 @@
 		"searchTerms": [],
 		"slug": "refresh-lunatic-remaster",
 		"title": "Re:MASTER (Re:Fresh)",
-		"versionFilter": ["refresh"],
-		"where": "chart.data->>'isBonusTrack' = 'false' AND chart.data->>'isReMaster' = 'true' AND chart.difficulty = 'LUNATIC'"
-	},
-	{
-		"game": "ongeki",
-		"id": "F19d35f0cf2a28977612",
-		"inactive": true,
-		"legacyFolderID": "F591906452a12c984f9a5e436543802e493d15782b678b518dbeba3705720c77c",
-		"searchTerms": [],
-		"slug": "refresh-lunatic-remaster-old",
-		"title": "Re:MASTER (Re:Fresh) (Old)",
 		"versionFilter": ["refresh"],
 		"where": "chart.data->>'isReMaster' = 'true' AND chart.difficulty = 'LUNATIC'"
 	},

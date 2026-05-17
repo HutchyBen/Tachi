@@ -2,7 +2,6 @@ import type { Game } from "tachi-db";
 
 import { SELECT_CHART, ToChartDocument } from "#lib/db-formats/chart";
 import { SELECT_SONG_DOCUMENT, ToSongDocument } from "#lib/db-formats/song";
-import { InvalidScoreFailure } from "#lib/score-import/framework/common/converter-failures";
 import DB from "#services/pg/db";
 import { sql, type SqlBool } from "kysely";
 import {
@@ -56,44 +55,6 @@ export async function FindChartWithSongDifficulty<TGame extends V3Game = V3Game>
 	}
 
 	return ToChartDocument(row);
-}
-
-/**
- * Like FindchartWithSongDifficulty, but with O.N.G.E.K.I.'s LUNATIC/Re:MASTER merger.
- * @see FindChartWithSongDifficulty
- */
-export async function FindOngekiChartWithSongDifficulty<TGame extends V3Game = V3Game>(
-	game: "ongeki",
-	songID: string,
-	difficulty: Difficulties[TGame],
-) {
-	if (difficulty === "Re:MASTER") {
-		// Importers shall not specify the Re:MASTER difficulty directly.
-		return null;
-	}
-
-	let query = DB.selectFrom("chart")
-		.innerJoin("song", "song.id", "chart.song_id")
-		.select(SELECT_CHART)
-		.where("song.id", "=", songID)
-		.where("chart.game", "=", game);
-
-	if (difficulty === "LUNATIC") {
-		query = query.where("chart.difficulty", "in", ["LUNATIC", "Re:MASTER"]);
-	} else {
-		query = query.where("chart.difficulty", "=", difficulty as string);
-	}
-	const row = await query.execute();
-
-	if (row.length === 0) {
-		return null;
-	}
-
-	if (row.length > 1) {
-		throw new InvalidScoreFailure("This chart cannot be matched by songTitle+difficulty.");
-	}
-
-	return ToChartDocument(row[0]);
 }
 
 /**
@@ -448,40 +409,6 @@ export async function FindIIDXChartOnInGameIDVersion(
 		.where("chart.difficulty", "=", difficulty as string)
 		.where(sql<boolean>`${sql.lit(String(version))} = ANY(chart.versions)`)
 		.executeTakeFirst();
-
-	if (!row) {
-		return null;
-	}
-
-	return ToChartDocument(row);
-}
-
-/**
- *  Like {@link FindChartOnInGameID} with an exception for O.N.G.E.K.I.'s LUNATIC/Re:MASTER difficulty.
- */
-export async function FindOngekiChartOnInGameID(
-	game: "ongeki",
-	inGameID: number,
-	difficulty: Difficulties[V3Game],
-) {
-	if (difficulty === "Re:MASTER") {
-		// Importers shall not specify the Re:MASTER difficulty directly.
-		return null;
-	}
-
-	let query = DB.selectFrom("chart")
-		.innerJoin("song", "song.id", "chart.song_id")
-		.select(SELECT_CHART)
-		.where("chart.game", "=", game)
-		.where(sqlChartDataInGameIDEquals(inGameID));
-
-	if (difficulty === "LUNATIC") {
-		query = query.where("chart.difficulty", "in", ["LUNATIC", "Re:MASTER"]);
-	} else {
-		query = query.where("chart.difficulty", "=", difficulty as string);
-	}
-
-	const row = await query.executeTakeFirst();
 
 	if (!row) {
 		return null;

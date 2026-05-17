@@ -78,8 +78,6 @@ The default rating algorithm is `naiveRating`.
 | :: | :: |
 | `naiveRating` | The average of your best 45 classic ratings. This is a simpler variant of the rating algorithm used in bright MEMORY and earlier versions, without distinguishing between new and old charts, and without taking recent scores into account. |
 | `naiveRatingRefresh` | A weighted sum of the average of your best 60 score ratings, and your best 50 star ratings. This is a simpler variant of the rating algorithm used in Re:Fresh, without distinguishing between new and old charts. |
-| `scoreRating` | The average of your best 60 score ratings. |
-| `starRating` | The average of your best 50 star ratings. |
 
 ## Difficulties
 
@@ -88,9 +86,6 @@ The default rating algorithm is `naiveRating`.
 - `EXPERT`
 - `MASTER`
 - `LUNATIC`
-- `Re:MASTER`
-
-The `LUNATIC`/`Re:MASTER` split is transparent; your import script must assume every "white" chart is `LUNATIC`.
 
 ## Classes
 
@@ -111,11 +106,11 @@ The `LUNATIC`/`Re:MASTER` split is transparent; your import script must assume e
 ## Supported Match Types
 
 - `songTitle`
-- `tachiSongID` – deprecated; don't use this
+- `tachiSongID`
 - `inGameID`
 
 ### Song Title Matching
-There are numerous songs with non-unique names (e.g. Singularity, Singularity, Singularity and Xingularity), but this can be resolved by providing the `artist` field. The only exception is Perfect Shining!!, which uniquely has two LUNATIC charts and has to be matched by `inGameID`:
+There are numerous songs with non-unique names (e.g. Singularity, Singularity and Singularity), but this can be resolved by providing the `artist` field. The only exception is Perfect Shining, which uniquely has two LUNATIC charts and has to be matched by `inGameID`:
 
 - LUNATIC 0 (Loctest chart) `inGameID: 8003`
-- Re:MASTER 13+ `inGameID: 8091`
+- LUNATIC 13+ (Re:Master) `inGameID: 8091`
