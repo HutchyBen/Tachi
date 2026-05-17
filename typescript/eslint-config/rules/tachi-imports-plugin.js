@@ -3,6 +3,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { requireUnicodeRegexpFix } from "./require-unicode-regexp-fix.js";
+
 const MESSAGE_NO_REDUNDANT_JS = "noRedundantJsExtension";
 const MESSAGE_PREFER_HASH = "preferHashImport";
 
@@ -299,5 +301,6 @@ export default {
 	rules: {
 		"no-redundant-js-extension": noRedundantJsExtension,
 		"prefer-hash-import": preferHashImport,
+		"require-unicode-regexp": requireUnicodeRegexpFix,
 	},
 };

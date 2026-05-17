@@ -1,4 +1,4 @@
-/* eslint no-labels: "off", require-unicode-regexp: "off", no-irregular-whitespace: "off" */
+/* eslint no-labels: "off", "tachi/require-unicode-regexp": "off", no-irregular-whitespace: "off" */
 import { Command } from "commander";
 import { parse } from "csv-parse/sync";
 import fs from "fs";

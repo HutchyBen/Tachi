@@ -121,7 +121,7 @@ const base = tseslint.config(
 			"quote-props": ["error", "as-needed"],
 			radix: "error",
 			"require-await": "warn",
-			"require-unicode-regexp": "error",
+			"tachi/require-unicode-regexp": "error",
 			"space-before-blocks": "error",
 			yoda: "error",
 			// import/extensions resolves the on-disk file and compares that extension (.ts vs a

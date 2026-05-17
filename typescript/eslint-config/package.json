@@ -14,6 +14,8 @@
 		}
 	},
 	"dependencies": {
+		"@eslint-community/eslint-utils": "catalog:",
+		"@eslint-community/regexpp": "catalog:",
 		"@eslint/js": "catalog:",
 		"@typescript-eslint/eslint-plugin": "catalog:",
 		"@typescript-eslint/parser": "catalog:",
