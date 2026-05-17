@@ -230,6 +230,12 @@ function slugOngeki(folder: SeedFolderRow): string {
 		return "lunatic-only-songs";
 	}
 
+	/** Modern bonus folder: Mongo `data¬isBonusTrack: true` (no version scope). */
+	if (w === "chart.data->>'isBonusTrack' = 'true'") {
+		return "bonus-tracks-isbonus";
+	}
+
+	/** Legacy bonus definition: inGameID in [7000, 8000). */
 	if (
 		w ===
 		"(chart.data->>'inGameID')::numeric >= 7000 AND (chart.data->>'inGameID')::numeric < 8000"
@@ -262,7 +268,13 @@ function slugOngeki(folder: SeedFolderRow): string {
 	const mD = /chart\.difficulty = '([^']+)'/u.exec(w);
 
 	if (mD !== null) {
-		return `${vfPart}-${asciiSlugSegment(mD[1])}${remaster}`;
+		let s = `${vfPart}-${asciiSlugSegment(mD[1])}${remaster}`;
+
+		if (isOld) {
+			s = `${s}-old`;
+		}
+
+		return s;
 	}
 
 	const mIn = /chart\.difficulty IN \(([^)]+)\)/u.exec(w);
@@ -270,7 +282,13 @@ function slugOngeki(folder: SeedFolderRow): string {
 	if (mIn !== null) {
 		const parts = mIn[1].split(",").map((x) => x.trim().replace(/^'/u, "").replace(/'$/u, ""));
 
-		return `${vfPart}-${asciiSlugSegment(parts.join("-"))}${remaster}`;
+		let s = `${vfPart}-${asciiSlugSegment(parts.join("-"))}${remaster}`;
+
+		if (isOld) {
+			s = `${s}-old`;
+		}
+
+		return s;
 	}
 
 	throw new Error(

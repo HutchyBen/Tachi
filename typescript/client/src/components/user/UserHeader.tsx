@@ -67,88 +67,88 @@ export function UserHeaderBody({ reqUser }: { reqUser: UserDocument }) {
 			</div>
 			<div className="col-12 col-lg-6 d-flex justify-content-center flex-column align-items-center">
 				<StatusComponent reqUser={reqUser} />
-			{loggedInUser?.authLevel === UserAuthLevels.ADMIN && (
-				<>
-					<Divider />
-					<div className="d-flex flex-wrap gap-2 justify-content-center">
-						{reqUser.isSupporter ? (
-							<Button
-								onClick={() =>
-									APIFetchV1(
-										`/admin/supporter/${reqUser.id}`,
-										{ method: "DELETE" },
-										true,
-										true,
-									).then(async (res) => {
-										if (res.success) {
-											await invalidateProfileQueries();
-										}
-									})
-								}
-								variant="danger"
-							>
-								Remove Supporter Rank?
-							</Button>
-						) : (
-							<Button
-								onClick={() =>
-									APIFetchV1(
-										`/admin/supporter/${reqUser.id}`,
-										{ method: "POST" },
-										true,
-										true,
-									).then(async (res) => {
-										if (res.success) {
-											await invalidateProfileQueries();
-										}
-									})
-								}
-								variant="primary"
-							>
-								Make Supporter?
-							</Button>
-						)}
+				{loggedInUser?.authLevel === UserAuthLevels.ADMIN && (
+					<>
+						<Divider />
+						<div className="d-flex flex-wrap gap-2 justify-content-center">
+							{reqUser.isSupporter ? (
+								<Button
+									onClick={() =>
+										APIFetchV1(
+											`/admin/supporter/${reqUser.id}`,
+											{ method: "DELETE" },
+											true,
+											true,
+										).then(async (res) => {
+											if (res.success) {
+												await invalidateProfileQueries();
+											}
+										})
+									}
+									variant="danger"
+								>
+									Remove Supporter Rank?
+								</Button>
+							) : (
+								<Button
+									onClick={() =>
+										APIFetchV1(
+											`/admin/supporter/${reqUser.id}`,
+											{ method: "POST" },
+											true,
+											true,
+										).then(async (res) => {
+											if (res.success) {
+												await invalidateProfileQueries();
+											}
+										})
+									}
+									variant="primary"
+								>
+									Make Supporter?
+								</Button>
+							)}
 
-						{reqUser.canSubmitQuests ? (
-							<Button
-								onClick={() =>
-									APIFetchV1(
-										`/admin/quest-submitter/${reqUser.id}`,
-										{ method: "DELETE" },
-										true,
-										true,
-									).then(async (res) => {
-										if (res.success) {
-											await invalidateProfileQueries();
-										}
-									})
-								}
-								variant="warning"
-							>
-								Revoke Quest Submitter?
-							</Button>
-						) : (
-							<Button
-								onClick={() =>
-									APIFetchV1(
-										`/admin/quest-submitter/${reqUser.id}`,
-										{ method: "POST" },
-										true,
-										true,
-									).then(async (res) => {
-										if (res.success) {
-											await invalidateProfileQueries();
-										}
-									})
-								}
-								variant="outline-success"
-							>
-								Grant Quest Submitter
-							</Button>
-						)}
-					</div>
-				</>
-			)}
+							{reqUser.canSubmitQuests ? (
+								<Button
+									onClick={() =>
+										APIFetchV1(
+											`/admin/quest-submitter/${reqUser.id}`,
+											{ method: "DELETE" },
+											true,
+											true,
+										).then(async (res) => {
+											if (res.success) {
+												await invalidateProfileQueries();
+											}
+										})
+									}
+									variant="warning"
+								>
+									Revoke Quest Submitter?
+								</Button>
+							) : (
+								<Button
+									onClick={() =>
+										APIFetchV1(
+											`/admin/quest-submitter/${reqUser.id}`,
+											{ method: "POST" },
+											true,
+											true,
+										).then(async (res) => {
+											if (res.success) {
+												await invalidateProfileQueries();
+											}
+										})
+									}
+									variant="outline-success"
+								>
+									Grant Quest Submitter
+								</Button>
+							)}
+						</div>
+					</>
+				)}
 			</div>
 			<div className="col-12 col-lg-3 d-flex justify-content-center">
 				<ul>

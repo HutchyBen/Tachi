@@ -69,7 +69,8 @@ export default function ProposalsPage() {
 				{TachiConfig.QUEST_PROPOSALS_ENABLED ? (
 					<>
 						{" "}
-						Open a PR to add your own quests via the <Link to="/quests">Quest Editor</Link>.
+						Open a PR to add your own quests via the{" "}
+						<Link to="/quests">Quest Editor</Link>.
 					</>
 				) : (
 					<> Open a PR on the seeds repository to add your own quests.</>

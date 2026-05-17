@@ -53,8 +53,8 @@ function QuestlineSelector({ game }: GamePT) {
 						{TachiConfig.QUEST_PROPOSALS_ENABLED ? (
 							<>
 								{" "}
-								If you want, you could <Link to="/quests">create your own</Link>, and
-								submit them in the discord!
+								If you want, you could <Link to="/quests">create your own</Link>,
+								and submit them in the discord!
 							</>
 						) : (
 							<> You can suggest new quests in the discord!</>

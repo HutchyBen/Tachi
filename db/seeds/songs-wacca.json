@@ -5518,5 +5518,125 @@
 		"legacySongID": 460,
 		"searchTerms": [],
 		"title": "MVURBD"
+	},
+	{
+		"altTitles": [],
+		"artist": "Getty feat. DJ Noriken",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "TANO*C"
+		},
+		"id": "S19e3332609b833c601f",
+		"legacySongID": 461,
+		"searchTerms": [],
+		"title": "Burned Out"
+	},
+	{
+		"altTitles": [],
+		"artist": "かめりあ",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19e3332609cd5381938",
+		"legacySongID": 462,
+		"searchTerms": [],
+		"title": "Mega TSKR"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Myosuke & Gram",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "TANO*C"
+		},
+		"id": "S19e3332609d0ba14cb0",
+		"legacySongID": 463,
+		"searchTerms": [],
+		"title": "The Rebellion of Phantom (feat. Valkyria)"
+	},
+	{
+		"altTitles": [],
+		"artist": "Lusumi",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "オリジナル"
+		},
+		"id": "S19e3332609ef077aeb9",
+		"legacySongID": 464,
+		"searchTerms": [],
+		"title": "sys_dei/cide"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Noriken",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "TANO*C"
+		},
+		"id": "S19e3332609ff62ec738",
+		"legacySongID": 465,
+		"searchTerms": [],
+		"title": "B2GFM"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Myosuke",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "TANO*C"
+		},
+		"id": "S19e333260a0317d7933",
+		"legacySongID": 466,
+		"searchTerms": [],
+		"title": "Battle No. 1 Remix"
+	},
+	{
+		"altTitles": [],
+		"artist": "打打だいず Vs. Tanchiky",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "バラエティ"
+		},
+		"id": "S19e333260a1112132cc",
+		"legacySongID": 467,
+		"searchTerms": [],
+		"title": "Drive Thrust"
+	},
+	{
+		"altTitles": [],
+		"artist": "Laur",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "TANO*C"
+		},
+		"id": "S19e333260a21f06ec1d",
+		"legacySongID": 468,
+		"searchTerms": [],
+		"title": "LUMIS:ETHER* feat.M1shamo & □□□□□□"
+	},
+	{
+		"altTitles": [],
+		"artist": "aran",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "TANO*C"
+		},
+		"id": "S19e333260a392d504f0",
+		"legacySongID": 469,
+		"searchTerms": [],
+		"title": "Super Rotation"
+	},
+	{
+		"altTitles": [],
+		"artist": "coμl vs reallerr",
+		"data": {
+			"displayVersion": "plus",
+			"genre": "オリジナル"
+		},
+		"id": "S19e333260a4cd696232",
+		"legacySongID": 470,
+		"searchTerms": [],
+		"title": "Super Abnormia"
 	}
 ]

@@ -7,7 +7,13 @@
  * updated compared to the base branch.
  */
 
-import { GITHUB_PAT_KEY, SEEDS_DEFAULT_BRANCH, SEEDS_GITHUB_HTML_URL, SEEDS_REPO, SEEDS_REPO_PATH } from "#lib/config";
+import {
+	GITHUB_PAT_KEY,
+	SEEDS_DEFAULT_BRANCH,
+	SEEDS_GITHUB_HTML_URL,
+	SEEDS_REPO,
+	SEEDS_REPO_PATH,
+} from "#lib/config";
 import { getTransport } from "#lib/transport/transport";
 import { useMemo } from "react";
 import { useQuery } from "react-query";
@@ -136,7 +142,8 @@ function diffById<T extends { [k: string]: unknown }>(
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function StatusBadge({ state }: { state: string }) {
-	const cls = state === "open" ? "badge-open" : state === "closed" ? "badge-closed" : "badge-merged";
+	const cls =
+		state === "open" ? "badge-open" : state === "closed" ? "badge-closed" : "badge-merged";
 	return <span className={`pr-status-badge ${cls}`}>{state}</span>;
 }
 
@@ -170,9 +177,7 @@ function QuestCard({
 			<div className="quest-sections">
 				{quest.questData.map((section, si) => (
 					<div className="quest-section" key={si}>
-						{section.title && (
-							<p className="quest-section-title">{section.title}</p>
-						)}
+						{section.title && <p className="quest-section-title">{section.title}</p>}
 						<div className="quest-goals">
 							{section.goals.map((ref) => {
 								const g = goals.get(ref.goalID);
@@ -309,8 +314,8 @@ export function QuestProposalPR() {
 			<div>
 				<h2 className="page-title">PR #{prNumber}</h2>
 				<p className="page-subtitle text-danger">
-					Could not load PR: {String(pr.error)}. It may not exist, or it may be a
-					private repo.
+					Could not load PR: {String(pr.error)}. It may not exist, or it may be a private
+					repo.
 				</p>
 				<p>
 					<a
@@ -341,9 +346,7 @@ export function QuestProposalPR() {
 			{/* ── PR header ────────────────────────────────────────────── */}
 			<div className="pr-header">
 				<div className="pr-header-main">
-					<h2 className="page-title">
-						{pr.data ? pr.data.title : `PR #${prNumber}`}
-					</h2>
+					<h2 className="page-title">{pr.data ? pr.data.title : `PR #${prNumber}`}</h2>
 					{pr.data && (
 						<div className="pr-meta">
 							<StatusBadge state={pr.data.state} />
@@ -384,14 +387,10 @@ export function QuestProposalPR() {
 			</div>
 
 			{/* ── Loading state ─────────────────────────────────────────── */}
-			{isLoading && (
-				<p className="page-subtitle">Loading seed data from GitHub…</p>
-			)}
+			{isLoading && <p className="page-subtitle">Loading seed data from GitHub…</p>}
 
 			{error && !pr.error && (
-				<p className="text-danger">
-					Error loading seed files: {String(error)}
-				</p>
+				<p className="text-danger">Error loading seed files: {String(error)}</p>
 			)}
 
 			{/* ── Quest diff ────────────────────────────────────────────── */}
@@ -480,8 +479,8 @@ export function QuestProposalPR() {
 					<p>
 						This PR (<code>{pr.data.head.ref}</code>) is not a{" "}
 						<code>quest-proposal/*</code> branch. The diff above shows any
-						quest/questline changes it contains, but it was not submitted through
-						the quest editor.
+						quest/questline changes it contains, but it was not submitted through the
+						quest editor.
 					</p>
 					<p>
 						<Link to={`/diff?${diffParams}`}>View the full seed diff →</Link>

@@ -19,7 +19,9 @@ interface StabilityMap {
 
 function readStabilityMap(): StabilityMap {
 	if (fs.existsSync(STABILITY_MAP_PATH)) {
-		const raw = JSON.parse(fs.readFileSync(STABILITY_MAP_PATH, "utf-8")) as Partial<StabilityMap>;
+		const raw = JSON.parse(
+			fs.readFileSync(STABILITY_MAP_PATH, "utf-8"),
+		) as Partial<StabilityMap>;
 
 		return {
 			songs: raw.songs ?? {},

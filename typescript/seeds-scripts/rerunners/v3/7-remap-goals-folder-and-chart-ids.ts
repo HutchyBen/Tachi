@@ -57,7 +57,9 @@ interface StabilityMap {
 
 function readStabilityMap(): StabilityMap {
 	if (fs.existsSync(STABILITY_MAP_PATH)) {
-		const raw = JSON.parse(fs.readFileSync(STABILITY_MAP_PATH, "utf-8")) as Partial<StabilityMap>;
+		const raw = JSON.parse(
+			fs.readFileSync(STABILITY_MAP_PATH, "utf-8"),
+		) as Partial<StabilityMap>;
 
 		return {
 			songs: raw.songs ?? {},
@@ -315,10 +317,14 @@ console.log(`stability-map.json: wrote ${translateMap.size} goal id translations
 
 const repoRoot = path.resolve(SEEDS_DIR, "..", "..");
 const biome = path.join(repoRoot, "node_modules", ".bin", "biome");
-const biomeResult = spawnSync(biome, ["format", "--write", goalsPath, questsPath, STABILITY_MAP_PATH], {
-	cwd: repoRoot,
-	stdio: "inherit",
-});
+const biomeResult = spawnSync(
+	biome,
+	["format", "--write", goalsPath, questsPath, STABILITY_MAP_PATH],
+	{
+		cwd: repoRoot,
+		stdio: "inherit",
+	},
+);
 
 if (biomeResult.status !== 0) {
 	throw new Error(`biome format exited ${biomeResult.status}`);

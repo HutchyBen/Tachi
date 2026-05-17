@@ -1,54 +1,6 @@
 [
 	{
 		"altTitles": [],
-		"artist": "NU-KO",
-		"data": {
-			"displayVersion": "inf",
-			"genre": "わんわんコア"
-		},
-		"id": "S1911d5ffc9ecfd1aa1c",
-		"legacySongID": 2582,
-		"searchTerms": ["Pochiko no shiawasena nichijou", "Pochiko", "Pupcore"],
-		"title": "ポチコの幸せな日常"
-	},
-	{
-		"altTitles": [],
-		"artist": "KOTONOHOUSE",
-		"data": {
-			"displayVersion": "inf",
-			"genre": "HYBRID RHYTHM BASS"
-		},
-		"id": "S1926faf31a560a24ff2",
-		"legacySongID": 2580,
-		"searchTerms": [],
-		"title": "I Want To Do This Keep"
-	},
-	{
-		"altTitles": [],
-		"artist": "SOUND HOLIC feat. Nana Takahashi",
-		"data": {
-			"displayVersion": "inf",
-			"genre": "GIRL'S EUROBEAT"
-		},
-		"id": "S19380f58922f0023afb",
-		"legacySongID": 2578,
-		"searchTerms": [],
-		"title": "CARNIVOROUS"
-	},
-	{
-		"altTitles": [],
-		"artist": "DJ Totoriott",
-		"data": {
-			"displayVersion": "inf",
-			"genre": "WONDER QUEST"
-		},
-		"id": "S197d195e6bc5c67322b",
-		"legacySongID": 2579,
-		"searchTerms": [],
-		"title": "Chronoxia"
-	},
-	{
-		"altTitles": [],
 		"artist": "dj nagureo",
 		"data": {
 			"displayVersion": "1",
@@ -29752,14 +29704,62 @@
 	},
 	{
 		"altTitles": [],
+		"artist": "SOUND HOLIC feat. Nana Takahashi",
+		"data": {
+			"displayVersion": "inf",
+			"genre": "GIRL'S EUROBEAT"
+		},
+		"id": "S19e33319b03f173d365",
+		"legacySongID": 2578,
+		"searchTerms": [],
+		"title": "CARNIVOROUS"
+	},
+	{
+		"altTitles": [],
+		"artist": "DJ Totoriott",
+		"data": {
+			"displayVersion": "inf",
+			"genre": "WONDER QUEST"
+		},
+		"id": "S19e33319b049f8a955b",
+		"legacySongID": 2579,
+		"searchTerms": [],
+		"title": "Chronoxia"
+	},
+	{
+		"altTitles": [],
+		"artist": "KOTONOHOUSE",
+		"data": {
+			"displayVersion": "inf",
+			"genre": "HYBRID RHYTHM BASS"
+		},
+		"id": "S19e33319b05a74ce7ca",
+		"legacySongID": 2580,
+		"searchTerms": [],
+		"title": "I Want To Do This Keep"
+	},
+	{
+		"altTitles": [],
 		"artist": "Dirty Androids",
 		"data": {
 			"displayVersion": "inf",
 			"genre": "FUTURE BASS"
 		},
-		"id": "S19e0d59cbb93a5fb456",
+		"id": "S19e33319b063f893970",
 		"legacySongID": 2581,
 		"searchTerms": [],
 		"title": "Pale Garden"
+	},
+	{
+		"altTitles": [],
+		"artist": "NU-KO",
+		"data": {
+			"displayVersion": "inf",
+			"genre": "わんわんコア"
+		},
+		"id": "S19e33319b07ea13f924",
+		"legacySongID": 2582,
+		"searchTerms": ["Pochiko no shiawasena nichijou", "Pochiko", "Pupcore"],
+		"title": "ポチコの幸せな日常"
 	}
 ]

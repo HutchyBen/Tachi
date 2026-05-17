@@ -259,8 +259,9 @@ export default function QuestEditor() {
 							Build quests locally and submit them to the community.
 						</p>
 					</div>
-					{user && quests.length > 0 && (
-						user.canSubmitQuests ? (
+					{user &&
+						quests.length > 0 &&
+						(user.canSubmitQuests ? (
 							<Button onClick={() => setShowSubmitModal(true)} variant="success">
 								<Icon type="code-branch" />{" "}
 								{editingProposal
@@ -268,21 +269,24 @@ export default function QuestEditor() {
 									: "Submit to Community"}
 							</Button>
 						) : (
-							<span className="text-body-secondary small text-end" style={{ maxWidth: "260px" }}>
-								<Icon type="lock" />{" "}
-								Want to submit quests to the community? Ask an admin to grant you
-								quest-submitter access.
+							<span
+								className="text-body-secondary small text-end"
+								style={{ maxWidth: "260px" }}
+							>
+								<Icon type="lock" /> Want to submit quests to the community? Ask an
+								admin to grant you quest-submitter access.
 							</span>
-						)
-					)}
+						))}
 				</div>
 
 				{/* Editing-proposal banner */}
 				{editingProposal && (
-					<Alert className="mt-3 mb-0 d-flex align-items-center justify-content-between" variant="info">
+					<Alert
+						className="mt-3 mb-0 d-flex align-items-center justify-content-between"
+						variant="info"
+					>
 						<span>
-							<Icon type="pencil" />{" "}
-							Editing{" "}
+							<Icon type="pencil" /> Editing{" "}
 							<a
 								href={editingProposal.prUrl}
 								rel="noopener noreferrer"
@@ -570,7 +574,10 @@ function MyProposalsPanel({
 									{questNames}
 								</p>
 
-								<p className="text-body-secondary mb-2" style={{ fontSize: "0.75rem" }}>
+								<p
+									className="text-body-secondary mb-2"
+									style={{ fontSize: "0.75rem" }}
+								>
 									{proposal.rawQuests[0]
 										? FormatGame(proposal.rawQuests[0].game as V3Game)
 										: ""}{" "}
@@ -874,9 +881,7 @@ function QuestlineCard({
 						onSubmit={(desc) => onUpdate({ ...questline, desc })}
 						placeholderText="Description…"
 					/>
-				<span className="text-body-secondary small">
-					{questline.game}
-				</span>
+					<span className="text-body-secondary small">{questline.game}</span>
 				</div>
 				<button
 					className="btn btn-outline-danger btn-sm py-0"
@@ -1032,7 +1037,11 @@ function SubmitProposalModal({
 							{isUpdate ? (
 								<>
 									<strong>PR updated!</strong> A new commit has been pushed to{" "}
-									<a href={result.prUrl} rel="noopener noreferrer" target="_blank">
+									<a
+										href={result.prUrl}
+										rel="noopener noreferrer"
+										target="_blank"
+									>
 										PR #{result.prNumber}
 									</a>
 									.
@@ -1069,9 +1078,8 @@ function SubmitProposalModal({
 							</p>
 						) : (
 							<p className="text-body-secondary small">
-								This will open a pull request on GitHub with your quests. A
-								reviewer will check the content before it&apos;s merged into the
-								site.
+								This will open a pull request on GitHub with your quests. A reviewer
+								will check the content before it&apos;s merged into the site.
 							</p>
 						)}
 

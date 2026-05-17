@@ -295,7 +295,16 @@ export function buildChartIdMap(seedsDir: string): Map<string, string> {
  * still use hashes from before legacy chart/folder ids were rewired.
  */
 export function buildGoalIdRemap(seedsDir: string): Map<string, string> {
-	const p = path.resolve(seedsDir, "..", "..", "typescript", "seeds-scripts", "rerunners", "v3", "stability-map.json");
+	const p = path.resolve(
+		seedsDir,
+		"..",
+		"..",
+		"typescript",
+		"seeds-scripts",
+		"rerunners",
+		"v3",
+		"stability-map.json",
+	);
 
 	if (!fs.existsSync(p)) {
 		return new Map();

@@ -38,9 +38,7 @@ export const SeedsQuestCells: CellsRenderFN<QuestWithRelated> = ({
 		<td>
 			<strong>{data.name}</strong>
 		</td>
-		<td>
-			{FormatGame(data.game as V3Game)}
-		</td>
+		<td>{FormatGame(data.game as V3Game)}</td>
 		<td>
 			<div style={{ maxHeight: "200px", overflowY: "auto" }}>
 				{data.questData.map((section) => (
