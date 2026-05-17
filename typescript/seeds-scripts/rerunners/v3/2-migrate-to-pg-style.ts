@@ -2,7 +2,13 @@ import fs from "fs";
 import path from "path";
 import { ALL_GAMES, GAME_GROUP_CONFIGS, GameToGameGroup } from "tachi-common";
 
-import { CreateChartID, CreateSongID, ReadCollection, WriteCollection } from "../../util";
+import {
+	CreateChartID,
+	CreateSongID,
+	ReadCollection,
+	WRITE_COLLECTION_SKIP_BIOME,
+	WriteCollection,
+} from "../../util";
 
 // ── Stability map ─────────────────────────────────────────────────────────────
 // Persists legacy→new ID mappings so re-runs produce the same IDs.
@@ -35,18 +41,34 @@ function readStabilityMap(): StabilityMap {
 	return { songs: {}, charts: {}, folders: {}, tables: {}, goals: {} };
 }
 
-function writeStabilityMap(map: StabilityMap): void {
+function writeStabilityMap(map: StabilityMap) {
 	fs.writeFileSync(STABILITY_MAP_PATH, JSON.stringify(map, null, "\t"));
 }
 
 const stabilityMap = readStabilityMap();
 
+/**
+ * Charts whose pre-remap mongo integer `songID` falls here reference songs absent from rollback
+ * (BMS)—TODO remove band once upstream collections include them.
+ *
+ * Canonical list supplied to this repo was every id inclusive from 97678 through 97928.
+ */
+const SKIP_CHART_ORPHAN_SONG_MONGO_MIN = 97678;
+const SKIP_CHART_ORPHAN_SONG_MONGO_MAX = 97928;
+
+function chartSkippedForOrphanRollbackSongMongoId(songFk: unknown): boolean {
+	return (
+		typeof songFk === "number" &&
+		songFk >= SKIP_CHART_ORPHAN_SONG_MONGO_MIN &&
+		songFk <= SKIP_CHART_ORPHAN_SONG_MONGO_MAX
+	);
+}
 // ── Pass 1: songs ─────────────────────────────────────────────────────────────
-// Build per-game maps keyed by old integer id:
-//   songIdMap       → new hex id
-//   songLegacyIdMap → legacySongID
-const songIdMap = new Map(); // "game:integerID" → new hex id
-const songLegacyIdMap = new Map(); // "game:newHexId" → legacySongID
+//
+// Writes each song row's final `id` (hex song id).
+//
+const songIdMap = new Map<string, string>(); // "game:<mongoSongInt>" → hex song id (from id or legacySongID)
+const songLegacyIdMap = new Map(); // "game:hexSongId" → integer mongo song id
 
 for (const gameGroup of Object.keys(GAME_GROUP_CONFIGS)) {
 	const collection = `songs-${gameGroup}.json`;
@@ -57,24 +79,28 @@ for (const gameGroup of Object.keys(GAME_GROUP_CONFIGS)) {
 		const stabilityKey = `${gameGroup}:${entry.id}`;
 		const savedId = stabilityMap.songs[stabilityKey];
 
-		entry.sid =
+		const nextSongHexId =
 			savedId ?? CreateSongID(Date.now() - 1000000 + (entry.legacySongID ?? entry.id));
 
-		// Preserve the old integer id before overwriting.
 		if (entry.id !== undefined && typeof entry.id === "number") {
 			entry.legacySongID = entry.id;
-			songIdMap.set(stabilityKey, entry.sid);
-			songLegacyIdMap.set(`${gameGroup}:${entry.sid}`, entry.id);
-			stabilityMap.songs[stabilityKey] = entry.sid;
+			songIdMap.set(stabilityKey, nextSongHexId);
+			songLegacyIdMap.set(`${gameGroup}:${nextSongHexId}`, entry.id);
+			stabilityMap.songs[stabilityKey] = nextSongHexId;
 		}
 
-		entry.id = entry.sid;
+		entry.id = nextSongHexId;
 		delete entry.sid;
+
+		if (typeof entry.legacySongID === "number") {
+			songIdMap.set(`${gameGroup}:${entry.legacySongID}`, entry.id);
+		}
+
 		modified++;
 	}
 
 	if (modified > 0) {
-		WriteCollection(collection, data);
+		WriteCollection(collection, data, WRITE_COLLECTION_SKIP_BIOME);
 		console.log(`${collection}: migrated ${modified} entries`);
 	} else {
 		console.log(`${collection}: already migrated, skipped`);
@@ -82,44 +108,80 @@ for (const gameGroup of Object.keys(GAME_GROUP_CONFIGS)) {
 }
 
 // ── Pass 2: charts ────────────────────────────────────────────────────────────
-
+//
+// Each chart row gains `id` (hex chart id) and retains `songID` as FK → parent song.
+// Charts have many‑to‑one songs: `songID` is normalized from mongo ints to hex song ids.
+//
 for (const game of ALL_GAMES) {
 	const gameGroup = GameToGameGroup(game);
 	const collection = `charts-${game}.json`;
-	const data = ReadCollection(collection);
+	const rawCharts = ReadCollection(collection);
+	let droppedHardcoded = 0;
+	const data = rawCharts.filter((entry: Record<string, unknown>) => {
+		const songFk = entry.songID;
+		if (chartSkippedForOrphanRollbackSongMongoId(songFk)) {
+			droppedHardcoded++;
+			return false;
+		}
+		return true;
+	});
+	if (droppedHardcoded > 0) {
+		console.warn(
+			`${collection}: omitted ${String(droppedHardcoded)} chart(s) (mongo songID in [${String(SKIP_CHART_ORPHAN_SONG_MONGO_MIN)}, ${String(SKIP_CHART_ORPHAN_SONG_MONGO_MAX)}] — rollback gap)`,
+		);
+	}
 	let modified = 0;
 
 	for (const entry of data) {
-		const legacyChartId: string | undefined = entry.chartID;
-		const savedId =
-			legacyChartId !== undefined ? stabilityMap.charts[legacyChartId] : undefined;
+		// Stability map keyed by mongo chart hash; after migrate it mirrors legacyChartID.
+		const mongoChartStableKey =
+			typeof entry.chartID === "string" && entry.chartID !== ""
+				? entry.chartID
+				: typeof entry.legacyChartID === "string" && entry.legacyChartID !== ""
+					? entry.legacyChartID
+					: undefined;
 
-		entry.sid =
-			savedId ?? CreateChartID(Date.now() - 1000000 + (entry.songID ?? entry.legacySongID));
+		const savedHexChartId =
+			mongoChartStableKey !== undefined
+				? stabilityMap.charts[mongoChartStableKey]
+				: undefined;
 
-		// Keep old MongoDB chartID around for reference.
-		if (entry.chartID) {
+		const retainedHexChartId =
+			mongoChartStableKey === undefined && typeof entry.id === "string" && entry.id !== ""
+				? entry.id
+				: undefined;
+
+		const nextChartHexId =
+			retainedHexChartId ??
+			savedHexChartId ??
+			CreateChartID(Date.now() - 1000000 + (entry.songID ?? entry.legacySongID));
+
+		if (mongoChartStableKey !== undefined) {
+			stabilityMap.charts[mongoChartStableKey] = nextChartHexId;
+		}
+
+		if (typeof entry.chartID === "string" && entry.chartID !== "") {
 			entry.legacyChartID = entry.chartID;
-			stabilityMap.charts[entry.chartID] = entry.sid;
 			delete entry.chartID;
 		}
 
-		// Rewrite songID to the new hex song id.
-		const newSongId = songIdMap.get(`${gameGroup}:${entry.songID}`);
-		if (newSongId === undefined) {
-			console.error(`Chart ${entry.sid} has no songID?`);
-			continue;
+		const newSongFkHexId = songIdMap.get(`${gameGroup}:${entry.songID}`);
+		if (newSongFkHexId === undefined) {
+			throw new Error(
+				`${collection}: chart (mongo chart hash=${mongoChartStableKey ?? "none"}, chart hex provisional=${nextChartHexId}) ` +
+					`— parent song FK songID=${JSON.stringify(entry.songID)} → no song with that mongo integer id under songs-${gameGroup}.json ` +
+					`(add the song to the collections mirror, fix songID on the chart, or remove the orphaned chart row).`,
+			);
 		}
 
-		entry.songID = newSongId;
-
-		entry.id = entry.sid;
+		entry.songID = newSongFkHexId;
+		entry.id = nextChartHexId;
 		delete entry.sid;
 		modified++;
 	}
 
-	if (modified > 0) {
-		WriteCollection(collection, data);
+	if (modified > 0 || droppedHardcoded > 0) {
+		WriteCollection(collection, data, WRITE_COLLECTION_SKIP_BIOME);
 		console.log(`${collection}: migrated ${modified} entries`);
 	} else {
 		console.log(`${collection}: already migrated, skipped`);

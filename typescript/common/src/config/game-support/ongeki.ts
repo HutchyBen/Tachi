@@ -242,6 +242,7 @@ export const GAME_ONGEKI_CONF = {
 		maxPlatScore: z.number().int(),
 		inGameID: z.number().int(),
 		chartViewURL: z.string().optional(),
+		isBonusTrack: z.boolean().optional(),
 	}),
 
 	preferences: z.strictObject({}),

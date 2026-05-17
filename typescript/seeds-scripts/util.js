@@ -12,7 +12,14 @@ const {
 
 const DeterministicCollectionSort = require("./sort-seeds");
 
-function IterateCollections(cb) {
+/** Third argument to {@link WriteCollection} / {@link MutateCollection}: deterministic sort still runs. */
+const WRITE_COLLECTION_SKIP_BIOME = Object.freeze({ skipBiomeFormat: true });
+
+/**
+ * @param {(data: unknown, collection: string) => unknown} cb
+ * @param {{ skipBiomeFormat?: boolean }} [writeOptions] forwarded to {@link DeterministicCollectionSort} after loop
+ */
+function IterateCollections(cb, writeOptions) {
 	for (const collection of fs
 		.readdirSync(COLLECTIONS_DIR)
 		.filter((name) => name.endsWith(".json"))) {
@@ -24,7 +31,7 @@ function IterateCollections(cb) {
 		fs.writeFileSync(path.join(COLLECTIONS_DIR, collection), JSON.stringify(data, null, "\t"));
 	}
 
-	DeterministicCollectionSort();
+	DeterministicCollectionSort(writeOptions);
 }
 
 // Seed JSON lives at repo root: db/seeds/ (was typescript/collections).
@@ -44,20 +51,31 @@ function ReadCollection(name, throwIfNotFound = false) {
 	return JSON.parse(fs.readFileSync(p));
 }
 
-function WriteCollection(name, data) {
+/**
+ * @param {string} name
+ * @param {unknown} data
+ * @param {{ skipBiomeFormat?: boolean }} [writeOptions] pass `{ skipBiomeFormat: true }` to skip
+ * running Biome over all of `db/seeds` after the mandatory deterministic sort pass (much faster).
+ */
+function WriteCollection(name, data, writeOptions) {
 	fs.writeFileSync(path.join(COLLECTIONS_DIR, name), JSON.stringify(data, null, "\t"));
 
-	DeterministicCollectionSort();
+	DeterministicCollectionSort(writeOptions);
 }
 
-function MutateCollection(name, cb) {
+/**
+ * @param {string} name
+ * @param {(collection: unknown) => unknown} cb
+ * @param {{ skipBiomeFormat?: boolean }} [writeOptions] see {@link WriteCollection}
+ */
+function MutateCollection(name, cb, writeOptions) {
 	const data = cb(ReadCollection(name));
 
 	if (data === undefined) {
 		throw new Error(`You forgot to return from your MutateCollection function.`);
 	}
 
-	WriteCollection(name, data);
+	WriteCollection(name, data, writeOptions);
 }
 
 // this api sucks, maybe dont use it
@@ -129,5 +147,6 @@ module.exports = {
 	IterateCollections,
 	MutateCollection,
 	ReadCollection,
+	WRITE_COLLECTION_SKIP_BIOME,
 	WriteCollection,
 };

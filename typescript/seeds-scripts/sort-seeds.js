@@ -69,7 +69,13 @@ function BMSCourseSort(a, b) {
 	return a.md5sums.localeCompare(b.md5sums);
 }
 
-function SortSeeds() {
+/**
+ * @param {{ skipBiomeFormat?: boolean }} [options]
+ *   Deterministic sorting + stable key ordering always run. Biome formatting of `db/seeds` runs
+ *   after that unless `skipBiomeFormat: true` (e.g. bulk migration — run `just fmt` after).
+ */
+function SortSeeds(options = {}) {
+	const { skipBiomeFormat = false } = options;
 	const collectionsDir = path.join(__dirname, "../../db/seeds");
 	const collections = fs.readdirSync(collectionsDir).filter((name) => name.endsWith(".json"));
 
@@ -105,15 +111,16 @@ function SortSeeds() {
 		fs.writeFileSync(collPath, JSON.stringify(content, null, "\t"));
 	}
 
-	// Run the repo formatter so the output is consistent with `just fmt`.
-	const repoRoot = path.resolve(__dirname, "../..");
-	const biome = path.join(repoRoot, "node_modules", ".bin", "biome");
-	const result = spawnSync(biome, ["format", "--write", collectionsDir], {
-		cwd: repoRoot,
-		stdio: "inherit",
-	});
-	if (result.status !== 0) {
-		throw new Error(`biome format exited ${result.status}`);
+	if (!skipBiomeFormat) {
+		const repoRoot = path.resolve(__dirname, "../..");
+		const biome = path.join(repoRoot, "node_modules", ".bin", "biome");
+		const result = spawnSync(biome, ["format", "--write", collectionsDir], {
+			cwd: repoRoot,
+			stdio: "inherit",
+		});
+		if (result.status !== 0) {
+			throw new Error(`biome format exited ${result.status}`);
+		}
 	}
 }
 

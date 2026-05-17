@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { ALL_GAMES, GAME_GROUP_CONFIGS } from "tachi-common";
 
-import { ReadCollection, WriteCollection } from "../../util";
+import { ReadCollection, WRITE_COLLECTION_SKIP_BIOME, WriteCollection } from "../../util";
 
 const COLLECTIONS_DIR = path.join(__dirname, "../../../../db/seeds");
 
@@ -49,7 +49,7 @@ for (const game of Object.keys(GAME_GROUP_CONFIGS)) {
 	for (const [pt, charts] of byPlaytype) {
 		const newName = `charts-${game}-${pt}.json`;
 
-		WriteCollection(newName, charts);
+		WriteCollection(newName, charts, WRITE_COLLECTION_SKIP_BIOME);
 		console.log(`${newName}: wrote ${charts.length} charts`);
 	}
 
@@ -63,6 +63,6 @@ for (const nugame of ALL_GAMES) {
 	for (const entry of data) {
 		delete entry.playtype;
 	}
-	WriteCollection(`charts-${nugame}.json`, data);
+	WriteCollection(`charts-${nugame}.json`, data, WRITE_COLLECTION_SKIP_BIOME);
 	console.log(`charts-${nugame}.json: removed playtype field`);
 }

@@ -15,6 +15,7 @@ export const GAME_GROUP_CHUNITHM_CONF = {
 	songData: z.strictObject({
 		genre: z.string(),
 		duration: z.number().optional(),
+		displayVersion: z.string(), // TODO(zk) what?
 	}),
 } as const satisfies INTERNAL_GAME_GROUP_CONFIG;
 
@@ -198,7 +199,8 @@ export const GAME_CHUNITHM_CONF = {
 
 	chartData: z.strictObject({
 		inGameID: z.union([z.array(zodNonNegativeInt), zodNonNegativeInt]),
-		displayVersion: z.string(),
+		// TODO(zk): bug?
+		// displayVersion: z.string(),
 	}),
 
 	preferences: z.strictObject({}),

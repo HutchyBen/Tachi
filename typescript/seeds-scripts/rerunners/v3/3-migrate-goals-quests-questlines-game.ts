@@ -21,7 +21,7 @@ import {
 	type V3Game,
 } from "tachi-common";
 
-import { ReadCollection, WriteCollection } from "../../util";
+import { ReadCollection, WRITE_COLLECTION_SKIP_BIOME, WriteCollection } from "../../util";
 
 function isV3GameString(s: string): s is V3Game {
 	return (ALL_GAMES as readonly string[]).includes(s);
@@ -93,7 +93,7 @@ function migrateCollection(name: string, rowLabelPrefix: string): number {
 		}
 	}
 
-	WriteCollection(name, rows);
+	WriteCollection(name, rows, WRITE_COLLECTION_SKIP_BIOME);
 
 	return changedRows;
 }

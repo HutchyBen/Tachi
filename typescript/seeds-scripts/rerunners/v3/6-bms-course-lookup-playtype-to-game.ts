@@ -1,4 +1,4 @@
-import { ReadCollection, WriteCollection } from "../../util";
+import { ReadCollection, WRITE_COLLECTION_SKIP_BIOME, WriteCollection } from "../../util";
 
 const courses = ReadCollection("bms-course-lookup.json");
 let modified = 0;
@@ -17,5 +17,5 @@ for (const entry of courses) {
 	modified++;
 }
 
-WriteCollection("bms-course-lookup.json", courses);
+WriteCollection("bms-course-lookup.json", courses, WRITE_COLLECTION_SKIP_BIOME);
 console.log(`bms-course-lookup.json: migrated ${modified} entries`);

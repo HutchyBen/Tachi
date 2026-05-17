@@ -14,7 +14,13 @@ import {
 	type LEGACY_Playtype,
 } from "tachi-common";
 
-import { CreateFolderID, CreateTableID, ReadCollection, WriteCollection } from "../../util";
+import {
+	CreateFolderID,
+	CreateTableID,
+	ReadCollection,
+	WRITE_COLLECTION_SKIP_BIOME,
+	WriteCollection,
+} from "../../util";
 
 // ── Stability map ─────────────────────────────────────────────────────────────
 
@@ -76,7 +82,7 @@ for (const entry of folders) {
 	delete entry.playtype;
 }
 
-WriteCollection("folders.json", folders);
+WriteCollection("folders.json", folders, WRITE_COLLECTION_SKIP_BIOME);
 console.log(`folders.json: migrated ${folders.length} entries`);
 
 // ── Pass 2: tables ────────────────────────────────────────────────────────────
@@ -111,7 +117,7 @@ for (const entry of tables) {
 	});
 }
 
-WriteCollection("tables.json", tables);
+WriteCollection("tables.json", tables, WRITE_COLLECTION_SKIP_BIOME);
 console.log(`tables.json: migrated ${tables.length} entries`);
 
 writeStabilityMap(stabilityMap);

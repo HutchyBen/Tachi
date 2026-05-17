@@ -18,6 +18,9 @@ mongo-to-pg POSTGRES_DB_NAME MONGO_DB_NAME:
 seeds-rollback ROLLBACK_DIR="/host-pc/Documents/Repos/Tachi/seeds/collections":
 	rsync -avz --delete "{{ROLLBACK_DIR}}/" db/seeds
 
+seeds-test:
+	cd "typescript/seeds-scripts" && ./run-tests.sh
+
 seeds-v3-migrate: seeds-rollback
 	#!/usr/bin/env bash
 	set -euo pipefail
@@ -26,4 +29,4 @@ seeds-v3-migrate: seeds-rollback
 	for script in $(ls -1 rerunners/v3/*.ts); do
 		bun run "./$script"
 	done
-	just fmt
+	just seeds-test

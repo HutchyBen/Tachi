@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-import { ReadCollection, WriteCollection } from "../../util";
+import { ReadCollection, WRITE_COLLECTION_SKIP_BIOME, WriteCollection } from "../../util";
 
 /**
  * BMS / PMS / USC chart `data.tableFolders`: migrate from Mongo-style
@@ -133,7 +133,7 @@ for (const name of TABLEFOLDERS_OBJECT_CHART_COLLECTIONS) {
 	}
 
 	if (modified > 0) {
-		WriteCollection(name, data);
+		WriteCollection(name, data, WRITE_COLLECTION_SKIP_BIOME);
 		console.log(`${name}: converted tableFolders on ${modified} charts`);
 	} else {
 		console.log(`${name}: no tableFolders arrays to convert`);
