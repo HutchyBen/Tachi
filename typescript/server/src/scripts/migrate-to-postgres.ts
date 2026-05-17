@@ -525,38 +525,41 @@ async function main(): Promise<void> {
 	{
 		console.log("\n[orphan_score]");
 
-		const mongoOrphans = await mongoDB
-			.get<{ _id?: unknown } & MongoOrphanScoresCollectionDocument>("orphan-scores")
-			.find({});
+		await streamCollection<MongoOrphanScoresCollectionDocument>(
+			"orphan-scores",
+			async (docs) => {
+				const orphanScoreRows: Array<NewOrphanScore> = [];
+				for (const o of docs) {
+					const errMsg = stripNulBytesIllegalInPostgres(o.errMsg ?? "");
 
-		const orphanScoreRows: Array<NewOrphanScore> = [];
-		for (const o of mongoOrphans) {
-			const errMsg = stripNulBytesIllegalInPostgres(o.errMsg ?? "");
+					orphanScoreRows.push({
+						orphan_id: o.orphanID,
+						user_id: o.userID,
+						import_id: null,
+						import_type: o.importType as ImportType,
+						game_group: o.game,
+						data: sanitizeOrphanScoreJsonForPostgres(o.data),
+						context: sanitizeOrphanScoreJsonForPostgres(o.context),
+						time_inserted: tsReq(o.timeInserted),
+						error_message: errMsg,
+					});
+				}
 
-			orphanScoreRows.push({
-				orphan_id: o.orphanID,
-				user_id: o.userID,
-				import_id: null,
-				import_type: o.importType as ImportType,
-				game_group: o.game,
-				data: sanitizeOrphanScoreJsonForPostgres(o.data),
-				context: sanitizeOrphanScoreJsonForPostgres(o.context),
-				time_inserted: tsReq(o.timeInserted),
-				error_message: errMsg,
-			});
-		}
+				for (let i = 0; i < orphanScoreRows.length; i = i + INSERT_CHUNK) {
+					const chunk = orphanScoreRows.slice(i, i + INSERT_CHUNK);
 
-		for (let i = 0; i < orphanScoreRows.length; i = i + INSERT_CHUNK) {
-			const chunk = orphanScoreRows.slice(i, i + INSERT_CHUNK);
+					await pg
+						.insertInto("orphan_score")
+						.values(chunk)
+						.onConflict((oc) => oc.column("orphan_id").doNothing())
+						.execute();
+				}
+			},
+			"orphan_score",
+			INSERT_CHUNK,
+		);
 
-			await pg
-				.insertInto("orphan_score")
-				.values(chunk)
-				.onConflict((oc) => oc.column("orphan_id").doNothing())
-				.execute();
-		}
-
-		console.log(`  ${mongoOrphans.length} orphan scores (idempotent on orphan_id).`);
+		console.log(`  idempotent on orphan_id (ON CONFLICT DO NOTHING).`);
 	}
 
 	// ══════════════════════════════════════════════════════════════════════════
