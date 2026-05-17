@@ -1,4 +1,4 @@
-const { IterateCollections } = require("../util");
+import { IterateCollections } from "../util.js";
 
 IterateCollections((data, filename) => {
 	if (!filename.startsWith("songs-") && !filename.startsWith("charts-")) {

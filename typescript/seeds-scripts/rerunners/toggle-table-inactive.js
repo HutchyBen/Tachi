@@ -1,6 +1,6 @@
-const { Command } = require("commander");
+import { Command } from "commander";
 
-const { MutateCollection, ReadCollection, WriteCollection } = require("../util");
+import { MutateCollection, ReadCollection, WriteCollection } from "../util.js";
 
 const program = new Command();
 program.requiredOption("-t, --tableID <tableID>");

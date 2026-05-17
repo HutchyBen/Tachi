@@ -1,13 +1,13 @@
-const { Database } = require("bun:sqlite");
-const { Command } = require("commander");
-const fs = require("fs");
+import { Database } from "bun:sqlite";
+import { Command } from "commander";
+import fs from "fs";
 
-const {
+import {
 	CreateChartID,
 	GetFreshSongIDGenerator,
 	ReadCollection,
 	WriteCollection,
-} = require("../../util");
+} from "../../util.js";
 
 const program = new Command();
 program.requiredOption("-d, --db <maps.db>");

@@ -1,9 +1,9 @@
-const { Command } = require("commander");
-const crypto = require("crypto");
-const { XMLParser } = require("fast-xml-parser");
-const fs = require("fs");
-const iconv = require("iconv-lite");
-const path = require("path");
+import { Command } from "commander";
+import crypto from "crypto";
+import { XMLParser } from "fast-xml-parser";
+import fs from "fs";
+import iconv from "iconv-lite";
+import path from "path";
 
 const program = new Command();
 program

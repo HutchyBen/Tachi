@@ -1,11 +1,10 @@
-const { GetGamePTConfig } = require("../../../common/src");
+import { Command } from "commander";
 
-const { CreateFolderID, MutateCollection } = require("../../util");
+import { GetGamePTConfig } from "../../../common/src/index.ts";
+import { CreateFolderID, MutateCollection } from "../../util.js";
 
 const tableMainFolders = [];
 const tableAllFolders = [];
-
-const { Command } = require("commander");
 
 const program = new Command();
 program.requiredOption("-v, --version <version>");

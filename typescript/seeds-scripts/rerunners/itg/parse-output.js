@@ -1,13 +1,13 @@
-const { Command } = require("commander");
-const { readFileSync } = require("fs");
+import { Command } from "commander";
+import { readFileSync } from "fs";
 
-const {
+import {
 	CreateChartID,
 	GetFreshSongIDGenerator,
 	MutateCollection,
 	ReadCollection,
 	WriteCollection,
-} = require("../../util");
+} from "../../util.js";
 
 const program = new Command();
 program.requiredOption("-i, --input <file.json>");

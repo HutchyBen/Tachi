@@ -1,9 +1,12 @@
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const { FindChartWithPTDFVersion, FindSongWithTitle } = require("../../../finders");
-const { ApplyMutations } = require("../../../mutations");
-const { ReadCollection } = require("../../../util");
+import { FindChartWithPTDFVersion, FindSongWithTitle } from "../../../finders.js";
+import { ApplyMutations } from "../../../mutations.js";
+import { ReadCollection } from "../../../util.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const songs = ReadCollection("songs-iidx.json");
 

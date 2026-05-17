@@ -1,6 +1,7 @@
-const fs = require("fs");
-const path = require("path");
-const { spawnSync } = require("child_process");
+import { spawnSync } from "child_process";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 function ChartSort(a, b) {
 	// sink all 2dxtra charts to the bottom
@@ -76,6 +77,10 @@ function BMSCourseSort(a, b) {
  */
 function SortSeeds(options = {}) {
 	const { skipBiomeFormat = false } = options;
+
+	const __filename = fileURLToPath(import.meta.url);
+	const __dirname = path.dirname(__filename);
+
 	const collectionsDir = path.join(__dirname, "../../db/seeds");
 	const collections = fs.readdirSync(collectionsDir).filter((name) => name.endsWith(".json"));
 
@@ -140,8 +145,11 @@ function SortObjectKeys(object) {
 	return newObject;
 }
 
-if (require.main === module) {
+const __resolvedMain =
+	process.argv[1] !== undefined ? path.resolve(process.argv[1]) : "";
+
+if (__resolvedMain === fileURLToPath(import.meta.url)) {
 	SortSeeds();
 }
 
-module.exports = SortSeeds;
+export default SortSeeds;

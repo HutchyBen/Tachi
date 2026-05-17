@@ -1,4 +1,4 @@
-const { MutateCollection } = require("../util");
+import { MutateCollection } from "../util.js";
 
 // This is an example SINGLE-USE script. It does something quickly and ad-hoc,
 // that is of absolutely no interest to anyone else.

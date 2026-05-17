@@ -1,4 +1,4 @@
-const { MutateCollection } = require("../../util");
+import { MutateCollection } from "../../util.js";
 
 // this script will add "newVersion" to all charts that are in "baseVersion"
 

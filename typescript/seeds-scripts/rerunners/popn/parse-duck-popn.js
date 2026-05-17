@@ -1,12 +1,12 @@
-const { Command } = require("commander");
-const fs = require("fs");
+import { Command } from "commander";
+import fs from "fs";
 
-const {
+import {
 	CreateChartID,
 	GetFreshSongIDGenerator: GetFreshScoreIDGenerator,
 	ReadCollection,
 	WriteCollection,
-} = require("../../util");
+} from "../../util.js";
 
 const program = new Command();
 program.requiredOption("-f, --file <mxb-json>");

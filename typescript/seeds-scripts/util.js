@@ -1,25 +1,32 @@
-const fjsh = require("fast-json-stable-hash");
-const fs = require("fs");
-const path = require("path");
+import fjsh from "fast-json-stable-hash";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const {
+import {
 	CreateChartID,
 	CreateFolderID,
 	CreateQuestID,
 	CreateSongID,
 	CreateTableID,
-} = require("tachi-common");
+} from "tachi-common";
 
-const DeterministicCollectionSort = require("./sort-seeds");
+import DeterministicCollectionSort from "./sort-seeds.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Seed JSON lives at repo root: db/seeds/ (was typescript/collections).
+const COLLECTIONS_DIR = path.join(__dirname, "../../db/seeds");
 
 /** Third argument to {@link WriteCollection} / {@link MutateCollection}: deterministic sort still runs. */
-const WRITE_COLLECTION_SKIP_BIOME = Object.freeze({ skipBiomeFormat: true });
+export const WRITE_COLLECTION_SKIP_BIOME = Object.freeze({ skipBiomeFormat: true });
 
 /**
  * @param {(data: unknown, collection: string) => unknown} cb
  * @param {{ skipBiomeFormat?: boolean }} [writeOptions] forwarded to {@link DeterministicCollectionSort} after loop
  */
-function IterateCollections(cb, writeOptions) {
+export function IterateCollections(cb, writeOptions) {
 	for (const collection of fs
 		.readdirSync(COLLECTIONS_DIR)
 		.filter((name) => name.endsWith(".json"))) {
@@ -34,10 +41,7 @@ function IterateCollections(cb, writeOptions) {
 	DeterministicCollectionSort(writeOptions);
 }
 
-// Seed JSON lives at repo root: db/seeds/ (was typescript/collections).
-const COLLECTIONS_DIR = path.join(__dirname, "../../db/seeds");
-
-function ReadCollection(name, throwIfNotFound = false) {
+export function ReadCollection(name, throwIfNotFound = false) {
 	const p = path.join(COLLECTIONS_DIR, name);
 	if (!fs.existsSync(p)) {
 		if (throwIfNotFound) {
@@ -57,7 +61,7 @@ function ReadCollection(name, throwIfNotFound = false) {
  * @param {{ skipBiomeFormat?: boolean }} [writeOptions] pass `{ skipBiomeFormat: true }` to skip
  * running Biome over all of `db/seeds` after the mandatory deterministic sort pass (much faster).
  */
-function WriteCollection(name, data, writeOptions) {
+export function WriteCollection(name, data, writeOptions) {
 	fs.writeFileSync(path.join(COLLECTIONS_DIR, name), JSON.stringify(data, null, "\t"));
 
 	DeterministicCollectionSort(writeOptions);
@@ -68,7 +72,7 @@ function WriteCollection(name, data, writeOptions) {
  * @param {(collection: unknown) => unknown} cb
  * @param {{ skipBiomeFormat?: boolean }} [writeOptions] see {@link WriteCollection}
  */
-function MutateCollection(name, cb, writeOptions) {
+export function MutateCollection(name, cb, writeOptions) {
 	const data = cb(ReadCollection(name));
 
 	if (data === undefined) {
@@ -81,21 +85,21 @@ function MutateCollection(name, cb, writeOptions) {
 // this api sucks, maybe dont use it
 //
 // TODO(zk): remove this and give folders actual readable names
-function CreateLegacyFolderID(query, game, playtype) {
+export function CreateLegacyFolderID(query, game, playtype) {
 	return `F${fjsh.hash(Object.assign({ game, playtype }, query), "SHA256")}`;
 }
 
-function CreateLegacyFolderIDFromFolder(folder) {
+export function CreateLegacyFolderIDFromFolder(folder) {
 	return CreateLegacyFolderID(folder.data, folder.game, folder.playtype);
 }
 
-function CreateGoalID(charts, criteria, game) {
+export function CreateGoalID(charts, criteria, game) {
 	return `G${fjsh.hash({ charts, criteria, game }, "sha256")}`;
 }
 
 // quick inplace deepmerge hack
 // probably doesn't work for arrays, i don't care though.
-function EfficientInPlaceDeepmerge(ref, apply) {
+export function EfficientInPlaceDeepmerge(ref, apply) {
 	for (const key in apply) {
 		if (typeof apply[key] === "object" && apply[key]) {
 			EfficientInPlaceDeepmerge(ref[key], apply[key]);
@@ -105,7 +109,7 @@ function EfficientInPlaceDeepmerge(ref, apply) {
 	}
 }
 
-function GetChartCollectionGame(filename) {
+export function GetChartCollectionGame(filename) {
 	let result = filename.match(/charts-([\w-]+)\.json$/u);
 
 	if (result === null) {
@@ -125,28 +129,17 @@ function GetSongCollectionGameGroup(filename) {
 	return result[1];
 }
 
-function GetFreshSongIDGenerator(gameGroup) {
+export function GetFreshSongIDGenerator(gameGroup) {
 	const existing = ReadCollection(`songs-${gameGroup}.json`);
 	let max = existing.reduce((acc, s) => Math.max(acc, s.id ?? 0), 0);
 	return () => ++max;
 }
 
-module.exports = {
+export {
 	CreateChartID,
 	CreateFolderID,
-	CreateGoalID,
-	CreateLegacyFolderID,
-	CreateLegacyFolderIDFromFolder,
 	CreateQuestID,
 	CreateSongID,
 	CreateTableID,
-	EfficientInPlaceDeepmerge,
-	GetChartCollectionGame,
-	GetFreshSongIDGenerator,
-	GetSongCollectionGame: GetSongCollectionGameGroup,
-	IterateCollections,
-	MutateCollection,
-	ReadCollection,
-	WRITE_COLLECTION_SKIP_BIOME,
-	WriteCollection,
+	GetSongCollectionGameGroup as GetSongCollectionGame,
 };

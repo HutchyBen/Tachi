@@ -1,4 +1,4 @@
-function FindChartWithPTDFVersion(collection, songID, playtype, difficulty, version) {
+export function FindChartWithPTDFVersion(collection, songID, playtype, difficulty, version) {
 	return collection.find(
 		(chart) =>
 			chart.song.id === songID &&
@@ -8,11 +8,6 @@ function FindChartWithPTDFVersion(collection, songID, playtype, difficulty, vers
 	);
 }
 
-function FindSongWithTitle(collection, title) {
+export function FindSongWithTitle(collection, title) {
 	return collection.find((e) => e.title === title || e.altTitles.includes(title));
 }
-
-module.exports = {
-	FindChartWithPTDFVersion,
-	FindSongWithTitle,
-};

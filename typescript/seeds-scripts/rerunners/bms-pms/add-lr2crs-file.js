@@ -1,9 +1,9 @@
-const { Command } = require("commander");
-const { XMLParser } = require("fast-xml-parser");
-const fs = require("fs");
-const { GAME_PT_CONFIGS } = require("../../../common/src");
+import { Command } from "commander";
+import fs from "fs";
+import { XMLParser } from "fast-xml-parser";
 
-const { MutateCollection } = require("../../util");
+import { GAME_PT_CONFIGS } from "../../../common/src/index.ts";
+import { MutateCollection } from "../../util.js";
 
 const program = new Command();
 program

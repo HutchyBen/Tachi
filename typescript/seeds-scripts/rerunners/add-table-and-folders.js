@@ -1,4 +1,4 @@
-const { CreateFolderID, MutateCollection } = require("../util");
+import { CreateFolderID, MutateCollection } from "../util.js";
 
 // Change these for whatever table you are adding.
 const GAME = "ddr";

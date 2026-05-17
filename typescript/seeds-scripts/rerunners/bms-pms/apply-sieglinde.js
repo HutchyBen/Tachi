@@ -1,8 +1,8 @@
-const { Command } = require("commander");
-const fs = require("fs");
-const path = require("path");
+import { Command } from "commander";
+import fs from "fs";
+import path from "path";
 
-const { MutateCollection } = require("../../util");
+import { MutateCollection } from "../../util.js";
 
 const program = new Command();
 program.option("-i, --input <sieglinde output/folder>");

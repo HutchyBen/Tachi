@@ -1,4 +1,4 @@
-const { CreateChartID, MutateCollection } = require("../../util");
+import { CreateChartID, MutateCollection } from "../../util.js";
 
 const inGameID = 25021;
 const tachiSongID = 1728;

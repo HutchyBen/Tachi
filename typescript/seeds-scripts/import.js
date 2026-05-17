@@ -5,12 +5,15 @@
 // This script is for importing the collections *immediately* into
 // any old mongo instance.
 
-const { execSync } = require("child_process");
-const { Command } = require("commander");
-const fs = require("fs");
-const path = require("path");
+import { execSync } from "child_process";
+import { Command } from "commander";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const logger = require("./log");
+import { log as logger } from "./log.ts";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const program = new Command();
 

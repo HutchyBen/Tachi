@@ -1,10 +1,13 @@
-const { Command } = require("commander");
-const fs = require("fs");
-const fetch = require("node-fetch");
-const path = require("path");
+import { Command } from "commander";
+import fs from "fs";
+import path from "path";
+import fetch from "node-fetch";
+import { fileURLToPath } from "url";
 
-const logger = require("../../log");
-const { MutateCollection, ReadCollection } = require("../../util");
+import { log as logger } from "../../log.ts";
+import { MutateCollection, ReadCollection } from "../../util.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const program = new Command();
 

@@ -1,9 +1,11 @@
-const crypto = require("crypto");
-const fs = require("fs");
-const path = require("path");
+import crypto from "crypto";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const { ReadCollection, WriteCollection } = require("../util");
+import { ReadCollection, WriteCollection } from "../util.js";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const COLLECTIONS_DIR = path.join(__dirname, "../../../db/seeds");
 
 const NOW = Date.now();

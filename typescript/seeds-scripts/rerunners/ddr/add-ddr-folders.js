@@ -1,4 +1,4 @@
-const { CreateFolderID, MutateCollection } = require("../../util");
+import { CreateFolderID, MutateCollection } from "../../util.js";
 
 const PLAYTYPES = ["SP", "DP"];
 const VERSIONS = ["world", "konaste", "a3", "a20plus", "a20", "a"];

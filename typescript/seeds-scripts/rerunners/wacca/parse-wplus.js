@@ -1,12 +1,12 @@
-const { Command } = require("commander");
-const fs = require("fs");
+import { Command } from "commander";
+import fs from "fs";
 
-const {
+import {
 	CreateChartID,
 	GetFreshSongIDGenerator,
 	MutateCollection,
 	ReadCollection,
-} = require("../../util");
+} from "../../util.js";
 
 const getNewSongID = GetFreshSongIDGenerator("wacca");
 const waccaDiffIndex = ["NORMAL", "HARD", "EXPERT", "INFERNO"];

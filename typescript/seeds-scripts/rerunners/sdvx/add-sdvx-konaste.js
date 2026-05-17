@@ -1,9 +1,9 @@
-const { Command } = require("commander");
-const Encoding = require("encoding-japanese");
-const { XMLParser } = require("fast-xml-parser");
-const fs = require("fs");
+import { Command } from "commander";
+import Encoding from "encoding-japanese";
+import { XMLParser } from "fast-xml-parser";
+import fs from "fs";
 
-const { CreateChartID, ReadCollection, WriteCollection } = require("../../util");
+import { CreateChartID, ReadCollection, WriteCollection } from "../../util.js";
 
 const VERSIONS = {
 	1: "booth",

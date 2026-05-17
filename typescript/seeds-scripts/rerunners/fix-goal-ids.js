@@ -1,5 +1,11 @@
-const logger = require("../log");
-const { CreateGoalID, MutateCollection, ReadCollection, WriteCollection } = require("../util");
+import { log as logger } from "../log.ts";
+import {
+	CreateGoalID,
+	MutateCollection,
+	ReadCollection,
+	WriteCollection,
+} from "../util.js";
+
 
 const translateMap = new Map();
 

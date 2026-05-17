@@ -1,6 +1,6 @@
-const { PrettyVersions } = require("tachi-common/config/versions");
+import { PrettyVersions } from "tachi-common/config/versions";
 
-const { CreateFolderID, MutateCollection } = require("../../util");
+import { CreateFolderID, MutateCollection } from "../../util.js";
 
 function CreateFolder(criteria, playtype, title) {
 	const f = {

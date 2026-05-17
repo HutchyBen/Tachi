@@ -1,8 +1,8 @@
-const { Command } = require("commander");
-const { XMLParser } = require("fast-xml-parser");
-const fs = require("fs");
+import { Command } from "commander";
+import { XMLParser } from "fast-xml-parser";
+import fs from "fs";
 
-const { CreateChartID, MutateCollection } = require("../../util");
+import { CreateChartID, MutateCollection } from "../../util.js";
 
 const program = new Command();
 program

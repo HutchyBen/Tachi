@@ -1,7 +1,7 @@
-const { Command } = require("commander");
-const fetch = require("node-fetch");
+import { Command } from "commander";
+import fetch from "node-fetch";
 
-const { MutateCollection } = require("../../util");
+import { MutateCollection } from "../../util.js";
 
 const program = new Command();
 program

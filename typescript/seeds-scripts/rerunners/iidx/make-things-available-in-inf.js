@@ -1,4 +1,4 @@
-const { MutateCollection } = require("../../util");
+import { MutateCollection } from "../../util.js";
 
 function idMatch(idSet, inGameID) {
 	if (Array.isArray(inGameID)) {
@@ -15,7 +15,7 @@ function idMatch(idSet, inGameID) {
 	return false;
 }
 
-module.exports = (idSet) =>
+export default (idSet) =>
 	MutateCollection("charts-iidx.json", (charts) => {
 		for (const chart of charts) {
 			if (

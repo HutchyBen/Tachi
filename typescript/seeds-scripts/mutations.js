@@ -1,4 +1,4 @@
-const { EfficientInPlaceDeepmerge, MutateCollection } = require("./util");
+import { EfficientInPlaceDeepmerge, MutateCollection } from "./util.js";
 
 function DoesMatchCriteria(element, mutation) {
 	for (const [key, value] of Object.entries(mutation.match)) {
@@ -10,7 +10,7 @@ function DoesMatchCriteria(element, mutation) {
 	return true;
 }
 
-function ApplyMutations(name, mutations) {
+export function ApplyMutations(name, mutations) {
 	MutateCollection(name, (collection) => {
 		for (const element of collection) {
 			for (const mutation of mutations) {
@@ -23,7 +23,3 @@ function ApplyMutations(name, mutations) {
 		return collection;
 	});
 }
-
-module.exports = {
-	ApplyMutations,
-};

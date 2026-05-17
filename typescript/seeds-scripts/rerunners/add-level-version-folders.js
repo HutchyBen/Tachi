@@ -1,8 +1,8 @@
-const { FormatGame } = require("../../common/src");
+import { FormatGame } from "../../common/src/index.ts";
 
-const { CreateFolderID, MutateCollection } = require("../util");
+import { CreateFolderID, MutateCollection } from "../util.js";
 
-module.exports = function AddLevelVersionFolders(name, game, playtypes, version, levels) {
+export default function AddLevelVersionFolders(name, game, playtypes, version, levels) {
 	const ptFolders = {};
 
 	MutateCollection("folders.json", (folders) => {

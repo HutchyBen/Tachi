@@ -1,7 +1,8 @@
-const { Command } = require("commander");
-const { GetGamePTConfig } = require("../../../common/src");
+import { Command } from "commander";
+import { GetGamePTConfig } from "../../../common/src/index.ts";
 
-const { CreateFolderID, MutateCollection } = require("../../util");
+import { CreateFolderID, MutateCollection } from "../../util.js";
+
 
 const LEVELS = [
 	"1",

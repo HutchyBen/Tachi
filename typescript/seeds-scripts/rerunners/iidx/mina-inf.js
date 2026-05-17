@@ -1,4 +1,4 @@
-const { MutateCollection } = require("../../util");
+import { MutateCollection } from "../../util.js";
 
 // This is the numerical ID of the song we want to add to the Infinitas table
 // Make sure to double check if it's using legacy charts for some stupid reason

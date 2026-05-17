@@ -1,10 +1,9 @@
 /* eslint no-labels: "off", require-unicode-regexp: "off", no-irregular-whitespace: "off" */
+import { Command } from "commander";
+import { parse } from "csv-parse/sync";
+import fs from "fs";
 
-const { Command } = require("commander");
-const { parse } = require("csv-parse/sync");
-const fs = require("fs");
-
-const { MutateCollection, ReadCollection } = require("../../util");
+import { MutateCollection, ReadCollection } from "../../util.js";
 
 // The tier lists are available at
 // https://docs.google.com/spreadsheets/d/1cFltguBvPplBem-x1STHnG3k4TZzFfyNEZ-RwsQszoo/edit

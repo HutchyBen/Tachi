@@ -1,7 +1,7 @@
-const { Command } = require("commander");
-const fs = require("fs");
+import { Command } from "commander";
+import fs from "fs";
 
-const { CreateChartID, MutateCollection, ReadCollection } = require("../../util");
+import { CreateChartID, MutateCollection, ReadCollection } from "../../util.js";
 
 const program = new Command();
 program.option("-f, --file <zk.json>");
