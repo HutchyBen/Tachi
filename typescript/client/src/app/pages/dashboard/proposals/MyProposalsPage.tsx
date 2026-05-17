@@ -3,7 +3,7 @@
  * with edit and withdraw capabilities.
  */
 
-import type { UnsuccessfulAPIResponse } from "tachi-common";
+import type { UnsuccessfulAPIResponse, UserDocument } from "tachi-common";
 
 import useSetSubheader from "#components/layout/header/useSetSubheader";
 import LoadingWrapper from "#components/util/LoadingWrapper";
@@ -51,6 +51,10 @@ export default function MyProposalsPage() {
 		return <Redirect to="/login" />;
 	}
 
+	return <MyProposalsPageInner user={user} />;
+}
+
+function MyProposalsPageInner({ user: _user }: { user: UserDocument }) {
 	const [data, setData] = useState<MyProposalsResponse | null>(null);
 	const [error, setError] = useState<UnsuccessfulAPIResponse | null>(null);
 

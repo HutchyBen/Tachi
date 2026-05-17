@@ -42,12 +42,33 @@ describe("getDueFireTime", () => {
 	});
 
 	it("null last: daily monthly and yearly examples match a bounded forward reference", () => {
-		const specs: Array<{ schedule: string; now: string; maxSteps: number; daysBack: number }> = [
-			{ schedule: "5 0 * * *", now: "2026-05-17T18:45:30.000Z", maxSteps: 50, daysBack: 3 },
-			{ schedule: "0 0 * * *", now: "2026-05-17T18:45:30.000Z", maxSteps: 10, daysBack: 3 },
-			{ schedule: "0 0 1 * *", now: "2026-03-15T12:00:00.000Z", maxSteps: 40, daysBack: 60 },
-			{ schedule: "0 0 1 1 *", now: "2026-06-15T12:00:00.000Z", maxSteps: 10, daysBack: 400 },
-		];
+		const specs: Array<{ daysBack: number; maxSteps: number; now: string; schedule: string }> =
+			[
+				{
+					schedule: "5 0 * * *",
+					now: "2026-05-17T18:45:30.000Z",
+					maxSteps: 50,
+					daysBack: 3,
+				},
+				{
+					schedule: "0 0 * * *",
+					now: "2026-05-17T18:45:30.000Z",
+					maxSteps: 10,
+					daysBack: 3,
+				},
+				{
+					schedule: "0 0 1 * *",
+					now: "2026-03-15T12:00:00.000Z",
+					maxSteps: 40,
+					daysBack: 60,
+				},
+				{
+					schedule: "0 0 1 1 *",
+					now: "2026-06-15T12:00:00.000Z",
+					maxSteps: 10,
+					daysBack: 400,
+				},
+			];
 		for (const { schedule, now: nowIso, maxSteps, daysBack } of specs) {
 			const now = new Date(nowIso);
 			const start = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000);
@@ -59,7 +80,12 @@ describe("getDueFireTime", () => {
 	it("non-null last: unchanged skip-missed semantics vs forward reference", () => {
 		const now = new Date("2026-05-17T18:45:30.000Z");
 		const last = new Date("2026-05-17T18:40:00.000Z");
-		const expected = dueFireTimeForwardFrom("* * * * *", new Date(last.getTime() + 1), now, 200);
+		const expected = dueFireTimeForwardFrom(
+			"* * * * *",
+			new Date(last.getTime() + 1),
+			now,
+			200,
+		);
 		expect(getDueFireTime("* * * * *", last, now)).toEqual(expected);
 	});
 

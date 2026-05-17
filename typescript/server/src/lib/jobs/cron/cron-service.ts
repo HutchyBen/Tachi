@@ -17,7 +17,9 @@ const CRON_ADVISORY_KEY2 = 0x63_72_6f_6e; // "cron"
  * `next()` is still <= `now`, then advance with the same `next()` loop as the non-null path.
  */
 export function getDueFireTime(schedule: string, last: Date | null, now: Date): Date | null {
-	const startAndFirstAfter = (start: Date): { it: ReturnType<typeof CronExpressionParser.parse>; first: Date } => {
+	const startAndFirstAfter = (
+		start: Date,
+	): { first: Date; it: ReturnType<typeof CronExpressionParser.parse> } => {
 		const it = CronExpressionParser.parse(schedule, { currentDate: start });
 		const first = it.next().toDate();
 		return { it, first };

@@ -7,13 +7,7 @@
  * updated compared to the base branch.
  */
 
-import {
-	GITHUB_PAT_KEY,
-	SEEDS_DEFAULT_BRANCH,
-	SEEDS_GITHUB_HTML_URL,
-	SEEDS_REPO,
-	SEEDS_REPO_PATH,
-} from "#lib/config";
+import { GITHUB_PAT_KEY, SEEDS_GITHUB_HTML_URL, SEEDS_REPO } from "#lib/config";
 import { getTransport } from "#lib/transport/transport";
 import { useMemo } from "react";
 import { useQuery } from "react-query";
