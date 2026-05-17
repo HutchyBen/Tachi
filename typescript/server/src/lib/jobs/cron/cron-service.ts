@@ -11,23 +11,56 @@ const CRON_ADVISORY_KEY2 = 0x63_72_6f_6e; // "cron"
 /**
  * Next cron fire strictly after `last`, that is still <= `now`.
  * If none, `null` (not due). "Skip missed" to the latest such fire time.
+ *
+ * When `last` is null (never scheduled), walking forward from the epoch is infeasible for
+ * minutely schedules. We first find a recent `start` by exponential lookback where the first
+ * `next()` is still <= `now`, then advance with the same `next()` loop as the non-null path.
  */
 export function getDueFireTime(schedule: string, last: Date | null, now: Date): Date | null {
-	const it = CronExpressionParser.parse(schedule, {
-		currentDate: last ? new Date(last.getTime() + 1) : new Date(0),
-	});
-	const first = it.next().toDate();
+	const startAndFirstAfter = (start: Date): { it: ReturnType<typeof CronExpressionParser.parse>; first: Date } => {
+		const it = CronExpressionParser.parse(schedule, { currentDate: start });
+		const first = it.next().toDate();
+		return { it, first };
+	};
+
+	let it: ReturnType<typeof CronExpressionParser.parse>;
+	let first: Date;
+
+	if (!last) {
+		let windowMs = 60_000;
+		const maxWindowMs = 800 * 24 * 60 * 60 * 1000;
+		for (;;) {
+			const start = new Date(Math.max(0, now.getTime() - windowMs));
+			const parsed = startAndFirstAfter(start);
+			if (parsed.first.getTime() <= now.getTime()) {
+				it = parsed.it;
+				first = parsed.first;
+				break;
+			}
+			if (windowMs >= maxWindowMs) {
+				return null;
+			}
+			windowMs = Math.min(windowMs * 2, maxWindowMs);
+		}
+	} else {
+		const parsed = startAndFirstAfter(new Date(last.getTime() + 1));
+		it = parsed.it;
+		first = parsed.first;
+	}
+
 	if (first.getTime() > now.getTime()) {
 		return null;
 	}
 	let lastDue = first;
-	for (;;) {
+	const maxSteps = 2_000_000;
+	for (let step = 0; step < maxSteps; step++) {
 		const n = it.next().toDate();
 		if (n.getTime() > now.getTime()) {
 			return lastDue;
 		}
 		lastDue = n;
 	}
+	throw new Error(`getDueFireTime exceeded ${maxSteps} next() steps (schedule ${schedule}).`);
 }
 
 export async function syncCronTasksFromRegistry(): Promise<void> {
