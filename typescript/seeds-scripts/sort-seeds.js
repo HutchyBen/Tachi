@@ -145,8 +145,7 @@ function SortObjectKeys(object) {
 	return newObject;
 }
 
-const __resolvedMain =
-	process.argv[1] !== undefined ? path.resolve(process.argv[1]) : "";
+const __resolvedMain = process.argv[1] !== undefined ? path.resolve(process.argv[1]) : "";
 
 if (__resolvedMain === fileURLToPath(import.meta.url)) {
 	SortSeeds();

@@ -27,8 +27,7 @@ export default function RizuPage() {
 				</li>
 				<li>
 					Download your <code>Rizu.cfg</code> config file{" "}
-					<ExternalLink href="/client-file-flow/CXRizu">here</ExternalLink>
-					. <br />
+					<ExternalLink href="/client-file-flow/CXRizu">here</ExternalLink>. <br />
 					<Alert className="mt-2" variant="warning">
 						This file contains an API Key, which is meant to be kept secret!
 					</Alert>

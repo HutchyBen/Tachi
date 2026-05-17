@@ -53,7 +53,7 @@ export default function AddLevelVersionFolders(name, game, playtypes, version, l
 
 		return tables;
 	});
-};
+}
 
 // usage:
 

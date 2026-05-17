@@ -73,7 +73,7 @@
 		"@nivo/bar": "0.79.1",
 		"@nivo/core": "0.79.0",
 		"@nivo/line": "0.79.1",
-		"@octokit/app": "15.1.0",
+		"@octokit/app": "^16.1.2",
 		"@octokit/webhooks-types": "7.5.1",
 		"@types/bcryptjs": "^2.4.2",
 		"@types/bunyan": "^1.8.8",

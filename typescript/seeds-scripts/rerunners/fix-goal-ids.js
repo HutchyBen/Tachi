@@ -1,11 +1,5 @@
 import { log as logger } from "../log.ts";
-import {
-	CreateGoalID,
-	MutateCollection,
-	ReadCollection,
-	WriteCollection,
-} from "../util.js";
-
+import { CreateGoalID, MutateCollection, ReadCollection, WriteCollection } from "../util.js";
 
 const translateMap = new Map();
 

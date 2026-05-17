@@ -3,7 +3,6 @@ import { GetGamePTConfig } from "../../../common/src/index.ts";
 
 import { CreateFolderID, MutateCollection } from "../../util.js";
 
-
 const LEVELS = [
 	"1",
 	"2",

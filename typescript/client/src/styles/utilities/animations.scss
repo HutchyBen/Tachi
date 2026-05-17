@@ -24,11 +24,7 @@
 }
 
 .shine::before {
-	background: linear-gradient(
-		transparent,
-		rgba(255, 255, 255, 0.5) 50%,
-		transparent
-	);
+	background: linear-gradient(transparent, rgba(255, 255, 255, 0.5) 50%, transparent);
 	content: "";
 	display: block;
 	width: 150%;

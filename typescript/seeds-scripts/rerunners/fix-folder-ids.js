@@ -1,11 +1,5 @@
 import { log as logger } from "../log.ts";
-import {
-	CreateFolderID,
-	MutateCollection,
-	ReadCollection,
-	WriteCollection,
-} from "../util.js";
-
+import { CreateFolderID, MutateCollection, ReadCollection, WriteCollection } from "../util.js";
 
 const translateMap = new Map();
 

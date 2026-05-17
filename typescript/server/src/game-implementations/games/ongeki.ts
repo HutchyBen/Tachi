@@ -18,10 +18,7 @@ import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
 const isUnranked = (chart: ChartDocument<"ongeki">) => {
 	const ig = chart.data.inGameID;
-	return (
-		(ig !== null && ig >= 7000 && ig < 8000) ||
-		chart.levelNum === 0.0
-	);
+	return (ig !== null && ig >= 7000 && ig < 8000) || chart.levelNum === 0.0;
 };
 
 const starCount = (platinumScore: number, maxPlatinumScore: number) => {

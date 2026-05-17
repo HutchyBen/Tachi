@@ -3,7 +3,7 @@ import fs from "fs";
 
 import {
 	CreateChartID,
-	GetFreshSongIDGenerator: GetFreshScoreIDGenerator,
+	GetFreshSongIDGenerator,
 	ReadCollection,
 	WriteCollection,
 } from "../../util.js";
@@ -25,7 +25,7 @@ const existingCharts = new Map(curCharts.map((e) => [e.data.hashSHA256, e]));
 const songs = [];
 const charts = [];
 
-const getNewSongID = GetFreshScoreIDGenerator("popn");
+const getNewSongID = GetFreshSongIDGenerator("popn");
 
 for (const song of data) {
 	// some datapoints might be null
