@@ -65,13 +65,13 @@ export type GPTClassColours<GPT extends V3Game> = {
 		// css properties => css
 		// null -> no styling
 		[V in ClassConfigs[GPT][C]["values"][number]["id"]]:
+			| ({ shine?: boolean } & CSSProperties)
 			| "danger"
 			| "info"
 			| "primary"
 			| "secondary"
 			| "success"
 			| "warning"
-			| CSSProperties
 			| null;
 	};
 };

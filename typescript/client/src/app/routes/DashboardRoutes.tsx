@@ -1,3 +1,4 @@
+import CreditsPage from "#app/pages/dashboard/misc/CreditsPage";
 import MyProposalsPage from "#app/pages/dashboard/proposals/MyProposalsPage";
 import ProposalsPage from "#app/pages/dashboard/proposals/ProposalsPage";
 import SearchPage from "#app/pages/dashboard/search/SearchPage";
@@ -93,6 +94,10 @@ export default function DashboardRoutes() {
 
 					<Route exact path="/privacy">
 						<PrivacyPolicyPage />
+					</Route>
+
+					<Route exact path="/credits">
+						<CreditsPage />
 					</Route>
 
 					{/* <Route exact path="/support">

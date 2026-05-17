@@ -149,7 +149,7 @@ function GraphComponent({
 				},
 			]}
 			difficulty={chart.difficulty}
-			duration={song.data.duration}
+			duration={song.data.duration ?? 240}
 			game="ongeki"
 			height="360px"
 			maximumAbsoluteValue={

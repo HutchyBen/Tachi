@@ -117,6 +117,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01002luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.2",
 			"inGameID": 8162,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2340
 		},
@@ -199,6 +200,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01003luna.htm",
 			"displayVersion": "オンゲキ R.E.D. PLUS",
 			"inGameID": 8058,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3014
 		},
@@ -281,6 +283,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01004luna.htm",
 			"displayVersion": "オンゲキ PLUS",
 			"inGameID": 8022,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2396
 		},
@@ -1224,6 +1227,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01016luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.2",
 			"inGameID": 8166,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3510
 		},
@@ -1247,6 +1251,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01016mst.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 118,
+			"isBonusTrack": false,
 			"maxPlatScore": 2556
 		},
 		"difficulty": "MASTER",
@@ -1489,6 +1494,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01019luna.htm",
 			"displayVersion": "オンゲキ bright",
 			"inGameID": 8065,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2698
 		},
@@ -1512,6 +1518,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01019mst.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 47,
+			"isBonusTrack": false,
 			"maxPlatScore": 2100
 		},
 		"difficulty": "MASTER",
@@ -1600,6 +1607,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01020luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.3",
 			"inGameID": 8179,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3006
 		},
@@ -1955,6 +1963,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01070luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.2",
 			"inGameID": 8113,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 1568
 		},
@@ -2056,6 +2065,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01061luna.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 8021,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 4000
 		},
@@ -2233,6 +2243,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01064luna.htm",
 			"displayVersion": "オンゲキ R.E.D. PLUS",
 			"inGameID": 8062,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 4036
 		},
@@ -2256,6 +2267,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01064mst.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 151,
+			"isBonusTrack": false,
 			"maxPlatScore": 2590
 		},
 		"difficulty": "MASTER",
@@ -2480,6 +2492,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01082luna.htm",
 			"displayVersion": "オンゲキ bright",
 			"inGameID": 8067,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2234
 		},
@@ -2669,6 +2682,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01066luna.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 8002,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 1052
 		},
@@ -3404,6 +3418,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01083luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.2",
 			"inGameID": 8165,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3048
 		},
@@ -3427,6 +3442,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01083mst.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 140,
+			"isBonusTrack": false,
 			"maxPlatScore": 2482
 		},
 		"difficulty": "MASTER",
@@ -3871,6 +3887,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01027luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.2",
 			"inGameID": 8163,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 4152
 		},
@@ -3894,6 +3911,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01027mst.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 45,
+			"isBonusTrack": false,
 			"maxPlatScore": 3016
 		},
 		"difficulty": "MASTER",
@@ -4517,6 +4535,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01032luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.2",
 			"inGameID": 8009,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 1672
 		},
@@ -4898,6 +4917,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01036luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.2",
 			"inGameID": 8115,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3020
 		},
@@ -4921,6 +4941,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01036mst.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 35,
+			"isBonusTrack": false,
 			"maxPlatScore": 2498
 		},
 		"difficulty": "MASTER",
@@ -5009,6 +5030,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01037luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.2",
 			"inGameID": 8015,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 2452
 		},
@@ -5924,6 +5946,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01038luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8091,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3692
 		},
@@ -5946,6 +5969,7 @@
 		"data": {
 			"displayVersion": "オンゲキ",
 			"inGameID": 36,
+			"isBonusTrack": false,
 			"maxPlatScore": 1836
 		},
 		"difficulty": "MASTER",
@@ -6034,6 +6058,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01039luna.htm",
 			"displayVersion": "オンゲキ PLUS",
 			"inGameID": 8029,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2464
 		},
@@ -6057,6 +6082,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01039mst.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 63,
+			"isBonusTrack": false,
 			"maxPlatScore": 1638
 		},
 		"difficulty": "MASTER",
@@ -6145,6 +6171,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01040luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8030,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2676
 		},
@@ -6168,6 +6195,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01040mst.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 64,
+			"isBonusTrack": false,
 			"maxPlatScore": 1942
 		},
 		"difficulty": "MASTER",
@@ -6256,6 +6284,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01041luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8031,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3144
 		},
@@ -6279,6 +6308,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01041mst.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 65,
+			"isBonusTrack": false,
 			"maxPlatScore": 1762
 		},
 		"difficulty": "MASTER",
@@ -6367,6 +6397,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01042luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8094,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2834
 		},
@@ -6390,6 +6421,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01042mst.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 67,
+			"isBonusTrack": false,
 			"maxPlatScore": 2624
 		},
 		"difficulty": "MASTER",
@@ -6478,6 +6510,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01043luna.htm",
 			"displayVersion": "オンゲキ Re:Fresh",
 			"inGameID": 8186,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3222
 		},
@@ -6584,6 +6617,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01044luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8095,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3118
 		},
@@ -6607,6 +6641,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01044mst.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 68,
+			"isBonusTrack": false,
 			"maxPlatScore": 2184
 		},
 		"difficulty": "MASTER",
@@ -6695,6 +6730,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01045luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8033,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2922
 		},
@@ -6718,6 +6754,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01045mst.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 69,
+			"isBonusTrack": false,
 			"maxPlatScore": 1672
 		},
 		"difficulty": "MASTER",
@@ -7092,6 +7129,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01052luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8097,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3094
 		},
@@ -7115,6 +7153,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01052mst.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 76,
+			"isBonusTrack": false,
 			"maxPlatScore": 2444
 		},
 		"difficulty": "MASTER",
@@ -7203,6 +7242,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01053luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8098,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2714
 		},
@@ -7226,6 +7266,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01053mst.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 79,
+			"isBonusTrack": false,
 			"maxPlatScore": 1808
 		},
 		"difficulty": "MASTER",
@@ -7582,6 +7623,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01069luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8099,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2482
 		},
@@ -7605,6 +7647,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01069mst.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 93,
+			"isBonusTrack": false,
 			"maxPlatScore": 2408
 		},
 		"difficulty": "MASTER",
@@ -7693,6 +7736,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01074luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8100,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3170
 		},
@@ -7716,6 +7760,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01074mst.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 94,
+			"isBonusTrack": false,
 			"maxPlatScore": 2280
 		},
 		"difficulty": "MASTER",
@@ -7918,6 +7963,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01063luna.htm",
 			"displayVersion": "オンゲキ",
 			"inGameID": 8001,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 1738
 		},
@@ -9482,6 +9528,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01109luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.2",
 			"inGameID": 8158,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 4434
 		},
@@ -10155,6 +10202,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01118luna.htm",
 			"displayVersion": "オンゲキ R.E.D.",
 			"inGameID": 8056,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 628
 		},
@@ -10338,6 +10386,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01120luna.htm",
 			"displayVersion": "オンゲキ R.E.D. PLUS",
 			"inGameID": 8063,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3690
 		},
@@ -10763,6 +10812,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01126luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.2",
 			"inGameID": 8164,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3766
 		},
@@ -10786,6 +10836,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01126mst.htm",
 			"displayVersion": "オンゲキ PLUS",
 			"inGameID": 163,
+			"isBonusTrack": false,
 			"maxPlatScore": 2614
 		},
 		"difficulty": "MASTER",
@@ -10874,6 +10925,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01127luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.2",
 			"inGameID": 8173,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3040
 		},
@@ -10897,6 +10949,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01127mst.htm",
 			"displayVersion": "オンゲキ PLUS",
 			"inGameID": 164,
+			"isBonusTrack": false,
 			"maxPlatScore": 2484
 		},
 		"difficulty": "MASTER",
@@ -11075,6 +11128,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01129luna.htm",
 			"displayVersion": "オンゲキ PLUS",
 			"inGameID": 8024,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 1994
 		},
@@ -11852,6 +11906,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01138luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8085,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3048
 		},
@@ -11875,6 +11930,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01138mst.htm",
 			"displayVersion": "オンゲキ PLUS",
 			"inGameID": 167,
+			"isBonusTrack": false,
 			"maxPlatScore": 2546
 		},
 		"difficulty": "MASTER",
@@ -12451,6 +12507,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01145luna.htm",
 			"displayVersion": "オンゲキ SUMMER",
 			"inGameID": 8041,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 2008
 		},
@@ -12854,6 +12911,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01150luna.htm",
 			"displayVersion": "オンゲキ PLUS",
 			"inGameID": 8023,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 1622
 		},
@@ -12966,6 +13024,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01152luna.htm",
 			"displayVersion": "オンゲキ PLUS",
 			"inGameID": 8025,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 1998
 		},
@@ -13504,6 +13563,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01161luna.htm",
 			"displayVersion": "オンゲキ R.E.D.",
 			"inGameID": 8050,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3026
 		},
@@ -13527,6 +13587,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01161mst.htm",
 			"displayVersion": "オンゲキ PLUS",
 			"inGameID": 190,
+			"isBonusTrack": false,
 			"maxPlatScore": 2474
 		},
 		"difficulty": "MASTER",
@@ -13745,6 +13806,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01167luna.htm",
 			"displayVersion": "オンゲキ R.E.D.",
 			"inGameID": 8052,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 3120
 		},
@@ -15103,6 +15165,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01177luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8101,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2586
 		},
@@ -15126,6 +15189,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01177mst.htm",
 			"displayVersion": "オンゲキ PLUS",
 			"inGameID": 205,
+			"isBonusTrack": false,
 			"maxPlatScore": 2124
 		},
 		"difficulty": "MASTER",
@@ -15214,6 +15278,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01180luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8102,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2806
 		},
@@ -15237,6 +15302,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01180mst.htm",
 			"displayVersion": "オンゲキ PLUS",
 			"inGameID": 206,
+			"isBonusTrack": false,
 			"maxPlatScore": 2568
 		},
 		"difficulty": "MASTER",
@@ -15325,6 +15391,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01179luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8103,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3326
 		},
@@ -15348,6 +15415,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01179mst.htm",
 			"displayVersion": "オンゲキ PLUS",
 			"inGameID": 207,
+			"isBonusTrack": false,
 			"maxPlatScore": 2690
 		},
 		"difficulty": "MASTER",
@@ -16142,6 +16210,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01188luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8088,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3088
 		},
@@ -16165,6 +16234,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/01/01188mst.htm",
 			"displayVersion": "オンゲキ PLUS",
 			"inGameID": 215,
+			"isBonusTrack": false,
 			"maxPlatScore": 2618
 		},
 		"difficulty": "MASTER",
@@ -18179,6 +18249,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/02017luna.htm",
 			"displayVersion": "オンゲキ SUMMER PLUS",
 			"inGameID": 8048,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3410
 		},
@@ -18202,6 +18273,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/02/02017mst.htm",
 			"displayVersion": "オンゲキ SUMMER",
 			"inGameID": 231,
+			"isBonusTrack": false,
 			"maxPlatScore": 2572
 		},
 		"difficulty": "MASTER",
@@ -18290,6 +18362,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/02018luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8104,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3230
 		},
@@ -18313,6 +18386,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/02/02018mst.htm",
 			"displayVersion": "オンゲキ SUMMER",
 			"inGameID": 232,
+			"isBonusTrack": false,
 			"maxPlatScore": 3028
 		},
 		"difficulty": "MASTER",
@@ -18581,6 +18655,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/02022luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8105,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3388
 		},
@@ -18604,6 +18679,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/02/02022mst.htm",
 			"displayVersion": "オンゲキ SUMMER",
 			"inGameID": 243,
+			"isBonusTrack": false,
 			"maxPlatScore": 2052
 		},
 		"difficulty": "MASTER",
@@ -18782,6 +18858,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/02021luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8106,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2190
 		},
@@ -18805,6 +18882,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/02/02021mst.htm",
 			"displayVersion": "オンゲキ SUMMER",
 			"inGameID": 238,
+			"isBonusTrack": false,
 			"maxPlatScore": 1508
 		},
 		"difficulty": "MASTER",
@@ -18917,6 +18995,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/02025luna.htm",
 			"displayVersion": "オンゲキ SUMMER",
 			"inGameID": 8042,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 2214
 		},
@@ -18982,6 +19061,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/02026luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8083,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3558
 		},
@@ -19343,6 +19423,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/02031luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8086,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 634
 		},
@@ -22452,6 +22533,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/02068luna.htm",
 			"displayVersion": "オンゲキ SUMMER",
 			"inGameID": 8043,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 2450
 		},
@@ -24571,6 +24653,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/02099luna.htm",
 			"displayVersion": "オンゲキ Re:Fresh",
 			"inGameID": 8188,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 3782
 		},
@@ -25671,6 +25754,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/02097luna.htm",
 			"displayVersion": "オンゲキ SUMMER PLUS",
 			"inGameID": 8044,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 1776
 		},
@@ -27088,6 +27172,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/02125luna.htm",
 			"displayVersion": "オンゲキ SUMMER PLUS",
 			"inGameID": 8045,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 1476
 		},
@@ -27446,6 +27531,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/02129luna.htm",
 			"displayVersion": "オンゲキ R.E.D.",
 			"inGameID": 8054,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2748
 		},
@@ -27469,6 +27555,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/02/02129mst.htm",
 			"displayVersion": "オンゲキ SUMMER PLUS",
 			"inGameID": 374,
+			"isBonusTrack": false,
 			"maxPlatScore": 2544
 		},
 		"difficulty": "MASTER",
@@ -29758,6 +29845,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/02157luna.htm",
 			"displayVersion": "オンゲキ SUMMER PLUS",
 			"inGameID": 8046,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 2968
 		},
@@ -29781,6 +29869,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/02158luna.htm",
 			"displayVersion": "オンゲキ SUMMER PLUS",
 			"inGameID": 8047,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 5200
 		},
@@ -30358,6 +30447,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/02165luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.2",
 			"inGameID": 8160,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 4572
 		},
@@ -31903,6 +31993,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/03001luna.htm",
 			"displayVersion": "オンゲキ R.E.D. PLUS",
 			"inGameID": 8061,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3006
 		},
@@ -31926,6 +32017,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/03/03001mst.htm",
 			"displayVersion": "オンゲキ R.E.D.",
 			"inGameID": 413,
+			"isBonusTrack": false,
 			"maxPlatScore": 2418
 		},
 		"difficulty": "MASTER",
@@ -32843,6 +32935,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/03010luna.htm",
 			"displayVersion": "オンゲキ R.E.D.",
 			"inGameID": 8049,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 4708
 		},
@@ -35818,6 +35911,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/03052luna.htm",
 			"displayVersion": "オンゲキ R.E.D.",
 			"inGameID": 8051,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 2586
 		},
@@ -36891,6 +36985,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/03067luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.2",
 			"inGameID": 8172,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 2758
 		},
@@ -39798,6 +39893,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/03100luna.htm",
 			"displayVersion": "オンゲキ R.E.D. PLUS",
 			"inGameID": 8064,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 1616
 		},
@@ -39821,6 +39917,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/03/03100mst.htm",
 			"displayVersion": "オンゲキ R.E.D. PLUS",
 			"inGameID": 509,
+			"isBonusTrack": false,
 			"maxPlatScore": 2610
 		},
 		"difficulty": "MASTER",
@@ -40000,6 +40097,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/03102luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.3",
 			"inGameID": 8178,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 3118
 		},
@@ -40577,6 +40675,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/03106luna.htm",
 			"displayVersion": "オンゲキ R.E.D. PLUS",
 			"inGameID": 8057,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 4422
 		},
@@ -40689,6 +40788,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/03109luna.htm",
 			"displayVersion": "オンゲキ R.E.D. PLUS",
 			"inGameID": 8059,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 3172
 		},
@@ -45301,6 +45401,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/03158luna.htm",
 			"displayVersion": "オンゲキ R.E.D. PLUS",
 			"inGameID": 8060,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 5740
 		},
@@ -47526,6 +47627,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/03176luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.3",
 			"inGameID": 8180,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3902
 		},
@@ -47812,6 +47914,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/03179luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8107,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 4180
 		},
@@ -47835,6 +47938,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/03/03179mst.htm",
 			"displayVersion": "オンゲキ R.E.D. PLUS",
 			"inGameID": 589,
+			"isBonusTrack": false,
 			"maxPlatScore": 4730
 		},
 		"difficulty": "MASTER",
@@ -47924,6 +48028,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/03180luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.3",
 			"inGameID": 8139,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 5006
 		},
@@ -48209,6 +48314,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/03183luna.htm",
 			"displayVersion": "オンゲキ bright",
 			"inGameID": 8081,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 3184
 		},
@@ -48679,6 +48785,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/03188luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8087,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 3712
 		},
@@ -48792,6 +48899,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/03189luna.htm",
 			"displayVersion": "オンゲキ Re:Fresh",
 			"inGameID": 8185,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 1754
 		},
@@ -49123,6 +49231,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04002luna.htm",
 			"displayVersion": "オンゲキ bright",
 			"inGameID": 8079,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2886
 		},
@@ -50288,6 +50397,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04016luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8072,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2690
 		},
@@ -50311,6 +50421,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/04/04016mst.htm",
 			"displayVersion": "オンゲキ bright",
 			"inGameID": 615,
+			"isBonusTrack": false,
 			"maxPlatScore": 2798
 		},
 		"difficulty": "MASTER",
@@ -51316,6 +51427,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04023luna.htm",
 			"displayVersion": "オンゲキ bright",
 			"inGameID": 8080,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 2240
 		},
@@ -56157,6 +56269,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04070luna.htm",
 			"displayVersion": "オンゲキ bright",
 			"inGameID": 8069,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 2114
 		},
@@ -57182,6 +57295,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04078luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.2",
 			"inGameID": 8168,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2438
 		},
@@ -57205,6 +57319,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/04/04078mst.htm",
 			"displayVersion": "オンゲキ bright",
 			"inGameID": 676,
+			"isBonusTrack": false,
 			"maxPlatScore": 2026
 		},
 		"difficulty": "MASTER",
@@ -57852,6 +57967,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04086luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8084,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 5000
 		},
@@ -59719,6 +59835,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04102luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8082,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 3060
 		},
@@ -59765,6 +59882,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04103luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8071,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 2126
 		},
@@ -61678,6 +61796,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04126luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8070,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 1194
 		},
@@ -61749,6 +61868,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04127luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.2",
 			"inGameID": 8170,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3502
 		},
@@ -67711,6 +67831,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04184luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8089,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 3776
 		},
@@ -67802,6 +67923,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04180luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.3",
 			"inGameID": 8145,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 5798
 		},
@@ -67931,6 +68053,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04185luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.1",
 			"inGameID": 8090,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 5400
 		},
@@ -68760,6 +68883,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/01038luna2.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.2",
 			"inGameID": 8003,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 2146
 		},
@@ -72692,6 +72816,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04215luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.2",
 			"inGameID": 8167,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2322
 		},
@@ -72715,6 +72840,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/04/04215mst.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.2",
 			"inGameID": 908,
+			"isBonusTrack": false,
 			"maxPlatScore": 1944
 		},
 		"difficulty": "MASTER",
@@ -73699,6 +73825,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04223luna.htm",
 			"displayVersion": "オンゲキ Re:Fresh",
 			"inGameID": 8177,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 4042
 		},
@@ -81221,6 +81348,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04285luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.3",
 			"inGameID": 8175,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 2884
 		},
@@ -81435,6 +81563,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04288luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.3",
 			"inGameID": 8169,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 2206
 		},
@@ -87428,6 +87557,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04359luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.3",
 			"inGameID": 8181,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 4266
 		},
@@ -87511,6 +87641,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/04360luna.htm",
 			"displayVersion": "オンゲキ bright MEMORY Act.3",
 			"inGameID": 8182,
+			"isBonusTrack": false,
 			"isReMaster": false,
 			"maxPlatScore": 1946
 		},
@@ -88312,6 +88443,7 @@
 			"chartViewURL": "https://sdvx.in/ongeki/luna/05017luna.htm",
 			"displayVersion": "オンゲキ Re:Fresh",
 			"inGameID": 8187,
+			"isBonusTrack": false,
 			"isReMaster": true,
 			"maxPlatScore": 3066
 		},

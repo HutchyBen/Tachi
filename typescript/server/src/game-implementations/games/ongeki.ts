@@ -16,8 +16,13 @@ import {
 
 import { GoalFmtScore, GoalOutOfFmtScore, GradeGoalFormatter } from "./_common";
 
-const isUnranked = (chart: ChartDocument<"ongeki">) =>
-	(chart.data.inGameID >= 7000 && chart.data.inGameID < 8000) || chart.levelNum === 0.0;
+const isUnranked = (chart: ChartDocument<"ongeki">) => {
+	const ig = chart.data.inGameID;
+	return (
+		(ig !== null && ig >= 7000 && ig < 8000) ||
+		chart.levelNum === 0.0
+	);
+};
 
 const starCount = (platinumScore: number, maxPlatinumScore: number) => {
 	const pct = Math.floor((platinumScore / maxPlatinumScore) * 100);
@@ -113,7 +118,9 @@ export const ONGEKI_IMPL: GameImplementation<"ongeki"> = {
 			return { colour: null };
 		}
 
-		if (rating >= 21) {
+		if (rating >= 22) {
+			return { colour: "RAINBOW_EX_TRUE" };
+		} else if (rating >= 21) {
 			return { colour: "RAINBOW_EX" };
 		} else if (rating >= 20) {
 			return { colour: "RAINBOW_SHINY" };
@@ -230,9 +237,11 @@ export const ONGEKI_IMPL: GameImplementation<"ongeki"> = {
 				}
 			}
 
-			if (s.scoreData.bellLamp === "FULL BELL" && s.scoreData.noteLamp === "LOSS") {
-				return "Cannot have a LOSS with a FULL BELL.";
-			}
+			// LMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO
+			// if (s.scoreData.bellLamp === "FULL BELL" && s.scoreData.noteLamp === "LOSS") {
+			//		return "Cannot have a LOSS with a FULL BELL.";
+			// }
+			// LMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO
 
 			if (s.scoreData.platinumScore > chart.data.maxPlatScore) {
 				return `Cannot have ${s.scoreData.platinumScore}/${chart.data.maxPlatScore} Platinum Score.`;

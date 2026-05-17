@@ -293,6 +293,8 @@ describe("ONGEKI_IMPL", () => {
 			c(19, "RAINBOW");
 			c(20, "RAINBOW_SHINY");
 			c(21, "RAINBOW_EX");
+			c(22, "RAINBOW_EX_TRUE");
+			c(23, "RAINBOW_EX_TRUE");
 		});
 	});
 

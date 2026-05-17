@@ -63,6 +63,14 @@ export function Footer() {
 						>
 							GDPR
 						</Nav.Link>
+						<Nav.Link
+							as={Link}
+							className={linkClassNames}
+							onClick={() => window.scrollTo(0, 0)}
+							to="/credits"
+						>
+							Credits
+						</Nav.Link>
 						{import.meta.env.VITE_DISCORD && (
 							<Nav.Link
 								as={ExternalLink}

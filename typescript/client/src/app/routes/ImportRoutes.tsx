@@ -19,6 +19,7 @@ import MikadoPage from "#app/pages/dashboard/import/MikadoPage";
 import OngekiArtemisExportPage from "#app/pages/dashboard/import/OngekiArtemisExportPage";
 import OngekiInoharaPage from "#app/pages/dashboard/import/OngekiInoharaPage";
 import OngekiSiteImportPage from "#app/pages/dashboard/import/OngekiSiteImportPage";
+import RizuPage from "#app/pages/dashboard/import/RizuPage";
 import SaekawaPage from "#app/pages/dashboard/import/SaekawaPage";
 import SDVXEamCSVPage from "#app/pages/dashboard/import/SDVXEamCSVPage";
 import SilentHookPage from "#app/pages/dashboard/import/SilentHookPage";
@@ -253,6 +254,10 @@ export default function ImportRoutes() {
 
 							<Route exact path="/import/wacca-mypage-scraper">
 								<WACCAMyPageScraperPage />
+							</Route>
+
+							<Route exact path="/import/rizu">
+								<RizuPage />
 							</Route>
 
 							<Route exact path="/import/kt-maimaidx-site-importer">

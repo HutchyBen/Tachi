@@ -25,7 +25,7 @@ import { NumericSOV } from "#util/sorts";
 import React from "react";
 import { COLOUR_SET, type PBScoreDocument, type ScoreDocument, type V3Game } from "tachi-common";
 
-import { bgc, RAINBOW_EX_GRADIENT, RAINBOW_GRADIENT, RAINBOW_SHINY_GRADIENT } from "./games/_util";
+import { bgc, RAINBOW_EX_GRADIENT, RAINBOW_GRADIENT } from "./games/_util";
 import { ARCAEA_TOUCH_IMPL } from "./games/arcaea";
 import { BMS_7K_IMPL, BMS_14K_IMPL, PMS_IMPL } from "./games/bms-pms";
 import { DDR_DP_IMPL, DDR_SP_IMPL } from "./games/ddr";
@@ -785,9 +785,22 @@ export const GPT_CLIENT_IMPLEMENTATIONS: GPTClientImplementations = {
 				SILVER: bgc("gray", "var(--bs-light)"),
 				GOLD: bgc("var(--bs-warning)", "var(--bs-dark)"),
 				PLATINUM: bgc("silver", "var(--bs-dark)"),
-				RAINBOW: RAINBOW_GRADIENT,
-				RAINBOW_SHINY: RAINBOW_SHINY_GRADIENT,
-				RAINBOW_EX: RAINBOW_EX_GRADIENT,
+				RAINBOW: {
+					background: "linear-gradient(-45deg, #ff73d6 20%, #00ffff 50%, #ebfb2a 80%)",
+					color: "var(--bs-dark)",
+				},
+				RAINBOW_SHINY: {
+					background: "linear-gradient(-45deg, #ff73d6 20%, #00ffff 50%, #ebfb2a 80%)",
+					color: "var(--bs-dark)",
+					shine: true,
+				},
+				RAINBOW_EX: {
+					background:
+						"linear-gradient(-45deg, #df7e85 20%, #efef51 40%, #4bee83 60%, #70bdd7 80%)",
+					color: "var(--bs-dark)",
+					shine: true,
+				},
+				RAINBOW_EX_TRUE: { ...RAINBOW_EX_GRADIENT, shine: true },
 			},
 		},
 		enumColours: {
@@ -845,7 +858,14 @@ export const GPT_CLIENT_IMPLEMENTATIONS: GPTClientImplementations = {
 			[
 				"Platinum Score",
 				"P-Score",
-				NumericSOV((x) => x.scoreData.platinumStars * 100000 + x.scoreData.platinumScore),
+				// __related is attached when rendering table rows with chart context
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any -- NumericSOV row shape
+				NumericSOV((x: any) => {
+					if (x.__related?.chart?.data !== undefined) {
+						return x.scoreData.platinumScore / x.__related.chart.data.maxPlatScore;
+					}
+					return x.scoreData.platinumStars * 100000 + x.scoreData.platinumScore;
+				}),
 			],
 			["Judgements", "Notes", NumericSOV((x) => x.scoreData.judgements.cbreak ?? 0)],
 			[

@@ -719,8 +719,9 @@ export const CHUNITHMBBKKSong: SongDocument<"chunithm"> = {
 	altTitles: [],
 	artist: "nora2r",
 	data: {
-		duration: 128.541,
 		genre: "VARIETY",
+		duration: 128.541,
+		displayVersion: "CHUNITHM",
 	},
 	id: "S19d35e0b935765ded25",
 	searchTerms: [],
@@ -736,7 +737,6 @@ export const CHUNITHMBBKKChart: ChartDocument<"chunithm"> = {
 	level: "3",
 	data: {
 		inGameID: 3,
-		displayVersion: "CHUNITHM",
 	},
 	isPrimary: true,
 	versions: ["paradiselost"],
@@ -1485,6 +1485,7 @@ export const TestingOngekiChart: ChartDocument<"ongeki"> = {
 		displayVersion: "オンゲキ bright MEMORY Act.3",
 		inGameID: 2137,
 		maxPlatScore: 1000,
+		isBonusTrack: false,
 	},
 	difficulty: "MASTER",
 	isPrimary: true,
@@ -1537,6 +1538,7 @@ export const TestingOngekiChartConverter: ChartDocument<"ongeki"> = {
 		displayVersion: "オンゲキ bright",
 		inGameID: 678,
 		maxPlatScore: 2768,
+		isBonusTrack: false,
 	},
 	difficulty: "MASTER",
 	isPrimary: true,
@@ -1552,6 +1554,7 @@ export const TestingChunithmSongConverter: SongDocument<"chunithm"> = {
 	data: {
 		genre: "POPS & ANIME",
 		duration: 120,
+		displayVersion: "CHUNITHM CRYSTAL PLUS",
 	},
 	id: "s956",
 	searchTerms: [],
@@ -1562,7 +1565,6 @@ export const TestingChunithmChartConverter: ChartDocument<"chunithm"> = {
 	game: "chunithm",
 	chartID: "fbba26a6a223b1dd0bf8ef139cfee83114b91086",
 	data: {
-		displayVersion: "CHUNITHM CRYSTAL PLUS",
 		inGameID: 956,
 	},
 	difficulty: "MASTER",
@@ -1579,6 +1581,7 @@ export const TestingChunithmWESongConverter: SongDocument<"chunithm"> = {
 	data: {
 		duration: 135.275,
 		genre: "VARIETY",
+		displayVersion: "CHUNITHM NEW PLUS",
 	},
 	id: "S19d35e0c127c7e441ce",
 	searchTerms: ["xl techno more dance"],
@@ -1588,7 +1591,6 @@ export const TestingChunithmWESongConverter: SongDocument<"chunithm"> = {
 export const TestingChunithmWEChartConverter: ChartDocument<"chunithm"> = {
 	game: "chunithm",
 	data: {
-		displayVersion: "CHUNITHM NEW PLUS",
 		inGameID: 8235,
 	},
 	difficulty: "割☆4",

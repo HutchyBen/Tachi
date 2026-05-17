@@ -9,6 +9,7 @@ import {
 	type SEEDS_QuestlineDocument,
 	type SEEDS_SongDocument,
 	type SEEDS_TableDocument,
+	type V3Game,
 } from "tachi-common";
 /* eslint-disable no-await-in-loop */
 import type {

@@ -45,8 +45,10 @@ export default function ClassBadge<GPT extends V3Game = V3Game>({
 			</Badge>
 		);
 	} else {
+		const styleWithMaybeShine = classStyle as { shine?: boolean } & React.CSSProperties;
+		const { shine, ...badgeStyle } = styleWithMaybeShine;
 		badgeComponent = (
-			<Badge bg={""} className="mx-2" style={classStyle}>
+			<Badge bg={""} className={`mx-2${shine ? " shine" : ""}`} style={badgeStyle}>
 				{data.display}
 			</Badge>
 		);
