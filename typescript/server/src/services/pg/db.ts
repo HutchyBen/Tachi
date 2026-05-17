@@ -12,7 +12,7 @@ pg.types.setTypeParser(pg.types.builtins.INT4, (val) => Number(val));
 pg.types.setTypeParser(pg.types.builtins.INT2, (val) => Number(val));
 pg.types.setTypeParser(pg.types.builtins.INT8, (val) => Number(val));
 
-const pool = new Pool({ connectionString: Env.POSTGRES_URL });
+const pool = new Pool({ connectionString: Env.POSTGRES_URL, max: Env.PG_POOL_MAX });
 
 if (process.env.NODE_ENV === "test") {
 	// Swallow 57P01 (admin_shutdown) errors that arrive on idle pool connections

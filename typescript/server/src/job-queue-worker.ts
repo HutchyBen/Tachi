@@ -3,7 +3,9 @@ import { loadServerEnvFile } from "#lib/setup/load-server-env";
 loadServerEnvFile(process.env.NODE_ENV === "test" ? ".env.test" : ".env");
 
 import { JOB_KIND_SCORE_IMPORT } from "#lib/jobs/job-queue/constants";
+import { parseJobQueueWorkerOptions } from "#lib/jobs/job-queue/parse-worker-options";
 import { ClaimNextJob, MarkJobDone, MarkJobFailed } from "#lib/jobs/job-queue/queue-ops";
+import { maybeStartWorkerMetricsServer } from "#lib/metrics/worker-metrics";
 import { log } from "#lib/log/log";
 import { CloseScoreImportQueue } from "#lib/score-import/worker/queue";
 import { processScoreImportJobFromPayload } from "#lib/score-import/worker/score-import-job-processor";
@@ -11,12 +13,16 @@ import { Env } from "#lib/setup/config";
 import { ClosePgConnection } from "#services/pg/db";
 import { CloseRedisConnection } from "#services/redis/redis";
 import { Sleep } from "#utils/misc";
+import { Counter, Histogram } from "prom-client";
 import { writeFileSync } from "fs";
 import { applyMigrations } from "tachi-db-migration-engine";
 
 const HEARTBEAT_FILE = "/tmp/worker-heartbeat";
 
 const POLL_MS = 250;
+
+/** Seconds — mirrors SCORE_IMPORT_DURATION_BUCKETS in prometheus.ts; jobs can run sub-second to 30 min. */
+const JOB_DURATION_BUCKETS = [0.25, 0.5, 1, 2, 5, 10, 30, 60, 120, 300, 600, 1800];
 
 process.on("uncaughtException", (err, origin) => {
 	log.fatal({ err, origin }, "Uncaught exception, terminating.");
@@ -27,7 +33,33 @@ void bootstrap();
 
 async function bootstrap() {
 	await applyMigrations(Env.POSTGRES_URL, Env.MIGRATIONS_DIR);
-	log.info({ bootInfo: true }, "tachi job-queue worker starting (Postgres job_queue).");
+
+	const { workerCount } = parseJobQueueWorkerOptions(process.argv.slice(2), process.env);
+	const metrics = await maybeStartWorkerMetricsServer(process.env);
+
+	log.info(
+		{ bootInfo: true, workerCount, pgPoolMax: Env.PG_POOL_MAX },
+		"tachi job-queue worker starting (Postgres job_queue).",
+	);
+
+	let jobsTotal: Counter | null = null;
+	let jobDurationSeconds: Histogram | null = null;
+
+	if (metrics) {
+		jobsTotal = new Counter({
+			name: "job_queue_jobs_total",
+			help: "Total number of job_queue jobs completed, by kind and status.",
+			labelNames: ["job_kind", "status"],
+			registers: [metrics.registry],
+		});
+		jobDurationSeconds = new Histogram({
+			name: "job_queue_job_duration_seconds",
+			help: "Wall-clock duration of job_queue jobs in seconds (claim through mark-done/failed).",
+			labelNames: ["job_kind"],
+			buckets: JOB_DURATION_BUCKETS,
+			registers: [metrics.registry],
+		});
+	}
 
 	let stopping = false;
 	const shutdown = () => {
@@ -36,38 +68,58 @@ async function bootstrap() {
 	process.on("SIGINT", shutdown);
 	process.on("SIGTERM", shutdown);
 
-	// eslint-disable-next-line no-unmodified-loop-condition
-	while (!stopping) {
-		writeFileSync(HEARTBEAT_FILE, Date.now().toString());
+	// Separate from the worker loops so long-running jobs cannot stall mtime updates.
+	writeFileSync(HEARTBEAT_FILE, Date.now().toString());
+	const heartbeatInterval = setInterval(
+		() => writeFileSync(HEARTBEAT_FILE, Date.now().toString()),
+		5_000,
+	);
 
-		const job = await ClaimNextJob();
+	async function runWorkerLoop(workerId: number): Promise<void> {
+		// eslint-disable-next-line no-unmodified-loop-condition
+		while (!stopping) {
+			const job = await ClaimNextJob();
 
-		if (!job) {
-			if (stopping) {
-				break;
-			}
-
-			await Sleep(POLL_MS);
-			continue;
-		}
-
-		try {
-			switch (job.job_kind) {
-				case JOB_KIND_SCORE_IMPORT:
-					await processScoreImportJobFromPayload(job.payload);
+			if (!job) {
+				if (stopping) {
 					break;
-				default:
-					log.error({ job_kind: job.job_kind, row_id: job.row_id }, "Unknown job_kind.");
-					throw new Error(`Unknown job_kind ${String(job.job_kind)}`);
+				}
+				await Sleep(POLL_MS);
+				continue;
 			}
-			await MarkJobDone(job.row_id);
-		} catch (e) {
-			log.error(e, `Job ${job.row_id} failed.`);
-			await MarkJobFailed(job.row_id);
+
+			const startMs = Date.now();
+
+			try {
+				switch (job.job_kind) {
+					case JOB_KIND_SCORE_IMPORT:
+						await processScoreImportJobFromPayload(job.payload);
+						break;
+					default:
+						log.error(
+							{ job_kind: job.job_kind, row_id: job.row_id, workerId },
+							"Unknown job_kind.",
+						);
+						throw new Error(`Unknown job_kind ${String(job.job_kind)}`);
+				}
+				await MarkJobDone(job.row_id);
+				jobDurationSeconds?.observe({ job_kind: job.job_kind }, (Date.now() - startMs) / 1000);
+				jobsTotal?.inc({ job_kind: job.job_kind, status: "success" });
+			} catch (e) {
+				log.error(e, `Job ${job.row_id} (worker ${workerId}) failed.`);
+				await MarkJobFailed(job.row_id);
+				jobDurationSeconds?.observe({ job_kind: job.job_kind }, (Date.now() - startMs) / 1000);
+				jobsTotal?.inc({ job_kind: job.job_kind, status: "failure" });
+			}
 		}
 	}
 
-	log.info("Job worker loop stopped, closing resources.");
+	const workerPromises = Array.from({ length: workerCount }, (_, i) => runWorkerLoop(i));
+	await Promise.allSettled(workerPromises);
+
+	clearInterval(heartbeatInterval);
+	metrics?.close();
+	log.info("Job worker loops stopped, closing resources.");
 	await CloseScoreImportQueue();
 	await CloseRedisConnection();
 	await ClosePgConnection();

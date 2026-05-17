@@ -579,6 +579,13 @@ if (!versionDetail) {
 	versionDetail = "unknown";
 }
 
+/**
+ * Maximum number of connections in the Postgres pool for this process.
+ * For job-queue workers, set this to at least `TACHI_JOB_QUEUE_WORKER_POOL + 2`
+ * so every worker loop can hold a connection simultaneously without queuing.
+ */
+const PG_POOL_MAX = parseIntEnv("PG_POOL_MAX", 10);
+
 export const Env = {
 	PORT,
 	REDIS_URL,
@@ -588,4 +595,5 @@ export const Env = {
 	VERSION_DETAIL: versionDetail,
 	NODE_ENV: NODE_ENV as "dev" | "production" | "staging" | "test",
 	LOG_LEVEL: logLevel as "crit" | "debug" | "error" | "info" | "severe" | "verbose" | "warn",
+	PG_POOL_MAX,
 };

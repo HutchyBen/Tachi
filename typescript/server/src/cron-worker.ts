@@ -4,6 +4,7 @@ loadServerEnvFile(process.env.NODE_ENV === "test" ? ".env.test" : ".env");
 
 import { runCronTickOnce } from "#lib/jobs/cron/cron-service";
 import { log } from "#lib/log/log";
+import { maybeStartWorkerMetricsServer } from "#lib/metrics/worker-metrics";
 import { Env } from "#lib/setup/config";
 import { ClosePgConnection } from "#services/pg/db";
 import { Sleep } from "#utils/misc";
@@ -27,6 +28,7 @@ void bootstrap();
  */
 async function bootstrap() {
 	await applyMigrations(Env.POSTGRES_URL, Env.MIGRATIONS_DIR);
+	const metrics = await maybeStartWorkerMetricsServer(process.env);
 	log.info({ bootInfo: true }, "tachi cron worker starting.");
 
 	function touchHeartbeatFile(): void {
@@ -59,6 +61,7 @@ async function bootstrap() {
 		}
 	} finally {
 		clearInterval(heartbeatInterval);
+		metrics?.close();
 	}
 	log.info("Cron worker stopped.");
 	await ClosePgConnection();
