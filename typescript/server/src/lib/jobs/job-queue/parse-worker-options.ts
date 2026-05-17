@@ -32,7 +32,7 @@ export function parseJobQueueWorkerOptions(
 		}
 	}
 
-	const envVal = env["TACHI_JOB_QUEUE_WORKER_POOL"];
+	const envVal = env.TACHI_JOB_QUEUE_WORKER_POOL;
 	if (envVal !== undefined && envVal !== "") {
 		const n = Number.parseInt(envVal, 10);
 		if (!Number.isNaN(n) && n >= 1) {

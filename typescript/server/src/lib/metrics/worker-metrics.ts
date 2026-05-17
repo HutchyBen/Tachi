@@ -1,7 +1,6 @@
-import http from "http";
-
 import { log } from "#lib/log/log";
-import { Registry, collectDefaultMetrics } from "prom-client";
+import http from "http";
+import { collectDefaultMetrics, Registry } from "prom-client";
 
 export interface WorkerMetrics {
 	registry: Registry;
@@ -69,7 +68,7 @@ export async function startWorkerMetricsServer(port: number): Promise<WorkerMetr
 export async function maybeStartWorkerMetricsServer(
 	env: Readonly<Record<string, string | undefined>>,
 ): Promise<WorkerMetrics | null> {
-	const raw = env["WORKER_METRICS_PORT"];
+	const raw = env.WORKER_METRICS_PORT;
 	if (!raw) {
 		return null;
 	}

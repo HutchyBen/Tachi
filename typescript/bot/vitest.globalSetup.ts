@@ -1,5 +1,4 @@
 import { execSync } from "node:child_process";
-
 import pg from "pg";
 
 const POSTGRES_HOST = "tachi-postgres";

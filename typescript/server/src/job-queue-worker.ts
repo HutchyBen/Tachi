@@ -5,16 +5,16 @@ loadServerEnvFile(process.env.NODE_ENV === "test" ? ".env.test" : ".env");
 import { JOB_KIND_SCORE_IMPORT } from "#lib/jobs/job-queue/constants";
 import { parseJobQueueWorkerOptions } from "#lib/jobs/job-queue/parse-worker-options";
 import { ClaimNextJob, MarkJobDone, MarkJobFailed } from "#lib/jobs/job-queue/queue-ops";
-import { maybeStartWorkerMetricsServer } from "#lib/metrics/worker-metrics";
 import { log } from "#lib/log/log";
+import { maybeStartWorkerMetricsServer } from "#lib/metrics/worker-metrics";
 import { CloseScoreImportQueue } from "#lib/score-import/worker/queue";
 import { processScoreImportJobFromPayload } from "#lib/score-import/worker/score-import-job-processor";
 import { Env } from "#lib/setup/config";
 import { ClosePgConnection } from "#services/pg/db";
 import { CloseRedisConnection } from "#services/redis/redis";
 import { Sleep } from "#utils/misc";
-import { Counter, Histogram } from "prom-client";
 import { writeFileSync } from "fs";
+import { Counter, Histogram } from "prom-client";
 import { applyMigrations } from "tachi-db-migration-engine";
 
 const HEARTBEAT_FILE = "/tmp/worker-heartbeat";
@@ -103,12 +103,18 @@ async function bootstrap() {
 						throw new Error(`Unknown job_kind ${String(job.job_kind)}`);
 				}
 				await MarkJobDone(job.row_id);
-				jobDurationSeconds?.observe({ job_kind: job.job_kind }, (Date.now() - startMs) / 1000);
+				jobDurationSeconds?.observe(
+					{ job_kind: job.job_kind },
+					(Date.now() - startMs) / 1000,
+				);
 				jobsTotal?.inc({ job_kind: job.job_kind, status: "success" });
 			} catch (e) {
 				log.error(e, `Job ${job.row_id} (worker ${workerId}) failed.`);
 				await MarkJobFailed(job.row_id);
-				jobDurationSeconds?.observe({ job_kind: job.job_kind }, (Date.now() - startMs) / 1000);
+				jobDurationSeconds?.observe(
+					{ job_kind: job.job_kind },
+					(Date.now() - startMs) / 1000,
+				);
 				jobsTotal?.inc({ job_kind: job.job_kind, status: "failure" });
 			}
 		}

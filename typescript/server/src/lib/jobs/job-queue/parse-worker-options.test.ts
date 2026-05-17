@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { parseJobQueueWorkerOptions } from "./parse-worker-options";
 
 describe("parseJobQueueWorkerOptions", () => {
@@ -80,13 +81,15 @@ describe("parseJobQueueWorkerOptions", () => {
 		});
 
 		it("tolerates other CLI args before --workers", () => {
-			expect(
-				parseJobQueueWorkerOptions(["--some-flag", "--workers", "4"], {}),
-			).toStrictEqual({ workerCount: 4 });
+			expect(parseJobQueueWorkerOptions(["--some-flag", "--workers", "4"], {})).toStrictEqual(
+				{ workerCount: 4 },
+			);
 		});
 
 		it("workerCount 1 is valid (does not clamp up)", () => {
-			expect(parseJobQueueWorkerOptions(["--workers=1"], {})).toStrictEqual({ workerCount: 1 });
+			expect(parseJobQueueWorkerOptions(["--workers=1"], {})).toStrictEqual({
+				workerCount: 1,
+			});
 		});
 	});
 });
