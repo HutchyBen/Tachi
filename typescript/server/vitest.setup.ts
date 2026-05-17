@@ -87,21 +87,21 @@ async function resetDatabase() {
 	const { default: db } = await import("#services/pg/db");
 	const { sql } = await import("kysely");
 
-	await sql`
-		DO $$
-		DECLARE
-			tables_sql text;
-		BEGIN
-			SELECT string_agg(quote_ident(table_name), ', ' ORDER BY table_name)
-			INTO tables_sql
-			FROM information_schema.tables
-			WHERE table_schema = 'public' AND table_type = 'BASE TABLE';
-
-			IF tables_sql IS NOT NULL AND tables_sql <> '' THEN
-				EXECUTE 'TRUNCATE TABLE ' || tables_sql || ' RESTART IDENTITY CASCADE';
-			END IF;
-		END $$;
+	// Dirty-table tracking is installed in the template by vitest.globalSetup.ts:
+	// statement-level AFTER INSERT/UPDATE/DELETE triggers on every public base table
+	// record their name in `_test_dirty_tables` whenever a test mutates them. We
+	// TRUNCATE only those tables (plus the tracker itself), so read-only tests pay
+	// for one tiny SELECT and write-heavy tests only pay for the rows they touched.
+	const dirty = await sql<{ table_name: string }>`
+		SELECT table_name FROM _test_dirty_tables
 	`.execute(db);
+
+	if (dirty.rows.length > 0) {
+		const idents = ["_test_dirty_tables", ...dirty.rows.map((r) => r.table_name)].map((n) =>
+			sql.id(n),
+		);
+		await sql`TRUNCATE TABLE ${sql.join(idents, sql`, `)} RESTART IDENTITY CASCADE`.execute(db);
+	}
 
 	try {
 		const { clearGameStatsCacheForTests } = await import("#server/router/api/v1/games/router");

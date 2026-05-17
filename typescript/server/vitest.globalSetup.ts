@@ -1,25 +1,97 @@
 import { execSync } from "node:child_process";
 
+import pg from "pg";
+
 import { ensureTestCdnBucket } from "./src/test-utils/ensure-test-cdn-bucket";
+
+const POSTGRES_HOST = "tachi-postgres";
+const POSTGRES_USER = "tachi";
+const POSTGRES_PASS = "tachi";
+const TEMPLATE_DB = "tachi_server_test_template";
+
+/**
+ * Installs per-test dirty-table tracking in the template DB so every worker
+ * clone inherits it. Adds a `_test_dirty_tables` table plus statement-level
+ * AFTER INSERT/UPDATE/DELETE triggers on every public base table that record
+ * which tables were written to during a test. `beforeEach` in `vitest.setup.ts`
+ * then TRUNCATEs only those tables instead of scanning the catalog and
+ * truncating all of them.
+ *
+ * We deliberately do NOT install an AFTER TRUNCATE trigger: the reset itself
+ * TRUNCATEs the dirty tables, and we don't want that statement to re-mark
+ * them as dirty for the next test.
+ */
+async function installTestDirtyTracking(): Promise<void> {
+	const client = new pg.Client({
+		host: POSTGRES_HOST,
+		user: POSTGRES_USER,
+		password: POSTGRES_PASS,
+		database: TEMPLATE_DB,
+	});
+
+	await client.connect();
+
+	try {
+		await client.query(`
+			CREATE TABLE IF NOT EXISTS _test_dirty_tables (table_name text PRIMARY KEY);
+
+			CREATE OR REPLACE FUNCTION _test_track_dirty() RETURNS trigger
+				LANGUAGE plpgsql AS $fn$
+				BEGIN
+					INSERT INTO _test_dirty_tables(table_name) VALUES (TG_TABLE_NAME)
+						ON CONFLICT DO NOTHING;
+					RETURN NULL;
+				END;
+				$fn$;
+
+			DO $do$
+			DECLARE r record;
+			BEGIN
+				FOR r IN
+					SELECT table_name FROM information_schema.tables
+					WHERE table_schema = 'public'
+						AND table_type = 'BASE TABLE'
+						AND table_name <> '_test_dirty_tables'
+				LOOP
+					EXECUTE format('DROP TRIGGER IF EXISTS _test_dirty_trk ON %I', r.table_name);
+					EXECUTE format(
+						'CREATE TRIGGER _test_dirty_trk AFTER INSERT OR UPDATE OR DELETE ON %I '
+						|| 'FOR EACH STATEMENT EXECUTE FUNCTION _test_track_dirty()',
+						r.table_name
+					);
+				END LOOP;
+			END
+			$do$;
+		`);
+	} finally {
+		// Must disconnect before workers try to CREATE DATABASE ... TEMPLATE this DB:
+		// Postgres requires zero sessions on the source.
+		await client.end();
+	}
+}
 
 /**
  * Global vitest setup - runs ONCE before any workers start.
  *
- * Creates a fully-migrated template database. Workers clone from it
- * instead of running migrations themselves, which is much faster.
+ * Creates a fully-migrated template database and installs per-test dirty-table
+ * tracking on it. Workers clone from it instead of running migrations
+ * themselves, which is much faster.
  */
 export default async function globalSetup() {
 	const timing = process.env.TACHI_VITEST_TIMING === "1";
 	const t0 = performance.now();
 	execSync("just server-db-test-template-reset", { stdio: "inherit" });
 	const t1 = performance.now();
+	await installTestDirtyTracking();
+	const t1b = performance.now();
 	await ensureTestCdnBucket();
 	const t2 = performance.now();
 	if (timing) {
 		const resetMs = t1 - t0;
-		const cdnMs = t2 - t1;
+		const dirtyMs = t1b - t1;
+		const cdnMs = t2 - t1b;
 		console.error(
-			`[vitest-timing] globalSetup: template_reset_ms=${resetMs.toFixed(1)} ensure_test_cdn_bucket_ms=${cdnMs.toFixed(1)} total_ms=${(t2 - t0).toFixed(1)}`,
+			`[vitest-timing] globalSetup: template_reset_ms=${resetMs.toFixed(1)} install_dirty_tracking_ms=${dirtyMs.toFixed(1)} ensure_test_cdn_bucket_ms=${cdnMs.toFixed(1)} total_ms=${(t2 - t0).toFixed(1)}`,
 		);
 	}
 }

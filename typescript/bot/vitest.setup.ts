@@ -30,19 +30,26 @@ process.env.POSTGRES_URL = `postgresql://${POSTGRES_USER}:${POSTGRES_PASS}@${POS
 const _realFetch = globalThis.fetch;
 globalThis.fetch = (url: string | Request | URL): Promise<Response> => {
 	if (url.toString().endsWith("/api/v1/config")) {
+		// `config.ts` now does `await httpRes.text()` then `JSON.parse(text)`, so we
+		// must serialise the body and expose `.text()` (plus status fields used in
+		// the error-path log preview).
+		const body = JSON.stringify({
+			success: true,
+			body: {
+				NAME: "Test Tachi",
+				TYPE: "boku",
+				SIGNUPS_ENABLED: true,
+				QUEST_PROPOSALS_ENABLED: false,
+				GAME_GROUPS: ["iidx"],
+				IMPORT_TYPES: [...allImportTypes],
+			},
+		});
+
 		return Promise.resolve({
-			json: () =>
-				Promise.resolve({
-					success: true,
-					body: {
-						NAME: "Test Tachi",
-						TYPE: "boku",
-						SIGNUPS_ENABLED: true,
-						QUEST_PROPOSALS_ENABLED: false,
-						GAME_GROUPS: ["iidx"],
-						IMPORT_TYPES: [...allImportTypes],
-					},
-				}),
+			status: 200,
+			statusText: "OK",
+			text: () => Promise.resolve(body),
+			json: () => Promise.resolve(JSON.parse(body)),
 		} as unknown as Response);
 	}
 
@@ -101,19 +108,23 @@ async function resetDatabase() {
 	const { default: db } = await import("#services/pg/db");
 	const { sql } = await import("kysely");
 
-	await sql`
-		DO $$ DECLARE
-			row RECORD;
-		BEGIN
-			FOR row IN (
-				SELECT table_name
-				FROM information_schema.tables
-				WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
-			) LOOP
-				EXECUTE 'TRUNCATE TABLE ' || quote_ident(row.table_name) || ' RESTART IDENTITY CASCADE';
-			END LOOP;
-		END $$;
+	// Dirty-table tracking is installed in the template by vitest.globalSetup.ts:
+	// statement-level AFTER INSERT/UPDATE/DELETE triggers on every public base table
+	// record their name in `_test_dirty_tables` whenever a test mutates them. We
+	// TRUNCATE only those tables (plus the tracker itself), so read-only tests pay
+	// for one tiny SELECT and write-heavy tests only pay for the rows they touched.
+	const dirty = await sql<{ table_name: string }>`
+		SELECT table_name FROM _test_dirty_tables
 	`.execute(db);
+
+	if (dirty.rows.length === 0) {
+		return;
+	}
+
+	const idents = ["_test_dirty_tables", ...dirty.rows.map((r) => r.table_name)].map((n) =>
+		sql.id(n),
+	);
+	await sql`TRUNCATE TABLE ${sql.join(idents, sql`, `)} RESTART IDENTITY CASCADE`.execute(db);
 }
 
 beforeAll(async () => {
