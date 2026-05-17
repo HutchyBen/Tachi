@@ -29,6 +29,14 @@ async function bootstrap() {
 	await applyMigrations(Env.POSTGRES_URL, Env.MIGRATIONS_DIR);
 	log.info({ bootInfo: true }, "tachi cron worker starting.");
 
+	function touchHeartbeatFile(): void {
+		writeFileSync(HEARTBEAT_FILE, Date.now().toString());
+	}
+
+	// Separate from the tick loop so long-running crons cannot stall mtime updates.
+	touchHeartbeatFile();
+	const heartbeatInterval = setInterval(touchHeartbeatFile, TICK_MS);
+
 	let stopping = false;
 	const shutdown = () => {
 		stopping = true;
@@ -36,18 +44,21 @@ async function bootstrap() {
 	process.on("SIGINT", shutdown);
 	process.on("SIGTERM", shutdown);
 
-	// eslint-disable-next-line no-unmodified-loop-condition
-	while (!stopping) {
-		writeFileSync(HEARTBEAT_FILE, Date.now().toString());
-		try {
-			await runCronTickOnce();
-		} catch (e) {
-			log.error(e, "Cron tick error.");
+	try {
+		// eslint-disable-next-line no-unmodified-loop-condition
+		while (!stopping) {
+			try {
+				await runCronTickOnce();
+			} catch (e) {
+				log.error(e, "Cron tick error.");
+			}
+			if (stopping) {
+				break;
+			}
+			await Sleep(TICK_MS);
 		}
-		if (stopping) {
-			break;
-		}
-		await Sleep(TICK_MS);
+	} finally {
+		clearInterval(heartbeatInterval);
 	}
 	log.info("Cron worker stopped.");
 	await ClosePgConnection();
