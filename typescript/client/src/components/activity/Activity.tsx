@@ -48,6 +48,16 @@ function isActivityInteractiveTarget(el: HTMLElement) {
 	return Boolean(el.closest("a, button, input, textarea, select, [role='button']"));
 }
 
+function activityUrlWithCursor(baseUrl: string, startTimeMs: number): string {
+	const queryStart = baseUrl.indexOf("?");
+	const path = queryStart === -1 ? baseUrl : baseUrl.slice(0, queryStart);
+	const params = new URLSearchParams(queryStart === -1 ? "" : baseUrl.slice(queryStart + 1));
+
+	params.set("startTime", String(startTimeMs));
+
+	return `${path}?${params.toString()}`;
+}
+
 // Records activity for a group of users on a GPT. Also used for single users.
 export default function Activity({
 	url,
@@ -104,7 +114,7 @@ export default function Activity({
 			data={clumped}
 			exhausted={exhausted}
 			fetchMoreFrom={(start) => {
-				APIFetchV1<ActivityReturn | RecordActivityReturn>(`${url}?startTime=${start}`).then(
+				APIFetchV1<ActivityReturn | RecordActivityReturn>(activityUrlWithCursor(url, start)).then(
 					(r) => {
 						if (r.success) {
 							const newActivity = ClumpActivity(r.body);
