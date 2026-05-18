@@ -10,7 +10,7 @@ import fjsh from "fast-json-stable-hash";
 import { sql } from "kysely";
 import { describe, expect, it } from "vitest";
 
-import { OrphanScore, ReprocessOrphan } from "./orphans";
+import { OrphanScore, ReprocessOrphan, summarizeOrphanRow } from "./orphans";
 
 const batchManualScore: BatchManualScore = {
 	score: 500,
@@ -81,6 +81,91 @@ async function ensureImportStub(opts: { importId: string; userId: number }) {
 		})
 		.execute();
 }
+
+describe("summarizeOrphanRow", () => {
+	it("returns null when data and context are empty", () => {
+		expect(summarizeOrphanRow({ data: {}, context: {} })).toBeNull();
+	});
+
+	it("returns the identifier alone when no artist or difficulty", () => {
+		expect(summarizeOrphanRow({ data: { identifier: "5.1.1." }, context: {} })).toBe("5.1.1.");
+	});
+
+	it("appends artist when present in data", () => {
+		expect(
+			summarizeOrphanRow({ data: { identifier: "5.1.1.", artist: "dj nagureo" }, context: {} }),
+		).toBe("5.1.1. (dj nagureo)");
+	});
+
+	it("appends difficulty when present in data", () => {
+		expect(
+			summarizeOrphanRow({ data: { identifier: "5.1.1.", difficulty: "ANOTHER" }, context: {} }),
+		).toBe("5.1.1. (ANOTHER)");
+	});
+
+	it("appends both artist and difficulty separated by ·", () => {
+		expect(
+			summarizeOrphanRow({
+				data: { identifier: "5.1.1.", artist: "dj nagureo", difficulty: "ANOTHER" },
+				context: {},
+			}),
+		).toBe("5.1.1. (dj nagureo · ANOTHER)");
+	});
+
+	it("reads artist from context.chart for beatoraja-style rows", () => {
+		expect(
+			summarizeOrphanRow({
+				data: { sha256: "abc" },
+				context: { chart: { artist: "dj artist" } },
+			}),
+		).toBe("abc (dj artist)");
+	});
+
+	it("prefers data.artist over context.chart.artist", () => {
+		expect(
+			summarizeOrphanRow({
+				data: { identifier: "Song", artist: "data artist" },
+				context: { chart: { artist: "ctx artist" } },
+			}),
+		).toBe("Song (data artist)");
+	});
+
+	it("falls back to context.chart.sha256 when no other primary", () => {
+		const sha = "a".repeat(64);
+		const result = summarizeOrphanRow({ data: {}, context: { chart: { sha256: sha } } });
+		expect(result).toBe(`sha256:${"a".repeat(16)}...`);
+	});
+
+	it("truncates a very long combined summary to 120 chars ending in ...", () => {
+		// Primary truncates to 80 chars; 30-char artist + 20-char difficulty push combined > 120.
+		const result = summarizeOrphanRow({
+			data: {
+				identifier: "A".repeat(100),
+				artist: "B".repeat(30),
+				difficulty: "C".repeat(20),
+			},
+			context: {},
+		});
+		expect(result).not.toBeNull();
+		expect(result!.length).toBe(120);
+		expect(result!.endsWith("...")).toBe(true);
+	});
+
+	it("truncates a very long identifier alone at 120 chars", () => {
+		const long = "B".repeat(130);
+		const result = summarizeOrphanRow({ data: { identifier: long }, context: {} });
+		expect(result).toBe(`${"B".repeat(117)}...`);
+	});
+
+	it("ignores non-string artist / difficulty values", () => {
+		expect(
+			summarizeOrphanRow({
+				data: { identifier: "Song", artist: 42, difficulty: null },
+				context: {},
+			}),
+		).toBe("Song");
+	});
+});
 
 describe("OrphanScore (Postgres)", () => {
 	it("inserts orphan_score with deterministic orphan_id", async () => {

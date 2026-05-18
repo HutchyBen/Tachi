@@ -69,36 +69,79 @@ export type OrphanScoreDetail = {
 	timeInserted: number;
 };
 
-function summarizeOrphanRow(row: PgOrphanScoreRow): string | null {
+/** @internal Exported for unit tests only. */
+export function summarizeOrphanRow(row: Pick<PgOrphanScoreRow, "context" | "data">): string | null {
+	let primary: string | null = null;
+	let artist: string | null = null;
+	let difficulty: string | null = null;
+
 	const data = row.data;
 	if (data && typeof data === "object") {
 		const d = data as Record<string, unknown>;
 		for (const k of ["identifier", "title", "songTitle", "hashSHA256", "sha256"] as const) {
 			const v = d[k];
 			if (typeof v === "string" && v.length > 0) {
-				return v.length > 120 ? `${v.slice(0, 117)}...` : v;
+				primary = v;
+				break;
 			}
 		}
+		const a = d.artist;
+		if (typeof a === "string" && a.length > 0) {
+			artist = a;
+		}
+		const diff = d.difficulty;
+		if (typeof diff === "string" && diff.length > 0) {
+			difficulty = diff;
+		}
 	}
+
 	const ctx = row.context;
 	if (ctx && typeof ctx === "object") {
 		const c = ctx as Record<string, unknown>;
-		for (const k of ["title", "identifier"] as const) {
-			const v = c[k];
-			if (typeof v === "string" && v.length > 0) {
-				return v.length > 120 ? `${v.slice(0, 117)}...` : v;
+		if (primary === null) {
+			for (const k of ["title", "identifier"] as const) {
+				const v = c[k];
+				if (typeof v === "string" && v.length > 0) {
+					primary = v;
+					break;
+				}
 			}
 		}
 		const chart = c.chart;
 		if (chart && typeof chart === "object") {
 			const chartObj = chart as Record<string, unknown>;
-			const sha = chartObj.sha256;
-			if (typeof sha === "string" && sha.length > 0) {
-				return `sha256:${sha.slice(0, 16)}...`;
+			if (primary === null) {
+				const sha = chartObj.sha256;
+				if (typeof sha === "string" && sha.length > 0) {
+					primary = `sha256:${sha.slice(0, 16)}...`;
+				}
+			}
+			// beatoraja stores artist on context.chart
+			if (artist === null) {
+				const a = chartObj.artist;
+				if (typeof a === "string" && a.length > 0) {
+					artist = a;
+				}
 			}
 		}
 	}
-	return null;
+
+	if (primary === null) {
+		return null;
+	}
+
+	const extras: string[] = [];
+	if (artist !== null) extras.push(artist);
+	if (difficulty !== null) extras.push(difficulty);
+
+	if (extras.length === 0) {
+		return primary.length > 120 ? `${primary.slice(0, 117)}...` : primary;
+	}
+
+	// Truncate primary to 80 chars to leave room for extras within the 120-char budget.
+	const primaryTrunc = primary.length > 80 ? `${primary.slice(0, 77)}...` : primary;
+	const combined = `${primaryTrunc} (${extras.join(" · ")})`;
+	return combined.length > 120 ? `${combined.slice(0, 117)}...` : combined;
 }
 
 function orphanRowToListItem(row: PgOrphanScoreRow): OrphanScoreListItem {
