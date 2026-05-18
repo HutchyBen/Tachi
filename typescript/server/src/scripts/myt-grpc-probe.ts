@@ -11,8 +11,6 @@
  *
  * Exit 0 only if every requested phase succeeds.
  */
-import type { Transport } from "@connectrpc/connect";
-
 import { Cards, LookupRequestSchema } from "#proto/generated/cards/cards_pb";
 import { ChunithmUser, GetPlaylogRequestSchema } from "#proto/generated/chunithm/user_pb";
 import {
@@ -25,7 +23,7 @@ import {
 } from "#proto/generated/ongeki/user_pb";
 import { PlaylogRequestSchema, WaccaUser } from "#proto/generated/wacca/user_pb";
 import { create } from "@bufbuild/protobuf";
-import { Code, ConnectError, createClient } from "@connectrpc/connect";
+import { Code, ConnectError, createClient, type Transport } from "@connectrpc/connect";
 import { createGrpcTransport } from "@connectrpc/connect-node";
 import { spawnSync } from "node:child_process";
 import { parseArgs } from "node:util";
@@ -171,9 +169,15 @@ async function probeGetPlaylog(
 	} catch (err) {
 		const ms = Math.round(performance.now() - started);
 		if (err instanceof ConnectError) {
-			log("stream", `FAILED after ${ms}ms (${count} item(s) before error)`, formatConnectError(err));
+			log(
+				"stream",
+				`FAILED after ${ms}ms (${count} item(s) before error)`,
+				formatConnectError(err),
+			);
 		} else {
-			log("stream", `FAILED after ${ms}ms (${count} item(s) before error)`, { err: String(err) });
+			log("stream", `FAILED after ${ms}ms (${count} item(s) before error)`, {
+				err: String(err),
+			});
 		}
 		throw err;
 	}
@@ -228,6 +232,8 @@ function createPlaylogStream(
 }
 
 function printRuntimeInfo(): void {
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
 	log("env", `Bun ${Bun.version}`);
 	log("env", `TACHI_MYT_API_HOST=${requireEnv("TACHI_MYT_API_HOST")}`);
 
