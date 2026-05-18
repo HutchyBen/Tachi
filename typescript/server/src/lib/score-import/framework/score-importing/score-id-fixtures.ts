@@ -1,6 +1,6 @@
 import { dmf } from "#test-utils/misc";
-
-import { ALL_GAMES, GetGameConfig, type ConfScoreMetric, type V3Game } from "tachi-common";
+import { ALL_GAMES, GetGameConfig, type V3Game } from "tachi-common";
+import { type ConfScoreMetric } from "tachi-common/types/metrics";
 
 import type { DryScore } from "../common/types";
 
@@ -14,7 +14,7 @@ export const SCORE_ID_ALT_CHART_ID = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
 function isEnumMetric(
 	conf: ConfScoreMetric,
-): conf is ConfScoreMetric & { type: "ENUM"; values: Array<string> } {
+): conf is { type: "ENUM"; values: Array<string> } & ConfScoreMetric {
 	return conf.type === "ENUM";
 }
 

@@ -216,10 +216,7 @@ API_V1_ROUTER.add("GET /imports/:importID/poll-status", async ({ params }) => {
 				});
 
 			case "FAILED":
-				throw new ExpectedErr(
-					tracker.error.statusCode ?? 500,
-					tracker.error.message,
-				);
+				throw new ExpectedErr(tracker.error.statusCode ?? 500, tracker.error.message);
 
 			default:
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
