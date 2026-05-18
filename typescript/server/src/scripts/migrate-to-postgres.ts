@@ -244,18 +244,39 @@ function tsReq(ms: number): string {
 
 // ──────────────────────────────────────────────────────────────────────────────
 // API permission helpers
-// (Old MongoDB data uses dash-separated permission names, not the underscore
-// form in the current APIPermissions type - kept as plain string lookups.)
+// Mongo validates against ALL_PERMISSIONS (underscore keys such as customise_profile).
+// Some dumps may instead use dashed legacy spellings — accept either when migrating.
 // ──────────────────────────────────────────────────────────────────────────────
 
+function permissionKeyDashVariant(canonicalUnderscoreKey: string): string {
+	return canonicalUnderscoreKey.replaceAll("_", "-");
+}
+
 /** Extract one Postgres pm_* column from a MongoDB requestedPermissions array. */
-function perm(permissions: Array<string>, key: string): boolean | null {
-	return permissions.includes(key) ? true : null;
+function perm(permissions: Array<string>, canonicalUnderscoreKey: string): boolean | null {
+	const dashed = permissionKeyDashVariant(canonicalUnderscoreKey);
+
+	return permissions.includes(canonicalUnderscoreKey) || permissions.includes(dashed)
+		? true
+		: null;
 }
 
 /** Extract one Postgres pm_* column from a MongoDB permissions record. */
-function permRec(permissions: Record<string, boolean>, key: string): boolean | null {
-	return permissions[key] ?? null;
+function permRec(
+	permissions: Record<string, boolean>,
+	canonicalUnderscoreKey: string,
+): boolean | null {
+	const dashed = permissionKeyDashVariant(canonicalUnderscoreKey);
+
+	if (Object.hasOwn(permissions, canonicalUnderscoreKey)) {
+		return permissions[canonicalUnderscoreKey]!;
+	}
+
+	if (Object.hasOwn(permissions, dashed)) {
+		return permissions[dashed]!;
+	}
+
+	return null;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -650,14 +671,14 @@ async function main(): Promise<void> {
 				client_secret: c.clientSecret,
 				name: c.name,
 				author: c.author,
-				pm_customise_profile: perm(p, "customise-profile"),
-				pm_customise_score: perm(p, "customise-score"),
-				pm_customise_session: perm(p, "customise-session"),
-				pm_delete_score: perm(p, "delete-score"),
-				pm_manage_rivals: perm(p, "manage-rivals"),
-				pm_manage_targets: perm(p, "manage-targets"),
-				pm_submit_score: perm(p, "submit-score"),
-				pm_manage_challenges: perm(p, "manage-challenges"),
+				pm_customise_profile: perm(p, "customise_profile"),
+				pm_customise_score: perm(p, "customise_score"),
+				pm_customise_session: perm(p, "customise_session"),
+				pm_delete_score: perm(p, "delete_score"),
+				pm_manage_rivals: perm(p, "manage_rivals"),
+				pm_manage_targets: perm(p, "manage_targets"),
+				pm_submit_score: perm(p, "submit_score"),
+				pm_manage_challenges: perm(p, "manage_challenges"),
 				api_key_template: c.apiKeyTemplate,
 				api_key_filename: c.apiKeyFilename,
 			};
@@ -1352,14 +1373,14 @@ async function main(): Promise<void> {
 
 				user_id: t.userID!,
 				identifier: t.identifier,
-				pm_customise_profile: permRec(p, "customise-profile"),
-				pm_customise_score: permRec(p, "customise-score"),
-				pm_customise_session: permRec(p, "customise-session"),
-				pm_delete_score: permRec(p, "delete-score"),
-				pm_manage_rivals: permRec(p, "manage-rivals"),
-				pm_manage_targets: permRec(p, "manage-targets"),
-				pm_submit_score: permRec(p, "submit-score"),
-				pm_manage_challenges: permRec(p, "manage-challenges"),
+				pm_customise_profile: permRec(p, "customise_profile"),
+				pm_customise_score: permRec(p, "customise_score"),
+				pm_customise_session: permRec(p, "customise_session"),
+				pm_delete_score: permRec(p, "delete_score"),
+				pm_manage_rivals: permRec(p, "manage_rivals"),
+				pm_manage_targets: permRec(p, "manage_targets"),
+				pm_submit_score: permRec(p, "submit_score"),
+				pm_manage_challenges: permRec(p, "manage_challenges"),
 				from_oauth2_client: t.fromAPIClient,
 			};
 		});
