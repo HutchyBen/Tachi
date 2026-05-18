@@ -127,6 +127,76 @@ describe("GET /api/v1/games/:game/folders/:folderSlug", () => {
 		expect(res.body.body.charts.length).toBeGreaterThanOrEqual(1);
 	});
 
+	it("returns the folder when the path segment is the primary folder id", async () => {
+		const res = await mockApi.get("/api/v1/games/iidx-sp/folders/folder-foo2");
+
+		expect(res.status).toBe(200);
+		expect(res.body.body.folder.folderID).toBe("folder-foo2");
+		expect(res.body.body.folder.slug).toBe("foo");
+		expect(res.body.body.charts.length).toBeGreaterThanOrEqual(1);
+	});
+
+	it("returns the folder when the path segment is legacy_id and differs from slug", async () => {
+		const n = Date.now();
+		const songId = `fsong-leg-${n}`;
+		const chartId = `fchart-leg-${n}`;
+
+		await DB.insertInto("song")
+			.values({
+				id: songId,
+				legacy_id: 880_000 + (n % 10_000),
+				game_group: "iidx",
+				title: "T2",
+				artist: "A2",
+				search_terms: [],
+				alt_titles: [],
+				data: {},
+				fts_document: "",
+			})
+			.execute();
+
+		await DB.insertInto("chart")
+			.values({
+				id: chartId,
+				legacy_id: chartId,
+				game: "iidx-sp",
+				song_id: songId,
+				difficulty: "ANOTHER",
+				level: "10",
+				level_num: 10,
+				is_primary: true,
+				versions: [],
+				data: {},
+			})
+			.execute();
+
+		const folderPk = `folder-by-legacy-path-${n}`;
+
+		await DB.insertInto("folder")
+			.values({
+				id: folderPk,
+				legacy_id: `mongo-folder-${n}`,
+				game: "iidx-sp",
+				inactive: false,
+				title: "legacy key",
+				slug: `pretty-slug-${n}`,
+				where: `chart.id = '${chartId}'`,
+				version_filter: null,
+				search_terms: [],
+			})
+			.execute();
+
+		await DB.insertInto("folder_chart_lookup")
+			.values({ folder_id: folderPk, chart_id: chartId })
+			.execute();
+
+		const res = await mockApi.get(`/api/v1/games/iidx-sp/folders/mongo-folder-${n}`);
+
+		expect(res.status).toBe(200);
+		expect(res.body.body.folder.folderID).toBe(folderPk);
+		expect(res.body.body.folder.slug).toBe(`pretty-slug-${n}`);
+	});
+
 	it("returns 404 when the folder does not exist", async () => {
 		const res = await mockApi.get("/api/v1/games/iidx-sp/folders/bar");
 

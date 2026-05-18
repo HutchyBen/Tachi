@@ -68,21 +68,45 @@ export async function LoadFolderDocumentsByIds(
 	return out;
 }
 
+/**
+ * Loads a folder for this GPT. The key may be **`slug`**, primary **`folder.id`**, or
+ * **`legacy_id`** (in that order of precedence when keys could theoretically collide).
+ */
 export async function LoadFolderDocumentByGameAndSlug(
 	game: V3Game,
-	slug: string,
+	slugOrFolderKey: string,
 ): Promise<FolderDocument | undefined> {
-	const row = await DB.selectFrom("folder")
+	const bySlug = await DB.selectFrom("folder")
 		.select(SELECT_FOLDER)
-		.where("game", "=", game)
-		.where("slug", "=", slug)
+		.where("folder.game", "=", game)
+		.where("folder.slug", "=", slugOrFolderKey)
 		.executeTakeFirst();
 
-	if (!row) {
-		return undefined;
+	if (bySlug) {
+		return ToFolderDocument(bySlug);
 	}
 
-	return ToFolderDocument(row);
+	const byId = await DB.selectFrom("folder")
+		.select(SELECT_FOLDER)
+		.where("folder.game", "=", game)
+		.where("folder.id", "=", slugOrFolderKey)
+		.executeTakeFirst();
+
+	if (byId) {
+		return ToFolderDocument(byId);
+	}
+
+	const byLegacy = await DB.selectFrom("folder")
+		.select(SELECT_FOLDER)
+		.where("folder.game", "=", game)
+		.where("folder.legacy_id", "=", slugOrFolderKey)
+		.executeTakeFirst();
+
+	if (byLegacy) {
+		return ToFolderDocument(byLegacy);
+	}
+
+	return undefined;
 }
 
 /**

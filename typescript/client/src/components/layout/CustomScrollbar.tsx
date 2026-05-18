@@ -104,9 +104,9 @@ export function CustomScrollbar() {
 		const mid = thumbRect.top + thumbRect.height / 2;
 		const page = clientHeight * 0.85;
 		if (e.clientY < mid) {
-			document.documentElement.scrollBy({ top: -page, behavior: "smooth" });
+			document.documentElement.scrollBy({ top: -page });
 		} else {
-			document.documentElement.scrollBy({ top: page, behavior: "smooth" });
+			document.documentElement.scrollBy({ top: page });
 		}
 	};
 

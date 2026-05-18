@@ -6,7 +6,6 @@
 	background-color: var(--bs-secondary-bg);
 	overflow-x: auto;
 	overflow-y: hidden;
-	scroll-behavior: smooth;
 	@extend .scrollbar-hide;
 
 	&-item {

@@ -124,7 +124,7 @@ export default function SpecificFolderPage({ reqUser, game }: Props) {
 				anchor.getBoundingClientRect().top +
 				window.scrollY -
 				FOLDER_BREAKDOWN_TABLE_SCROLL_EXTRA_OFFSET_PX;
-			window.scrollTo({ behavior: "smooth", top: Math.max(0, y) });
+			window.scrollTo({ top: Math.max(0, y) });
 		});
 	}, []);
 
@@ -928,7 +928,6 @@ function TierlistInfoLadder({
 		});
 		queueMicrotask(() => {
 			document.getElementById(`tierlist-tier-section-${i}`)?.scrollIntoView({
-				behavior: "smooth",
 				block: "start",
 			});
 		});
