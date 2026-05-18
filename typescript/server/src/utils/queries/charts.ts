@@ -748,7 +748,8 @@ export async function FindUSCChartsByHashSHA1(hash: string): Promise<Array<Chart
  * Returns the N most popular charts for this game + playtype.
  * Popularity is determined by how many rows exist in Postgres `score` for each chart.
  *
- * @param _scoreCollection - ignored; kept for API compatibility with the old Mongo implementation.
+ * Aggregates `score` once per `game` (CTE), then joins `chart`/`song`, so Postgres does not
+ * nested-loop probe `score` per chart (see `score_game_chart_id_idx` on `(game, chart_id)`).
  */
 export async function FindChartsOnPopularity(
 	game: V3Game,
@@ -756,37 +757,49 @@ export async function FindChartsOnPopularity(
 	skip = 0,
 	limit = 100,
 ): Promise<Array<{ __playcount: integer } & ChartDocument>> {
-	let q = DB.selectFrom("chart")
+	if (filters?.chartIDs?.length === 0) {
+		return [];
+	}
+
+	if (filters?.songIDs?.length === 0) {
+		return [];
+	}
+
+	const chartIdFilter = filters?.chartIDs;
+
+	let q = DB.with("score_counts", (db) => {
+		let sq = db
+			.selectFrom("score")
+			.where("score.game", "=", game)
+			.select(["score.chart_id", sql<number>`count(*)::int`.as("playcount")])
+			.groupBy("score.chart_id");
+
+		if (chartIdFilter !== undefined) {
+			sq = sq.where("score.chart_id", "in", chartIdFilter);
+		}
+
+		return sq;
+	})
+		.selectFrom("chart")
 		.innerJoin("song", "song.id", "chart.song_id")
-		.leftJoin("score", "score.chart_id", "chart.id")
+		.leftJoin("score_counts", "score_counts.chart_id", "chart.id")
 		.where("chart.game", "=", game)
 		.where(sql<SqlBool>`(chart.data->>'2dxtraSet') IS NULL`);
 
-	if (filters?.chartIDs) {
-		// empty array - should be no matches, just short circuit
-		if (filters.chartIDs.length === 0) {
-			return [];
-		} else {
-			q = q.where("chart.id", "in", filters.chartIDs);
-		}
+	if (chartIdFilter !== undefined) {
+		q = q.where("chart.id", "in", chartIdFilter);
 	}
 
 	if (filters?.songIDs) {
-		// empty array - should be no matches, just short circuit
-		if (filters.songIDs.length === 0) {
-			return [];
-		} else {
-			q = q.where("song.id", "in", filters.songIDs);
-		}
+		q = q.where("song.id", "in", filters.songIDs);
 	}
 
 	const rows = await q
 		.select([
 			...SELECT_CHART, // format-bearing comment
-			sql<number>`count(score.id)::int`.as("playcount"),
+			sql<number>`coalesce(score_counts.playcount, 0)::int`.as("playcount"),
 		])
-		.groupBy(["chart.id", "song.id"])
-		.orderBy(sql`count(score.id)`, "desc")
+		.orderBy(sql`coalesce(score_counts.playcount, 0)`, "desc")
 		.offset(skip)
 		.limit(limit)
 		.execute();
