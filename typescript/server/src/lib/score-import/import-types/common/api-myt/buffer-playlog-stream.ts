@@ -1,8 +1,8 @@
 import type { KtLogger } from "#lib/log/log";
+import type { integer } from "tachi-common";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
 import { ConnectError } from "@connectrpc/connect";
-import type { integer } from "tachi-common";
 
 export type MytPlaylogStreamContext = {
 	gameLabel: string;
@@ -36,7 +36,10 @@ export async function drainMytPlaylogStream<T>(
 				`MYT gRPC error streaming ${context.gameLabel} playlog${userSuffix}`,
 			);
 		} else {
-			log.error({ err }, `Unexpected MYT error streaming ${context.gameLabel} playlog${userSuffix}`);
+			log.error(
+				{ err },
+				`Unexpected MYT error streaming ${context.gameLabel} playlog${userSuffix}`,
+			);
 		}
 
 		throw new ScoreImportFatalError(500, `Failed to get scores from MYT.`);
