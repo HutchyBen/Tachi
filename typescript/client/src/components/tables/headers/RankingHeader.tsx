@@ -23,9 +23,7 @@ export function CreateRankingHeader<T>(
 				return -Infinity;
 			}
 
-			return rankingViewMode === "rival"
-				? (rankingData.rivalRank ?? -Infinity)
-				: rankingData.rank;
+			return rankingData.rank;
 		}),
 		(thProps: ZTableTHProps) => (
 			<SelectableRanking

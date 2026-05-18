@@ -1,6 +1,7 @@
 import { ACTION_DeleteScore } from "#actions/delete-score";
 import { ACTION_DeleteSession } from "#actions/delete-session";
 import { ACTION_RebuildFolderChartLookup } from "#actions/rebuild-folder-chart-lookup";
+import { ACTION_RecalcAllGameProfiles } from "#actions/recalc-all-game-profiles";
 import { ACTION_SetUserQuestSubmitterStatus } from "#actions/set-user-quest-submitter-status";
 import { ACTION_SetUserSupporterStatus } from "#actions/set-user-supporter-status";
 import {
@@ -122,6 +123,19 @@ API_V1_ROUTER.add("POST /admin/recalc", withAdmin, async () => {
 
 	return success(
 		"Enqueued every chart for score re-derivation and drained score/pb/session/game_profile queues until idle.",
+		{},
+	);
+});
+
+API_V1_ROUTER.add("POST /admin/recalc-profiles", withAdmin, async ({ req }) => {
+	const adminUserID = req[SYMBOL_TACHI_API_AUTH].userID!;
+	const adminUser = await GetUserWithIDGuaranteed(adminUserID);
+	const taker = { acct: { id: adminUser.id, username: adminUser.username }, ip: req.ip };
+
+	await ACTION_RecalcAllGameProfiles(taker, {});
+
+	return success(
+		"Enqueued all game_profile rows and distinct committed score (user, game) pairs into game_profile_dirty, then drained that queue until idle.",
 		{},
 	);
 });

@@ -194,6 +194,58 @@ describe("POST /api/v1/admin/recalc", () => {
 	});
 });
 
+describe("POST /api/v1/admin/recalc-profiles", () => {
+	it("returns 403 when the caller is not an admin", async () => {
+		await seedUser({
+			username: "prof_pleb",
+			email: "prof_pleb@test.com",
+			withCredential: true,
+			withSettings: true,
+		});
+
+		const plebCookie = await loginAs("prof_pleb");
+
+		const res = await mockApi
+			.post("/api/v1/admin/recalc-profiles")
+			.set("Cookie", plebCookie)
+			.send({});
+
+		expect(res.status).toBe(403);
+	});
+
+	it("drains game_profile_dirty when the caller is an admin", async () => {
+		const { id: adminId } = await seedUser({
+			username: "prof_admin",
+			email: "prof_admin@test.com",
+			authLevel: "admin",
+			withCredential: true,
+			withSettings: true,
+		});
+
+		const adminCookie = await loginAs("prof_admin");
+
+		await DB.insertInto("game_profile_dirty")
+			.values({ user_id: adminId, game: "iidx-sp" })
+			.onConflict((oc) => oc.doNothing())
+			.execute();
+
+		const res = await mockApi
+			.post("/api/v1/admin/recalc-profiles")
+			.set("Cookie", adminCookie)
+			.send({});
+
+		expect(res.status).toBe(200);
+
+		const stillQueued = await DB.selectFrom("game_profile_dirty")
+			.select("game_profile_dirty.user_id")
+			.where("game_profile_dirty.user_id", "=", adminId)
+			.where("game_profile_dirty.game", "=", "iidx-sp")
+			.executeTakeFirst();
+
+		expect(stillQueued).toBeUndefined();
+	});
+});
+
 describe("POST /api/v1/admin/recalc-pbs", () => {
 	it("returns 403 when the caller is not an admin", async () => {
 		await seedUser({

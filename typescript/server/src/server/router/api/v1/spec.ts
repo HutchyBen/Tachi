@@ -194,6 +194,13 @@ export const API_V1_SPEC = {
 		output: z.record(z.string(), doc<ActivityPayload>()),
 	},
 
+	"GET /ublock-blocks-this": {
+		description:
+			"Global recent activity across all games (alias of GET /activity for clients affected by blocklists that match `/activity`).",
+		input: z.object({ startTime: z.coerce.number().optional() }),
+		output: z.record(z.string(), doc<ActivityPayload>()),
+	},
+
 	// ────────────────────────────────────────────────
 	// Search
 	// ────────────────────────────────────────────────
@@ -1983,6 +1990,13 @@ export const API_V1_SPEC = {
 	"POST /admin/recalc": {
 		description:
 			"Enqueue every chart for score re-derivation (derived_data + calculated_data), then synchronously drain score_rederive and downstream pb/session/game_profile queues until idle. No request body.",
+		input: z.object({}),
+		output: empty,
+	},
+
+	"POST /admin/recalc-profiles": {
+		description:
+			"Enqueue every `game_profile` row and every distinct committed `(user_id, game)` from `score` into `game_profile_dirty`, then synchronously drain that queue until idle (recomputes ratings/classes from current PBs). No request body.",
 		input: z.object({}),
 		output: empty,
 	},

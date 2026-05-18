@@ -1,7 +1,18 @@
 import { GetRecentActivityForMultipleGames } from "#lib/activity/activity";
+import { success } from "#lib/router/typed-router";
 import { ALL_GAMES } from "tachi-common";
 
 import { API_V1_ROUTER } from "../router";
+
+async function globalActivityImpl(input: { startTime?: number }) {
+	const data = await GetRecentActivityForMultipleGames(
+		ALL_GAMES,
+		undefined,
+		input.startTime ?? null,
+	);
+
+	return success(`Returned global activity.`, data);
+}
 
 /**
  * Retrieve *all* activity across every game on the site.
@@ -9,16 +20,10 @@ import { API_V1_ROUTER } from "../router";
  * @param session - See CreateActivityRouteHandler
  * @param startTime - See CreateActivityRouteHandler
  */
-API_V1_ROUTER.add("GET /activity", async ({ input }) => {
-	const data = await GetRecentActivityForMultipleGames(
-		ALL_GAMES,
-		undefined,
-		input.startTime ?? null,
-	);
+API_V1_ROUTER.add("GET /activity", ({ input }) => globalActivityImpl(input));
 
-	return {
-		success: true,
-		description: `Returned global activity.`,
-		body: data,
-	};
-});
+/**
+ * Same behavior as `GET /activity`. Some browser blocklists match `/activity`;
+ * use this path when an ad blocker interferes.
+ */
+API_V1_ROUTER.add("GET /ublock-blocks-this", ({ input }) => globalActivityImpl(input));

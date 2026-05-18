@@ -7,5 +7,7 @@ export default function usePreferredRanking():
 	| null {
 	const { settings } = useLUGPTSettings();
 
-	return settings?.preferences.preferredRanking ?? null;
+	const raw = settings?.preferences.preferredRanking ?? null;
+	// Rival ranking display is disabled; treat stored preference as global.
+	return raw === "rival" ? "global" : raw;
 }

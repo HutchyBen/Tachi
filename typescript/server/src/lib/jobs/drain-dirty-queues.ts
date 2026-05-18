@@ -244,6 +244,20 @@ export async function drainGameProfileDirty(): Promise<number> {
 }
 
 /**
+ * Drain `game_profile_dirty` until empty (no per-tick row cap). For admin synchronous
+ * profile recalculation.
+ */
+export async function drainGameProfileDirtyFully(): Promise<void> {
+	while (true) {
+		const n = await drainGameProfileDirty();
+
+		if (n === 0) {
+			break;
+		}
+	}
+}
+
+/**
  * Drain `score_rederive`, then `pb_dirty`, then `session_dirty`, then `game_profile_dirty`,
  * repeating until a full pass does nothing. Each queue has its own per-tick row budget so
  * a large `score_rederive` backlog cannot permanently starve the downstream queues.

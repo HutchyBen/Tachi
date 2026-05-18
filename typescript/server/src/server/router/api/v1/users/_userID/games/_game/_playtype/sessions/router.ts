@@ -14,11 +14,7 @@ import { GetScoreIdsGroupedBySessionId } from "#utils/queries/sessions";
 import { CheckStrSessionAlg } from "#utils/string-checks";
 import { ExpectedErr } from "bliss";
 import { sql } from "kysely";
-import {
-	type AnySessionRatingAlg,
-	GetGameConfig,
-	LEGACY_GameToGameGroupPT,
-} from "tachi-common";
+import { type AnySessionRatingAlg, GetGameConfig, LEGACY_GameToGameGroupPT } from "tachi-common";
 import { type Game } from "tachi-db";
 
 /**

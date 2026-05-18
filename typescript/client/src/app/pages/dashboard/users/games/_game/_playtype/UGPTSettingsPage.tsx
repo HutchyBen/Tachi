@@ -168,7 +168,10 @@ function PreferencesForm({
 			defaultTable: settings.preferences.defaultTable,
 			preferredDefaultEnum:
 				settings.preferences.preferredDefaultEnum ?? gameConfig.preferredDefaultEnum,
-			preferredRanking: settings.preferences.preferredRanking ?? "global",
+			preferredRanking:
+				settings.preferences.preferredRanking === "rival"
+					? "global"
+					: (settings.preferences.preferredRanking ?? "global"),
 		},
 		onSubmit: async (values) => {
 			const rj = await APIFetchV1<UserDocument>(
@@ -292,22 +295,6 @@ function PreferencesForm({
 					What should {TachiConfig.NAME} default to showing you about folders?
 				</Form.Text>
 			</Form.Group>
-			{settings.rivals.length !== 0 && (
-				<Form.Group className={formGroupClassNames}>
-					<Form.Label>Preferred Ranking</Form.Label>
-					<Form.Select
-						id="preferredRanking"
-						onChange={formik.handleChange}
-						value={formik.values.preferredRanking}
-					>
-						<option value="global">Global Rankings</option>
-						<option value="rival">Rival Rankings</option>
-					</Form.Select>
-					<Form.Text className="text-body-secondary">
-						What should {TachiConfig.NAME} default to when showing your score rankings?
-					</Form.Text>
-				</Form.Group>
-			)}
 			<Form.Group className={formGroupClassNames}>
 				<Form.Label>Preferred Table</Form.Label>
 				<Form.Select

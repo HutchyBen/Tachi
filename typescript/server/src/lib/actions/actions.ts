@@ -298,6 +298,10 @@ export const ActionSignatures = {
 			rowCount: z.number().int(),
 		}),
 	},
+	RECALC_ALL_GAME_PROFILES: {
+		input: z.object({}),
+		output: z.object({}),
+	},
 	IMPORT_SEEDS: {
 		input: z.object({
 			commitHash: z.string(),

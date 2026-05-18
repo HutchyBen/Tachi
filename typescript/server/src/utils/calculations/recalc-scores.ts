@@ -22,3 +22,27 @@ export async function UpdateAllPBs(): Promise<void> {
 		.onConflict((oc) => oc.doNothing())
 		.execute();
 }
+
+/**
+ * Enqueue every existing `game_profile` row and every distinct (user, playtype) with a
+ * committed score into `game_profile_dirty` so workers (or admin drain) will recompute
+ * ratings/classes from current PBs.
+ */
+export async function EnqueueAllGameProfilesDirty(): Promise<void> {
+	await DB.insertInto("game_profile_dirty")
+		.expression(
+			DB.selectFrom("game_profile").select(["game_profile.user_id", "game_profile.game"]),
+		)
+		.onConflict((oc) => oc.doNothing())
+		.execute();
+
+	await DB.insertInto("game_profile_dirty")
+		.expression(
+			DB.selectFrom("score")
+				.select(["score.user_id", "score.game"])
+				.where("score.committed", "=", true)
+				.distinct(),
+		)
+		.onConflict((oc) => oc.doNothing())
+		.execute();
+}

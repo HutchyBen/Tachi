@@ -1,16 +1,17 @@
 import type { CSSProperties } from "react";
 
 /** Body + `<th>` must agree or `auto` tables size the column from the widest header cell. */
-export const RANKING_CELL_WIDTH_PX = 50;
+export const RANKING_CELL_WIDTH_PX = 104;
 
 const rankingColumnBox: Pick<
 	CSSProperties,
-	"boxSizing" | "maxWidth" | "minWidth" | "overflow" | "width"
+	"boxSizing" | "maxWidth" | "minWidth" | "overflow" | "whiteSpace" | "width"
 > = {
 	boxSizing: "border-box",
-	maxWidth: `${RANKING_CELL_WIDTH_PX}px`,
+	maxWidth: "none",
 	minWidth: `${RANKING_CELL_WIDTH_PX}px`,
-	overflow: "hidden",
+	overflow: "visible",
+	whiteSpace: "nowrap",
 	width: `${RANKING_CELL_WIDTH_PX}px`,
 };
 

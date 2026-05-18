@@ -29,6 +29,7 @@ import { ACTION_ImportSeeds } from "#actions/import-seeds";
 import { ACTION_InstallBuiltinClient } from "#actions/install-builtin-client";
 import { ACTION_MarkAllNotificationsRead } from "#actions/mark-all-notifications-read";
 import { ACTION_PatchUGPTSettings } from "#actions/patch-ugpt-settings";
+import { ACTION_RecalcAllGameProfiles } from "#actions/recalc-all-game-profiles";
 import { ACTION_RebuildFolderChartLookup } from "#actions/rebuild-folder-chart-lookup";
 import { ACTION_RemoveGoalSubscription } from "#actions/remove-goal-subscription";
 import { ACTION_ResendVerifyEmail } from "#actions/resend-verify-email";
@@ -93,6 +94,7 @@ export const authenticatedActionHandlers = {
 	MARK_ALL_NOTIFICATIONS_READ: ACTION_MarkAllNotificationsRead,
 	PATCH_UGPT_SETTINGS: ACTION_PatchUGPTSettings,
 	REBUILD_FOLDER_CHART_LOOKUP: ACTION_RebuildFolderChartLookup,
+	RECALC_ALL_GAME_PROFILES: ACTION_RecalcAllGameProfiles,
 	REMOVE_GOAL_SUBSCRIPTION: ACTION_RemoveGoalSubscription,
 	RESEND_VERIFY_EMAIL: ACTION_ResendVerifyEmail,
 	RESET_API_CLIENT_SECRET: ACTION_ResetApiClientSecret,

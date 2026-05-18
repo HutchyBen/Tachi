@@ -71,7 +71,7 @@ function DashboardLoggedIn({ user }: { user: UserDocument }) {
 					<UGPTProfiles />
 				</Route>
 				<Route exact path="/global-activity">
-					<Activity url="/activity" />
+					<Activity url="/ublock-blocks-this" />
 				</Route>
 			</Switch>
 		</div>
@@ -239,7 +239,7 @@ function DashboardNotLoggedIn() {
 			<div className="text-center">
 				Nosey? Here's what our users are up to.
 				<div style={{ fontSize: "1rem" }}>
-					<Activity url="/activity" />
+					<Activity url="/ublock-blocks-this" />
 				</div>
 			</div>
 		</Stack>
