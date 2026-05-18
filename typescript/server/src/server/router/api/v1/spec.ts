@@ -55,6 +55,14 @@ type UserGameStatsWithRanking = {
 	__rankingData?: Record<string, { outOf: integer; ranking: integer }>;
 } & UserGameStats;
 type SearchUserRow = { __isRival: boolean } & UserDocument;
+type SearchChartsByGame = Record<
+	string,
+	Array<{
+		chart: ChartDocument;
+		playcount: integer;
+		song: SongDocument;
+	}>
+>;
 type UserRankingPosition = { outOf: integer; ranking: integer };
 type UGPTHistorySnapshot = Omit<UserGameStatsSnapshotDocument, "game" | "playtype" | "userID">;
 type AdminJobQueueFilters = { job_kind?: string; scope?: string; status?: number };
@@ -209,7 +217,16 @@ export const API_V1_SPEC = {
 		description: "Search users, charts, and folders.",
 		input: z.object({ search: z.string() }),
 		output: z.strictObject({
-			charts: docArray<ChartDocument>(),
+			charts: z.record(
+				z.string(),
+				z.array(
+					z.strictObject({
+						chart: doc<ChartDocument>(),
+						playcount: z.number(),
+						song: doc<SongDocument>(),
+					}),
+				),
+			) as z.ZodType<SearchChartsByGame>,
 			folders: docArray<FolderDocument>(),
 			users: docArray<SearchUserRow>(),
 		}),
