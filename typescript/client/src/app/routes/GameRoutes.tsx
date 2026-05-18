@@ -51,13 +51,6 @@ import {
 } from "tachi-common/types/game-config-utils";
 
 export default function GameRoutes() {
-	const { game: gameParam } = useParams<{ game: string }>();
-	const { setBackground } = useContext(BackgroundContext);
-
-	useEffect(() => {
-		setBackground(ToCDNURL(`/game-banners/${gameParam}`));
-	}, [gameParam, setBackground]);
-
 	// Support legacy URLs like /games/iidx/SP → redirect to /games/iidx-sp
 	return (
 		<Switch>
@@ -73,7 +66,11 @@ function V3GameRoutes() {
 	const { setBackground } = useContext(BackgroundContext);
 
 	useEffect(() => {
-		setBackground(ToCDNURL(`/game-banners/${gameParam}`));
+		if (!IsSupportedGame(gameParam)) {
+			setBackground(null);
+			return;
+		}
+		setBackground(ToCDNURL(`/game-group-banners/${GameToGameGroup(gameParam)}`));
 	}, [gameParam, setBackground]);
 
 	if (!IsSupportedGame(gameParam)) {
