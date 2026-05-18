@@ -1149,6 +1149,8 @@ export const API_V1_SPEC = {
 			folder: doc<FolderDocument>(),
 			goals: docArray<GoalDocument>(),
 			goalSubs: docArray<GoalSubscriptionDocument>(),
+			quests: docArray<QuestDocument>(),
+			questSubs: docArray<QuestSubscriptionDocument>(),
 		}),
 	},
 

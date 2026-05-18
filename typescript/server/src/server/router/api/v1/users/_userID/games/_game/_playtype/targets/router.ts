@@ -186,12 +186,30 @@ API_V1_ROUTER.add(
 			goals.find((g) => g.goalID === s.goalID),
 		);
 
+		const quests = await GetParentQuests(requestedUser.id, game, filteredGoalSubs);
+		const questIds = quests.map((e) => e.questID);
+
+		const questSubRows =
+			questIds.length === 0
+				? []
+				: await DB.selectFrom("quest_sub")
+						.innerJoin("quest", "quest.id", "quest_sub.quest_id")
+						.select(SELECT_QUEST_SUB_WITH_QUEST_GAME)
+						.where("quest_sub.user_id", "=", requestedUser.id)
+						.where("quest.game", "=", game)
+						.where("quest_sub.quest_id", "in", questIds)
+						.execute();
+
+		const questSubs = questSubRows.map((r) => ToQuestSubscriptionDocument(r));
+
 		await AttachFolderSlugsToGoals(goals);
 
 		return success("Found pertinent goals.", {
 			folder,
 			goalSubs: filteredGoalSubs,
 			goals,
+			quests,
+			questSubs,
 		});
 	},
 );
