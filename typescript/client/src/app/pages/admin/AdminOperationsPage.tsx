@@ -254,6 +254,38 @@ export default function AdminOperationsPage() {
 
 			<Col lg={6}>
 				<Card>
+					<Card.Header>Recalc game profiles</Card.Header>
+					<Card.Body>
+						<p className="text-muted small mb-3">
+							Enqueues every game profile and every distinct committed score
+							(user, game) pair into
+							<code className="mx-1">game_profile_dirty</code>, then drains that
+							queue until idle (all games). This request waits until processing
+							finishes.
+						</p>
+						<Button
+							onClick={() => {
+								void APIFetchV1(
+									`/admin/recalc-profiles`,
+									{
+										method: "POST",
+										headers: { "Content-Type": "application/json" },
+										body: JSON.stringify({}),
+									},
+									true,
+									true,
+								);
+							}}
+							variant="primary"
+						>
+							Recalc all profiles
+						</Button>
+					</Card.Body>
+				</Card>
+			</Col>
+
+			<Col lg={6}>
+				<Card>
 					<Card.Header>Recalc scores</Card.Header>
 					<Card.Body>
 						<p className="text-muted small mb-3">
