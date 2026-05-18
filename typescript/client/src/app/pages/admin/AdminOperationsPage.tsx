@@ -257,11 +257,10 @@ export default function AdminOperationsPage() {
 					<Card.Header>Recalc game profiles</Card.Header>
 					<Card.Body>
 						<p className="text-muted small mb-3">
-							Enqueues every game profile and every distinct committed score
-							(user, game) pair into
-							<code className="mx-1">game_profile_dirty</code>, then drains that
-							queue until idle (all games). This request waits until processing
-							finishes.
+							Enqueues every game profile and every distinct committed score (user,
+							game) pair into
+							<code className="mx-1">game_profile_dirty</code>, then drains that queue
+							until idle (all games). This request waits until processing finishes.
 						</p>
 						<Button
 							onClick={() => {

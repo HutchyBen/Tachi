@@ -1,3 +1,4 @@
+import Muted from "#components/util/Muted";
 import { GPT_CLIENT_IMPLEMENTATIONS } from "#lib/game-implementations";
 import { type ComparePBsDataset } from "#types/tables";
 import { NumericSOV, StrSOV } from "#util/sorts";
@@ -111,7 +112,9 @@ function Row({ data, game, metric }: { data: ComparePBsDataset[0]; game: V3Game;
 			{data.base ? (
 				<ScoreCoreCells chart={data.chart} game={game} score={data.base} short />
 			) : (
-				<td colSpan={gptImpl.scoreHeaders.length}>Not Played</td>
+				<td colSpan={gptImpl.scoreHeaders.length}>
+					<Muted>Not Played</Muted>
+				</td>
 			)}
 			<PBCompareCell
 				base={data.base}
@@ -122,7 +125,9 @@ function Row({ data, game, metric }: { data: ComparePBsDataset[0]; game: V3Game;
 			{data.compare ? (
 				<ScoreCoreCells chart={data.chart} game={game} score={data.compare} short />
 			) : (
-				<td colSpan={gptImpl.scoreHeaders.length}>Not Played</td>
+				<td colSpan={gptImpl.scoreHeaders.length}>
+					<Muted>Not Played</Muted>
+				</td>
 			)}
 		</tr>
 	);

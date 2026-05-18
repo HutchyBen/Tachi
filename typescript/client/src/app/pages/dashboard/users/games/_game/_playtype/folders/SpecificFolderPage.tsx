@@ -1258,7 +1258,7 @@ function TierlistInfoCell({
 				maxWidth: "60px",
 			}}
 		>
-			{tierlistInfo.score ?? "NOT PLAYED"}
+			{tierlistInfo.score ?? <Muted>NOT PLAYED</Muted>}
 		</td>
 	);
 }

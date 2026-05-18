@@ -1,3 +1,4 @@
+import Muted from "#components/util/Muted";
 import useScoreRatingAlg from "#components/util/useScoreRatingAlg";
 import { type RivalChartDataset } from "#types/tables";
 import { NumericSOV, StrSOV } from "#util/sorts";
@@ -83,7 +84,9 @@ function Row({
 			<tr>
 				<td>N/A</td>
 				<UserCell game={game} user={data} />
-				<td colSpan={7}>Not Played.</td>
+				<td colSpan={7}>
+					<Muted>Not Played.</Muted>
+				</td>
 			</tr>
 		);
 	}

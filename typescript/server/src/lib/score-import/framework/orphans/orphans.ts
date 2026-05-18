@@ -131,8 +131,12 @@ export function summarizeOrphanRow(row: Pick<PgOrphanScoreRow, "context" | "data
 	}
 
 	const extras: string[] = [];
-	if (artist !== null) extras.push(artist);
-	if (difficulty !== null) extras.push(difficulty);
+	if (artist !== null) {
+		extras.push(artist);
+	}
+	if (difficulty !== null) {
+		extras.push(difficulty);
+	}
 
 	if (extras.length === 0) {
 		return primary.length > 120 ? `${primary.slice(0, 117)}...` : primary;

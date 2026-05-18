@@ -93,13 +93,19 @@ describe("summarizeOrphanRow", () => {
 
 	it("appends artist when present in data", () => {
 		expect(
-			summarizeOrphanRow({ data: { identifier: "5.1.1.", artist: "dj nagureo" }, context: {} }),
+			summarizeOrphanRow({
+				data: { identifier: "5.1.1.", artist: "dj nagureo" },
+				context: {},
+			}),
 		).toBe("5.1.1. (dj nagureo)");
 	});
 
 	it("appends difficulty when present in data", () => {
 		expect(
-			summarizeOrphanRow({ data: { identifier: "5.1.1.", difficulty: "ANOTHER" }, context: {} }),
+			summarizeOrphanRow({
+				data: { identifier: "5.1.1.", difficulty: "ANOTHER" },
+				context: {},
+			}),
 		).toBe("5.1.1. (ANOTHER)");
 	});
 
