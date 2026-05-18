@@ -70,7 +70,7 @@ function V3GameRoutes() {
 			setBackground(null);
 			return;
 		}
-		setBackground(ToCDNURL(`/game-group-banners/${GameToGameGroup(gameParam)}`));
+		setBackground(ToCDNURL(`/game-banners/${GameToGameGroup(gameParam)}`));
 	}, [gameParam, setBackground]);
 
 	if (!IsSupportedGame(gameParam)) {
