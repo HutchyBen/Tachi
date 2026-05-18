@@ -151,7 +151,10 @@ async function probeGetPlaylog(
 	let firstItemMs: number | undefined;
 
 	const pauseNote = pauseMs > 0 ? `, pause ${pauseMs}ms/item (import-like)` : "";
-	log("stream", `GetPlaylog (max ${maxItems} items${pauseNote}) profileApiId=${profileApiId} ...`);
+	log(
+		"stream",
+		`GetPlaylog (max ${maxItems} items${pauseNote}) profileApiId=${profileApiId} ...`,
+	);
 
 	const stream = createPlaylogStream(transport, profileApiId, game);
 
@@ -244,9 +247,9 @@ function createPlaylogStream(
 }
 
 function runtimeLabel(): string {
-	const proc = process as NodeJS.Process & {
+	const proc = process as {
 		versions?: { bun?: string; node?: string };
-	};
+	} & NodeJS.Process;
 
 	if (proc.versions?.bun !== undefined) {
 		return `Bun ${proc.versions.bun}`;
