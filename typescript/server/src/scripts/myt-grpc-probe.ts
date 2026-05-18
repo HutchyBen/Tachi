@@ -7,6 +7,9 @@
  *   bun run src/scripts/myt-grpc-probe.ts -- --profile-api-id "<title_api_id>" --game chunithm
  *   bun run src/scripts/myt-grpc-probe.ts -- --access-code "..." --game chunithm
  *
+ * Node A/B (same flags; builds a temp bundle — see docker/myt-grpc-probe-node.sh):
+ *   /app/docker/myt-grpc-probe-node.sh --stream-only --profile-api-id "..." --pause-ms 50
+ *
  * Env (required): TACHI_MYT_API_HOST, TACHI_MYT_AUTH_TOKEN
  *
  * Exit 0 only if every requested phase succeeds.
@@ -25,7 +28,6 @@ import { PlaylogRequestSchema, WaccaUser } from "#proto/generated/wacca/user_pb"
 import { create } from "@bufbuild/protobuf";
 import { Code, ConnectError, createClient, type Transport } from "@connectrpc/connect";
 import { createGrpcTransport } from "@connectrpc/connect-node";
-import { spawnSync } from "node:child_process";
 import { parseArgs } from "node:util";
 
 type ProbeGame = "chunithm" | "maimaidx" | "ongeki" | "wacca";
@@ -241,18 +243,25 @@ function createPlaylogStream(
 	}
 }
 
-function printRuntimeInfo(): void {
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	// @ts-ignore
-	log("env", `Bun ${Bun.version}`);
-	log("env", `TACHI_MYT_API_HOST=${requireEnv("TACHI_MYT_API_HOST")}`);
+function runtimeLabel(): string {
+	const proc = process as NodeJS.Process & {
+		versions?: { bun?: string; node?: string };
+	};
 
-	const node = spawnSync("node", ["--version"], { encoding: "utf8" });
-	if (node.status === 0 && node.stdout.trim()) {
-		log("env", `Node ${node.stdout.trim()} (available for manual A/B vs bun)`);
-	} else {
-		log("env", "Node not on PATH — streaming A/B needs a Node binary in the image");
+	if (proc.versions?.bun !== undefined) {
+		return `Bun ${proc.versions.bun}`;
 	}
+
+	if (proc.versions?.node !== undefined) {
+		return `Node ${proc.versions.node}`;
+	}
+
+	return `runtime pid=${process.pid}`;
+}
+
+function printRuntimeInfo(): void {
+	log("env", `Running on ${runtimeLabel()}`);
+	log("env", `TACHI_MYT_API_HOST=${requireEnv("TACHI_MYT_API_HOST")}`);
 }
 
 function printHelp(): void {
