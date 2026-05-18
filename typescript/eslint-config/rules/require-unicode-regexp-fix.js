@@ -134,8 +134,9 @@ export const requireUnicodeRegexpFix = {
 
 				context.report({
 					messageId:
-						requireFlag === "v" /** @type {"requireVFlag"|"requireUFlag"} */
-							? "requireVFlag"
+						requireFlag === "v"
+							? /** @type {"requireVFlag"|"requireUFlag"} */
+								"requireVFlag"
 							: "requireUFlag",
 					node,
 					fix: isValidWithUnicodeFlag(
@@ -149,7 +150,9 @@ export const requireUnicodeRegexpFix = {
 			},
 
 			Program(node) {
-				const scope = /** @type {import("eslint").Scope.Scope} */ (sourceCode.getScope(node));
+				const scope = /** @type {import("eslint").Scope.Scope} */ (
+					sourceCode.getScope(node)
+				);
 
 				const tracker = new ReferenceTracker(scope);
 				const trackMap = { RegExp: { [CALL]: true, [CONSTRUCT]: true } };
@@ -157,17 +160,12 @@ export const requireUnicodeRegexpFix = {
 				for (const { node: refNode } of tracker.iterateGlobalReferences(trackMap)) {
 					const [patternNode, flagsNode] = refNode.arguments;
 
-					if (
-						patternNode &&
-						patternNode.type === "SpreadElement"
-					) {
+					if (patternNode && patternNode.type === "SpreadElement") {
 						continue;
 					}
 
-					const pattern =
-						getStringIfConstant(patternNode, scope);
-					const flags =
-						flagsNode ? getStringIfConstant(flagsNode, scope) : undefined;
+					const pattern = getStringIfConstant(patternNode, scope);
+					const flags = flagsNode ? getStringIfConstant(flagsNode, scope) : undefined;
 
 					let missingFlag = !flagsNode;
 
@@ -189,22 +187,22 @@ export const requireUnicodeRegexpFix = {
 
 					context.report({
 						messageId:
-							requireFlag === "v" /** @type {"requireVFlag"|"requireUFlag"} */
-								? "requireVFlag"
+							requireFlag === "v"
+								? /** @type {"requireVFlag"|"requireUFlag"} */
+									"requireVFlag"
 								: "requireUFlag",
 						node: refNode,
-						fix:
-							canFixPattern
-								? (fixer) =>
-										fixGlobalRegExpCall(
-											fixer,
-											sourceCode,
-											refNode,
-											flagsNode,
-											flags ?? "",
-											requireFlag,
-										)
-								: null,
+						fix: canFixPattern
+							? (fixer) =>
+									fixGlobalRegExpCall(
+										fixer,
+										sourceCode,
+										refNode,
+										flagsNode,
+										flags ?? "",
+										requireFlag,
+									)
+							: null,
 					});
 				}
 			},
@@ -225,12 +223,7 @@ function fixRegexLiteral(fixer, sourceCode, node, requireFlag) {
 
 	if (requireFlag) {
 		const conflicting = requireFlag === "u" /** @type {"u"|"v"} */ ? "v" : "u";
-		if (
-			regexText.includes(
-				conflicting,
-				slashPos,
-			)
-		) {
+		if (regexText.includes(conflicting, slashPos)) {
 			return fixer.replaceText(
 				node,
 				regexText.slice(0, slashPos) +
@@ -252,14 +245,7 @@ function fixRegexLiteral(fixer, sourceCode, node, requireFlag) {
  * @param {string} flags Resolved constant flags when determinable (`""` if omitted)
  * @param {RequireFlagOption} requireFlag
  */
-function fixGlobalRegExpCall(
-	fixer,
-	sourceCode,
-	refNode,
-	flagsNode,
-	flags,
-	requireFlag,
-) {
+function fixGlobalRegExpCall(fixer, sourceCode, refNode, flagsNode, flags, requireFlag) {
 	const replaceFlag =
 		requireFlag ??
 		/** @type {"u"|"v"} */
@@ -284,10 +270,7 @@ function fixGlobalRegExpCall(
 				if (
 					flagsNode.type === "TemplateLiteral" &&
 					(flagsNode.expressions.length ||
-						flagsNode.quasis.some(
-							(q) =>
-								q.value.raw.includes("\\"),
-						))
+						flagsNode.quasis.some((q) => q.value.raw.includes("\\")))
 				) {
 					return null;
 				}
@@ -298,28 +281,25 @@ function fixGlobalRegExpCall(
 				);
 			}
 
-			return fixer.replaceText(flagsNode, [
-				flagsNodeText.slice(0, flagsNodeText.length - 1),
-				flagsNodeText.slice(flagsNodeText.length - 1),
-			].join(replaceFlag));
+			return fixer.replaceText(
+				flagsNode,
+				[
+					flagsNodeText.slice(0, flagsNodeText.length - 1),
+					flagsNodeText.slice(flagsNodeText.length - 1),
+				].join(replaceFlag),
+			);
 		}
 
 		return null;
 	}
 
-	const penultimateToken =
-		sourceCode.getLastToken(
-			refNode,
-			{ skip: 1 },
-		);
+	const penultimateToken = sourceCode.getLastToken(refNode, { skip: 1 });
 	if (!penultimateToken) {
 		return null;
 	}
 
 	return fixer.insertTextAfter(
 		penultimateToken,
-		isCommaToken(penultimateToken)
-			? ` "${replaceFlag}",`
-			: `, "${replaceFlag}"`,
+		isCommaToken(penultimateToken) ? ` "${replaceFlag}",` : `, "${replaceFlag}"`,
 	);
 }

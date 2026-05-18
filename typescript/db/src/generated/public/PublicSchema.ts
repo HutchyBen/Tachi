@@ -50,6 +50,7 @@ import type { default as QuestSubTable } from './QuestSub';
 import type { default as OrphanScoreTable } from './OrphanScore';
 import type { default as FolderViewTable } from './FolderView';
 import type { default as TableTable } from './Table';
+import type { default as ChartLeaderboardTable } from './ChartLeaderboard';
 import type { default as GoalSubTable } from './GoalSub';
 import type { default as JobQueueTable } from './JobQueue';
 import type { default as PrivApiClientTable } from './PrivApiClient';
@@ -67,7 +68,6 @@ import type { default as QuestlineTable } from './Questline';
 import type { default as CronTaskTable } from './CronTask';
 import type { default as ImportClassTable } from './ImportClass';
 import type { default as GameStatsSnapshotTable } from './GameStatsSnapshot';
-import type { default as ChartLeaderboardTable } from './ChartLeaderboard';
 
 export default interface PublicSchema {
   priv_svc_cg_card_info: PrivSvcCgCardInfoTable;
@@ -168,6 +168,8 @@ export default interface PublicSchema {
 
   table: TableTable;
 
+  chart_leaderboard: ChartLeaderboardTable;
+
   goal_sub: GoalSubTable;
 
   job_queue: JobQueueTable;
@@ -201,6 +203,4 @@ export default interface PublicSchema {
   import_class: ImportClassTable;
 
   game_stats_snapshot: GameStatsSnapshotTable;
-
-  chart_leaderboard: ChartLeaderboardTable;
 }

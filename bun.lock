@@ -211,6 +211,24 @@
         "typescript": "catalog:",
       },
     },
+    "typescript/discord-pb-dirty-monitor": {
+      "name": "tachi-discord-pb-dirty-monitor",
+      "version": "0.1.0",
+      "dependencies": {
+        "discord.js": "catalog:",
+        "dotenv": "catalog:",
+        "express": "catalog:",
+        "pg": "catalog:",
+      },
+      "devDependencies": {
+        "@types/express": "catalog:",
+        "@types/node": "catalog:",
+        "@types/pg": "catalog:",
+        "@typescript/native-preview": "catalog:",
+        "eslint-config-tachi": "workspace:*",
+        "typescript": "catalog:",
+      },
+    },
     "typescript/docs-autogen-scripts": {
       "name": "tachi-autogen-docs",
       "version": "1.0.0",
@@ -2893,6 +2911,8 @@
     "tachi-db-migration-engine": ["tachi-db-migration-engine@workspace:typescript/db-migration-engine"],
 
     "tachi-db-migration-engine-cli": ["tachi-db-migration-engine-cli@workspace:typescript/db-cli"],
+
+    "tachi-discord-pb-dirty-monitor": ["tachi-discord-pb-dirty-monitor@workspace:typescript/discord-pb-dirty-monitor"],
 
     "tachi-github-bot": ["tachi-github-bot@workspace:typescript/github-bot"],
 
