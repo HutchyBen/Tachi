@@ -91,8 +91,6 @@ export async function GetSessionScoreInfo(
 	// need to get the PB for this chart BEFORE the
 	// given time T
 	const scores = await DB.selectFrom("score")
-		.innerJoin("chart", "chart.id", "score.chart_id")
-		.innerJoin("song", "song.id", "chart.song_id")
 		.select("score.id")
 		.where("score.session_id", "=", session.sessionID)
 		.execute();

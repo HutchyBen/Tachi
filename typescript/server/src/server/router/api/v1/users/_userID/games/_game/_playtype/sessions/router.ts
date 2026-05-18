@@ -23,21 +23,15 @@ import {
 } from "tachi-common";
 import { type Game } from "tachi-db";
 
-async function attachSessionScoreInfo(
+function attachSessionScoreInfo(
 	sessions: Array<SessionDocument>,
 ): Promise<Array<{ __scoreInfo: Array<SessionScoreInfo> } & SessionDocument>> {
-	const sessionsWithScoreInfo: Array<{ __scoreInfo: Array<SessionScoreInfo> } & SessionDocument> =
-		[];
-
-	await Promise.all(
-		sessions.map((session) =>
-			GetSessionScoreInfo(session).then((r) => {
-				sessionsWithScoreInfo.push({ ...session, __scoreInfo: r });
-			}),
-		),
+	return Promise.all(
+		sessions.map(async (session) => ({
+			...session,
+			__scoreInfo: await GetSessionScoreInfo(session),
+		})),
 	);
-
-	return sessionsWithScoreInfo;
 }
 
 /**
