@@ -18,21 +18,8 @@ import {
 	type AnySessionRatingAlg,
 	GetGameConfig,
 	LEGACY_GameToGameGroupPT,
-	type SessionDocument,
-	type SessionScoreInfo,
 } from "tachi-common";
 import { type Game } from "tachi-db";
-
-function attachSessionScoreInfo(
-	sessions: Array<SessionDocument>,
-): Promise<Array<{ __scoreInfo: Array<SessionScoreInfo> } & SessionDocument>> {
-	return Promise.all(
-		sessions.map(async (session) => ({
-			...session,
-			__scoreInfo: await GetSessionScoreInfo(session),
-		})),
-	);
-}
 
 /**
  * Search a users sessions.
@@ -95,13 +82,12 @@ API_V1_ROUTER.add(
 
 		const scoreMap = await GetScoreIdsGroupedBySessionId(rows.map((r) => r.id));
 		const sessions = rows.map((row) => ToSessionDocument(row, scoreMap.get(row.id) ?? []));
-		const sessionsWithScoreInfo = await attachSessionScoreInfo(sessions);
 
-		sessionsWithScoreInfo.sort(
+		sessions.sort(
 			(a, b) => (b.calculatedData[alg] ?? -Infinity) - (a.calculatedData[alg] ?? -Infinity),
 		);
 
-		return success(`Retrieved ${sessions.length} sessions.`, sessionsWithScoreInfo);
+		return success(`Retrieved ${sessions.length} sessions.`, sessions);
 	},
 );
 
@@ -127,11 +113,10 @@ API_V1_ROUTER.add(
 
 		const scoreMap = await GetScoreIdsGroupedBySessionId(rows.map((r) => r.id));
 		const sessions = rows.map((row) => ToSessionDocument(row, scoreMap.get(row.id) ?? []));
-		const sessionsWithScoreInfo = await attachSessionScoreInfo(sessions);
 
-		sessionsWithScoreInfo.sort((a, b) => b.timeEnded - a.timeEnded);
+		sessions.sort((a, b) => b.timeEnded - a.timeEnded);
 
-		return success(`Returned ${sessions.length} sessions.`, sessionsWithScoreInfo);
+		return success(`Returned ${sessions.length} sessions.`, sessions);
 	},
 );
 
@@ -157,11 +142,10 @@ API_V1_ROUTER.add(
 
 		const scoreMap = await GetScoreIdsGroupedBySessionId(rows.map((r) => r.id));
 		const sessions = rows.map((row) => ToSessionDocument(row, scoreMap.get(row.id) ?? []));
-		const sessionsWithScoreInfo = await attachSessionScoreInfo(sessions);
 
-		sessionsWithScoreInfo.sort((a, b) => b.timeEnded - a.timeEnded);
+		sessions.sort((a, b) => b.timeEnded - a.timeEnded);
 
-		return success(`Returned ${sessions.length} sessions.`, sessionsWithScoreInfo);
+		return success(`Returned ${sessions.length} sessions.`, sessions);
 	},
 );
 

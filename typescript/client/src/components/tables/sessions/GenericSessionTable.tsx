@@ -20,7 +20,8 @@ import SelectableRating from "../components/SelectableRating";
 import TachiTable, { type Header, type ZTableTHProps } from "../components/TachiTable";
 
 export type SessionDataset = ({
-	__related: { index: integer; scoreInfo: Array<SessionScoreInfo> };
+	/** Present when API attaches per-score PB deltas (list views omit this). */
+	__related: { index: integer; scoreInfo?: Array<SessionScoreInfo> };
 } & SessionDocument)[];
 
 export default function GenericSessionTable({

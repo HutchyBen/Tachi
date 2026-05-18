@@ -19,7 +19,6 @@ import {
 	GameToGameGroup,
 	GetGameGroupConfig,
 	type SessionDocument,
-	type SessionScoreInfo,
 	type UnsuccessfulAPIResponse,
 	type UserDocument,
 } from "tachi-common";
@@ -47,9 +46,7 @@ export default function SessionsPage({ reqUser, game }: UGPT) {
 	const { data, error } = useQuery<SessionDataset, UnsuccessfulAPIResponse>(
 		`${baseUrl}/${sessionSet}`,
 		async () => {
-			const res = await APIFetchV1<
-				({ __scoreInfo: Array<SessionScoreInfo> } & SessionDocument)[]
-			>(`${baseUrl}/${sessionSet}`);
+			const res = await APIFetchV1<SessionDocument[]>(`${baseUrl}/${sessionSet}`);
 
 			if (!res.success) {
 				throw res;
@@ -63,10 +60,7 @@ export default function SessionsPage({ reqUser, game }: UGPT) {
 				)
 				.map((e, i) => ({
 					...e,
-					__related: {
-						index: i,
-						scoreInfo: e.__scoreInfo,
-					},
+					__related: { index: i },
 				}));
 		},
 	);
