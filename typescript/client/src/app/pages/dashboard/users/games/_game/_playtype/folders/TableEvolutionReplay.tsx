@@ -468,31 +468,35 @@ export default function TableEvolutionReplay({
 				</Button>
 			</div>
 
+			{enumMetricChoices.length > 1 ? (
+				<div className="d-flex justify-content-center mt-3 mb-2 px-2">
+					<div className="d-flex flex-wrap justify-content-center gap-2">
+						{enumMetricChoices.map((metric) => (
+							<SelectButton
+								className="text-wrap"
+								id={metric}
+								key={metric}
+								setValue={setEnumMetric}
+								value={enumMetric}
+							>
+								<Icon
+									type={
+										/* @ts-expect-error enum icon keys align with score metrics */
+										GPT_CLIENT_IMPLEMENTATIONS[game].enumIcons[metric]
+									}
+								/>{" "}
+								{UppercaseFirst(metric)}
+							</SelectButton>
+						))}
+					</div>
+				</div>
+			) : null}
+
 			<Collapse in={open}>
-				<div className="mt-3" id={collapseId}>
-					{enumMetricChoices.length > 1 ? (
-						<div className="d-flex justify-content-center mb-3 px-2">
-							<div className="btn-group scrollbar-hide flex-wrap justify-content-center overflow-x-auto">
-								{enumMetricChoices.map((metric) => (
-									<SelectButton
-										className="text-wrap"
-										id={metric}
-										key={metric}
-										setValue={setEnumMetric}
-										value={enumMetric}
-									>
-										<Icon
-											type={
-												/* @ts-expect-error enum icon keys align with score metrics */
-												GPT_CLIENT_IMPLEMENTATIONS[game].enumIcons[metric]
-											}
-										/>{" "}
-										{UppercaseFirst(metric)}
-									</SelectButton>
-								))}
-							</div>
-						</div>
-					) : null}
+				<div
+					className={enumMetricChoices.length > 1 ? "mt-2" : "mt-3"}
+					id={collapseId}
+				>
 					{evoError ? <ApiError error={evoError} /> : null}
 
 					{open && evolutionLoading ? <Loading /> : null}
