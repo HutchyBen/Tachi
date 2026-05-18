@@ -1,0 +1,274 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CreateScoreID static output > arcaea produces stable score ids 1`] = `
+{
+  "baseline": "T611ff4451dd7ff905e9468d128a73f05fa106bc80c75a86e132b51d819f9dd00",
+  "chartID": "Tc855e4d5df609a3ac6aceccd0aaf75454aecd8091513bde9978a270ae26b40f8",
+  "optional.fast.ignored": "T611ff4451dd7ff905e9468d128a73f05fa106bc80c75a86e132b51d819f9dd00",
+  "provided.lamp": "T87515e8d5a9921435c1c449d605d185a2d534f949f32cc03367c00c5787f5d78",
+  "provided.score": "T77c242b448574d58745a9b5c36bf67e769ee420c2f23c3f0837877cdefe37fda",
+  "userID": "T542bc5112a0a0342be56856bb38c80ebfa14286a7e951578680bc78ff957a134",
+}
+`;
+
+exports[`CreateScoreID static output > bms-7k produces stable score ids 1`] = `
+{
+  "baseline": "T611ff4451dd7ff905e9468d128a73f05fa106bc80c75a86e132b51d819f9dd00",
+  "chartID": "Tc855e4d5df609a3ac6aceccd0aaf75454aecd8091513bde9978a270ae26b40f8",
+  "optional.fast.ignored": "T611ff4451dd7ff905e9468d128a73f05fa106bc80c75a86e132b51d819f9dd00",
+  "provided.lamp": "T87515e8d5a9921435c1c449d605d185a2d534f949f32cc03367c00c5787f5d78",
+  "provided.score": "T77c242b448574d58745a9b5c36bf67e769ee420c2f23c3f0837877cdefe37fda",
+  "userID": "T542bc5112a0a0342be56856bb38c80ebfa14286a7e951578680bc78ff957a134",
+}
+`;
+
+exports[`CreateScoreID static output > bms-14k produces stable score ids 1`] = `
+{
+  "baseline": "T611ff4451dd7ff905e9468d128a73f05fa106bc80c75a86e132b51d819f9dd00",
+  "chartID": "Tc855e4d5df609a3ac6aceccd0aaf75454aecd8091513bde9978a270ae26b40f8",
+  "optional.fast.ignored": "T611ff4451dd7ff905e9468d128a73f05fa106bc80c75a86e132b51d819f9dd00",
+  "provided.lamp": "T87515e8d5a9921435c1c449d605d185a2d534f949f32cc03367c00c5787f5d78",
+  "provided.score": "T77c242b448574d58745a9b5c36bf67e769ee420c2f23c3f0837877cdefe37fda",
+  "userID": "T542bc5112a0a0342be56856bb38c80ebfa14286a7e951578680bc78ff957a134",
+}
+`;
+
+exports[`CreateScoreID static output > chunithm produces stable score ids 1`] = `
+{
+  "baseline": "T34db52d521109b3a8889ab3b5354fef08f9b39ab6da62eb6240c868035affe93",
+  "chartID": "T343ef4bf7d6bd59590247a5c7c51b2fc99a45be5666a99c282d17232a7a50ed7",
+  "optional.fast.ignored": "T34db52d521109b3a8889ab3b5354fef08f9b39ab6da62eb6240c868035affe93",
+  "provided.clearLamp": "T725933011ed88177e9a6d6785ec1f05789e2a50490216b3bd362f9a148266a87",
+  "provided.noteLamp": "Tdb1dfc3587098c967a9831fde32da01fd2a7e54af9819d1cb51f01d0da55c0cd",
+  "provided.score": "T082194b0a2b91ad226d6aa1705e6dd1def4485e6b63bb57030bc8f9b05657ae6",
+  "userID": "T05f3250757ccea76b266f478c51dadf3a704234a3006dbe24362468648ac6a14",
+}
+`;
+
+exports[`CreateScoreID static output > ddr-dp produces stable score ids 1`] = `
+{
+  "baseline": "Tefde7e5b2f221fb4522c8d02033e0d7e7c4f14e47c18978e9054d4412d743ebd",
+  "chartID": "T475d196f662d46fca9bc65e29e495cead9d19fedfc541e67a7841027169ee505",
+  "optional.exScore.null": "T17a4b7a38a565b747be4a838bbe1cb996a817b61f3397d7befd9f4422026a110",
+  "optional.exScore.set": "Tefde7e5b2f221fb4522c8d02033e0d7e7c4f14e47c18978e9054d4412d743ebd",
+  "optional.exScore.unset": "T17a4b7a38a565b747be4a838bbe1cb996a817b61f3397d7befd9f4422026a110",
+  "optional.flare.ignored": "Tefde7e5b2f221fb4522c8d02033e0d7e7c4f14e47c18978e9054d4412d743ebd",
+  "provided.lamp": "T80cbc715b7acc9a7b3a029b2912e4c0f6e020109be46780a42c877654ef1ece8",
+  "provided.score": "T4283ad151d4659d35ef56ef18ae4b5be2f8b2d094c7105666ef92b02d78e0d4f",
+  "userID": "Tde9d8c058751a41e5e278be598968e52d9ce1c74c28b5f426b6390b76e15acf7",
+}
+`;
+
+exports[`CreateScoreID static output > ddr-sp produces stable score ids 1`] = `
+{
+  "baseline": "Tefde7e5b2f221fb4522c8d02033e0d7e7c4f14e47c18978e9054d4412d743ebd",
+  "chartID": "T475d196f662d46fca9bc65e29e495cead9d19fedfc541e67a7841027169ee505",
+  "optional.exScore.null": "T17a4b7a38a565b747be4a838bbe1cb996a817b61f3397d7befd9f4422026a110",
+  "optional.exScore.set": "Tefde7e5b2f221fb4522c8d02033e0d7e7c4f14e47c18978e9054d4412d743ebd",
+  "optional.exScore.unset": "T17a4b7a38a565b747be4a838bbe1cb996a817b61f3397d7befd9f4422026a110",
+  "optional.flare.ignored": "Tefde7e5b2f221fb4522c8d02033e0d7e7c4f14e47c18978e9054d4412d743ebd",
+  "provided.lamp": "T80cbc715b7acc9a7b3a029b2912e4c0f6e020109be46780a42c877654ef1ece8",
+  "provided.score": "T4283ad151d4659d35ef56ef18ae4b5be2f8b2d094c7105666ef92b02d78e0d4f",
+  "userID": "Tde9d8c058751a41e5e278be598968e52d9ce1c74c28b5f426b6390b76e15acf7",
+}
+`;
+
+exports[`CreateScoreID static output > gitadora-dora produces stable score ids 1`] = `
+{
+  "baseline": "T5db96789ad7a73096158cb1eb57381d423bf8dd5ad4fd0c0bf4e63883e3d8ac0",
+  "chartID": "T9561c3da01a13f78fdb402026c8424d5a754159e894927bb3118a12064e37b17",
+  "optional.fast.ignored": "T5db96789ad7a73096158cb1eb57381d423bf8dd5ad4fd0c0bf4e63883e3d8ac0",
+  "provided.lamp": "Te6a1f9342cefc623314a5ae8f7c4b37f77ce236023540dd94743cdc959189179",
+  "provided.percent": "T809dbd0b965b67e6b99fdda40d96290100b8f41876f79eeb0d68ed240cfb0f42",
+  "userID": "Te2fecd654e16a3ca7754f7493d0f186f5cfaa7d4df1504558e41fcd2a65233e5",
+}
+`;
+
+exports[`CreateScoreID static output > gitadora-gita produces stable score ids 1`] = `
+{
+  "baseline": "T5db96789ad7a73096158cb1eb57381d423bf8dd5ad4fd0c0bf4e63883e3d8ac0",
+  "chartID": "T9561c3da01a13f78fdb402026c8424d5a754159e894927bb3118a12064e37b17",
+  "optional.fast.ignored": "T5db96789ad7a73096158cb1eb57381d423bf8dd5ad4fd0c0bf4e63883e3d8ac0",
+  "provided.lamp": "Te6a1f9342cefc623314a5ae8f7c4b37f77ce236023540dd94743cdc959189179",
+  "provided.percent": "T809dbd0b965b67e6b99fdda40d96290100b8f41876f79eeb0d68ed240cfb0f42",
+  "userID": "Te2fecd654e16a3ca7754f7493d0f186f5cfaa7d4df1504558e41fcd2a65233e5",
+}
+`;
+
+exports[`CreateScoreID static output > iidx-dp produces stable score ids 1`] = `
+{
+  "baseline": "T611ff4451dd7ff905e9468d128a73f05fa106bc80c75a86e132b51d819f9dd00",
+  "chartID": "Tc855e4d5df609a3ac6aceccd0aaf75454aecd8091513bde9978a270ae26b40f8",
+  "optional.fast.ignored": "T611ff4451dd7ff905e9468d128a73f05fa106bc80c75a86e132b51d819f9dd00",
+  "provided.lamp": "T87515e8d5a9921435c1c449d605d185a2d534f949f32cc03367c00c5787f5d78",
+  "provided.score": "T77c242b448574d58745a9b5c36bf67e769ee420c2f23c3f0837877cdefe37fda",
+  "userID": "T542bc5112a0a0342be56856bb38c80ebfa14286a7e951578680bc78ff957a134",
+}
+`;
+
+exports[`CreateScoreID static output > iidx-sp produces stable score ids 1`] = `
+{
+  "baseline": "T611ff4451dd7ff905e9468d128a73f05fa106bc80c75a86e132b51d819f9dd00",
+  "chartID": "Tc855e4d5df609a3ac6aceccd0aaf75454aecd8091513bde9978a270ae26b40f8",
+  "optional.fast.ignored": "T611ff4451dd7ff905e9468d128a73f05fa106bc80c75a86e132b51d819f9dd00",
+  "provided.lamp": "T87515e8d5a9921435c1c449d605d185a2d534f949f32cc03367c00c5787f5d78",
+  "provided.score": "T77c242b448574d58745a9b5c36bf67e769ee420c2f23c3f0837877cdefe37fda",
+  "userID": "T542bc5112a0a0342be56856bb38c80ebfa14286a7e951578680bc78ff957a134",
+}
+`;
+
+exports[`CreateScoreID static output > itg-stamina produces stable score ids 1`] = `
+{
+  "baseline": "Tdadb283e70ef31c8702bb89f837bc94436ae6ee7f244ab70ea2a39ae1fe9f7ec",
+  "chartID": "T6ca6f39f038396ecb849664b2c1835a5be822e6192e90b60214d5cd2002723ba",
+  "optional.lifebarHistory.ignored": "Tdadb283e70ef31c8702bb89f837bc94436ae6ee7f244ab70ea2a39ae1fe9f7ec",
+  "provided.lamp": "T2ab2790e85a14fc39a38e8061c80a3ef8a0d67bfe40a9433a4a0ba8f2680ce3d",
+  "provided.scorePercent": "T79c2380cac5b3d602354e86f961bf954e77366fa2d7143ac125a8781adf4b734",
+  "provided.survivedPercent": "Tbc57ec37a8ab4469b5c1fefab2a86434e8bc72518302fc6a2cfaff572f1bd820",
+  "userID": "Tca59e8a903c600ec370819d96cfde63aaa549704c8606109bee8d76a6ef0d20d",
+}
+`;
+
+exports[`CreateScoreID static output > jubeat produces stable score ids 1`] = `
+{
+  "baseline": "T83e29d2893291c0cae7aefba2d9405c1d2c60ee98ee6ab1adf2c5cbcebb7550e",
+  "chartID": "T692dd9a1a68dcddb58c19415797dfabf1095d483a0f33367df299ae668c8cdf5",
+  "optional.fast.ignored": "T83e29d2893291c0cae7aefba2d9405c1d2c60ee98ee6ab1adf2c5cbcebb7550e",
+  "provided.lamp": "T97861ca816081d7071e0cfb8acaaa229deb0d11facd73c68380743594812c4b2",
+  "provided.musicRate": "T470a07c210911b79f8fa3b11fb4613d10fd9b5e8020e37c10e47c29669cc0541",
+  "provided.score": "Tb21103a4c8034291988f0fe83e3d4b653e40b027994e43d23855c7b8a32739b8",
+  "userID": "Te92e20c8d9e7463bb8a79367281420bdc146d4c09e666f7056a89bd681481088",
+}
+`;
+
+exports[`CreateScoreID static output > maimai produces stable score ids 1`] = `
+{
+  "baseline": "T5db96789ad7a73096158cb1eb57381d423bf8dd5ad4fd0c0bf4e63883e3d8ac0",
+  "chartID": "T9561c3da01a13f78fdb402026c8424d5a754159e894927bb3118a12064e37b17",
+  "optional.fast.ignored": "T5db96789ad7a73096158cb1eb57381d423bf8dd5ad4fd0c0bf4e63883e3d8ac0",
+  "provided.lamp": "Te6a1f9342cefc623314a5ae8f7c4b37f77ce236023540dd94743cdc959189179",
+  "provided.percent": "T809dbd0b965b67e6b99fdda40d96290100b8f41876f79eeb0d68ed240cfb0f42",
+  "userID": "Te2fecd654e16a3ca7754f7493d0f186f5cfaa7d4df1504558e41fcd2a65233e5",
+}
+`;
+
+exports[`CreateScoreID static output > maimaidx produces stable score ids 1`] = `
+{
+  "baseline": "T5db96789ad7a73096158cb1eb57381d423bf8dd5ad4fd0c0bf4e63883e3d8ac0",
+  "chartID": "T9561c3da01a13f78fdb402026c8424d5a754159e894927bb3118a12064e37b17",
+  "optional.fast.ignored": "T5db96789ad7a73096158cb1eb57381d423bf8dd5ad4fd0c0bf4e63883e3d8ac0",
+  "provided.lamp": "Te6a1f9342cefc623314a5ae8f7c4b37f77ce236023540dd94743cdc959189179",
+  "provided.percent": "T809dbd0b965b67e6b99fdda40d96290100b8f41876f79eeb0d68ed240cfb0f42",
+  "userID": "Te2fecd654e16a3ca7754f7493d0f186f5cfaa7d4df1504558e41fcd2a65233e5",
+}
+`;
+
+exports[`CreateScoreID static output > museca produces stable score ids 1`] = `
+{
+  "baseline": "T87515e8d5a9921435c1c449d605d185a2d534f949f32cc03367c00c5787f5d78",
+  "chartID": "T17a81c58b451236c6f80c80848bef7d1e4dbaff88e4fac35638e966f686f5602",
+  "optional.fast.ignored": "T87515e8d5a9921435c1c449d605d185a2d534f949f32cc03367c00c5787f5d78",
+  "provided.lamp": "Te570c06f4431c29ff6493869c56749e259dc83fa19e9cfd7e02899a772152d9c",
+  "provided.score": "Tfd40722a31de045b97b7ae23b0d1613ebc9442ab27cdbdfe5252ef823a0ad94f",
+  "userID": "Tc18bba02eca24e8fa646f70f8d2d447caf9315b0b16efb9ac90ae8a798118848",
+}
+`;
+
+exports[`CreateScoreID static output > ongeki produces stable score ids 1`] = `
+{
+  "baseline": "T14a20b47ff8adaa78a3c8fcc587996cccf9e69ff9e94d28ffc2a99a43b2e1173",
+  "chartID": "T1a31b6d75fa427ee4154981c5212abf0494db270b2f1d5d8472ff7cc3671ca1e",
+  "optional.bellCount.null": "T093f6dc7537e576dba449a2699246efa947ed8fa9f697cd3e4dcfeefc3ffe784",
+  "optional.bellCount.set": "T14a20b47ff8adaa78a3c8fcc587996cccf9e69ff9e94d28ffc2a99a43b2e1173",
+  "optional.bellCount.unset": "T093f6dc7537e576dba449a2699246efa947ed8fa9f697cd3e4dcfeefc3ffe784",
+  "optional.damage.null": "T66c94a56bb6d00a1ce8700b64adf5d6bcd7da022c6fc27ba98b80236e9d7fd1a",
+  "optional.damage.set": "T14a20b47ff8adaa78a3c8fcc587996cccf9e69ff9e94d28ffc2a99a43b2e1173",
+  "optional.damage.unset": "T66c94a56bb6d00a1ce8700b64adf5d6bcd7da022c6fc27ba98b80236e9d7fd1a",
+  "optional.fast.ignored": "T14a20b47ff8adaa78a3c8fcc587996cccf9e69ff9e94d28ffc2a99a43b2e1173",
+  "provided.bellLamp": "Tca16675649b342a148d57cfc2a966489f753bce05c721d22a331fe5b1848ac0a",
+  "provided.noteLamp": "Taa7a7095805bc712a33997530f0594c32aa67a4aad31d8040d52246d9aecd0b2",
+  "provided.platinumScore": "T2ada4cd09159bbc5affcb2ff1f13df6353e784382a1181a9d38b3178621496e9",
+  "provided.score": "T207b7cf7f0423818cc4a69f8b7ce111559b82ee71ab6cf64d7ad8afb41ce7d65",
+  "userID": "T8910462fc86dc4dd87878884784fb2aa5a63934cf121dcf0fe2832c9b0ce576a",
+}
+`;
+
+exports[`CreateScoreID static output > pms-controller produces stable score ids 1`] = `
+{
+  "baseline": "T611ff4451dd7ff905e9468d128a73f05fa106bc80c75a86e132b51d819f9dd00",
+  "chartID": "Tc855e4d5df609a3ac6aceccd0aaf75454aecd8091513bde9978a270ae26b40f8",
+  "optional.fast.ignored": "T611ff4451dd7ff905e9468d128a73f05fa106bc80c75a86e132b51d819f9dd00",
+  "provided.lamp": "T87515e8d5a9921435c1c449d605d185a2d534f949f32cc03367c00c5787f5d78",
+  "provided.score": "T77c242b448574d58745a9b5c36bf67e769ee420c2f23c3f0837877cdefe37fda",
+  "userID": "T542bc5112a0a0342be56856bb38c80ebfa14286a7e951578680bc78ff957a134",
+}
+`;
+
+exports[`CreateScoreID static output > pms-keyboard produces stable score ids 1`] = `
+{
+  "baseline": "T611ff4451dd7ff905e9468d128a73f05fa106bc80c75a86e132b51d819f9dd00",
+  "chartID": "Tc855e4d5df609a3ac6aceccd0aaf75454aecd8091513bde9978a270ae26b40f8",
+  "optional.fast.ignored": "T611ff4451dd7ff905e9468d128a73f05fa106bc80c75a86e132b51d819f9dd00",
+  "provided.lamp": "T87515e8d5a9921435c1c449d605d185a2d534f949f32cc03367c00c5787f5d78",
+  "provided.score": "T77c242b448574d58745a9b5c36bf67e769ee420c2f23c3f0837877cdefe37fda",
+  "userID": "T542bc5112a0a0342be56856bb38c80ebfa14286a7e951578680bc78ff957a134",
+}
+`;
+
+exports[`CreateScoreID static output > popn produces stable score ids 1`] = `
+{
+  "baseline": "Tb4ad84adf0b4e18f32d696e3567887cd4607db61550d6fbd9fac0231b9f8e7bb",
+  "chartID": "T77807c70a4da0d1b5210b5ce8d18c09444555ffacd28d590509acb961c9de6c9",
+  "optional.fast.ignored": "Tb4ad84adf0b4e18f32d696e3567887cd4607db61550d6fbd9fac0231b9f8e7bb",
+  "provided.clearMedal": "T1e9d1165a2ccc2c1082d9bc266030a48fa66e140e86853670e292d3397446d27",
+  "provided.score": "T265b8102af7d36a80b44e33a10a8989b608e4014120da5148aa23aff427230a4",
+  "userID": "T9137d13aa0eb07438184dd49dd296ab8485b3a62737416547f98d52adc578ad4",
+}
+`;
+
+exports[`CreateScoreID static output > sdvx produces stable score ids 1`] = `
+{
+  "baseline": "Tefde7e5b2f221fb4522c8d02033e0d7e7c4f14e47c18978e9054d4412d743ebd",
+  "chartID": "T475d196f662d46fca9bc65e29e495cead9d19fedfc541e67a7841027169ee505",
+  "optional.exScore.null": "T17a4b7a38a565b747be4a838bbe1cb996a817b61f3397d7befd9f4422026a110",
+  "optional.exScore.set": "Tefde7e5b2f221fb4522c8d02033e0d7e7c4f14e47c18978e9054d4412d743ebd",
+  "optional.exScore.unset": "T17a4b7a38a565b747be4a838bbe1cb996a817b61f3397d7befd9f4422026a110",
+  "optional.fast.ignored": "Tefde7e5b2f221fb4522c8d02033e0d7e7c4f14e47c18978e9054d4412d743ebd",
+  "provided.lamp": "Td12f6eb659d72412c12316a69570e6e488c525f211b311467810d5c324ed355d",
+  "provided.score": "T4283ad151d4659d35ef56ef18ae4b5be2f8b2d094c7105666ef92b02d78e0d4f",
+  "userID": "Tde9d8c058751a41e5e278be598968e52d9ce1c74c28b5f426b6390b76e15acf7",
+}
+`;
+
+exports[`CreateScoreID static output > usc-controller produces stable score ids 1`] = `
+{
+  "baseline": "T87515e8d5a9921435c1c449d605d185a2d534f949f32cc03367c00c5787f5d78",
+  "chartID": "T17a81c58b451236c6f80c80848bef7d1e4dbaff88e4fac35638e966f686f5602",
+  "optional.fast.ignored": "T87515e8d5a9921435c1c449d605d185a2d534f949f32cc03367c00c5787f5d78",
+  "provided.lamp": "T810246f082ed7f9722ec63cba06f3f773eb4bcca671ad9ee9ce64be0ff2c492e",
+  "provided.score": "Tfd40722a31de045b97b7ae23b0d1613ebc9442ab27cdbdfe5252ef823a0ad94f",
+  "userID": "Tc18bba02eca24e8fa646f70f8d2d447caf9315b0b16efb9ac90ae8a798118848",
+}
+`;
+
+exports[`CreateScoreID static output > usc-keyboard produces stable score ids 1`] = `
+{
+  "baseline": "T87515e8d5a9921435c1c449d605d185a2d534f949f32cc03367c00c5787f5d78",
+  "chartID": "T17a81c58b451236c6f80c80848bef7d1e4dbaff88e4fac35638e966f686f5602",
+  "optional.fast.ignored": "T87515e8d5a9921435c1c449d605d185a2d534f949f32cc03367c00c5787f5d78",
+  "provided.lamp": "T810246f082ed7f9722ec63cba06f3f773eb4bcca671ad9ee9ce64be0ff2c492e",
+  "provided.score": "Tfd40722a31de045b97b7ae23b0d1613ebc9442ab27cdbdfe5252ef823a0ad94f",
+  "userID": "Tc18bba02eca24e8fa646f70f8d2d447caf9315b0b16efb9ac90ae8a798118848",
+}
+`;
+
+exports[`CreateScoreID static output > wacca produces stable score ids 1`] = `
+{
+  "baseline": "T87515e8d5a9921435c1c449d605d185a2d534f949f32cc03367c00c5787f5d78",
+  "chartID": "T17a81c58b451236c6f80c80848bef7d1e4dbaff88e4fac35638e966f686f5602",
+  "optional.fast.ignored": "T87515e8d5a9921435c1c449d605d185a2d534f949f32cc03367c00c5787f5d78",
+  "provided.lamp": "Tc6ea52eaea944f67bedd0b513ffb87215210ea3b22a19f54e96a19f892ab17f8",
+  "provided.score": "Tfd40722a31de045b97b7ae23b0d1613ebc9442ab27cdbdfe5252ef823a0ad94f",
+  "userID": "Tc18bba02eca24e8fa646f70f8d2d447caf9315b0b16efb9ac90ae8a798118848",
+}
+`;

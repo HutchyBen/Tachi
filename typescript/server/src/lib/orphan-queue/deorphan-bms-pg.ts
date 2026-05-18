@@ -68,7 +68,7 @@ export async function DeorphanBmsIfInOrphanChartPg(
 			.insertInto("chart")
 			.values({
 				id: chartDoc.chartID,
-				legacy_id: chartDoc.chartID,
+				legacy_id: chartDoc.legacyChartID,
 				game,
 				song_id: songNewID,
 				level: chartDoc.level,
