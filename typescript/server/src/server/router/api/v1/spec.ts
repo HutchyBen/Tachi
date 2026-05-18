@@ -550,7 +550,7 @@ export const API_V1_SPEC = {
 	"GET /users/:userID/integrations/myt": {
 		description: "Get MYT card info for the user.",
 		input: z.object({}),
-		output: doc<MytCardInfo>(),
+		output: z.nullable(doc<MytCardInfo>()),
 	},
 
 	"PUT /users/:userID/integrations/myt": {
