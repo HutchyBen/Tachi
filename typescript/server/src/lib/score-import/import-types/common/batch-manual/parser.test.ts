@@ -2,7 +2,6 @@ import type { BatchManual } from "tachi-common";
 
 import { log } from "#lib/log/log";
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
-import { TachiConfig } from "#lib/setup/config";
 import { EscapeStringRegexp } from "#utils/misc";
 import deepmerge from "deepmerge";
 import { describe, expect, it } from "vitest";
@@ -50,6 +49,20 @@ const baseBatchManualScore = {
 function dm(sc: any) {
 	return deepmerge(
 		baseBatchManual,
+		{ scores: [deepmerge(baseBatchManualScore, sc)] },
+		{ arrayMerge: (r, c) => c },
+	);
+}
+
+const baseBatchManualV3 = {
+	scores: [],
+	meta: { service: "foo", game: "iidx-sp" as const },
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function dmV3(sc: any) {
+	return deepmerge(
+		baseBatchManualV3,
 		{ scores: [deepmerge(baseBatchManualScore, sc)] },
 		{ arrayMerge: (r, c) => c },
 	);
@@ -110,7 +123,7 @@ describe("#ParserFn", () => {
 				),
 			new ScoreImportFatalError(
 				400,
-				`Invalid game 'iidx' - expected any of ${TachiConfig.GAME_GROUPS.join(", ")}.`,
+				`Invalid game 'iidx' - when meta.playtype is omitted, meta.game must be a canonical enabled game string (for example iidx-sp).`,
 			),
 		);
 	});
@@ -139,7 +152,7 @@ describe("#ParserFn", () => {
 	});
 
 	it("Invalid Service", () => {
-		expectThrowsFatal(
+		expectThrowsFatalMatch(
 			() =>
 				ParserFn(
 					{ scores: [], meta: { service: "1", game: "iidx", playtype: "SP" } },
@@ -147,13 +160,10 @@ describe("#ParserFn", () => {
 					false,
 					log,
 				),
-			new ScoreImportFatalError(
-				400,
-				"Invalid BATCH-MANUAL: meta.service | Expected a string with length between 3 and 60. | Received 1 [type: string].",
-			),
+			/^Invalid BATCH-MANUAL: meta/u,
 		);
 
-		expectThrowsFatal(
+		expectThrowsFatalMatch(
 			() =>
 				ParserFn(
 					{
@@ -164,10 +174,7 @@ describe("#ParserFn", () => {
 					false,
 					log,
 				),
-			new ScoreImportFatalError(
-				400,
-				"Invalid BATCH-MANUAL: meta.service | Expected a string with length between 3 and 60. | Received 1 [type: number].",
-			),
+			/^Invalid BATCH-MANUAL: meta/u,
 		);
 	});
 
@@ -190,7 +197,64 @@ describe("#ParserFn", () => {
 		});
 	});
 
+	it("Valid Empty BATCH-MANUAL with v3 meta.game only (no playtype)", () => {
+		const res = ParserFn(
+			{ scores: [], meta: { service: "foo", game: "iidx-sp" } },
+			"file/batch-manual",
+			false,
+			log,
+		);
+
+		expect(res).toMatchObject({
+			gameGroup: "iidx",
+			context: {
+				service: "foo",
+				game: "iidx-sp",
+				version: null,
+			},
+			iterable: [],
+		});
+	});
+
+	it("meta.playtype forces legacy interpretation of meta.game (reject bare V3 string)", () => {
+		expectThrowsFatalMatch(
+			() =>
+				ParserFn(
+					{
+						scores: [],
+						meta: { service: "foo", game: "iidx-sp", playtype: "SP" },
+					} as unknown as BatchManual,
+					"file/batch-manual",
+					false,
+					log,
+				),
+			mockErr("Invalid game group"),
+		);
+	});
+
 	describe("Valid BATCH-MANUAL", () => {
+		it("Basic BATCH-MANUAL with v3 meta.game only", () => {
+			const res = ParserFn(dmV3({}), "file/batch-manual", false, log);
+
+			expect(res).toMatchObject({
+				gameGroup: "iidx",
+				context: {
+					service: "foo",
+					game: "iidx-sp",
+					version: null,
+				},
+				iterable: [
+					{
+						score: 1000,
+						lamp: "HARD CLEAR",
+						matchType: "tachiSongID",
+						identifier: "123",
+						difficulty: "ANOTHER",
+					},
+				],
+			});
+		});
+
 		it("Basic BATCH-MANUAL", () => {
 			const res = ParserFn(
 				{

@@ -4,7 +4,6 @@ import type {
 	ConfProvidedMetrics,
 	Difficulties,
 	ExtractedClasses,
-	GameGroup,
 	Judgements,
 	ScoreMeta,
 	Versions,
@@ -74,13 +73,21 @@ export type BatchManualScore<TGame extends V3Game = V3Game> = {
 ) &
 	MongoExtractMetrics<ConfProvidedMetrics[TGame]>;
 
+export type BatchManualMeta<TGame extends V3Game = V3Game> =
+	| {
+			game: GameGroupFromGame[TGame];
+			playtype: LEGACY_Playtypes[GameGroupFromGame[TGame]];
+			service: string;
+			version?: Versions[TGame];
+	  }
+	| {
+			game: TGame;
+			service: string;
+			version?: Versions[TGame];
+	  };
+
 export interface BatchManual<TGame extends V3Game = V3Game> {
-	meta: {
-		game: GameGroupFromGame[TGame];
-		playtype: LEGACY_Playtypes[GameGroup];
-		service: string;
-		version?: Versions[TGame];
-	};
+	meta: BatchManualMeta<TGame>;
 	scores: Array<BatchManualScore<TGame>>;
 	classes?: ExtractedClasses[TGame] | null;
 }

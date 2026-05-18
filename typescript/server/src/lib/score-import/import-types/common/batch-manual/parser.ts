@@ -1,7 +1,7 @@
 import type { KtLogger } from "#lib/log/log";
 
 import ScoreImportFatalError from "#lib/score-import/framework/score-importing/score-import-error";
-import { TachiConfig } from "#lib/setup/config";
+import { AllEnabledGames, TachiConfig } from "#lib/setup/config";
 import { IsEnabledGame, IsEnabledGameGroup, IsRecord, IsValidPlaytype } from "#utils/misc";
 import { FormatPrError } from "#utils/prudence";
 import { p } from "prudence";
@@ -65,7 +65,7 @@ export function ParseBatchManualFromObject(
 		if (typeof maybeGame !== "string" || !IsEnabledGame(maybeGame)) {
 			throw new ScoreImportFatalError(
 				400,
-				`Invalid game '${maybeGame}' - expected any of ${TachiConfig.GAME_GROUPS.join(", ")}.`,
+				`Invalid game '${maybeGame}'. It must be one of ${AllEnabledGames().join(", ")}.`,
 			);
 		}
 

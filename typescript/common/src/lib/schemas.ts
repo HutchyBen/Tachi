@@ -1008,13 +1008,27 @@ const PR_BATCH_MANUAL_CLASSES = (game: V3Game): PrudenceSchema => {
 	return schema;
 };
 
+/**
+ * Batch-manual meta supports either legacy `{ game: GameGroup, playtype }` or v3 `{ game: V3Game }`
+ * without `playtype` (see batch-manual parser on the server).
+ */
+const PR_BATCH_MANUAL_META = (game: V3Game) =>
+	p.or(
+		{
+			service: p.isBoundedString(3, 60),
+			game: p.is(game),
+			version: "*?string",
+		},
+		{
+			service: p.isBoundedString(3, 60),
+			game: p.is(GameToGameGroup(game)),
+			playtype: p.is(LEGACY_GameToPlaytypeFn(game)),
+			version: "*?string",
+		},
+	);
+
 export const PR_BATCH_MANUAL = (game: V3Game): PrudenceSchema => ({
-	meta: {
-		service: p.isBoundedString(3, 60),
-		game: p.isIn(allSupportedGameGroups),
-		playtype: p.is(LEGACY_GameToPlaytypeFn(game)),
-		version: "*?string",
-	},
+	meta: PR_BATCH_MANUAL_META(game),
 	scores: [PR_BATCH_MANUAL_SCORE(game)],
 	classes: optNull(PR_BATCH_MANUAL_CLASSES(game)),
 });
