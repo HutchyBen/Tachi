@@ -1,7 +1,7 @@
 import { GetRecentActivity } from "#lib/activity/activity";
 import DB from "#services/pg/db";
 import mockApi, { CloseServerConnection } from "#test-utils/mock-api";
-import { seedUser } from "#test-utils/pg-fixtures";
+import { seedMinimalIidxSpChart, seedUser } from "#test-utils/pg-fixtures";
 import { UnixMillisecondsToISO8601 } from "#utils/time";
 import { afterAll, describe, expect, it } from "vitest";
 
@@ -207,6 +207,93 @@ describe("GetRecentActivity (Postgres)", () => {
 		expect(result.achievedClasses).toHaveLength(1);
 		expect(result.achievedClasses[0]?.classOldValue).toBe(null);
 		expect(result.achievedClasses[0]?.classValue).toBe("DAN_1");
+	});
+
+	it("returns only goals for the requested GPT", async () => {
+		const { id: userId } = await seedUser({
+			username: `act_goal_${Date.now()}`,
+		});
+		const base = 50_000_000;
+		const tAchieved = base + 5000;
+
+		await insertIidxSession({
+			userId,
+			id: `act-g-goal-s-${base}`,
+			timeStartedMs: base,
+			timeEndedMs: base + 1000,
+		});
+
+		const iidxChartId = await seedMinimalIidxSpChart();
+		const sdvxSongId = `act-sdvx-song-${base}`;
+		const sdvxChartId = `act-sdvx-ch-${base}`;
+
+		await DB.insertInto("song")
+			.values({
+				id: sdvxSongId,
+				legacy_id: 92_000,
+				game_group: "sdvx",
+				title: "sdvx",
+				artist: "a",
+				search_terms: [],
+				alt_titles: [],
+				data: JSON.stringify({}),
+				fts_document: "",
+			})
+			.execute();
+
+		await DB.insertInto("chart")
+			.values({
+				id: sdvxChartId,
+				legacy_id: sdvxChartId,
+				game: "sdvx",
+				song_id: sdvxSongId,
+				level: "9",
+				level_num: 9,
+				is_primary: true,
+				difficulty: "EXHAUST",
+				versions: [],
+				data: JSON.stringify({}),
+			})
+			.execute();
+
+		const goalIidx = `G_ACT_IIDX_${base}`;
+		const goalSdvx = `G_ACT_SDVX_${base}`;
+
+		for (const [id, g, chartId] of [
+			[goalIidx, "iidx-sp" as const, iidxChartId],
+			[goalSdvx, "sdvx" as const, sdvxChartId],
+		] as const) {
+			await DB.insertInto("goal")
+				.values({
+					id,
+					game: g,
+					name: id,
+					charts: JSON.stringify({ type: "single", data: chartId }),
+					criteria: JSON.stringify({ mode: "single", key: "lamp", value: 7 }),
+				})
+				.execute();
+
+			await DB.insertInto("goal_sub")
+				.values({
+					goal_id: id,
+					user_id: userId,
+					achieved: true,
+					time_achieved: UnixMillisecondsToISO8601(tAchieved),
+					progress: 7,
+					progress_human: "done",
+					out_of: 7,
+					out_of_human: "FULL COMBO",
+					last_interaction: UnixMillisecondsToISO8601(tAchieved),
+					was_instantly_achieved: false,
+					was_assigned_standalone: true,
+				})
+				.execute();
+		}
+
+		const result = await GetRecentActivity("iidx-sp", { userID: userId }, 10, null);
+
+		expect(result.goals.map((g) => g.goalID)).toEqual([goalIidx]);
+		expect(result.goalSubs.map((s) => s.goalID)).toEqual([goalIidx]);
 	});
 
 	it("returns no sessions, scores, or class rows when userID $in is empty", async () => {
