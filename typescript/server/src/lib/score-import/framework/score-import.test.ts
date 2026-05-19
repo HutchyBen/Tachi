@@ -1,6 +1,9 @@
+import type { ScoreImportJobData } from "#lib/score-import/worker/types";
+
 import { seedUser } from "#actions/test-utils/api-tokens";
 import { CDNRetrieve } from "#lib/cdn/cdn";
 import { LoadImportDocumentById } from "#lib/db-formats/import-document";
+import { StartTrackingImport } from "#lib/score-import/framework/status-tracking/import-status-tracking";
 import { RunScoreImportOnce } from "#lib/score-import/worker/run-score-import";
 import DB from "#services/pg/db";
 import {
@@ -89,13 +92,18 @@ describe("RunScoreImportOnce (ported from score-import.oldtest.ts)", () => {
 	it.skipIf(!process.env.TACHI_CDN_SAVE_LOCATION_BUCKET)(
 		"stores import-input on CDN when TACHI_CDN_SAVE_LOCATION_BUCKET is set",
 		async () => {
-			await RunScoreImportOnce({
+			const jobData: ScoreImportJobData<"ir/direct-manual"> = {
 				importID: "mockImportID_cdn",
 				importType: "ir/direct-manual",
 				parserArguments: [FakeSmallBatchManual, false],
 				userID: 1,
 				userIntent: true,
-			});
+			};
+
+			// Production enqueues tracking (including CDN upload) before the worker runs
+			// RunScoreImportOnce with skipStartTracking.
+			await StartTrackingImport(jobData);
+			await RunScoreImportOnce(jobData);
 
 			await Sleep(800);
 
