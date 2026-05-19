@@ -1,11 +1,11 @@
 import type { Repository } from "@octokit/webhooks-types";
 
+import { log } from "#utils/log";
 import { App, createNodeMiddleware } from "@octokit/app";
 import express from "express";
 import { URLSearchParams } from "url";
 
 import { ProcessEnv } from "./config";
-import { log } from "#utils/log";
 
 const app = new App({
 	appId: ProcessEnv.appId,
