@@ -182,7 +182,12 @@ async function upsertBotComment(
 	return "created";
 }
 
-async function sendMsg(message: string, octokit: OctokitRequester, repo: Repository, issue: number) {
+async function sendMsg(
+	message: string,
+	octokit: OctokitRequester,
+	repo: Repository,
+	issue: number,
+) {
 	await octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/comments", {
 		owner: repo.owner.login,
 		repo: repo.name,
@@ -321,7 +326,10 @@ app.webhooks.on(["pull_request.closed"], async ({ payload }) => {
 			log.info({ prNumber: pr.number }, "Notified Tachi server: quest-proposal PR merged.");
 		}
 	} catch (err) {
-		log.error({ err, prNumber: pr.number }, "Error notifying Tachi server of merged quest-proposal PR.");
+		log.error(
+			{ err, prNumber: pr.number },
+			"Error notifying Tachi server of merged quest-proposal PR.",
+		);
 	}
 });
 

@@ -49,7 +49,6 @@ export async function FindSongOnTitleInsensitive(
 	title: string,
 	artist?: string | null,
 ): Promise<SongDocument | null> {
-
 	let q = DB.selectFrom("song")
 		.select(SELECT_SONG_ROW)
 		.where("song.game_group", "=", game)
