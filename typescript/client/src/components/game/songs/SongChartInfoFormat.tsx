@@ -28,12 +28,17 @@ export default function SongChartInfoFormat({
 			/>
 		);
 	}
-	if (gameGroup === "ongeki" || gameGroup === "chunithm" || gameGroup === "maimaidx") {
+	if (["arcaea", "chunithm", "maimaidx", "ongeki"].includes(gameGroup)) {
+		let displayVersion =
+			(chart?.data as any).displayVersion ?? (song.data as any).displayVersion;
+		if (gameGroup === "arcaea") {
+			displayVersion = `version ${displayVersion}`;
+		}
 		return (
 			<>
 				<IIDXStyleSongChartInfoFormat
 					{...{
-						song: song as SongDocument<"chunithm" | "maimaidx" | "ongeki">,
+						song: song as SongDocument<"arcaea" | "chunithm" | "maimaidx" | "ongeki">,
 						chart,
 						game,
 					}}
@@ -48,17 +53,9 @@ export default function SongChartInfoFormat({
 								prefix="Internal Level: "
 							/>
 						</h6>
-						{"displayVersion" in chart.data ? (
-							<h6>
-								<Muted>From {chart.data.displayVersion}</Muted>
-							</h6>
-						) : (
-							"displayVersion" in song.data && (
-								<h6>
-									<Muted>From {song.data.displayVersion}</Muted>
-								</h6>
-							)
-						)}
+						<h6>
+							<Muted>From {displayVersion}</Muted>
+						</h6>
 					</>
 				)}
 			</>
