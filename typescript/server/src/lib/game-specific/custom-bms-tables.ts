@@ -10,7 +10,7 @@ import {
 	GetFoldersFromTable,
 	GetTableForIDGuaranteed,
 } from "#utils/folder";
-import { GetRecentUGPTScores } from "#utils/queries/scores";
+import { GetRecentUGPTHighlights, GetRecentUGPTScores } from "#utils/queries/scores";
 import { REQ_GetGame, REQ_GetUser } from "#utils/req-tachi-data";
 import { type BMSTableHead, LoadBMSTable, type RawBMSTableEntry } from "bms-table-loader";
 import path from "path";
@@ -112,7 +112,7 @@ export type TachiBMSTable = {
 				game: GamesForGroup["bms"],
 			) => Promise<Array<RawBMSTableEntry>>;
 			// like, say, their rivals scores or something.
-			// then the callbacks need to recieve that info.
+			// then the callbacks need to receive that info.
 			getLevelOrder: (
 				userID: integer,
 				game: GamesForGroup["bms"],
@@ -163,7 +163,7 @@ function GetUserID(req: Request) {
 
 /**
  * Handle a request for a bms table. This endpoint should return "HTML" with the caveat
- * that atleast one of the lines should refer to a "bmstable" meta header.
+ * that at least one of the lines should refer to a "bmstable" meta header.
  */
 export function HandleBMSTableHTMLRequest(bmsTable: TachiBMSTable, req: Request, res: Response) {
 	let absURL;
@@ -417,7 +417,7 @@ export const CUSTOM_TACHI_BMS_TABLES: Array<TachiBMSTable> = [
 
 				promises.push(
 					(async () => {
-						const scores = await GetRecentUGPTScores(rival.id, game);
+						const scores = await GetRecentUGPTHighlights(rival.id, game);
 
 						const data = await GetRelevantSongsAndCharts(scores);
 						const charts = data.charts as unknown as Array<
