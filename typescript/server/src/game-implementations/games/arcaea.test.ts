@@ -8,7 +8,11 @@ import { mongoScoreDataToPg } from "#lib/v3/migration-tools";
 import DB from "#services/pg/db";
 import { dmf, mkMockPB, mkMockScore } from "#test-utils/misc";
 import { seedUser } from "#test-utils/pg-fixtures";
-import { TestingArcaeaSheriruthFTR, TestingArcaeaSheriruthPST, TestingArcaeaSheriruthSong } from "#test-utils/test-data";
+import {
+	TestingArcaeaSheriruthFTR,
+	TestingArcaeaSheriruthPST,
+	TestingArcaeaSheriruthSong,
+} from "#test-utils/test-data";
 import { UnixMillisecondsToISO8601 } from "#utils/time";
 import {
 	ARCAEA_GRADES,
@@ -322,9 +326,9 @@ describe("ARCAEA_IMPL", () => {
 				`Score cannot exceed ${10_000_000 + (chart.data.notecount ?? 0)} for this chart.`,
 			);
 
-			expect(ARCAEA_IMPL.chartSpecificValidators.score(10_001_152, chartWithoutNotecount)).toBe(
-				true
-			);
+			expect(
+				ARCAEA_IMPL.chartSpecificValidators.score(10_001_152, chartWithoutNotecount),
+			).toBe(true);
 		});
 	});
 });

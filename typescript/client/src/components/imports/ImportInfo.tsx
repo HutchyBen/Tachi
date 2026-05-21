@@ -87,10 +87,10 @@ export default function ImportInfo({
 	const importDoc = data.import;
 
 	const warningErrors = importDoc.errors.filter(
-		(e) => e.type === "SongOrChartNotFound" || e.type === "OrphanExists"
+		(e) => e.type === "SongOrChartNotFound" || e.type === "OrphanExists",
 	);
 	const hardErrors = importDoc.errors.filter(
-		(e) => e.type !== "SongOrChartNotFound" && e.type !== "OrphanExists"
+		(e) => e.type !== "SongOrChartNotFound" && e.type !== "OrphanExists",
 	);
 
 	return (
@@ -141,8 +141,8 @@ export default function ImportInfo({
 								<Alert variant="warning">
 									<strong>SongOrChartNotFound</strong> and{" "}
 									<strong>OrphanExists</strong> scores are{" "}
-									<strong>saved as orphans</strong> for nightly matching (around
-									1 AM UTC) or manual reprocess — see{" "}
+									<strong>saved as orphans</strong> for nightly matching (around 1
+									AM UTC) or manual reprocess — see{" "}
 									{user ? (
 										<Link to={`/u/${user.username}/orphans`}>
 											Orphan scores
@@ -167,13 +167,14 @@ export default function ImportInfo({
 												{r.orphanID !== undefined && (
 													<div className="mt-2 small text-muted">
 														{user ? (
-															<Link to={`/u/${user.username}/orphans`}>
+															<Link
+																to={`/u/${user.username}/orphans`}
+															>
 																Open orphan queue
 															</Link>
 														) : (
 															"Open orphan queue"
-														)}
-														{" "}
+														)}{" "}
 														(ID: <code>{r.orphanID}</code>)
 													</div>
 												)}
@@ -187,9 +188,9 @@ export default function ImportInfo({
 							<>
 								<h4>Errors</h4>
 								<Alert variant="danger">
-									Some of these errors might not be very useful. Depending on
-									how scores are matched with data, all we have to display might
-									be a hash.
+									Some of these errors might not be very useful. Depending on how
+									scores are matched with data, all we have to display might be a
+									hash.
 								</Alert>
 								<TachiTable
 									dataset={hardErrors}
