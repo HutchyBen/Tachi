@@ -8,6 +8,13 @@ for file in ./dev/fish-plugins/*
 	fisher install $file
 end
 
+# forgit's conf.d plugin resolves the git-forgit binary relative to its own
+# location, expecting it at <fish_config>/conf.d/bin/git-forgit. Fisher only
+# copies the .fish files, so we place the binary there manually.
+mkdir -p ~/.config/fish/conf.d/bin
+cp ./dev/fish-plugins/forgit/bin/git-forgit ~/.config/fish/conf.d/bin/git-forgit
+chmod +x ~/.config/fish/conf.d/bin/git-forgit
+
 tide configure --auto --style=Lean --prompt_colors='True color' --show_time='24-hour format' --lean_prompt_height='One line' --prompt_spacing=Compact --icons='Few icons' --transient=No
 
 cp ./dev/functions.fish ~/.config/fish/functions/functions.fish
