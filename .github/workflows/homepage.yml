@@ -44,4 +44,4 @@ jobs:
       - name: Deploy
         env:
           TACHI_HOST: ${{ secrets.TACHI_HOST }}
-        run: rsync --recursive --compress --delete --progress ./typescript/homepage/dist/. "ci@${TACHI_HOST}:/srv/tachi-static/homepage/"
+        run: rsync --recursive --compress --delete --progress --mkpath ./typescript/homepage/dist/. "ci@${TACHI_HOST}:/srv/tachi-static/homepage/"
