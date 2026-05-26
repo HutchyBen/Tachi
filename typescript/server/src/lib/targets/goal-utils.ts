@@ -268,7 +268,10 @@ export async function ValidateGoalChartsAndCriteria(
 	switch (config.type) {
 		case "DECIMAL":
 		case "INTEGER": {
-			if (config.chartDependentMax && charts.type !== "single") {
+			const allowFolderGoals =
+				config.chartDependentMax !== true || config.allowFolderGoalsIf?.(criteria.value);
+
+			if (!allowFolderGoals && charts.type !== "single") {
 				throw new Error(
 					`Creating ${criteria.key} goals on multiple charts where the maximum value is relative to the chart is a terrible idea, and has been disabled.`,
 				);
@@ -276,7 +279,7 @@ export async function ValidateGoalChartsAndCriteria(
 
 			let err;
 
-			if (config.chartDependentMax) {
+			if (!allowFolderGoals) {
 				const chart = await GetChartByIdForGame(game, charts.data as string);
 
 				if (!chart) {
@@ -288,6 +291,7 @@ export async function ValidateGoalChartsAndCriteria(
 				// @ts-expect-error this is fine leave me alone
 				err = gptImpl.chartSpecificValidators[criteria.key](criteria.value, chart);
 			} else {
+				// @ts-expect-error if allowFolderGoals is true, validate has to exist, and tsc's opinion has no weight here.
 				err = config.validate(criteria.value);
 			}
 

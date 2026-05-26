@@ -1,3 +1,4 @@
+import { p } from "prudence";
 import { z } from "zod";
 
 import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
@@ -48,6 +49,8 @@ export const GAME_ARCAEA_CONF = {
 		score: {
 			type: "INTEGER",
 			chartDependentMax: true,
+			validate: p.isPositiveInteger,
+			allowFolderGoalsIf: (v: number) => v < 10_000_000,
 			formatter: FmtNum,
 			description:
 				"The score value. This is between 0 and 10 million, plus bonus points dependent on how many shiny PUREs you get.",

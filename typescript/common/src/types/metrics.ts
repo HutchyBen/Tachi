@@ -45,6 +45,7 @@ interface ConfDecimalScoreMetricChartDependent {
 	 * @example: IIDX's EX Score is upperbounded at 2x the chart's notecount.
 	 */
 	chartDependentMax: true;
+	allowFolderGoalsIf?: never;
 }
 
 interface ConfIntegerScoreMetricChartDependent {
@@ -57,14 +58,51 @@ interface ConfIntegerScoreMetricChartDependent {
 	 * @example: IIDX's EX Score is upperbounded at 2x the chart's notecount.
 	 */
 	chartDependentMax: true;
+	allowFolderGoalsIf?: never;
+}
+
+interface ConfDecimalScoreMetricChartDependentWithExemption {
+	type: "DECIMAL";
+	formatter: (v: number) => string;
+	validate: (v: number) => string | true;
+
+	/**
+	 * When the value is chart dependent,
+	 * should folder-wide goals be allowed conditionally?
+	 *
+	 * @example:
+	 * Arcaea's score is upperbounded at 10M+notecount, but scores below 10M
+	 * behave as if the max was 10M.
+	 */
+	allowFolderGoalsIf: (v: number) => boolean;
+	chartDependentMax: true;
+}
+
+interface ConfIntegerScoreMetricChartDependentWithExemption {
+	type: "INTEGER";
+	formatter: (v: number) => string;
+	validate: (v: number) => string | true;
+
+	/**
+	 * When the value is chart dependent,
+	 * should folder-wide goals be allowed conditionally?
+	 *
+	 * @example:
+	 * Arcaea's score is upperbounded at 10M+notecount, but scores below 10M
+	 * behave as if the max was 10M.
+	 */
+	allowFolderGoalsIf: (v: number) => boolean;
+	chartDependentMax: true;
 }
 
 export type ConfDecimalScoreMetric =
 	| ConfDecimalScoreMetricChartDependent
+	| ConfDecimalScoreMetricChartDependentWithExemption
 	| ConfDecimalScoreMetricNormal;
 
 export type ConfIntegerScoreMetric =
 	| ConfIntegerScoreMetricChartDependent
+	| ConfIntegerScoreMetricChartDependentWithExemption
 	| ConfIntegerScoreMetricNormal;
 
 /**
