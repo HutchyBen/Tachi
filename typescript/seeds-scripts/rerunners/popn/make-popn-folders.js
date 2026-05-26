@@ -1,7 +1,8 @@
 import { Command } from "commander";
 
-import { GetGamePTConfig } from "../../../common/src/index.ts";
-import { CreateFolderID, MutateCollection } from "../../util.js";
+import { GetGameConfig } from "../../../common/src/index.ts";
+import { CreateFolderID, MutateCollection, CreateTableID } from "../../util.js";
+import { Random20Hex } from "../../../server/src/utils/misc.ts";
 
 const tableMainFolders = [];
 const tableAllFolders = [];
@@ -12,7 +13,8 @@ program.requiredOption("-v, --version <version>");
 program.parse(process.argv);
 const options = program.opts();
 
-const fmtVersion = GetGamePTConfig("popn", "9B").versions[options.version];
+//const fmtVersion = GetGamePTConfig("popn", "9B").versions[options.version];
+const fmtVersion = GetGameConfig("popn").versions[options.version];
 
 MutateCollection("folders.json", (folders) => {
 	for (let i = 0; i < 3; i++) {
@@ -20,52 +22,45 @@ MutateCollection("folders.json", (folders) => {
 		const ub = 10 * (i + 1) - 1;
 
 		const folder = {
-			data: {
-				levelNum: {
-					"~gte": lb,
-					"~lte": ub,
-				},
-				versions: options.version,
-			},
 			game: "popn",
 			inactive: false,
-			playtype: "9B",
+			legacyFolderID: Random20Hex(),
 			searchTerms: [],
+			slug: `ge-${lb}-le-${ub}-${options.version}`,
 			title: `Level ${lb}-${ub} (${fmtVersion})`,
-			type: "charts",
+			versionFilter: [options.version],
+			where: `chart.level_num >= ${lb} AND chart.level_num <= ${ub}`,
 		};
 
 		const folderID = CreateFolderID(folder.data, "popn", "9B");
 
-		folder.folderID = folderID;
+		folder.id = folderID;
 
-		tableMainFolders.push(folderID);
+		tableMainFolders.push(folder.slug);
 		folders.push(folder);
 	}
 
 	for (let i = 1; i <= 50; i++) {
 		const folder = {
-			data: {
-				level: i.toString(),
-				versions: options.version,
-			},
 			game: "popn",
 			inactive: false,
-			playtype: "9B",
+			legacyFolderID: Random20Hex(),
 			searchTerms: [],
+			slug: `${i}-${options.version}`,
 			title: `Level ${i} (${fmtVersion})`,
-			type: "charts",
+			versionFilter: [options.version],
+			where: `chart.level = '${i}'`,
 		};
 
 		const folderID = CreateFolderID(folder.data, "popn", "9B");
 
-		folder.folderID = folderID;
+		folder.id = folderID;
 
 		if (i > 30) {
-			tableMainFolders.push(folderID);
+			tableMainFolders.push(folder.slug);
 		}
 
-		tableAllFolders.push(folderID);
+		tableAllFolders.push(folder.slug);
 
 		folders.push(folder);
 	}
@@ -79,9 +74,9 @@ MutateCollection("tables.json", (tables) => {
 		description: `All pop'n ${fmtVersion} levels individually.`,
 		folders: tableAllFolders,
 		game: "popn",
+		id: CreateTableID(),
 		inactive: false,
-		playtype: "9B",
-		tableID: `popn-9B-${options.version}-alllevels`,
+		legacyTableID: `popn-9B-${options.version}-alllevels`,
 		title: `Pop'n Music ${fmtVersion} All Levels`,
 	});
 
@@ -91,8 +86,8 @@ MutateCollection("tables.json", (tables) => {
 		folders: tableMainFolders,
 		game: "popn",
 		inactive: false,
-		playtype: "9B",
-		tableID: `popn-9B-${options.version}-levels`,
+		id: CreateTableID(),
+		legacyTableID: `popn-9B-${options.version}-levels`,
 		title: `Pop'n Music ${fmtVersion} Levels`,
 	});
 

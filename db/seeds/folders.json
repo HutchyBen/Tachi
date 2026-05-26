@@ -47183,6 +47183,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe77b1733440",
+		"inactive": false,
+		"legacyFolderID": "f6d5080268213cad18b4841753ece892bc6d5c55",
+		"searchTerms": [],
+		"slug": "1-jamfizz",
+		"title": "Level 1 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '1'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2a8d99bbcc",
 		"inactive": false,
 		"legacyFolderID": "F1dae653d7e838a57ccbb14ee7b5b2fce52427edad023fe5892ae70e46c512881",
@@ -47219,6 +47232,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '1'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe7774eff97d",
+		"inactive": false,
+		"legacyFolderID": "0efce1a9f04e876a2f8122cabd2cad8084d48f91",
+		"searchTerms": [],
+		"slug": "ge-1-le-9-jamfizz",
+		"title": "Level 1-9 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level_num >= 1 AND chart.level_num <= 9"
 	},
 	{
 		"game": "popn",
@@ -47261,6 +47287,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe7883bc0f8b",
+		"inactive": false,
+		"legacyFolderID": "4848e0671811e896bdbbbfded09532955122381c",
+		"searchTerms": [],
+		"slug": "10-jamfizz",
+		"title": "Level 10 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '10'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2aee3d38a1",
 		"inactive": false,
 		"legacyFolderID": "F0f11e1a4b39aeaaa7b381992c6a404e3eb5fc338f22c0e8b60446dd96f1294ed",
@@ -47297,6 +47336,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '10'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe772825db71",
+		"inactive": false,
+		"legacyFolderID": "39422e3db13b1165409c11a1246a93ccf60feb1e",
+		"searchTerms": [],
+		"slug": "ge-10-le-19-jamfizz",
+		"title": "Level 10-19 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level_num >= 10 AND chart.level_num <= 19"
 	},
 	{
 		"game": "popn",
@@ -47339,6 +47391,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe78a2edf506",
+		"inactive": false,
+		"legacyFolderID": "999d50b1c603ef34e8c6a8306dcd02c0fede5f23",
+		"searchTerms": [],
+		"slug": "11-jamfizz",
+		"title": "Level 11 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '11'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2a009c762d",
 		"inactive": false,
 		"legacyFolderID": "F61fd802646e66e09f154f0cd5a77da11c499d83538b305175b636b6ba819433a",
@@ -47375,6 +47440,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '11'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe787a249cc9",
+		"inactive": false,
+		"legacyFolderID": "74d07932caa8d8db195ecbcef83a39bb8aad080c",
+		"searchTerms": [],
+		"slug": "12-jamfizz",
+		"title": "Level 12 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '12'"
 	},
 	{
 		"game": "popn",
@@ -47417,6 +47495,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe782547dda9",
+		"inactive": false,
+		"legacyFolderID": "7d803adf08a16da5c36171c8c45d05069a39919a",
+		"searchTerms": [],
+		"slug": "13-jamfizz",
+		"title": "Level 13 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '13'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2ad240bc82",
 		"inactive": false,
 		"legacyFolderID": "F17c6326cbbd0cfa8f4c68150cb2f858cc9c05a6397390f1f28b2105cb1265a33",
@@ -47453,6 +47544,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '13'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe78fe175c37",
+		"inactive": false,
+		"legacyFolderID": "5580f536958dbe7fc10626ed1d9eed3013fd3aa2",
+		"searchTerms": [],
+		"slug": "14-jamfizz",
+		"title": "Level 14 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '14'"
 	},
 	{
 		"game": "popn",
@@ -47495,6 +47599,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe784c6ee699",
+		"inactive": false,
+		"legacyFolderID": "897b456b5b146b2cbad37db8d2b5f39abbd1482d",
+		"searchTerms": [],
+		"slug": "15-jamfizz",
+		"title": "Level 15 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '15'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2a8fa8aa41",
 		"inactive": false,
 		"legacyFolderID": "F22619e6dd83962e6293c7a23b16be7c9a49f66b89716ae910827c30ae080feb2",
@@ -47531,6 +47648,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '15'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe78b2ef749c",
+		"inactive": false,
+		"legacyFolderID": "63012fa513eea13ce0ebec32747f4c03ad81e268",
+		"searchTerms": [],
+		"slug": "16-jamfizz",
+		"title": "Level 16 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '16'"
 	},
 	{
 		"game": "popn",
@@ -47573,6 +47703,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe7846506e88",
+		"inactive": false,
+		"legacyFolderID": "f4e74ec8d9ba6bedf8d9d5c7c9feab1a38b395e3",
+		"searchTerms": [],
+		"slug": "17-jamfizz",
+		"title": "Level 17 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '17'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2a3ddca401",
 		"inactive": false,
 		"legacyFolderID": "Fe4eb0073eb309411d3c1f9a9f51e4fd0f8735c942b076a59e35b6b5b424adf1f",
@@ -47609,6 +47752,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '17'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe78f364bad2",
+		"inactive": false,
+		"legacyFolderID": "8be8693d7e217170aeeda8c67721bbbcbf3a039e",
+		"searchTerms": [],
+		"slug": "18-jamfizz",
+		"title": "Level 18 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '18'"
 	},
 	{
 		"game": "popn",
@@ -47651,6 +47807,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe78a05a31c7",
+		"inactive": false,
+		"legacyFolderID": "25536a2995232fad9f04d561c96714e91844843a",
+		"searchTerms": [],
+		"slug": "19-jamfizz",
+		"title": "Level 19 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '19'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2afe12628d",
 		"inactive": false,
 		"legacyFolderID": "F28d4ee9a9a3ba52245db773a56a669b974f5031905761a9c12d7f2c4034a2c9d",
@@ -47687,6 +47856,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '19'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe7865d0e5d4",
+		"inactive": false,
+		"legacyFolderID": "8c3c0e4de6fa144144024a88604b6551f820b149",
+		"searchTerms": [],
+		"slug": "2-jamfizz",
+		"title": "Level 2 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '2'"
 	},
 	{
 		"game": "popn",
@@ -47729,6 +47911,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe78a7240441",
+		"inactive": false,
+		"legacyFolderID": "6e9a6c40f41a7a7efe79f817cd60a761c54e823a",
+		"searchTerms": [],
+		"slug": "20-jamfizz",
+		"title": "Level 20 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '20'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2afc54b488",
 		"inactive": false,
 		"legacyFolderID": "F2b0872b14c2bc785242151d12d62cc5c76ea0795db834879d07946111f781471",
@@ -47765,6 +47960,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '20'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe77ebd84ca3",
+		"inactive": false,
+		"legacyFolderID": "35e9130ea16604c136a14002512cbd8d35f4e060",
+		"searchTerms": [],
+		"slug": "ge-20-le-29-jamfizz",
+		"title": "Level 20-29 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level_num >= 20 AND chart.level_num <= 29"
 	},
 	{
 		"game": "popn",
@@ -47807,6 +48015,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe789e2303bc",
+		"inactive": false,
+		"legacyFolderID": "f10d71eab06ed7fb36b368b5c8572735042b91a8",
+		"searchTerms": [],
+		"slug": "21-jamfizz",
+		"title": "Level 21 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '21'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2aaaaf96c4",
 		"inactive": false,
 		"legacyFolderID": "F8752d62cd659c58dab58983751b4e34c04edb8ff9b34aef48fb90884a709b669",
@@ -47843,6 +48064,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '21'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe78bc6d2968",
+		"inactive": false,
+		"legacyFolderID": "74ea5636e719467bb684e38aa94fdf3fb05af090",
+		"searchTerms": [],
+		"slug": "22-jamfizz",
+		"title": "Level 22 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '22'"
 	},
 	{
 		"game": "popn",
@@ -47885,6 +48119,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe7809d54ba3",
+		"inactive": false,
+		"legacyFolderID": "7c49d9641530c895d998921e6c5a9cc078ee4250",
+		"searchTerms": [],
+		"slug": "23-jamfizz",
+		"title": "Level 23 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '23'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2a9dd85142",
 		"inactive": false,
 		"legacyFolderID": "F970a7358d34084758327b813803f92dac807a70fe1709ce0a9c160c96fce8689",
@@ -47921,6 +48168,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '23'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe788989a2ea",
+		"inactive": false,
+		"legacyFolderID": "e9540e81600c6bebe9f9f5257e1b0debd983723a",
+		"searchTerms": [],
+		"slug": "24-jamfizz",
+		"title": "Level 24 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '24'"
 	},
 	{
 		"game": "popn",
@@ -47963,6 +48223,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe78d623b226",
+		"inactive": false,
+		"legacyFolderID": "dcc10da69155c6a100f5d9954405339857c3b1f7",
+		"searchTerms": [],
+		"slug": "25-jamfizz",
+		"title": "Level 25 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '25'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2a0841e4a5",
 		"inactive": false,
 		"legacyFolderID": "Ff7c0ee7932747e06a620bd7cedef3e8c152907411c827f38c3e20512d761b7cf",
@@ -47999,6 +48272,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '25'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe78007d0a8f",
+		"inactive": false,
+		"legacyFolderID": "294164627756ba1aa36f931c6339b3714ed23bfd",
+		"searchTerms": [],
+		"slug": "26-jamfizz",
+		"title": "Level 26 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '26'"
 	},
 	{
 		"game": "popn",
@@ -48041,6 +48327,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe78b1dfa7e5",
+		"inactive": false,
+		"legacyFolderID": "ed9cd397b697fc6674b9f2ed62ef30f2944cd498",
+		"searchTerms": [],
+		"slug": "27-jamfizz",
+		"title": "Level 27 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '27'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2a171ef1e7",
 		"inactive": false,
 		"legacyFolderID": "F0d51a947cc3c4e03aece3bf2567d50c47fc549b4d7d670686e03dff46347cbf4",
@@ -48077,6 +48376,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '27'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe78933f9442",
+		"inactive": false,
+		"legacyFolderID": "ff8db743a0eb26cbf10728c4f7bb28348c86d8d2",
+		"searchTerms": [],
+		"slug": "28-jamfizz",
+		"title": "Level 28 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '28'"
 	},
 	{
 		"game": "popn",
@@ -48119,6 +48431,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe7811ebec67",
+		"inactive": false,
+		"legacyFolderID": "25d9373edbc50c1bb4a3b4a35e756a6aeb625fcf",
+		"searchTerms": [],
+		"slug": "29-jamfizz",
+		"title": "Level 29 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '29'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2ad5863482",
 		"inactive": false,
 		"legacyFolderID": "Fc98f1d18f832c8914e4c8c028cbbb3cf13622ccc645c2771dd6284af43364abb",
@@ -48155,6 +48480,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '29'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe7874beaf0d",
+		"inactive": false,
+		"legacyFolderID": "e2cc26795d09a0f57d7f3703350b7b1ff118d36c",
+		"searchTerms": [],
+		"slug": "3-jamfizz",
+		"title": "Level 3 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '3'"
 	},
 	{
 		"game": "popn",
@@ -48197,6 +48535,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe788c5598c8",
+		"inactive": false,
+		"legacyFolderID": "8f96669282d83a851b22da05fc2707d06d0fe897",
+		"searchTerms": [],
+		"slug": "30-jamfizz",
+		"title": "Level 30 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '30'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2a8b77af3e",
 		"inactive": false,
 		"legacyFolderID": "F6486f668e7be8be24da029b029ce056502e87845b5e52cecdc733518998e266e",
@@ -48233,6 +48584,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '30'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe7881fbfd5c",
+		"inactive": false,
+		"legacyFolderID": "9236971a5911e869b24ba70dbd94ee8e6d1160ac",
+		"searchTerms": [],
+		"slug": "31-jamfizz",
+		"title": "Level 31 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '31'"
 	},
 	{
 		"game": "popn",
@@ -48275,6 +48639,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe7878cfb617",
+		"inactive": false,
+		"legacyFolderID": "1741cc78ae0ed89e0c2f1ae96ebe56dfadf8b76e",
+		"searchTerms": [],
+		"slug": "32-jamfizz",
+		"title": "Level 32 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '32'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2a775e12ff",
 		"inactive": false,
 		"legacyFolderID": "F36fc553d7aad23757645205b9dba495b03b098aaf71bc1ec33a7d49ef56fed65",
@@ -48311,6 +48688,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '32'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe78142259e8",
+		"inactive": false,
+		"legacyFolderID": "c9151ba57f1cc8e4bba9af6cc48b6eaa2012cdc3",
+		"searchTerms": [],
+		"slug": "33-jamfizz",
+		"title": "Level 33 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '33'"
 	},
 	{
 		"game": "popn",
@@ -48353,6 +48743,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe78b4d44d93",
+		"inactive": false,
+		"legacyFolderID": "81892e3d8caf9c40bbd1b0bd8bcb15e071fc8b40",
+		"searchTerms": [],
+		"slug": "34-jamfizz",
+		"title": "Level 34 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '34'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2abb8e1889",
 		"inactive": false,
 		"legacyFolderID": "F21e5707dc75c21b07d9d674d24fa5325717474a9d11489bcd55402a87fa8e4b8",
@@ -48389,6 +48792,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '34'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe783a291952",
+		"inactive": false,
+		"legacyFolderID": "f10b8d53bc095be6c38fc33478d85a87232ec0d1",
+		"searchTerms": [],
+		"slug": "35-jamfizz",
+		"title": "Level 35 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '35'"
 	},
 	{
 		"game": "popn",
@@ -48431,6 +48847,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe782e44fe4f",
+		"inactive": false,
+		"legacyFolderID": "0f1e7a61dc0d59c75f2b585c0b07b69ca88cc146",
+		"searchTerms": [],
+		"slug": "36-jamfizz",
+		"title": "Level 36 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '36'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2a522de128",
 		"inactive": false,
 		"legacyFolderID": "Fb09463053139d58ec87d5b7df565d97531368f22a638f38be13bf90e8a9fa306",
@@ -48467,6 +48896,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '36'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe7817de03e2",
+		"inactive": false,
+		"legacyFolderID": "450515ad89fa83e4cc5f4ddcca9fc1a64edaf272",
+		"searchTerms": [],
+		"slug": "37-jamfizz",
+		"title": "Level 37 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '37'"
 	},
 	{
 		"game": "popn",
@@ -48509,6 +48951,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe782c109db8",
+		"inactive": false,
+		"legacyFolderID": "1eb7101d30e5bbd2891782f3b66cf4e7a6de02f5",
+		"searchTerms": [],
+		"slug": "38-jamfizz",
+		"title": "Level 38 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '38'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2aa7aff75d",
 		"inactive": false,
 		"legacyFolderID": "F1157602c6e4c9fe94e3be01d92ecb80a71fa5b8bd2a98ab35bdf0726a497176a",
@@ -48545,6 +49000,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '38'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe78e3e9e69a",
+		"inactive": false,
+		"legacyFolderID": "a65ac2586605a2d0f24be2dadd362cc75ee046d6",
+		"searchTerms": [],
+		"slug": "39-jamfizz",
+		"title": "Level 39 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '39'"
 	},
 	{
 		"game": "popn",
@@ -48587,6 +49055,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe7891c724f0",
+		"inactive": false,
+		"legacyFolderID": "714897f039742a5138d05ee493cf5739025164c3",
+		"searchTerms": [],
+		"slug": "4-jamfizz",
+		"title": "Level 4 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '4'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2ad37780fb",
 		"inactive": false,
 		"legacyFolderID": "Fcc3acdd57f1921b9fa14fa67a7a2f3ad9aca1899dd22c3d5970f4216adcb2f33",
@@ -48623,6 +49104,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '4'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe78ffca757b",
+		"inactive": false,
+		"legacyFolderID": "26a46fb38fc040519d717158adb487f9fab9d900",
+		"searchTerms": [],
+		"slug": "40-jamfizz",
+		"title": "Level 40 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '40'"
 	},
 	{
 		"game": "popn",
@@ -48665,6 +49159,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe7858771ddc",
+		"inactive": false,
+		"legacyFolderID": "bd83fb6805162243b8ff7954906e2f639c01bd23",
+		"searchTerms": [],
+		"slug": "41-jamfizz",
+		"title": "Level 41 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '41'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2a0ca09c76",
 		"inactive": false,
 		"legacyFolderID": "Fcaa2b6198bc080a99ad618c6d98c41f22482582850b9d6d9205590bcccad3527",
@@ -48701,6 +49208,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '41'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe789d592cdf",
+		"inactive": false,
+		"legacyFolderID": "7cbf75c68c68443b6e8803a49f44bd79bbedacf4",
+		"searchTerms": [],
+		"slug": "42-jamfizz",
+		"title": "Level 42 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '42'"
 	},
 	{
 		"game": "popn",
@@ -48743,6 +49263,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe7829b1f56a",
+		"inactive": false,
+		"legacyFolderID": "e0fe3fc37407f2a964aca86ec3ce9e3e351a60b9",
+		"searchTerms": [],
+		"slug": "43-jamfizz",
+		"title": "Level 43 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '43'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2ae112a6d6",
 		"inactive": false,
 		"legacyFolderID": "Fa1a38915d082711fba913f58eeb80257f28d773d958a0e02982dd9c4afce0d2d",
@@ -48779,6 +49312,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '43'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe7809cead83",
+		"inactive": false,
+		"legacyFolderID": "14639606855379846eac5fc0c46f31c15f8fed4b",
+		"searchTerms": [],
+		"slug": "44-jamfizz",
+		"title": "Level 44 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '44'"
 	},
 	{
 		"game": "popn",
@@ -48821,6 +49367,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe78aee9959f",
+		"inactive": false,
+		"legacyFolderID": "db431cfa63cea4566ad050fbc35498d7c47afb3f",
+		"searchTerms": [],
+		"slug": "45-jamfizz",
+		"title": "Level 45 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '45'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2af8f23285",
 		"inactive": false,
 		"legacyFolderID": "F91067d7ae22988498783332ea93885f7e982887a361d85207b5579075bc8597f",
@@ -48857,6 +49416,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '45'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe7834587e67",
+		"inactive": false,
+		"legacyFolderID": "24c2cae3d0c2ccf5bb6f078b59b64c329eaf40cd",
+		"searchTerms": [],
+		"slug": "46-jamfizz",
+		"title": "Level 46 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '46'"
 	},
 	{
 		"game": "popn",
@@ -48899,6 +49471,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe78e16b9bf1",
+		"inactive": false,
+		"legacyFolderID": "9f94313ed976c7f057fbab563075478e1b6572b3",
+		"searchTerms": [],
+		"slug": "47-jamfizz",
+		"title": "Level 47 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '47'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2ab14491ad",
 		"inactive": false,
 		"legacyFolderID": "Fb397b4b6ce019e9504c48115d5dc6946bd994f0eb7ad86641e05d43b5c955667",
@@ -48935,6 +49520,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '47'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe787ce95fdd",
+		"inactive": false,
+		"legacyFolderID": "6e6d9c50152fb8c944a0cde437efce6b0c193e9d",
+		"searchTerms": [],
+		"slug": "48-jamfizz",
+		"title": "Level 48 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '48'"
 	},
 	{
 		"game": "popn",
@@ -48977,6 +49575,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe78babb01dd",
+		"inactive": false,
+		"legacyFolderID": "25eb8e280dec7fd8064d20f2bc0838324c5d1a2c",
+		"searchTerms": [],
+		"slug": "49-jamfizz",
+		"title": "Level 49 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '49'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2a790622d6",
 		"inactive": false,
 		"legacyFolderID": "F42456cc1261922631b71ef772314c33e6e46f7ef0a1945f754087170bc3fd0f1",
@@ -49013,6 +49624,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '49'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe784a4b66ec",
+		"inactive": false,
+		"legacyFolderID": "a80978f54ded4aebca6e183a26ac6bea72969300",
+		"searchTerms": [],
+		"slug": "5-jamfizz",
+		"title": "Level 5 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '5'"
 	},
 	{
 		"game": "popn",
@@ -49055,6 +49679,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe788d90ec5a",
+		"inactive": false,
+		"legacyFolderID": "0c36ba79e85ed4bda99f2bc528403d61255348c9",
+		"searchTerms": [],
+		"slug": "50-jamfizz",
+		"title": "Level 50 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '50'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2af7e6fc1f",
 		"inactive": false,
 		"legacyFolderID": "Fa705e7e3062ccbf291f63b77cdcc478a1f86646152662aa262cd660ffa787c46",
@@ -49091,6 +49728,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '50'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe78c01e8d97",
+		"inactive": false,
+		"legacyFolderID": "99c85378e5d7b9637c63356f89ea40ef8f7a13b4",
+		"searchTerms": [],
+		"slug": "6-jamfizz",
+		"title": "Level 6 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '6'"
 	},
 	{
 		"game": "popn",
@@ -49133,6 +49783,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe789db68072",
+		"inactive": false,
+		"legacyFolderID": "4add3f269ce5adafacdc442d95c104a61aafdc83",
+		"searchTerms": [],
+		"slug": "7-jamfizz",
+		"title": "Level 7 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '7'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2ac5a7acdc",
 		"inactive": false,
 		"legacyFolderID": "F30ed1f9b36aac7140a64ee678bfd437f851e49302ea21eae114dd32c356094b9",
@@ -49172,6 +49835,19 @@
 	},
 	{
 		"game": "popn",
+		"id": "F19e5b4ffe782f321791",
+		"inactive": false,
+		"legacyFolderID": "99d9f6c317e32479b9e6d2035ed7fd92b3c22f89",
+		"searchTerms": [],
+		"slug": "8-jamfizz",
+		"title": "Level 8 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '8'"
+	},
+	{
+		"game": "popn",
 		"id": "F19d35f0cf2aa285aa9f",
 		"inactive": false,
 		"legacyFolderID": "F6fc6baff173adb843554e8aa9b17124e2b6f140ba61dbe0fd80ce5ec40babb99",
@@ -49208,6 +49884,19 @@
 			"unilab"
 		],
 		"where": "chart.level = '8'"
+	},
+	{
+		"game": "popn",
+		"id": "F19e5b4ffe783cebd90f",
+		"inactive": false,
+		"legacyFolderID": "0ce48bce18ec24f711030fb68c6a8c25ee463b83",
+		"searchTerms": [],
+		"slug": "9-jamfizz",
+		"title": "Level 9 (Jam & Fizz)",
+		"versionFilter": [
+			"jamfizz"
+		],
+		"where": "chart.level = '9'"
 	},
 	{
 		"game": "popn",

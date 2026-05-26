@@ -1,8 +1,10 @@
 import { Command } from "commander";
 import fs from "fs";
+import { Random20Hex } from "../../../server/src/utils/misc.js";
 
 import {
 	CreateChartID,
+	CreateSongID,
 	GetFreshSongIDGenerator,
 	ReadCollection,
 	WriteCollection,
@@ -20,7 +22,14 @@ const data = JSON.parse(fs.readFileSync(options.file));
 const curCharts = ReadCollection("charts-popn.json");
 
 const existingSongs = new Map(curCharts.map((e) => [e.data.inGameID, e.songID]));
-const existingCharts = new Map(curCharts.map((e) => [e.data.hashSHA256, e]));
+const existingCharts = new Map(
+	curCharts.flatMap((e) => {
+		if (Array.isArray(e.data.hashSHA256)) {
+			return e.data.hashSHA256.map((hash) => [hash, e]);
+		}
+		return [[e.data.hashSHA256, e]];
+	}),
+);
 
 const songs = [];
 const charts = [];
@@ -44,7 +53,7 @@ for (const song of data) {
 	let songID = existingSongs.get(index);
 
 	if (!songID) {
-		songID = getNewSongID();
+		songID = CreateSongID();
 		songs.push({
 			altTitles: [],
 			artist: song.artist,
@@ -54,6 +63,7 @@ for (const song of data) {
 				genreEN: null,
 			},
 			id: songID,
+			legacySongID: index,
 			searchTerms: [],
 			title,
 		});
@@ -74,6 +84,10 @@ for (const song of data) {
 				existingChart.versions.push(options.version);
 			}
 
+			// update difficulty
+			existingChart.levelNum = chart.level;
+			existingChart.level = chart.level.toString();
+
 			// don't add a new chart, just update versions
 			continue;
 		}
@@ -83,7 +97,7 @@ for (const song of data) {
 			(curchart) =>
 				curchart.data.inGameID === song.music_entry &&
 				curchart.difficulty === chart.difficulty &&
-				curchart.levelNum === chart.level,
+				curchart.levelNum === chart.levelNum,
 		);
 		if (existingChartManual) {
 			// it means the chart hash has changed, but the chart did not get rerated.
@@ -94,7 +108,9 @@ for (const song of data) {
 				existingChartManual.versions.push(options.version);
 			}
 			if (Array.isArray(existingChartManual.data.hashSHA256)) {
-				existingChartManual.data.hashSHA256.push(chart.hash);
+				if (!existingChartManual.data.hashSHA256.includes(chart.hash)) {
+					existingChartManual.data.hashSHA256.push(chart.hash);
+				}
 			} else {
 				const newHashes = [existingChartManual.data.hashSHA256, chart.hash];
 				existingChartManual.data.hashSHA256 = newHashes;
@@ -103,7 +119,6 @@ for (const song of data) {
 		}
 
 		charts.push({
-			chartID: CreateChartID(),
 			data: {
 				hashSHA256: chart.hash,
 				inGameID: index,
@@ -113,10 +128,11 @@ for (const song of data) {
 				chart.difficulty === "EX"
 					? "EX"
 					: chart.difficulty[0] + chart.difficulty.slice(1).toLowerCase(),
+			id: CreateChartID(),
 			isPrimary: true,
+			legacyChartID: Random20Hex(),
 			level: chart.level.toString(),
 			levelNum: chart.level,
-			playtype: "9B",
 			songID,
 			versions: [options.version],
 		});
@@ -126,4 +142,4 @@ for (const song of data) {
 const curSongs = ReadCollection("songs-popn.json");
 
 WriteCollection("songs-popn.json", [...curSongs, ...songs]);
-WriteCollection("charts-popn.json", [...existingCharts.values(), ...charts]);
+WriteCollection("charts-popn.json", [...new Set(existingCharts.values()), ...charts]);

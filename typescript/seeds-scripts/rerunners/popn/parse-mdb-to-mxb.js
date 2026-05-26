@@ -45,14 +45,25 @@ function getDiffForIdx(idx) {
 const valid_diffs = ["ep", "np", "hp", "op"];
 
 function getSha256ForChart(filename, folder, idx) {
+	// Check if there's a patched version first
 	let filepath = path.join(
 		options.data,
 		"data",
 		"sd",
 		folder,
-		`${filename}_ifs`,
+		`${filename}_diff_ifs`,
 		`${filename}_${idx}.bin`,
 	);
+	if (!fs.existsSync(filepath)) {
+		filepath = path.join(
+			options.data,
+			"data",
+			"sd",
+			folder,
+			`${filename}_ifs`,
+			`${filename}_${idx}.bin`,
+		);
+	}
 
 	if (filename === "tour" && idx === "op") {
 		// silly workaround for one song which is in another directory for no fucking reason

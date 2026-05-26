@@ -144,6 +144,7 @@ export const GAME_POPN_CONF = {
 		peace: "peace",
 		kaimei: "Kaimei Riddles",
 		unilab: "Unilab",
+		jamfizz: "Jam & Fizz",
 	},
 
 	chartData: z.strictObject({
