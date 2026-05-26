@@ -18,6 +18,14 @@ export type GPTEnumColours<GPT extends V3Game> = {
 	[M in ExtractEnumMetricNames<ConfScoreMetrics[GPT]>]: Record<GetEnumValue<GPT, M>, string>;
 };
 
+export type GPTEnumFormatters<GPT extends V3Game> = {
+	[M in ExtractEnumMetricNames<ConfScoreMetrics[GPT]>]?: Record<
+		// @ts-expect-error I am not worried
+		GetEnumValue<GPT, M>,
+		JSX.Element
+	>;
+};
+
 export type GPTEnumIcons<GPT extends V3Game> = {
 	[M in ExtractEnumMetricNames<ConfScoreMetrics[GPT]>]: string;
 };
@@ -78,6 +86,8 @@ export type GPTClassColours<GPT extends V3Game> = {
 
 export interface GPTClientImplementation<GPT extends V3Game = V3Game> {
 	enumColours: GPTEnumColours<GPT>;
+
+	enumFormatters?: GPTEnumFormatters<GPT>;
 
 	/**
 	 * Fontawesome Icons to use next to enum names.

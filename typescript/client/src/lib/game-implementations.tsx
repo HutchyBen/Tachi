@@ -13,7 +13,7 @@ import MusecaJudgementCell from "#components/tables/cells/MusecaJudgementCell";
 import OngekiDamageCell from "#components/tables/cells/OngekiDamageCell";
 import OngekiJudgementCell from "#components/tables/cells/OngekiJudgementCell";
 import OngekiLampCell from "#components/tables/cells/OngekiLampCell";
-import OngekiPlatinumCell from "#components/tables/cells/OngekiPlatinumCell";
+import OngekiPlatinumCell, { StarField } from "#components/tables/cells/OngekiPlatinumCell";
 import OngekiScoreRatingCell from "#components/tables/cells/OngekiScoreRatingCell";
 import PopnJudgementCell from "#components/tables/cells/PopnJudgementCell";
 import PopnLampCell from "#components/tables/cells/PopnLampCell";
@@ -777,8 +777,9 @@ export const GPT_CLIENT_IMPLEMENTATIONS: GPTClientImplementations = {
 		sessionImportantScoreCount: 45,
 		enumIcons: {
 			grade: "sort-alpha-up",
-			noteLamp: "lightbulb",
-			bellLamp: "lightbulb",
+			noteLamp: "sliders-h",
+			bellLamp: "bell",
+			platinumStars: "star-half-alt",
 		},
 		classColours: {
 			colour: {
@@ -809,6 +810,17 @@ export const GPT_CLIENT_IMPLEMENTATIONS: GPTClientImplementations = {
 				RAINBOW_EX_TRUE: { ...RAINBOW_EX_GRADIENT, shine: true },
 			},
 		},
+		enumFormatters: {
+			platinumStars: {
+				"R-star": <StarField compact={false} stars={6} />,
+				"5-star": <StarField compact={false} stars={5} />,
+				"4-star": <StarField compact={false} stars={4} />,
+				"3-star": <StarField compact={false} stars={3} />,
+				"2-star": <StarField compact={false} stars={2} />,
+				"1-star": <StarField compact={false} stars={1} />,
+				"0-star": <StarField compact={false} stars={0} />,
+			},
+		},
 		enumColours: {
 			grade: {
 				D: COLOUR_SET.red,
@@ -834,6 +846,15 @@ export const GPT_CLIENT_IMPLEMENTATIONS: GPTClientImplementations = {
 			bellLamp: {
 				NONE: COLOUR_SET.gray,
 				"FULL BELL": COLOUR_SET.gold,
+			},
+			platinumStars: {
+				"0-star": COLOUR_SET.gray,
+				"1-star": COLOUR_SET.red,
+				"2-star": COLOUR_SET.orange,
+				"3-star": COLOUR_SET.blue,
+				"4-star": COLOUR_SET.green,
+				"5-star": COLOUR_SET.gold,
+				"R-star": COLOUR_SET.white,
 			},
 		},
 		difficultyColours: {
@@ -871,7 +892,7 @@ export const GPT_CLIENT_IMPLEMENTATIONS: GPTClientImplementations = {
 					if (x.__related?.chart?.data !== undefined) {
 						return x.scoreData.platinumScore / x.__related.chart.data.maxPlatScore;
 					}
-					return x.scoreData.platinumStars * 100000 + x.scoreData.platinumScore;
+					return x.scoreData.platinumScore;
 				}),
 			],
 			["Judgements", "Notes", NumericSOV((x) => x.scoreData.judgements.cbreak ?? 0)],

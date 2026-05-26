@@ -1,4 +1,4 @@
-import type { GoalCriteriaFormatter } from "#game-implementations/types";
+import type { GoalCriteriaFormatter, GoalCriteriaFormatterEnum } from "#game-implementations/types";
 
 import { GAME_IMPLEMENTATIONS } from "#game-implementations/game-implementations";
 import { GetChartByIdForGame } from "#lib/db-formats/chart";
@@ -139,13 +139,16 @@ function FormatCriteria<TGame extends V3Game>(
 	}
 
 	if (conf.type === "ENUM") {
+		const fmt: GoalCriteriaFormatterEnum | undefined =
+			// @ts-expect-error it still thinks criteria.key might be a symbol.
+			GAME_IMPLEMENTATIONS[game].goalCriteriaFormatters[criteria.key];
 		const v = conf.values[criteria.value];
 
 		if (v === undefined) {
 			throw new Error(`Invalid criteria value '${criteria.value}'.`);
 		}
 
-		return v;
+		return fmt ? fmt(v) : v;
 	} else if (conf.type === "DECIMAL" || conf.type === "INTEGER") {
 		const fmt: GoalCriteriaFormatter | undefined =
 			// @ts-expect-error it still thinks criteria.key might be a symbol.

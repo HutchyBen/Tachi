@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
-import { FmtNum, FmtStars } from "../../utils/util";
+import { FmtNum } from "../../utils/util";
 import { ClassValue, ToDecimalPlaces } from "../config-utils";
 import { FAST_SLOW_MAXCOMBO } from "./_common";
 
@@ -44,6 +44,18 @@ export const OngekiColours = [
 	ClassValue("RAINBOW_EX_TRUE", "虹(極)・真", "Rainbow Extreme (True): 22.000~ RatingRefresh"),
 ];
 
+export type StarEnum = "0-star" | "1-star" | "2-star" | "3-star" | "4-star" | "5-star" | "R-star";
+
+export const StarEnumToInt = (v: StarEnum) => (v === "R-star" ? 6 : parseInt(v[0], 10));
+
+export const FmtStars = (v: number | StarEnum, compact: boolean) => {
+	const n = typeof v === "number" ? v : StarEnumToInt(v);
+	if (n > 5) {
+		return "★★★★★(虹)";
+	}
+	return `${"★".repeat(n)}${"☆".repeat(compact ? 0 : 5 - n)}`;
+};
+
 export const GAME_ONGEKI_CONF = {
 	providedMetrics: {
 		score: {
@@ -82,9 +94,9 @@ export const GAME_ONGEKI_CONF = {
 			description: "The grade this score was.",
 		},
 		platinumStars: {
-			type: "INTEGER",
-			validate: p.isBetween(0, 6),
-			formatter: FmtStars,
+			type: "ENUM",
+			values: ["0-star", "1-star", "2-star", "3-star", "4-star", "5-star", "R-star"],
+			minimumRelevantValue: "1-star",
 			description: "The number of platinum stars of this score",
 		},
 	},
@@ -245,7 +257,6 @@ export const GAME_ONGEKI_CONF = {
 			"オンゲキ Re:Fresh",
 		]),
 		isBonusTrack: z.boolean(),
-		isReMaster: z.boolean().optional(),
 		maxPlatScore: z.number().int().nonnegative(),
 		inGameID: z.number().int().nonnegative().nullable(),
 		chartViewURL: z.string().optional(),
