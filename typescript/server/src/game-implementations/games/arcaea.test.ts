@@ -17,6 +17,7 @@ import { UnixMillisecondsToISO8601 } from "#utils/time";
 import {
 	ARCAEA_GRADES,
 	ARCAEA_LAMPS,
+	type ChartDocument,
 	type MongoProvidedMetrics,
 	type ScoreData,
 	type ScoreDocument,
@@ -234,8 +235,15 @@ describe("ARCAEA_IMPL", () => {
 	describe("scoreValidators & chartSpecificValidators", () => {
 		const mockScore = mkMockScore("arcaea", chart, scoreData);
 
-		const runVal = (s: DeepPartial<ScoreDocument<"arcaea">>) =>
-			RunValidators(ARCAEA_IMPL.scoreValidators, dmf(mockScore, s) as never, chart as never);
+		const runVal = (
+			s: DeepPartial<ScoreDocument<"arcaea">>,
+			c?: DeepPartial<ChartDocument<"arcaea">>,
+		) =>
+			RunValidators(
+				ARCAEA_IMPL.scoreValidators,
+				dmf(mockScore, s) as never,
+				dmf(chart, c ?? {}) as never,
+			);
 
 		it("accepts valid PM, FR, and chart score bounds", () => {
 			expect(
@@ -348,6 +356,67 @@ describe("ARCAEA_IMPL", () => {
 						lamp: "PURE MEMORY",
 						score: 10_001_151,
 						judgements: { pure: 1151, far: 0, lost: 0 },
+					},
+				}),
+			).toBeUndefined();
+		});
+
+		it("rejects impossibly large number of judgements", () => {
+			expect(
+				runVal({
+					scoreData: {
+						lamp: "CLEAR",
+						score: 9_970_000,
+						judgements: { pure: 1150, far: 20, lost: 10 },
+					},
+				}),
+			).toEqual([
+				`Too many judgements: received ${1180} in total but the chart's note count is ${1151}.`,
+			]);
+
+			expect(
+				runVal({
+					scoreData: {
+						lamp: "CLEAR",
+						score: 9_970_000,
+						judgements: { pure: 1121, far: 20, lost: 10 },
+					},
+				}),
+			).toBeUndefined();
+
+			expect(
+				runVal({
+					scoreData: {
+						lamp: "CLEAR",
+						score: 9_970_000,
+						judgements: { pure: 1120, far: 20, lost: 10 },
+					},
+				}),
+			).toBeUndefined();
+
+			expect(
+				runVal(
+					{
+						scoreData: {
+							lamp: "CLEAR",
+							score: 9_970_000,
+							judgements: { pure: 1150, far: 20, lost: 10 },
+						},
+					},
+					{
+						data: {
+							notecount: undefined,
+						},
+					},
+				),
+			).toBeUndefined();
+
+			expect(
+				runVal({
+					scoreData: {
+						lamp: "CLEAR",
+						score: 9_970_000,
+						judgements: {},
 					},
 				}),
 			).toBeUndefined();
