@@ -12,6 +12,7 @@ import {
 import { ParseDateFromString } from "#lib/score-import/framework/common/score-utils";
 import { FindChartOnInGameIDVersion } from "#utils/queries/charts";
 import { FindSongOnID } from "#utils/queries/songs";
+import { PopnVersions } from "tachi-common/config/game-support/popn";
 
 import type { CGContext, CGPopnScore } from "../types";
 
@@ -94,16 +95,12 @@ function ConvertDifficulty(diff: number): Difficulties["popn"] {
 }
 
 function ConvertVersion(ver: number): Versions["popn"] {
-	switch (ver) {
-		case 27:
-			return "unilab";
-		case 26:
-			return "kaimei";
-		case 25:
-			return "peace";
+	const version = PopnVersions.get(ver);
+	if (!version) {
+		throw new InvalidScoreFailure(`Unknown/Unsupported Game Version ${ver}.`);
 	}
 
-	throw new InvalidScoreFailure(`Unknown/Unsupported Game Version ${ver}.`);
+	return version;
 }
 
 function GetClearMedal(clearFlag: integer): GetEnumValue<"popn", "clearMedal"> {

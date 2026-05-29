@@ -5,6 +5,8 @@ import { ParseDateFromString } from "#lib/score-import/framework/common/score-ut
 import DB from "#services/pg/db";
 import { dmf } from "#test-utils/misc";
 import { TestingPopnSong } from "#test-utils/test-data";
+import { GAME_POPN_CONF, PopnVersions } from "tachi-common/config/game-support/popn";
+import { type Versions } from "tachi-common/types/game-config";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import type { CGContext, CGPopnScore } from "../types";
@@ -110,5 +112,22 @@ describe("ConverterAPICGPopn", () => {
 			},
 		});
 		expect(res.dryScore).toStrictEqual(mkOutput());
+	});
+});
+
+describe("resolves all defined pop'n versions", () => {
+	const popnVersionTestCases = Object.keys(GAME_POPN_CONF.versions).map(
+		(v) => v as Versions["popn"],
+	);
+
+	const versionNumberByName = new Map(
+		Array.from(PopnVersions.entries()).map(([versionNumber, versionName]) => [
+			versionName,
+			versionNumber,
+		]),
+	);
+
+	it.each(popnVersionTestCases)("resolves version number for %s", (v) => {
+		expect(versionNumberByName.get(v)).toBeDefined();
 	});
 });

@@ -1,6 +1,7 @@
 import { p } from "prudence";
 import { z } from "zod";
 
+import type { Versions } from "../../types/game-config";
 import type { INTERNAL_GAME_CONFIG, INTERNAL_GAME_GROUP_CONFIG } from "../../types/internals";
 
 import { FmtNum, FmtPercent } from "../../utils/util";
@@ -29,6 +30,13 @@ const PopnClasses = [
 	ClassValue("HERMIT", "仙人", "Hermit"),
 	ClassValue("GOD", "神", "God"),
 ];
+
+export const PopnVersions = new Map<number, Versions["popn"]>([
+	[25, "peace"],
+	[26, "kaimei"],
+	[27, "unilab"],
+	[28, "jamfizz"],
+]);
 
 export const GAME_POPN_CONF = {
 	providedMetrics: {
