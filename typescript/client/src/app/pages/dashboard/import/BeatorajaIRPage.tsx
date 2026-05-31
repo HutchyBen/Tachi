@@ -33,7 +33,7 @@ export default function BeatorajaIRPage({ game }: { game: "bms" | "pms" }) {
 			<ol className="instructions-list">
 				<li>
 					Download the latest version of the {name} IR{" "}
-					<ExternalLink href="https://github.com/zkldi/Tachi-beatoraja-ir/releases">
+					<ExternalLink href="https://github.com/zkldi/Tachi/releases/tag/beatoraja-ir-4.0.0">
 						here
 					</ExternalLink>
 					.
