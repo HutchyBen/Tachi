@@ -22,6 +22,7 @@ export async function FetchScoresForMD5(md5: string) {
 
 		return data;
 	} catch {
+		// TODO(zk): fix, point at lr2ir.com
 		const scores = await fetch(
 			`http://dream-pro.info/~lavalse/LR2IR/2/getrankingxml.cgi?songmd5=${md5}&id=1`,
 		).then((r) => r.text());

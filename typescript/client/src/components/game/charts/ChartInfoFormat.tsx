@@ -150,10 +150,8 @@ function ChartInfoMiddle({
 					View Chart
 				</ExternalLink>
 				<br />
-				<ExternalLink
-					href={`http://www.dream-pro.info/~lavalse/LR2IR/search.cgi?&bmsmd5=${bmsChart.data.hashMD5}`}
-				>
-					View on LR2IR
+				<ExternalLink href={`https://lr2ir.com/charts/${bmsChart.data.hashMD5}`}>
+					View on LR2IR Archive
 				</ExternalLink>
 			</>
 		);
@@ -162,10 +160,8 @@ function ChartInfoMiddle({
 
 		return (
 			<>
-				<ExternalLink
-					href={`http://www.dream-pro.info/~lavalse/LR2IR/search.cgi?&bmsmd5=${pmsChart.data.hashMD5}`}
-				>
-					View on LR2IR
+				<ExternalLink href={`https://lr2ir.com/charts/${pmsChart.data.hashMD5}`}>
+					View on LR2IR Archive
 				</ExternalLink>
 			</>
 		);
