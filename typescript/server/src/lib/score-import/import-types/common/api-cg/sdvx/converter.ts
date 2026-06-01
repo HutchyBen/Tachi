@@ -105,6 +105,8 @@ function ConvertVersion(ver: number): Versions["sdvx"] {
 			return "vivid";
 		case 6:
 			return "exceed";
+		case 7:
+			return "nabla";
 	}
 
 	throw new InvalidScoreFailure(`Unknown Game Version ${ver}.`);
