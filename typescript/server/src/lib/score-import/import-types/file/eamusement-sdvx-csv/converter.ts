@@ -72,11 +72,12 @@ const ConvertEamSDVXCSV: ConverterFunction<SDVXEamusementCSVData, EmptyObject> =
 		);
 	}
 
-	if (chart.level !== data.level) {
-		throw new InvalidScoreFailure(
-			`${humanisedChartTitle} - Should be level ${chart.level}, but found level ${data.level}.`,
-		);
-	}
+	// disabled now because nabla+exceed csvs cause confusion here
+	// if (chart.level !== data.level) {
+	// 	throw new InvalidScoreFailure(
+	// 		`${humanisedChartTitle} - Should be level ${chart.level}, but found level ${data.level}.`,
+	// 	);
+	// }
 
 	const score = AssertStrAsPositiveInt(
 		data.score,

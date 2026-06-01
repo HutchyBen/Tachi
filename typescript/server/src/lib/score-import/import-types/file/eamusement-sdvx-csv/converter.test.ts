@@ -114,13 +114,14 @@ describe("ConvertEamSDVXCSV", () => {
 		});
 	});
 
-	it("rejects incorrect level", async () => {
-		await seedAlbidaAdv();
+	// skipped
+	// it("rejects incorrect level", async () => {
+	// 	await seedAlbidaAdv();
 
-		await expect(conv({ level: "17" })).rejects.toMatchObject({
-			message: expect.stringMatching(/Should be level 10, but found level 17/u) as string,
-		});
-	});
+	// 	await expect(conv({ level: "17" })).rejects.toMatchObject({
+	// 		message: expect.stringMatching(/Should be level 10, but found level 17/u) as string,
+	// 	});
+	// });
 
 	it("rejects invalid score", async () => {
 		await seedAlbidaAdv();
