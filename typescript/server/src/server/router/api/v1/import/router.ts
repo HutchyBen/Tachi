@@ -20,13 +20,30 @@ import { Random20Hex } from "#utils/misc";
 import { FormatUserDoc, GetUserWithIDGuaranteed } from "#utils/user";
 import { ExpectedErr } from "bliss";
 import { p } from "prudence";
-import { type FileUploadImportTypes, type V3Game } from "tachi-common";
+import { type APIImportTypes, type FileUploadImportTypes, type V3Game } from "tachi-common";
+import { apiImportTypes } from "tachi-common/constants/import-types";
 
 import { API_V1_ROUTER } from "../_singleton";
 
 const ParseMultipartScoredata = CreateMulterSingleUploadMiddleware("scoreData", SIXTEEN_MEGABTYES);
 
 const fileImportTypes = TachiConfig.IMPORT_TYPES.filter((e) => e.startsWith("file/"));
+
+const enabledApiImportTypes = TachiConfig.IMPORT_TYPES.filter((e): e is APIImportTypes =>
+	e.startsWith("api/"),
+);
+
+function assertEnabledApiImportType(importType: string): APIImportTypes {
+	if (!apiImportTypes.includes(importType as APIImportTypes)) {
+		throw new ExpectedErr(400, `Invalid import type: ${importType}`);
+	}
+
+	if (!enabledApiImportTypes.includes(importType as APIImportTypes)) {
+		throw new ExpectedErr(400, `Import type "${importType}" is not enabled on this instance.`);
+	}
+
+	return importType as APIImportTypes;
+}
 
 /**
  * Import scores from a file. Expects the post request to be multipart,
@@ -91,8 +108,7 @@ API_V1_ROUTER.rawAdd(
  * @name POST /api/v1/import/from-api
  */
 API_V1_ROUTER.add("POST /import/from-api", async ({ input, req }) => {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const importType = input.importType as any;
+	const importType = assertEnabledApiImportType(input.importType);
 	const importID = Random20Hex();
 	const userID = req[SYMBOL_TACHI_API_AUTH].userID!;
 	const userIntent = req.header("X-User-Intent")?.toLowerCase() === "true";

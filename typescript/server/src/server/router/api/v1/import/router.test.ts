@@ -6,6 +6,52 @@ import { afterAll, describe, expect, it } from "vitest";
 
 afterAll(() => CloseServerConnection());
 
+describe("POST /api/v1/import/from-api", () => {
+	it("returns 400 when the import type is not enabled on this instance", async () => {
+		const { id: userId } = await seedUser({
+			username: "from_api_disabled_type",
+			withCredential: true,
+			withSettings: true,
+		});
+		await seedApiToken({
+			token: "from_api_disabled",
+			userId,
+			submitScore: true,
+		});
+
+		const res = await mockApi
+			.post("/api/v1/import/from-api")
+			.set("Authorization", "Bearer from_api_disabled")
+			.send({ importType: "api/cg-dev-sdvx" });
+
+		expect(res.status).toBe(400);
+		expect(res.body.success).toBe(false);
+		expect(String(res.body.description)).toMatch(/not enabled on this instance/iu);
+	});
+
+	it("returns 400 for non-API import types", async () => {
+		const { id: userId } = await seedUser({
+			username: "from_api_wrong_type",
+			withCredential: true,
+			withSettings: true,
+		});
+		await seedApiToken({
+			token: "from_api_wrong",
+			userId,
+			submitScore: true,
+		});
+
+		const res = await mockApi
+			.post("/api/v1/import/from-api")
+			.set("Authorization", "Bearer from_api_wrong")
+			.send({ importType: "file/batch-manual" });
+
+		expect(res.status).toBe(400);
+		expect(res.body.success).toBe(false);
+		expect(String(res.body.description)).toMatch(/Invalid import type/iu);
+	});
+});
+
 describe("import/orphans auth", () => {
 	it("returns 403 for unauthenticated GET list", async () => {
 		const res = await mockApi.get("/api/v1/import/orphans");
