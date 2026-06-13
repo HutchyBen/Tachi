@@ -582,12 +582,12 @@ export async function FindIIDXChartWith2DXtraHash(hash: string) {
 	return ToChartDocument(row);
 }
 
-const SDVX_INF_DIFFS = ["INF", "GRV", "HVN", "VVD", "XCD"] as const;
+const SDVX_INF_DIFFS = ["INF", "GRV", "HVN", "VVD", "XCD", "NBL"] as const;
 
 /**
  * Find an SDVX Chart on its in game ID. This exists to handle
  * oddities with SDVX difficulties - If "ANY_INF" is sent, it actually
- * refers to any of INF, GRV, HVN or VVD. This is because some services treat
+ * refers to any of INF, GRV, HVN, VVD, XCD, or NBL. This is because some services treat
  * all of those as the same difficulty, but we do not.
  */
 export async function FindSDVXChartOnInGameID(

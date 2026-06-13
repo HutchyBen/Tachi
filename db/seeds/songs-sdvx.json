@@ -8445,7 +8445,9 @@
 		"title": "無双"
 	},
 	{
-		"altTitles": [],
+		"altTitles": [
+			"ロンロンへ ライライライ！"
+		],
 		"artist": "ここなつ",
 		"data": {
 			"displayVersion": "gw"
@@ -18821,7 +18823,9 @@
 		"title": "#EmoCloche"
 	},
 	{
-		"altTitles": [],
+		"altTitles": [
+			"cloche(といぼっくすうぃんぐ みっくす)"
+		],
 		"artist": "coTatsu",
 		"data": {
 			"displayVersion": "vivid"
@@ -22034,7 +22038,9 @@
 		"title": "ユメブキ"
 	},
 	{
-		"altTitles": [],
+		"altTitles": [
+			"カジノファイヤーことみちゃん(ARM feat. 山本椛 + Brasscapsule)"
+		],
 		"artist": "ARM feat. 山本椛 + Brasscapsule",
 		"data": {
 			"displayVersion": "exceed"
@@ -27885,7 +27891,9 @@
 		"title": "SCHWARZSCHILD FIELD"
 	},
 	{
-		"altTitles": [],
+		"altTitles": [
+			"ビューティフル レシート"
+		],
 		"artist": "Lucky Vacuum",
 		"data": {
 			"displayVersion": "exceed"
