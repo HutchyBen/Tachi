@@ -199,7 +199,7 @@ export async function GetUsersRankingAndOutOf(
 	const result = await DB.selectFrom("game_profile")
 		.select([
 			(eb) => eb.fn.countAll().as("out_of"),
-			sql<number>`COUNT(*) FILTER (WHERE (ratings->>${ratingAlg})::numeric > ${userRating})`.as(
+			sql<number>`COUNT(*) FILTER (WHERE (ratings->>${ratingAlg})::numeric > ${userRating ?? 0})`.as(
 				"ranking_count",
 			),
 		])
