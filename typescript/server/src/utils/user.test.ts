@@ -131,15 +131,17 @@ describe("GetUsersRankingAndOutOf", () => {
 		expect(result).toEqual({ ranking: 1, outOf: 2 });
 	});
 
-	it("returns ranking 1 when user rating is null (no one can be strictly greater than null)", async () => {
+	it("returns worst ranking when user rating is null", async () => {
 		const user1 = await seedUser({ username: "null_rater" });
 		const user2 = await seedUser({ username: "other_player" });
+		const user3 = await seedUser({ username: "other_better_player" });
 		await seedGameStats(user1.id, null);
-		await seedGameStats(user2.id, 10);
+		await seedGameStats(user2.id, 0);
+		await seedGameStats(user3.id, 10);
 
 		const result = await GetUsersRankingAndOutOf(makeStats(user1.id, null));
 
-		expect(result).toEqual({ ranking: 1, outOf: 2 });
+		expect(result).toEqual({ ranking: 3, outOf: 3 });
 	});
 
 	it("does not include rows from different games in the count", async () => {
